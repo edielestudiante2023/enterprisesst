@@ -1,7 +1,8 @@
 <?php
 $url_base="http://localhost/website/admin/";
 ?>
-
+ 
+ // direccion inicial
 
 <!doctype html>
 <html lang="en">
