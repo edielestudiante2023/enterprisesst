@@ -33,6 +33,9 @@ if ($_POST) {
     $sentencia->bindParam(":categoria", $categoria);
     $sentencia->bindParam(":url", $url);
     $sentencia->execute();
+
+    $mensaje="Registro agregado con éxito.";
+    header("Location:index.php?mensaje=".$mensaje);
 }
 
 include("../../templates/header.php");

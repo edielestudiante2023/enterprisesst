@@ -2,10 +2,10 @@
 $url_base="http://localhost/website/admin/";
 ?>
  
- // direccion inicial
-
-<!doctype html>
-<html lang="en">
+ 
+ <!doctype html>
+ <html lang="en">
+    
 
 <head>
     <title>Administrador del sitio web</title>
