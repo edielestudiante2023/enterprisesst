@@ -24,7 +24,7 @@ if ($_POST) {
 
 
     //Recepcionamos los valores del formulario
-    $titulo = (isset($_POST['txtID'])) ? $_POST['txtID'] : "";
+    $txtID = (isset($_POST['txtID'])) ? $_POST['txtID'] : "";
     $titulo = (isset($_POST['titulo'])) ? $_POST['titulo'] : "";
     $subtitulo = (isset($_POST['subtitulo'])) ? $_POST['subtitulo'] : "";
 

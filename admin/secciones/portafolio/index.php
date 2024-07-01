@@ -65,7 +65,7 @@ include("../../templates/header.php");
                             </td>
 
                             <td scope="col">
-                                <img width="50" src="../../../../assets/img/portfolio/<?php echo $registros['imagen']; ?>">
+                                <img width="50" src="../../../../assets/img/team/<?php echo $registros['imagen']; ?>">
                             </td>
 
 
