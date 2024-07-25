@@ -1,28 +1,31 @@
 <?php
 session_start();
 if ($_POST) {
-    include("./bd.php");
+    include("./admin/bd.php");
 
-    $usuario = trim((isset($_POST['usuario'])) ? $_POST['usuario'] : "");
+    $cliente = trim((isset($_POST['cliente'])) ? $_POST['cliente'] : "");
     $password = trim((isset($_POST['password'])) ? $_POST['password'] : "");
 
     // Seleccionar registros
-    $sentencia = $conexion->prepare("SELECT *, count(*) as n_usuario 
-    FROM tbl_usuarios
-    WHERE usuario = :usuario
-    GROUP BY usuario, password");
-    $sentencia->bindParam(":usuario", $usuario);
+    $sentencia = $conexion->prepare("SELECT *, count(*) as n_cliente 
+    FROM tbl_cliente
+    WHERE cliente = :cliente
+    GROUP BY cliente, password");
+    $sentencia->bindParam(":cliente", $cliente);
     $sentencia->execute();
 
-    $lista_usuarios = $sentencia->fetch(PDO::FETCH_LAZY);
+    $lista_cliente = $sentencia->fetch(PDO::FETCH_LAZY);
 
     // Verificar la contraseña
-    if ($lista_usuarios['n_usuario'] > 0 && password_verify($password, $lista_usuarios['password'])) {
-        $_SESSION['usuario'] = $lista_usuarios['usuario'];
+    if ($lista_cliente['n_cliente'] > 0 && password_verify($password, $lista_cliente['password'])) {
+        $_SESSION['cliente'] = $lista_cliente['cliente'];
         $_SESSION['logueado'] = true;
         header("Location: index.php");
+
+        print_r($_SESSION);
+
     } else {
-        $mensaje = "Error: El usuario o contraseña son incorrectos";
+        $mensaje = "Error: El cliente o contraseña son incorrectos";
     }
 }
 
@@ -33,7 +36,7 @@ if ($_POST) {
 <html lang="en">
 
 <head>
-    <title>Ingreso Consultores SST</title>
+    <title>Login</title>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -71,8 +74,8 @@ if ($_POST) {
                             </script>
                             <form action="" method="POST">
                                 <div class="mb-3">
-                                    <label for="usuario" class="form-label">Usuario</label>
-                                    <input type="text" class="form-control" name="usuario" id="usuario" aria-describedby="helpId" placeholder="" />
+                                    <label for="cliente" class="form-label">cliente</label>
+                                    <input type="text" class="form-control" name="cliente" id="cliente" aria-describedby="helpId" placeholder="" />
                                 </div>
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Contraseña</label>

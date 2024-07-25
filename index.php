@@ -1,4 +1,12 @@
 <?php
+
+session_start();
+$url_base="http://localhost/website/";
+
+if (!isset($_SESSION['cliente'])){
+
+    header("Location:".$url_base."logincliente.php");
+}
 include("admin/bd.php");
 
 
@@ -67,6 +75,8 @@ $lista_configuraciones = $sentencia->fetchAll(PDO::FETCH_ASSOC);
                     <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="#team">Team</a></li>
                     <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo $url_base;?>cerrarcliente.php">Cerrar Sesión</a></li>
+                    
                 </ul>
             </div>
         </div>
