@@ -14,7 +14,7 @@ if (isset($_GET['txtID'])) {
 }
 
 if ($_POST) {
-    print_r($_POST);
+    
 
     $txtID = (isset($_POST['txtID'])) ? $_POST['txtID'] : "";
     $icono = (isset($_POST['icono'])) ? $_POST['icono'] : "";
