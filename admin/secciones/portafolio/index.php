@@ -6,7 +6,7 @@ if (isset($_GET['txtID'])) {
     $txtID = (isset($_GET['txtID'])) ? $_GET['txtID'] : "";
 
 
-
+    
     $sentencia = $conexion->prepare("SELECT imagen FROM tbl_portafolio WHERE ID=:id");
     $sentencia->bindParam(":id", $txtID);
     $sentencia->execute();
@@ -17,6 +17,8 @@ if (isset($_GET['txtID'])) {
             unlink("../../../assets/img/portfolio/".$registro_imagen["imagen"]);
         }
     }
+
+    
     $sentencia = $conexion->prepare("DELETE FROM tbl_portafolio WHERE ID=:id");
     $sentencia->bindParam(":id", $txtID);
     $sentencia->execute();
@@ -65,7 +67,7 @@ include("../../templates/header.php");
                             </td>
 
                             <td scope="col">
-                                <img width="50" src="../../../../assets/img/team/<?php echo $registros['imagen']; ?>">
+                                <img width="50" src="../../../../assets/img/portfolio/<?php echo $registros['imagen']; ?>">
                             </td>
 
 

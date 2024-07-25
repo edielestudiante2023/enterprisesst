@@ -22,6 +22,13 @@ $sentencia = $conexion->prepare("SELECT * FROM tbl_equipo ");
 $sentencia->execute();
 $lista_equipo = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
+//seleccionar registros de configuraciones
+$sentencia = $conexion->prepare("SELECT * FROM tbl_configuraciones ");
+$sentencia->execute();
+$lista_configuraciones = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -67,17 +74,17 @@ $lista_equipo = $sentencia->fetchAll(PDO::FETCH_ASSOC);
     <!-- Masthead-->
     <header class="masthead">
         <div class="container">
-            <div class="masthead-subheading">Welcome To Our Studio!</div>
-            <div class="masthead-heading text-uppercase">It's Nice To Meet You</div>
-            <a class="btn btn-primary btn-xl text-uppercase" href="#services">Tell Me More</a>
+            <div class="masthead-subheading"> <?php echo $lista_configuraciones[0]['valor'];?> </div>
+            <div class="masthead-heading text-uppercase"><?php echo $lista_configuraciones[1]['valor'];?></div>
+            <a class="btn btn-primary btn-xl text-uppercase" href="#services"><?php echo $lista_configuraciones[3]['valor'];?></a>
         </div>
     </header>
     <!-- Services-->
     <section class="page-section" id="services">
         <div class="container">
             <div class="text-center">
-                <h2 class="section-heading text-uppercase">Services</h2>
-                <h3 class="section-subheading text-muted">Lorem ipsum dolor sit amet consectetur.</h3>
+                <h2 class="section-heading text-uppercase"><?php echo $lista_configuraciones[2]['valor'];?></h2>
+                <h3 class="section-subheading text-muted"><?php echo $lista_configuraciones[4]['valor'];?></h3>
             </div>
             <div class="row text-center">
                 <?php foreach ($lista_servicios as $registros) { ?>
@@ -97,8 +104,8 @@ $lista_equipo = $sentencia->fetchAll(PDO::FETCH_ASSOC);
     <section class="page-section bg-light" id="portfolio">
         <div class="container">
             <div class="text-center">
-                <h2 class="section-heading text-uppercase">Portfolio</h2>
-                <h3 class="section-subheading text-muted">Lorem ipsum dolor sit amet consectetur.</h3>
+                <h2 class="section-heading text-uppercase"><?php echo $lista_configuraciones[5]['valor'];?></h2>
+                <h3 class="section-subheading text-muted"><?php echo $lista_configuraciones[6]['valor'];?>.</h3>
             </div>
             <div class="row">
 
@@ -170,8 +177,8 @@ $lista_equipo = $sentencia->fetchAll(PDO::FETCH_ASSOC);
     <section class="page-section" id="about">
         <div class="container">
             <div class="text-center">
-                <h2 class="section-heading text-uppercase">About</h2>
-                <h3 class="section-subheading text-muted">Lorem ipsum dolor sit amet consectetur.</h3>
+                <h2 class="section-heading text-uppercase"><?php echo $lista_configuraciones[8]['valor'];?></h2>
+                <h3 class="section-subheading text-muted"><?php echo $lista_configuraciones[9]['valor'];?></h3>
             </div>
             <ul class="timeline">
 
@@ -199,8 +206,8 @@ $lista_equipo = $sentencia->fetchAll(PDO::FETCH_ASSOC);
     <section class="page-section bg-light" id="team">
         <div class="container">
             <div class="text-center">
-                <h2 class="section-heading text-uppercase">Our Amazing Team</h2>
-                <h3 class="section-subheading text-muted">Lorem ipsum dolor sit amet consectetur.</h3>
+                <h2 class="section-heading text-uppercase"><?php echo $lista_configuraciones[10]['valor'];?></h2>
+                <h3 class="section-subheading text-muted"><?php echo $lista_configuraciones[11]['valor'];?></h3>
             </div>
             <div class="row">
                     <?php foreach ($lista_equipo as $registros) { ?>
@@ -218,7 +225,7 @@ $lista_equipo = $sentencia->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="row">
                 <div class="col-lg-8 mx-auto text-center">
-                    <p class="large text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut eaque, laboriosam veritatis, quos non quis ad perspiciatis, totam corporis ea, alias ut unde.</p>
+                    <p class="large text-muted"><?php echo $lista_configuraciones[12]['valor'];?></p>
                 </div>
             </div>
         </div>
@@ -246,8 +253,8 @@ $lista_equipo = $sentencia->fetchAll(PDO::FETCH_ASSOC);
     <section class="page-section" id="contact">
         <div class="container">
             <div class="text-center">
-                <h2 class="section-heading text-uppercase">Contact Us</h2>
-                <h3 class="section-subheading text-muted">Lorem ipsum dolor sit amet consectetur.</h3>
+                <h2 class="section-heading text-uppercase"><?php echo $lista_configuraciones[13]['valor'];?></h2>
+                <h3 class="section-subheading text-muted"><?php echo $lista_configuraciones[14]['valor'];?></h3>
             </div>
             <!-- * * * * * * * * * * * * * * *-->
             <!-- * * SB Forms Contact Form * *-->
