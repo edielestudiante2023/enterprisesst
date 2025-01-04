@@ -130,7 +130,7 @@
         .gamma-titulo {
             font-size: 1.5em;
             font-weight: bold;
-
+            
             margin-bottom: 20px;
         }
 
@@ -192,10 +192,10 @@
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
                     <?php
-                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-                    ?>
+setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+?>
 
-                    Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
                 </td>
             </tr>
@@ -205,19 +205,16 @@
     <div class="alfa-contenedor">
         <h3 class="gamma-titulo">1. INTRODUCCIÓN</h3>
         <p>
-            La notificación e investigación de los accidentes de trabajo que se presenten eventualmente en <strong><?= $client['nombre_cliente'] ?></strong> es responsabilidad del personal asignado de manera permanente por nuestros contratistas o de manera eventual por nuestros proveedores. Estas actividades son fundamentales para lograr un mejoramiento continuo de las condiciones de salud, seguridad y medio ambiente de sus proveedores y contratistas.
+            La notificación e investigación de los accidentes de trabajo es una de las principales actividades que la empresa <strong><?= $client['nombre_cliente'] ?></strong> necesita llevar a cabo para lograr un mejoramiento continuo de las condiciones de salud, seguridad y medio ambiente de sus trabajadores.
         </p>
         <p>
-            Es fundamental tener presente que, en el ámbito de las propiedades horizontales, donde no existen trabajadores directos ni son consideradas empresas en sí mismas, nuestra empresa, CYCLOID TALENT, se especializa en la gestión de la Seguridad y Salud en el Trabajo (SST). En este contexto, <strong><?= $client['nombre_cliente'] ?></strong> cuenta con proveedores que asignan talento humano de forma permanente y contratistas que destinan personal para actividades específicas.
+            La recolección, análisis y ordenamiento de los datos relacionados con los eventos y las estadísticas que de allí resultan, ayudan a identificar los factores de riesgo de los oficios o secciones más afectadas, los agentes de la lesión más comunes, entre otros aspectos; los cuales no solo generan estrategias de mejora empresarial sino que también entregarán información fundamental para el diseño de políticas y programas nacionales a través de los informes entregados al Ministerio de Protección Social.
         </p>
         <p>
-            Dentro de este marco, la Resolución 1570 de 2005 establece las variables y mecanismos para la recolección de información en salud ocupacional y riesgos laborales. Asimismo, esta resolución impone la obligación de registrar de manera clara y completa el Formato Único de Reporte de Accidentes de Trabajo (FURAT).
+            Es importante recordar que la resolución 1570 de 2005, por la cual se establecen las variables y mecanismos para la recolección de la información en salud ocupacional y riesgos laborales, establece la obligatoriedad de registrar de manera clara y completa el Formato Único de reporte de accidentes de Trabajo FURAT.
         </p>
         <p>
-            La importancia de este registro es tal que, en caso de faltantes en la información, el Ministerio correspondiente puede notificar por escrito a los empleadores, solicitando explicaciones. Esta situación podría conllevar sanciones para los empresarios, en forma de multas sucesivas mensuales de hasta 500 SMLMV. Adicionalmente, las Administradoras de Riesgos Laborales también están sujetas a sanciones si no solicitan la información faltante a los empleadores o no la reportan al Ministerio, pudiendo alcanzar multas de hasta 1000 SMLMV. En CYCLOID TALENT, nos comprometemos a garantizar la adecuada gestión de la información requerida, evitando posibles sanciones y contribuyendo al cumplimiento normativo en materia de SST en propiedades horizontales.
-        </p>
-        <p>
-            <strong>Término:</strong> El artículo 62 del Decreto 1295 de 1994 establece para el empleador la obligatoriedad de reportar todo accidente de trabajo o enfermedad laboral que ocurra en una empresa o actividad económica dentro de los dos días hábiles siguientes a la ocurrencia del accidente o diagnóstico de la enfermedad.
+            Es tal la importancia de esta información que de ser necesario el Ministerio notificará por escrito a los empleadores solicitando explicación sobre los faltantes de la información, lo que puede generar una sanción para el empresario con multas sucesivas mensuales de hasta 500 SMLMV, y para las Administradoras de Riesgos laborales que no soliciten la información faltante a los empleadores o no reporten la información al Ministerio, las sanciones podrán alcanzar hasta los 1000 SMLMV.
         </p>
 
         <h3 class="gamma-titulo">2. DEFINICIÓN DE ACCIDENTE DE TRABAJO</h3>
@@ -225,7 +222,7 @@
             Según el artículo 9 del decreto 1295 de 1994, el accidente de trabajo “es todo suceso repentino que sobrevenga por causa o con ocasión del trabajo y que produzca en el trabajador una lesión orgánica, una perturbación funcional, una invalidez o la muerte”.
         </p>
         <p>
-            Igualmente, se considera accidente de trabajo aquel que se produce durante la ejecución de órdenes del empleador o durante la ejecución de una labor bajo su autoridad, aun fuera del lugar y horas del trabajo.
+            Igualmente se considera accidente de trabajo aquel que se produce durante la ejecución de órdenes del empleador, o durante la ejecución de una labor bajo su autoridad, aun fuera del lugar y horas del trabajo.
         </p>
         <p><strong>No es accidente de trabajo:</strong></p>
         <ul class="delta-lista">
@@ -235,112 +232,91 @@
 
         <h3 class="gamma-titulo">3. PROCEDIMIENTO PARA LA NOTIFICACIÓN DEL PRESUNTO ACCIDENTE DE TRABAJO</h3>
         <p>
-            En el contexto específico de <strong><?= $client['nombre_cliente'] ?></strong>, es esencial tener presente el artículo 62 del Decreto 1295 de 1994. Dicho artículo establece que "todo accidente de trabajo o enfermedad profesional que ocurra en una empresa o actividad deberá ser informado por el respectivo empleador a la entidad Administradora de Riesgos Laborales (ARL) y a la Entidad Promotora de Salud (EPS) en forma simultánea dentro de los dos días hábiles siguientes (48 horas) de ocurrido el accidente o enfermedad profesional".
+            El artículo 62 del decreto 1295 de 1994 contempla que todo accidente de trabajo o enfermedad profesional que ocurra en una empresa o actividad deberá ser informado por el respectivo empleador a la <?= $clientPolicy['policy_content'] ?> y EPS en forma simultánea dentro de los dos días hábiles siguientes (48 horas).
         </p>
-        <p>¿Qué hacer cuando ocurra un accidente de trabajo?</p>
         <ul class="delta-lista">
-            <li>Prestar los primeros auxilios: Proporcionar los primeros auxilios al trabajador afectado si se dispone de los medios necesarios.</li>
-            <li>Verificar si necesita atención médica: Evaluar la gravedad del incidente y, si es necesario, trasladarlo a la institución de salud más cercana.</li>
-            <li>Comunicar el incidente al administrador de la copropiedad y al supervisor/líder para reporte correspondiente.</li>
-            <li>Determinar si el accidente es de origen laboral.</li>
-            <li>Contactar a la línea efectiva de la ARL del proveedor o contratista para solicitar orientación.</li>
-            <li>Solicitar el diligenciamiento del Formato Único de Reporte de Accidentes de Trabajo (FURAT) y una copia del mismo por parte del proveedor o contratista.</li>
-            <li>Confirmar el envío de la copia del FURAT a la EPS y la ARL.</li>
-            <li>Monitorear el envío del original a la ARL del proveedor o contratista dentro de los plazos establecidos.</li>
-            <li>Realizar una investigación del accidente junto con los líderes de SST de los contratistas o proveedores y de la propiedad horizontal para definir acciones correctivas.</li>
+            <li>Presta los primeros auxilios si es posible.</li>
+            <li>Verifica si necesita atención médica.</li>
+            <li>Verifica si el accidente es de origen laboral.</li>
+            <li>Llama a la LÍNEA de la <?= $clientPolicy['policy_content'] ?> y solicita orientación.</li>
+            <li>Diligencia el informe individual de Accidente de Trabajo de la <?= $clientPolicy['policy_content'] ?>.</li>
         </ul>
 
         <h3 class="gamma-titulo">4. BENEFICIOS</h3>
         <ul class="delta-lista">
             <li>Facilita la identificación de las causas durante la investigación.</li>
-            <li>Evita obstáculos en la calificación profesional del evento.</li>
-            <li>Entrega información al Ministerio para determinar políticas y programas.</li>
-            <li>Previene posibles sanciones de los entes de control debido a información incompleta.</li>
-            <li>Manifiesta el compromiso de los proveedores y contratistas con la seguridad de su personal.</li>
+            <li>Entrega información al Ministerio para determinar políticas.</li>
+            <li>Evita sanciones por información incompleta.</li>
+            <li>Manifiesta el compromiso del supervisor con su equipo.</li>
         </ul>
-        <p>
-            Tanto para la propiedad horizontal como para el talento humano asignado por parte de proveedores y contratistas, es fundamental colaborar en la investigación para identificar las causas, definir acciones preventivas y compartir aprendizajes que mejoren la seguridad laboral.
-        </p>
     </div>
 
-
-    <footer>
-        <h2>Historial de Versiones</h2>
-        <style>
-            footer table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-
-            footer table th,
-            footer table td {
-                border: 1px solid #ddd;
-                text-align: center;
-                vertical-align: middle;
-                padding: 8px;
-                word-wrap: break-word;
-            }
-
-            footer table th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
-
-            footer table tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-
-            footer table tr:hover {
-                background-color: #f1f1f1;
-            }
-
-            /* Ajuste del ancho de las columnas */
-            footer table th:nth-child(5),
-            footer table td:nth-child(5) {
-                width: 35%;
-                /* Más ancho para la columna Observaciones */
-            }
-
-            footer table th:nth-child(1),
-            footer table td:nth-child(1) {
-                width: 10%;
-                /* Más estrecho para la columna Versión */
-            }
-
-            footer table th:nth-child(2),
-            footer table td:nth-child(2),
-            footer table th:nth-child(3),
-            footer table td:nth-child(3),
-            footer table th:nth-child(4),
-            footer table td:nth-child(4) {
-                width: 15%;
-                /* Ancho uniforme para las demás columnas */
-            }
-        </style>
-        <table>
+<footer>
+    <h2>Historial de Versiones</h2>
+    <style>
+        footer table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        footer table th, footer table td {
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        footer table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        footer table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        footer table tr:hover {
+            background-color: #f1f1f1;
+        }
+        /* Ajuste del ancho de las columnas */
+        footer table th:nth-child(5),
+        footer table td:nth-child(5) {
+            width: 35%; /* Más ancho para la columna Observaciones */
+        }
+        footer table th:nth-child(1),
+        footer table td:nth-child(1) {
+            width: 10%; /* Más estrecho para la columna Versión */
+        }
+        footer table th:nth-child(2),
+        footer table td:nth-child(2),
+        footer table th:nth-child(3),
+        footer table td:nth-child(3),
+        footer table th:nth-child(4),
+        footer table td:nth-child(4) {
+            width: 15%; /* Ancho uniforme para las demás columnas */
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Versión</th>
+            <th>Tipo de Documento</th>
+            <th>Acrónimo</th>
+            <th>Fecha de Creación</th>
+            <th>Observaciones</th>
+        </tr>
+        <?php foreach ($allVersions as $version): ?>
             <tr>
-                <th>Versión</th>
-                <th>Tipo de Documento</th>
-                <th>Acrónimo</th>
-                <th>Fecha de Creación</th>
-                <th>Observaciones</th>
+                <td><?= $version['version_number'] ?></td>
+                <td><?= $version['document_type'] ?></td>
+                <td><?= $version['acronym'] ?></td>
+                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                <td><?= $version['change_control'] ?></td>
             </tr>
-            <?php foreach ($allVersions as $version): ?>
-                <tr>
-                    <td><?= $version['version_number'] ?></td>
-                    <td><?= $version['document_type'] ?></td>
-                    <td><?= $version['acronym'] ?></td>
-                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                    <td><?= $version['change_control'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    </footer>
+        <?php endforeach; ?>
+    </table>
+</footer>
 
     <br>
 
-    <!--  <div>
+   <!--  <div>
         <a href="<?= base_url('/generatePdf_reporteAccidente') ?>" target="_blank">
             <button type="button">PDF</button>
         </a>

@@ -80,10 +80,9 @@
         }
 
         .subtitle {
-            padding: 10px;
             font-weight: bold;
             font-size: 16px;
-            text-align: left;
+            text-align: center;
         }
 
         .right {
@@ -122,9 +121,9 @@
         }
 
 
+        
 
-
-
+        
         .alpha-title {
             font-size: 1.5em;
             font-weight: bold;
@@ -163,10 +162,10 @@
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
                     <?php
-                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-                    ?>
+setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+?>
 
-                    Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
                 </td>
             </tr>
@@ -176,31 +175,19 @@
     <div class="alpha-title">Política de Seguridad y Salud en el Trabajo</div>
 
     <p class="beta-parrafo">
-        <strong><?= $client['nombre_cliente'] ?></strong>, nos comprometemos de manera prioritaria a salvaguardar la salud, la integridad física, social y psicológica de nuestros residentes, visitantes y contratistas. Esto se logra mediante la identificación, control y seguimiento de los factores de riesgo a los que pueden estar expuestos en nuestras instalaciones.
-    </p>
-
-    <div class="subtitle">Compromiso General</div>
-    <p class="beta-parrafo">
-        Reconocemos formalmente nuestro compromiso con la seguridad y salud en el trabajo como un valor fundamental. En este sentido, todos los niveles de nuestra copropiedad asumen la responsabilidad de crear y mantener entornos seguros y saludables. Cumpliremos con todos los requisitos legales aplicables en la implementación del sistema de gestión de seguridad y salud en el trabajo.
-    </p>
-
-    <div class="subtitle">Asignación de Recursos</div>
-    <p class="beta-parrafo">
-        Destinamos los recursos humanos, físicos, tecnológicos y financieros necesarios para llevar a cabo una gestión efectiva de la salud y seguridad en el trabajo. Contamos con el respaldo y la colaboración del vigía en Seguridad y Salud en el Trabajo, del consejo de administración y del administrador de la copropiedad. Trabajaremos en conjunto para optimizar los recursos presupuestados y alcanzar nuestras metas de seguridad y salud.
-    </p>
-
-    <div class="subtitle">Enfoque basado en Riesgos</div>
-    <p class="beta-parrafo">
-        Nuestros programas están diseñados para impulsar un enfoque basado en riesgos y el autocuidado. Nos dedicamos a la identificación y corrección proactiva de condiciones inseguras, con el propósito de reducir la incidencia de accidentes en nuestros residentes, visitantes y contratistas. Además, nos preparamos para responder de manera efectiva en situaciones de emergencia.
-    </p>
-
-    <div class="subtitle">Responsabilidad Compartida</div>
-    <p class="beta-parrafo">
-        Cada residente, visitante y contratista comparte la responsabilidad de cumplir con las normas y procedimientos de seguridad. Este compromiso es esencial para garantizar entornos seguros y productivos. Asimismo, se espera que notifiquen de inmediato cualquier condición que pueda generar consecuencias o contingencias, tanto para las personas asignadas a la copropiedad por parte de nuestros proveedores, como para prevenir daños o perjuicios a cualquier otra persona dentro de la propiedad horizontal.
+        <strong><?= $client['nombre_cliente'] ?></strong> se compromete con la protección y promoción de la salud de los trabajadores, procurando su integridad física, social y psicológica, mediante el control y seguimiento de los factores de riesgos a los que se encuentran expuestos.
     </p>
 
     <p class="beta-parrafo">
-        En <strong><?= $client['nombre_cliente'] ?></strong>, mantenemos un firme compromiso con la seguridad y salud en el trabajo, y trabajamos en equipo para alcanzar nuestros objetivos en este ámbito. Esta política se revisará y actualizará regularmente para garantizar su eficacia y pertinencia.
+        A través de esta política, <strong><?= $client['nombre_cliente'] ?></strong> pronuncia formalmente su compromiso hacia la seguridad y salud en el trabajo y define que todos los niveles de la organización asumen la responsabilidad de promover un ambiente de trabajo sano y seguro, cumpliendo los requisitos legales aplicables, en la implementación del sistema de gestión de seguridad y salud en el trabajo. Adicionalmente, se destinan los recursos humanos, físicos, tecnológicos y financieros necesarios para la gestión de la salud y la seguridad, contando con el apoyo del vigía en Seguridad y Salud en el Trabajo, el Comité de Convivencia y la alta gerencia para la optimización de los recursos presupuestados con el fin de cumplir con las metas propuestas.
+    </p>
+
+    <p class="beta-parrafo">
+        Los programas desarrollados en <strong><?= $client['nombre_cliente'] ?></strong> estarán orientados al fomento de una cultura preventiva y de autocuidado, a la intervención de las condiciones inseguras, con el propósito de disminuir la generación de accidentes de trabajo y enfermedades laborales, ejerciendo un control adecuado de los riesgos en su origen, al control del ausentismo y a la preparación para emergencias.
+    </p>
+
+    <p class="beta-parrafo">
+        Todos los empleados, participantes, visitantes y contratistas tendrán la responsabilidad de cumplir con las normas y procedimientos de seguridad, con el fin de realizar un trabajo seguro y productivo. Igualmente, serán responsables de notificar oportunamente todas aquellas condiciones que puedan generar consecuencias y contingencias para los empleados y la organización.
     </p>
 
     <div class="signature-container">
@@ -212,83 +199,72 @@
 
     </div>
 
-    <footer>
-        <h2>Historial de Versiones</h2>
-        <style>
-            footer table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-
-            footer table th,
-            footer table td {
-                border: 1px solid #ddd;
-                text-align: center;
-                vertical-align: middle;
-                padding: 8px;
-                word-wrap: break-word;
-            }
-
-            footer table th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
-
-            footer table tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-
-            footer table tr:hover {
-                background-color: #f1f1f1;
-            }
-
-            /* Ajuste del ancho de las columnas */
-            footer table th:nth-child(5),
-            footer table td:nth-child(5) {
-                width: 35%;
-                /* Más ancho para la columna Observaciones */
-            }
-
-            footer table th:nth-child(1),
-            footer table td:nth-child(1) {
-                width: 10%;
-                /* Más estrecho para la columna Versión */
-            }
-
-            footer table th:nth-child(2),
-            footer table td:nth-child(2),
-            footer table th:nth-child(3),
-            footer table td:nth-child(3),
-            footer table th:nth-child(4),
-            footer table td:nth-child(4) {
-                width: 15%;
-                /* Ancho uniforme para las demás columnas */
-            }
-        </style>
-        <table>
+<footer>
+    <h2>Historial de Versiones</h2>
+    <style>
+        footer table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        footer table th, footer table td {
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        footer table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        footer table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        footer table tr:hover {
+            background-color: #f1f1f1;
+        }
+        /* Ajuste del ancho de las columnas */
+        footer table th:nth-child(5),
+        footer table td:nth-child(5) {
+            width: 35%; /* Más ancho para la columna Observaciones */
+        }
+        footer table th:nth-child(1),
+        footer table td:nth-child(1) {
+            width: 10%; /* Más estrecho para la columna Versión */
+        }
+        footer table th:nth-child(2),
+        footer table td:nth-child(2),
+        footer table th:nth-child(3),
+        footer table td:nth-child(3),
+        footer table th:nth-child(4),
+        footer table td:nth-child(4) {
+            width: 15%; /* Ancho uniforme para las demás columnas */
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Versión</th>
+            <th>Tipo de Documento</th>
+            <th>Acrónimo</th>
+            <th>Fecha de Creación</th>
+            <th>Observaciones</th>
+        </tr>
+        <?php foreach ($allVersions as $version): ?>
             <tr>
-                <th>Versión</th>
-                <th>Tipo de Documento</th>
-                <th>Acrónimo</th>
-                <th>Fecha de Creación</th>
-                <th>Observaciones</th>
+                <td><?= $version['version_number'] ?></td>
+                <td><?= $version['document_type'] ?></td>
+                <td><?= $version['acronym'] ?></td>
+                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                <td><?= $version['change_control'] ?></td>
             </tr>
-            <?php foreach ($allVersions as $version): ?>
-                <tr>
-                    <td><?= $version['version_number'] ?></td>
-                    <td><?= $version['document_type'] ?></td>
-                    <td><?= $version['acronym'] ?></td>
-                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                    <td><?= $version['change_control'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    </footer>
+        <?php endforeach; ?>
+    </table>
+</footer>
 
     <br>
 
-    <!--  <div>
+   <!--  <div>
         <a href="<?= base_url('/generatePdf_politicaSst') ?>" target="_blank">
             <button type="button">PDF</button>
         </a>

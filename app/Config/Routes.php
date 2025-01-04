@@ -172,7 +172,7 @@ $routes->get('/generatePdf_reporteAccidente', 'PzrepoaccidenteController::genera
 $routes->get('/inspeccionPlanynoplan/(:num)', 'PzinpeccionplanynoplanController::inspeccionPlanynoplan/$1');
 $routes->get('/generatePdf_inspeccionPlanynoplan', 'PzinpeccionplanynoplanController::generatePdf_inspeccionPlanynoplan');
 $routes->get('/funcionesyresponsabilidades/(:num)', 'HzfuncionesyrespController::funcionesyresponsabilidades/$1');
-$routes->get('/generatePdf_entregaDotacion', 'HzentregadotacionController::generatePdf_entregaDotacion');
+$routes->get('/entregaDotacion', 'HzentregadotacionController::entregaDotacion/$1');
 $routes->get('/responsablePesv/(:num)', 'HzresponsablepesvController::responsablePesv/$1');
 $routes->get('/generatePdf_responsablePesv', 'HzresponsablepesvController::generatePdf_responsablePesv');
 $routes->get('/responsabilidadesSalud/(:num)', 'HzrespsaludController::responsabilidadesSalud/$1');
@@ -191,6 +191,9 @@ $routes->get('/actaCocolab/(:num)', 'PzactacocolabController::actaCocolab/$1');
 $routes->get('/generatePdf_actaCocolab', 'PzactacocolabController::generatePdf_actaCocolab');
 $routes->get('/procedimientoAuditoria/(:num)', 'HzauditoriaController::procedimientoAuditoria/$1');
 $routes->get('/generatePdf_procedimientoAuditoria', 'HzauditoriaController::generatePdf_procedimientoAuditoria');
+$routes->get('/entregaDotacion/(:num)', 'HzentregadotacionController::entregaDotacion/$1');
+$routes->get('/politicaAcoso/(:num)', 'PzpoliticaacosoController::politicaAcoso/$1');
+$routes->get('/examenMedico/(:num)', 'PzexamedController::examenMedico/$1');
 
 
 

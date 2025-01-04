@@ -166,33 +166,35 @@
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
                     <?php
-                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-                    ?>
+setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+?>
 
-                    Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
                 </td>
             </tr>
         </table>
     </div>
 
-    <div class="alpha-title">POLÍTICA DE PREVENCIÓN – PREPARACIÓN Y RESPUESTA ANTE EMERGENCIAS</div>
+    <div class="alpha-title">Política de Prevención, Preparación y Respuesta Ante Emergencias</div>
 
     <p class="beta-parrafo">
-        Para <strong><?= $client['nombre_cliente'] ?></strong> es de vital importancia proveer un óptimo nivel de seguridad de los residentes, proveedores, contratistas y visitantes, para lo cual dispondrá de elementos e instalaciones adecuadas, apoyo en el fomento de la cultura de la prevención y el entrenamiento requerido para asegurar el control de emergencias de cualquier naturaleza.
+        Para <strong><?= $client['nombre_cliente'] ?></strong> es de vital importancia proveer un óptimo nivel de seguridad a sus trabajadores, contratistas y visitantes. Para ello, dispondrá de elementos e instalaciones adecuadas, fomentará una cultura de prevención y brindará el entrenamiento necesario para asegurar el control de emergencias de cualquier naturaleza.
     </p>
 
     <p class="beta-parrafo">
-        En concordancia con lo anterior, el consejo de administración, administrador de la copropiedad, y vigía SST se comprometen a proporcionar todo su apoyo, colaboración y gestión necesaria, para adelantar todos los procesos tendientes al cumplimiento de los objetivos propuestos en el Plan de Emergencias adoptado por <strong><?= $client['nombre_cliente'] ?></strong>.
+        En concordancia con lo anterior, la Gerencia se compromete a proporcionar todo su apoyo, colaboración y gestión necesaria para adelantar todos los procesos tendientes al cumplimiento de los objetivos propuestos en el Plan de Emergencias adoptado por la empresa.
     </p>
 
-    <p class="beta-parrafo">Con el fin de:</p>
+    <p class="beta-parrafo">
+        Con el fin de:
+    </p>
 
     <ul class="delta-lista">
-        <li class="beta-parrafo">Preservar la vida e integridad de todas las personas (proveedores, contratistas, residentes, visitantes y comunidad).</li>
-        <li class="beta-parrafo">Garantizar la preservación de los bienes y activos de <strong><?= $client['nombre_cliente'] ?></strong>.</li>
+        <li class="beta-parrafo">Preservar la vida e integridad de todas las personas (empleados, contratistas, estudiantes, visitantes y comunidad).</li>
+        <li class="beta-parrafo">Garantizar la preservación de los bienes y activos de la <strong><?= $client['nombre_cliente'] ?></strong>.</li>
         <li class="beta-parrafo">Velar por que todas las acciones que se adelanten garanticen la protección del medio ambiente.</li>
-        <li class="beta-parrafo">Garantizar la continuidad operativa de <strong><?= $client['nombre_cliente'] ?></strong> y una rápida recuperación de los sectores afectados por eventuales emergencias.</li>
+        <li class="beta-parrafo">Garantizar la continuidad operativa de las actividades en las instalaciones y una rápida recuperación de los sectores afectados por eventuales emergencias.</li>
         <li class="beta-parrafo">Dispondrá todos sus esfuerzos para dar cumplimiento a la legislación vigente en materia de prevención y atención de emergencias.</li>
     </ul>
 
@@ -205,79 +207,68 @@
 
     </div>
 
-    <footer>
-        <h2>Historial de Versiones</h2>
-        <style>
-            footer table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-
-            footer table th,
-            footer table td {
-                border: 1px solid #ddd;
-                text-align: center;
-                vertical-align: middle;
-                padding: 8px;
-                word-wrap: break-word;
-            }
-
-            footer table th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
-
-            footer table tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-
-            footer table tr:hover {
-                background-color: #f1f1f1;
-            }
-
-            /* Ajuste del ancho de las columnas */
-            footer table th:nth-child(5),
-            footer table td:nth-child(5) {
-                width: 35%;
-                /* Más ancho para la columna Observaciones */
-            }
-
-            footer table th:nth-child(1),
-            footer table td:nth-child(1) {
-                width: 10%;
-                /* Más estrecho para la columna Versión */
-            }
-
-            footer table th:nth-child(2),
-            footer table td:nth-child(2),
-            footer table th:nth-child(3),
-            footer table td:nth-child(3),
-            footer table th:nth-child(4),
-            footer table td:nth-child(4) {
-                width: 15%;
-                /* Ancho uniforme para las demás columnas */
-            }
-        </style>
-        <table>
+<footer>
+    <h2>Historial de Versiones</h2>
+    <style>
+        footer table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        footer table th, footer table td {
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        footer table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        footer table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        footer table tr:hover {
+            background-color: #f1f1f1;
+        }
+        /* Ajuste del ancho de las columnas */
+        footer table th:nth-child(5),
+        footer table td:nth-child(5) {
+            width: 35%; /* Más ancho para la columna Observaciones */
+        }
+        footer table th:nth-child(1),
+        footer table td:nth-child(1) {
+            width: 10%; /* Más estrecho para la columna Versión */
+        }
+        footer table th:nth-child(2),
+        footer table td:nth-child(2),
+        footer table th:nth-child(3),
+        footer table td:nth-child(3),
+        footer table th:nth-child(4),
+        footer table td:nth-child(4) {
+            width: 15%; /* Ancho uniforme para las demás columnas */
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Versión</th>
+            <th>Tipo de Documento</th>
+            <th>Acrónimo</th>
+            <th>Fecha de Creación</th>
+            <th>Observaciones</th>
+        </tr>
+        <?php foreach ($allVersions as $version): ?>
             <tr>
-                <th>Versión</th>
-                <th>Tipo de Documento</th>
-                <th>Acrónimo</th>
-                <th>Fecha de Creación</th>
-                <th>Observaciones</th>
+                <td><?= $version['version_number'] ?></td>
+                <td><?= $version['document_type'] ?></td>
+                <td><?= $version['acronym'] ?></td>
+                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                <td><?= $version['change_control'] ?></td>
             </tr>
-            <?php foreach ($allVersions as $version): ?>
-                <tr>
-                    <td><?= $version['version_number'] ?></td>
-                    <td><?= $version['document_type'] ?></td>
-                    <td><?= $version['acronym'] ?></td>
-                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                    <td><?= $version['change_control'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    </footer>
+        <?php endforeach; ?>
+    </table>
+</footer>
 
     <br>
 

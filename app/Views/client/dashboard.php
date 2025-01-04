@@ -14,7 +14,13 @@
             color: #1c2437;
             font-family: Arial, sans-serif;
         }
+        a:visited {
+        color: #bd9751; /* Cambia a un color dorado */
+    }
 
+    a.clicked {
+        color: #bd9751; /* Cambia a un color dorado */
+    }
         /* Navbar fija */
         .navbar {
             background-color: whitesmoke;
@@ -250,6 +256,17 @@
             alert('Cerrar sesión presionado');
         }
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const links = document.querySelectorAll('a');
+        links.forEach(link => {
+            link.addEventListener('click', function () {
+                this.classList.add('clicked');
+            });
+        });
+    });
+</script>
+
 </body>
 
 </html>

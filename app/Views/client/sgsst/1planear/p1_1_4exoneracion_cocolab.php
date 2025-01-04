@@ -183,10 +183,10 @@
             <td class="code right">
                 Versión: <?= $latestVersion['version_number'] ?><br>
                 <?php
-                setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-                ?>
+setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+?>
 
-                Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
             </td>
         </tr>
@@ -194,7 +194,7 @@
 
     <div class="container">
 
-        <h3 style="text-align: center;">ACLARACIÓN FRENTE A CUMPLIMIENTO DEL NUMERAL 1.1.8 CONFORMACIÓN Y FUNCIONAMIENTO DEL COMITÉ DE CONVIVENCIA LABORAL</h3>
+        <h3 style="text-align: center;">ACLARACIÓN NO CONFORMACIÓN DE COMITÉ DE CONVIVENCIA LABORAL</h3>
 
         <br>
 
@@ -205,27 +205,63 @@ setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idi
 <p>FECHA: <strong><?= strftime('%d de %B de %Y', strtotime($client['fecha_ingreso'])); ?></strong></p>
 
 
-
+        
 
         <p>
-            <strong><?= $client['nombre_cliente'] ?></strong> con Nit <strong><?= $client['nit_cliente'] ?></strong> desea informar que, en la actualidad, no cuenta con empleados dependientes en su estructura. En consecuencia, se considera innecesaria la formación de un Comité de Convivencia Laboral, dado que este se establece principalmente para representar y atender las necesidades y preocupaciones de los trabajadores directos de una empresa. Dado que las copropiedades de propiedad horizontal no participan en actividades económicas, comerciales o de producción, este ítem no resulta aplicable en nuestra situación actual.
-
-            <br>
-            <br>
-
-            La decisión de no conformar un Comité de Convivencia Laboral se toma en estricto cumplimiento con lo establecido en el artículo 3 de la Resolución 652 de 2012, que regula la creación y funcionamiento de estos comités. De acuerdo con esta normativa, es obligatorio formar un comité cuando se tienen trabajadores a quienes representar en asuntos relacionados con la convivencia laboral.
-
-            <br>
-            <br>
-
-            En virtud de lo expuesto, y considerando que en nuestro conjunto residencial no existen empleados contratados directamente por la copropiedad, no es necesario establecer dicho comité en este momento. Reiteramos nuestro compromiso de cumplir con todas las normativas y regulaciones pertinentes para garantizar un ambiente seguro y armonioso en nuestro entorno para contratistas y residentes.
-
+            <strong><?= $client['nombre_cliente'] ?></strong> con Nit <strong><?= $client['nit_cliente'] ?></strong> certifica que actualmente no cuenta con el número de trabajadores dependientes para la activación de un comité de convivencia. Por lo que no aplica
+            conformar este organismo que regula y motiva la convivencia laboral. 
 
             <br><br>
             <?= $clientPolicy['policy_content'] ?>
         </p>
 
-        
+        <p>
+            El artículo 3 de la <strong>Resolución 652 de 2012</strong> modificado por la <strong>Resolución 1356 de 2012</strong>
+            establece que el Comité de Convivencia Laboral estará compuesto por un número igual de representantes del
+            empleador y de los trabajadores con sus respectivos suplentes.
+        </p>
+
+        <p>En concreto, el artículo establece lo siguiente:</p>
+        <p><strong>Artículo 3. Conformación</strong>: El Comité de Convivencia Laboral estará compuesto por dos (2) representantes
+            del empleador y dos (2) de los trabajadores con sus respectivos suplentes.</p>
+
+        <p>
+            El Comité de Convivencia Laboral es un organismo de prevención y resolución de conflictos laborales que tiene
+            como objetivo promover, proteger y velar por el ejercicio de los derechos fundamentales de los trabajadores en
+            materia de prevención y atención del acoso laboral.
+        </p>
+
+        <p>
+            Los miembros del Comité de Convivencia Laboral deben ser elegidos por votación secreta y universal por los
+            representantes del empleador y de los trabajadores respectivamente. Los suplentes serán elegidos de la misma
+            forma que los principales.
+        </p>
+
+        <p>
+            Los miembros del Comité de Convivencia Laboral deben tener la capacidad de participar de manera constructiva
+            en la solución de conflictos, así como de promover la convivencia laboral.
+        </p>
+
+        <p>
+            El Comité de Convivencia Laboral se reunirá ordinariamente cada tres (3) meses y sesionará con la mitad más uno
+            de sus integrantes. Se reunirá extraordinariamente cuando se presenten casos que requieran de su inmediata
+            intervención y podrá ser convocado por cualquiera de sus integrantes.
+        </p>
+
+        <p>El Comité de Convivencia Laboral tiene las siguientes funciones:</p>
+        <ul>
+            <li>Recibir y dar trámite a las quejas de acoso laboral presentadas por los trabajadores.</li>
+            <li>Realizar evaluaciones periódicas de clima organizacional.</li>
+            <li>Difundir la política de prevención y atención del acoso laboral.</li>
+            <li>Promover actividades de capacitación y sensibilización sobre el acoso laboral.</li>
+            <li>Asesorar a los trabajadores sobre los derechos y deberes en materia de acoso laboral.</li>
+        </ul>
+
+        <p>
+            El Comité de Convivencia Laboral es un organismo fundamental para la prevención y atención del acoso laboral.
+            Su conformación y funcionamiento es una obligación de todas las empresas y entidades públicas con más de 10
+            trabajadores.
+        </p>
 
         <div class="signature-container">
             <div class="signature">
@@ -242,82 +278,71 @@ setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idi
 
 
 
-    <footer>
-        <h2>Historial de Versiones</h2>
-        <style>
-            footer table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-
-            footer table th,
-            footer table td {
-                border: 1px solid #ddd;
-                text-align: center;
-                vertical-align: middle;
-                padding: 8px;
-                word-wrap: break-word;
-            }
-
-            footer table th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
-
-            footer table tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-
-            footer table tr:hover {
-                background-color: #f1f1f1;
-            }
-
-            /* Ajuste del ancho de las columnas */
-            footer table th:nth-child(5),
-            footer table td:nth-child(5) {
-                width: 35%;
-                /* Más ancho para la columna Observaciones */
-            }
-
-            footer table th:nth-child(1),
-            footer table td:nth-child(1) {
-                width: 10%;
-                /* Más estrecho para la columna Versión */
-            }
-
-            footer table th:nth-child(2),
-            footer table td:nth-child(2),
-            footer table th:nth-child(3),
-            footer table td:nth-child(3),
-            footer table th:nth-child(4),
-            footer table td:nth-child(4) {
-                width: 15%;
-                /* Ancho uniforme para las demás columnas */
-            }
-        </style>
-        <table>
+<footer>
+    <h2>Historial de Versiones</h2>
+    <style>
+        footer table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        footer table th, footer table td {
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        footer table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        footer table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        footer table tr:hover {
+            background-color: #f1f1f1;
+        }
+        /* Ajuste del ancho de las columnas */
+        footer table th:nth-child(5),
+        footer table td:nth-child(5) {
+            width: 35%; /* Más ancho para la columna Observaciones */
+        }
+        footer table th:nth-child(1),
+        footer table td:nth-child(1) {
+            width: 10%; /* Más estrecho para la columna Versión */
+        }
+        footer table th:nth-child(2),
+        footer table td:nth-child(2),
+        footer table th:nth-child(3),
+        footer table td:nth-child(3),
+        footer table th:nth-child(4),
+        footer table td:nth-child(4) {
+            width: 15%; /* Ancho uniforme para las demás columnas */
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Versión</th>
+            <th>Tipo de Documento</th>
+            <th>Acrónimo</th>
+            <th>Fecha de Creación</th>
+            <th>Observaciones</th>
+        </tr>
+        <?php foreach ($allVersions as $version): ?>
             <tr>
-                <th>Versión</th>
-                <th>Tipo de Documento</th>
-                <th>Acrónimo</th>
-                <th>Fecha de Creación</th>
-                <th>Observaciones</th>
+                <td><?= $version['version_number'] ?></td>
+                <td><?= $version['document_type'] ?></td>
+                <td><?= $version['acronym'] ?></td>
+                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                <td><?= $version['change_control'] ?></td>
             </tr>
-            <?php foreach ($allVersions as $version): ?>
-                <tr>
-                    <td><?= $version['version_number'] ?></td>
-                    <td><?= $version['document_type'] ?></td>
-                    <td><?= $version['acronym'] ?></td>
-                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                    <td><?= $version['change_control'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    </footer>
+        <?php endforeach; ?>
+    </table>
+</footer>
 
     <br>
-    <!--  <div class="no-print">
+   <!--  <div class="no-print">
         <a href="<?= base_url('/generatePdf_exoneracionCocolab') ?>" target="_blank">
             <button type="button">PDF</button>
         </a>

@@ -22,6 +22,11 @@
             font-family: Arial, sans-serif;
         }
 
+        a:visited {
+            color: #bd9751;
+            /* Color del enlace visitado */
+        }
+
         .navbar {
             background-color: #ffffff;
             border-bottom: 1px solid #e9ecef;
@@ -529,17 +534,17 @@
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js" defer></script>
     <!-- DataTables Spanish Translation -->
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             // Actualizar dinámicamente el año en el footer
             document.getElementById('currentYear').textContent = new Date().getFullYear();
         });
     </script>
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             // Función para inicializar los tooltips
             function initializeTooltips() {
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
                 });
             }
@@ -559,17 +564,16 @@
                     "searchable": false // Deshabilitar búsqueda
                 }],
                 "stateSave": true, // Habilitar guardado de estado
-                "stateSaveCallback": function (settings, data) {
+                "stateSaveCallback": function(settings, data) {
                     // Guardar el estado en localStorage con una clave única
                     localStorage.setItem('DataTables_consultorTable', JSON.stringify(data));
                 },
-                "stateLoadCallback": function (settings) {
+                "stateLoadCallback": function(settings) {
                     // Cargar el estado desde localStorage
                     return JSON.parse(localStorage.getItem('DataTables_consultorTable'));
                 },
                 "dom": 'Bfrtip', // Posición de los botones
-                "buttons": [
-                    {
+                "buttons": [{
                         extend: 'excelHtml5',
                         text: '<i class="bi bi-file-earmark-excel"></i> Exportar a Excel',
                         className: 'btn btn-primary-custom btn-sm',
@@ -579,7 +583,7 @@
                         title: 'Lista_de_Reportes',
                         filename: 'Lista_de_Reportes',
                         titleAttr: 'Exportar a Excel',
-                        customize: function (xlsx) {
+                        customize: function(xlsx) {
                             var sheet = xlsx.xl.worksheets['sheet1.xml'];
 
                             // Agregar estilo al título (opcional)
@@ -595,11 +599,11 @@
                         titleAttr: 'Mostrar u Ocultar Columnas'
                     }
                 ],
-                "initComplete": function () {
+                "initComplete": function() {
                     var api = this.api();
 
                     // Configurar los filtros en <tfoot>
-                    api.columns().every(function () {
+                    api.columns().every(function() {
                         var column = this;
                         var columnIdx = column.index();
 
@@ -611,13 +615,13 @@
 
                         var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
                             .appendTo($(column.footer()).empty())
-                            .on('change', function () {
+                            .on('change', function() {
                                 var val = $.fn.dataTable.util.escapeRegex($(this).val());
                                 column.search(val ? '^' + val + '$' : '', true, false).draw();
                             });
 
                         // Precargar los datos únicos de la columna en el filtro
-                        column.data().unique().sort().each(function (d, j) {
+                        column.data().unique().sort().each(function(d, j) {
                             // Manejar valores nulos o vacíos
                             if (d === null || d === undefined) {
                                 d = '';
@@ -641,12 +645,12 @@
             });
 
             // Re-inicializar tooltips después de cada dibujo de la tabla
-            table.on('draw.dt', function () {
+            table.on('draw.dt', function() {
                 initializeTooltips();
             });
 
             // Botón para borrar el estado
-            $('#clearState').on('click', function () {
+            $('#clearState').on('click', function() {
                 // Borrar estado guardado en localStorage
                 localStorage.removeItem('DataTables_consultorTable');
                 table.state.clear(); // Limpiar estado en DataTables
@@ -655,7 +659,7 @@
             });
 
             // Botón para exportar a Excel
-            $('#exportExcel').on('click', function () {
+            $('#exportExcel').on('click', function() {
                 table.button('.buttons-excel').trigger();
             });
 

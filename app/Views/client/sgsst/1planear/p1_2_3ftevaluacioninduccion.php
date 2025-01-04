@@ -145,10 +145,10 @@
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
                     <?php
-                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-                    ?>
+setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+?>
 
-                    Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
                 </td>
             </tr>
@@ -158,192 +158,139 @@
     <div class="alpha-title">Evaluación de Seguridad y Salud en el Trabajo</div>
 
     <div class="gamma-section">
-        <p class="delta-label">Nombre: ______________________________</p>
-        <p class="delta-label">Fecha: ______________________________</p>
+        <p class="delta-label">Nombre: ______________________________________________</p>
+        <p class="delta-label">Área: ____________________________________________________</p>
+        <p class="delta-label">Cargo: ________________________ Fecha: __________________</p>
     </div>
 
     <div class="epsilon-question">
-        <p><strong>1. ¿Cuál es el principal objetivo del Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST)?</strong></p>
+        <p><strong>1. ¿Cuál de los siguientes objetivos se debe cumplir en la Política de Seguridad y Salud en trabajo?</strong></p>
         <ul>
-            <li>a) Maximizar los beneficios económicos.</li>
-            <li>b) Prevenir enfermedades en los residentes.</li>
-            <li>c) Minimizar los riesgos legales de la propiedad horizontal en caso de un eventual accidente.</li>
-            <li>d) Fomentar el consumo de alcohol y tabaco en el trabajo.</li>
+            <li>a) Identificar los peligros, evaluar y valorar los riesgos y establecer los respectivos.</li>
+            <li>b) Proteger la seguridad y salud de todos los trabajadores, mediante la mejora continua del SG-SST.</li>
+            <li>c) Cumplir con la normatividad vigente que regula la Seguridad y Salud en el Trabajo.</li>
+            <li>d) Todas las anteriores</li>
         </ul>
     </div>
 
     <div class="epsilon-question">
-        <p><strong>2. ¿Quiénes deben implementar el SG-SST en una propiedad horizontal?</strong></p>
+        <p><strong>2. ¿Algunos de los riesgos a los que estamos expuestos son?</strong></p>
         <ul>
-            <li>a) Solo los residentes.</li>
-            <li>b) Solo los empleados.</li>
-            <li>c) Solo los contratistas.</li>
-            <li>d) Los contratantes de personal bajo modalidad de contrato civil, comercial o administrativo.</li>
-        </ul>
-    </div>
-
-    <div class="epsilon-question">
-        <p><strong>3. ¿Qué es un "peligro" en el contexto de seguridad y salud en el trabajo?</strong></p>
-        <ul>
-            <li>a) Un evento inesperado.</li>
-            <li>b) Un acto inseguro.</li>
-            <li>c) Una fuente, situación o acto con potencial de daño.</li>
-            <li>d) Un accidente laboral.</li>
-        </ul>
-    </div>
-
-    <div class="epsilon-question">
-        <p><strong>4. ¿Cuál es la diferencia entre un "peligro" y un "riesgo"?</strong></p>
-        <ul>
-            <li>a) No hay diferencia.</li>
-            <li>b) El riesgo es un acto inseguro.</li>
-            <li>c) El peligro es un evento inesperado.</li>
-            <li>d) El riesgo es la combinación de la probabilidad de que ocurra un peligro y la severidad de la lesión que puede causar.</li>
-        </ul>
-    </div>
-
-    <div class="epsilon-question">
-        <p><strong>5. ¿Qué función desempeña la "Brigada de Emergencia" en la propiedad horizontal?</strong></p>
-        <ul>
-            <li>a) Mantener orden y limpieza en las áreas comunes.</li>
-            <li>b) Promover la cultura de la prevención y reaccionar en caso de emergencias como sismos o incendios.</li>
-            <li>c) Organizar fiestas y eventos.</li>
-            <li>d) Gestionar la seguridad en las zonas comunes.</li>
-        </ul>
-    </div>
-
-    <div class="epsilon-question">
-        <p><strong>6. ¿Cuál es el propósito de un "FURAT" en el contexto de seguridad y salud en el trabajo?</strong></p>
-        <ul>
-            <li>a) Registrar la asistencia de los residentes a cursos de seguridad.</li>
-            <li>b) Informar a la ARL sobre la ocurrencia de un accidente de trabajo.</li>
-            <li>c) Realizar pruebas de alcoholemia a los trabajadores.</li>
-            <li>d) Organizar simulacros de evacuación.</li>
-        </ul>
-    </div>
-
-    <div class="epsilon-question">
-        <p><strong>7. ¿Qué debe exigir la copropiedad en cuanto a las dotaciones de proveedores y contratistas?</strong></p>
-        <ul>
-            <li>a) Equipos de oficina.</li>
-            <li>b) Programas de entretenimiento para residentes.</li>
-            <li>c) Programas de capacitación para empleados.</li>
-            <li>d) Equipos de protección personal (EPP) adecuados.</li>
-        </ul>
-    </div>
-
-    <div class="epsilon-question">
-        <p><strong>8. ¿Cuál es la política sobre el consumo de alcohol, tabaco y drogas?</strong></p>
-        <ul>
-            <li>a) Prohibir el consumo solo para los residentes.</li>
-            <li>b) Permitir el consumo en áreas designadas.</li>
-            <li>c) Prohibir el consumo para proveedores y contratistas.</li>
-            <li>d) Promover el consumo de drogas en eventos sociales.</li>
-        </ul>
-    </div>
-
-    <div class="epsilon-question">
-        <p><strong>9. ¿Cuál es el objetivo de la política de prevención, preparación y respuesta ante emergencias?</strong></p>
-        <ul>
-            <li>a) Fomentar el uso de dispositivos móviles.</li>
-            <li>b) Proporcionar entretenimiento a los residentes.</li>
-            <li>c) Salvaguardar la salud y la seguridad de las personas en la propiedad.</li>
-            <li>d) Controlar el consumo de alimentos en la copropiedad.</li>
-        </ul>
-    </div>
-
-    <div class="epsilon-question">
-        <p><strong>10. ¿Qué tipo de emergencia se menciona como ejemplo en la información proporcionada?</strong></p>
-        <ul>
-            <li>a) Emergencia tecnológica.</li>
-            <li>b) Emergencia natural.</li>
-            <li>c) Emergencia social.</li>
+            <li>a) Biomecánicos, Psicosocial, Físico, Locativo.</li>
+            <li>b) Químico, eléctrico, espacios confinados.</li>
+            <li>c) Trabajos en alturas, trabajos en caliente.</li>
             <li>d) Todas las anteriores.</li>
         </ul>
     </div>
 
-    <div class="gamma-section">
-        <p class="delta-label">Nombre del Evaluador: ______________________________</p>
-        <p class="delta-label">Calificación: ______________________________</p>
+    <div class="epsilon-question">
+        <p><strong>3. ¿En caso de sufrir un accidente laboral debo reportarlo?</strong></p>
+        <ul>
+            <li>a) Inmediatamente.</li>
+            <li>b) En el transcurso de la semana siguiente.</li>
+            <li>c) A los quince días.</li>
+        </ul>
     </div>
 
+    <div class="epsilon-question">
+        <p><strong>4. ¿Qué responsabilidades tengo yo al frente en Seguridad y Salud en el Trabajo?</strong></p>
+        <ul>
+            <li>a) Suministrar información personal y asistir a los eventos de la compañía.</li>
+            <li>b) Suministrar información clara, veraz y completa sobre su estado de salud y participar en las actividades de capacitación en SST.</li>
+            <li>c) Cumplir con horarios laborales y realizar mis funciones del cargo.</li>
+        </ul>
+    </div>
 
-    <footer>
-        <h2>Historial de Versiones</h2>
-        <style>
-            footer table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
+    <div class="epsilon-question">
+        <p><strong>5. ¿Qué es COPASST y COCOLAB?</strong></p>
+        <ul>
+            <li>a) Comité para la Seguridad y Salud Ocupacional y Comité de control Laboral.</li>
+            <li>b) Comités para la vigilancia del COVID-19.</li>
+            <li>c) Comité Paritario de Seguridad y Salud en el Trabajo y Comité de Convivencia Laboral.</li>
+            <li>d) Ninguna de las anteriores.</li>
+        </ul>
+    </div>
 
-            footer table th,
-            footer table td {
-                border: 1px solid #ddd;
-                text-align: center;
-                vertical-align: middle;
-                padding: 8px;
-                word-wrap: break-word;
-            }
+    <div class="epsilon-question">
+        <p><strong>6. ¿Qué debo hacer en caso de emergencia?</strong></p>
+        <ul>
+            <li>a) Correr hacia el punto de encuentro, seguir ruta de evacuación y seguir instrucciones del brigadista.</li>
+            <li>b) Mantener la calma, seguir la ruta de evacuación, seguir instrucciones del brigadista, dirigirse al punto de encuentro.</li>
+            <li>c) Mantener la calma, seguir la ruta de evacuación, seguir instrucciones del brigadista, y devolverse.</li>
+        </ul>
+    </div>
 
-            footer table th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
+    <div class="gamma-section">
+        <p class="delta-label">Resultado de la Evaluación</p>
+        <p class="delta-label">Puntaje: __________________________</p>
+        <p class="delta-label">Firma evaluador(a): ________________________</p>
+    </div>
 
-            footer table tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-
-            footer table tr:hover {
-                background-color: #f1f1f1;
-            }
-
-            /* Ajuste del ancho de las columnas */
-            footer table th:nth-child(5),
-            footer table td:nth-child(5) {
-                width: 35%;
-                /* Más ancho para la columna Observaciones */
-            }
-
-            footer table th:nth-child(1),
-            footer table td:nth-child(1) {
-                width: 10%;
-                /* Más estrecho para la columna Versión */
-            }
-
-            footer table th:nth-child(2),
-            footer table td:nth-child(2),
-            footer table th:nth-child(3),
-            footer table td:nth-child(3),
-            footer table th:nth-child(4),
-            footer table td:nth-child(4) {
-                width: 15%;
-                /* Ancho uniforme para las demás columnas */
-            }
-        </style>
-        <table>
+<footer>
+    <h2>Historial de Versiones</h2>
+    <style>
+        footer table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        footer table th, footer table td {
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        footer table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        footer table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        footer table tr:hover {
+            background-color: #f1f1f1;
+        }
+        /* Ajuste del ancho de las columnas */
+        footer table th:nth-child(5),
+        footer table td:nth-child(5) {
+            width: 35%; /* Más ancho para la columna Observaciones */
+        }
+        footer table th:nth-child(1),
+        footer table td:nth-child(1) {
+            width: 10%; /* Más estrecho para la columna Versión */
+        }
+        footer table th:nth-child(2),
+        footer table td:nth-child(2),
+        footer table th:nth-child(3),
+        footer table td:nth-child(3),
+        footer table th:nth-child(4),
+        footer table td:nth-child(4) {
+            width: 15%; /* Ancho uniforme para las demás columnas */
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Versión</th>
+            <th>Tipo de Documento</th>
+            <th>Acrónimo</th>
+            <th>Fecha de Creación</th>
+            <th>Observaciones</th>
+        </tr>
+        <?php foreach ($allVersions as $version): ?>
             <tr>
-                <th>Versión</th>
-                <th>Tipo de Documento</th>
-                <th>Acrónimo</th>
-                <th>Fecha de Creación</th>
-                <th>Observaciones</th>
+                <td><?= $version['version_number'] ?></td>
+                <td><?= $version['document_type'] ?></td>
+                <td><?= $version['acronym'] ?></td>
+                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                <td><?= $version['change_control'] ?></td>
             </tr>
-            <?php foreach ($allVersions as $version): ?>
-                <tr>
-                    <td><?= $version['version_number'] ?></td>
-                    <td><?= $version['document_type'] ?></td>
-                    <td><?= $version['acronym'] ?></td>
-                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                    <td><?= $version['change_control'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    </footer>
+        <?php endforeach; ?>
+    </table>
+</footer>
 
     <br>
-    <!-- 
+<!-- 
     <div>
         <a href="<?= base_url('/generatePdf_ftevaluacionInduccion') ?>" target="_blank">
             <button type="button">PDF</button>

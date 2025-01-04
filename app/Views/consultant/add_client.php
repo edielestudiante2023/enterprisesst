@@ -171,11 +171,21 @@
                     <div class="mb-3">
                         <label class="form-label">Tipo de Servicio:</label>
                         <select name="estandares" class="form-select">
-                            <option value="Mensual">7A</option>
-                            <option value="Bimensual">7B</option>
-                            <option value="Trimestral">7C</option>
-                            <option value="Proyecto">7D</option>
-                            
+                            <option value="7A">7A</option>
+                            <option value="7B">7B</option>
+                            <option value="7C">7C</option>
+                            <option value="7D">7D</option>
+                            <option value="7E">7E</option>
+                            <option value="21A">21A</option>
+                            <option value="21B">21B</option>
+                            <option value="21C">21C</option>
+                            <option value="21D">21D</option>
+                            <option value="21E">21E</option>
+                            <option value="60A">60A</option>
+                            <option value="60B">60B</option>
+                            <option value="60C">60C</option>
+                            <option value="60D">60D</option>
+                            <option value="60E">60E</option>
                         </select>
                     </div>
 

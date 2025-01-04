@@ -131,31 +131,22 @@
         }
 
         .signature-container {
-            display: flex;
-            /* Ensures that the divs are displayed in a row */
-            justify-content: space-evenly;
-            /* Adds space between the items */
-            align-items: center;
-            /* Aligns the items vertically in the center */
+            display: flex; /* Ensures that the divs are displayed in a row */
+            justify-content: space-evenly; /* Adds space between the items */
+            align-items: center; /* Aligns the items vertically in the center */
             margin-top: 20px;
         }
-
         .signature {
             text-align: center;
-            width: 90%;
-            /* Adjust the width of each signature block */
+            width: 90%; /* Adjust the width of each signature block */
         }
-
         .signature img {
-            max-width: 100px;
-            /* Adjust the size of the images as needed */
+            max-width: 100px; /* Adjust the size of the images as needed */
             height: auto;
         }
-
         .signature .name {
             font-weight: bold;
         }
-
         .signature .title {
             font-style: italic;
         }
@@ -183,10 +174,10 @@
             <td class="code right">
                 Versión: <?= $latestVersion['version_number'] ?><br>
                 <?php
-                setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-                ?>
+setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+?>
 
-                Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
             </td>
         </tr>
@@ -290,7 +281,7 @@ setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idi
 </footer>
 
     <br>
-    <!--  <div class="no-print">
+   <!--  <div class="no-print">
         <a href="<?= base_url('/generatePdf_asignacionResponsable') ?>" target="_blank">
             <button type="button">PDF</button>
         </a>

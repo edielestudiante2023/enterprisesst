@@ -132,10 +132,10 @@
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
                     <?php
-                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-                    ?>
+setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+?>
 
-                    Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
                 </td>
             </tr>
@@ -145,172 +145,149 @@
 
     <div class="beta-subtitulo">1. OBJETO</div>
     <p class="gamma-parrafo">
-        Desarrollar actividades de capacitación acordes con los programas del Sistema de Gestión de la Salud y Seguridad en el Trabajo de la copropiedad <strong><?= $client['nombre_cliente'] ?></strong>, que fortalezcan las capacidades, conocimientos y aptitudes del consejo de administración, vigía, proveedores y contratistas en materia de Salud y Seguridad en el trabajo.
+        Desarrollar actividades de capacitación acordes con los programas del Sistema de Gestión de la Salud y Seguridad en el Trabajo de la organización <strong><?= $client['nombre_cliente'] ?></strong> que fortalezcan las capacidades, conocimientos y actitudes tanto de los empleados de la organización como de contratistas en materia de Salud y Seguridad en el trabajo.
     </p>
 
     <div class="beta-subtitulo">2. ALCANCE</div>
     <p class="gamma-parrafo">
-        Aplica a todas las partes interesadas de <strong><?= $client['nombre_cliente'] ?></strong>, incluyendo proveedores y contratistas, cuyas actividades o servicios estén relacionados directamente con riesgos a la salud.
+        Aplica a todas las personas que hagan parte de la comunidad de la organización <strong><?= $client['nombre_cliente'] ?></strong>, funcionarios y contratistas, cuyas actividades o servicios estén relacionados directamente con riesgos a la salud.
     </p>
 
     <div class="beta-subtitulo">3. METODOLOGÍA</div>
-    <p class="gamma-parrafo"><strong>CAPACITACIÓN CONTINUA:</strong> Con el programa de capacitación, se busca mantener actualizados a las partes interesadas y desarrollar un plan de entrenamiento que incluya temas de seguridad industrial y ambiental. Este plan contará con la participación del administrador de la copropiedad, el vigía de la seguridad y salud en el trabajo, y los miembros del consejo de administración interesados. Tomando como referencia la Matriz de riesgos, se capacitará a todas las partes interesadas de acuerdo con los riesgos críticos detectados. El entrenamiento estará enfocado en la prevención de incidentes, accidentes y enfermedades laborales; se analizarán indicadores como cumplimiento, cobertura y eficacia para la elaboración del cronograma.</p>
+    <p class="gamma-parrafo"><strong>CAPACITACIÓN CONTINUA:</strong> Con el programa de capacitación, lo que se permite es mantener actualizado y desarrollar un plan de entrenamiento que incluye los temas de seguridad industrial y ambiental. Tomando como referencia la Matriz de riesgos, se capacitará al personal de cada área de acuerdo a los riesgos críticos detectados. El entrenamiento estará enfocado en la prevención de incidentes, accidentes y enfermedades laborales; para analizar los indicadores (cumplimiento, cobertura y eficacia) y elaborar el Cronograma.</p>
 
-    <p class="gamma-parrafo"><strong>CAPACITACIÓN ESPECÍFICA:</strong> Según la evaluación de riesgos de la copropiedad, se procederá al fortalecimiento de las competencias de todas las partes interesadas, promoviendo el "saber-hacer" y el "saber-saber" para mejorar la gestión y aplicar acciones concretas para la comunidad, proveedores y contratistas.</p>
+    <p class="gamma-parrafo"><strong>CAPACITACIÓN ESPECÍFICA:</strong> Según la evaluación del puesto de trabajo y actividades se realizará y ejecutará un cronograma de entrenamiento interno.</p>
 
-    <ul class="delta-lista">
-        <li class="gamma-parrafo">
-            <strong>Descripción de la Actividad:</strong> El responsable del SG-SST, en común acuerdo con el administrador de la copropiedad, definirá la ruta de capacitación para las partes interesadas (consejo de administración, vigía SST, proveedores y contratistas) según criterios de criticidad o nivelación de conocimientos.
-        </li>
-        <li class="gamma-parrafo">
-            <strong>Capacitación Programada:</strong> Tras el proceso de Identificación de Peligros y Evaluación de Riesgos, el responsable del SG-SST detectará las capacitaciones necesarias para el personal cuyas actividades representen riesgos significativos y procederá a establecer el cronograma.
-        </li>
-        <li class="gamma-parrafo">
-            <strong>Capacitación No Programada:</strong> Ante nuevas necesidades no contempladas en el cronograma, el encargado del SG-SST realizará las capacitaciones o entrenamientos necesarios para mitigar riesgos significativos.
-        </li>
+    <ul class="delta-lista"> 
+        <li class="gamma-parrafo"><strong>Descripción de la Actividad:</strong> Talento Humano o el área administrativa identificarán el perfil del cargo y sus necesidades, planteando el entrenamiento interno según la necesidad. El Encargado del Sistema de Gestión de Seguridad y Salud en el Trabajo identificará el nivel de riesgo de cada actividad y planteará capacitaciones según la necesidad.</li>
+        <li class="gamma-parrafo"><strong>Capacitación Programada:</strong> Tras la identificación de Peligros y Evaluación de Riesgos, el Encargado del SG-SST procederá a establecer el cronograma de Capacitación, para el personal cuyo trabajo represente un riesgo significativo.</li>
+        <li class="gamma-parrafo"><strong>Capacitación No Programada:</strong> Cuando se identifiquen nuevas necesidades de capacitación no contempladas en el cronograma, el Encargado del SG-SST deberá realizar la capacitación correspondiente.</li>
     </ul>
 
     <div class="beta-subtitulo">4. DEFINICIONES</div>
     <ul class="delta-lista">
-        <li class="gamma-parrafo"><strong>Capacitación:</strong> Actividades de formación en temas específicos que complementan la educación académica del trabajador.</li>
-        <li class="gamma-parrafo"><strong>Líder del programa:</strong> Persona encargada del desarrollo y cumplimiento de las actividades definidas en el SG-SST.</li>
-        <li class="gamma-parrafo"><strong>Competencias técnicas, cognitivas e interpersonales:</strong> Incluyen habilidades específicas (técnicas), pensamiento crítico y resolución de problemas (cognitivas), y capacidad para interactuar eficazmente con otros (interpersonales).</li>
+        <li class="gamma-parrafo"><strong>Capacitación:</strong> Actividades de formación de personal en temas específicos complementando la educación académica del trabajador.</li>
+        <li class="gamma-parrafo"><strong>Líder del programa:</strong> Persona encargada del desarrollo y cumplimiento de las actividades del SG-SST.</li>
+        <li class="gamma-parrafo"><strong>Competencia Laboral:</strong> Conjunto de conocimientos, habilidades y actitudes aplicadas en situaciones laborales (Min Educación Nacional).</li>
     </ul>
 
     <div class="beta-subtitulo">5. RESPONSABLE</div>
     <p class="gamma-parrafo">
-        La responsabilidad de implementar este programa recae en el responsable del SG-SST, quien debe contar con licencia y resolución vigente.
+        La responsabilidad de la implementación de este programa está a cargo del ROL responsable de Seguridad y Salud en el Trabajo.
     </p>
 
     <div class="beta-subtitulo">6. DOCUMENTOS RELACIONADOS</div>
     <ul class="delta-lista">
-        <li class="gamma-parrafo">Decreto 1072 de 2015.</li>
+        <li class="gamma-parrafo">Resolución 0312 del 2019</li>
+        <li class="gamma-parrafo">Decreto 1072 de 2015</li>
     </ul>
 
     <div class="beta-subtitulo">7. DESCRIPCIÓN</div>
     <p class="gamma-parrafo">
-        El programa de capacitaciones de <strong><?= $client['nombre_cliente'] ?></strong> se divide en 5 etapas:
+        El programa de capacitaciones de la organización <strong><?= $client['nombre_cliente'] ?></strong> se divide en 5 etapas:
     </p>
 
     <div class="beta-subtitulo">7.1. Programación</div>
     <p class="gamma-parrafo">
-        El responsable del SG-SST y el administrador de la copropiedad definirán y programarán las actividades de capacitación, incluyendo:
+        Los responsables de los diferentes programas definirán y programarán las actividades de capacitación a desarrollar, incluyendo:
     </p>
     <ul class="delta-lista">
         <li class="gamma-parrafo">Tema</li>
         <li class="gamma-parrafo">Responsable</li>
         <li class="gamma-parrafo">Fecha de ejecución</li>
-        <li class="gamma-parrafo">Horas dictadas</li>
-        <li class="gamma-parrafo">N. de personas invitadas</li>
-        <li class="gamma-parrafo">Población objetivo</li>
+        <li class="gamma-parrafo">Horas Dictadas</li>
+        <li class="gamma-parrafo">N. Trabajadores Invitados</li>
     </ul>
-    <p class="gamma-parrafo">
-        Nota: Las capacitaciones no planeadas deberán registrarse de la misma forma, cumpliendo con estos parámetros.
-    </p>
+    <p class="gamma-parrafo">Nota: Las capacitaciones no planeadas deberán registrarse de la misma forma cumpliendo con los parámetros descritos anteriormente.</p>
 
     <div class="beta-subtitulo">7.2. Ejecución</div>
     <p class="gamma-parrafo">
-        El responsable de la capacitación presentará la propuesta al administrador de la copropiedad, vigía SST y/o consejo de administración para su verificación. Si se requiere un ente externo, se solicitará su revisión previa. Todos los asistentes deberán ser registrados en el formato FT-SST-006, junto con una evaluación del conocimiento.
+        El responsable de la capacitación presentará la propuesta al encargado de Seguridad y Salud en el Trabajo para verificar su contenido. Si es necesario, se solicitará la revisión previa de un ente externo. Todos los asistentes serán registrados en el formato correspondiente.
     </p>
 
     <div class="beta-subtitulo">7.3. Registro de asistencia y resultado de evaluaciones</div>
     <p class="gamma-parrafo">
-        El líder de la actividad recopilará los formatos y calificará las evaluaciones, que serán archivadas en el sistema del SG-SST. Se analizarán:
+        El líder de la actividad recopilará los formatos y procederá a calificar las evaluaciones si han sido evaluados los conocimientos competencias adquiridas, y todo se archivará en los medios que la empresa determine, bien sea físico o digital.
     </p>
-    <ul class="delta-lista">
-        <li class="gamma-parrafo">N. de personas asistentes</li>
-        <li class="gamma-parrafo">Promedio de calificaciones</li>
-    </ul>
 
     <div class="beta-subtitulo">7.4. Etapa de seguimiento</div>
     <p class="gamma-parrafo">
-        Se identificarán oportunidades de mejora y se asegurarán altos niveles de comprensión. Rangos de calificación: &lt; 70 (Reprobó), &gt;= 70 (Aprobó). Cobertura mínima aceptable: 60% de asistencia.
+        Esta etapa tiene como objetivo identificar oportunidades de mejora y asegurar el entendimiento de los temas tratados. Los rangos de calificación son: &lt; 70 Reprobó, &gt;= 70 Aprobó. Se busca asegurar una cobertura mínima del 60% de la población invitada.
     </p>
 
     <div class="beta-subtitulo">7.5. Indicadores</div>
     <ul class="delta-lista">
-        <li class="gamma-parrafo"><strong>Cumplimiento de capacitaciones:</strong> N° capacitaciones realizadas / N° programadas x 100.</li>
-        <li class="gamma-parrafo"><strong>Cobertura de capacitaciones:</strong> N° asistentes / N° invitados x 100.</li>
+        <li class="gamma-parrafo"><strong>Cumplimiento de capacitaciones:</strong> N° de capacitaciones realizadas / N° de capacitaciones programadas X 100.</li>
+        <li class="gamma-parrafo"><strong>Cobertura de capacitaciones:</strong> N° de funcionarios que asistieron / N° de funcionarios invitados X 100.</li>
     </ul>
 
 
-    <footer>
-        <h2>Historial de Versiones</h2>
-        <style>
-            footer table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-
-            footer table th,
-            footer table td {
-                border: 1px solid #ddd;
-                text-align: center;
-                vertical-align: middle;
-                padding: 8px;
-                word-wrap: break-word;
-            }
-
-            footer table th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
-
-            footer table tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-
-            footer table tr:hover {
-                background-color: #f1f1f1;
-            }
-
-            /* Ajuste del ancho de las columnas */
-            footer table th:nth-child(5),
-            footer table td:nth-child(5) {
-                width: 35%;
-                /* Más ancho para la columna Observaciones */
-            }
-
-            footer table th:nth-child(1),
-            footer table td:nth-child(1) {
-                width: 10%;
-                /* Más estrecho para la columna Versión */
-            }
-
-            footer table th:nth-child(2),
-            footer table td:nth-child(2),
-            footer table th:nth-child(3),
-            footer table td:nth-child(3),
-            footer table th:nth-child(4),
-            footer table td:nth-child(4) {
-                width: 15%;
-                /* Ancho uniforme para las demás columnas */
-            }
-        </style>
-        <table>
+<footer>
+    <h2>Historial de Versiones</h2>
+    <style>
+        footer table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        footer table th, footer table td {
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        footer table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        footer table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        footer table tr:hover {
+            background-color: #f1f1f1;
+        }
+        /* Ajuste del ancho de las columnas */
+        footer table th:nth-child(5),
+        footer table td:nth-child(5) {
+            width: 35%; /* Más ancho para la columna Observaciones */
+        }
+        footer table th:nth-child(1),
+        footer table td:nth-child(1) {
+            width: 10%; /* Más estrecho para la columna Versión */
+        }
+        footer table th:nth-child(2),
+        footer table td:nth-child(2),
+        footer table th:nth-child(3),
+        footer table td:nth-child(3),
+        footer table th:nth-child(4),
+        footer table td:nth-child(4) {
+            width: 15%; /* Ancho uniforme para las demás columnas */
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Versión</th>
+            <th>Tipo de Documento</th>
+            <th>Acrónimo</th>
+            <th>Fecha de Creación</th>
+            <th>Observaciones</th>
+        </tr>
+        <?php foreach ($allVersions as $version): ?>
             <tr>
-                <th>Versión</th>
-                <th>Tipo de Documento</th>
-                <th>Acrónimo</th>
-                <th>Fecha de Creación</th>
-                <th>Observaciones</th>
+                <td><?= $version['version_number'] ?></td>
+                <td><?= $version['document_type'] ?></td>
+                <td><?= $version['acronym'] ?></td>
+                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                <td><?= $version['change_control'] ?></td>
             </tr>
-            <?php foreach ($allVersions as $version): ?>
-                <tr>
-                    <td><?= $version['version_number'] ?></td>
-                    <td><?= $version['document_type'] ?></td>
-                    <td><?= $version['acronym'] ?></td>
-                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                    <td><?= $version['change_control'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    </footer>
+        <?php endforeach; ?>
+    </table>
+</footer>
 
     <br>
 
-    <!--  <div>
+   <!--  <div>
         <a href="<?= base_url('/generatePdf_prgCapacitacion') ?>" target="_blank">
             <button type="button">PDF</button>
         </a>

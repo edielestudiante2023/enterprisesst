@@ -193,7 +193,7 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
     <div class="gamma-container">
         <h3>OBJETIVO</h3>
         <p class="gamma-paragraph">
-            Desarrollar auditorías a los procesos, procedimientos, programas del Sistema de gestión de Seguridad y salud en el Trabajo, con el fin de determinar su estado dentro del Sistema de Control Interno de <?= $client['nombre_cliente'] ?>, bajo la Planeación y Gestión por el mejoramiento continuo de los mismos.
+            Desarrollar auditorías a los procesos, procedimientos, programas del Sistema de gestión de Seguridad y salud en el Trabajo, con el fin de determinar su estado dentro del Sistema de Control Interno de COMPAÑIA INTERAMERICANA DE FIANZAS S.A.S, bajo la Planeación y Gestión por el mejoramiento continuo de los mismos.
         </p>
 
         <h3>ALCANCE</h3>

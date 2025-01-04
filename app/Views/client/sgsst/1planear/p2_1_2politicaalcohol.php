@@ -162,36 +162,36 @@
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
                     <?php
-                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-                    ?>
+setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+?>
 
-                    Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
                 </td>
             </tr>
         </table>
     </div>
 
-    <div class="alpha-title">POLÍTICA NO CONSUMO DE ALCOHOL, TABACO Y DROGAS</div>
+    <div class="alpha-title">Política de No Alcohol, Drogas ni Tabaco</div>
 
     <p class="beta-parrafo">
-        Con el objetivo de fomentar un entorno libre de alcohol, drogas y tabaco en las instalaciones de <strong><?= $client['nombre_cliente'] ?></strong>, se ha formulado una política destinada a promover el bienestar de contratistas, trabajadores, residentes y proveedores.
+        <strong><?= $client['nombre_cliente'] ?></strong> ha establecido una política de control para el alcohol, tabaco y drogas con el objetivo de prevenir, mejorar y conservar el bienestar de los trabajadores y su calidad de vida. Adicionalmente, esta política busca garantizar un adecuado desempeño, competitividad del personal y de la institución, así como fomentar estilos de vida saludables y el autocuidado.
     </p>
 
     <p class="beta-parrafo">
-        <strong><?= $client['nombre_cliente'] ?></strong> mantiene la prohibición del consumo, posesión y comercialización de bebidas alcohólicas, drogas ilícitas y tabaco por parte de contratistas y proveedores en cualquier área o durante la ejecución de servicios para la copropiedad.
+        Es política de <strong><?= $client['nombre_cliente'] ?></strong> mantener los lugares de trabajo en óptimas condiciones que permitan alcanzar los más altos estándares de seguridad y bienestar. La empresa es consciente de que el consumo de alcohol, el abuso de tabaco y el uso de sustancias psicoactivas por parte de los funcionarios tiene efectos adversos considerables en la salud y en la capacidad de ejecución de sus labores, afectando tanto a la empresa como a su integridad. Por lo tanto, la indebida utilización de medicamentos no formulados; la posesión y distribución de sustancias psicoactivas; y la posesión, uso y distribución de bebidas alcohólicas están estrictamente prohibidos durante el horario laboral y dentro de las instalaciones.
     </p>
 
     <p class="beta-parrafo">
-        Con el propósito de garantizar el cumplimiento de esta política, <strong><?= $client['nombre_cliente'] ?></strong> se reserva el derecho de solicitar pruebas de alcoholemia y/o consumo de drogas ilícitas a contratistas o proveedores en situaciones en las que estén involucrados en accidentes y/o presenten características o actitudes sospechosas. El contratista o proveedor acepta someterse a estas pruebas necesarias para esclarecer presuntos indicios de abuso de drogas y/o alcohol en el desempeño de su personal asignado a la copropiedad.
+        Asimismo, se prohíbe el uso de tabaco en las instalaciones de <strong><?= $client['nombre_cliente'] ?></strong> y en lugares no autorizados.
     </p>
 
     <p class="beta-parrafo">
-        La confirmación del uso, transporte, distribución y venta de bebidas alcohólicas o drogas por parte de contratistas o proveedores será motivo de aplicación de causales de terminación de contrato por justa causa.
+        La violación a esta política se considera una falta grave, y en consecuencia, la empresa adoptará medidas disciplinarias, inclusive la terminación del contrato de trabajo por justa causa, conforme al Código Sustantivo del Trabajo (artículo 62, numeral 12) y como se establece en el reglamento interno de trabajo. Por lo anterior, se ha designado el recurso humano necesario para dar cumplimiento a esta política, y se establecen responsabilidades para todos los trabajadores, quienes deberán participar en los programas de capacitación y sensibilización.
     </p>
 
     <p class="beta-parrafo">
-        Se prohíbe expresamente presentarse en la copropiedad para llevar a cabo cualquier forma de contrato comercial o servicio bajo la influencia de alcohol y/o sustancias psicoactivas ilegales.
+        Esta política aplica a todos los trabajadores, contratistas y visitantes de <strong><?= $client['nombre_cliente'] ?></strong>. Por este motivo, no se permitirá el ingreso a las instalaciones de la empresa a personas que se encuentren en estado de embriaguez o que hayan ingerido cualquier tipo de sustancias psicoactivas.
     </p>
 
     <div class="signature-container">
@@ -203,83 +203,72 @@
 
     </div>
 
-    <footer>
-        <h2>Historial de Versiones</h2>
-        <style>
-            footer table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-
-            footer table th,
-            footer table td {
-                border: 1px solid #ddd;
-                text-align: center;
-                vertical-align: middle;
-                padding: 8px;
-                word-wrap: break-word;
-            }
-
-            footer table th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
-
-            footer table tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-
-            footer table tr:hover {
-                background-color: #f1f1f1;
-            }
-
-            /* Ajuste del ancho de las columnas */
-            footer table th:nth-child(5),
-            footer table td:nth-child(5) {
-                width: 35%;
-                /* Más ancho para la columna Observaciones */
-            }
-
-            footer table th:nth-child(1),
-            footer table td:nth-child(1) {
-                width: 10%;
-                /* Más estrecho para la columna Versión */
-            }
-
-            footer table th:nth-child(2),
-            footer table td:nth-child(2),
-            footer table th:nth-child(3),
-            footer table td:nth-child(3),
-            footer table th:nth-child(4),
-            footer table td:nth-child(4) {
-                width: 15%;
-                /* Ancho uniforme para las demás columnas */
-            }
-        </style>
-        <table>
+<footer>
+    <h2>Historial de Versiones</h2>
+    <style>
+        footer table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        footer table th, footer table td {
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        footer table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        footer table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        footer table tr:hover {
+            background-color: #f1f1f1;
+        }
+        /* Ajuste del ancho de las columnas */
+        footer table th:nth-child(5),
+        footer table td:nth-child(5) {
+            width: 35%; /* Más ancho para la columna Observaciones */
+        }
+        footer table th:nth-child(1),
+        footer table td:nth-child(1) {
+            width: 10%; /* Más estrecho para la columna Versión */
+        }
+        footer table th:nth-child(2),
+        footer table td:nth-child(2),
+        footer table th:nth-child(3),
+        footer table td:nth-child(3),
+        footer table th:nth-child(4),
+        footer table td:nth-child(4) {
+            width: 15%; /* Ancho uniforme para las demás columnas */
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Versión</th>
+            <th>Tipo de Documento</th>
+            <th>Acrónimo</th>
+            <th>Fecha de Creación</th>
+            <th>Observaciones</th>
+        </tr>
+        <?php foreach ($allVersions as $version): ?>
             <tr>
-                <th>Versión</th>
-                <th>Tipo de Documento</th>
-                <th>Acrónimo</th>
-                <th>Fecha de Creación</th>
-                <th>Observaciones</th>
+                <td><?= $version['version_number'] ?></td>
+                <td><?= $version['document_type'] ?></td>
+                <td><?= $version['acronym'] ?></td>
+                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                <td><?= $version['change_control'] ?></td>
             </tr>
-            <?php foreach ($allVersions as $version): ?>
-                <tr>
-                    <td><?= $version['version_number'] ?></td>
-                    <td><?= $version['document_type'] ?></td>
-                    <td><?= $version['acronym'] ?></td>
-                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                    <td><?= $version['change_control'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    </footer>
+        <?php endforeach; ?>
+    </table>
+</footer>
 
     <br>
 
-    <!--  <div>
+   <!--  <div>
         <a href="<?= base_url('/generatePdf_politicaAlcohol') ?>" target="_blank">
             <button type="button">PDF</button>
         </a>

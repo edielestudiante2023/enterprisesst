@@ -162,41 +162,32 @@
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
                     <?php
-                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-                    ?>
+setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+?>
 
-                    Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
                 </td>
             </tr>
         </table>
     </div>
 
-    <div class="alpha-title">OBJETIVOS DEL SISTEMA DE GESTIÓN DEL SEGURIDAD Y SALUD EN EL TRABAJO</div>
+    <div class="alpha-title">Objetivos del Sistema de Gestión de Seguridad y Salud en el Trabajo</div>
 
     <p class="beta-parrafo">
-        <strong><?= $client['nombre_cliente'] ?></strong>, con el propósito de garantizar el cumplimiento de los planes de seguridad y salud, tanto para contratistas y proveedores que desempeñan sus funciones en nuestro conjunto residencial, como para otras personas expuestas a riesgos o accidentes, emite la presente declaración de objetivos. Se considera este enfoque como un núcleo fundamental para el desarrollo humano y laboral.
-    </p>
-
-    <p class="beta-parrafo">
-        Esta prioridad se encuentra alineada con los estándares establecidos por la legislación colombiana en materia de Seguridad y Salud en el Trabajo, abarcando diversos aspectos relacionados con recursos, políticas y objetivos en esta área.
-    </p>
-
-    <p class="beta-parrafo">
-        Con el firme propósito de cumplir con este compromiso, nos hemos planteado los siguientes objetivos estratégicos:
+        La prioridad de <strong><?= $client['nombre_cliente'] ?></strong> es conservar, preservar y mejorar la seguridad y la salud de los trabajadores que prestan su labor a nuestra organización, como foco de desarrollo humano y laboral, cumpliendo con los parámetros determinados por la legislación colombiana en materia de Seguridad y Salud en el trabajo y en todo lo referente a recursos, políticas y objetivos del área de Seguridad y Salud en el trabajo.
     </p>
 
     <ul class="delta-lista">
-        <li class="beta-parrafo">Diseñar un sistema de gestión en seguridad y salud en el trabajo que promueva el bienestar de acuerdo con la normatividad vigente. Este sistema facilitará el control de los factores de riesgo inherentes al personal asignado por nuestros proveedores y contratistas, con el objetivo de prevenir accidentes y enfermedades laborales que puedan resultar en incapacidades, invalidez o incluso pérdida de vidas.</li>
-        <li class="beta-parrafo">Identificar los factores de riesgo presentes en la copropiedad y aplicar medidas de control para mejorar las condiciones de trabajo y la salud del personal asignado por nuestros proveedores y contratistas.</li>
-        <li class="beta-parrafo">Planificar, organizar y llevar a cabo eventos de instrucción y capacitación que sirvan como elementos integrales para fortalecer competencias en la prevención del riesgo, fomentando la participación de proveedores y contratistas.</li>
-        <li class="beta-parrafo">Diseñar e implementar un plan de emergencias para estar preparados ante eventos inesperados que puedan poner en riesgo a las personas o la propiedad, capacitando a la brigada de emergencia.</li>
-        <li class="beta-parrafo">Garantizar que todas las acciones y estrategias definidas en el plan de trabajo del Programa de Seguridad y Salud en el Trabajo se lleven a cabo de manera completa y oportuna.</li>
-        <li class="beta-parrafo">Implementar mecanismos de supervisión para asegurar el desarrollo adecuado de las actividades programadas, verificando su conformidad con los lineamientos establecidos.</li>
-        <li class="beta-parrafo">Identificar oportunidades de mejora en la ejecución del programa, realizando ajustes conforme sea necesario para optimizar su eficacia y adaptarlo a las condiciones cambiantes del entorno laboral.</li>
-        <li class="beta-parrafo">Monitorizar de manera constante los indicadores de gestión asociados al Programa de Seguridad y Salud en el Trabajo, asegurando que se mantengan en niveles elevados de cumplimiento y proponiendo acciones correctivas en caso de desviaciones.</li>
+        <li class="beta-parrafo">Identificar los Factores de Riesgo existentes con el fin de poner en práctica medidas de control que mejoren las condiciones de trabajo y salud.</li>
+        <li class="beta-parrafo">Promover las normas internas de Seguridad y Salud en el trabajo y el Reglamento de Higiene y Seguridad Industrial, para facilitar el control de los factores de riesgo y prevenir la aparición de accidentes y enfermedades laborales, que produzcan incapacidades, invalidez y/o muerte.</li>
+        <li class="beta-parrafo">Crear estándares de seguridad y vigilancia que ayuden a evitar accidentes de trabajo y enfermedades laborales.</li>
+        <li class="beta-parrafo">Planear, organizar y desarrollar eventos de instrucción y capacitación que sirvan de elementos de formación integral en el trabajo y fomenten la participación de los trabajadores en general.</li>
+        <li class="beta-parrafo">Desarrollar actividades de prevención de enfermedades laborales y accidentes de trabajo apoyados en un prestador de servicios externo, coordinando y optimizando los recursos y servicios dispuestos por ARL.</li>
+        <li class="beta-parrafo">Ubicar y mantener al trabajador según sus aptitudes físicas y psicológicas, en ocupaciones que pueda desempeñar eficientemente sin poner en peligro su salud o la de sus compañeros.</li>
+        <li class="beta-parrafo">Procurar una adecuada y oportuna atención médica en caso de accidente de trabajo o enfermedad profesional.</li>
+        <li class="beta-parrafo">Conformar, fomentar y apoyar los grupos de apoyo del Programa de Seguridad y Salud en el trabajo: Comité Paritario de Seguridad y Salud en el Trabajo, Comité de Convivencia y Brigada de Emergencia, los cuales liderarán el desarrollo y adecuado cumplimiento de las metas establecidas por la empresa, en beneficio de la salud de los trabajadores.</li>
     </ul>
-
 
     <div class="signature-container">
         <div class="signature">
@@ -207,83 +198,72 @@
 
     </div>
 
-    <footer>
-        <h2>Historial de Versiones</h2>
-        <style>
-            footer table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed;
-            }
-
-            footer table th,
-            footer table td {
-                border: 1px solid #ddd;
-                text-align: center;
-                vertical-align: middle;
-                padding: 8px;
-                word-wrap: break-word;
-            }
-
-            footer table th {
-                background-color: #f4f4f4;
-                font-weight: bold;
-            }
-
-            footer table tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-
-            footer table tr:hover {
-                background-color: #f1f1f1;
-            }
-
-            /* Ajuste del ancho de las columnas */
-            footer table th:nth-child(5),
-            footer table td:nth-child(5) {
-                width: 35%;
-                /* Más ancho para la columna Observaciones */
-            }
-
-            footer table th:nth-child(1),
-            footer table td:nth-child(1) {
-                width: 10%;
-                /* Más estrecho para la columna Versión */
-            }
-
-            footer table th:nth-child(2),
-            footer table td:nth-child(2),
-            footer table th:nth-child(3),
-            footer table td:nth-child(3),
-            footer table th:nth-child(4),
-            footer table td:nth-child(4) {
-                width: 15%;
-                /* Ancho uniforme para las demás columnas */
-            }
-        </style>
-        <table>
+<footer>
+    <h2>Historial de Versiones</h2>
+    <style>
+        footer table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        footer table th, footer table td {
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        footer table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        footer table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        footer table tr:hover {
+            background-color: #f1f1f1;
+        }
+        /* Ajuste del ancho de las columnas */
+        footer table th:nth-child(5),
+        footer table td:nth-child(5) {
+            width: 35%; /* Más ancho para la columna Observaciones */
+        }
+        footer table th:nth-child(1),
+        footer table td:nth-child(1) {
+            width: 10%; /* Más estrecho para la columna Versión */
+        }
+        footer table th:nth-child(2),
+        footer table td:nth-child(2),
+        footer table th:nth-child(3),
+        footer table td:nth-child(3),
+        footer table th:nth-child(4),
+        footer table td:nth-child(4) {
+            width: 15%; /* Ancho uniforme para las demás columnas */
+        }
+    </style>
+    <table>
+        <tr>
+            <th>Versión</th>
+            <th>Tipo de Documento</th>
+            <th>Acrónimo</th>
+            <th>Fecha de Creación</th>
+            <th>Observaciones</th>
+        </tr>
+        <?php foreach ($allVersions as $version): ?>
             <tr>
-                <th>Versión</th>
-                <th>Tipo de Documento</th>
-                <th>Acrónimo</th>
-                <th>Fecha de Creación</th>
-                <th>Observaciones</th>
+                <td><?= $version['version_number'] ?></td>
+                <td><?= $version['document_type'] ?></td>
+                <td><?= $version['acronym'] ?></td>
+                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                <td><?= $version['change_control'] ?></td>
             </tr>
-            <?php foreach ($allVersions as $version): ?>
-                <tr>
-                    <td><?= $version['version_number'] ?></td>
-                    <td><?= $version['document_type'] ?></td>
-                    <td><?= $version['acronym'] ?></td>
-                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                    <td><?= $version['change_control'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    </footer>
+        <?php endforeach; ?>
+    </table>
+</footer>
 
     <br>
 
-    <!--     <div>
+<!--     <div>
         <a href="<?= base_url('/generatePdf_oBjetivos') ?>" target="_blank">
             <button type="button">PDF</button>
         </a>

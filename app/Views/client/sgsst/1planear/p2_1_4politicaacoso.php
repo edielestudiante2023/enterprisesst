@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2.1.6 Reglamento de Higiene y Seguridad Industrial</title>
+    <title>2.1.4 Política para la Prevención y Gestión del Acoso Laboral</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -121,6 +121,9 @@
         }
 
 
+
+
+
         .alpha-title {
             font-size: 1.5em;
             font-weight: bold;
@@ -131,11 +134,6 @@
         .beta-parrafo {
             margin-bottom: 10px;
             font-size: 1.1em;
-            text-align: justify;
-        }
-
-        .gamma-section {
-            margin-bottom: 20px;
             text-align: justify;
         }
 
@@ -178,94 +176,23 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
         </table>
     </div>
 
-    <div class="alpha-title">Reglamento de Higiene y Seguridad Industrial</div> <br>
+    <div class="alpha-title">Política de Prevención de Acoso Laboral</div>
 
-    <div class="gamma-section">
-        <table width=100% border="1" cellpadding="10" cellspacing="0">
-            <tr>
-                <td><strong>EMPRESA:</strong></td>
-                <td><strong><?= $client['nombre_cliente'] ?></strong></td>
-            </tr>
-            <tr>
-                <td><strong>IDENTIFICACION:</strong></td>
-                <td><?= $client['nit_cliente'] ?></td>
-            </tr>
-            <tr>
-                <td><strong>DIRECCION:</strong></td>
-                <td><?= $client['direccion_cliente'] ?></td>
-            </tr>
-            <tr>
-                <td><strong>TELEFONO:</strong></td>
-                <td><?= $client['telefono_1_cliente'] ?></td>
-            </tr>
-            <tr>
-                <td><strong>CIUDAD:</strong></td>
-                <td><?= $client['ciudad_cliente'] ?></td>
-            </tr>
-            <tr>
-                <td><strong>SUCURSALES:</strong></td>
-                <td><?= $clientPolicy['policy_content'] ?></td>
-            </tr>
-            <tr>
-                <td><strong>CODIGO DE LA ACTIVIDAD ECONOMICA:</strong></td>
-                <td><?= $client['codigo_actividad_economica'] ?></td>
-            </tr>
-        </table>
+    <p class="beta-parrafo">
+        <strong><?= $client['nombre_cliente'] ?></strong>, buscando promover y mantener un excelente ambiente de convivencia laboral, para fomentar relaciones interpersonales positivas entre todos los trabajadores, se compromete a adoptar medidas para prevenir, corregir y sancionar el acoso laboral y cualquier abuso en el marco de las relaciones de trabajo.
+    </p>
 
-    </div>
+    <p class="beta-parrafo">
+        Esta política está dirigida a todos los trabajadores de la empresa y reafirma el compromiso que deben tener frente a las actividades que promuevan el respeto y la sinergia laboral, reflejándose desde la alta dirección en el día a día.
+    </p>
 
-    <div class="gamma-section">
-        <p class="beta-parrafo"><strong>ARTÍCULO PRIMERO:</strong> <strong><?= $client['nombre_cliente'] ?></strong> se compromete a dar cumplimiento a las disposiciones legales vigentes, tendientes a garantizar los mecanismos que aseguren una oportuna y adecuada prevención de los accidentes de trabajo y enfermedades profesionales, de conformidad con el Código Sustantivo del Trabajo y demás normas relacionadas.</p>
-    </div>
+    <p class="beta-parrafo">
+        <strong><?= $client['nombre_cliente'] ?></strong> establece el cumplimiento de las obligaciones introducidas en la Ley 1010 de 2006 y cualquier otra reglamentación legal que busque impedir conductas de acoso laboral, tales como: maltrato, persecución, discriminación, entorpecimiento, inequidad y/o desprotección laboral. El incumplimiento de esta política dará lugar a los procesos investigativos y sancionatorios que enmarca la ley.
+    </p>
 
-    <div class="gamma-section">
-        <p class="beta-parrafo"><strong>ARTÍCULO SEGUNDO:</strong> <strong><?= $client['nombre_cliente'] ?></strong> se obliga a promover y garantizar la constitución y funcionamiento del Comité Paritario de Salud Ocupacional, de acuerdo con las disposiciones legales.</p>
-    </div>
-
-    <div class="gamma-section">
-        <p class="beta-parrafo"><strong>ARTÍCULO TERCERO:</strong> <strong><?= $client['nombre_cliente'] ?></strong> se compromete a destinar los recursos necesarios para desarrollar actividades permanentes en conformidad con el Sistema de Gestión en seguridad y salud en el trabajo, que contempla, entre otros:</p>
-        <ul class="delta-lista">
-            <li class="beta-parrafo">Subprograma de Medicina Preventiva y del Trabajo, orientado a promover y mantener el más alto grado de bienestar físico, mental y social de los trabajadores.</li>
-            <li class="beta-parrafo">Subprograma de Higiene y Seguridad Industrial, enfocado en establecer las mejores condiciones de saneamiento básico y eliminar o controlar los factores de riesgo en los lugares de trabajo.</li>
-        </ul>
-    </div>
-
-    <div class="gamma-section">
-        <p class="beta-parrafo"><strong>ARTÍCULO CUARTO:</strong> Los riesgos existentes en <strong><?= $client['nombre_cliente'] ?></strong> están constituidos principalmente por:</p>
-        <ul class="delta-lista">
-            <li class="beta-parrafo"><strong>Riesgo Biomecánico:</strong> Posturas prolongadas, cargas físicas, esfuerzo repetitivo, entre otros.</li>
-            <li class="beta-parrafo"><strong>Riesgo Biológico:</strong> Parásitos, hongos, bacterias, virus.</li>
-            <li class="beta-parrafo"><strong>Riesgo Público:</strong> Asaltos, desórdenes públicos, violencia.</li>
-            <li class="beta-parrafo"><strong>Riesgo Mecánico:</strong> Manipulación de máquinas y herramientas.</li>
-            <li class="beta-parrafo"><strong>Riesgo Locativo:</strong> Almacenamiento, superficies de trabajo, condiciones de orden y aseo.</li>
-            <li class="beta-parrafo"><strong>Riesgo Eléctrico:</strong> Contacto directo e indirecto con cableado de media y baja tensión.</li>
-            <li class="beta-parrafo"><strong>Riesgos Naturales:</strong> Precipitaciones, inundaciones, terremotos.</li>
-            <li class="beta-parrafo"><strong>Riesgo Físico:</strong> Ruido, iluminación, radiaciones no ionizantes.</li>
-            <li class="beta-parrafo"><strong>Riesgo Psicosocial:</strong> Exceso de responsabilidades, trabajo bajo presión, problemas laborales.</li>
-            <li class="beta-parrafo"><strong>Riesgo Químico:</strong> Líquidos, fibras, material particulado.</li>
-            <li class="beta-parrafo"><strong>Riesgo de Tránsito:</strong> Colisiones, volcamientos, atropellamientos.</li>
-            <li class="beta-parrafo"><strong>Tareas de Alto Riesgo:</strong> Trabajo en alturas, trabajos en caliente, incendios, explosiones.</li>
-        </ul>
-        <p class="beta-parrafo">PARÁGRAFO: Para evitar accidentes de trabajo o enfermedades laborales, <strong><?= $client['nombre_cliente'] ?></strong> ejerce control en la fuente, el medio transmisor o el trabajador, conforme a lo estipulado en su Programa de Salud Ocupacional.</p>
-    </div>
-
-    <div class="gamma-section">
-        <p class="beta-parrafo"><strong>ARTÍCULO QUINTO:</strong> <strong><?= $client['nombre_cliente'] ?></strong> y sus trabajadores darán estricto cumplimiento a las disposiciones legales, normas técnicas e internas relacionadas con la Seguridad Industrial y Salud Ocupacional.</p>
-    </div>
-
-    <div class="gamma-section">
-        <p class="beta-parrafo"><strong>ARTÍCULO SEXTO:</strong> <strong><?= $client['nombre_cliente'] ?></strong> ha implantado un proceso de inducción para capacitar a los trabajadores en las medidas de prevención y seguridad exigidas en su ambiente laboral.</p>
-    </div>
-
-    <div class="gamma-section">
-        <p class="beta-parrafo"><strong>ARTÍCULO SÉPTIMO:</strong> Este Reglamento permanecerá exhibido en al menos dos lugares visibles en los locales de trabajo, junto con la Resolución Aprobatoria, y su contenido se dará a conocer a todos los trabajadores al momento de su ingreso.</p>
-    </div>
-
-    <div class="gamma-section">
-        <p class="beta-parrafo"><strong>ARTÍCULO OCTAVO:</strong> El presente Reglamento entra en vigor a partir de la aprobación del Ministerio de la Protección Social y se revisará anualmente.</p>
-        <p class="beta-parrafo">Fecha de publicación: <p>FECHA: <strong><?= strftime('%d de %B de %Y', strtotime($client['fecha_ingreso'])); ?></strong></p>
-        <p class="beta-parrafo">Publíquese, comuníquese y cúmplase.</p>
-    </div>
+    <p class="beta-parrafo">
+        La Gerencia resuelve que la presente política sea revisada periódicamente, difundida e implementada en todos los niveles de la organización.
+    </p>
 
     <div class="signature-container">
         <div class="signature">
@@ -342,11 +269,11 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
     <br>
 
     <!-- <div>
-        <a href="<?= base_url('/generatePdf_regHigsegind') ?>" target="_blank">
+        <a href="<?= base_url('/generatePdf_politicaAcoso') ?>" target="_blank">
             <button type="button">PDF</button>
         </a>
-    </div>
- -->
+    </div> -->
+
 </body>
 
 </html>
