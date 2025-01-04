@@ -91,7 +91,7 @@
     <div class="login-box">
         <div style="text-align: center;">
         <h2>Aplicativo Enterprisesst</h2>
-        <h4>Inicio de Sesión Propiedad Horizontal </h4>
+        <h4>Inicio de Sesión Empresas </h4>
         </div>
 
         <br>
