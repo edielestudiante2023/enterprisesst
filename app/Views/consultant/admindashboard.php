@@ -8,28 +8,22 @@
     <!-- Favicon -->
     <link rel="icon" href="<?= base_url('path/to/favicon.ico') ?>" type="image/x-icon">
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" defer>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet" defer>
-    <!-- DataTables Buttons CSS -->
-    <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet" defer>
+    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" defer>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body {
-            background-color: #ffffff;
-            color: #1c2437;
+            background-color: #f8f9fa; /* Fondo claro */
+            color: #333333; /* Texto oscuro para mejor legibilidad */
             font-family: Arial, sans-serif;
-        }
-
-        a:visited {
-            color: #bd9751;
-            /* Color del enlace visitado */
         }
 
         .navbar {
             background-color: #ffffff;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #dee2e6;
+            padding: 15px 0; /* Ajuste de padding para un navbar más amplio */
         }
 
         .navbar-brand img {
@@ -46,27 +40,27 @@
         }
 
         .welcome-banner {
-            background-color: #bd9751;
-            border-left: 5px solid #1c2437;
-            color: #ffffff;
+            background-color: #e9ecef; /* Gris claro */
+            border-left: 5px solid #0d6efd; /* Azul corporativo */
+            color: #333333;
         }
 
         .welcome-banner h3 {
-            color: #ffffff;
+            color: #0d6efd; /* Azul corporativo */
         }
 
         .table th {
-            background-color: #bd9751;
+            background-color: #0d6efd; /* Azul corporativo */
             color: #ffffff;
         }
 
         .table td a {
-            color: #1c2437;
+            color: #0d6efd;
             text-decoration: none;
         }
 
         .table td a:hover {
-            color: #bd9751;
+            color: #0b5ed7;
             text-decoration: underline;
         }
 
@@ -75,74 +69,59 @@
             margin-top: 20px;
         }
 
-        /* Estilo para truncar el texto en celdas específicas */
-        .enlace-col {
-            max-width: 200px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Estilo para los select de filtros en el pie de la tabla */
-        tfoot th {
-            padding: 8px 10px;
-            background-color: #f8f9fa;
-            color: #1c2437;
-        }
-
         /* Botones personalizados */
         .btn-outline-secondary {
-            border-color: #bd9751;
-            color: #bd9751;
+            border-color: #6c757d;
+            color: #6c757d;
         }
 
         .btn-outline-secondary:hover {
-            background-color: #bd9751;
+            background-color: #6c757d;
             color: #ffffff;
         }
 
         .btn-primary-custom {
-            background-color: #1c2437;
-            border-color: #1c2437;
+            background-color: #0d6efd;
+            border-color: #0d6efd;
             color: #ffffff;
         }
 
         .btn-primary-custom:hover {
             background-color: #ffffff;
-            color: #1c2437;
-            border-color: #1c2437;
+            color: #0d6efd;
+            border-color: #0d6efd;
         }
 
         .btn-danger-custom {
-            background-color: #bd9751;
-            border-color: #bd9751;
+            background-color: #dc3545; /* Rojo corporativo */
+            border-color: #dc3545;
             color: #ffffff;
         }
 
         .btn-danger-custom:hover {
             background-color: #ffffff;
-            color: #bd9751;
-            border-color: #bd9751;
+            color: #dc3545;
+            border-color: #dc3545;
         }
 
         .footer {
-            background-color: #f8f9fa;
-            color: #1c2437;
+            background-color: #ffffff;
+            color: #333333;
         }
 
         .footer a {
-            color: #bd9751;
+            color: #0d6efd;
             text-decoration: none;
         }
 
         .footer a:hover {
-            color: #1c2437;
+            color: #0b5ed7;
             text-decoration: underline;
         }
 
         /* Estilo para el espacio debajo del navbar */
         .navbar-spacing {
-            height: 160px;
+            height: 100px; /* Ajuste según la altura real del navbar */
         }
 
         /* Estilos Responsivos */
@@ -155,6 +134,31 @@
             .header-logos img {
                 margin-bottom: 10px;
             }
+        }
+
+        /* Estilo para resaltar la fila */
+        .highlighted {
+            background-color: #cce5ff !important; /* Azul claro */
+            transition: background-color 0.5s ease;
+        }
+
+        /* Estilo para la casilla de búsqueda personalizada */
+        .custom-search {
+            margin-bottom: 15px;
+        }
+
+        /* Estilo para los select de filtros en el pie de la tabla */
+        tfoot th {
+            padding: 8px 10px;
+            background-color: #f8f9fa;
+        }
+
+        /* Ajuste para la longitud máxima de las celdas de descripción */
+        .description-col {
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
@@ -192,23 +196,21 @@
 
     <main class="container-fluid content">
         <div class="welcome-banner p-4 mb-4 rounded">
-            <h3 class="mb-3">¡Bienvenido al Dashboard de Administración de Cycloid Talent!</h3>
+            <h3 class="mb-3">¡Bienvenido al Dashboard de Administración en Empresas de Cycloid Talent!</h3>
             <p class="mt-3">Explora las diferentes secciones y aprovecha las herramientas disponibles para optimizar tu desempeño.</p>
+        </div>
+
+        <!-- Casilla de Búsqueda Personalizada -->
+        <div class="custom-search">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="wordSearch" class="form-control" placeholder="Buscar por palabra...">
+                <button class="btn btn-outline-secondary" id="clearWordSearch" type="button">Limpiar</button>
+            </div>
         </div>
 
         <!-- Tabla con DataTables -->
         <div class="table-responsive">
-            <!-- Botones para Exportar y Visibilidad de Columnas -->
-            <div class="mb-3 d-flex justify-content-between">
-                <div>
-                    <button id="clearState" class="btn btn-danger-custom btn-sm" aria-label="Restablecer Filtros">Restablecer Filtros</button>
-                    <button id="exportExcel" class="btn btn-primary-custom btn-sm ms-2" aria-label="Exportar a Excel">Exportar a Excel</button>
-                </div>
-                <div>
-                    <!-- Botón ColVis (Opcional si no se usa el botón integrado) -->
-                </div>
-            </div>
-
             <table id="consultorTable" class="table table-hover table-bordered">
                 <thead>
                     <tr>
@@ -226,254 +228,254 @@
                 </tfoot>
                 <tbody>
                     <!-- Capacitaciones y Evaluaciones -->
-                    <tr>
+                    <tr data-detail="Capacitaciones">
                         <td>Capacitaciones</td>
-                        <td>Accede a la lista de capacitaciones disponibles.</td>
+                        <td class="description-col">Accede a la lista de capacitaciones disponibles.</td>
                         <td>
                             <a href="<?= base_url('listCapacitaciones') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Capacitaciones">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Cronogramas de Capacitación">
                         <td>Cronogramas de Capacitación</td>
-                        <td>Accede a los cronogramas detallados de capacitaciones programadas.</td>
+                        <td class="description-col">Accede a los cronogramas detallados de capacitaciones programadas.</td>
                         <td>
                             <a href="<?= base_url('listcronogCapacitacion') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Cronogramas de Capacitación">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Evaluacion de Estándares Mínimos">
                         <td>Evaluacion de Estándares Mínimos</td>
-                        <td>Accede a la lista de evaluaciones realizadas y sus resultados.</td>
+                        <td class="description-col">Accede a la lista de evaluaciones realizadas y sus resultados.</td>
                         <td>
                             <a href="<?= base_url('listEvaluaciones') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Evaluaciones">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
 
                     <!-- Gestión de Clientes y Consultores -->
-                    <tr>
+                    <tr data-detail="Clientes">
                         <td>Clientes</td>
-                        <td>Consulta los detalles de los clientes registrados.</td>
+                        <td class="description-col">Consulta los detalles de los clientes registrados.</td>
                         <td>
                             <a href="<?= base_url('/listClients') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Clientes">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Consultores">
                         <td>Consultores</td>
-                        <td>Consulta la información de los consultores activos.</td>
+                        <td class="description-col">Consulta la información de los consultores activos.</td>
                         <td>
                             <a href="<?= base_url('/index.php/listConsultants') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Consultores">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
 
                     <!-- Documentación -->
-                    <tr>
+                    <tr data-detail="Cargue de PDF´S a clientes">
                         <td>Cargue de PDF´S a clientes</td>
-                        <td>Modulo de cargue de soportes de gestión</td>
+                        <td class="description-col">Módulo de cargue de soportes de gestión.</td>
                         <td>
                             <a href="<?= base_url('/reportList') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Cargue de PDF's">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Documentos y Matrices">
                         <td>Documentos y Matrices</td>
-                        <td>Consulta los tipos de documentos y matrices disponibles.</td>
+                        <td class="description-col">Consulta los tipos de documentos y matrices disponibles.</td>
                         <td>
                             <a href="<?= base_url('listReportTypes') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Documentos y Matrices">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Matrices">
                         <td>Matrices</td>
-                        <td>Matrices Interactivas de Gestión</td>
+                        <td class="description-col">Matrices Interactivas de Gestión.</td>
                         <td>
                             <a href="<?= base_url('matrices/list') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Matrices">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Looker Studio">
                         <td>Looker Studio</td>
-                        <td>Tableros de Indicadores del cliente</td>
+                        <td class="description-col">Tableros de Indicadores del cliente.</td>
                         <td>
                             <a href="<?= base_url('lookerstudio/list') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Looker Studio">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Versiones">
                         <td>Versiones</td>
-                        <td>Accede a la lista de versiones de los documentos generados.</td>
+                        <td class="description-col">Accede a la lista de versiones de los documentos generados.</td>
                         <td>
                             <a href="<?= base_url('listVersions') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Versiones">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Políticas">
                         <td>Políticas</td>
-                        <td>Consulta las políticas asociadas a la empresa.</td>
+                        <td class="description-col">Consulta las políticas asociadas a la empresa.</td>
                         <td>
                             <a href="<?= base_url('/listPolicies') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Políticas">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Tipos de Documentos">
                         <td>Tipos de Documentos</td>
-                        <td>Consulta los diferentes tipos de documentos configurados.</td>
+                        <td class="description-col">Consulta los diferentes tipos de documentos configurados.</td>
                         <td>
                             <a href="<?= base_url('/listPolicyTypes') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Tipos de Documentos">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
 
                     <!-- Indicadores y KPIs -->
-                    <tr>
+                    <tr data-detail="Indicadores de Clientes">
                         <td>Indicadores de Clientes</td>
-                        <td>Consulta los indicadores clave de desempeño para clientes.</td>
+                        <td class="description-col">Consulta los indicadores clave de desempeño para clientes.</td>
                         <td>
                             <a href="<?= base_url('listClientKpis') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Indicadores de Clientes">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Tipos de Indicadores y Significados">
                         <td>Tipos de Indicadores y Significados</td>
-                        <td>Accede a la lista de tipos de indicadores y sus significados.</td>
+                        <td class="description-col">Accede a la lista de tipos de indicadores y sus significados.</td>
                         <td>
                             <a href="<?= base_url('listKpiTypes') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Tipos de Indicadores y Significados">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Definiciones de Indicadores">
                         <td>Definiciones de Indicadores</td>
-                        <td>Consulta las definiciones y detalles de los indicadores utilizados.</td>
+                        <td class="description-col">Consulta las definiciones y detalles de los indicadores utilizados.</td>
                         <td>
                             <a href="<?= base_url('listKpiDefinitions') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Definiciones de Indicadores">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Nombres de Indicadores">
                         <td>Nombres de Indicadores</td>
-                        <td>Consulta la lista de nombres de indicadores configurados.</td>
+                        <td class="description-col">Consulta la lista de nombres de indicadores configurados.</td>
                         <td>
                             <a href="<?= base_url('listKpis') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Nombres de Indicadores">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Responsables de Indicadores">
                         <td>Responsables de Indicadores</td>
-                        <td>Consulta la lista de responsables de cada indicador.</td>
+                        <td class="description-col">Consulta la lista de responsables de cada indicador.</td>
                         <td>
                             <a href="<?= base_url('listDataOwners') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Responsables de Indicadores">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Numeradores de Indicadores">
                         <td>Numeradores de Indicadores</td>
-                        <td>Consulta los numeradores utilizados en los indicadores.</td>
+                        <td class="description-col">Consulta los numeradores utilizados en los indicadores.</td>
                         <td>
                             <a href="<?= base_url('listNumeratorVariables') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Numeradores de Indicadores">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Denominadores de Indicadores">
                         <td>Denominadores de Indicadores</td>
-                        <td>Consulta los denominadores utilizados en los indicadores.</td>
+                        <td class="description-col">Consulta los denominadores utilizados en los indicadores.</td>
                         <td>
                             <a href="<?= base_url('listDenominatorVariables') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Denominadores de Indicadores">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Objetivos de Indicadores">
                         <td>Objetivos de Indicadores</td>
-                        <td>Consulta los objetivos de los indicadores establecidos.</td>
+                        <td class="description-col">Consulta los objetivos de los indicadores establecidos.</td>
                         <td>
                             <a href="<?= base_url('listObjectives') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Objetivos de Indicadores">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Políticas de SST">
                         <td>Políticas de SST</td>
-                        <td>Accede a las políticas de Seguridad y Salud en el Trabajo.</td>
+                        <td class="description-col">Accede a las políticas de Seguridad y Salud en el Trabajo.</td>
                         <td>
                             <a href="<?= base_url('listKpiPolicies') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Políticas de SST">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
 
                     <!-- Otros -->
-                    <tr>
+                    <tr data-detail="Vigías">
                         <td>Vigías</td>
-                        <td>Consulta la lista de vigías asociados a la empresa.</td>
+                        <td class="description-col">Consulta la lista de vigías asociados a la empresa.</td>
                         <td>
                             <a href="<?= base_url('listVigias') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Vigías">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Actividades del Plan Anual">
                         <td>Actividades del Plan Anual</td>
-                        <td>Accede a las actividades del plan anual para la empresa.</td>
+                        <td class="description-col">Accede a las actividades del plan anual para la empresa.</td>
                         <td>
                             <a href="<?= base_url('listPlanDeTrabajoAnual') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Actividades del Plan Anual">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Pendientes">
                         <td>Pendientes</td>
-                        <td>Consulta la lista de tareas pendientes dentro de la plataforma.</td>
+                        <td class="description-col">Consulta la lista de tareas pendientes dentro de la plataforma.</td>
                         <td>
                             <a href="<?= base_url('listPendientes') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Pendientes">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Matrices Cycloid">
                         <td>Matrices Cycloid</td>
-                        <td>Consulta las matrices de datos de Cycloid.</td>
+                        <td class="description-col">Consulta las matrices de datos de Cycloid.</td>
                         <td>
                             <a href="<?= base_url('listMatricesCycloid') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Matrices Cycloid">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Períodos de Medición">
                         <td>Períodos de Medición</td>
-                        <td>Consulta los períodos de medición configurados para los indicadores.</td>
+                        <td class="description-col">Consulta los períodos de medición configurados para los indicadores.</td>
                         <td>
                             <a href="<?= base_url('listMeasurementPeriods') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Períodos de Medición">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-detail="Lista de Detalles de Reporte">
                         <td>Lista de Detalles de Reporte</td>
-                        <td>Sub Clasificación del gestor documental, es la rama derivada</td>
+                        <td class="description-col">Sub Clasificación del gestor documental, es la rama derivada.</td>
                         <td>
                             <a href="<?= base_url('detailreportlist') ?>" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="Abrir Detalles de Reporte">
-                                <button type="button" class="btn btn-outline-secondary btn-sm">Abrir</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm abrir-btn">Abrir</button>
                             </a>
                         </td>
                     </tr>
@@ -520,33 +522,57 @@
     </footer>
 
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap Bundle JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js" defer></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js" defer></script>
-    <!-- DataTables Buttons JS -->
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js" defer></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js" defer></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js" defer></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <!-- DataTables Buttons JS (Eliminado si ya no se usan) -->
+    <!--
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js"></script>
+    -->
+
     <!-- DataTables Spanish Translation -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             // Actualizar dinámicamente el año en el footer
             document.getElementById('currentYear').textContent = new Date().getFullYear();
         });
     </script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Función para inicializar los tooltips
             function initializeTooltips() {
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
                 });
+                console.log("Tooltips inicializados: " + tooltipList.length);
+            }
+
+            // Función para resaltar una fila
+            function highlightRow(detail) {
+                var row = $('#consultorTable tbody tr').filter(function () {
+                    return $(this).data('detail') === detail;
+                });
+                row.addClass('highlighted');
+
+                // Guardar en localStorage con timestamp
+                var highlights = JSON.parse(localStorage.getItem('highlightedRows')) || {};
+                highlights[detail] = new Date().getTime();
+                localStorage.setItem('highlightedRows', JSON.stringify(highlights));
+
+                // Establecer timeout para quitar el resaltado después de 15 minutos
+                setTimeout(function () {
+                    row.removeClass('highlighted');
+                    delete highlights[detail];
+                    localStorage.setItem('highlightedRows', JSON.stringify(highlights));
+                }, 15 * 60 * 1000); // 15 minutos en milisegundos
             }
 
             // Inicializar DataTable con configuraciones personalizadas
@@ -554,7 +580,7 @@
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                 },
-                "pageLength": 50, // Mostrar 50 filas por defecto
+                "pageLength": 40, // Mostrar 40 filas por defecto
                 "order": [
                     [0, "asc"]
                 ], // Ordenar por la primera columna (Detalle)
@@ -564,46 +590,28 @@
                     "searchable": false // Deshabilitar búsqueda
                 }],
                 "stateSave": true, // Habilitar guardado de estado
-                "stateSaveCallback": function(settings, data) {
+                "stateSaveCallback": function (settings, data) {
                     // Guardar el estado en localStorage con una clave única
                     localStorage.setItem('DataTables_consultorTable', JSON.stringify(data));
                 },
-                "stateLoadCallback": function(settings) {
+                "stateLoadCallback": function (settings) {
                     // Cargar el estado desde localStorage
                     return JSON.parse(localStorage.getItem('DataTables_consultorTable'));
                 },
-                "dom": 'Bfrtip', // Posición de los botones
-                "buttons": [{
-                        extend: 'excelHtml5',
-                        text: '<i class="bi bi-file-earmark-excel"></i> Exportar a Excel',
-                        className: 'btn btn-primary-custom btn-sm',
-                        exportOptions: {
-                            columns: ':not(:last-child)' // Excluir la columna de Acciones
-                        },
-                        title: 'Lista_de_Reportes',
-                        filename: 'Lista_de_Reportes',
-                        titleAttr: 'Exportar a Excel',
-                        customize: function(xlsx) {
-                            var sheet = xlsx.xl.worksheets['sheet1.xml'];
-
-                            // Agregar estilo al título (opcional)
-                            $('row:first c', sheet).attr('s', '2'); // Aplicar estilo 2 a la primera fila
-
-                            // Aquí puedes agregar más personalizaciones al XML de Excel si lo deseas
-                        }
-                    },
-                    {
-                        extend: 'colvis',
-                        text: '<i class="bi bi-eye"></i> Visibilidad de Columnas',
-                        className: 'btn btn-secondary btn-sm',
-                        titleAttr: 'Mostrar u Ocultar Columnas'
-                    }
-                ],
-                "initComplete": function() {
+                "dom": 'lrtip', // Quitar los botones y solo dejar la tabla, el filtro y la paginación
+                /*
+                   'lrtip' significa:
+                   l - length changing input control
+                   r - processing display element
+                   t - The table!
+                   i - Table information summary
+                   p - pagination control
+                */
+                "initComplete": function () {
                     var api = this.api();
 
                     // Configurar los filtros en <tfoot>
-                    api.columns().every(function() {
+                    api.columns().every(function () {
                         var column = this;
                         var columnIdx = column.index();
 
@@ -615,13 +623,13 @@
 
                         var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
                             .appendTo($(column.footer()).empty())
-                            .on('change', function() {
+                            .on('change', function () {
                                 var val = $.fn.dataTable.util.escapeRegex($(this).val());
                                 column.search(val ? '^' + val + '$' : '', true, false).draw();
                             });
 
                         // Precargar los datos únicos de la columna en el filtro
-                        column.data().unique().sort().each(function(d, j) {
+                        column.data().unique().sort().each(function (d, j) {
                             // Manejar valores nulos o vacíos
                             if (d === null || d === undefined) {
                                 d = '';
@@ -641,26 +649,60 @@
 
                     // Inicializar los tooltips después de configurar los filtros
                     initializeTooltips();
+
+                    // Restaurar filas resaltadas desde localStorage
+                    var highlights = JSON.parse(localStorage.getItem('highlightedRows')) || {};
+                    var currentTime = new Date().getTime();
+                    for (var detail in highlights) {
+                        if (highlights.hasOwnProperty(detail)) {
+                            var timestamp = highlights[detail];
+                            // Verificar si el resaltado aún es válido (15 minutos)
+                            if (currentTime - timestamp < 15 * 60 * 1000) {
+                                highlightRow(detail);
+                            } else {
+                                // Si ha pasado más de 15 minutos, eliminar el resaltado
+                                delete highlights[detail];
+                                localStorage.setItem('highlightedRows', JSON.stringify(highlights));
+                            }
+                        }
+                    }
                 }
             });
 
             // Re-inicializar tooltips después de cada dibujo de la tabla
-            table.on('draw.dt', function() {
+            table.on('draw.dt', function () {
                 initializeTooltips();
             });
 
-            // Botón para borrar el estado
-            $('#clearState').on('click', function() {
-                // Borrar estado guardado en localStorage
-                localStorage.removeItem('DataTables_consultorTable');
-                table.state.clear(); // Limpiar estado en DataTables
-                table.search('').columns().search('').draw(); // Limpiar filtros y búsquedas
-                initializeTooltips();
+            // Manejar clic en botones "Abrir"
+            $('#consultorTable tbody').on('click', 'button.abrir-btn', function (e) {
+                var tr = $(this).closest('tr');
+                var detail = tr.data('detail');
+
+                // Resaltar la fila
+                highlightRow(detail);
+
+                // Opcional: Puedes manejar la lógica adicional del botón aquí
             });
 
-            // Botón para exportar a Excel
-            $('#exportExcel').on('click', function() {
-                table.button('.buttons-excel').trigger();
+            // Funcionalidad de Búsqueda Personalizada por Palabra
+            $('#wordSearch').on('keyup change', function () {
+                var searchTerm = $(this).val().trim();
+
+                // Aplicar la búsqueda personalizada utilizando expresiones regulares para buscar palabras completas
+                if (searchTerm) {
+                    // Escapar caracteres especiales para las expresiones regulares
+                    var escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    table.search('\\b' + escapedSearchTerm + '\\b', true, false).draw();
+                } else {
+                    table.search('').draw();
+                }
+            });
+
+            // Botón para Limpiar la Búsqueda Personalizada
+            $('#clearWordSearch').on('click', function () {
+                $('#wordSearch').val('');
+                table.search('').draw();
             });
 
             // Inicializar tooltips al cargar la página

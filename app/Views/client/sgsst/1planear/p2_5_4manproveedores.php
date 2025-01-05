@@ -217,7 +217,7 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
             <li>Parte interesada: Persona o grupo involucrado o afectado por el desempeño en seguridad y salud en el trabajo en la propiedad horizontal.</li>
             <li>Producto: Resultado del desarrollo de actividades o procesos aplicados a materias primas e insumos para generar un elemento tangible.</li>
             <li>Proveedor: Organización o persona que proporciona producto o servicio a la propiedad horizontal.</li>
-            <li>Proveedores críticos: Aquellos que pueden afectar de manera significativa la seguridad y salud en el trabajo de la copropiedad.</li>
+            <li>Proveedores críticos: Aquellos que pueden afectar de manera significativa la seguridad y salud en el trabajo de la Organización.</li>
             <li>Proveedor único o exclusivo: Organización que por las características especiales de su producto y/o servicio no tiene competencia alguna.</li>
             <li>Requisito Normativo: Requisito de seguridad y salud en el trabajo impuesto por una norma vigente y aplicable.</li>
             <li>Servicio: Labor o trabajo realizado a favor de la propiedad horizontal por empresas o personas, sin implicar transformación de materia prima.</li>

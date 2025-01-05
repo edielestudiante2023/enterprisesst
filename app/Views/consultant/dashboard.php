@@ -9,19 +9,19 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <!-- DataTables Buttons CSS -->
-    <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body {
             background-color: #F8F9FA;
             color: #343A40;
+            font-family: Arial, sans-serif;
         }
 
         .navbar {
             background-color: #F8F9FA;
             border-bottom: 1px solid #E9ECEF;
+            padding: 15px 0; /* Ajuste de padding para un navbar más amplio */
         }
 
         .navbar-brand img {
@@ -37,8 +37,21 @@
             padding: 20px;
         }
 
+        .welcome-banner {
+            background-color: #E9F7EF; /* Gris claro */
+            border-left: 5px solid #28A745; /* Verde corporativo */
+            color: #2D3436;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-banner h3 {
+            color: #28A745; /* Verde corporativo */
+        }
+
         .table th {
-            background-color: #6C757D;
+            background-color: #6C757D; /* Gris oscuro */
             color: #FFF;
         }
 
@@ -49,6 +62,7 @@
 
         .table td a:hover {
             color: #007BFF;
+            text-decoration: underline;
         }
 
         .logout-button {
@@ -68,6 +82,17 @@
         tfoot th {
             padding: 8px 10px;
             background-color: #f8f9fa;
+        }
+
+        /* Estilo para resaltar la fila */
+        .highlighted {
+            background-color: #cce5ff !important; /* Azul claro */
+            transition: background-color 0.5s ease;
+        }
+
+        /* Estilo para la casilla de búsqueda personalizada */
+        .custom-search {
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -99,27 +124,25 @@
     </nav>
 
     <!-- Ajustar el espaciado para evitar que el contenido se oculte bajo el navbar fijo -->
-    <div style="height: 160px;"></div>
+    <div style="height: 70px;"></div>
 
     <div class="container-fluid content">
-        <div class="welcome-banner p-4 mb-4 rounded" style="background-color: #E9F7EF; border-left: 5px solid #28A745; color: #2D3436;">
-            <h3 class="mb-3" style="color: #28A745;">¡Bienvenido al Dashboard de Consultores de Cycloid Talent!</h3>
+        <div class="welcome-banner p-4 mb-4 rounded">
+            <h3 class="mb-3">¡Bienvenido al Dashboard de Consultores en Empresas de Cycloid Talent!</h3>
             <p class="mt-3">Explora las diferentes secciones y aprovecha las herramientas disponibles para optimizar tu desempeño.</p>
+        </div>
+
+        <!-- Casilla de Búsqueda Personalizada -->
+        <div class="custom-search">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="wordSearch" class="form-control" placeholder="Buscar por palabra...">
+                <button class="btn btn-outline-secondary" id="clearWordSearch" type="button">Limpiar</button>
+            </div>
         </div>
 
         <!-- Tabla con DataTables -->
         <div class="table-responsive">
-            <!-- Botones para Exportar y Visibilidad de Columnas -->
-            <div class="mb-3 d-flex justify-content-between">
-                <div>
-                    <button id="clearState" class="btn btn-danger btn-sm">Restablecer Filtros</button>
-                    <button id="exportExcel" class="btn btn-success btn-sm ms-2">Exportar a Excel</button>
-                </div>
-                <div>
-                    <!-- Botón ColVis (Opcional si no se usa el botón integrado) -->
-                </div>
-            </div>
-
             <table id="consultorTable" class="table table-hover table-bordered">
                 <thead>
                     <tr>
@@ -165,8 +188,6 @@
                         </td>
                     </tr>
 
-                   
-
                     <!-- Documentación -->
                     <tr>
                         <td>Cargue de PDF´S a clientes</td>
@@ -204,7 +225,6 @@
                             </a>
                         </td>
                     </tr>
-                  
                     <tr>
                         <td>Políticas</td>
                         <td>Consulta las políticas asociadas a la empresa.</td>
@@ -214,7 +234,6 @@
                             </a>
                         </td>
                     </tr>
-                   
 
                     <!-- Indicadores y KPIs -->
                     <tr>
@@ -262,8 +281,7 @@
                             </a>
                         </td>
                     </tr>
-                  
-                  
+
                     <tr>
                         <td>Objetivos de Indicadores</td>
                         <td>Consulta los objetivos de los indicadores establecidos.</td>
@@ -353,7 +371,7 @@
         <div class="container text-center">
             <!-- Company and Rights -->
             <p class="fw-bold mb-0">Cycloid Talent SAS</p>
-            <p class="mb-0">Todos los derechos reservados © 2024</p>
+            <p class="mb-0">Todos los derechos reservados © <span id="currentYear"></span></p>
             <p class="mb-0">NIT: 901.653.912</p>
 
             <!-- Website Link -->
@@ -387,14 +405,23 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <!-- DataTables Buttons JS -->
+    <!-- DataTables Buttons JS (Eliminados ya que no se usan) -->
+    <!--
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js"></script>
+    -->
     <!-- DataTables Spanish Translation -->
-    <script src="https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"></script>
+    <!-- La traducción se carga directamente desde el archivo de configuración en DataTables -->
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Actualizar dinámicamente el año en el footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+        });
+    </script>
     <script>
         $(document).ready(function () {
             // Función para inicializar los tooltips
@@ -406,12 +433,32 @@
                 console.log("Tooltips inicializados: " + tooltipList.length);
             }
 
+            // Función para resaltar una fila
+            function highlightRow(detail) {
+                var row = $('#consultorTable tbody tr').filter(function () {
+                    return $(this).find('td:first').text().trim() === detail;
+                });
+                row.addClass('highlighted');
+
+                // Guardar en localStorage con timestamp
+                var highlights = JSON.parse(localStorage.getItem('highlightedRows')) || {};
+                highlights[detail] = new Date().getTime();
+                localStorage.setItem('highlightedRows', JSON.stringify(highlights));
+
+                // Establecer timeout para quitar el resaltado después de 15 minutos
+                setTimeout(function () {
+                    row.removeClass('highlighted');
+                    delete highlights[detail];
+                    localStorage.setItem('highlightedRows', JSON.stringify(highlights));
+                }, 15 * 60 * 1000); // 15 minutos en milisegundos
+            }
+
             // Inicializar DataTable con configuraciones personalizadas
             const table = $('#consultorTable').DataTable({
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                 },
-                "pageLength": 50, // Mostrar 50 filas por defecto
+                "pageLength": 40, // Mostrar 40 filas por defecto
                 "order": [
                     [0, "asc"]
                 ], // Ordenar por la primera columna (Detalle)
@@ -429,34 +476,15 @@
                     // Cargar el estado desde localStorage
                     return JSON.parse(localStorage.getItem('DataTables_consultorTable'));
                 },
-                "dom": 'Bfrtip', // Posición de los botones
-                "buttons": [
-                    {
-                        extend: 'excelHtml5',
-                        text: '<i class="bi bi-file-earmark-excel"></i> Exportar a Excel',
-                        className: 'btn btn-success btn-sm',
-                        exportOptions: {
-                            columns: ':not(:last-child)' // Excluir la columna de Acciones
-                        },
-                        title: 'Lista_de_Reportes',
-                        filename: 'Lista_de_Reportes',
-                        titleAttr: 'Exportar a Excel',
-                        customize: function (xlsx) {
-                            var sheet = xlsx.xl.worksheets['sheet1.xml'];
-
-                            // Agregar estilo al título (opcional)
-                            $('row:first c', sheet).attr('s', '2'); // Aplicar estilo 2 a la primera fila
-
-                            // Aquí puedes agregar más personalizaciones al XML de Excel si lo deseas
-                        }
-                    },
-                    {
-                        extend: 'colvis',
-                        text: '<i class="bi bi-eye"></i> Visibilidad de Columnas',
-                        className: 'btn btn-secondary btn-sm',
-                        titleAttr: 'Mostrar u Ocultar Columnas'
-                    }
-                ],
+                "dom": 'lrtip', // Quitar los botones y solo dejar la tabla, el filtro y la paginación
+                /* 
+                   'lrtip' significa:
+                   l - length changing input control
+                   r - processing display element
+                   t - The table!
+                   i - Table information summary
+                   p - pagination control
+                */
                 "initComplete": function () {
                     var api = this.api();
 
@@ -499,6 +527,23 @@
 
                     // Inicializar los tooltips después de configurar los filtros
                     initializeTooltips();
+
+                    // Restaurar filas resaltadas desde localStorage
+                    var highlights = JSON.parse(localStorage.getItem('highlightedRows')) || {};
+                    var currentTime = new Date().getTime();
+                    for (var detail in highlights) {
+                        if (highlights.hasOwnProperty(detail)) {
+                            var timestamp = highlights[detail];
+                            // Verificar si el resaltado aún es válido (15 minutos)
+                            if (currentTime - timestamp < 15 * 60 * 1000) {
+                                highlightRow(detail);
+                            } else {
+                                // Si ha pasado más de 15 minutos, eliminar el resaltado
+                                delete highlights[detail];
+                                localStorage.setItem('highlightedRows', JSON.stringify(highlights));
+                            }
+                        }
+                    }
                 }
             });
 
@@ -507,17 +552,31 @@
                 initializeTooltips();
             });
 
-            // Botón para borrar el estado
-            $('#clearState').on('click', function () {
-                // Borrar estado guardado en localStorage
-                localStorage.removeItem('DataTables_consultorTable');
-                table.state.clear(); // Limpiar estado en DataTables
-                location.reload(); // Recargar la página
+            // Manejar clic en botones "Abrir"
+            $('#consultorTable tbody').on('click', 'button.btn-outline-secondary', function (e) {
+                var tr = $(this).closest('tr');
+                var detail = tr.find('td:first').text().trim();
+
+                // Resaltar la fila
+                highlightRow(detail);
             });
 
-            // Botón para exportar a Excel
-            $('#exportExcel').on('click', function () {
-                table.button('.buttons-excel').trigger();
+            // Funcionalidad de Búsqueda Personalizada por Palabra
+            $('#wordSearch').on('keyup change', function () {
+                var searchTerm = $(this).val().trim();
+
+                // Aplicar la búsqueda personalizada utilizando expresiones regulares para buscar palabras completas
+                if (searchTerm) {
+                    table.search('\\b' + searchTerm + '\\b', true, false).draw();
+                } else {
+                    table.search('').draw();
+                }
+            });
+
+            // Botón para Limpiar la Búsqueda Personalizada
+            $('#clearWordSearch').on('click', function () {
+                $('#wordSearch').val('');
+                table.search('').draw();
             });
 
             // Inicializar tooltips al cargar la página

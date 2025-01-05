@@ -5,8 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan de Trabajo Anual</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables CSS para Bootstrap 5 -->
+    <link href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables Buttons CSS -->
+    <link href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.bootstrap5.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f9f9f9;
@@ -47,51 +51,66 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
+        /* Estilos adicionales para asegurar la responsividad y apariencia */
+        table.dataTable thead th,
+        table.dataTable tfoot th {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        table.dataTable tbody td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        /* Ajuste de ancho de columnas para evitar espacios excesivos */
+        #planesTable th:nth-child(4), /* Actividad */
+        #planesTable th:nth-child(10) /* Observaciones */ {
+            width: 150px;
+        }
+
+        /* Botones adicionales */
+        .dt-buttons {
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 
 <body>
 
+    <!-- Navbar fijo -->
     <nav style="background-color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 10px 0; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto;">
-
-            <!-- Logo izquierdo -->
+        <div class="container d-flex justify-content-between align-items-center">
+            <!-- Logos -->
             <div>
                 <a href="https://dashboard.cycloidtalent.com/login">
                     <img src="<?= base_url('uploads/logoenterprisesstblancoslogan.png') ?>" alt="Enterprisesst Logo" style="height: 100px;">
                 </a>
             </div>
-
-            <!-- Logo centro -->
             <div>
                 <a href="https://cycloidtalent.com/index.php/consultoria-sst">
                     <img src="<?= base_url('uploads/logosst.png') ?>" alt="SST Logo" style="height: 100px;">
                 </a>
             </div>
-
-            <!-- Logo derecho -->
             <div>
                 <a href="https://cycloidtalent.com/">
                     <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Cycloids Logo" style="height: 100px;">
                 </a>
             </div>
-
         </div>
     </nav>
 
-    <!-- Ajustar el espaciado para evitar que el contenido se oculte bajo el navbar fijo -->
-    <div style="height: 120px;"></div>
+    <!-- Espaciador para evitar que el contenido quede oculto debajo del navbar fijo -->
+    <div style="height: 160px;"></div>
 
-
-    <div class="container mt-5">
+    <div class="container-fluid mt-5">
         <h2 class="text-center mb-4">Plan de Trabajo Anual</h2>
 
-        <!-- Botón para ir a la vista de agregar reportes -->
-        <!-- <div class="text-center btn-dashboard">
-            <a href="<?= base_url('/dashboardclient') ?>">
-                <button type="button" class="btn btn-primary">Ir a DashBoard</button>
-            </a>
-        </div> -->
+        <!-- Botón para restablecer filtros -->
+        <div class="d-flex justify-content-end mb-3">
+            <button id="clearState" class="btn btn-secondary">Restablecer Filtros</button>
+        </div>
 
         <!-- Mensaje de éxito -->
         <?php if (session()->getFlashdata('msg')): ?>
@@ -100,10 +119,8 @@
 
         <!-- Tabla interactiva con DataTables y filtros personalizados -->
         <div class="table-responsive">
-        <button id="downloadExcel" class="btn btn-primary">Descargar Excel</button>
-
             <table id="planesTable" class="table table-bordered table-striped">
-                <thead class="thead-dark">
+                <thead class="table-dark">
                     <tr>
                         <th>Cliente</th>
                         <th>PHVA</th>
@@ -117,27 +134,22 @@
                         <th>Semana</th>
                         <th>Observaciones</th>
                     </tr>
-                    <!-- Fila adicional para los filtros dinámicos -->
-                    <tr>
-                        <th></th>
-                        <th><select id="filterPHVA" class="form-control form-control-sm">
-                                <option value="">Todos</option>
-                            </select></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th><select id="filterResponsable" class="form-control form-control-sm">
-                                <option value="">Todos</option>
-                            </select></th>
-                        <th><select id="filterEstado" class="form-control form-control-sm">
-                                <option value="">Todos</option>
-                            </select></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                    </tr>
                 </thead>
+                <tfoot>
+                    <tr>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+                    </tr>
+                </tfoot>
                 <tbody>
                     <?php foreach ($planes as $plan): ?>
                         <tr>
@@ -163,94 +175,156 @@
 
     <!-- Footer -->
     <footer style="background-color: white; padding: 20px 0; border-top: 1px solid #B0BEC5; margin-top: 40px; color: #3A3F51; font-size: 14px; text-align: center;">
-        <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
+        <div class="container d-flex flex-column align-items-center">
             <!-- Company and Rights -->
-            <p style="margin: 0; font-weight: bold;">Cycloid Talent SAS</p>
-            <p style="margin: 5px 0;">Todos los derechos reservados © 2024</p>
-            <p style="margin: 5px 0;">NIT: 901.653.912</p>
+            <p class="fw-bold mb-0">Cycloid Talent SAS</p>
+            <p class="mb-2">Todos los derechos reservados © 2024</p>
+            <p class="mb-2">NIT: 901.653.912</p>
 
             <!-- Website Link -->
-            <p style="margin: 5px 0;">
-                Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" style="color: #007BFF; text-decoration: none;">https://cycloidtalent.com/</a>
+            <p class="mb-2">
+                Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" class="text-primary text-decoration-none">https://cycloidtalent.com/</a>
             </p>
 
             <!-- Social Media Links -->
-            <p style="margin: 15px 0 5px;"><strong>Nuestras Redes Sociales:</strong></p>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <a href="https://www.facebook.com/CycloidTalent" target="_blank" style="color: #3A3F51; text-decoration: none;">
+            <p class="mb-3"><strong>Nuestras Redes Sociales:</strong></p>
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="https://www.facebook.com/CycloidTalent" target="_blank" class="text-dark">
                     <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook" style="height: 24px; width: 24px;">
                 </a>
-                <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank" style="color: #3A3F51; text-decoration: none;">
+                <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank" class="text-dark">
                     <img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn" style="height: 24px; width: 24px;">
                 </a>
-                <a href="https://www.instagram.com/cycloid_talent?igsh=Nmo4d2QwZDg5dHh0" target="_blank" style="color: #3A3F51; text-decoration: none;">
+                <a href="https://www.instagram.com/cycloid_talent?igsh=Nmo4d2QwZDg5dHh0" target="_blank" class="text-dark">
                     <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram" style="height: 24px; width: 24px;">
                 </a>
-                <a href="https://www.tiktok.com/@cycloid_talent?_t=8qBSOu0o1ZN&_r=1" target="_blank" style="color: #3A3F51; text-decoration: none;">
+                <a href="https://www.tiktok.com/@cycloid_talent?_t=8qBSOu0o1ZN&_r=1" target="_blank" class="text-dark">
                     <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok" style="height: 24px; width: 24px;">
                 </a>
             </div>
         </div>
     </footer>
 
-
-    <!-- Scripts de jQuery, Bootstrap y DataTables -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <!-- Librerías necesarias -->
+    <!-- jQuery 3.6.0 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap 5 JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables JS para Bootstrap 5 -->
+    <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
+    <!-- DataTables Buttons JS -->
+    <script src="https://cdn.datatables.net/buttons/2.3.3/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.bootstrap5.min.js"></script>
+    <!-- JSZip para exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Buttons para Excel export -->
+    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
+    <!-- Buttons para ColVis -->
+    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
+    <!-- XSLX (si deseas mantener la funcionalidad de descarga personalizada) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script>
-    document.getElementById('downloadExcel').addEventListener('click', function () {
-        // Selecciona la tabla
-        const table = document.getElementById('planesTable');
-        
-        // Crea una hoja de cálculo a partir de la tabla
-        const wb = XLSX.utils.table_to_book(table, {sheet: "Planes de Trabajo"});
-        
-        // Genera el archivo Excel y lo descarga
-        XLSX.writeFile(wb, 'PlanesDeTrabajo.xlsx');
-    });
-</script>
 
+    <!-- Script para descargar a Excel utilizando XSLX -->
+    <script>
+        document.getElementById('downloadExcel')?.addEventListener('click', function () {
+            // Selecciona la tabla
+            const table = document.getElementById('planesTable');
+            
+            // Crea una hoja de cálculo a partir de la tabla
+            const wb = XLSX.utils.table_to_book(table, {sheet: "Planes de Trabajo"});
+            
+            // Genera el archivo Excel y lo descarga
+            XLSX.writeFile(wb, 'PlanesDeTrabajo.xlsx');
+        });
+    </script>
 
     <!-- Script para inicializar DataTables, filtros dinámicos y tooltips -->
     <script>
         $(document).ready(function() {
-            // Inicialización de DataTables
+            // Inicialización de DataTables con las funcionalidades requeridas
             var table = $('#planesTable').DataTable({
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/Spanish.json'
+                    url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json' // Archivo de idioma en español
                 },
-                pageLength: 10,
-                responsive: true,
+                pageLength: 10, // Número de registros por página
+                responsive: true, // Diseño responsivo
+                stateSave: true, // Persistencia del estado (filtros, paginación, etc.)
+                dom: 'Bfrtip', // Estructura de control: Botones, filtro, tabla, paginación
+                buttons: [
+                    {
+                        extend: 'colvis',
+                        text: 'Mostrar/Ocultar Columnas',
+                        className: 'btn btn-secondary btn-sm'
+                    },
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Descargar Excel',
+                        className: 'btn btn-success btn-sm',
+                        exportOptions: {
+                            columns: ':visible' // Exporta solo las columnas visibles
+                        }
+                    }
+                ],
                 initComplete: function() {
-                    // Crear filtros dinámicos
-                    this.api().columns([1, 6, 7]).every(function() {
+                    var api = this.api();
+
+                    // Iterar sobre cada columna para agregar un filtro desplegable en el tfoot
+                    api.columns().every(function() {
                         var column = this;
-                        var select = $(column.header()).find('select');
+                        var select = $('select', column.footer());
+
+                        // Obtener valores únicos y ordenarlos
+                        var uniqueData = [];
                         column.data().unique().sort().each(function(d) {
+                            if (d) { // Excluir valores nulos o vacíos
+                                uniqueData.push(d);
+                            }
+                        });
+
+                        // Agregar opciones al select
+                        uniqueData.forEach(function(d) {
                             select.append('<option value="' + d + '">' + d + '</option>');
+                        });
+
+                        // Event listener para filtrar la columna
+                        select.on('change', function() {
+                            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                            column
+                                .search(val ? '^' + val + '$' : '', true, false)
+                                .draw();
                         });
                     });
                 }
             });
 
-            // Filtrado basado en los select de la segunda fila
-            $('#filterPHVA').on('change', function() {
-                table.column(1).search(this.value).draw();
-            });
-            $('#filterResponsable').on('change', function() {
-                table.column(6).search(this.value).draw();
-            });
-            $('#filterEstado').on('change', function() {
-                table.column(7).search(this.value).draw();
+         
+
+            // Botón "Restablecer Filtros"
+            $('#clearState').on('click', function () {
+                // Remover el estado guardado de DataTables
+                table.state.clear();
+                // Remover el ítem específico de localStorage si corresponde
+                localStorage.removeItem('DataTables_planesTable');
+                // Recargar la página para aplicar los cambios
+                location.reload();
             });
 
             // Inicializar tooltips de Bootstrap en todas las celdas con el atributo data-bs-toggle="tooltip"
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
+            function initializeTooltips() {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function(tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+
+            // Inicializar tooltips al cargar la página
+            initializeTooltips();
+
+            // Re-inicializar tooltips después de cada redibujado de la tabla
+            table.on('draw', function() {
+                initializeTooltips();
             });
         });
     </script>
