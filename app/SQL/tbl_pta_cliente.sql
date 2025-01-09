@@ -138,12 +138,52 @@ INSERT INTO `tbl_pta_cliente` (, `id_cliente`, `id_plandetrabajo`, `phva_plandet
 ( 999, 135, 'ACTUAR', '7.8.1', 'Implementar acciones preventivas tras la evaluación de condiciones de seguridad en transporte de carga', 'Responsable de Logística, Asesor Externo SS', '2024-09-27', '2024-09-27', '-', 'ABIERTA', '0%', '', '-', '2024-09-28 13:37:08', '2024-09-28 13:37:08'),
 ( 999, 136, 'ACTUAR', '7.9.1', 'Implementar medidas correctivas tras la auditoría del SG-SST por parte de la Alta Direcció', 'Analista de Gestión Humana, Asesor Externo SS', '2024-09-27', '2024-09-27', '-', 'ABIERTA', '0%', '', '-', '2024-09-28 13:37:08', '2024-09-28 13:37:08');
 
+UPDATE `tbl_pta_cliente`
+SET 
+  `fecha_propuesta`    = '2025-12-31',
+  `fecha_cierre`       = NULL,         -- Establece fecha_cierre como vacío/NULL para actualizarlo luego
+  `estado_actividad`   = 'ABIERTA',
+  `porcentaje_avance`  = 0,
+  `observaciones`      = ''            -- Vacío, puede usarse NULL si se prefiere
+WHERE 
+  /* Condición para identificar el registro a actualizar, por ejemplo: */
+  `id_cliente` = 999;
+
 INSERT INTO `tbl_pta_cliente` (`id_cliente`, `id_plandetrabajo`, `phva_plandetrabajo`, `numeral_plandetrabajo`, `actividad_plandetrabajo`, `responsable_sugerido_plandetrabajo`, `fecha_propuesta`, `fecha_cierre`, `responsable_definido_paralaactividad`, `estado_actividad`, `porcentaje_avance`, `semana`, `observaciones`, `created_at`, `updated_at`) VALUES
 ( 999, 144, 'PLANEAR', '2.2.4.6.13', 'Realizar inducción en Seguridad y Salud en el Trabajo (SST) para todos los empleados.', 'Asesor Externo SST, Analista de Gestión Humana', NOW(), NOW(), '-', 'ABIERTA', '0%', '', '-', NOW(), NOW()),
 ( 999, 145, 'HACER', '2.2.4.6.8', 'Entregar todas las piezas documentales del diseño del SG-SST al cliente.', 'Asesor Externo SST', NOW(), NOW(), '-', 'ABIERTA', '0%', '', '-', NOW(), NOW()),
 ( 999, 146, 'VERIFICAR', '2.2.4.6.28', 'Realizar el reporte del SG-SST ante el Ministerio de Trabajo.', 'Asesor Externo SST', NOW(), NOW(), '-', 'ABIERTA', '0%', '', '-', NOW(), NOW());
 
+UPDATE `tbl_pta_cliente`
+SET 
+  `fecha_propuesta`    = '2025-12-31',
+  `fecha_cierre`       = NULL,         -- Establece fecha_cierre como vacío/NULL para actualizarlo luego
+  `estado_actividad`   = 'ABIERTA',
+  `porcentaje_avance`  = 0,
+  `observaciones`      = ''            -- Vacío, puede usarse NULL si se prefiere
+WHERE 
+  /* Condición para identificar el registro a actualizar, por ejemplo: */
+  `id_cliente` = 999;
+
 
 ( 999, 147, 'VERIFICAR', '2.2.4.6.25', 'Acompañar la investigación de accidentes de trabajo ocurridos.', 'Asesor Externo SST, COPASS', NOW(), NOW(), '-', 'ABIERTA', '0%', '', '-', NOW(), NOW()),
 ( 999, 148, 'ACTUAR', '2.2.4.6.30', 'Elaborar recomendaciones tras la investigación de accidente de trabajo.', 'Asesor Externo SST', NOW(), NOW(), '-', 'ABIERTA', '0%', '', '-', NOW(), NOW());
 
+/* ***************************SOLO DISEÑO + RESPORTE MINISTERIO**************************** */
+
+INSERT INTO `tbl_pta_cliente` 
+(`id_cliente`, `id_plandetrabajo`, `phva_plandetrabajo`, `numeral_plandetrabajo`, `actividad_plandetrabajo`, `responsable_sugerido_plandetrabajo`, `fecha_propuesta`, `fecha_cierre`, `responsable_definido_paralaactividad`, `estado_actividad`, `porcentaje_avance`, `semana`, `observaciones`, `created_at`, `updated_at`) 
+VALUES
+
+(999, 146, 'VERIFICAR', '2.2.4.6.28', 'Realizar el reporte del SG-SST ante el Ministerio de Trabajo.', 'Consultor Cycloid Talent', '2025-01-31', NULL, '-', 'ABIERTA', '0', '', '-', NOW(), NOW());
+
+UPDATE `tbl_pta_cliente`
+SET 
+  `fecha_propuesta`    = '2025-12-31',
+  `fecha_cierre`       = NULL,         -- Establece fecha_cierre como vacío/NULL para actualizarlo luego
+  `estado_actividad`   = 'ABIERTA',
+  `porcentaje_avance`  = 0,
+  `observaciones`      = ''            -- Vacío, puede usarse NULL si se prefiere
+WHERE 
+  /* Condición para identificar el registro a actualizar, por ejemplo: */
+  `id_cliente` = 999;

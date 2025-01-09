@@ -60,7 +60,7 @@
 
         .signature img,
         .logo img {
-            max-width: 200px;
+            max-width: 300px;
             display: block;
             margin: 0 auto;
         }

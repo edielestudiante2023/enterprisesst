@@ -62,20 +62,9 @@ INSERT INTO `evaluacion_inicial_sst` ( `id_cliente`, `ciclo`, `estandar`, `detal
 (999, 'IV. ACTUAR', 'MEJORAMIENTO (10%)', 'Acciones preventivas y correctivas con base en los resultados del SG-SST (10%)', '60 - Acciones de mejora con base en investigaciones de accidentes de trabajo y enfermedades laborales', '7.1.3', 60, 0, 0, 60, '7.1.3 Acciones de mejora con base en investigaciones de accidentes de trabajo y enfermedades laborales', 'NO CUMPLE', '2.50', '2.50', 'Acciones de mejora con base en investigaciones de accidentes de trabajo y enfermedades laborales', 'Definir e implementar acciones de mejora con base en investigaciones de accidentes y enfermedades.', 'Solicitar evidencia documental de las acciones implementadas.', '0.00', '', ''),
 (999, 'IV. ACTUAR', 'MEJORAMIENTO (10%)', 'Acciones preventivas y correctivas con base en los resultados del SG-SST (10%)', '60 - Plan de mejoramiento', '7.1.4', 60, 0, 0, 60, '7.1.4 Elaboración Plan de mejoramiento, implementación de medidas y acciones correctivas solicitadas por autoridades y ARL', 'NO CUMPLE', '2.50', '0.00', 'Plan de mejoramiento', 'Implementar las medidas y acciones correctivas producto de requerimientos o recomendaciones de autoridades administrativas y de las administradoras de riesgos laborales.', 'Solicitar las evidencias de las acciones correctivas realizadas en respuesta a los requerimientos o recomendaciones de las autoridades administrativas y de las administradoras de riesgos laborales.', '0.00', '', '');
 
-/* TIEMSTAMP
+UPDATE evaluacion_inicial_sst
+SET 
+    evaluacion_inicial = 'NO CUMPLE',
+    puntaje_cuantitativo = '0.00'
+WHERE id_cliente = 999;
 
-UPDATE `evaluacion_inicial_sst`
-SET `created_at` = NOW(),
-    `updated_at` = NOW()
-WHERE `created_at` IS NULL OR `updated_at` IS NULL;
-
- 2. Si necesitas actualizar los campos existentes que están en NULL
-Para aquellos registros que ya tienen los valores NULL, puedes ejecutar una consulta para actualizarlos:
-
-sql
-Copiar código
-
-UPDATE `evaluacion_inicial_sst`
-SET `created_at` = NOW(),
-    `updated_at` = NOW()
-WHERE `created_at` IS NULL OR `updated_at` IS NULL;*/

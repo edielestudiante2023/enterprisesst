@@ -19,20 +19,12 @@ INSERT INTO `tbl_client_kpi` ( `year`, `month`, `kpi_interpretation`, `id_client
 (  2024, 7, 'La empresa cuenta con el 0% de los casos rehabilitados del total de enfermedades laborales calificadas en el año.', 999, 1, 2, 16, 1, 16, 100, 'Número de casos de enfermedad laboral con rehabilitación / Número de casos de enfermedad laboral.', 'Seguimiento a enfermedades laborales', 1, 'Gerencia General,Gerencia GH', NULL, NULL, NULL, '14', 0, '14', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '1', 0, '1', 0, '0.00', '0.00', '', '', '', '', 'anual'),
 (  2024, 7, 'De acuerdo con los datos registrados no se evidencian ausentismos.', 999, 1, 2, 17, 4, 17, 15, '(Número de días de ausencia por incapacidad médica laboral y común en el mes / Número de días de trabajo programados en el mes) × 100', 'Base de datos de Ausentismo', 1, 'Gerencia General,Gerencia GH', NULL, NULL, NULL, '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '15', 0, '15', 53, '0.00', '0.00', '', '', '', '', 'mensual');
 
-/* TIEMSTAMP
+UPDATE tbl_client_kpi
+SET 
+  year = 2025,
+  month = 1,
+  kpi_interpretation = 'Interpretación por Definir',
+  positions_should_know_result = 'Pendiente por Definir',
+  analisis_datos = 'Pendiente por Definir'
+WHERE id_cliente = 999;
 
-UPDATE `tbl_client_kpi`
-SET `created_at` = NOW(),
-    `updated_at` = NOW()
-WHERE `created_at` IS NULL OR `updated_at` IS NULL;
-
- 2. Si necesitas actualizar los campos existentes que están en NULL
-Para aquellos registros que ya tienen los valores NULL, puedes ejecutar una consulta para actualizarlos:
-
-sql
-Copiar código
-
-UPDATE `tbl_client_kpi`
-SET `created_at` = NOW(),
-    `updated_at` = NOW()
-WHERE `created_at` IS NULL OR `updated_at` IS NULL;*/
