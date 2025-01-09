@@ -147,7 +147,7 @@
         }
 
         .signature img {
-            max-width: 100px;
+            max-width: 200px;
             /* Adjust the size of the images as needed */
             height: auto;
         }
