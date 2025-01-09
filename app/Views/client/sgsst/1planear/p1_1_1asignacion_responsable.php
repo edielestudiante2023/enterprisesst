@@ -141,7 +141,7 @@
             width: 90%; /* Adjust the width of each signature block */
         }
         .signature img {
-            max-width: 100px; /* Adjust the size of the images as needed */
+            max-width: 200px; /* Adjust the size of the images as needed */
             height: auto;
         }
         .signature .name {
