@@ -286,6 +286,7 @@
                 // Orden inicial (opcional)
                 "order": [[0, "asc"]],
                 // Callback después de cada redibujado de la tabla
+                "pageLength": 40,
                 "initComplete": function () {
                     // Agregar filtros desplegables en el footer
                     this.api().columns().every(function () {

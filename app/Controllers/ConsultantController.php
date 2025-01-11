@@ -342,6 +342,7 @@ class ConsultantController extends Controller
 
         // Datos que siempre se actualizarán
         $data = [
+            'fecha_ingreso' => $this->request->getVar('fecha_ingreso'),
             'nombre_cliente' => $this->request->getVar('nombre_cliente'),
             'nit_cliente' => $this->request->getVar('nit_cliente'),
             'usuario' => $this->request->getVar('usuario'),

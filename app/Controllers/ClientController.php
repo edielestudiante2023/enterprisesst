@@ -99,402 +99,70 @@ class ClientController extends Controller
     }
 
     public function viewDocuments()
-    {
-        $reportModel = new ReporteModel();
+{
+    $reportModel = new ReporteModel();
+    $clientId = session()->get('user_id');
 
-        // Obtener el ID del cliente desde la sesión
-        $clientId = session()->get('user_id'); // Asegúrate de que 'user_id' almacene el ID del cliente
-
-        if (!$clientId) {
-            return redirect()->to('/login')->with('error', 'Sesión no válida.');
-        }
-
-        // Obtener documentos por subtemas y campos relacionados
-        $inspecciones = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 1) // ID para 'Hojas de cálculo interactivas'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-
-        $reportes = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 2) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-        
-            $aseo = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 3) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $vigilancia = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 4) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $ambiental = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 5) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $actasdevisita = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 6) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $capacitaciones = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 7) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $cincuentahoras = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 8) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $reporteministerio = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 9) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $cierredemes = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 10) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $emergencias = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 11) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $otrosproveedores = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 12) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $secretariasalud = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 13) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $lavadotanques = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 14) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $localescomerciales = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 15) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $fumigaciones = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 16) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $normatividad = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 17) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-            $contrato = $reportModel
-            ->select('
-                tbl_reporte.id_reporte,
-                tbl_reporte.titulo_reporte,
-                tbl_reporte.enlace,
-                tbl_reporte.estado,
-                tbl_reporte.observaciones,
-                tbl_reporte.created_at,
-                tbl_reporte.updated_at,
-                detail_report.detail_report AS detalle_reporte,
-                report_type_table.report_type AS tipo_reporte,
-                tbl_clientes.nombre_cliente AS cliente_nombre
-            ')
-            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
-            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
-            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
-            ->where('tbl_reporte.id_cliente', $clientId)
-            ->where('tbl_reporte.id_report_type', 19) // ID para 'Matrices'
-            ->orderBy('tbl_reporte.created_at', 'DESC')
-            ->findAll();
-
-        $data = [
-            'inspecciones' => $inspecciones,
-            'reportes' => $reportes,
-            'aseo' => $aseo,
-            'vigilancia' => $vigilancia,
-            'ambiental' => $ambiental,
-            'actasdevisita' => $actasdevisita,
-            'capacitaciones' => $capacitaciones,
-            'cincuentahoras' => $cincuentahoras,
-            'reporteministerio' => $reporteministerio,
-            'cierredemes' => $cierredemes,
-            'emergencias' => $emergencias,
-            'otrosproveedores' => $otrosproveedores,
-            'secretariasalud' => $secretariasalud,
-            'lavadotanques' => $lavadotanques,
-            'localescomerciales' => $localescomerciales,
-            'fumigaciones' => $fumigaciones,
-            'normatividad' => $normatividad,
-            'contrato' => $contrato,
-        ];
-
-        return view('client/document_view', $data);
+    if (!$clientId) {
+        return redirect()->to('/login')->with('error', 'Sesión no válida.');
     }
+
+    // Mapeo de claves con ID de reportes y títulos
+    $topics = [
+        'revisionCopasst'            => ['id' => 1,  'titulo' => 'Revisión del COPASST'],
+        'comiteConvivencia'         => ['id' => 2,  'titulo' => 'Comité de Convivencia Laboral'],
+        'actaVisitasSST'             => ['id' => 3,  'titulo' => 'Acta de Visitas SST'],
+        'capacitacionSST'            => ['id' => 4,  'titulo' => 'Capacitación en SST'],
+        'protocolosEmergencia'       => ['id' => 5,  'titulo' => 'Protocolos de Emergencia'],
+        'talentoHumanoBienestar'     => ['id' => 6,  'titulo' => 'Talento Humano y Bienestar'],
+        'analisisAccidentes'         => ['id' => 7,  'titulo' => 'Análisis de Accidentes de Trabajo'],
+        'evaluacionFactores'         => ['id' => 8,  'titulo' => 'Evaluación de Factores Psicosociales'],
+        'inspeccionPuestos'          => ['id' => 9,  'titulo' => 'Inspección de Puestos de Trabajo'],
+        'planGestionAmbiental'       => ['id' => 10, 'titulo' => 'Plan de Gestión Ambiental'],
+        'organigrama'                => ['id' => 11, 'titulo' => 'Organigrama'],
+        'documentacionNormativa'     => ['id' => 12, 'titulo' => 'Documentación Normativa SST'],
+        'proveedoresExternos'        => ['id' => 13, 'titulo' => 'Proveedores Externos'],
+        'programaErgonomia'          => ['id' => 14, 'titulo' => 'Programa de Ergonomía'],
+        'gestionResiduos'            => ['id' => 15, 'titulo' => 'Gestión de Residuos Peligrosos'],
+        'seguimientoPlanes'          => ['id' => 16, 'titulo' => 'Seguimiento a Planes de Acción'],
+        'programaRiesgos'            => ['id' => 17, 'titulo' => 'Programa de Gestión de Riesgos'],
+        'matrizPeligros'             => ['id' => 19, 'titulo' => 'Matriz de Peligros'],
+        'revisionIluminacion'        => ['id' => 20, 'titulo' => 'Revisión de Sistemas de Iluminación'],
+        'arl'                        => ['id' => 21, 'titulo' => 'Temas Relacionados con la ARL'],
+        'contratoycontractuales'     => ['id' => 22, 'titulo' => 'Contrato y Otros Documentos Contractuales'],
+        'plandeemergencia'           => ['id' => 23, 'titulo' => 'Plan de Emergencia y Análisis Relacionados'],
+        'inspecciones'               => ['id' => 24, 'titulo' => 'Inspecciones Efectuadas'],
+    ];
+
+    $data = ['topicsList' => []];
+
+    foreach ($topics as $key => $info) {
+        $data['topicsList'][$key] = $info['titulo'];
+
+        $data[$key] = $reportModel
+            ->select('
+                tbl_reporte.id_reporte,
+                tbl_reporte.titulo_reporte,
+                tbl_reporte.enlace,
+                tbl_reporte.estado,
+                tbl_reporte.observaciones,
+                tbl_reporte.created_at,
+                tbl_reporte.updated_at,
+                detail_report.detail_report AS detalle_reporte,
+                report_type_table.report_type AS tipo_reporte,
+                tbl_clientes.nombre_cliente AS cliente_nombre
+            ')
+            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
+            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
+            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_reporte.id_cliente', 'left')
+            ->where('tbl_reporte.id_cliente', $clientId)
+            ->where('tbl_reporte.id_report_type', $info['id'])
+            ->orderBy('tbl_reporte.created_at', 'DESC')
+            ->findAll();
+    }
+
+    return view('client/document_view', $data);
+}
+
 
 }

@@ -73,12 +73,18 @@
                 <label for="responsable" class="font-weight-bold">Responsable:</label>
                 <select name="responsable" id="responsable" class="form-control" required>
                     <option value="">Seleccione un responsable</option>
-                    <option value="ADMINISTRADOR" <?= ($pendiente['responsable'] == 'ADMINISTRADOR') ? 'selected' : '' ?>>ADMINISTRADOR</option>
-                    <option value="EDISON CUERVO" <?= ($pendiente['responsable'] == 'EDISON CUERVO') ? 'selected' : '' ?>>EDISON CUERVO</option>
-                    <option value="ELEYSON SEGURA" <?= ($pendiente['responsable'] == 'ELEYSON SEGURA') ? 'selected' : '' ?>>ELEYSON SEGURA</option>
-                    <option value="NATALIA JIMENEZ" <?= ($pendiente['responsable'] == 'NATALIA JIMENEZ') ? 'selected' : '' ?>>NATALIA JIMENEZ</option>
-                    <option value="DIANA CUESTAS" <?= ($pendiente['responsable'] == 'DIANA CUESTAS') ? 'selected' : '' ?>>DIANA CUESTAS</option>
+                    <option value="GERENTE" <?= ($pendiente['responsable'] == 'GERENTE') ? 'selected' : '' ?>>Gerente General o Dirección</option>
+                    <option value="COORDINADOR_SST" <?= ($pendiente['responsable'] == 'COORDINADOR_SST') ? 'selected' : '' ?>>Coordinador de SST o Responsable SST</option>
+                    <option value="COPASST" <?= ($pendiente['responsable'] == 'COPASST') ? 'selected' : '' ?>>Miembro del COPASST</option>
+                    <option value="RRHH" <?= ($pendiente['responsable'] == 'RRHH') ? 'selected' : '' ?>>Recursos Humanos</option>
+                    <option value="SUPERVISOR" <?= ($pendiente['responsable'] == 'SUPERVISOR') ? 'selected' : '' ?>>Supervisor de Área o Jefe de Equipo</option>
+                    <option value="MANTENIMIENTO" <?= ($pendiente['responsable'] == 'MANTENIMIENTO') ? 'selected' : '' ?>>Personal de Mantenimiento</option>
+                    <option value="TRABAJADOR_DESIGNADO" <?= ($pendiente['responsable'] == 'TRABAJADOR_DESIGNADO') ? 'selected' : '' ?>>Trabajador Designado por Área (Inspector)</option>
+                    <option value="AUDITOR" <?= ($pendiente['responsable'] == 'AUDITOR') ? 'selected' : '' ?>>Auditor Interno SST</option>
+                    <option value="GESTION_DOCUMENTAL" <?= ($pendiente['responsable'] == 'GESTION_DOCUMENTAL') ? 'selected' : '' ?>>Encargado de Gestión Documental</option>
+                    <option value="CONSULTOR_EXTERNO" <?= ($pendiente['responsable'] == 'CONSULTOR_EXTERNO') ? 'selected' : '' ?>>Consultor Externo - Cycloid Talent</option>
                 </select>
+
             </div>
 
             <div class="form-group">

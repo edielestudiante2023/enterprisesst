@@ -153,13 +153,39 @@
                         <label for="perfil_de_asistentes" class="form-label">Perfil de Asistentes</label>
                         <select name="perfil_de_asistentes" id="perfil_de_asistentes" class="form-select" required>
                             <option value="" disabled selected>Selecciona un perfil</option>
-                            <option value="CONTRATISTAS">CONTRATISTAS</option>
-                            <option value="RESIDENTES">RESIDENTES</option>
+
+                            <!-- Roles Internos -->
+                            <optgroup label="Roles Internos">
+                                <option value="GERENTE_GENERAL">Gerente General</option>
+                                <option value="MIEMBROS_COPASST">Miembros del COPASST</option>
+                                <option value="RESPONSABLE_SST">Responsable de SST</option>
+                                <option value="SUPERVISORES">Supervisores o Jefes de Área</option>
+                                <option value="TRABAJADORES_REPRESENTANTES">Trabajadores Representantes</option>
+                                <option value="MIEMBROS_COMITE_CONVIVENCIA">Miembros del Comité de Convivencia Laboral</option>
+                                <option value="RECURSOS_HUMANOS">Departamento de Recursos Humanos</option>
+                                <option value="PERSONAL_MANTENIMIENTO">Personal de Mantenimiento o Producción</option>
+                                <option value="ENCARGADO_AMBIENTAL">Encargado de Gestión Ambiental</option>
+                                <option value="TRABAJADORES_RIESGOS_CRITICOS">Trabajadores con Riesgos Críticos</option>
+                            </optgroup>
+
+                            <!-- Roles Externos -->
+                            <optgroup label="Roles Externos">
+                                <option value="ASESOR_SST">Asesor o Consultor en SST</option>
+                                <option value="AUDITOR_EXTERNO">Auditores Externos</option>
+                                <option value="CAPACITADOR_EXTERNO">Capacitadores Externos</option>
+                                <option value="CONTRATISTAS">Contratistas y Proveedores</option>
+                                <option value="INSPECTORES_GUBERNAMENTALES">Inspectores Gubernamentales</option>
+                                <option value="FISIOTERAPEUTAS_ERGONOMOS">Fisioterapeutas o Ergónomos</option>
+                                <option value="TECNICOS_ESPECIALIZADOS">Técnicos en Riesgos Especializados</option>
+                                <option value="BRIGADISTAS_EXTERNOS">Brigadistas o Personal de Emergencias Externo</option>
+                                <option value="REPRESENTANTES_ARL">Representantes de Aseguradoras (ARL)</option>
+                                <option value="AUDITORES_ISO">Auditores de Normas ISO</option>
+                            </optgroup>
+
+                            <!-- Opción para Todos -->
                             <option value="TODOS">TODOS</option>
-                            <option value="ASAMBLEA">ASAMBLEA</option>
-                            <option value="CONSEJO DE ADMINISTRACIÓN">CONSEJO DE ADMINISTRACIÓN</option>
-                            <option value="ADMINISTRADOR">ADMINISTRADOR</option>
                         </select>
+
                     </div>
                 </div>
 

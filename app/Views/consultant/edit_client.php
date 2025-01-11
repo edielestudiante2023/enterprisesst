@@ -65,7 +65,7 @@
         <form action="<?= base_url('/updateClient/' . $client['id_cliente']) ?>" method="post" enctype="multipart/form-data" class="bg-white p-4 rounded shadow-sm">
             <div class="mb-3">
                 <label class="form-label">Fecha de Ingreso:</label>
-                <input type="date" name="fecha_ingreso" value="<p>FECHA: <strong><?= strftime('%d de %B de %Y', strtotime($client['fecha_ingreso'])); ?></strong>" class="form-control">
+                <input type="date" name="fecha_ingreso" value="<?= date('Y-m-d', strtotime($client['fecha_ingreso'])); ?>" class="form-control">
             </div>
 
             <div class="mb-3">

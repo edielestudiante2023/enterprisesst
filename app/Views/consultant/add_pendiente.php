@@ -11,19 +11,25 @@
         body {
             background-color: #f8f9fa;
         }
+
         h2 {
             color: #333;
         }
-        .form-control, .btn {
+
+        .form-control,
+        .btn {
             border-radius: 5px;
         }
+
         .btn-primary {
             background-color: #007bff;
             border: none;
         }
+
         .btn-primary:hover {
             background-color: #0056b3;
         }
+
         label {
             font-weight: bold;
             color: #555;
@@ -33,7 +39,7 @@
 
 <body>
 
-<nav style="background-color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 10px 0; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
+    <nav style="background-color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 10px 0; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
 
             <!-- Logo izquierdo -->
@@ -84,12 +90,18 @@
                 <label for="responsable">Responsable:</label>
                 <select name="responsable" id="responsable" class="form-control" required>
                     <option value="">Seleccione un responsable</option>
-                    <option value="ADMINISTRADOR">ADMINISTRADOR</option>
-                    <option value="EDISON CUERVO">EDISON CUERVO</option>
-                    <option value="ELEYSON SEGURA">ELEYSON SEGURA</option>
-                    <option value="NATALIA JIMENEZ">NATALIA JIMENEZ</option>
-                    <option value="DIANA CUESTAS">DIANA CUESTAS</option>
+                    <option value="GERENTE">Gerente General o Dirección</option>
+                    <option value="COORDINADOR_SST">Coordinador de SST o Responsable SST</option>
+                    <option value="COPASST">Miembro del COPASST</option>
+                    <option value="RRHH">Recursos Humanos</option>
+                    <option value="SUPERVISOR">Supervisor de Área o Jefe de Equipo</option>
+                    <option value="MANTENIMIENTO">Personal de Mantenimiento</option>
+                    <option value="TRABAJADOR_DESIGNADO">Trabajador Designado por Área (Inspector)</option>
+                    <option value="AUDITOR">Auditor Interno SST</option>
+                    <option value="GESTION_DOCUMENTAL">Encargado de Gestión Documental</option>
+                    <option value="CONSULTOR_EXTERNO">Consultor Externo - Cycloid Talent</option>
                 </select>
+
             </div>
 
             <div class="form-group">

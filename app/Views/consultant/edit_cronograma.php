@@ -161,13 +161,36 @@
                     <div class="mb-3">
                         <label for="perfil_de_asistentes" class="form-label">Perfil de Asistentes</label>
                         <select name="perfil_de_asistentes" id="perfil_de_asistentes" class="form-select" required>
-                            <option value="CONTRATISTAS" <?= ($cronograma['perfil_de_asistentes'] == 'CONTRATISTAS') ? 'selected' : '' ?>>CONTRATISTAS</option>
-                            <option value="RESIDENTES" <?= ($cronograma['perfil_de_asistentes'] == 'RESIDENTES') ? 'selected' : '' ?>>RESIDENTES</option>
+                            <option value="" disabled>Selecciona un perfil</option>
+
+                            <!-- Roles Internos -->
+                            <option value="GERENTE_GENERAL" <?= ($cronograma['perfil_de_asistentes'] == 'GERENTE_GENERAL') ? 'selected' : '' ?>>Gerente General</option>
+                            <option value="MIEMBROS_COPASST" <?= ($cronograma['perfil_de_asistentes'] == 'MIEMBROS_COPASST') ? 'selected' : '' ?>>Miembros del COPASST</option>
+                            <option value="RESPONSABLE_SST" <?= ($cronograma['perfil_de_asistentes'] == 'RESPONSABLE_SST') ? 'selected' : '' ?>>Responsable de SST</option>
+                            <option value="SUPERVISORES" <?= ($cronograma['perfil_de_asistentes'] == 'SUPERVISORES') ? 'selected' : '' ?>>Supervisores o Jefes de Área</option>
+                            <option value="TRABAJADORES_REPRESENTANTES" <?= ($cronograma['perfil_de_asistentes'] == 'TRABAJADORES_REPRESENTANTES') ? 'selected' : '' ?>>Trabajadores Representantes</option>
+                            <option value="MIEMBROS_COMITE_CONVIVENCIA" <?= ($cronograma['perfil_de_asistentes'] == 'MIEMBROS_COMITE_CONVIVENCIA') ? 'selected' : '' ?>>Miembros del Comité de Convivencia Laboral</option>
+                            <option value="RECURSOS_HUMANOS" <?= ($cronograma['perfil_de_asistentes'] == 'RECURSOS_HUMANOS') ? 'selected' : '' ?>>Departamento de Recursos Humanos</option>
+                            <option value="PERSONAL_MANTENIMIENTO" <?= ($cronograma['perfil_de_asistentes'] == 'PERSONAL_MANTENIMIENTO') ? 'selected' : '' ?>>Personal de Mantenimiento o Producción</option>
+                            <option value="ENCARGADO_AMBIENTAL" <?= ($cronograma['perfil_de_asistentes'] == 'ENCARGADO_AMBIENTAL') ? 'selected' : '' ?>>Encargado de Gestión Ambiental</option>
+                            <option value="TRABAJADORES_RIESGOS_CRITICOS" <?= ($cronograma['perfil_de_asistentes'] == 'TRABAJADORES_RIESGOS_CRITICOS') ? 'selected' : '' ?>>Trabajadores con Riesgos Críticos</option>
+
+                            <!-- Roles Externos -->
+                            <option value="ASESOR_SST" <?= ($cronograma['perfil_de_asistentes'] == 'ASESOR_SST') ? 'selected' : '' ?>>Asesor o Consultor en SST</option>
+                            <option value="AUDITOR_EXTERNO" <?= ($cronograma['perfil_de_asistentes'] == 'AUDITOR_EXTERNO') ? 'selected' : '' ?>>Auditores Externos</option>
+                            <option value="CAPACITADOR_EXTERNO" <?= ($cronograma['perfil_de_asistentes'] == 'CAPACITADOR_EXTERNO') ? 'selected' : '' ?>>Capacitadores Externos</option>
+                            <option value="CONTRATISTAS" <?= ($cronograma['perfil_de_asistentes'] == 'CONTRATISTAS') ? 'selected' : '' ?>>Contratistas y Proveedores</option>
+                            <option value="INSPECTORES_GUBERNAMENTALES" <?= ($cronograma['perfil_de_asistentes'] == 'INSPECTORES_GUBERNAMENTALES') ? 'selected' : '' ?>>Inspectores Gubernamentales</option>
+                            <option value="FISIOTERAPEUTAS_ERGONOMOS" <?= ($cronograma['perfil_de_asistentes'] == 'FISIOTERAPEUTAS_ERGONOMOS') ? 'selected' : '' ?>>Fisioterapeutas o Ergónomos</option>
+                            <option value="TECNICOS_ESPECIALIZADOS" <?= ($cronograma['perfil_de_asistentes'] == 'TECNICOS_ESPECIALIZADOS') ? 'selected' : '' ?>>Técnicos en Riesgos Especializados</option>
+                            <option value="BRIGADISTAS_EXTERNOS" <?= ($cronograma['perfil_de_asistentes'] == 'BRIGADISTAS_EXTERNOS') ? 'selected' : '' ?>>Brigadistas o Personal de Emergencias Externo</option>
+                            <option value="REPRESENTANTES_ARL" <?= ($cronograma['perfil_de_asistentes'] == 'REPRESENTANTES_ARL') ? 'selected' : '' ?>>Representantes de Aseguradoras (ARL)</option>
+                            <option value="AUDITORES_ISO" <?= ($cronograma['perfil_de_asistentes'] == 'AUDITORES_ISO') ? 'selected' : '' ?>>Auditores de Normas ISO</option>
+
+                            <!-- Opción para Todos -->
                             <option value="TODOS" <?= ($cronograma['perfil_de_asistentes'] == 'TODOS') ? 'selected' : '' ?>>TODOS</option>
-                            <option value="ASAMBLEA" <?= ($cronograma['perfil_de_asistentes'] == 'ASAMBLEA') ? 'selected' : '' ?>>ASAMBLEA</option>
-                            <option value="CONSEJO DE ADMINISTRACIÓN" <?= ($cronograma['perfil_de_asistentes'] == 'CONSEJO DE ADMINISTRACIÓN') ? 'selected' : '' ?>>CONSEJO DE ADMINISTRACIÓN</option>
-                            <option value="ADMINISTRADOR" <?= ($cronograma['perfil_de_asistentes'] == 'ADMINISTRADOR') ? 'selected' : '' ?>>ADMINISTRADOR</option>
                         </select>
+
                     </div>
                 </div>
 
