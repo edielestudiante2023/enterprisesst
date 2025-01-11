@@ -1,8 +1,8 @@
 
 
 INSERT INTO `client_policies` (`client_id`, `policy_type_id`, `policy_content`) VALUES
-( 999, 1, ' '),
-( 999, 4, ' '),
+( 999, 1, 'administración  e implementación del sistema, para lo cual deberá planificar, organizar y dirigir una evaluación, informar a la alta dirección sobre el funcionamiento y los resultados del SG-SST, y actualización de acuerdo con la normatividad vigente.'),
+( 999, 4, 'Este enfoque permitirá no solo cumplir con los requisitos legales, sino también fomentar una cultura preventiva dentro de la organización, donde todos los miembros, desde la alta dirección hasta los trabajadores, asumen un rol activo en la identificación y control de riesgos. La participación constante, la formación adecuada y el monitoreo continuo del Sistema de Gestión en SST garantizarán la mejora continua y el bienestar de los empleados, al tiempo que contribuyen a la sostenibilidad y productividad de la empresa.'),
 ( 999, 5, ' '),
 ( 999, 6, ' '),
 ( 999, 7, ' '),
