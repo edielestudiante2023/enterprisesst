@@ -18,15 +18,25 @@ class AuthController extends Controller
         $session = session();
         $username = $this->request->getVar('username');
         $password = $this->request->getVar('password');
-        $role = $this->request->getVar('role'); // 'client' or 'consultant'
+        $role = $this->request->getVar('role'); // 'client' o 'consultant'
 
         if ($role === 'client') {
             $clientModel = new ClientModel();
             $client = $clientModel->where('correo_cliente', $username)->first();
+
             if ($client && password_verify($password, $client['password'])) {
+                // Verificar el estado del cliente
+                if ($client['estado'] !== 'activo') {
+                    // Si el estado no es 'Activo', redirigir a la vista específica
+                    // Asegúrate de haber creado la vista en app/Views/client/suspended.php 
+                    // o la que corresponda.
+                    return view('client/suspended');
+                }
+
+                // Si el cliente está activo, continuar con el inicio de sesión normal
                 $session->set([
-                    'user_id' => $client['id_cliente'],
-                    'role' => 'client',
+                    'user_id'   => $client['id_cliente'],
+                    'role'      => 'client',
                     'isLoggedIn' => true
                 ]);
                 return redirect()->to('/dashboard');
@@ -37,18 +47,18 @@ class AuthController extends Controller
             if ($consultant && password_verify($password, $consultant['password'])) {
                 if ($consultant['rol'] === 'admin') {
                     $session->set([
-                        'user_id' => $consultant['id_consultor'],
-                        'role' => $consultant['rol'],
+                        'user_id'   => $consultant['id_consultor'],
+                        'role'      => $consultant['rol'],
                         'isLoggedIn' => true
                     ]);
-                    return redirect()->to('/admindashboard'); // Redirigir al dashboard de administrador
+                    return redirect()->to('/admindashboard');
                 } elseif ($consultant['rol'] === 'consultant') {
                     $session->set([
-                        'user_id' => $consultant['id_consultor'],
-                        'role' => $consultant['rol'],
+                        'user_id'   => $consultant['id_consultor'],
+                        'role'      => $consultant['rol'],
                         'isLoggedIn' => true
                     ]);
-                    return redirect()->to('/dashboardconsultant'); // Redirigir al dashboard de consultores
+                    return redirect()->to('/dashboardconsultant');
                 }
             }
         }
