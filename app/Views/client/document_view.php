@@ -15,60 +15,69 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        body {
-            background-color: #f9f9f9;
-            color: #333;
-        }
+    body {
+        background-color: #f9f9f9;
+        color: #333;
+    }
 
-        .container {
-            margin-top: 30px;
-            max-width: 1200px;
-        }
+    .container {
+        margin-top: 30px;
+        max-width: 1200px;
+    }
 
+    .table-container {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-container h2 {
+        color: #333;
+        font-weight: 600;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        margin-left: 0.5em;
+        display: inline-block;
+        width: auto;
+    }
+
+    .empty-message {
+        color: #333;
+        font-size: 18px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    /* Estilo para limitar la columna Observaciones a 40 caracteres */
+    .observaciones-cell {
+        max-width: 40ch;        /* Limitar el ancho a 40 caracteres aproximados */
+        white-space: nowrap;    /* Evitar saltos de línea */
+        overflow: hidden;       /* Ocultar contenido que exceda el ancho */
+        text-overflow: ellipsis;/* Mostrar "..." al truncar */
+    }
+
+    /* Responsive table adjustments */
+    @media (max-width: 768px) {
         .table-container {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
         }
 
         .table-container h2 {
-            color: #333;
-            font-weight: 600;
-            font-size: 24px;
-            margin-bottom: 15px;
+            font-size: 20px;
         }
 
-        .dataTables_wrapper .dataTables_filter input {
-            margin-left: 0.5em;
-            display: inline-block;
-            width: auto;
+        .table th,
+        .table td {
+            font-size: 14px;
         }
-
-        .empty-message {
-            color: #333;
-            font-size: 18px;
-            text-align: center;
-            padding: 20px;
-        }
-
-        /* Responsive table adjustments */
-        @media (max-width: 768px) {
-            .table-container {
-                padding: 10px;
-            }
-
-            .table-container h2 {
-                font-size: 20px;
-            }
-
-            .table th,
-            .table td {
-                font-size: 14px;
-            }
-        }
+    }
     </style>
 </head>
 
@@ -98,7 +107,7 @@
 
     <!-- Espacio para el Navbar Fijo -->
     <div style="height: 120px;"></div>
-    <div class="container">
+    <div class="container-fluid">
         <?php foreach ($topicsList as $key => $titulo): ?>
             <div class="table-container">
                 <h2><?= esc($titulo) ?></h2>
@@ -131,7 +140,14 @@
                                     <td><?= esc($reporte['estado']) ?></td>
                                     <td><?= esc($reporte['tipo_reporte']) ?></td>
                                     <td><?= esc($reporte['detalle_reporte']) ?></td>
-                                    <td><?= esc($reporte['observaciones']) ?></td>
+                                    <td class="observaciones-cell"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="<?= esc($reporte['observaciones']) ?>">
+                                        <?= (strlen($reporte['observaciones']) > 40)
+                                            ? esc(substr($reporte['observaciones'], 0, 40)) . '...'
+                                            : esc($reporte['observaciones']) ?>
+                                    </td>
                                     <td><?= esc($reporte['created_at']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
@@ -143,9 +159,6 @@
             </div>
         <?php endforeach; ?>
     </div>
-
-
-
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -167,6 +180,12 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Inicializar tooltips de Bootstrap
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+              return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
             // Lista de claves para las tablas basadas en los temas
             var tableKeys = <?= json_encode(array_keys($topicsList)) ?>;
 
