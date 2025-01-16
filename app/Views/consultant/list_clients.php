@@ -121,7 +121,7 @@
                             <th>Fecha Fin de Contrato</th>
                             <th>Ciudad</th>
                             <th>Estado</th>
-                            <th>ID Consultor</th>
+                            <th>Consultor</th>
                             <th>Logo</th>
                             <th>Firma Representante Legal</th>
                             <th>Estándares</th>
@@ -147,7 +147,7 @@
                             <th>Fecha Fin de Contrato</th>
                             <th>Ciudad</th>
                             <th>Estado</th>
-                            <th>ID Consultor</th>
+                            <th>Consultor</th>
                             <th>Logo</th>
                             <th>Firma Representante Legal</th>
                             <th>Estándares</th>
@@ -173,7 +173,7 @@
                                 <td><?= htmlspecialchars($client['fecha_fin_contrato']) ?></td>
                                 <td><?= htmlspecialchars($client['ciudad_cliente']) ?></td>
                                 <td><?= htmlspecialchars($client['estado']) ?></td>
-                                <td><?= htmlspecialchars($client['id_consultor']) ?></td>
+                                <td><?= htmlspecialchars($client['nombre_consultor']) ?></td>
                                 <td>
                                     <?php if (!empty($client['logo'])): ?>
                                         <img src="<?= base_url('uploads/' . htmlspecialchars($client['logo'])) ?>" alt="Logo" width="50" data-bs-toggle="tooltip" title="Logo del Cliente">
@@ -262,6 +262,10 @@
                 },
                 // Guardar el estado de la tabla (filtros, paginación, etc.)
                 "stateSave": true,
+                // Forzar orden al cargar el estado guardado
+                "stateLoadParams": function(settings, data) {
+                    data.order = [[0, "desc"]];
+                },
                 // Configuración de los botones
                 "dom": 'Bfrtip', // Posicionamiento de los botones
                 "buttons": [
@@ -284,9 +288,9 @@
                 // Configuración para ajustar automáticamente el ancho de las columnas
                 "autoWidth": false,
                 // Orden inicial (opcional)
-                "order": [[0, "asc"]],
+                "order": [[0, "desc"]],
                 // Callback después de cada redibujado de la tabla
-                "pageLength": 40,
+                "pageLength": 40,  // Número de filas por página
                 "initComplete": function () {
                     // Agregar filtros desplegables en el footer
                     this.api().columns().every(function () {
