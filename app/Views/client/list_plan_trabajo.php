@@ -163,7 +163,7 @@
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['fecha_cierre']) ?>"><?= esc($plan['fecha_cierre']) ?></td>
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['responsable_definido_paralaactividad']) ?>"><?= esc($plan['responsable_definido_paralaactividad']) ?></td>
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['estado_actividad']) ?>"><?= esc($plan['estado_actividad']) ?></td>
-                            <td data-bs-toggle="tooltip" title="<?= esc($plan['porcentaje_avance'] * 100) ?>%"><?= esc($plan['porcentaje_avance'] * 100) ?>%</td>
+                            <td data-bs-toggle="tooltip" title="<?= esc($plan['porcentaje_avance']) ?>%"><?= esc($plan['porcentaje_avance']) ?>%</td>
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['semana']) ?>"><?= esc($plan['semana']) ?></td>
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['observaciones']) ?>"><?= esc($plan['observaciones']) ?></td>
                         </tr>

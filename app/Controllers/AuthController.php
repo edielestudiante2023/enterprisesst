@@ -51,7 +51,7 @@ class AuthController extends Controller
                         'role'      => $consultant['rol'],
                         'isLoggedIn' => true
                     ]);
-                    return redirect()->to('/admindashboard');
+                    return redirect()->to('/admin/dashboard');
                 } elseif ($consultant['rol'] === 'consultant') {
                     $session->set([
                         'user_id'   => $consultant['id_consultor'],

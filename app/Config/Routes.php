@@ -389,3 +389,57 @@ $routes->post('/detailreportadd', 'DetailReportController::detailReportAddPost')
 $routes->get('/detailreportedit/(:num)', 'DetailReportController::detailReportEdit/$1');
 $routes->post('/detailreportedit', 'DetailReportController::detailReportEditPost');
 $routes->get('/detailreportdelete/(:num)', 'DetailReportController::detailReportDelete/$1');
+
+
+$routes->post('/updatePlanDeTrabajo', 'PlanDeTrabajoAnualController::updatePlanDeTrabajo');
+
+// Rutas en app/Config/Routes.php
+$routes->get('/listinventarioactividades', 'InventarioActividadesController::listinventarioactividades');
+$routes->get('/addinventarioactividades', 'InventarioActividadesController::addinventarioactividades');
+$routes->post('/addinventarioactividades', 'InventarioActividadesController::addpostinventarioactividades');
+$routes->get('/editinventarioactividades/(:num)', 'InventarioActividadesController::editinventarioactividades/$1');
+$routes->post('/editinventarioactividades/(:num)', 'InventarioActividadesController::editpostinventarioactividades/$1');
+$routes->get('/deleteinventarioactividades/(:num)', 'InventarioActividadesController::deleteinventarioactividades/$1');
+
+$routes->get('consultant/plan', 'PlanController::index'); // Ruta para mostrar la vista
+$routes->post('consultant/plan/upload', 'PlanController::upload'); // Ruta para procesar la carga
+
+$routes->get('/nuevoListPlanTrabajoCliente/(:num)', 'NuevoClientePlanTrabajoController::nuevoListPlanTrabajoCliente/$1');
+
+$routes->post('/updatecronogCapacitacion', 'CronogcapacitacionController::updatecronogCapacitacion');
+
+$routes->get('consultant/csvcronogramadecapacitacion', 'CsvCronogramaDeCapacitacion::index');
+$routes->post('consultant/csvcronogramadecapacitacion/upload', 'CsvCronogramaDeCapacitacion::upload');
+
+$routes->post('updateEvaluacion', 'EvaluationController::updateEvaluacion');
+
+
+$routes->post('updatePendiente', 'PendientesController::updatePendiente');
+
+$routes->get('consultant/csvpendientes', 'CsvPendientes::index');
+$routes->post('consultant/csvpendientes/upload', 'CsvPendientes::upload');
+
+$routes->get('consultant/csvevaluacioninicial', 'CsvEvaluacionInicial::index');
+$routes->post('consultant/csvevaluacioninicial/upload', 'CsvEvaluacionInicial::upload');
+
+
+
+$routes->get('consultant/csvpoliticasparadocumentos', 'csvpoliticasparadocumentosController::index');
+$routes->post('consultant/csvpoliticasparadocumentos/upload', 'csvpoliticasparadocumentosController::upload');
+
+$routes->get('consultant/csvversionesdocumentos', 'csvversionesdocumentosController::index');
+$routes->post('consultant/csvversionesdocumentos/upload', 'csvversionesdocumentosController::upload');
+
+$routes->get('consultant/csvkpisempresas', 'csvkpiempresasController::index');
+$routes->post('consultant/csvkpisempresas/upload', 'csvkpiempresasController::upload');
+
+
+
+$routes->get('consultant/listitemdashboard', 'AdminlistdashboardController::listitemdashboard');
+$routes->get('consultant/additemdashboard', 'AdminlistdashboardController::additemdashboard');
+$routes->post('consultant/additemdashboardpost', 'AdminlistdashboardController::additemdashboardpost');
+$routes->get('consultant/edititemdashboar/(:num)', 'AdminlistdashboardController::edititemdashboar/$1');
+$routes->post('consultant/editpostitemdashboar/(:num)', 'AdminlistdashboardController::editpostitemdashboar/$1');
+$routes->get('consultant/deleteitemdashboard/(:num)', 'AdminlistdashboardController::deleteitemdashboard/$1');
+
+$routes->get('admin/dashboard', 'CustomDashboardController::index');

@@ -167,7 +167,7 @@
             <div class="quick-access text-center">
                 <div class="row justify-content-center">
                     <div class="col-md-4 mb-3">
-                        <a href="<?= base_url('listPlanTrabajoCliente/' . $client['id_cliente']) ?>" target="_blank" class="btn btn-primary-custom w-100">
+                        <a href="<?= base_url('nuevoListPlanTrabajoCliente/' . $client['id_cliente']) ?>" target="_blank" class="btn btn-primary-custom w-100">
                             <i class="fas fa-calendar-alt"></i> Plan de Trabajo
                         </a>
                     </div>

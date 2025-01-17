@@ -6,42 +6,28 @@ use CodeIgniter\Model;
 
 class InventarioActividadesArrayModel extends Model
 {
-    protected $table = 'tbl_inventario_actividades_plandetrabajo';  // Nombre de la tabla
-    protected $primaryKey = 'id_inventario_actividades_plandetrabajo';  // Llave primaria
+    protected $table = 'tbl_inventario_actividades_plandetrabajo';
+    protected $primaryKey = 'id_inventario_actividades_plandetrabajo';
     protected $allowedFields = [
         'phva_plandetrabajo',
         'numeral_plandetrabajo',
         'actividad_plandetrabajo',
-        'responsable_sugerido_plandetrabajo' // Este campo no es obligatorio
+        'responsable_sugerido_plandetrabajo'
     ];
 
-    // Usar timestamps si es necesario
-    protected $useTimestamps = true;
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    // No usar timestamps ya que la tabla no tiene estos campos
+    protected $useTimestamps = false;
 
-    // Este modelo devolverá los resultados como arrays
-    protected $returnType = 'array';
+    // Configurar el modelo para que devuelva objetos
+    protected $returnType = 'object';
 
     // Validaciones
     protected $validationRules = [
         'phva_plandetrabajo' => 'required|string',
         'numeral_plandetrabajo' => 'required|string',
-        'actividad_plandetrabajo' => 'required|string',
+        'actividad_plandetrabajo' => 'required|string'
     ];
 
-    // Mensajes de validación
-    protected $validationMessages = [
-        'phva_plandetrabajo' => [
-            'required' => 'El campo PHVA es obligatorio.',
-        ],
-        'numeral_plandetrabajo' => [
-            'required' => 'El campo numeral es obligatorio.',
-        ],
-        'actividad_plandetrabajo' => [
-            'required' => 'El campo actividad es obligatorio.',
-        ],
-    ];
-
+    // Desactivar validación automática
     protected $skipValidation = false;
 }

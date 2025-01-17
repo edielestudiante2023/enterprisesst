@@ -5,19 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Cronogramas de Capacitación</title>
-    
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Bootstrap Icons CSS (Opcional) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    
+
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    
+
     <!-- DataTables Buttons CSS -->
     <link href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.bootstrap5.min.css" rel="stylesheet">
-    
+
     <style>
         body {
             font-size: 0.9rem;
@@ -42,19 +42,31 @@
         }
 
         /* Establecer altura fija para las filas de la tabla */
-        /* Asegúrate de que el contenido de las celdas no exceda esta altura */
-        table tbody tr td, table thead tr th, table tfoot tr th {
-            height: 50px; /* Ajusta este valor según tus necesidades */
+        table tbody tr td,
+        table thead tr th,
+        table tfoot tr th {
+            height: 50px;
             vertical-align: middle;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* Opcional: Ajustar el ancho de las columnas para mejorar la apariencia */
-        /* table th, table td {
-            max-width: 200px;
-        } */
+        /* Estilos para celdas editables */
+        .editable {
+            background-color: #fff3cd;
+            cursor: pointer;
+        }
+
+        .editable-select {
+            background-color: #e2f0fb;
+            cursor: pointer;
+        }
+
+        .editable-date {
+            background-color: #d1ecf1;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -135,7 +147,6 @@
                 </thead>
                 <tfoot>
                     <tr>
-                        <!-- Generaremos los filtros desplegables mediante JavaScript -->
                         <th></th>
                         <th></th>
                         <th></th>
@@ -159,24 +170,56 @@
                 <tbody>
                     <?php if (!empty($cronogramas) && is_array($cronogramas)): ?>
                         <?php foreach ($cronogramas as $cronograma): ?>
-                            <tr>
+                            <tr data-id="<?= esc($cronograma['id_cronograma_capacitacion']) ?>">
                                 <td><?= esc($cronograma['id_cronograma_capacitacion']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_capacitacion']); ?>"><?= esc($cronograma['nombre_capacitacion']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['objetivo_capacitacion']); ?>"><?= esc($cronograma['objetivo_capacitacion']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_cliente']); ?>"><?= esc($cronograma['nombre_cliente']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_programada']); ?>"><?= esc($cronograma['fecha_programada']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_de_realizacion']); ?>"><?= esc($cronograma['fecha_de_realizacion']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['estado']); ?>"><?= esc($cronograma['estado']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['perfil_de_asistentes']); ?>"><?= esc($cronograma['perfil_de_asistentes']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_del_capacitador']); ?>"><?= esc($cronograma['nombre_del_capacitador']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['horas_de_duracion_de_la_capacitacion']); ?>"><?= esc($cronograma['horas_de_duracion_de_la_capacitacion']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']); ?>"><?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_asistentes_a_capacitacion']); ?>"><?= esc($cronograma['numero_de_asistentes_a_capacitacion']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_total_de_personas_programadas']); ?>"><?= esc($cronograma['numero_total_de_personas_programadas']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['porcentaje_cobertura']); ?>"><?= esc($cronograma['porcentaje_cobertura']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_personas_evaluadas']); ?>"><?= esc($cronograma['numero_de_personas_evaluadas']) ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['promedio_de_calificaciones']); ?>"><?= esc($cronograma['promedio_de_calificaciones']) ?>%</td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['observaciones']); ?>"><?= esc($cronograma['observaciones']) ?></td>
+                                <td class="editable" data-field="nombre_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_capacitacion']); ?>">
+                                    <?= esc($cronograma['nombre_capacitacion']) ?>
+                                </td>
+                                <td class="editable" data-field="objetivo_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['objetivo_capacitacion']); ?>">
+                                    <?= esc($cronograma['objetivo_capacitacion']) ?>
+                                </td>
+                                <td class="editable" data-field="nombre_cliente" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_cliente']); ?>">
+                                    <?= esc($cronograma['nombre_cliente']) ?>
+                                </td>
+                                <td class="editable-date" data-field="fecha_programada" data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_programada']); ?>">
+                                    <?= esc($cronograma['fecha_programada']) ?>
+                                </td>
+                                <td class="editable-date" data-field="fecha_de_realizacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_de_realizacion']); ?>">
+                                    <?= esc($cronograma['fecha_de_realizacion']) ?>
+                                </td>
+                                <td class="editable-select" data-field="estado" data-bs-toggle="tooltip" title="<?= esc($cronograma['estado']); ?>">
+                                    <?= esc($cronograma['estado']) ?>
+                                </td>
+                                <td class="editable-select" data-field="perfil_de_asistentes" data-bs-toggle="tooltip" title="<?= esc($cronograma['perfil_de_asistentes']); ?>">
+                                    <?= esc($cronograma['perfil_de_asistentes']) ?>
+                                </td>
+                                <td class="editable" data-field="nombre_del_capacitador" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_del_capacitador']); ?>">
+                                    <?= esc($cronograma['nombre_del_capacitador']) ?>
+                                </td>
+                                <td class="editable" data-field="horas_de_duracion_de_la_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['horas_de_duracion_de_la_capacitacion']); ?>">
+                                    <?= esc($cronograma['horas_de_duracion_de_la_capacitacion']) ?>
+                                </td>
+                                <td class="editable-select" data-field="indicador_de_realizacion_de_la_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']); ?>">
+                                    <?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']) ?>
+                                </td>
+                                <td class="editable" data-field="numero_de_asistentes_a_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_asistentes_a_capacitacion']); ?>">
+                                    <?= esc($cronograma['numero_de_asistentes_a_capacitacion']) ?>
+                                </td>
+                                <td class="editable" data-field="numero_total_de_personas_programadas" data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_total_de_personas_programadas']); ?>">
+                                    <?= esc($cronograma['numero_total_de_personas_programadas']) ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['porcentaje_cobertura']); ?>">
+                                    <?= esc($cronograma['porcentaje_cobertura']) ?>
+                                </td>
+                                <td class="editable" data-field="numero_de_personas_evaluadas" data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_personas_evaluadas']); ?>">
+                                    <?= esc($cronograma['numero_de_personas_evaluadas']) ?>
+                                </td>
+                                <td class="editable" data-field="promedio_de_calificaciones" data-bs-toggle="tooltip" title="<?= esc($cronograma['promedio_de_calificaciones']); ?>">
+                                    <?= esc($cronograma['promedio_de_calificaciones']) ?>%
+                                </td>
+                                <td class="editable" data-field="observaciones" data-bs-toggle="tooltip" title="<?= esc($cronograma['observaciones']); ?>">
+                                    <?= esc($cronograma['observaciones']) ?>
+                                </td>
                                 <td class="text-center">
                                     <a href="<?= base_url('/editcronogCapacitacion/' . esc($cronograma['id_cronograma_capacitacion'])) ?>" class="btn btn-warning btn-sm">Editar</a>
                                     <a href="<?= base_url('/deletecronogCapacitacion/' . esc($cronograma['id_cronograma_capacitacion'])) ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este cronograma?');">Eliminar</a>
@@ -196,17 +239,12 @@
     <!-- Footer -->
     <footer class="bg-white py-4 border-top mt-4">
         <div class="container text-center">
-            <!-- Company and Rights -->
             <p class="fw-bold mb-1">Cycloid Talent SAS</p>
             <p class="mb-1">Todos los derechos reservados © 2024</p>
             <p class="mb-1">NIT: 901.653.912</p>
-
-            <!-- Website Link -->
             <p class="mb-3">
                 Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" class="text-primary text-decoration-none">https://cycloidtalent.com/</a>
             </p>
-
-            <!-- Social Media Links -->
             <p class="mb-2"><strong>Nuestras Redes Sociales:</strong></p>
             <div class="d-flex justify-content-center gap-3">
                 <a href="https://www.facebook.com/CycloidTalent" target="_blank">
@@ -227,106 +265,148 @@
 
     <!-- jQuery 3.6.0 -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <!-- Bootstrap 5 JS Bundle (Includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
-    
+
     <!-- DataTables Buttons JS -->
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> <!-- Biblioteca necesaria para Excel -->
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script> <!-- Botones HTML5 -->
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
+
     <!-- DataTables Spanish Language -->
-    <script src="https://cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"></script>
+    <!-- Se eliminó la carga incorrecta del archivo JSON como script -->
 
     <script>
-        $(document).ready(function() {
-            // Inicializar DataTable con las opciones requeridas
-            var table = $('#cronogramaTable').DataTable({
-                // Activar la extensión de botones
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'excelHtml5',
-                        text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel', // Icono de Bootstrap Icons
-                        titleAttr: 'Exportar a Excel',
-                        className: 'btn btn-success btn-sm'
-                    },
-                    {
-                        extend: 'colvis',
-                        text: '<i class="bi bi-columns"></i> Mostrar/Ocultar Columnas',
-                        className: 'btn btn-secondary btn-sm'
+        // Verificar si ya existe un campo de entrada en la celda para evitar duplicados
+        $(document).on('click', '.editable, .editable-date, .editable-select', function() {
+            if ($(this).find('input, select').length) return;  // Si ya hay un input o select, no hacer nada
+
+            var cell = $(this);
+            var field = cell.data('field');
+            var id = cell.closest('tr').data('id');
+
+            if (cell.hasClass('editable-date')) {
+                // Manejo de fechas
+                var currentValue = cell.text().trim();
+                var input = $('<input>', {
+                    type: 'date',
+                    class: 'form-control',
+                    value: currentValue
+                });
+
+                cell.html(input);
+                input.focus();
+
+                input.on('blur change', function() {
+                    var newValue = input.val();
+                    if (newValue) {
+                        cell.text(newValue);
+                        updateField(id, field, newValue);
+                    } else {
+                        cell.text(currentValue);
                     }
-                ],
-                // Configurar el idioma a español
-                language: {
-                    url: "https://cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
-                },
-                // Activar el guardado del estado para persistencia de filtros
-                stateSave: true,
-                // Definir el callback para inicializar los filtros después de la creación de la tabla
-                initComplete: function () {
-                    this.api().columns().every(function () {
-                        var column = this;
-                        var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
-                            .appendTo($(column.footer()).empty())
-                            .on('change', function () {
-                                var val = $.fn.dataTable.util.escapeRegex(
-                                    $(this).val()
-                                );
+                });
 
-                                column
-                                    .search(val ? '^' + val + '$' : '', true, false)
-                                    .draw();
-                            });
-
-                        // Obtener los valores únicos de cada columna
-                        column.data().unique().sort().each(function (d, j) {
-                            if(d !== null && d !== ""){
-                                select.append('<option value="' + d + '">' + d + '</option>')
-                            }
-                        });
-
-                        // Restaurar el valor del filtro si existe en el estado guardado
-                        var state = table.state.loaded();
-                        if(state && state.columns && state.columns[column.index()].search && state.columns[column.index()].search.search) {
-                            var searchValue = state.columns[column.index()].search.search.replace('^','').replace('$','');
-                            select.val(searchValue);
-                        }
-                    });
+            } else if (cell.hasClass('editable-select')) {
+                // Manejo de listas desplegables
+                var currentValue = cell.text().trim();
+                var options = [];
+                if (field === 'estado') {
+                    options = ['PROGRAMADA', 'EJECUTADA', 'CANCELADA POR EL CLIENTE', 'REPROGRAMADA'];
+                } else if (field === 'perfil_de_asistentes') {
+                    options = ['CONTRATISTAS', 'RESIDENTES', 'TODOS', 'ASAMBLEA', 'CONSEJO DE ADMINISTRACIÓN', 'ADMINISTRADOR'];
+                } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
+                    options = [
+                        'SE EJECUTO EN LA FECHA O ANTES DE LA FECHA',
+                        'SE EJECUTO DESPUES DE LA FECHA ACORDADA A CAUSA DEL CLIENTE',
+                        'DECLINADA POR EL CLIENTE',
+                        'NO HAY JUSTIFICACION PORQUE NO SE REALIZÓ',
+                        'SE EJECUTO DESPUES DE LA FECHA POR CAUSA DEL CAPACITADOR'
+                    ];
                 }
-            });
 
-            // Inicializar los tooltips de Bootstrap
-            function initializeTooltips() {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-                    new bootstrap.Tooltip(tooltipTriggerEl);
+                var select = $('<select>', {
+                    class: 'form-select form-select-sm'
+                });
+
+                options.forEach(function(option) {
+                    select.append($('<option>', {
+                        value: option,
+                        text: option,
+                        selected: option === currentValue
+                    }));
+                });
+
+                cell.html(select);
+                select.focus();
+
+                select.on('blur change', function() {
+                    setTimeout(function() {
+                        var newValue = select.val();
+                        if (newValue) {
+                            cell.text(newValue);
+                            updateField(id, field, newValue);
+                        } else {
+                            cell.text(currentValue);
+                        }
+                    }, 200);
+                });
+
+            } else {
+                // Manejo de texto estándar
+                var currentValue = cell.text().trim();
+                var input = $('<input>', {
+                    type: 'text',
+                    class: 'form-control',
+                    value: currentValue
+                });
+
+                cell.html(input);
+                input.focus();
+
+                input.on('blur', function() {
+                    var newValue = input.val();
+                    if (newValue) {
+                        cell.text(newValue);
+                        updateField(id, field, newValue);
+                    } else {
+                        cell.text(currentValue);
+                    }
                 });
             }
-
-            // Inicializar tooltips al cargar la página
-            initializeTooltips();
-
-            // Re-inicializar los tooltips después de cada redibujado de la tabla
-            table.on('draw', function () {
-                initializeTooltips();
-            });
-
-            // Botón para restablecer filtros
-            $('#clearState').on('click', function () {
-                // Limpiar el estado guardado de DataTables
-                table.state.clear();
-                // Recargar la página para aplicar los cambios
-                location.reload();
-            });
         });
+
+        // Función para enviar datos al servidor
+        function updateField(id, field, value) {
+            $.ajax({
+                url: '<?= base_url('/updatecronogCapacitacion') ?>',
+                method: 'POST',
+                data: {
+                    id: id,
+                    field: field,
+                    value: value
+                },
+                success: function(response) {
+                    if (response.success) {
+                        console.log('Registro actualizado correctamente');
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error al comunicarse con el servidor:', error);
+                    console.error('Detalles:', xhr.responseText);
+                    alert('Error al comunicarse con el servidor: ' + error);
+                }
+            });
+        }
     </script>
 </body>
 

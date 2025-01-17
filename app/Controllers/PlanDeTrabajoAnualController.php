@@ -17,16 +17,20 @@ class PlanDeTrabajoAnualController extends Controller
         $clientModel = new ClientModel();
         $inventarioModel = new InventarioActividadesArrayModel();
 
-        // Obtenemos todos los planes de trabajo
-        $planes = $ptaModel->findAll();
+        // Obtenemos todos los planes de trabajo como arrays
+        $planes = $ptaModel->asArray()->findAll();
 
-        // Creamos un array para pasar los datos completos a la vista
         $actividades = [];
-
-        // Iteramos los planes para obtener los datos relacionados (nombre del cliente y actividad del plan de trabajo)
         foreach ($planes as $plan) {
-            // Obtenemos el nombre del cliente
-            $cliente = $clientModel->find($plan['id_cliente']);
+            // Si 'semana' está vacío pero hay una 'fecha_propuesta', se recalcula la semana
+            if (empty($plan['semana']) && !empty($plan['fecha_propuesta'])) {
+                $plan['semana'] = date('W', strtotime($plan['fecha_propuesta']));
+                // Opcional: Actualizar el registro en la base de datos con la semana calculada
+                $ptaModel->update($plan['id_ptacliente'], ['semana' => $plan['semana']]);
+            }
+
+            // Obtener nombre del cliente como array
+            $cliente = $clientModel->asArray()->find($plan['id_cliente']);
             $actividad = [
                 'id_ptacliente' => $plan['id_ptacliente'],
                 'nombre_cliente' => $cliente ? $cliente['nombre_cliente'] : 'Cliente no encontrado',
@@ -46,8 +50,8 @@ class PlanDeTrabajoAnualController extends Controller
                 'updated_at' => $plan['updated_at'],
             ];
 
-            // Obtenemos los datos de la actividad del plan de trabajo
-            $actividadInfo = $inventarioModel->find($plan['id_plandetrabajo']);
+            // Obtener datos adicionales de la actividad como array
+            $actividadInfo = $inventarioModel->asArray()->find($plan['id_plandetrabajo']);
             if ($actividadInfo) {
                 $actividad['actividad_plandetrabajo'] = $actividadInfo['actividad_plandetrabajo'];
                 $actividad['phva_plandetrabajo'] = $actividadInfo['phva_plandetrabajo'];
@@ -57,10 +61,10 @@ class PlanDeTrabajoAnualController extends Controller
             $actividades[] = $actividad;
         }
 
-        // Pasamos los datos a la vista
         $data['actividades'] = $actividades;
         return view('consultant/listplantrabajoanual', $data);
     }
+
 
     // Mostrar formulario para agregar nuevo plan de trabajo anual
     public function addPlanDeTrabajoAnual()
@@ -176,6 +180,57 @@ class PlanDeTrabajoAnualController extends Controller
             }
         } else {
             return redirect()->back()->with('msg', 'ID inválido o no proporcionado');
+        }
+    }
+
+    public function updatePlanDeTrabajo()
+    {
+        $id = $this->request->getPost('id');
+        $field = $this->request->getPost('field');
+        $value = $this->request->getPost('value');
+
+        $allowedFields = [
+            'fecha_cierre',
+            'responsable_definido_paralaactividad',
+            'responsable_sugerido_plandetrabajo',
+            'estado_actividad',
+            'porcentaje_avance',
+            'observaciones',
+            'fecha_propuesta'
+        ];
+
+        if (!in_array($field, $allowedFields)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
+        }
+
+        if ($field === 'estado_actividad') {
+            $allowedStates = ['ABIERTA', 'CERRADA', 'GESTIONANDO'];
+            if (!in_array(strtoupper($value), $allowedStates)) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Estado no permitido']);
+            }
+        }
+
+        $ptaModel = new PtaclienteModel();
+        $updateData = [$field => $value];
+
+        // Si se actualiza la 'fecha_propuesta', recalcula la semana
+        if ($field === 'fecha_propuesta') {
+            $week = date('W', strtotime($value));
+            $updateData['semana'] = $week;
+            log_message('debug', "Fecha propuesta: $value, Semana calculada: $week");
+        }
+
+        if ($ptaModel->update($id, $updateData)) {
+            // Tras la actualización, verificamos si falta la semana y la fecha propuesta existe
+            $plan = $ptaModel->find($id);
+            if (empty($plan['semana']) && !empty($plan['fecha_propuesta'])) {
+                $week = date('W', strtotime($plan['fecha_propuesta']));
+                $ptaModel->update($id, ['semana' => $week]);
+                log_message('debug', "Semana recalculada para ID $id: $week");
+            }
+            return $this->response->setJSON(['success' => true, 'message' => 'Registro actualizado']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'No se pudo actualizar el registro']);
         }
     }
 }

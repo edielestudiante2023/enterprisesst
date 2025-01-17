@@ -155,4 +155,35 @@ class EvaluationController extends Controller
 
         return redirect()->to('/listEvaluaciones')->with('msg', 'Evaluación eliminada exitosamente');
     }
+
+    // En App/Controllers/EvaluationController.php
+
+    public function updateEvaluacion()
+    {
+        $id = $this->request->getPost('id');
+        $field = $this->request->getPost('field');
+        $value = $this->request->getPost('value');
+
+        $allowedFields = ['evaluacion_inicial', 'observaciones'];
+        if (!in_array($field, $allowedFields)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
+        }
+
+        $model = new \App\Models\EvaluationModel();
+        $updateData = [$field => $value];
+
+        // Si se actualiza "evaluacion_inicial", recalcular puntaje_cuantitativo
+        if ($field === 'evaluacion_inicial') {
+            $evaluation = $model->find($id);
+            $valor = isset($evaluation['valor']) ? $evaluation['valor'] : 0;
+            $puntaje_cuantitativo = in_array($value, ['CUMPLE TOTALMENTE', 'NO APLICA']) ? $valor : 0;
+            $updateData['puntaje_cuantitativo'] = $puntaje_cuantitativo;
+        }
+
+        if ($model->update($id, $updateData)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Registro actualizado correctamente']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el registro']);
+        }
+    }
 }

@@ -5,9 +5,18 @@
     <title>Lista de Contenidos</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <!-- CSS para Buttons -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <!-- JS para Buttons y exportación a Excel -->
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+
     <style>
         body {
             background-color: #f8f9fa;
@@ -62,12 +71,21 @@
 
     <script>
         $(document).ready(function () {
-            // Inicialización de DataTable
+            // Inicialización de DataTable con Buttons
             let table = $('#contentTable').DataTable({
                 language: {
                     url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                 },
                 stateSave: true, // Habilitar guardar estado
+                // Definir estructura DOM para incluir botones
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Exportar a Excel',
+                        titleAttr: 'Exportar a Excel'
+                    }
+                ],
                 initComplete: function () {
                     // Añadir filtros dinámicos en cada columna
                     this.api().columns().every(function () {
@@ -102,12 +120,12 @@
             }
 
             // Botón para borrar el estado
-        $('#clearState').on('click', function () {
-            // Borrar estado guardado en localStorage
-            localStorage.removeItem('DataTables_contentTable_/');
-            table.state.clear(); // Limpiar estado en DataTables
-            location.reload(); // Recargar la página
-        });
+            $('#clearState').on('click', function () {
+                // Borrar estado guardado en localStorage
+                localStorage.removeItem('DataTables_contentTable_/');
+                table.state.clear(); // Limpiar estado en DataTables
+                location.reload(); // Recargar la página
+            });
         });
     </script>
 </body>

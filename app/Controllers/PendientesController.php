@@ -149,4 +149,49 @@ class PendientesController extends Controller
             return redirect()->back()->with('msg', 'Error al eliminar pendiente');
         }
     }
+
+    public function updatePendiente() {
+        $id = $this->request->getPost('id');
+        $field = $this->request->getPost('field');
+        $value = $this->request->getPost('value');
+
+        // Incluir 'estado_avance' en los campos permitidos
+        $allowedFields = ['tarea_actividad', 'fecha_cierre', 'estado', 'evidencia_para_cerrarla', 'estado_avance'];
+
+        if (!in_array($field, $allowedFields)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
+        }
+
+        $model = new PendientesModel();
+        $pendiente = $model->find($id);
+        if (!$pendiente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Pendiente no encontrado']);
+        }
+
+        $updateData = [$field => $value];
+
+        // Recalcular "conteo_dias" si se actualiza "fecha_cierre" o "estado"
+        if (in_array($field, ['fecha_cierre', 'estado'])) {
+            $createdAt = $pendiente['created_at'];
+            $fechaCierre = ($field === 'fecha_cierre') ? $value : $pendiente['fecha_cierre'];
+
+            if (empty($fechaCierre) || $fechaCierre === '0') {
+                $updateData['conteo_dias'] = (int)((strtotime(date('Y-m-d H:i:s')) - strtotime($createdAt)) / (60*60*24));
+            } else {
+                $updateData['conteo_dias'] = (int)((strtotime($fechaCierre) - strtotime($createdAt)) / (60*60*24));
+            }
+        }
+
+        if ($model->update($id, $updateData)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Actualizado correctamente']);
+        } else {
+            $errors = $model->errors();
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al actualizar: ' . json_encode($errors)
+            ]);
+        }
+    }
+
+    
 }
