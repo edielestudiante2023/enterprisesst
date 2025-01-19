@@ -443,3 +443,26 @@ $routes->post('consultant/editpostitemdashboar/(:num)', 'AdminlistdashboardContr
 $routes->get('consultant/deleteitemdashboard/(:num)', 'AdminlistdashboardController::deleteitemdashboard/$1');
 
 $routes->get('admin/dashboard', 'CustomDashboardController::index');
+
+$routes->get('/accesosseguncliente/list', 'AccesossegunclienteController::listaccesosseguncliente');
+$routes->get('/accesosseguncliente/add', 'AccesossegunclienteController::addaccesosseguncliente');
+$routes->post('/accesosseguncliente/add', 'AccesossegunclienteController::addpostaccesosseguncliente');
+$routes->get('/accesosseguncliente/edit/(:num)', 'AccesossegunclienteController::editaccesosseguncliente/$1');
+$routes->post('/accesosseguncliente/edit', 'AccesossegunclienteController::editpostaccesosseguncliente');
+$routes->get('/accesosseguncliente/delete/(:num)', 'AccesossegunclienteController::deleteaccesosseguncliente/$1');
+
+$routes->get('/estandarcontractual/list', 'EstandarcontractualController::listestandarcontractual');
+$routes->get('/estandarcontractual/add', 'EstandarcontractualController::addestandarcontractual');
+$routes->post('/estandarcontractual/add', 'EstandarcontractualController::addpostestandarcontractual');
+$routes->get('/estandarcontractual/edit/(:num)', 'EstandarcontractualController::editestandarcontractual/$1');
+$routes->post('/estandarcontractual/edit', 'EstandarcontractualController::editpostestandarcontractual');
+$routes->get('/estandarcontractual/delete/(:num)', 'EstandarcontractualController::deleteestandarcontractual/$1');
+
+$routes->get('/accesosseguncontractualidad/list', 'AccesosseguncontractualidadController::listaccesosseguncontractualidad');
+$routes->get('/accesosseguncontractualidad/add', 'AccesosseguncontractualidadController::addaccesosseguncontractualidad');
+$routes->post('/accesosseguncontractualidad/add', 'AccesosseguncontractualidadController::addpostaccesosseguncontractualidad');
+$routes->get('/accesosseguncontractualidad/edit/(:num)', 'AccesosseguncontractualidadController::editaccesosseguncontractualidad/$1');
+$routes->post('/accesosseguncontractualidad/edit', 'AccesosseguncontractualidadController::editpostaccesosseguncontractualidad');
+$routes->get('/accesosseguncontractualidad/delete/(:num)', 'AccesosseguncontractualidadController::deleteaccesosseguncontractualidad/$1');
+
+
