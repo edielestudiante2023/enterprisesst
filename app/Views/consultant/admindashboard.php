@@ -26,7 +26,6 @@
             background-color: #ffffff;
             border-bottom: 1px solid #dee2e6;
             padding: 15px 0;
-            /* Ajuste de padding para un navbar más amplio */
         }
 
         .navbar-brand img {
@@ -44,20 +43,16 @@
 
         .welcome-banner {
             background-color: #e9ecef;
-            /* Gris claro */
             border-left: 5px solid #0d6efd;
-            /* Azul corporativo */
             color: #333333;
         }
 
         .welcome-banner h3 {
             color: #0d6efd;
-            /* Azul corporativo */
         }
 
         .table th {
             background-color: #0d6efd;
-            /* Azul corporativo */
             color: #ffffff;
         }
 
@@ -101,7 +96,6 @@
 
         .btn-danger-custom {
             background-color: #dc3545;
-            /* Rojo corporativo */
             border-color: #dc3545;
             color: #ffffff;
         }
@@ -127,13 +121,10 @@
             text-decoration: underline;
         }
 
-        /* Estilo para el espacio debajo del navbar */
         .navbar-spacing {
             height: 100px;
-            /* Ajuste según la altura real del navbar */
         }
 
-        /* Estilos Responsivos */
         @media (max-width: 768px) {
             .header-logos {
                 flex-direction: column;
@@ -145,25 +136,20 @@
             }
         }
 
-        /* Estilo para resaltar la fila */
         .highlighted {
             background-color: #cce5ff !important;
-            /* Azul claro */
             transition: background-color 0.5s ease;
         }
 
-        /* Estilo para la casilla de búsqueda personalizada */
         .custom-search {
             margin-bottom: 15px;
         }
 
-        /* Estilo para los select de filtros en el pie de la tabla */
         tfoot th {
             padding: 8px 10px;
             background-color: #f8f9fa;
         }
 
-        /* Ajuste para la longitud máxima de las celdas de descripción */
         .description-col {
             max-width: 300px;
             white-space: nowrap;
@@ -222,15 +208,6 @@
             <p class="mt-3">Explora las diferentes secciones y aprovecha las herramientas disponibles para optimizar tu desempeño.</p>
         </div>
 
-        <!-- Casilla de Búsqueda Personalizada -->
-        <div class="custom-search">
-            <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" id="wordSearch" class="form-control" placeholder="Buscar por palabra...">
-                <button class="btn btn-outline-secondary" id="clearWordSearch" type="button">Limpiar</button>
-            </div>
-        </div>
-
         <div class="table-responsive">
             <table id="itemTable" class="table table-striped table-bordered">
                 <thead>
@@ -257,8 +234,6 @@
                         <th></th>
                     </tr>
                 </tfoot>
-               
-
                 <tbody>
                     <?php foreach ($items as $item): ?>
                         <tr>
@@ -276,10 +251,10 @@
                             <td>
                                 <a href="<?= base_url('consultant/edititemdashboar/' . $item['id']) ?>" class="btn btn-warning btn-sm">
                                     <i class="bi bi-pencil-square"></i> Edit
-                                </a>
+                                <!-- </a>
                                 <a href="<?= base_url('consultant/deleteitemdashboard/' . $item['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
                                     <i class="bi bi-trash"></i> Delete
-                                </a>
+                                </a> -->
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -296,17 +271,12 @@
 
     <footer class="footer mt-auto py-3 border-top">
         <div class="container text-center">
-            <!-- Company and Rights -->
             <p class="fw-bold mb-0">Cycloid Talent SAS</p>
             <p class="mb-0">Todos los derechos reservados © <span id="currentYear"></span></p>
             <p class="mb-0">NIT: 901.653.912</p>
-
-            <!-- Website Link -->
             <p class="mb-0">
                 Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" rel="noopener noreferrer">https://cycloidtalent.com/</a>
             </p>
-
-            <!-- Social Media Links -->
             <p class="mt-3 mb-0"><strong>Nuestras Redes Sociales:</strong></p>
             <div class="d-flex justify-content-center gap-3">
                 <a href="https://www.facebook.com/CycloidTalent" target="_blank" rel="noopener noreferrer" class="text-secondary text-decoration-none" aria-label="Facebook">
@@ -332,13 +302,13 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <!-- Scripts específicos para la tabla -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#itemTable').DataTable({
+                columnDefs: [
+                    { targets: 0, visible: false },  // Oculta la columna "ID" (índice 0)
+                    { targets: 6, visible: false }   // Oculta la columna "Orden" (índice 6)
+                ],
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                 },
@@ -362,7 +332,6 @@
             });
         });
     </script>
-
 </body>
 
 </html>
