@@ -129,19 +129,19 @@
                         <th>Nombre de la Capacitación</th>
                         <th>Objetivo de la Capacitación</th>
                         <th>Nombre del Cliente</th>
-                        <th>Fecha Programada</th>
-                        <th>Fecha de Realización</th>
-                        <th>Estado</th>
-                        <th>Perfil de Asistentes</th>
-                        <th>Capacitador</th>
-                        <th>Horas de Duración</th>
-                        <th>Indicador de Realización</th>
-                        <th>Número de Asistentes</th>
-                        <th>Total Programados</th>
+                        <th>*Fecha Programada</th>
+                        <th>*Fecha de Realización</th>
+                        <th>*Estado</th>
+                        <th>*Perfil de Asistentes</th>
+                        <th>*Capacitador</th>
+                        <th>*Horas de Duración</th>
+                        <th>*Indicador de Realización</th>
+                        <th>*Número de Asistentes</th>
+                        <th>*Total Programados</th>
                         <th>Porcentaje de Cobertura</th>
-                        <th>Personas Evaluadas</th>
-                        <th>Promedio de Calificaciones</th>
-                        <th>Observaciones</th>
+                        <th>*Personas Evaluadas</th>
+                        <th>*Promedio de Calificaciones</th>
+                        <th>*Observaciones</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -172,13 +172,13 @@
                         <?php foreach ($cronogramas as $cronograma): ?>
                             <tr data-id="<?= esc($cronograma['id_cronograma_capacitacion']) ?>">
                                 <td><?= esc($cronograma['id_cronograma_capacitacion']) ?></td>
-                                <td class="editable" data-field="nombre_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_capacitacion']); ?>">
+                                <td class="" data-field="nombre_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_capacitacion']); ?>">
                                     <?= esc($cronograma['nombre_capacitacion']) ?>
                                 </td>
-                                <td class="editable" data-field="objetivo_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['objetivo_capacitacion']); ?>">
+                                <td class="" data-field="objetivo_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['objetivo_capacitacion']); ?>">
                                     <?= esc($cronograma['objetivo_capacitacion']) ?>
                                 </td>
-                                <td class="editable" data-field="nombre_cliente" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_cliente']); ?>">
+                                <td class="" data-field="nombre_cliente" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_cliente']); ?>">
                                     <?= esc($cronograma['nombre_cliente']) ?>
                                 </td>
                                 <td class="editable-date" data-field="fecha_programada" data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_programada']); ?>">

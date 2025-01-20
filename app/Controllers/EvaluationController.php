@@ -23,7 +23,7 @@ class EvaluationController extends Controller
         // Crear un array asociando los id_cliente con los nombres de cliente
         $clientsMap = [];
         foreach ($clients as $client) {
-            $clientsMap[$client['id_cliente']] = $client['nombre_cliente']; // Asume que 'nombre_cliente' es el campo con el nombre del cliente
+            $clientsMap[$client['id_cliente']] = $client['nombre_cliente'];
         }
 
         // Agregar los nombres de los clientes a las evaluaciones
@@ -71,7 +71,7 @@ class EvaluationController extends Controller
             'item_del_estandar' => $this->request->getVar('item_del_estandar'),
             'evaluacion_inicial' => $evaluacion_inicial,
             'valor' => $valor,
-            'puntaje_cuantitativo' => $puntaje_cuantitativo,  // Asignar el puntaje calculado
+            'puntaje_cuantitativo' => $puntaje_cuantitativo,
             'item' => $this->request->getVar('item'),
             'criterio' => $this->request->getVar('criterio'),
             'modo_de_verificacion' => $this->request->getVar('modo_de_verificacion'),
@@ -129,7 +129,7 @@ class EvaluationController extends Controller
             'item_del_estandar' => $this->request->getVar('item_del_estandar'),
             'evaluacion_inicial' => $evaluacion_inicial,
             'valor' => $valor,
-            'puntaje_cuantitativo' => $puntaje_cuantitativo,  // Asignar el puntaje calculado
+            'puntaje_cuantitativo' => $puntaje_cuantitativo,
             'item' => $this->request->getVar('item'),
             'criterio' => $this->request->getVar('criterio'),
             'modo_de_verificacion' => $this->request->getVar('modo_de_verificacion'),
@@ -146,7 +146,6 @@ class EvaluationController extends Controller
         }
     }
 
-
     // Eliminar una evaluación
     public function deleteEvaluacion($id)
     {
@@ -156,8 +155,7 @@ class EvaluationController extends Controller
         return redirect()->to('/listEvaluaciones')->with('msg', 'Evaluación eliminada exitosamente');
     }
 
-    // En App/Controllers/EvaluationController.php
-
+    // Función para actualización en línea
     public function updateEvaluacion()
     {
         $id = $this->request->getPost('id');
@@ -169,7 +167,7 @@ class EvaluationController extends Controller
             return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
         }
 
-        $model = new \App\Models\EvaluationModel();
+        $model = new EvaluationModel();
         $updateData = [$field => $value];
 
         // Si se actualiza "evaluacion_inicial", recalcular puntaje_cuantitativo
@@ -181,7 +179,13 @@ class EvaluationController extends Controller
         }
 
         if ($model->update($id, $updateData)) {
-            return $this->response->setJSON(['success' => true, 'message' => 'Registro actualizado correctamente']);
+            // Obtener el registro actualizado para recuperar el nuevo puntaje_cuantitativo
+            $updatedRecord = $model->find($id);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Registro actualizado correctamente',
+                'puntaje_cuantitativo' => $updatedRecord['puntaje_cuantitativo']
+            ]);
         } else {
             return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el registro']);
         }

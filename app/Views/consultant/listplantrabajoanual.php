@@ -155,14 +155,14 @@
                         <th>PHVA</th>
                         <th>Numeral</th>
                         <th>Actividad</th>
-                        <th>Responsable Sugerido</th>
-                        <th>Fecha Propuesta</th>
-                        <th>Fecha Cierre</th>
-                        <th>Responsable Definido</th>
-                        <th>Estado Actividad</th>
-                        <th>Porcentaje Avance</th>
+                        <th>*Responsable Sugerido</th>
+                        <th>*Fecha Propuesta</th>
+                        <th>*Fecha Cierre</th>
+                        <th>*Responsable Definido</th>
+                        <th>*Estado Actividad</th>
+                        <th>*Porcentaje Avance</th>
                         <th>Semana</th>
-                        <th>Observaciones</th>
+                        <th>*Observaciones</th>
                         <th>Creado en</th>
                         <th>Actualizado en</th>
                         <th>Acciones</th>

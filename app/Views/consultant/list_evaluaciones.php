@@ -48,20 +48,16 @@
         td,
         th {
             max-width: 20ch;
-            /* Limita el contenido visible a 20 caracteres */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             height: 25px;
-            /* Reduce la altura de las filas */
         }
 
         .tooltip-inner {
             max-width: 300px;
-            /* Ajusta el ancho máximo del tooltip */
             word-wrap: break-word;
             z-index: 1050;
-            /* Asegura que el tooltip se muestre correctamente */
         }
 
         .filters select {
@@ -137,7 +133,7 @@
                         <th>Ciclo</th>
                         <th>Estándar</th>
                         <th>Item del Estándar</th>
-                        <th>Evaluación Inicial</th>
+                        <th>*Evaluación Inicial</th>
                         <th>Valor</th>
                         <th>Puntaje Cuantitativo</th>
                         <th>Item</th>
@@ -149,7 +145,6 @@
                 <tfoot class="table-light">
                     <tr class="filters">
                         <th>
-                            <!-- Filtro para "Acciones" - Opcionalmente puedes dejarlo vacío o con "Todos" -->
                             <select class="form-select form-select-sm filter-select" aria-label="Filtro Acciones" disabled>
                                 <option value="">Todos</option>
                             </select>
@@ -229,7 +224,6 @@
                                 <td class="editable-select"
                                     data-field="evaluacion_inicial"
                                     data-id="<?= $evaluacion['id_ev_ini']; ?>"
-                                    
                                     title="<?= esc($evaluacion['evaluacion_inicial']); ?>">
                                     <?= esc($evaluacion['evaluacion_inicial']); ?>
                                 </td>
@@ -304,162 +298,168 @@
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
 
     <script>
-$(document).ready(function() {
-    // 1. Configuración para edición en línea
-    $(document).on('click', '.editable-select, .editable', function() {
-        if ($(this).find('input, select').length) return; // Evitar duplicados
+        $(document).ready(function() {
+            // 1. Configuración para edición en línea
+            $(document).on('click', '.editable-select, .editable', function() {
+                if ($(this).find('input, select').length) return; // Evitar duplicados
 
-        var cell = $(this);
-        var field = cell.data('field');
-        var id = cell.data('id');
-        var currentValue = cell.text().trim();
+                var cell = $(this);
+                var field = cell.data('field');
+                var id = cell.data('id');
+                var currentValue = cell.text().trim();
 
-        if (field === 'evaluacion_inicial') {
-            var options = ['CUMPLE TOTALMENTE', 'NO CUMPLE', 'NO APLICA'];
-            var select = $('<select>', { class: 'form-select form-select-sm' });
+                if (field === 'evaluacion_inicial') {
+                    var options = ['CUMPLE TOTALMENTE', 'NO CUMPLE', 'NO APLICA'];
+                    var select = $('<select>', {
+                        class: 'form-select form-select-sm'
+                    });
 
-            options.forEach(function(option) {
-                select.append($('<option>', {
-                    value: option,
-                    text: option,
-                    selected: option === currentValue
-                }));
-            });
+                    options.forEach(function(option) {
+                        select.append($('<option>', {
+                            value: option,
+                            text: option,
+                            selected: option === currentValue
+                        }));
+                    });
 
-            cell.html(select);
-            select.focus();
+                    cell.html(select);
+                    select.focus();
 
-            select.on('blur change', function() {
-                var newValue = select.val();
-                cell.text(newValue);
-                updateField(id, field, newValue);
-            });
+                    select.on('blur change', function() {
+                        var newValue = select.val();
+                        cell.text(newValue);
+                        // Pasar 'cell' como argumento adicional
+                        updateField(id, field, newValue, cell);
+                    });
 
-        } else if (field === 'observaciones') {
-            var input = $('<input>', {
-                type: 'text',
-                class: 'form-control',
-                value: currentValue
-            });
+                } else if (field === 'observaciones') {
+                    var input = $('<input>', {
+                        type: 'text',
+                        class: 'form-control',
+                        value: currentValue
+                    });
 
-            cell.html(input);
-            input.focus();
+                    cell.html(input);
+                    input.focus();
 
-            input.on('blur', function() {
-                var newValue = input.val();
-                cell.text(newValue);
-                updateField(id, field, newValue);
-            });
-        }
-    });
-
-    function updateField(id, field, value) {
-        $.ajax({
-            url: '<?= base_url('/updateEvaluacion') ?>',
-            method: 'POST',
-            data: { id: id, field: field, value: value },
-            success: function(response) {
-                if (response.success) {
-                    console.log(response.message);
-                } else {
-                    alert('Error: ' + response.message);
+                    input.on('blur', function() {
+                        var newValue = input.val();
+                        cell.text(newValue);
+                        // Pasar 'cell' como argumento adicional
+                        updateField(id, field, newValue, cell);
+                    });
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error al comunicarse con el servidor:', error);
-                alert('Error al comunicarse con el servidor: ' + error);
-            }
-        });
-    }
+            });
 
-    // 2. Inicialización de DataTables
-    var table = $('#evaluacionesTable').DataTable({
-        stateSave: true,
-        language: {
-            url: "//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
-        },
-        pagingType: "full_numbers",
-        responsive: true,
-        autoWidth: false,
-        dom: 'Bfltip',        // Incluye 'f' para el buscador global
-        pageLength: 10,       // Limita a 10 registros por página
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                text: 'Exportar a Excel',
-                className: 'btn btn-success btn-sm'
-            },
-            {
-                extend: 'colvis',
-                text: 'Seleccionar Columnas',
-                className: 'btn btn-secondary btn-sm'
+            function updateField(id, field, value, cell) {
+                $.ajax({
+                    url: '<?= base_url('/updateEvaluacion') ?>',
+                    method: 'POST',
+                    data: {
+                        id: id,
+                        field: field,
+                        value: value
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            console.log(response.message);
+                            // Si se actualizó "evaluacion_inicial", actualizar puntaje_cuantitativo en la fila
+                            if (field === 'evaluacion_inicial' && response.puntaje_cuantitativo !== undefined) {
+                                var row = cell.closest('tr');
+                                // Asegúrate de que el índice de la columna coincide con la columna puntaje_cuantitativo en tu tabla
+                                row.find('td').eq(7).text(response.puntaje_cuantitativo);
+                            }
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error al comunicarse con el servidor:', error);
+                        alert('Error al comunicarse con el servidor: ' + error);
+                    }
+                });
             }
-        ],
-        initComplete: function() {
-            var api = this.api();
-            // Para cada columna, crear un filtro en el <tfoot>
-            api.columns().every(function() {
-                var column = this;
-                var headerIndex = column.index();
-                var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-select');
 
-                if (filterElement.length && !filterElement.prop('disabled')) {
-                    // Obtener los valores únicos de la columna
-                    column.data().unique().sort().each(function(d) {
-                        if (d) { // Evitar valores vacíos
-                            if (filterElement.find('option[value="' + d + '"]').length === 0) {
-                                filterElement.append('<option value="' + d + '">' + d + '</option>');
+            // 2. Inicialización de DataTables
+            var table = $('#evaluacionesTable').DataTable({
+                stateSave: true,
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
+                },
+                pagingType: "full_numbers",
+                responsive: true,
+                autoWidth: false,
+                dom: 'Bfltip',
+                pageLength: 10,
+                buttons: [{
+                        extend: 'excelHtml5',
+                        text: 'Exportar a Excel',
+                        className: 'btn btn-success btn-sm'
+                    },
+                    {
+                        extend: 'colvis',
+                        text: 'Seleccionar Columnas',
+                        className: 'btn btn-secondary btn-sm'
+                    }
+                ],
+                initComplete: function() {
+                    var api = this.api();
+                    // Para cada columna, crear un filtro en el <tfoot>
+                    api.columns().every(function() {
+                        var column = this;
+                        var headerIndex = column.index();
+                        var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-select');
+
+                        if (filterElement.length && !filterElement.prop('disabled')) {
+                            column.data().unique().sort().each(function(d) {
+                                if (d) {
+                                    if (filterElement.find('option[value="' + d + '"]').length === 0) {
+                                        filterElement.append('<option value="' + d + '">' + d + '</option>');
+                                    }
+                                }
+                            });
+
+                            var search = column.search();
+                            if (search) {
+                                filterElement.val(search);
                             }
                         }
                     });
-
-                    // Restaurar el valor del filtro si existe en el estado guardado
-                    var search = column.search();
-                    if (search) {
-                        filterElement.val(search);
-                    }
                 }
             });
-        }
-    });
 
-    // Colocar los botones de DataTables en el contenedor específico
-    table.buttons().container().appendTo('#buttonsContainer');
+            table.buttons().container().appendTo('#buttonsContainer');
 
-    // Evento al cambiar cualquier filtro (select)
-    $('tfoot .filter-select').on('change', function() {
-        var columnIndex = $(this).closest('th').index();
-        var value = $(this).val();
-        table.column(columnIndex).search(value).draw();
-    });
+            $('tfoot .filter-select').on('change', function() {
+                var columnIndex = $(this).closest('th').index();
+                var value = $(this).val();
+                table.column(columnIndex).search(value).draw();
+            });
 
-    // Inicializar tooltips de Bootstrap 5 y re-inicializar en cada redibujado
-    function initializeTooltips() {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function(tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
+            function initializeTooltips() {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function(tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+            initializeTooltips();
+            table.on('draw.dt', function() {
+                initializeTooltips();
+            });
+
+            $('#clearState').on('click', function() {
+                var storageKey = 'DataTables_' + table.table().node().id + '_' + window.location.pathname;
+                localStorage.removeItem(storageKey);
+                table.state.clear();
+
+                $('tfoot .filter-select').each(function() {
+                    $(this).val('');
+                });
+
+                table.columns().search('').draw();
+            });
         });
-    }
-    initializeTooltips();
-    table.on('draw.dt', function() {
-        initializeTooltips();
-    });
-
-    // Botón para borrar el estado y restablecer filtros
-    $('#clearState').on('click', function() {
-        var storageKey = 'DataTables_' + table.table().node().id + '_' + window.location.pathname;
-        localStorage.removeItem(storageKey);
-        table.state.clear();
-
-        $('tfoot .filter-select').each(function() {
-            $(this).val('');
-        });
-
-        table.columns().search('').draw();
-    });
-});
-</script>
-
+    </script>
 
 </body>
 
