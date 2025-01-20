@@ -95,6 +95,10 @@
     <div class="container my-5">
         <h2 class="mb-4 text-dark">Evaluaciones del Cliente: <?= esc($client['nombre_cliente']) ?></h2>
 
+        <div class="text-end text-secondary mb-3">
+        <strong><?= date('d/m/Y') ?></strong>
+    </div>
+
         <!-- Tarjetas de indicadores -->
         <div class="row text-center mb-4">
             <div class="col-md-4">
@@ -115,9 +119,9 @@
             </div>
             <div class="col-md-4">
                 <div class="card shadow-sm border-light">
-                    <div class="card-body bg-white">
+                <div class="card-body bg-white">
                         <h5 class="card-title text-secondary">Indicador General</h5>
-                        <p class="display-4 font-weight-bold"><?= number_format($indicador_general, 2) ?></p>
+                        <p class="display-4 font-weight-bold"><?= number_format($indicador_general * 100, 0) ?>%</p>
                     </div>
                 </div>
             </div>
