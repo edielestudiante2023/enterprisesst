@@ -162,7 +162,7 @@ class ClientController extends Controller
         'documentosContractuales'=> ['id' => 22, 'titulo' => 'Contrato y otros Documentos Contractuales'],
         'planEmergencia'         => ['id' => 23, 'titulo' => 'Plan de Emergencia'],
         'inspecciones'           => ['id' => 24, 'titulo' => 'Inspecciones'],
-        'reportes'               => ['id' => 25, 'titulo' => 'Reportes'],
+        'reportes'               => ['id' => 27, 'titulo' => 'Reportes'],
         'examenesMedicos'        => ['id' => 26, 'titulo' => 'Examenes Médicos Ocupacionales']
     ];
     
