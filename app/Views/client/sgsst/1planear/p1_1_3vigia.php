@@ -29,8 +29,6 @@
             }
         }
 
-
-
         h1,
         h2 {
             text-align: center;
@@ -183,11 +181,9 @@
             <td class="code right">
                 Versión: <?= $latestVersion['version_number'] ?><br>
                 <?php
-setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-?>
-
-Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
-
+                setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+                ?>
+                Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
             </td>
         </tr>
     </table>
@@ -198,49 +194,40 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
 
         <br>
         <?php
-setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-?>
+        setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+        ?>
 
-<p>FECHA: <strong><?= strftime('%d de %B de %Y', strtotime($client['fecha_ingreso'])); ?></strong></p>
+        <p>FECHA: <strong><?= strftime('%d de %B de %Y', strtotime($client['fecha_ingreso'])); ?></strong></p>
 
-        <p>
-        <p>En las instalaciones de <strong><?= $client['nombre_cliente'] ?></strong>, el representante legal <strong><?= $client['nombre_rep_legal'] ?></strong>, con documento de identidad número <strong><?= $client['cedula_rep_legal'] ?></strong>, asigna como vigía en Seguridad y Salud en el Trabajo a <strong><?= $latestVigia['nombre_vigia'] ?></strong> con documento de identidad número <strong><?= $latestVigia['cedula_vigia'] ?></strong> Por un periodo de <strong><?= $latestVigia['periodo_texto'] ?></strong>, dando cumplimiento a la normativa vigente en materia de Seguridad y Salud en el Trabajo, incluyendo el <strong>Decreto 1072 de 2015</strong> y la <strong>Resolución 0312 de 2019</strong>, así como a las exigencias de la división de salud ocupacional del Ministerio de Trabajo. El empleador está obligado a proporcionar al menos cuatro horas semanales dentro de la jornada laboral normal para el funcionamiento de las actividades del vigía.
-    
-        <br><br>
-        <?= $clientPolicy['policy_content'] ?>
-    </p>
-
-        </p>
+        <?php if (!$latestVigia): ?>
+            <p><strong>VIGIA NO ASIGNADO AÚN</strong></p>
+        <?php else: ?>
+            <p>
+            En las instalaciones de <strong><?= $client['nombre_cliente'] ?></strong>, el representante legal <strong><?= $client['nombre_rep_legal'] ?></strong>, con documento de identidad número <strong><?= $client['cedula_rep_legal'] ?></strong>, asigna como vigía en Seguridad y Salud en el Trabajo a <strong><?= $latestVigia['nombre_vigia'] ?></strong> con documento de identidad número <strong><?= $latestVigia['cedula_vigia'] ?></strong> Por un periodo de <strong><?= $latestVigia['periodo_texto'] ?></strong>, dando cumplimiento a la normativa vigente en materia de Seguridad y Salud en el Trabajo, incluyendo el <strong>Decreto 1072 de 2015</strong> y la <strong>Resolución 0312 de 2019</strong>, así como a las exigencias de la división de salud ocupacional del Ministerio de Trabajo. El empleador está obligado a proporcionar al menos cuatro horas semanales dentro de la jornada laboral normal para el funcionamiento de las actividades del vigía.
+                <br><br>
+                <?= $clientPolicy['policy_content'] ?>
+            </p>
+        <?php endif; ?>
 
         <h2>Funciones del Vigía</h2>
 
         <ol>
-            <li>Proponer a la administración de la empresa o establecimiento de trabajo la adopción de medidas y el desarrollo de actividades que procuren y mantengan la salud en los lugares y ambientes de trabajo.</li>
-            <li>Proponer y participar en actividades de capacitación en salud ocupacional dirigidas a trabajadores, supervisores y directivos de la empresa o establecimiento de trabajo.</li>
-            <li>Colaborar con los funcionarios de entidades gubernamentales de salud ocupacional en las actividades que éstos adelanten en la empresa y recibir por derecho propio los informes correspondientes.</li>
-            <li>Vigilar el desarrollo de las actividades que en materia de medicina, higiene y seguridad industrial debe realizar la empresa de acuerdo con el Reglamento de Higiene y Seguridad Industrial y las normas vigentes, promover su divulgación y observancia.</li>
-            <li>Colaborar en el análisis de las causas de los accidentes de trabajo y enfermedades profesionales y proponer al empleador las medidas correctivas a que haya lugar para evitar su ocurrencia. Evaluar los programas que se hayan realizado.</li>
-            <li>Visitar periódicamente los lugares de trabajo e inspeccionar los ambientes, máquinas, equipos, aparatos y las operaciones realizadas por el personal de trabajadores en cada área o sección de la empresa e informar al empleador sobre la existencia de factores de riesgo y sugerir las medidas correctivas y de control.</li>
-            <li>Estudiar y considerar las sugerencias que presenten los trabajadores, en materia de medicina, higiene y seguridad industrial.</li>
-            <li>Servir como organismo de coordinación entre empleador y los trabajadores en la solución de los problemas relativos a la salud ocupacional. Tramitar los reclamos de los trabajadores relacionados con la salud ocupacional.</li>
-            <li>Solicitar periódicamente a la empresa informes sobre accidentalidad y enfermedades profesionales con el objeto de dar cumplimiento a lo estipulado en la presente resolución.</li>
-            <li>Mantener un archivo de las actas de cada reunión y demás actividades que se desarrollen, el cual estará en cualquier momento a disposición del empleador, los trabajadores y las autoridades competentes.</li>
-            <li>Recibir por parte de la alta dirección la comunicación de la política de seguridad y salud en el trabajo (artículo 2.2.4.6.5).</li>
-            <li>Recibir por parte del empleador información sobre el desarrollo de todas las etapas del Sistema de Gestión de Seguridad de la Salud en el Trabajo (SG-SST) (artículo 2.2.4.6.8).</li>
-            <li>Rendir cuentas internamente en relación con su desempeño (artículo 2.2.4.6.8).</li>
-            <li>Dar recomendaciones para el mejoramiento del SG-SST (artículo 2.2.4.6.8).</li>
-            <li>Participar en las capacitaciones que realice la Administradora de Riesgos Laborales (artículo 2.2.4.6.9).</li>
-            <li>Revisión del programa de capacitación en Seguridad y Salud en el Trabajo (artículo 2.2.4.6.11).</li>
-            <li>Recibir los resultados de las evaluaciones de los ambientes de trabajo y emitir recomendaciones (artículo 2.2.4.6.15).</li>
-            <li>Apoyar la adopción de las medidas de prevención y control derivadas de la gestión del cambio (artículo 2.2.4.6.26).</li>
-            <li>Participar en la planificación de las auditorías (artículo 2.2.4.6.29).</li>
-            <li>Tener conocimiento de los resultados de la revisión de la alta dirección (artículo 2.2.4.6.31).</li>
-            <li>Formar parte del equipo investigador de incidentes, accidentes de trabajo y enfermedades laborales (artículos 2.2.4.1.6 y 2.2.4.6.32).</li>
-            <!-- Agregando funciones adicionales -->
-            <li>Elaborar y mantener un plan de seguimiento de acciones correctivas y preventivas derivadas de los riesgos identificados en la organización.</li>
-            <li>Realizar reportes periódicos de avances en la implementación de las recomendaciones de seguridad y salud en el trabajo a la alta dirección.</li>
+            <li>Revisar y autorizar el plan de emergencia del conjunto residencial, en coordinación con el administrador de la copropiedad.</li>
+            <li>Realizar simulacros de emergencia con la comunidad, al menos una vez al año.</li>
+            <li>Promover la cultura de la prevención en la comunidad, a través de campañas de sensibilización y educación.</li>
+            <li>Inspeccionar periódicamente las áreas comunes del conjunto residencial, para identificar y corregir los riesgos potenciales.</li>
+            <li>Revisar los extintores y demás equipos de seguridad, para garantizar su correcto funcionamiento.</li>
+            <li>Mantener actualizada la información de los contratistas que prestan servicios al conjunto residencial, en materia de seguridad y salud en el trabajo.</li>
+            <li>Inspeccionar los trabajos que realizan los contratistas, para verificar el cumplimiento de las normas de seguridad.</li>
+            <li>Promover la participación de los residentes en las actividades de prevención de riesgos.</li>
+            <li>Brindar información y orientación a los residentes sobre temas de seguridad y salud en el trabajo.</li>
+            <li>Promover la práctica de hábitos saludables en la comunidad, como la alimentación sana y la actividad física.</li>
+            <li>Promover el reciclaje y la reutilización de materiales, para contribuir con la protección del medio ambiente.</li>
+            <li>Revisar con la administración del conjunto residencial las políticas y procedimientos en materia de seguridad y salud en el trabajo.</li>
+            <li>Revisar junto con el administrador el informe anual sobre las actividades realizadas en materia de seguridad y salud en el trabajo.</li>
+            <li>Promover la cultura de la prevención en el entorno del conjunto residencial, a través del trabajo con las instituciones locales.</li>
+            <li>Actualizar constantemente sus conocimientos y habilidades en materia de seguridad y salud en el trabajo.</li>
         </ol>
-
 
         <div class="signature-container">
             <div class="signature">
@@ -248,82 +235,90 @@ setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idi
                 <div class="name"><b><?= $client['nombre_rep_legal'] ?></b></div>
                 <div class="title">Representante Legal</div>
             </div>
+            <?php if ($latestVigia): ?>
             <div class="signature">
                 <img src="<?= base_url('uploads/' . $latestVigia['firma_vigia']) ?>" alt="Firma Vigía">
                 <div class="name"><b><?= $latestVigia['nombre_vigia'] ?></b></div>
                 <div class="title">Vigía</div>
             </div>
-
+            <?php endif; ?>
         </div>
-
 
     </div>
 
+    <footer>
+        <h2>Historial de Versiones</h2>
+        <style>
+            footer table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
 
+            footer table th,
+            footer table td {
+                border: 1px solid #ddd;
+                text-align: center;
+                vertical-align: middle;
+                padding: 8px;
+                word-wrap: break-word;
+            }
 
+            footer table th {
+                background-color: #f4f4f4;
+                font-weight: bold;
+            }
 
-<footer>
-    <h2>Historial de Versiones</h2>
-    <style>
-        footer table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        footer table th, footer table td {
-            border: 1px solid #ddd;
-            text-align: center;
-            vertical-align: middle;
-            padding: 8px;
-            word-wrap: break-word;
-        }
-        footer table th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-        footer table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        footer table tr:hover {
-            background-color: #f1f1f1;
-        }
-        /* Ajuste del ancho de las columnas */
-        footer table th:nth-child(5),
-        footer table td:nth-child(5) {
-            width: 35%; /* Más ancho para la columna Observaciones */
-        }
-        footer table th:nth-child(1),
-        footer table td:nth-child(1) {
-            width: 10%; /* Más estrecho para la columna Versión */
-        }
-        footer table th:nth-child(2),
-        footer table td:nth-child(2),
-        footer table th:nth-child(3),
-        footer table td:nth-child(3),
-        footer table th:nth-child(4),
-        footer table td:nth-child(4) {
-            width: 15%; /* Ancho uniforme para las demás columnas */
-        }
-    </style>
-    <table>
-        <tr>
-            <th>Versión</th>
-            <th>Tipo de Documento</th>
-            <th>Acrónimo</th>
-            <th>Fecha de Creación</th>
-            <th>Observaciones</th>
-        </tr>
-        <?php foreach ($allVersions as $version): ?>
+            footer table tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            footer table tr:hover {
+                background-color: #f1f1f1;
+            }
+
+            /* Ajuste del ancho de las columnas */
+            footer table th:nth-child(5),
+            footer table td:nth-child(5) {
+                width: 35%;
+                /* Más ancho para la columna Observaciones */
+            }
+
+            footer table th:nth-child(1),
+            footer table td:nth-child(1) {
+                width: 10%;
+                /* Más estrecho para la columna Versión */
+            }
+
+            footer table th:nth-child(2),
+            footer table td:nth-child(2),
+            footer table th:nth-child(3),
+            footer table td:nth-child(3),
+            footer table th:nth-child(4),
+            footer table td:nth-child(4) {
+                width: 15%;
+                /* Ancho uniforme para las demás columnas */
+            }
+        </style>
+        <table>
             <tr>
-                <td><?= $version['version_number'] ?></td>
-                <td><?= $version['document_type'] ?></td>
-                <td><?= $version['acronym'] ?></td>
-                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                <td><?= $version['change_control'] ?></td>
+                <th>Versión</th>
+                <th>Tipo de Documento</th>
+                <th>Acrónimo</th>
+                <th>Fecha de Creación</th>
+                <th>Observaciones</th>
             </tr>
-        <?php endforeach; ?>
-    </table>
-</footer>
+            <?php foreach ($allVersions as $version): ?>
+                <tr>
+                    <td><?= $version['version_number'] ?></td>
+                    <td><?= $version['document_type'] ?></td>
+                    <td><?= $version['acronym'] ?></td>
+                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                    <td><?= $version['change_control'] ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    </footer>
 
     <br>
     <!-- <div class="no-print">
