@@ -18,46 +18,65 @@ class CsvPendientes extends Controller
     {
         $file = $this->request->getFile('file');
         
-        if ($file->isValid() && !$file->hasMoved()) {
+        if ($file && $file->isValid() && !$file->hasMoved()) {
             // Mover el archivo a la carpeta writable/uploads
             $newName = $file->getRandomName();
             $file->move(WRITEPATH . 'uploads', $newName);
             $filePath = WRITEPATH . 'uploads/' . $newName;
 
-            // Leer el archivo CSV utilizando PhpSpreadsheet
-            $spreadsheet = IOFactory::load($filePath);
-            $sheet = $spreadsheet->getActiveSheet();
-            $rows = $sheet->toArray();
+            try {
+                // Leer el archivo CSV utilizando PhpSpreadsheet
+                $spreadsheet = IOFactory::load($filePath);
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray();
 
-            // Validar encabezados
-            $headers = $rows[0];
-            $requiredHeaders = ['id_cliente', 'responsable', 'tarea_actividad', 'fecha_cierre', 'estado'];
+                // Validar encabezados
+                $headers = $rows[0];
+                $requiredHeaders = ['id_cliente', 'responsable', 'tarea_actividad', 'fecha_cierre', 'estado'];
 
-            if ($headers !== $requiredHeaders) {
+                if ($headers !== $requiredHeaders) {
+                    return redirect()->to(base_url('consultant/csvpendientes'))
+                        ->with('error', 'El archivo no tiene los encabezados requeridos: ' . implode(', ', $requiredHeaders));
+                }
+
+                // Procesar las filas (omitimos la primera fila de encabezados)
+                $model = new SimplePendientesModel(); // Modelo simplificado
+                foreach (array_slice($rows, 1) as $row) {
+                    // Validar y preparar los datos antes de insertar
+                    $data = [
+                        'id_cliente' => $row[0],
+                        'responsable' => $row[1],
+                        'tarea_actividad' => $row[2],
+                        'fecha_cierre' => $this->formatDate($row[3]),
+                        'estado' => $row[4],
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+
+                    // Insertar los datos
+                    $model->insert($data);
+                }
+
+                // Eliminar el archivo después de procesarlo
+                unlink($filePath);
+
                 return redirect()->to(base_url('consultant/csvpendientes'))
-                    ->with('error', 'El archivo no tiene los encabezados requeridos.');
+                    ->with('success', 'Archivo cargado exitosamente.');
+            } catch (\Exception $e) {
+                return redirect()->to(base_url('consultant/csvpendientes'))
+                    ->with('error', 'Error al procesar el archivo: ' . $e->getMessage());
             }
-
-            // Procesar las filas (omitimos la primera fila de encabezados)
-            $model = new SimplePendientesModel(); // Modelo simplificado
-            foreach (array_slice($rows, 1) as $row) {
-                $data = [
-                    'id_cliente' => $row[0],
-                    'responsable' => $row[1],
-                    'tarea_actividad' => $row[2],
-                    'fecha_cierre' => date('Y-m-d', strtotime($row[3])),
-                    'estado' => $row[4],
-                ];
-
-                // Insertar los datos sin restricciones
-                $model->insert($data);
-            }
-
-            return redirect()->to(base_url('consultant/csvpendientes'))
-                ->with('success', 'Archivo cargado exitosamente.');
         }
 
         return redirect()->to(base_url('consultant/csvpendientes'))
             ->with('error', 'Error al subir el archivo.');
+    }
+
+    /**
+     * Formatear la fecha al formato Y-m-d
+     */
+    private function formatDate($date)
+    {
+        return date('Y-m-d', strtotime($date));
     }
 }
