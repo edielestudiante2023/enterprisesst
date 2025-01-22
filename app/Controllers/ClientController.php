@@ -140,7 +140,7 @@ class ClientController extends Controller
     // Mapeo de claves con ID de reportes y títulos
     $topics = [
         'revisionCopasst'        => ['id' => 1,  'titulo' => 'Revisión del COPASST'],
-        'comiteConvivencia'     => ['id' => 2,  'titulo' => 'Comité de Convivencia Laboral'],
+        'comiteConvivencia'      => ['id' => 2,  'titulo' => 'Comité de Convivencia Laboral'],
         'actaVisitasSST'         => ['id' => 3,  'titulo' => 'Acta de Visitas SST'],
         'capacitacionSST'        => ['id' => 4,  'titulo' => 'Capacitación en SST'],
         'protocolosEmergencia'   => ['id' => 5,  'titulo' => 'Protocolos de Emergencia'],
@@ -156,11 +156,16 @@ class ClientController extends Controller
         'gestionResiduos'        => ['id' => 15, 'titulo' => 'Gestión de Residuos Peligrosos'],
         'seguimientoPlanes'      => ['id' => 16, 'titulo' => 'Seguimiento a Planes de Acción'],
         'programaRiesgos'        => ['id' => 17, 'titulo' => 'Programa de Gestión de Riesgos'],
-        'matrizPeligros'         => ['id' => 18, 'titulo' => 'Matriz de Peligros'],
-        'revisionIluminacion'    => ['id' => 19, 'titulo' => 'Revisión de Sistemas de Iluminación'],
-        'reportes'               => ['id' => 20, 'titulo' => 'Reportes de Gestión'],
-        'examed'                 => ['id' => 21, 'titulo' => 'Examenes Médicos Ocupacionales'],
+        'matrizPeligros'         => ['id' => 19, 'titulo' => 'Matriz de Peligros'],
+        'revisionIluminacion'    => ['id' => 20, 'titulo' => 'Revisión de Sistemas de Iluminación'],
+        'elementosARL'           => ['id' => 21, 'titulo' => 'Elementos Relacionados con la ARL'],
+        'documentosContractuales'=> ['id' => 22, 'titulo' => 'Contrato y otros Documentos Contractuales'],
+        'planEmergencia'         => ['id' => 23, 'titulo' => 'Plan de Emergencia'],
+        'inspecciones'           => ['id' => 24, 'titulo' => 'Inspecciones'],
+        'reportes'               => ['id' => 25, 'titulo' => 'Reportes'],
+        'examenesMedicos'        => ['id' => 26, 'titulo' => 'Examenes Médicos Ocupacionales']
     ];
+    
 
     $data = ['topicsList' => []];
 
