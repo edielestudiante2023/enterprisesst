@@ -150,7 +150,7 @@ class ClientController extends Controller
         'inspeccionPuestos'      => ['id' => 9,  'titulo' => 'Inspección de Puestos de Trabajo'],
         'planGestionAmbiental'   => ['id' => 10, 'titulo' => 'Plan de Gestión Ambiental'],
         'organigrama'            => ['id' => 11, 'titulo' => 'Organigrama'],
-        'documentacionNormativa' => ['id' => 12, 'titulo' => 'Documentación Normativa SST'],
+        'documentacionNormativa' => ['id' => 12, 'titulo' => 'Reportes SST'],
         'proveedoresExternos'    => ['id' => 13, 'titulo' => 'Proveedores Externos'],
         'programaErgonomia'      => ['id' => 14, 'titulo' => 'Programa de Ergonomía'],
         'gestionResiduos'        => ['id' => 15, 'titulo' => 'Gestión de Residuos Peligrosos'],
@@ -162,7 +162,7 @@ class ClientController extends Controller
         'documentosContractuales'=> ['id' => 22, 'titulo' => 'Contrato y otros Documentos Contractuales'],
         'planEmergencia'         => ['id' => 23, 'titulo' => 'Plan de Emergencia'],
         'inspecciones'           => ['id' => 24, 'titulo' => 'Inspecciones'],
-        'reportes'               => ['id' => 27, 'titulo' => 'Reportes'],
+        
         'examenesMedicos'        => ['id' => 26, 'titulo' => 'Examenes Médicos Ocupacionales']
     ];
     
