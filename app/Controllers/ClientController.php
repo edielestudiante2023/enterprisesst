@@ -158,6 +158,8 @@ class ClientController extends Controller
         'programaRiesgos'        => ['id' => 17, 'titulo' => 'Programa de Gestión de Riesgos'],
         'matrizPeligros'         => ['id' => 18, 'titulo' => 'Matriz de Peligros'],
         'revisionIluminacion'    => ['id' => 19, 'titulo' => 'Revisión de Sistemas de Iluminación'],
+        'reportes'               => ['id' => 20, 'titulo' => 'Reportes de Gestión'],
+        'examed'                 => ['id' => 21, 'titulo' => 'Examenes Médicos Ocupacionales'],
     ];
 
     $data = ['topicsList' => []];
