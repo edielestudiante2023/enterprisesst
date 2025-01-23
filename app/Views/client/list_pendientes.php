@@ -100,7 +100,7 @@
     <!-- Espaciado para el navbar fijo -->
     <div style="height: 100px;"></div>
 
-    <div class="container my-5">
+    <div class="container-fluid my-5">
         <h2 class="text-center mb-4">Listado de Pendientes</h2>
 
         <?php if (session()->getFlashdata('msg')): ?>
@@ -112,7 +112,7 @@
         </div>
 
         <div class="table-responsive table-container">
-            <table id="pendientesTable" class="table table-bordered table-striped">
+            <table id="pendientesTable" class="table table-bordered table-striped w-100">
                 <thead class="table-light">
                     <tr>
                         <th>Cliente</th>
@@ -238,6 +238,15 @@
                     }
                 ],
                 stateSave: true, // Habilitar la persistencia del estado
+                scrollY: '50vh',
+                scrollX: true, // Habilitar el desplazamiento horizontal
+                scrollCollapse: true,
+                paging: true,
+                lengthChange: true,
+                searching: true,
+                ordering: true,
+                info: true,
+                autoWidth: false,
                 initComplete: function () {
                     var api = this.api();
 
@@ -284,15 +293,6 @@
                     // Re-inicializar los tooltips después de cada redibujado de la tabla
                     initTooltips();
                 },
-                // Ajustes de altura y ancho de columnas
-                scrollY: '50vh',
-                scrollCollapse: true,
-                paging: true,
-                lengthChange: true,
-                searching: true,
-                ordering: true,
-                info: true,
-                autoWidth: false,
                 // Definir anchos de columnas
                 columnDefs: [
                     { width: '15%', targets: 0 }, // Cliente
