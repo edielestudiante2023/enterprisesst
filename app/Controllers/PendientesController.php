@@ -53,7 +53,7 @@ class PendientesController extends Controller
     {
         $pendientesModel = new PendientesModel();
 
-        // Recogemos los datos del formulario
+        // Recogemos los datos del formulario sin 'created_at'
         $data = [
             'id_cliente' => $this->request->getPost('id_cliente'),
             'responsable' => $this->request->getPost('responsable'),
@@ -62,17 +62,12 @@ class PendientesController extends Controller
             'estado' => $this->request->getPost('estado'),
             'estado_avance' => $this->request->getPost('estado_avance'),
             'evidencia_para_cerrarla' => $this->request->getPost('evidencia_para_cerrarla'),
-            // No asignar manualmente 'created_at'; el modelo lo gestiona automáticamente
+            // 'created_at' se manejará automáticamente por el modelo
         ];
 
-        // Validar que la fecha de cierre no sea menor que la fecha de creación
-        // Obtén la fecha de creación desde el modelo (se asigna automáticamente)
-        // Dado que 'useTimestamps' está habilitado, 'created_at' se asigna en el modelo
-        // Por lo tanto, necesitas insertar primero para obtener 'created_at'
-        // Sin embargo, para mantener la validación antes de insertar, utilizaremos la fecha actual
-        $createdAt = time(); // Timestamp actual
-
-        if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < $createdAt) {
+        // Validar que la fecha de cierre no sea menor que la fecha de creación (fecha actual)
+        $currentDateTime = date('Y-m-d H:i:s');
+        if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < strtotime($currentDateTime)) {
             return redirect()->back()->with('msg', 'Error: La fecha de cierre no puede ser anterior a la fecha de creación.')->withInput();
         }
 
@@ -81,19 +76,32 @@ class PendientesController extends Controller
             return redirect()->back()->with('msg', 'Error: No se puede establecer el estado como ABIERTA si ya hay una fecha de cierre.')->withInput();
         }
 
-        // Calcular conteo_dias
-        if ($data['estado'] === 'ABIERTA') {
-            $data['conteo_dias'] = (int) floor((time() - $createdAt) / (60 * 60 * 24));
-        } elseif ($data['estado'] === 'CERRADA' && !empty($data['fecha_cierre'])) {
-            $fechaCierre = strtotime($data['fecha_cierre']);
-            $data['conteo_dias'] = (int) floor(($fechaCierre - $createdAt) / (60 * 60 * 24));
-        } else {
-            $data['conteo_dias'] = 0; // Valor por defecto si no se cumple ninguna condición
-        }
-
-        // Insertar el nuevo pendiente
+        // Insertar el nuevo pendiente sin 'conteo_dias'
         if ($pendientesModel->insert($data)) {
-            return redirect()->to('/listPendientes')->with('msg', 'Pendiente agregado exitosamente');
+            // Obtener el ID del registro insertado
+            $insertedId = $pendientesModel->getInsertID();
+
+            // Obtener el registro recién insertado para obtener 'created_at'
+            $pendiente = $pendientesModel->find($insertedId);
+            if ($pendiente) {
+                // Calcular 'conteo_dias' basado en el estado
+                if ($pendiente['estado'] === 'ABIERTA') {
+                    $conteo_dias = (int) floor((time() - strtotime($pendiente['created_at'])) / (60 * 60 * 24));
+                } elseif ($pendiente['estado'] === 'CERRADA' && !empty($pendiente['fecha_cierre'])) {
+                    $conteo_dias = (int) floor((strtotime($pendiente['fecha_cierre']) - strtotime($pendiente['created_at'])) / (60 * 60 * 24));
+                } else {
+                    $conteo_dias = 0;
+                }
+
+                // Actualizar 'conteo_dias'
+                $pendientesModel->update($insertedId, ['conteo_dias' => $conteo_dias]);
+
+                return redirect()->to('/listPendientes')->with('msg', 'Pendiente agregado exitosamente');
+            } else {
+                // Si no se pudo recuperar el registro, eliminar la inserción y mostrar error
+                $pendientesModel->delete($insertedId);
+                return redirect()->back()->with('msg', 'Error al agregar pendiente: No se pudo recuperar el registro insertado.')->withInput();
+            }
         } else {
             // Obtener y mostrar los errores de validación
             $errors = $pendientesModel->errors();
@@ -137,7 +145,7 @@ class PendientesController extends Controller
             'estado' => $this->request->getPost('estado'),
             'estado_avance' => $this->request->getPost('estado_avance'),
             'evidencia_para_cerrarla' => $this->request->getPost('evidencia_para_cerrarla'),
-            // No asignar manualmente 'updated_at'; el modelo lo gestiona automáticamente
+            // 'updated_at' se manejará automáticamente por el modelo
         ];
 
         // Obtener el pendiente actual para obtener 'created_at'
@@ -157,15 +165,17 @@ class PendientesController extends Controller
             return redirect()->back()->with('msg', 'Error: No se puede establecer el estado como ABIERTA si ya hay una fecha de cierre.')->withInput();
         }
 
-        // Calcular conteo_dias
+        // Calcular 'conteo_dias' basado en el estado
         if ($data['estado'] === 'ABIERTA') {
-            $data['conteo_dias'] = (int) floor((time() - $createdAt) / (60 * 60 * 24));
+            $conteo_dias = (int) floor((time() - $createdAt) / (60 * 60 * 24));
         } elseif ($data['estado'] === 'CERRADA' && !empty($data['fecha_cierre'])) {
-            $fechaCierre = strtotime($data['fecha_cierre']);
-            $data['conteo_dias'] = (int) floor(($fechaCierre - $createdAt) / (60 * 60 * 24));
+            $conteo_dias = (int) floor((strtotime($data['fecha_cierre']) - $createdAt) / (60 * 60 * 24));
         } else {
-            $data['conteo_dias'] = 0; // Valor por defecto si no se cumple ninguna condición
+            $conteo_dias = 0;
         }
+
+        // Actualizar 'conteo_dias' en los datos a actualizar
+        $data['conteo_dias'] = $conteo_dias;
 
         // Actualizar el pendiente
         if ($pendientesModel->update($id, $data)) {
