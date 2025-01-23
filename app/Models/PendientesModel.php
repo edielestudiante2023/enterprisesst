@@ -34,7 +34,7 @@ class PendientesModel extends Model
         'tarea_actividad' => 'required|string',
         'fecha_cierre' => 'permit_empty|valid_date',
         'estado' => 'required|in_list[ABIERTA,CERRADA]',
-        'conteo_dias' => 'required|integer',
+        
         'estado_avance' => 'permit_empty|string',
         'evidencia_para_cerrarla' => 'permit_empty|string',
     ];
