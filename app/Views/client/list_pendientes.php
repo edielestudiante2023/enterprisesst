@@ -72,6 +72,11 @@
                 max-width: 150px; /* Ajuste para pantallas más pequeñas */
             }
         }
+
+        /* Centrar el contenido de las columnas de fecha */
+        .fecha-col {
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -118,6 +123,7 @@
                         <th>Cliente</th>
                         <th>Responsable</th>
                         <th>Tarea Actividad</th>
+                        <th>Fecha de Apertura</th> <!-- Nueva Columna -->
                         <th>Fecha Cierre</th>
                         <th>Estado</th>
                         <th>Conteo Días</th>
@@ -131,7 +137,7 @@
                 <tbody>
                     <?php if (empty($pendientes)): ?>
                         <tr>
-                            <td colspan="8" class="text-center">No hay pendientes registrados.</td>
+                            <td colspan="9" class="text-center">No hay pendientes registrados.</td> <!-- Actualizado colspan -->
                         </tr>
                     <?php else: ?>
                         <?php foreach ($pendientes as $pendiente): ?>
@@ -139,7 +145,12 @@
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['nombre_cliente']); ?>"><?= esc($pendiente['nombre_cliente']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['responsable']); ?>"><?= esc($pendiente['responsable']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['tarea_actividad']); ?>"><?= esc($pendiente['tarea_actividad']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($pendiente['fecha_cierre']); ?>"><?= esc($pendiente['fecha_cierre']); ?></td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($pendiente['created_at']); ?>" class="fecha-col">
+                                    <?= date('Y-m-d', strtotime($pendiente['created_at'])); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($pendiente['fecha_cierre']); ?>" class="fecha-col">
+                                    <?= esc($pendiente['fecha_cierre']); ?>
+                                </td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['estado']); ?>"><?= esc($pendiente['estado']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['conteo_dias']); ?>"><?= esc($pendiente['conteo_dias']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['estado_avance']); ?>"><?= esc($pendiente['estado_avance']); ?></td>
@@ -212,7 +223,12 @@
             $('#pendientesTable tfoot tr').each(function () {
                 $(this).find('th').each(function (index) {
                     var title = $(this).text();
-                    $(this).html('<select class="form-select form-select-sm"><option value="">' + title + '</option></select>');
+                    if (title === 'Fecha de Apertura' || title === 'Fecha Cierre') {
+                        // Usar un input de fecha para las columnas de fecha
+                        $(this).html('<input type="date" class="form-control form-control-sm" placeholder="Filtrar ' + title + '" />');
+                    } else {
+                        $(this).html('<select class="form-select form-select-sm"><option value="">' + title + '</option></select>');
+                    }
                 });
             });
 
@@ -250,27 +266,46 @@
                 initComplete: function () {
                     var api = this.api();
 
-                    // Para cada columna, llenar el filtro con valores únicos
+                    // Para cada columna, llenar el filtro con valores únicos o configurar el input de fecha
                     api.columns().every(function () {
                         var column = this;
-                        var select = $('select', column.footer());
+                        var footerCell = $(column.footer());
 
-                        column.data().unique().sort().each(function (d, j) {
-                            if (d !== null && d !== "") {
-                                select.append('<option value="' + d + '">' + d + '</option>');
-                            }
-                        });
+                        if (footerCell.find('input').length) {
+                            // Configurar el filtro para columnas de fecha
+                            $('input', column.footer()).on('change', function () {
+                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
 
-                        // Aplicar el filtro al seleccionar una opción
-                        select.on('change', function () {
-                            var val = $.fn.dataTable.util.escapeRegex(
-                                $(this).val()
-                            );
+                                if (val) {
+                                    column
+                                        .search('^' + val + '$', true, false)
+                                        .draw();
+                                } else {
+                                    column
+                                        .search('', true, false)
+                                        .draw();
+                                }
+                            });
+                        } else {
+                            var select = $('select', column.footer());
 
-                            column
-                                .search(val ? '^' + val + '$' : '', true, false)
-                                .draw();
-                        });
+                            column.data().unique().sort().each(function (d, j) {
+                                if (d !== null && d !== "") {
+                                    select.append('<option value="' + d + '">' + d + '</option>');
+                                }
+                            });
+
+                            // Aplicar el filtro al seleccionar una opción
+                            select.on('change', function () {
+                                var val = $.fn.dataTable.util.escapeRegex(
+                                    $(this).val()
+                                );
+
+                                column
+                                    .search(val ? '^' + val + '$' : '', true, false)
+                                    .draw();
+                            });
+                        }
                     });
 
                     // Restaurar los filtros desde localStorage si existen
@@ -279,9 +314,15 @@
                         table.columns().every(function (index) {
                             var colSearch = state.columns[index].search.search;
                             if (colSearch) {
-                                var select = $('select', table.column(index).footer());
-                                var val = colSearch.replace('^', '').replace('$', '');
-                                select.val(val);
+                                var footerCell = $('th', table.column(index).footer()).text();
+                                if (footerCell === 'Fecha de Apertura' || footerCell === 'Fecha Cierre') {
+                                    var input = $('input', table.column(index).footer());
+                                    input.val(colSearch.replace('^', '').replace('$', ''));
+                                } else {
+                                    var select = $('select', table.column(index).footer());
+                                    var val = colSearch.replace('^', '').replace('$', '');
+                                    select.val(val);
+                                }
                             }
                         });
                     }
@@ -297,12 +338,13 @@
                 columnDefs: [
                     { width: '15%', targets: 0 }, // Cliente
                     { width: '10%', targets: 1 }, // Responsable
-                    { width: '20%', targets: 2 }, // Tarea Actividad
-                    { width: '10%', targets: 3 }, // Fecha Cierre
-                    { width: '10%', targets: 4 }, // Estado
-                    { width: '10%', targets: 5 }, // Conteo Días
-                    { width: '10%', targets: 6 }, // Estado Avance
-                    { width: '15%', targets: 7 }  // Evidencia
+                    { width: '15%', targets: 2 }, // Tarea Actividad
+                    { width: '10%', targets: 3, className: 'fecha-col' }, // Fecha de Apertura
+                    { width: '10%', targets: 4, className: 'fecha-col' }, // Fecha Cierre
+                    { width: '10%', targets: 5 }, // Estado
+                    { width: '10%', targets: 6 }, // Conteo Días
+                    { width: '10%', targets: 7 }, // Estado Avance
+                    { width: '10%', targets: 8 }  // Evidencia
                 ]
             });
 
