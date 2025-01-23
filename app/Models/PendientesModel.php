@@ -10,6 +10,7 @@ class PendientesModel extends Model
     protected $primaryKey = 'id_pendientes';  // Llave primaria
     protected $allowedFields = [
         'id_cliente',
+        'fecha_asignacion', // Nueva columna añadida
         'created_at',
         'responsable',
         'tarea_actividad',
@@ -28,6 +29,7 @@ class PendientesModel extends Model
     // Validaciones
     protected $validationRules = [
         'id_cliente' => 'required|integer',
+        'fecha_asignacion' => 'required|valid_date', // Validación para la nueva columna
         'responsable' => 'required|string',
         'tarea_actividad' => 'required|string',
         'fecha_cierre' => 'permit_empty|valid_date',
@@ -43,10 +45,13 @@ class PendientesModel extends Model
             'required' => 'El campo id_cliente es obligatorio.',
             'integer' => 'El campo id_cliente debe ser un número entero.'
         ],
+        'fecha_asignacion' => [
+            'required' => 'El campo fecha de asignación es obligatorio.',
+            'valid_date' => 'El campo fecha de asignación debe ser una fecha válida.'
+        ],
         // Agrega mensajes para otros campos según sea necesario
     ];
 
     // Desactivar validación automática
     protected $skipValidation = false;
 }
-

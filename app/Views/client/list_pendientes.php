@@ -13,6 +13,8 @@
     <link href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- DataTables Buttons CSS -->
     <link href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables Responsive CSS (Mejora de Responsividad) -->
+    <link href="https://cdn.datatables.net/responsive/2.4.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f8f9fa;
@@ -56,7 +58,8 @@
         }
 
         /* Estilo para los filtros desplegables en <tfoot> */
-        table.dataTable tfoot select {
+        table.dataTable tfoot select,
+        table.dataTable tfoot input {
             width: 100%;
             height: 30px;
         }
@@ -117,13 +120,13 @@
         </div>
 
         <div class="table-responsive table-container">
-            <table id="pendientesTable" class="table table-bordered table-striped w-100">
+            <table id="pendientesTable" class="table table-bordered table-striped w-100 responsive nowrap">
                 <thead class="table-light">
                     <tr>
                         <th>Cliente</th>
                         <th>Responsable</th>
                         <th>Tarea Actividad</th>
-                        <th>Fecha de Apertura</th> <!-- Nueva Columna -->
+                        <th>Fecha de Asignación</th> <!-- Nueva Columna -->
                         <th>Fecha Cierre</th>
                         <th>Estado</th>
                         <th>Conteo Días</th>
@@ -145,8 +148,8 @@
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['nombre_cliente']); ?>"><?= esc($pendiente['nombre_cliente']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['responsable']); ?>"><?= esc($pendiente['responsable']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['tarea_actividad']); ?>"><?= esc($pendiente['tarea_actividad']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($pendiente['created_at']); ?>" class="fecha-col">
-                                    <?= date('Y-m-d', strtotime($pendiente['created_at'])); ?>
+                                <td data-bs-toggle="tooltip" title="<?= esc($pendiente['fecha_asignacion']); ?>" class="fecha-col">
+                                    <?= date('Y-m-d', strtotime($pendiente['fecha_asignacion'])); ?>
                                 </td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['fecha_cierre']); ?>" class="fecha-col">
                                     <?= esc($pendiente['fecha_cierre']); ?>
@@ -207,6 +210,9 @@
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
     <!-- Buttons ColVis -->
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
+    <!-- DataTables Responsive JS -->
+    <script src="https://cdn.datatables.net/responsive/2.4.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.0/js/responsive.bootstrap5.min.js"></script>
 
     <script>
         $(document).ready(function () {
@@ -223,7 +229,7 @@
             $('#pendientesTable tfoot tr').each(function () {
                 $(this).find('th').each(function (index) {
                     var title = $(this).text();
-                    if (title === 'Fecha de Apertura' || title === 'Fecha Cierre') {
+                    if (title === 'Fecha de Asignación' || title === 'Fecha Cierre') {
                         // Usar un input de fecha para las columnas de fecha
                         $(this).html('<input type="date" class="form-control form-control-sm" placeholder="Filtrar ' + title + '" />');
                     } else {
@@ -233,6 +239,7 @@
             });
 
             var table = $('#pendientesTable').DataTable({
+                responsive: true, // Activar responsividad
                 language: {
                     url: "//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
                 },
@@ -253,6 +260,7 @@
                         }
                     }
                 ],
+                order: [[3, 'desc']], // Ordenar por Fecha de Asignación descendente
                 stateSave: true, // Habilitar la persistencia del estado
                 scrollY: '50vh',
                 scrollX: true, // Habilitar el desplazamiento horizontal
@@ -278,7 +286,7 @@
 
                                 if (val) {
                                     column
-                                        .search('^' + val + '$', true, false)
+                                        .search(val, true, false)
                                         .draw();
                                 } else {
                                     column
@@ -315,9 +323,9 @@
                             var colSearch = state.columns[index].search.search;
                             if (colSearch) {
                                 var footerCell = $('th', table.column(index).footer()).text();
-                                if (footerCell === 'Fecha de Apertura' || footerCell === 'Fecha Cierre') {
+                                if (footerCell === 'Fecha de Asignación' || footerCell === 'Fecha Cierre') {
                                     var input = $('input', table.column(index).footer());
-                                    input.val(colSearch.replace('^', '').replace('$', ''));
+                                    input.val(colSearch);
                                 } else {
                                     var select = $('select', table.column(index).footer());
                                     var val = colSearch.replace('^', '').replace('$', '');
@@ -339,7 +347,7 @@
                     { width: '15%', targets: 0 }, // Cliente
                     { width: '10%', targets: 1 }, // Responsable
                     { width: '15%', targets: 2 }, // Tarea Actividad
-                    { width: '10%', targets: 3, className: 'fecha-col' }, // Fecha de Apertura
+                    { width: '10%', targets: 3, className: 'fecha-col' }, // Fecha de Asignación
                     { width: '10%', targets: 4, className: 'fecha-col' }, // Fecha Cierre
                     { width: '10%', targets: 5 }, // Estado
                     { width: '10%', targets: 6 }, // Conteo Días

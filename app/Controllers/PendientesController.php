@@ -23,12 +23,12 @@ class PendientesController extends Controller
             $pendiente['nombre_cliente'] = $cliente['nombre_cliente'] ?? 'Cliente desconocido';
 
             // Calcular conteo_dias dinámicamente
-            $createdAt = strtotime($pendiente['created_at']);
+            $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
             if ($pendiente['estado'] === 'ABIERTA') {
-                $pendiente['conteo_dias'] = (int) floor((time() - $createdAt) / (60 * 60 * 24));
+                $pendiente['conteo_dias'] = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
             } elseif ($pendiente['estado'] === 'CERRADA' && !empty($pendiente['fecha_cierre'])) {
                 $fechaCierre = strtotime($pendiente['fecha_cierre']);
-                $pendiente['conteo_dias'] = (int) floor(($fechaCierre - $createdAt) / (60 * 60 * 24));
+                $pendiente['conteo_dias'] = (int) floor(($fechaCierre - $fechaAsignacion) / (60 * 60 * 24));
             } else {
                 $pendiente['conteo_dias'] = 0; // Valor por defecto si no se cumple ninguna condición
             }
@@ -56,6 +56,7 @@ class PendientesController extends Controller
         // Recogemos los datos del formulario sin 'created_at'
         $data = [
             'id_cliente' => $this->request->getPost('id_cliente'),
+            'fecha_asignacion' => $this->request->getPost('fecha_asignacion'), // Nueva columna
             'responsable' => $this->request->getPost('responsable'),
             'tarea_actividad' => $this->request->getPost('tarea_actividad'),
             'fecha_cierre' => $this->request->getPost('fecha_cierre'),
@@ -65,10 +66,9 @@ class PendientesController extends Controller
             // 'created_at' se manejará automáticamente por el modelo
         ];
 
-        // Validar que la fecha de cierre no sea menor que la fecha de creación (fecha actual)
-        $currentDateTime = date('Y-m-d H:i:s');
-        if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < strtotime($currentDateTime)) {
-            return redirect()->back()->with('msg', 'Error: La fecha de cierre no puede ser anterior a la fecha de creación.')->withInput();
+        // Validar que la fecha de cierre no sea menor que la fecha de asignación
+        if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < strtotime($data['fecha_asignacion'])) {
+            return redirect()->back()->with('msg', 'Error: La fecha de cierre no puede ser anterior a la fecha de asignación.')->withInput();
         }
 
         // Validar que si hay fecha de cierre, el estado no puede ser ABIERTA
@@ -81,14 +81,14 @@ class PendientesController extends Controller
             // Obtener el ID del registro insertado
             $insertedId = $pendientesModel->getInsertID();
 
-            // Obtener el registro recién insertado para obtener 'created_at'
+            // Obtener el registro recién insertado para obtener 'fecha_asignacion'
             $pendiente = $pendientesModel->find($insertedId);
             if ($pendiente) {
                 // Calcular 'conteo_dias' basado en el estado
                 if ($pendiente['estado'] === 'ABIERTA') {
-                    $conteo_dias = (int) floor((time() - strtotime($pendiente['created_at'])) / (60 * 60 * 24));
+                    $conteo_dias = (int) floor((time() - strtotime($pendiente['fecha_asignacion'])) / (60 * 60 * 24));
                 } elseif ($pendiente['estado'] === 'CERRADA' && !empty($pendiente['fecha_cierre'])) {
-                    $conteo_dias = (int) floor((strtotime($pendiente['fecha_cierre']) - strtotime($pendiente['created_at'])) / (60 * 60 * 24));
+                    $conteo_dias = (int) floor((strtotime($pendiente['fecha_cierre']) - strtotime($pendiente['fecha_asignacion'])) / (60 * 60 * 24));
                 } else {
                     $conteo_dias = 0;
                 }
@@ -139,6 +139,7 @@ class PendientesController extends Controller
         // Recogemos los datos del formulario
         $data = [
             'id_cliente' => $this->request->getPost('id_cliente'),
+            'fecha_asignacion' => $this->request->getPost('fecha_asignacion'), // Asegurarse de que esta columna no cambie si no es necesario
             'responsable' => $this->request->getPost('responsable'),
             'tarea_actividad' => $this->request->getPost('tarea_actividad'),
             'fecha_cierre' => $this->request->getPost('fecha_cierre'),
@@ -148,16 +149,16 @@ class PendientesController extends Controller
             // 'updated_at' se manejará automáticamente por el modelo
         ];
 
-        // Obtener el pendiente actual para obtener 'created_at'
+        // Obtener el pendiente actual para obtener 'fecha_asignacion'
         $pendienteActual = $pendientesModel->find($id);
         if (!$pendienteActual) {
             return redirect()->to('/listPendientes')->with('msg', 'Pendiente no encontrado.');
         }
-        $createdAt = strtotime($pendienteActual['created_at']);
+        $fechaAsignacion = strtotime($pendienteActual['fecha_asignacion']);
 
-        // Validar que la fecha de cierre no sea menor que la fecha de creación
-        if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < $createdAt) {
-            return redirect()->back()->with('msg', 'Error: La fecha de cierre no puede ser anterior a la fecha de creación.')->withInput();
+        // Validar que la fecha de cierre no sea menor que la fecha de asignación
+        if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < $fechaAsignacion) {
+            return redirect()->back()->with('msg', 'Error: La fecha de cierre no puede ser anterior a la fecha de asignación.')->withInput();
         }
 
         // Validar que si hay fecha de cierre, el estado no puede ser ABIERTA
@@ -167,9 +168,9 @@ class PendientesController extends Controller
 
         // Calcular 'conteo_dias' basado en el estado
         if ($data['estado'] === 'ABIERTA') {
-            $conteo_dias = (int) floor((time() - $createdAt) / (60 * 60 * 24));
+            $conteo_dias = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
         } elseif ($data['estado'] === 'CERRADA' && !empty($data['fecha_cierre'])) {
-            $conteo_dias = (int) floor((strtotime($data['fecha_cierre']) - $createdAt) / (60 * 60 * 24));
+            $conteo_dias = (int) floor((strtotime($data['fecha_cierre']) - $fechaAsignacion) / (60 * 60 * 24));
         } else {
             $conteo_dias = 0;
         }
@@ -229,23 +230,22 @@ class PendientesController extends Controller
 
         // Recalcular "conteo_dias" si se actualiza "fecha_cierre" o "estado"
         if (in_array($field, ['fecha_cierre', 'estado'])) {
-            $createdAt = strtotime($pendiente['created_at']);
+            $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
             $estado = ($field === 'estado') ? $value : $pendiente['estado'];
             $fechaCierre = ($field === 'fecha_cierre') ? $value : $pendiente['fecha_cierre'];
 
             if ($estado === 'ABIERTA') {
-                $updateData['conteo_dias'] = (int) floor((time() - $createdAt) / (60 * 60 * 24));
+                $updateData['conteo_dias'] = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
             } elseif ($estado === 'CERRADA' && !empty($fechaCierre)) {
-                $fechaCierreTimestamp = strtotime($fechaCierre);
-                $updateData['conteo_dias'] = (int) floor(($fechaCierreTimestamp - $createdAt) / (60 * 60 * 24));
+                $updateData['conteo_dias'] = (int) floor((strtotime($fechaCierre) - $fechaAsignacion) / (60 * 60 * 24));
             } else {
                 $updateData['conteo_dias'] = 0; // Valor por defecto si no se cumple ninguna condición
             }
         }
 
         // Validaciones adicionales si se actualizan campos relacionados
-        if ($field === 'fecha_cierre' && $value && strtotime($value) < strtotime($pendiente['created_at'])) {
-            return $this->response->setJSON(['success' => false, 'message' => 'La fecha de cierre no puede ser anterior a la fecha de creación.']);
+        if ($field === 'fecha_cierre' && $value && strtotime($value) < strtotime($pendiente['fecha_asignacion'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'La fecha de cierre no puede ser anterior a la fecha de asignación.']);
         }
 
         if ($field === 'estado' && $value === 'ABIERTA' && !empty($pendiente['fecha_cierre'])) {

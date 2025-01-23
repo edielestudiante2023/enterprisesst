@@ -35,10 +35,15 @@
             color: #555;
         }
     </style>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
 
+    <!-- Navbar -->
     <nav style="background-color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 10px 0; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
 
@@ -73,68 +78,91 @@
 
     <!-- Ajustar el espaciado para evitar que el contenido se oculte bajo el navbar fijo -->
     <div style="height: 160px;"></div>
+
     <div class="container mt-5">
         <h2 class="text-center mb-4">Agregar Pendiente</h2>
+
+        <!-- Mensaje de error o éxito -->
+        <?php if (session()->getFlashdata('msg')): ?>
+            <div class="alert alert-danger"><?= session()->getFlashdata('msg') ?></div>
+        <?php endif; ?>
+
         <form action="<?= base_url('/addPendientePost') ?>" method="post">
+            <?= csrf_field() ?>
             <div class="form-group">
                 <label for="id_cliente">Cliente:</label>
                 <select name="id_cliente" id="id_cliente" class="form-control" required>
                     <option value="">Seleccione un cliente</option>
                     <?php foreach ($clientes as $cliente) : ?>
-                        <option value="<?= $cliente['id_cliente'] ?>"><?= $cliente['nombre_cliente'] ?></option>
+                        <option value="<?= esc($cliente['id_cliente']); ?>" <?= set_select('id_cliente', $cliente['id_cliente']); ?>>
+                            <?= esc($cliente['nombre_cliente']); ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
+                <div class="text-danger"><?= isset($validation) ? $validation->getError('id_cliente') : '' ?></div>
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_asignacion">Fecha de Asignación:</label>
+                <input type="date" class="form-control" id="fecha_asignacion" name="fecha_asignacion" value="<?= set_value('fecha_asignacion', date('Y-m-d')); ?>" required>
+                <div class="text-danger"><?= isset($validation) ? $validation->getError('fecha_asignacion') : '' ?></div>
             </div>
 
             <div class="form-group">
                 <label for="responsable">Responsable:</label>
                 <select name="responsable" id="responsable" class="form-control" required>
                     <option value="">Seleccione un responsable</option>
-                    <option value="GERENTE">Gerente General o Dirección</option>
-                    <option value="COORDINADOR_SST">Coordinador de SST o Responsable SST</option>
-                    <option value="COPASST">Miembro del COPASST</option>
-                    <option value="RRHH">Recursos Humanos</option>
-                    <option value="SUPERVISOR">Supervisor de Área o Jefe de Equipo</option>
-                    <option value="MANTENIMIENTO">Personal de Mantenimiento</option>
-                    <option value="TRABAJADOR_DESIGNADO">Trabajador Designado por Área (Inspector)</option>
-                    <option value="AUDITOR">Auditor Interno SST</option>
-                    <option value="GESTION_DOCUMENTAL">Encargado de Gestión Documental</option>
-                    <option value="CONSULTOR_EXTERNO">Consultor Externo - Cycloid Talent</option>
+                    <option value="GERENTE" <?= set_select('responsable', 'GERENTE'); ?>>Gerente General o Dirección</option>
+                    <option value="COORDINADOR_SST" <?= set_select('responsable', 'COORDINADOR_SST'); ?>>Coordinador de SST o Responsable SST</option>
+                    <option value="COPASST" <?= set_select('responsable', 'COPASST'); ?>>Miembro del COPASST</option>
+                    <option value="RRHH" <?= set_select('responsable', 'RRHH'); ?>>Recursos Humanos</option>
+                    <option value="SUPERVISOR" <?= set_select('responsable', 'SUPERVISOR'); ?>>Supervisor de Área o Jefe de Equipo</option>
+                    <option value="MANTENIMIENTO" <?= set_select('responsable', 'MANTENIMIENTO'); ?>>Personal de Mantenimiento</option>
+                    <option value="TRABAJADOR_DESIGNADO" <?= set_select('responsable', 'TRABAJADOR_DESIGNADO'); ?>>Trabajador Designado por Área (Inspector)</option>
+                    <option value="AUDITOR" <?= set_select('responsable', 'AUDITOR'); ?>>Auditor Interno SST</option>
+                    <option value="GESTION_DOCUMENTAL" <?= set_select('responsable', 'GESTION_DOCUMENTAL'); ?>>Encargado de Gestión Documental</option>
+                    <option value="CONSULTOR_EXTERNO" <?= set_select('responsable', 'CONSULTOR_EXTERNO'); ?>>Consultor Externo - Cycloid Talent</option>
                 </select>
-
+                <div class="text-danger"><?= isset($validation) ? $validation->getError('responsable') : '' ?></div>
             </div>
 
             <div class="form-group">
                 <label for="tarea_actividad">Tarea Actividad:</label>
-                <textarea class="form-control" id="tarea_actividad" name="tarea_actividad" required></textarea>
+                <textarea class="form-control" id="tarea_actividad" name="tarea_actividad" required><?= set_value('tarea_actividad'); ?></textarea>
+                <div class="text-danger"><?= isset($validation) ? $validation->getError('tarea_actividad') : '' ?></div>
             </div>
 
             <div class="form-group">
                 <label for="fecha_cierre">Fecha Cierre:</label>
-                <input type="date" class="form-control" id="fecha_cierre" name="fecha_cierre">
+                <input type="date" class="form-control" id="fecha_cierre" name="fecha_cierre" value="<?= set_value('fecha_cierre'); ?>">
+                <div class="text-danger"><?= isset($validation) ? $validation->getError('fecha_cierre') : '' ?></div>
             </div>
 
             <div class="form-group">
                 <label for="estado">Estado:</label>
                 <select name="estado" id="estado" class="form-control" required>
-                    <option value="ABIERTA">ABIERTA</option>
-                    <option value="CERRADA">CERRADA</option>
+                    <option value="ABIERTA" <?= set_select('estado', 'ABIERTA'); ?>>ABIERTA</option>
+                    <option value="CERRADA" <?= set_select('estado', 'CERRADA'); ?>>CERRADA</option>
                 </select>
+                <div class="text-danger"><?= isset($validation) ? $validation->getError('estado') : '' ?></div>
             </div>
 
             <div class="form-group">
                 <label for="conteo_dias">Conteo Días:</label>
                 <input type="number" class="form-control" id="conteo_dias" name="conteo_dias" readonly>
+                <div class="text-danger"><?= isset($validation) ? $validation->getError('conteo_dias') : '' ?></div>
             </div>
 
             <div class="form-group">
                 <label for="estado_avance">Estado Avance:</label>
-                <input type="text" class="form-control" id="estado_avance" name="estado_avance">
+                <input type="text" class="form-control" id="estado_avance" name="estado_avance" value="<?= set_value('estado_avance'); ?>">
+                <div class="text-danger"><?= isset($validation) ? $validation->getError('estado_avance') : '' ?></div>
             </div>
 
             <div class="form-group">
                 <label for="evidencia_para_cerrarla">Evidencia para Cerrarla:</label>
-                <textarea class="form-control" id="evidencia_para_cerrarla" name="evidencia_para_cerrarla"></textarea>
+                <textarea class="form-control" id="evidencia_para_cerrarla" name="evidencia_para_cerrarla"><?= set_value('evidencia_para_cerrarla'); ?></textarea>
+                <div class="text-danger"><?= isset($validation) ? $validation->getError('evidencia_para_cerrarla') : '' ?></div>
             </div>
 
             <button type="submit" class="btn btn-primary">Guardar Pendiente</button>
@@ -148,10 +176,15 @@
                     <tr>
                         <th>ID</th>
                         <th>Cliente</th>
+                        <th>Fecha Asignación</th> <!-- Nueva Columna -->
+                        <th>Fecha Creación</th>
                         <th>Responsable</th>
                         <th>Tarea</th>
                         <th>Fecha Cierre</th>
                         <th>Estado</th>
+                        <th>Conteo Días</th>
+                        <th>Estado Avance</th>
+                        <th>Evidencia para Cerrarla</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -190,19 +223,43 @@
             </div>
         </div>
     </footer>
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
+
+    <!-- Scripts para calcular conteo_dias automáticamente -->
     <script>
         $(document).ready(function() {
-            $('#pendientesTable').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+            function calculateConteoDias() {
+                var fechaAsignacion = $('#fecha_asignacion').val();
+                var fechaCierre = $('#fecha_cierre').val();
+                var estado = $('#estado').val();
+                var conteoDias = 0;
+
+                if (fechaAsignacion) {
+                    var asignacionDate = new Date(fechaAsignacion);
+                    var currentDate = new Date();
+
+                    if (estado === 'ABIERTA') {
+                        var timeDiff = currentDate - asignacionDate;
+                        conteoDias = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                    } else if (estado === 'CERRADA' && fechaCierre) {
+                        var cierreDate = new Date(fechaCierre);
+                        var timeDiff = cierreDate - asignacionDate;
+                        conteoDias = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                    }
                 }
+
+                $('#conteo_dias').val(conteoDias);
+            }
+
+            // Calcular al cargar la página
+            calculateConteoDias();
+
+            // Calcular al cambiar fecha_asignacion, fecha_cierre o estado
+            $('#fecha_asignacion, #fecha_cierre, #estado').on('change', function() {
+                calculateConteoDias();
             });
         });
     </script>
+
 </body>
 
 </html>
