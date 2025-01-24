@@ -72,9 +72,9 @@ class PendientesController extends Controller
         }
 
         // Validar que si hay fecha de cierre, el estado no puede ser ABIERTA
-        if (!empty($data['fecha_cierre']) && $data['estado'] === 'ABIERTA') {
+        /* if (!empty($data['fecha_cierre']) && $data['estado'] === 'ABIERTA') {
             return redirect()->back()->with('msg', 'Error: No se puede establecer el estado como ABIERTA si ya hay una fecha de cierre.')->withInput();
-        }
+        } */
 
         // Insertar el nuevo pendiente sin 'conteo_dias'
         if ($pendientesModel->insert($data)) {
@@ -143,6 +143,7 @@ class PendientesController extends Controller
             'responsable' => $this->request->getPost('responsable'),
             'tarea_actividad' => $this->request->getPost('tarea_actividad'),
             'fecha_cierre' => $this->request->getPost('fecha_cierre'),
+            'fecha_asignacion' => $this->request->getPost('fecha_asignacion'),
             'estado' => $this->request->getPost('estado'),
             'estado_avance' => $this->request->getPost('estado_avance'),
             'evidencia_para_cerrarla' => $this->request->getPost('evidencia_para_cerrarla'),
@@ -162,9 +163,9 @@ class PendientesController extends Controller
         }
 
         // Validar que si hay fecha de cierre, el estado no puede ser ABIERTA
-        if (!empty($data['fecha_cierre']) && $data['estado'] === 'ABIERTA') {
+        /* if (!empty($data['fecha_cierre']) && $data['estado'] === 'ABIERTA') {
             return redirect()->back()->with('msg', 'Error: No se puede establecer el estado como ABIERTA si ya hay una fecha de cierre.')->withInput();
-        }
+        } */
 
         // Calcular 'conteo_dias' basado en el estado
         if ($data['estado'] === 'ABIERTA') {
@@ -209,65 +210,93 @@ class PendientesController extends Controller
     // Actualizar campo específico del pendiente
     public function updatePendiente()
     {
-        $id = $this->request->getPost('id');
-        $field = $this->request->getPost('field');
-        $value = $this->request->getPost('value');
-
-        // Definir los campos permitidos para actualización
-        $allowedFields = ['tarea_actividad', 'fecha_cierre', 'estado', 'evidencia_para_cerrarla', 'estado_avance'];
-
+        $id = $this->request->getPost('id'); // ID del registro a actualizar
+        $field = $this->request->getPost('field'); // Campo que se está actualizando
+        $value = $this->request->getPost('value'); // Nuevo valor del campo
+    
+        // Campos permitidos para actualización
+        $allowedFields = ['tarea_actividad', 'fecha_cierre', 'estado', 'evidencia_para_cerrarla', 'estado_avance', 'fecha_asignacion'];
+    
         if (!in_array($field, $allowedFields)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
         }
-
+    
         $model = new PendientesModel();
         $pendiente = $model->find($id);
+    
         if (!$pendiente) {
             return $this->response->setJSON(['success' => false, 'message' => 'Pendiente no encontrado']);
         }
-
+    
+        // Preparar los datos para actualizar
         $updateData = [$field => $value];
-
-        // Recalcular "conteo_dias" si se actualiza "fecha_cierre" o "estado"
-        if (in_array($field, ['fecha_cierre', 'estado'])) {
-            $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
-            $estado = ($field === 'estado') ? $value : $pendiente['estado'];
-            $fechaCierre = ($field === 'fecha_cierre') ? $value : $pendiente['fecha_cierre'];
-
-            if ($estado === 'ABIERTA') {
-                $updateData['conteo_dias'] = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
-            } elseif ($estado === 'CERRADA' && !empty($fechaCierre)) {
-                $updateData['conteo_dias'] = (int) floor((strtotime($fechaCierre) - $fechaAsignacion) / (60 * 60 * 24));
-            } else {
-                $updateData['conteo_dias'] = 0; // Valor por defecto si no se cumple ninguna condición
-            }
-        }
-
-        // Validaciones adicionales si se actualizan campos relacionados
-        if ($field === 'fecha_cierre' && $value && strtotime($value) < strtotime($pendiente['fecha_asignacion'])) {
-            return $this->response->setJSON(['success' => false, 'message' => 'La fecha de cierre no puede ser anterior a la fecha de asignación.']);
-        }
-
-        if ($field === 'estado' && $value === 'ABIERTA' && !empty($pendiente['fecha_cierre'])) {
-            return $this->response->setJSON(['success' => false, 'message' => 'No se puede establecer el estado como ABIERTA si ya hay una fecha de cierre.']);
-        }
-
-        if ($model->update($id, $updateData)) {
-            return $this->response->setJSON(['success' => true, 'message' => 'Actualizado correctamente']);
+    
+        // Recalcular conteo_dias si cambia fecha_cierre, estado o fecha_asignacion
+        $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
+        $estado = ($field === 'estado') ? $value : $pendiente['estado'];
+        $fechaCierre = ($field === 'fecha_cierre') ? $value : $pendiente['fecha_cierre'];
+    
+        if ($estado === 'ABIERTA') {
+            $updateData['conteo_dias'] = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
+        } elseif ($estado === 'CERRADA' && !empty($fechaCierre)) {
+            $updateData['conteo_dias'] = (int) floor((strtotime($fechaCierre) - $fechaAsignacion) / (60 * 60 * 24));
         } else {
-            $errors = $model->errors();
-            $errorMessage = 'Error al actualizar: ';
-            if (!empty($errors)) {
-                $errorMessage .= implode(' ', array_map(function($msg) {
-                    return is_array($msg) ? implode(', ', $msg) : $msg;
-                }, $errors));
-            } else {
-                $errorMessage .= 'No se pudo actualizar el pendiente.';
-            }
+            $updateData['conteo_dias'] = 0; // Si no se cumple ninguna condición
+        }
+    
+        // Actualizar el registro en la base de datos
+        if ($model->update($id, $updateData)) {
             return $this->response->setJSON([
-                'success' => false,
-                'message' => $errorMessage
+                'success' => true,
+                'message' => 'Actualizado correctamente',
+                'updatedValue' => $updateData['conteo_dias'] // Enviar el nuevo valor al cliente
             ]);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar']);
         }
     }
+
+    public function recalcularConteoDias()
+{
+    // Verificar si la solicitud es una solicitud AJAX
+    if (!$this->request->isAJAX()) {
+        return $this->response->setStatusCode(403, 'Forbidden');
+    }
+
+    $model = new PendientesModel();
+    $pendientes = $model->findAll();
+
+    $updatedCount = 0;
+    foreach ($pendientes as $pendiente) {
+        $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
+        $fechaCierre = !empty($pendiente['fecha_cierre']) ? strtotime($pendiente['fecha_cierre']) : null;
+        $estado = $pendiente['estado'];
+
+        if ($estado === 'ABIERTA') {
+            $conteo_dias = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
+        } elseif ($estado === 'CERRADA' && $fechaCierre) {
+            $conteo_dias = (int) floor(($fechaCierre - $fechaAsignacion) / (60 * 60 * 24));
+        } else {
+            $conteo_dias = 0;
+        }
+
+        // Actualizar solo si el valor ha cambiado
+        if ($pendiente['conteo_dias'] != $conteo_dias) {
+            $model->update($pendiente['id_pendientes'], ['conteo_dias' => $conteo_dias]);
+            $updatedCount++;
+        }
+    }
+
+    // Obtener todos los pendientes actualizados con el nombre del cliente
+    $pendientesActualizados = $model->getPendientesWithCliente();
+
+    return $this->response->setJSON([
+        'success' => true,
+        'message' => "Conteo de días actualizado para {$updatedCount} registros.",
+        'pendientes' => $pendientesActualizados
+    ]);
+}
+
+    
+    
 }

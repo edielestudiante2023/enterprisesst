@@ -6,52 +6,82 @@ use CodeIgniter\Model;
 
 class PendientesModel extends Model
 {
-    protected $table = 'tbl_pendientes';  // Nombre de la tabla
-    protected $primaryKey = 'id_pendientes';  // Llave primaria
+    protected $table = 'tbl_pendientes';
+    protected $primaryKey = 'id_pendientes';
     protected $allowedFields = [
         'id_cliente',
-        'fecha_asignacion', // Nueva columna añadida
-        'created_at',
         'responsable',
         'tarea_actividad',
+        'fecha_asignacion',
         'fecha_cierre',
         'estado',
         'conteo_dias',
         'estado_avance',
-        'evidencia_para_cerrarla'
+        'evidencia_para_cerrarla',
     ];
 
-    // Para que los campos de created_at y updated_at se actualicen automáticamente
     protected $useTimestamps = true;
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at'; // Si tienes un campo 'updated_at', sino lo puedes quitar
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
 
-    // Validaciones
-    protected $validationRules = [
-        'id_cliente' => 'required|integer',
-        'fecha_asignacion' => 'required|valid_date', // Validación para la nueva columna
-        'responsable' => 'required|string',
-        'tarea_actividad' => 'required|string',
-        'fecha_cierre' => 'permit_empty|valid_date',
-        'estado' => 'required|in_list[ABIERTA,CERRADA]',
-        
-        'estado_avance' => 'permit_empty|string',
-        'evidencia_para_cerrarla' => 'permit_empty|string',
-    ];
+    // Definir los callbacks para calcular 'conteo_dias'
+    protected $beforeInsert = ['calculateConteoDias'];
+    protected $beforeUpdate = ['calculateConteoDias'];
 
-    // Mensajes de validación personalizados (opcional)
-    protected $validationMessages = [
-        'id_cliente' => [
-            'required' => 'El campo id_cliente es obligatorio.',
-            'integer' => 'El campo id_cliente debe ser un número entero.'
-        ],
-        'fecha_asignacion' => [
-            'required' => 'El campo fecha de asignación es obligatorio.',
-            'valid_date' => 'El campo fecha de asignación debe ser una fecha válida.'
-        ],
-        // Agrega mensajes para otros campos según sea necesario
-    ];
+    protected $afterFind = ['formatFechaAsignacion'];
 
-    // Desactivar validación automática
-    protected $skipValidation = false;
+    protected function formatFechaAsignacion(array $data)
+    {
+        if (isset($data['data']) && is_array($data['data'])) {
+            foreach ($data['data'] as &$row) {
+                if (isset($row['fecha_asignacion'])) {
+                    $row['fecha_asignacion'] = date('Y-m-d', strtotime($row['fecha_asignacion']));
+                }
+            }
+        }
+        return $data;
+    }
+
+
+    /**
+     * Calcular 'conteo_dias' antes de insertar o actualizar
+     */
+    protected function calculateConteoDias(array $data)
+    {
+        // Obtener los datos del pendiente
+        $fechaAsignacion = isset($data['data']['fecha_asignacion']) ? $data['data']['fecha_asignacion'] : null;
+        $fechaCierre = isset($data['data']['fecha_cierre']) ? $data['data']['fecha_cierre'] : null;
+        $estado = isset($data['data']['estado']) ? $data['data']['estado'] : null;
+
+        if ($fechaAsignacion && $estado) {
+            $asignacionDate = new \DateTime($fechaAsignacion);
+            $currentDate = new \DateTime();
+
+            if ($estado === 'ABIERTA') {
+                // Calcula la diferencia en días entre fecha_asignacion y la fecha actual
+                $interval = $asignacionDate->diff($currentDate);
+                $conteoDias = $interval->days;
+            } elseif ($estado === 'CERRADA' && $fechaCierre) {
+                $cierreDate = new \DateTime($fechaCierre);
+                $interval = $asignacionDate->diff($cierreDate);
+                $conteoDias = $interval->days;
+            } else {
+                $conteoDias = 0;
+            }
+
+            $data['data']['conteo_dias'] = $conteoDias;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Obtener pendientes junto con el nombre del cliente
+     */
+    public function getPendientesWithCliente()
+    {
+        return $this->select('tbl_pendientes.*, tbl_clientes.nombre_cliente')
+            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_pendientes.id_cliente')
+            ->findAll();
+    }
 }

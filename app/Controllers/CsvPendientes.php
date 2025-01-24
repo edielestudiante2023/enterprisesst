@@ -32,7 +32,7 @@ class CsvPendientes extends Controller
 
                 // Validar encabezados
                 $headers = $rows[0];
-                $requiredHeaders = ['id_cliente', 'responsable', 'tarea_actividad', 'fecha_cierre', 'estado'];
+                $requiredHeaders = ['id_cliente', 'responsable', 'tarea_actividad', 'fecha_asignacion','fecha_cierre', 'estado'];
 
                 if ($headers !== $requiredHeaders) {
                     return redirect()->to(base_url('consultant/csvpendientes'))
@@ -47,8 +47,9 @@ class CsvPendientes extends Controller
                         'id_cliente' => $row[0],
                         'responsable' => $row[1],
                         'tarea_actividad' => $row[2],
-                        'fecha_cierre' => $this->formatDate($row[3]),
-                        'estado' => $row[4],
+                        'fecha_asignacion' => $this->formatDate($row[3]),
+                        'fecha_cierre' => $this->formatDate($row[4]),
+                        'estado' => $row[5],
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s'),
                     ];
