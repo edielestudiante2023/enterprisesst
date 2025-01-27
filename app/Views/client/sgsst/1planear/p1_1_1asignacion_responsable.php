@@ -281,11 +281,11 @@ setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idi
 </footer>
 
     <br>
-   <!--  <div class="no-print">
+    <div class="no-print">
         <a href="<?= base_url('/generatePdf_asignacionResponsable') ?>" target="_blank">
             <button type="button">PDF</button>
         </a>
-    </div> -->
+    </div>
 
 </body>
 

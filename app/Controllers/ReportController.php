@@ -6,6 +6,8 @@ use App\Models\{ReporteModel, ClientModel, ReportTypeModel, DetailReportModel};
 use CodeIgniter\Controller;
 use SendGrid\Mail\Mail;
 
+echo realpath(__DIR__ . '/../../vendor/autoload.php');
+
 require __DIR__ . '/../../vendor/autoload.php';
 
 
@@ -85,9 +87,9 @@ class ReportController extends Controller
         $reportTypeModel = new ReportTypeModel();
         $detailReportModel = new DetailReportModel();
 
-        $client = $clientModel->find($this->request->getVar('id_cliente'));
+        $idCliente = $this->request->getVar('id_cliente');
+        $client = $clientModel->find($idCliente);
         log_message('debug', 'Cliente recuperado: ' . print_r($client, true));
-
 
         if (!$client) {
             return redirect()->back()->with('msg', 'Cliente no encontrado');
@@ -127,7 +129,7 @@ class ReportController extends Controller
             'titulo_reporte' => $this->request->getVar('titulo_reporte'),
             'id_detailreport' => $this->request->getVar('id_detailreport'),
             'id_report_type' => $this->request->getVar('id_report_type'),
-            'id_cliente' => $this->request->getVar('id_cliente'),
+            'id_cliente' => $idCliente,
             'estado' => $this->request->getVar('estado'),
             'observaciones' => $this->request->getVar('observaciones'),
             'enlace' => base_url('uploads/' . $nitCliente . '/' . $fileName),
@@ -137,7 +139,8 @@ class ReportController extends Controller
 
         if ($reporteModel->save($data)) {
             log_message('debug', 'Guardado exitoso, llamando a sendEmailToClient');
-            $this->sendEmailToClient($client['correo_cliente'], $data['titulo_reporte'], $data['enlace']);
+            // Llamar a sendEmailToClient con el ID del cliente
+            $this->sendEmailToClient($idCliente, $data['titulo_reporte'], $data['enlace']);
 
             return redirect()->to('/reportList')->with('msg', 'Reporte agregado exitosamente');
         } else {
@@ -145,45 +148,75 @@ class ReportController extends Controller
         }
     }
 
-    private function sendEmailToClient($toEmail, $tituloReporte, $enlace)
+    private function sendEmailToClient($idCliente, $tituloReporte, $enlace)
     {
-
+        // Validar el enlace antes de proceder
         if (!filter_var($enlace, FILTER_VALIDATE_URL)) {
             log_message('error', 'El enlace generado no es válido: ' . $enlace);
             return; // Finaliza si el enlace no es válido
         }
 
-        $email = new Mail();
+        // Obtener los datos del cliente desde el modelo
+        $clientModel = new \App\Models\ClientModel();
+        $cliente = $clientModel->find($idCliente);
+
+        // Validar si se encuentra el cliente
+        if (!$cliente || empty($cliente['correo_cliente'])) {
+            log_message('error', "No se encontró el cliente o el correo no está disponible para id_cliente: $idCliente");
+            return;
+        }
+
+        $toEmail = $cliente['correo_cliente']; // Correo dinámico
+        $nombreCliente = $cliente['nombre_cliente']; // Nombre dinámico del cliente
+
+        // Crear el objeto Mail para enviar el correo
+        $email = new \SendGrid\Mail\Mail();
         $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent");
-        $email->setSubject("Nuevo documento añadido en su aplicación Enterprisesst");
-        $email->addTo($toEmail = "edison.cuervo@cycloidtalent.com");
-        $email->addContent(
-            "text/html",
-            "<h6>¡Estimado Cliente</h6>
+        $email->setSubject("Nuevo documento añadido en su aplicación EnterpriseSST");
+        $email->addTo($toEmail);
 
-                <p style='text-align: justify;'>Nos complace informarle que hemos añadido el documento <strong>$tituloReporte</strong> a su aplicación Enterprisesst.  Este soporte evidencia los avances de nuestra gestión en Seguridad y Salud en el Trabajo (SG-SST).</p>
-
-                <p style='text-align: justify;'>El documento <strong>$tituloReporte</strong> ya está disponible para su consulta inmediata en la sección de documentos dentro de su aplicación. Le invitamos a acceder a su plataforma de manera ágil y sencilla para revisar este nuevo contenido, el cual seguramente será de gran utilidad en la optimización de sus procesos. Puede acceder directamente al aplicativo haciendo clic en el siguiente enlace:</p>
-
-                <p style='text-align: center;'>
-                    <a href='https://phorizontal.cycloidtalent.com/' target='_blank' style='display: inline-block; padding: 10px 20px; background-color: #0056b3; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ir a Enterprisesst</a>
-                </p>
-
-                <p style='text-align: justify;'>En <strong>Cycloid Talent</strong>, nos distinguimos por ser aliados estratégicos en la administración del SG-SST. Nuestro compromiso es ofrecerle soluciones innovadoras y personalizadas que potencien la seguridad y el bienestar en su organización. Con Enterprisesst, no solo recibe herramientas de gestión, sino también el respaldo de un equipo de expertos enfocados en brindarle resultados sobresalientes.</p>
-
-                <p style='text-align: justify;'>Le recordamos que nuestro equipo está disponible para atender cualquier inquietud o requerimiento adicional que pueda tener. Si necesita orientación sobre cómo aprovechar al máximo este documento o cualquier otro servicio de nuestro portafolio, no dude en ponerse en contacto con nosotros.</p>
-
-                <p style='font-size: 1.1em; font-weight: bold;'>Gracias por confiar en Cycloid Talent, donde su tranquilidad y éxito son nuestra prioridad.</p>
-
-                <p style='text-align: center; font-size: 0.9em; color: #6c757d;'>Para más información, visite nuestra página web o contáctenos directamente a través de nuestros canales de atención.</p>"
-                    );
+        // Crear el contenido del correo, incluyendo el nombre del cliente
+        $emailContent = "
+        <h3>Estimado/a $nombreCliente</h3>
+        <p style='text-align: justify;'>Nos complace informarle que hemos añadido el documento <strong>$tituloReporte</strong> a su aplicación Enterprisesst. Este soporte evidencia los avances de nuestra gestión en Seguridad y Salud en el Trabajo (SG-SST).</p>
+        <p style='text-align: justify;'>El documento <strong>$tituloReporte</strong> ya está disponible para su consulta inmediata en la sección de documentos dentro de su aplicación. Le invitamos a acceder a su plataforma de manera ágil y sencilla siguiendo el enlace:</p>
+        
+        <p style='text-align: left;'>
+            <div style='text-align: center;'>
+                <a href='https://dashboard.cycloidtalent.com/login' target='_blank' style='display: inline-block; text-decoration: none; text-align: center;'>
+        <img src='" . base_url('uploads/logoenterprisesstblancoslogan.png') . "' alt='Logo Enterprise SST' style='width: 400px; border: none;'>
+                    <p style='margin: 10px 0 0; color: #0056b3; font-size: 16px; font-weight: bold;'>Haz clic aquí</p>
+                </a>
+            </div>
 
 
-        // Instancia de SendGrid
+        </p>
+        <p style='text-align: justify;'>
+            En <strong>Cycloid Talent</strong>, nos distinguimos por ser aliados estratégicos en la administración del SG-SST. Nuestro compromiso es ofrecerle soluciones innovadoras y personalizadas que potencien la seguridad y el bienestar en su organización. Con Enterprisesst, no solo recibe herramientas de gestión, sino también el respaldo de un equipo de expertos enfocados en brindarle resultados sobresalientes.
+            </p>
+
+            <p style='text-align: justify;'>
+            Le recordamos que nuestro equipo está disponible para atender cualquier inquietud o requerimiento adicional que pueda tener. Si necesita orientación sobre cómo aprovechar al máximo este documento o cualquier otro servicio de nuestro portafolio, no dude en ponerse en contacto con nosotros.
+            </p>
+
+            <p style='text-align: justify; font-size: 1.1em; font-weight: bold;'>
+            Gracias por confiar en Cycloid Talent, donde su tranquilidad y éxito son nuestra prioridad.
+            </p>
+
+            <p style='text-align: center; font-size: 0.9em; color: #6c757d;'>
+            Para más información, visite nuestra página web o contáctenos directamente a través de nuestros canales de atención.
+            </p>
+
+            ";
+
+
+        $email->addContent("text/html", $emailContent);
+
+        // Cargar la clave API desde las variables de entorno
         $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
 
-
         try {
+            // Enviar el correo
             $response = $sendgrid->send($email);
             log_message('debug', 'SendGrid Response Status Code: ' . $response->statusCode());
             log_message('debug', 'SendGrid Response Body: ' . $response->body());
@@ -191,6 +224,8 @@ class ReportController extends Controller
             log_message('error', 'Excepción al enviar el correo: ' . $e->getMessage());
         }
     }
+
+
 
 
 
