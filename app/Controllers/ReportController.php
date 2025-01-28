@@ -181,12 +181,15 @@ class ReportController extends Controller
         <p style='text-align: justify;'>Nos complace informarle que hemos añadido el documento <strong>$tituloReporte</strong> a su aplicación Enterprisesst. Este soporte evidencia los avances de nuestra gestión en Seguridad y Salud en el Trabajo (SG-SST).</p>
         <p style='text-align: justify;'>El documento <strong>$tituloReporte</strong> ya está disponible para su consulta inmediata en la sección de documentos dentro de su aplicación. Le invitamos a acceder a su plataforma de manera ágil y sencilla siguiendo el enlace:</p>
         
-        
-         <p style='text-align: center;'>
-        <a href='https://dashboard.cycloidtalent.com/login' target='_blank' style='display: inline-block; padding: 15px 25px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 25px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;'>
-            Ir a Enterprisesst
-        </a>
-        </p>
+       
+            <div style='text-align: center;'>
+                <a href='https://dashboard.cycloidtalent.com/login' target='_blank' style='display: inline-block; text-decoration: none; text-align: center;'>
+                <img src='http://localhost/enterprisesst/public/img/logoenterprisesstblancoslogan.png' alt='Logo Enterprise SST' style='width: 400px; border: none;'>
+                <p style='margin: 10px 0 0; color: #0056b3; font-size: 16px; font-weight: bold;'>Haz clic aquí</p>
+                </a>
+            </div>
+
+
         
         <p style='text-align: justify;'>
             En <strong>Cycloid Talent</strong>, nos distinguimos por ser aliados estratégicos en la administración del SG-SST. Nuestro compromiso es ofrecerle soluciones innovadoras y personalizadas que potencien la seguridad y el bienestar en su organización. Con Enterprisesst, no solo recibe herramientas de gestión, sino también el respaldo de un equipo de expertos enfocados en brindarle resultados sobresalientes.
