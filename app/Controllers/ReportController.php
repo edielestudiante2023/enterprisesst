@@ -172,7 +172,7 @@ class ReportController extends Controller
         // Crear el objeto Mail para enviar el correo
         $email = new \SendGrid\Mail\Mail();
         $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent");
-        $email->setSubject("Nuevo documento añadido en su aplicación EnterpriseSST");
+        $email->setSubject("Nuevo documento añadido en su aplicación Enterprisesst");
         $email->addTo($toEmail);
 
         // Crear el contenido del correo, incluyendo el nombre del cliente
