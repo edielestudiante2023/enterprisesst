@@ -85,17 +85,33 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label for="id_plandetrabajo">Actividad del Plan de Trabajo:</label>
-                <select name="id_plandetrabajo" id="id_plandetrabajo" class="form-control" required>
-                    <option value="">Seleccione una actividad</option>
-                    <?php foreach ($actividades as $actividad) : ?>
-                        <option value="<?= $actividad->id_inventario_actividades_plandetrabajo ?>">
-                            <?= $actividad->actividad_plandetrabajo ?>
-                        </option>
-                    <?php endforeach; ?>
+            <!-- <div class="form-group">
+                <label for="tipo_servicio">Tipo de Servicio:</label>
+                <select name="tipo_servicio" id="tipo_servicio" class="form-control" required>
+                    <option value="">Seleccione el tipo de servicio</option>
+                    <option value="7A">7A</option>
+                    <option value="7B">7B</option>
+                    <option value="7C">7C</option>
+                    <option value="7D">7D</option>
+                    <option value="7E">7E</option>
+                    <option value="21A">21A</option>
+                    <option value="21B">21B</option>
+                    <option value="21C">21C</option>
+                    <option value="21D">21D</option>
+                    <option value="21E">21E</option>
+                    <option value="60A">60A</option>
+                    <option value="60B">60B</option>
+                    <option value="60C">60C</option>
+                    <option value="60D">60D</option>
+                    <option value="60E">60E</option>
                 </select>
+            </div> -->
+            <!-- Campo para escribir la Actividad -->
+            <div class="form-group">
+                <label for="actividad_plandetrabajo">Actividad:</label>
+                <textarea class="form-control" id="actividad_plandetrabajo" name="actividad_plandetrabajo" required></textarea>
             </div>
+
 
             <div class="form-group">
                 <label for="phva_plandetrabajo">PHVA:</label>

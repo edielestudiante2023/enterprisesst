@@ -34,7 +34,7 @@ class PlanController extends Controller
                 $headers = $rows[0];
                 $requiredHeaders = [
                     'id_cliente',
-                    'id_plandetrabajo',
+                    
                     'phva_plandetrabajo',
                     'numeral_plandetrabajo',
                     'actividad_plandetrabajo',
@@ -51,11 +51,11 @@ class PlanController extends Controller
                 foreach (array_slice($rows, 1) as $row) {
                     $data = [
                         'id_cliente' => $row[0],
-                        'id_plandetrabajo' => $row[1],
-                        'phva_plandetrabajo' => $row[2],
-                        'numeral_plandetrabajo' => $row[3],
-                        'actividad_plandetrabajo' => $row[4],
-                        'responsable_sugerido_plandetrabajo' => $row[5],
+                        
+                        'phva_plandetrabajo' => $row[1],
+                        'numeral_plandetrabajo' => $row[2],
+                        'actividad_plandetrabajo' => $row[3],
+                        'responsable_sugerido_plandetrabajo' => $row[4],
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s'),
                     ];

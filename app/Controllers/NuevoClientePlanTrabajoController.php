@@ -18,12 +18,17 @@ class NuevoClientePlanTrabajoController extends BaseController
         $planes = $ptaModel->asArray()->where('id_cliente', $id)->findAll();
 
         foreach ($planes as &$plan) {
-            // Obtener información adicional del cliente y la actividad
+            // Obtener información adicional del cliente
             $cliente = $clientModel->asArray()->find($plan['id_cliente']);
-            $actividad = $actividadesModel->asArray()->find($plan['id_plandetrabajo']);
 
+            // Intentamos obtener información de la actividad
+            $actividad = $actividadesModel->asArray()
+                ->where('actividad_plandetrabajo', $plan['actividad_plandetrabajo'])
+                ->first();
+
+            // Asignamos la información a la variable del plan
             $plan['nombre_cliente'] = $cliente ? $cliente['nombre_cliente'] : 'No disponible';
-            $plan['nombre_actividad'] = $actividad ? $actividad['actividad_plandetrabajo'] : 'No disponible';
+            $plan['nombre_actividad'] = $actividad ? $actividad['actividad_plandetrabajo'] : $plan['actividad_plandetrabajo'];
             $plan['numeral_actividad'] = $actividad ? $actividad['numeral_plandetrabajo'] : 'No disponible';
         }
 

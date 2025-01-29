@@ -96,36 +96,37 @@
         <h2 class="mb-4 text-dark">Evaluaciones del Cliente: <?= esc($client['nombre_cliente']) ?></h2>
 
         <div class="text-end text-secondary mb-3">
-        <strong><?= date('d/m/Y') ?></strong>
-    </div>
+            <strong><?= date('d/m/Y') ?></strong>
+        </div>
 
         <!-- Tarjetas de indicadores -->
         <div class="row text-center mb-4">
             <div class="col-md-4">
-                <div class="card shadow-sm border-light">
-                    <div class="card-body bg-white">
+                <div class="card shadow-sm border-light h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center" style="background-color: #FFE5EC;">
                         <h5 class="card-title text-secondary">Suma de Puntuación Actual</h5>
                         <p class="display-4 font-weight-bold"><?= esc($sum_puntaje_cuantitativo) ?></p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card shadow-sm border-light">
-                    <div class="card-body bg-white">
+                <div class="card shadow-sm border-light h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center" style="background-color: #E3FDFD;">
                         <h5 class="card-title text-secondary">Puntuación Máxima del Sistema</h5>
                         <p class="display-4 font-weight-bold"><?= esc($sum_valor) ?></p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card shadow-sm border-light">
-                <div class="card-body bg-white">
+                <div class="card shadow-sm border-light h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center" style="background-color: #E5FBB8;">
                         <h5 class="card-title text-secondary">Indicador de Cumplimiento Decreto 1072 de 2015</h5>
                         <p class="display-4 font-weight-bold"><?= number_format($indicador_general * 100, 0) ?>%</p>
                     </div>
                 </div>
             </div>
         </div>
+
 
         <!-- Indicadores por categoría -->
         <div class="row text-center mb-4">
@@ -204,8 +205,8 @@
             <table id="evaluacionesTable" class="styled-table table table-striped table-bordered nowrap" style="width:100%">
                 <thead class="table-light">
                     <tr>
-                        
-                        
+
+
                         <th>Ciclo</th>
                         <th>Estándar</th>
                         <th>Detalle Estándar</th>
@@ -221,8 +222,8 @@
                 </thead>
                 <tfoot class="table-light">
                     <tr class="filters">
-                        
-                       
+
+
                         <th>
                             <select class="form-select form-select-sm filter-select" aria-label="Filtro Ciclo">
                                 <option value="">Todos</option>
@@ -285,8 +286,8 @@
                     <?php if (!empty($evaluaciones) && is_array($evaluaciones)): ?>
                         <?php foreach ($evaluaciones as $evaluacion): ?>
                             <tr>
-                                
-                               
+
+
                                 <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['ciclo']); ?>"><?= esc($evaluacion['ciclo']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['estandar']); ?>"><?= esc($evaluacion['estandar']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['detalle_estandar']); ?>"><?= esc($evaluacion['detalle_estandar']); ?></td>
@@ -366,8 +367,7 @@
                 responsive: true,
                 autoWidth: false,
                 dom: 'Bfltip', // Integrar Buttons en el DOM
-                buttons: [
-                    {
+                buttons: [{
                         extend: 'excelHtml5',
                         text: 'Exportar a Excel',
                         className: 'btn btn-success btn-sm'

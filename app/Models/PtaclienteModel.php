@@ -9,7 +9,7 @@ class PtaclienteModel extends Model
     protected $primaryKey = 'id_ptacliente';  // Llave primaria
     protected $allowedFields = [
         'id_cliente',
-        'id_plandetrabajo',
+        'tipo_servicio',  // Reemplazo de id_plandetrabajo
         'phva_plandetrabajo',
         'numeral_plandetrabajo',
         'actividad_plandetrabajo',
@@ -31,24 +31,26 @@ class PtaclienteModel extends Model
 
     protected $validationRules = [
         'id_cliente' => 'required|integer',
-        'id_plandetrabajo' => 'required|integer',
-        'phva_plandetrabajo' => 'required|string',
-        'numeral_plandetrabajo' => 'required|string',
-        'actividad_plandetrabajo' => 'required|integer',  // Cambiado a integer si es un ID
-        'responsable_sugerido_plandetrabajo' => 'string',
-        'fecha_propuesta' => 'valid_date',
-        'fecha_cierre' => 'valid_date',
-        'estado_actividad' => 'required|string',
+        'tipo_servicio' => 'permit_empty|string|max_length[255]',
+
+        'phva_plandetrabajo' => 'required|string|max_length[255]',
+        'numeral_plandetrabajo' => 'required|string|max_length[255]',
+        'actividad_plandetrabajo' => 'required|string',
+        'responsable_sugerido_plandetrabajo' => 'permit_empty|string|max_length[255]',
+        'fecha_propuesta' => 'permit_empty|valid_date',
+        'fecha_cierre' => 'permit_empty|valid_date',  // Ahora permite NULL
+        'estado_actividad' => 'required|string|in_list[ABIERTA,CERRADA,GESTIONANDO]',
         'porcentaje_avance' => 'required|decimal',
     ];
+    
 
     protected $validationMessages = [
         'id_cliente' => [
             'required' => 'El campo id_cliente es obligatorio.',
             'integer' => 'El campo id_cliente debe ser un número entero.'
         ],
-        // Agrega mensajes para otros campos según sea necesario
+        
     ];
 
-    protected $skipValidation = true; // Cambiado para depurar
+    protected $skipValidation = false;
 }

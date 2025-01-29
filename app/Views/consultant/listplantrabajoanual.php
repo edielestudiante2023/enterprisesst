@@ -151,14 +151,14 @@
                     <tr>
                         <th>ID</th>
                         <th>Cliente</th>
-                        <th>ID Plan de Trabajo</th>
+                        <!-- <th>Tipo de Servicio</th> -->
                         <th>PHVA</th>
                         <th>Numeral</th>
                         <th>Actividad</th>
-                        <th>*Responsable Sugerido</th>
+                        <th>*Responsable</th>
                         <th>*Fecha Propuesta</th>
                         <th>*Fecha Cierre</th>
-                        <th>*Responsable Definido</th>
+                        <!-- <th>*Responsable Definido</th> -->
                         <th>*Estado Actividad</th>
                         <th>*Porcentaje Avance</th>
                         <th>Semana</th>
@@ -175,9 +175,25 @@
                         <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Cliente">
                                 <option value="">Todos</option>
                             </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro ID Plan de Trabajo">
+                        <!-- <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Tipo de Servicio">
                                 <option value="">Todos</option>
-                            </select></th>
+                                <option value="7A">7A</option>
+                                <option value="7B">7B</option>
+                                <option value="7C">7C</option>
+                                <option value="7D">7D</option>
+                                <option value="7E">7E</option>
+                                <option value="21A">21A</option>
+                                <option value="21B">21B</option>
+                                <option value="21C">21C</option>
+                                <option value="21D">21D</option>
+                                <option value="21E">21E</option>
+                                <option value="60A">60A</option>
+                                <option value="60B">60B</option>
+                                <option value="60C">60C</option>
+                                <option value="60D">60D</option>
+                                <option value="60E">60E</option>
+                            </select></th> -->
+
                         <th><select class="form-select form-select-sm filter-select" aria-label="Filtro PHVA">
                                 <option value="">Todos</option>
                             </select></th>
@@ -196,9 +212,9 @@
                         <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Fecha Cierre">
                                 <option value="">Todos</option>
                             </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Responsable Definido">
+                        <!-- <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Responsable Definido">
                                 <option value="">Todos</option>
-                            </select></th>
+                            </select></th> -->
                         <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Estado Actividad">
                                 <option value="">Todos</option>
                             </select></th>
@@ -228,7 +244,7 @@
                             <tr data-id="<?= esc($actividad['id_ptacliente']) ?>">
                                 <td><?= esc($actividad['id_ptacliente']) ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($actividad['nombre_cliente']) ?>"><?= esc($actividad['nombre_cliente']) ?></td>
-                                <td><?= esc($actividad['id_plandetrabajo']) ?></td>
+                                <!-- <td><?= esc($actividad['tipo_servicio']) ?></td> -->
                                 <td data-bs-toggle="tooltip" title="<?= esc($actividad['phva_plandetrabajo']) ?>"><?= esc($actividad['phva_plandetrabajo']) ?></td>
                                 <td><?= esc($actividad['numeral_plandetrabajo']) ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($actividad['actividad_plandetrabajo']) ?>"><?= esc($actividad['actividad_plandetrabajo']) ?></td>
@@ -252,13 +268,13 @@
                                 <td contenteditable="false" class="editable-date" data-field="fecha_cierre" data-bs-toggle="tooltip" title="<?= esc($actividad['fecha_cierre']) ?>">
                                     <?= esc($actividad['fecha_cierre']) ?>
                                 </td>
-                                <td contenteditable="true"
+                               <!--  <td contenteditable="true"
                                     class="editable"
                                     data-field="responsable_definido_paralaactividad"
                                     data-bs-toggle="tooltip"
                                     title="<?= esc($actividad['responsable_definido_paralaactividad']) ?>">
                                     <?= esc($actividad['responsable_definido_paralaactividad']) ?>
-                                </td>
+                                </td> -->
 
 
                                 <td contenteditable="false"

@@ -91,17 +91,32 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label for="id_plandetrabajo">Actividad del Plan de Trabajo:</label>
-                <select name="id_plandetrabajo" id="id_plandetrabajo" class="form-control" required>
-                    <option value="">Seleccione una actividad</option>
-                    <?php foreach ($actividades as $actividad) : ?>
-                        <option value="<?= $actividad->id_inventario_actividades_plandetrabajo ?>" <?= ($actividad->id_inventario_actividades_plandetrabajo == $plan['id_plandetrabajo']) ? 'selected' : '' ?>>
-                            <?= $actividad->actividad_plandetrabajo ?>
-                        </option>
-                    <?php endforeach; ?>
+            <!-- <div class="form-group">
+                <label for="tipo_servicio">Tipo de Servicio:</label>
+                <select name="tipo_servicio" id="tipo_servicio" class="form-control" required>
+                    <option value="">Seleccione el tipo de servicio</option>
+                    <option value="7A" <?= ($plan['tipo_servicio'] == '7A') ? 'selected' : '' ?>>7A</option>
+                    <option value="7B" <?= ($plan['tipo_servicio'] == '7B') ? 'selected' : '' ?>>7B</option>
+                    <option value="7C" <?= ($plan['tipo_servicio'] == '7C') ? 'selected' : '' ?>>7C</option>
+                    <option value="7D" <?= ($plan['tipo_servicio'] == '7D') ? 'selected' : '' ?>>7D</option>
+                    <option value="7E" <?= ($plan['tipo_servicio'] == '7E') ? 'selected' : '' ?>>7E</option>
+                    <option value="21A" <?= ($plan['tipo_servicio'] == '21A') ? 'selected' : '' ?>>21A</option>
+                    <option value="21B" <?= ($plan['tipo_servicio'] == '21B') ? 'selected' : '' ?>>21B</option>
+                    <option value="21C" <?= ($plan['tipo_servicio'] == '21C') ? 'selected' : '' ?>>21C</option>
+                    <option value="21D" <?= ($plan['tipo_servicio'] == '21D') ? 'selected' : '' ?>>21D</option>
+                    <option value="21E" <?= ($plan['tipo_servicio'] == '21E') ? 'selected' : '' ?>>21E</option>
+                    <option value="60A" <?= ($plan['tipo_servicio'] == '60A') ? 'selected' : '' ?>>60A</option>
+                    <option value="60B" <?= ($plan['tipo_servicio'] == '60B') ? 'selected' : '' ?>>60B</option>
+                    <option value="60C" <?= ($plan['tipo_servicio'] == '60C') ? 'selected' : '' ?>>60C</option>
+                    <option value="60D" <?= ($plan['tipo_servicio'] == '60D') ? 'selected' : '' ?>>60D</option>
+                    <option value="60E" <?= ($plan['tipo_servicio'] == '60E') ? 'selected' : '' ?>>60E</option>
                 </select>
+            </div> -->
+            <div class="form-group">
+                <label for="actividad_plandetrabajo">Actividad:</label>
+                <textarea class="form-control" id="actividad_plandetrabajo" name="actividad_plandetrabajo" required><?= $plan['actividad_plandetrabajo'] ?></textarea>
             </div>
+
 
             <div class="form-group">
                 <label for="phva_plandetrabajo">PHVA:</label>
