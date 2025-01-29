@@ -520,7 +520,7 @@
                         });
                     } else if (field === 'porcentaje_avance') {
                         for (var i = 0; i <= 100; i += 10) {
-                            var perc = i + '%';
+                            var perc = i ;
                             var optionElem = $('<option>', {
                                 value: perc,
                                 text: perc
