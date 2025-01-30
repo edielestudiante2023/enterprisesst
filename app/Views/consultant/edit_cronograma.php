@@ -205,13 +205,13 @@
                     <!-- Horas de Duración -->
                     <div class="mb-3">
                         <label for="horas_de_duracion_de_la_capacitacion" class="form-label">Horas de Duración</label>
-                        <input type="number" name="horas_de_duracion_de_la_capacitacion" id="horas_de_duracion_de_la_capacitacion" class="form-control" value="<?= esc($cronograma['horas_de_duracion_de_la_capacitacion']) ?>" required>
+                        <input type="number" name="horas_de_duracion_de_la_capacitacion" id="horas_de_duracion_de_la_capacitacion" class="form-control" value="<?= esc($cronograma['horas_de_duracion_de_la_capacitacion']) ?>" >
                     </div>
 
                     <!-- Indicador de Realización -->
                     <div class="mb-3">
                         <label for="indicador_de_realizacion_de_la_capacitacion" class="form-label">Indicador de Realización</label>
-                        <select name="indicador_de_realizacion_de_la_capacitacion" id="indicador_de_realizacion_de_la_capacitacion" class="form-select" required>
+                        <select name="indicador_de_realizacion_de_la_capacitacion" id="indicador_de_realizacion_de_la_capacitacion" class="form-select" >
                             <option value="SE EJECUTO EN LA FECHA O ANTES DE LA FECHA" <?= ($cronograma['indicador_de_realizacion_de_la_capacitacion'] == 'SE EJECUTO EN LA FECHA O ANTES DE LA FECHA') ? 'selected' : '' ?>>SE EJECUTÓ EN LA FECHA O ANTES DE LA FECHA</option>
                             <option value="SE EJECUTO DESPUES DE LA FECHA ACORDADA A CAUSA DEL CLIENTE" <?= ($cronograma['indicador_de_realizacion_de_la_capacitacion'] == 'SE EJECUTO DESPUES DE LA FECHA ACORDADA A CAUSA DEL CLIENTE') ? 'selected' : '' ?>>SE EJECUTÓ DESPUÉS DE LA FECHA ACORDADA A CAUSA DEL CLIENTE</option>
                             <option value="DECLINADA POR EL CLIENTE" <?= ($cronograma['indicador_de_realizacion_de_la_capacitacion'] == 'DECLINADA POR EL CLIENTE') ? 'selected' : '' ?>>DECLINADA POR EL CLIENTE</option>
@@ -223,13 +223,13 @@
                     <!-- Número de Asistentes -->
                     <div class="mb-3">
                         <label for="numero_de_asistentes_a_capacitacion" class="form-label">Número de Asistentes</label>
-                        <input type="number" name="numero_de_asistentes_a_capacitacion" id="numero_de_asistentes_a_capacitacion" class="form-control" value="<?= esc($cronograma['numero_de_asistentes_a_capacitacion']) ?>" required>
+                        <input type="number" name="numero_de_asistentes_a_capacitacion" id="numero_de_asistentes_a_capacitacion" class="form-control" value="<?= esc($cronograma['numero_de_asistentes_a_capacitacion']) ?>" >
                     </div>
 
                     <!-- Número Total de Programados -->
                     <div class="mb-3">
                         <label for="numero_total_de_personas_programadas" class="form-label">Número Total de Programados</label>
-                        <input type="number" name="numero_total_de_personas_programadas" id="numero_total_de_personas_programadas" class="form-control" value="<?= esc($cronograma['numero_total_de_personas_programadas']) ?>" required>
+                        <input type="number" name="numero_total_de_personas_programadas" id="numero_total_de_personas_programadas" class="form-control" value="<?= esc($cronograma['numero_total_de_personas_programadas']) ?>" >
                     </div>
 
                     <!-- Porcentaje de Cobertura -->
@@ -241,13 +241,13 @@
                     <!-- Número de Evaluados -->
                     <div class="mb-3">
                         <label for="numero_de_personas_evaluadas" class="form-label">Número de Evaluados</label>
-                        <input type="number" name="numero_de_personas_evaluadas" id="numero_de_personas_evaluadas" class="form-control" value="<?= esc($cronograma['numero_de_personas_evaluadas']) ?>" required>
+                        <input type="number" name="numero_de_personas_evaluadas" id="numero_de_personas_evaluadas" class="form-control" value="<?= esc($cronograma['numero_de_personas_evaluadas']) ?>" >
                     </div>
 
                     <!-- Promedio de Calificaciones -->
                     <div class="mb-3">
                         <label for="promedio_de_calificaciones" class="form-label">Promedio de Calificaciones</label>
-                        <input type="number" step="0.01" name="promedio_de_calificaciones" id="promedio_de_calificaciones" class="form-control" value="<?= esc($cronograma['promedio_de_calificaciones']) ?>" required>
+                        <input type="number" step="0.01" name="promedio_de_calificaciones" id="promedio_de_calificaciones" class="form-control" value="<?= esc($cronograma['promedio_de_calificaciones']) ?>" >
                     </div>
 
                     <!-- Observaciones -->
