@@ -39,10 +39,41 @@ class CronogcapacitacionController extends Controller
     // Mostrar formulario para agregar nuevo cronograma de capacitación
     public function addcronogCapacitacion()
     {
+        $capacitacionModel = new CapacitacionModel();
+        $clienteModel = new ClientModel();
+
+        // Obtener capacitaciones y clientes
+        $capacitaciones = $capacitacionModel->findAll();
+        $clientes = $clienteModel->findAll();
+
+        // Preparar los datos para la vista
+        $data = [
+            'capacitaciones' => $capacitaciones,
+            'clientes' => $clientes,
+        ];
+
+        return view('consultant/add_cronograma', $data);
+    }
+
+    // Guardar nuevo cronograma de capacitación
+    public function addcronogCapacitacionPost()
+    {
         $cronogModel = new CronogcapacitacionModel();
 
+        // Depuración: Mostrar los valores recibidos
+        log_message('debug', 'Datos POST recibidos: ' . print_r($this->request->getPost(), true));
+
+        // Capturar el valor de id_capacitacion
+        $id_capacitacion = $this->request->getPost('id_capacitacion');
+
+        // Si `id_capacitacion` está vacío, detener el proceso
+        if (empty($id_capacitacion)) {
+            return redirect()->back()->with('msg', 'Error: No seleccionaste una capacitación.');
+        }
+
+        // Preparar los datos para la inserción
         $data = [
-            'id_capacitacion' => $this->request->getPost('id_capacitacion'),
+            'id_capacitacion' => $id_capacitacion,
             'id_cliente' => $this->request->getPost('id_cliente'),
             'fecha_programada' => $this->request->getPost('fecha_programada'),
             'fecha_de_realizacion' => $this->request->getPost('fecha_de_realizacion'),
@@ -59,52 +90,13 @@ class CronogcapacitacionController extends Controller
             'observaciones' => $this->request->getPost('observaciones'),
         ];
 
+        // Intentar insertar el nuevo cronograma
         if ($cronogModel->insert($data)) {
             return redirect()->to('/listcronogCapacitacion')->with('msg', 'Cronograma agregado exitosamente');
         } else {
-            return redirect()->back()->with('msg', 'Error al agregar cronograma');
+            return redirect()->back()->with('msg', 'Error al agregar cronograma.');
         }
     }
-
-    // Guardar nuevo cronograma de capacitación
-    public function addcronogCapacitacionPost()
-    {
-        $cronogModel = new CronogcapacitacionModel();
-
-        // Recogemos los datos del formulario
-        $numero_asistentes = $this->request->getPost('numero_de_asistentes_a_capacitacion');
-        $numero_total_programados = $this->request->getPost('numero_total_de_personas_programadas');
-
-        // Calcular el porcentaje de cobertura
-        $porcentaje_cobertura = ($numero_total_programados > 0)
-            ? number_format(($numero_asistentes / $numero_total_programados) * 100, 2)
-            : 0;
-
-        $data = [
-            'id_capacitacion' => $this->request->getPost('id_capacitacion'),
-            'id_cliente' => $this->request->getPost('id_cliente'),
-            'fecha_programada' => $this->request->getPost('fecha_programada'),
-            'fecha_de_realizacion' => $this->request->getPost('fecha_de_realizacion'),
-            'estado' => $this->request->getPost('estado'),
-            'perfil_de_asistentes' => $this->request->getPost('perfil_de_asistentes'),
-            'nombre_del_capacitador' => $this->request->getPost('nombre_del_capacitador'),
-            'horas_de_duracion_de_la_capacitacion' => $this->request->getPost('horas_de_duracion_de_la_capacitacion'),
-            'indicador_de_realizacion_de_la_capacitacion' => $this->request->getPost('indicador_de_realizacion_de_la_capacitacion'),
-            'numero_de_asistentes_a_capacitacion' => $numero_asistentes,
-            'numero_total_de_personas_programadas' => $numero_total_programados,
-            'porcentaje_cobertura' => $porcentaje_cobertura . '%', // Agregar el símbolo de porcentaje
-            'numero_de_personas_evaluadas' => $this->request->getPost('numero_de_personas_evaluadas'),
-            'promedio_de_calificaciones' => $this->request->getPost('promedio_de_calificaciones'),
-            'observaciones' => $this->request->getPost('observaciones'),
-        ];
-
-        if ($cronogModel->insert($data)) {
-            return redirect()->to('/listcronogCapacitacion')->with('msg', 'Cronograma agregado exitosamente');
-        } else {
-            return redirect()->back()->with('msg', 'Error al agregar cronograma');
-        }
-    }
-
 
     // Mostrar formulario para editar cronograma de capacitación
     public function editcronogCapacitacion($id)
@@ -114,11 +106,21 @@ class CronogcapacitacionController extends Controller
         $capacitacionModel = new CapacitacionModel();
 
         // Obtener el cronograma que se va a editar
-        $data['cronograma'] = $cronogModel->find($id);
+        $cronograma = $cronogModel->find($id);
+        if (!$cronograma) {
+            return redirect()->to('/listcronogCapacitacion')->with('msg', 'Cronograma no encontrado.');
+        }
 
         // Obtener listas de clientes y capacitaciones para los selects del formulario
-        $data['clientes'] = $clientModel->findAll();
-        $data['capacitaciones'] = $capacitacionModel->findAll();
+        $clientes = $clientModel->findAll();
+        $capacitaciones = $capacitacionModel->findAll();
+
+        // Preparar los datos para la vista
+        $data = [
+            'cronograma' => $cronograma,
+            'clientes' => $clientes,
+            'capacitaciones' => $capacitaciones,
+        ];
 
         return view('consultant/edit_cronograma', $data);
     }
@@ -161,64 +163,56 @@ class CronogcapacitacionController extends Controller
         }
     }
 
-
     // Eliminar cronograma de capacitación
     public function deletecronogCapacitacion($id)
     {
-        // Instancia del modelo
         $cronogModel = new CronogcapacitacionModel();
 
-        // Asegurarse de que el ID no esté vacío y sea válido
-        if ($id) {
-            // Eliminar el registro
-            if ($cronogModel->delete($id)) {
-                return redirect()->to('/listcronogCapacitacion')->with('msg', 'Cronograma eliminado exitosamente');
-            } else {
-                return redirect()->back()->with('msg', 'Error al eliminar el cronograma');
-            }
+        if ($cronogModel->delete($id)) {
+            return redirect()->to('/listcronogCapacitacion')->with('msg', 'Cronograma eliminado exitosamente');
         } else {
-            return redirect()->back()->with('msg', 'ID inválido o no proporcionado');
+            return redirect()->back()->with('msg', 'Error al eliminar el cronograma');
         }
     }
 
+    // Actualizar campos específicos del cronograma de capacitación
     public function updatecronogCapacitacion()
-{
-    log_message('debug', 'Datos recibidos: ' . print_r($this->request->getPost(), true));
+    {
+        log_message('debug', 'Datos recibidos: ' . print_r($this->request->getPost(), true));
 
-    $id = $this->request->getPost('id');
-    $field = $this->request->getPost('field');
-    $value = $this->request->getPost('value');
+        $id = $this->request->getPost('id');
+        $field = $this->request->getPost('field');
+        $value = $this->request->getPost('value');
 
-    $allowedFields = [
-        'fecha_programada',
-        'fecha_de_realizacion',
-        'estado',
-        'perfil_de_asistentes',
-        'nombre_del_capacitador',
-        'horas_de_duracion_de_la_capacitacion',
-        'indicador_de_realizacion_de_la_capacitacion',
-        'numero_de_asistentes_a_capacitacion',
-        'numero_total_de_personas_programadas',
-        'numero_de_personas_evaluadas',
-        'promedio_de_calificaciones',
-        'observaciones'
-    ];
+        $allowedFields = [
+            'fecha_programada',
+            'fecha_de_realizacion',
+            'estado',
+            'perfil_de_asistentes',
+            'nombre_del_capacitador',
+            'horas_de_duracion_de_la_capacitacion',
+            'indicador_de_realizacion_de_la_capacitacion',
+            'numero_de_asistentes_a_capacitacion',
+            'numero_total_de_personas_programadas',
+            'numero_de_personas_evaluadas',
+            'promedio_de_calificaciones',
+            'observaciones'
+        ];
 
-    if (!in_array($field, $allowedFields)) {
-        log_message('error', 'Campo no permitido: ' . $field);
-        return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
+        if (!in_array($field, $allowedFields)) {
+            log_message('error', 'Campo no permitido: ' . $field);
+            return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
+        }
+
+        $cronogModel = new CronogcapacitacionModel();
+        $updateData = [$field => $value];
+
+        if ($cronogModel->update($id, $updateData)) {
+            log_message('debug', 'Registro actualizado correctamente');
+            return $this->response->setJSON(['success' => true, 'message' => 'Registro actualizado correctamente']);
+        } else {
+            log_message('error', 'Error al actualizar el registro');
+            return $this->response->setJSON(['success' => false, 'message' => 'No se pudo actualizar el registro']);
+        }
     }
-
-    $cronogModel = new CronogcapacitacionModel();
-    $updateData = [$field => $value];
-
-    if ($cronogModel->update($id, $updateData)) {
-        log_message('debug', 'Registro actualizado correctamente');
-        return $this->response->setJSON(['success' => true, 'message' => 'Registro actualizado correctamente']);
-    } else {
-        log_message('error', 'Error al actualizar el registro');
-        return $this->response->setJSON(['success' => false, 'message' => 'No se pudo actualizar el registro']);
-    }
-}
-
 }

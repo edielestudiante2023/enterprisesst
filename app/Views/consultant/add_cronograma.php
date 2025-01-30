@@ -99,167 +99,170 @@
                 <!-- Columna Izquierda -->
                 <div class="col-md-6">
                     <!-- Capacitación -->
-                    <div class="mb-3">
-                        <label for="id_capacitacion" class="form-label">Capacitación</label>
-                        <select name="id_capacitacion" id="id_capacitacion" class="form-select" required>
-                            <option value="" disabled selected>Selecciona una capacitación</option>
-                            <?php foreach ($capacitaciones as $capacitacion): ?>
-                                <option value="<?= $capacitacion['id_capacitacion'] ?>">
-                                    <?= $capacitacion['capacitacion'] ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
 
-                    <!-- Cliente -->
-                    <div class="mb-3">
-                        <label for="id_cliente" class="form-label">Cliente</label>
-                        <select name="id_cliente" id="id_cliente" class="form-select" required>
-                            <option value="" disabled selected>Selecciona un cliente</option>
-                            <?php foreach ($clientes as $cliente): ?>
-                                <option value="<?= $cliente['id_cliente'] ?>">
-                                    <?= $cliente['nombre_cliente'] ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                    <select name="id_capacitacion" id="id_capacitacion" class="form-select" required>
+                        <option value="" disabled selected>Selecciona una capacitación</option>
+                        <?php foreach ($capacitaciones as $capacitacion): ?>
+                            <option value="<?= htmlspecialchars($capacitacion['id_capacitacion']) ?>">
+                                <?= htmlspecialchars($capacitacion['capacitacion']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
 
-                    <!-- Fecha Programada -->
-                    <div class="mb-3">
-                        <label for="fecha_programada" class="form-label">Fecha Programada</label>
-                        <input type="date" name="fecha_programada" id="fecha_programada" class="form-control" required>
-                    </div>
 
-                    <!-- Fecha de Realización -->
-                    <div class="mb-3">
-                        <label for="fecha_de_realizacion" class="form-label">Fecha de Realización</label>
-                        <input type="date" name="fecha_de_realizacion" id="fecha_de_realizacion" class="form-control">
-                    </div>
 
-                    <!-- Estado -->
-                    <div class="mb-3">
-                        <label for="estado" class="form-label">Estado</label>
-                        <select name="estado" id="estado" class="form-select" required>
-                            <option value="" disabled selected>Selecciona un estado</option>
-                            <option value="PROGRAMADA">PROGRAMADA</option>
-                            <option value="EJECUTADA">EJECUTADA</option>
-                            <option value="CANCELADA POR EL CLIENTE">CANCELADA POR EL CLIENTE</option>
-                            <option value="REPROGRAMADA">REPROGRAMADA</option>
-                        </select>
-                    </div>
 
-                    <!-- Perfil de Asistentes -->
-                    <div class="mb-3">
-                        <label for="perfil_de_asistentes" class="form-label">Perfil de Asistentes</label>
-                        <select name="perfil_de_asistentes" id="perfil_de_asistentes" class="form-select" required>
-                            <option value="" disabled selected>Selecciona un perfil</option>
-
-                            <!-- Roles Internos -->
-                            <optgroup label="Roles Internos">
-                                <option value="GERENTE_GENERAL">Gerente General</option>
-                                <option value="MIEMBROS_COPASST">Miembros del COPASST</option>
-                                <option value="RESPONSABLE_SST">Responsable de SST</option>
-                                <option value="SUPERVISORES">Supervisores o Jefes de Área</option>
-                                <option value="TRABAJADORES_REPRESENTANTES">Trabajadores Representantes</option>
-                                <option value="MIEMBROS_COMITE_CONVIVENCIA">Miembros del Comité de Convivencia Laboral</option>
-                                <option value="RECURSOS_HUMANOS">Departamento de Recursos Humanos</option>
-                                <option value="PERSONAL_MANTENIMIENTO">Personal de Mantenimiento o Producción</option>
-                                <option value="ENCARGADO_AMBIENTAL">Encargado de Gestión Ambiental</option>
-                                <option value="TRABAJADORES_RIESGOS_CRITICOS">Trabajadores con Riesgos Críticos</option>
-                            </optgroup>
-
-                            <!-- Roles Externos -->
-                            <optgroup label="Roles Externos">
-                                <option value="ASESOR_SST">Asesor o Consultor en SST</option>
-                                <option value="AUDITOR_EXTERNO">Auditores Externos</option>
-                                <option value="CAPACITADOR_EXTERNO">Capacitadores Externos</option>
-                                <option value="CONTRATISTAS">Contratistas y Proveedores</option>
-                                <option value="INSPECTORES_GUBERNAMENTALES">Inspectores Gubernamentales</option>
-                                <option value="FISIOTERAPEUTAS_ERGONOMOS">Fisioterapeutas o Ergónomos</option>
-                                <option value="TECNICOS_ESPECIALIZADOS">Técnicos en Riesgos Especializados</option>
-                                <option value="BRIGADISTAS_EXTERNOS">Brigadistas o Personal de Emergencias Externo</option>
-                                <option value="REPRESENTANTES_ARL">Representantes de Aseguradoras (ARL)</option>
-                                <option value="AUDITORES_ISO">Auditores de Normas ISO</option>
-                            </optgroup>
-
-                            <!-- Opción para Todos -->
-                            <option value="TODOS">TODOS</option>
-                        </select>
-
-                    </div>
                 </div>
 
-                <!-- Columna Derecha -->
-                <div class="col-md-6">
-                    <!-- Nombre del Capacitador -->
-                    <div class="mb-3">
-                        <label for="nombre_del_capacitador" class="form-label">Nombre del Capacitador</label>
-                        <input type="text" name="nombre_del_capacitador" id="nombre_del_capacitador" class="form-control" required>
-                    </div>
+                <!-- Cliente -->
+                <div class="mb-3">
+                    <label for="id_cliente" class="form-label">Cliente</label>
+                    <select name="id_cliente" id="id_cliente" class="form-select" required>
+                        <option value="" disabled selected>Selecciona un cliente</option>
+                        <?php foreach ($clientes as $cliente): ?>
+                            <option value="<?= $cliente['id_cliente'] ?>">
+                                <?= $cliente['nombre_cliente'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-                    <!-- Horas de Duración -->
-                    <div class="mb-3">
-                        <label for="horas_de_duracion_de_la_capacitacion" class="form-label">Horas de Duración</label>
-                        <input type="number" name="horas_de_duracion_de_la_capacitacion" id="horas_de_duracion_de_la_capacitacion" class="form-control" required>
-                    </div>
+                <!-- Fecha Programada -->
+                <div class="mb-3">
+                    <label for="fecha_programada" class="form-label">Fecha Programada</label>
+                    <input type="date" name="fecha_programada" id="fecha_programada" class="form-control" required>
+                </div>
 
-                    <!-- Indicador de Realización -->
-                    <div class="mb-3">
-                        <label for="indicador_de_realizacion_de_la_capacitacion" class="form-label">Indicador de Realización</label>
-                        <select name="indicador_de_realizacion_de_la_capacitacion" id="indicador_de_realizacion_de_la_capacitacion" class="form-select" required>
-                            <option value="" disabled selected>Selecciona un indicador</option>
-                            <option value="SE EJECUTO EN LA FECHA O ANTES DE LA FECHA">SE EJECUTÓ EN LA FECHA O ANTES DE LA FECHA</option>
-                            <option value="SE EJECUTO DESPUES DE LA FECHA ACORDADA A CAUSA DEL CLIENTE">SE EJECUTÓ DESPUÉS DE LA FECHA ACORDADA A CAUSA DEL CLIENTE</option>
-                            <option value="DECLINADA POR EL CLIENTE">DECLINADA POR EL CLIENTE</option>
-                            <option value="NO HAY JUSTIFICACION PORQUE NO SE REALIZÓ">NO HAY JUSTIFICACIÓN PORQUE NO SE REALIZÓ</option>
-                            <option value="SE EJECUTO DESPUES DE LA FECHA POR CAUSA DEL CAPACITADOR">SE EJECUTÓ DESPUÉS DE LA FECHA POR CAUSA DEL CAPACITADOR</option>
-                        </select>
-                    </div>
+                <!-- Fecha de Realización -->
+                <div class="mb-3">
+                    <label for="fecha_de_realizacion" class="form-label">Fecha de Realización</label>
+                    <input type="date" name="fecha_de_realizacion" id="fecha_de_realizacion" class="form-control">
+                </div>
 
-                    <!-- Número de Asistentes -->
-                    <div class="mb-3">
-                        <label for="numero_de_asistentes_a_capacitacion" class="form-label">Número de Asistentes</label>
-                        <input type="number" name="numero_de_asistentes_a_capacitacion" id="numero_de_asistentes_a_capacitacion" class="form-control" required>
-                    </div>
+                <!-- Estado -->
+                <div class="mb-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select name="estado" id="estado" class="form-select" required>
+                        <option value="" disabled selected>Selecciona un estado</option>
+                        <option value="PROGRAMADA">PROGRAMADA</option>
+                        <option value="EJECUTADA">EJECUTADA</option>
+                        <option value="CANCELADA POR EL CLIENTE">CANCELADA POR EL CLIENTE</option>
+                        <option value="REPROGRAMADA">REPROGRAMADA</option>
+                    </select>
+                </div>
 
-                    <!-- Número Total de Programados -->
-                    <div class="mb-3">
-                        <label for="numero_total_de_personas_programadas" class="form-label">Número Total de Programados</label>
-                        <input type="number" name="numero_total_de_personas_programadas" id="numero_total_de_personas_programadas" class="form-control" required>
-                    </div>
+                <!-- Perfil de Asistentes -->
+                <div class="mb-3">
+                    <label for="perfil_de_asistentes" class="form-label">Perfil de Asistentes</label>
+                    <select name="perfil_de_asistentes" id="perfil_de_asistentes" class="form-select" required>
+                        <option value="" disabled selected>Selecciona un perfil</option>
 
-                    <!-- Porcentaje de Cobertura -->
-                    <div class="mb-3">
-                        <label for="porcentaje_cobertura" class="form-label">Porcentaje de Cobertura</label>
-                        <input type="text" name="porcentaje_cobertura" id="porcentaje_cobertura" class="form-control" readonly>
-                    </div>
+                        <!-- Roles Internos -->
+                        <optgroup label="Roles Internos">
+                            <option value="GERENTE_GENERAL">Gerente General</option>
+                            <option value="MIEMBROS_COPASST">Miembros del COPASST</option>
+                            <option value="RESPONSABLE_SST">Responsable de SST</option>
+                            <option value="SUPERVISORES">Supervisores o Jefes de Área</option>
+                            <option value="TRABAJADORES_REPRESENTANTES">Trabajadores Representantes</option>
+                            <option value="MIEMBROS_COMITE_CONVIVENCIA">Miembros del Comité de Convivencia Laboral</option>
+                            <option value="RECURSOS_HUMANOS">Departamento de Recursos Humanos</option>
+                            <option value="PERSONAL_MANTENIMIENTO">Personal de Mantenimiento o Producción</option>
+                            <option value="ENCARGADO_AMBIENTAL">Encargado de Gestión Ambiental</option>
+                            <option value="TRABAJADORES_RIESGOS_CRITICOS">Trabajadores con Riesgos Críticos</option>
+                        </optgroup>
 
-                    <!-- Número de Evaluados -->
-                    <div class="mb-3">
-                        <label for="numero_de_personas_evaluadas" class="form-label">Número de Evaluados</label>
-                        <input type="number" name="numero_de_personas_evaluadas" id="numero_de_personas_evaluadas" class="form-control" required>
-                    </div>
+                        <!-- Roles Externos -->
+                        <optgroup label="Roles Externos">
+                            <option value="ASESOR_SST">Asesor o Consultor en SST</option>
+                            <option value="AUDITOR_EXTERNO">Auditores Externos</option>
+                            <option value="CAPACITADOR_EXTERNO">Capacitadores Externos</option>
+                            <option value="CONTRATISTAS">Contratistas y Proveedores</option>
+                            <option value="INSPECTORES_GUBERNAMENTALES">Inspectores Gubernamentales</option>
+                            <option value="FISIOTERAPEUTAS_ERGONOMOS">Fisioterapeutas o Ergónomos</option>
+                            <option value="TECNICOS_ESPECIALIZADOS">Técnicos en Riesgos Especializados</option>
+                            <option value="BRIGADISTAS_EXTERNOS">Brigadistas o Personal de Emergencias Externo</option>
+                            <option value="REPRESENTANTES_ARL">Representantes de Aseguradoras (ARL)</option>
+                            <option value="AUDITORES_ISO">Auditores de Normas ISO</option>
+                        </optgroup>
 
-                    <!-- Promedio de Calificaciones -->
-                    <div class="mb-3">
-                        <label for="promedio_de_calificaciones" class="form-label">Promedio de Calificaciones</label>
-                        <input type="number" step="0.01" name="promedio_de_calificaciones" id="promedio_de_calificaciones" class="form-control" required>
-                    </div>
+                        <!-- Opción para Todos -->
+                        <option value="TODOS">TODOS</option>
+                    </select>
 
-                    <!-- Observaciones -->
-                    <div class="mb-3">
-                        <label for="observaciones" class="form-label">Observaciones</label>
-                        <textarea name="observaciones" id="observaciones" class="form-control" rows="4"></textarea>
-                    </div>
                 </div>
             </div>
 
-            <!-- Botones de Acción -->
-            <div class="d-flex justify-content-end mt-4">
-                <button type="submit" class="btn btn-primary me-2">Agregar Cronograma</button>
-                <a href="<?= base_url('/listcronogCapacitacion') ?>" class="btn btn-secondary">Cancelar</a>
+            <!-- Columna Derecha -->
+            <div class="col-md-6">
+                <!-- Nombre del Capacitador -->
+                <div class="mb-3">
+                    <label for="nombre_del_capacitador" class="form-label">Nombre del Capacitador</label>
+                    <input type="text" name="nombre_del_capacitador" id="nombre_del_capacitador" class="form-control" required>
+                </div>
+
+                <!-- Horas de Duración -->
+                <div class="mb-3">
+                    <label for="horas_de_duracion_de_la_capacitacion" class="form-label">Horas de Duración</label>
+                    <input type="number" name="horas_de_duracion_de_la_capacitacion" id="horas_de_duracion_de_la_capacitacion" class="form-control" required>
+                </div>
+
+                <!-- Indicador de Realización -->
+                <div class="mb-3">
+                    <label for="indicador_de_realizacion_de_la_capacitacion" class="form-label">Indicador de Realización</label>
+                    <select name="indicador_de_realizacion_de_la_capacitacion" id="indicador_de_realizacion_de_la_capacitacion" class="form-select" required>
+                        <option value="" disabled selected>Selecciona un indicador</option>
+                        <option value="SE EJECUTO EN LA FECHA O ANTES DE LA FECHA">SE EJECUTÓ EN LA FECHA O ANTES DE LA FECHA</option>
+                        <option value="SE EJECUTO DESPUES DE LA FECHA ACORDADA A CAUSA DEL CLIENTE">SE EJECUTÓ DESPUÉS DE LA FECHA ACORDADA A CAUSA DEL CLIENTE</option>
+                        <option value="DECLINADA POR EL CLIENTE">DECLINADA POR EL CLIENTE</option>
+                        <option value="NO HAY JUSTIFICACION PORQUE NO SE REALIZÓ">NO HAY JUSTIFICACIÓN PORQUE NO SE REALIZÓ</option>
+                        <option value="SE EJECUTO DESPUES DE LA FECHA POR CAUSA DEL CAPACITADOR">SE EJECUTÓ DESPUÉS DE LA FECHA POR CAUSA DEL CAPACITADOR</option>
+                    </select>
+                </div>
+
+                <!-- Número de Asistentes -->
+                <div class="mb-3">
+                    <label for="numero_de_asistentes_a_capacitacion" class="form-label">Número de Asistentes</label>
+                    <input type="number" name="numero_de_asistentes_a_capacitacion" id="numero_de_asistentes_a_capacitacion" class="form-control" required>
+                </div>
+
+                <!-- Número Total de Programados -->
+                <div class="mb-3">
+                    <label for="numero_total_de_personas_programadas" class="form-label">Número Total de Programados</label>
+                    <input type="number" name="numero_total_de_personas_programadas" id="numero_total_de_personas_programadas" class="form-control" required>
+                </div>
+
+                <!-- Porcentaje de Cobertura -->
+                <div class="mb-3">
+                    <label for="porcentaje_cobertura" class="form-label">Porcentaje de Cobertura</label>
+                    <input type="text" name="porcentaje_cobertura" id="porcentaje_cobertura" class="form-control" readonly>
+                </div>
+
+                <!-- Número de Evaluados -->
+                <div class="mb-3">
+                    <label for="numero_de_personas_evaluadas" class="form-label">Número de Evaluados</label>
+                    <input type="number" name="numero_de_personas_evaluadas" id="numero_de_personas_evaluadas" class="form-control" required>
+                </div>
+
+                <!-- Promedio de Calificaciones -->
+                <div class="mb-3">
+                    <label for="promedio_de_calificaciones" class="form-label">Promedio de Calificaciones</label>
+                    <input type="number" step="0.01" name="promedio_de_calificaciones" id="promedio_de_calificaciones" class="form-control" required>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="mb-3">
+                    <label for="observaciones" class="form-label">Observaciones</label>
+                    <textarea name="observaciones" id="observaciones" class="form-control" rows="4"></textarea>
+                </div>
             </div>
-        </form>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="d-flex justify-content-end mt-4">
+        <button type="submit" class="btn btn-primary me-2">Agregar Cronograma</button>
+        <a href="<?= base_url('/listcronogCapacitacion') ?>" class="btn btn-secondary">Cancelar</a>
+    </div>
+    </form>
     </div>
 
     <!-- Footer -->
