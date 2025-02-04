@@ -189,62 +189,74 @@
   </footer>
 
   <!-- Inicialización de DataTables con botones y filtros -->
-  <script>
-    $(document).ready(function () {
-      var table = $('#capacitacionesTable').DataTable({
-        dom: 'Bfrtip', // Contenedor para los botones
-        buttons: [
-          {
-            extend: 'excelHtml5',
-            title: 'Listado de Capacitaciones',
-            exportOptions: {
-              // Exporta columnas 0 a 3, omitiendo la columna "Acciones"
-              columns: [0, 1, 2, 3]
+  <!-- ... resto del código HTML ... -->
+
+<script>
+  $(document).ready(function () {
+    var table = $('#capacitacionesTable').DataTable({
+      dom: 'Bfrtip', // Contenedor para los botones
+      buttons: [
+        {
+          extend: 'excelHtml5',
+          title: 'Listado de Capacitaciones',
+          exportOptions: {
+            // Exporta las columnas 0 a 3 (se omite la columna "Acciones")
+            columns: [0, 1, 2, 3],
+            // Personaliza la forma en que se exportan los encabezados
+            format: {
+              header: function (data, columnIdx) {
+                // Se retorna el texto del <th> de la primera fila (fila de títulos)
+                return $('#capacitacionesTable thead tr:first-child th').eq(columnIdx).text();
+              }
             }
           }
-        ],
-        language: {
-          url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
-        },
-        initComplete: function () {
-          var api = this.api();
-
-          // Filtro para la columna "Capacitación" (índice 1)
-          var columnCap = api.column(1);
-          var selectCap = $('#filterCapacitacion');
-          columnCap.data().unique().sort().each(function (d) {
-            selectCap.append('<option value="' + d + '">' + d + '</option>');
-          });
-          selectCap.on('change', function () {
-            var val = $.fn.dataTable.util.escapeRegex($(this).val());
-            columnCap.search(val ? '^' + val + '$' : '', true, false).draw();
-          });
-
-          // Filtro para la columna "Objetivo de la Capacitación" (índice 2)
-          var columnObj = api.column(2);
-          var selectObj = $('#filterObjetivos');
-          columnObj.data().unique().sort().each(function (d) {
-            selectObj.append('<option value="' + d + '">' + d + '</option>');
-          });
-          selectObj.on('change', function () {
-            var val = $.fn.dataTable.util.escapeRegex($(this).val());
-            columnObj.search(val ? '^' + val + '$' : '', true, false).draw();
-          });
-
-          // Filtro para la columna "Observaciones" (índice 3)
-          var columnObs = api.column(3);
-          var selectObs = $('#filterObservaciones');
-          columnObs.data().unique().sort().each(function (d) {
-            selectObs.append('<option value="' + d + '">' + d + '</option>');
-          });
-          selectObs.on('change', function () {
-            var val = $.fn.dataTable.util.escapeRegex($(this).val());
-            columnObs.search(val ? '^' + val + '$' : '', true, false).draw();
-          });
         }
-      });
+      ],
+      language: {
+        url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+      },
+      initComplete: function () {
+        var api = this.api();
+
+        // Filtro para la columna "Capacitación" (índice 1)
+        var columnCap = api.column(1);
+        var selectCap = $('#filterCapacitacion');
+        columnCap.data().unique().sort().each(function (d) {
+          selectCap.append('<option value="' + d + '">' + d + '</option>');
+        });
+        selectCap.on('change', function () {
+          var val = $.fn.dataTable.util.escapeRegex($(this).val());
+          columnCap.search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+
+        // Filtro para la columna "Objetivo de la Capacitación" (índice 2)
+        var columnObj = api.column(2);
+        var selectObj = $('#filterObjetivos');
+        columnObj.data().unique().sort().each(function (d) {
+          selectObj.append('<option value="' + d + '">' + d + '</option>');
+        });
+        selectObj.on('change', function () {
+          var val = $.fn.dataTable.util.escapeRegex($(this).val());
+          columnObj.search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+
+        // Filtro para la columna "Observaciones" (índice 3)
+        var columnObs = api.column(3);
+        var selectObs = $('#filterObservaciones');
+        columnObs.data().unique().sort().each(function (d) {
+          selectObs.append('<option value="' + d + '">' + d + '</option>');
+        });
+        selectObs.on('change', function () {
+          var val = $.fn.dataTable.util.escapeRegex($(this).val());
+          columnObs.search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+      }
     });
-  </script>
+  });
+</script>
+
+<!-- ... resto del código HTML ... -->
+
 
   <!-- Bootstrap JS y Popper -->
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
