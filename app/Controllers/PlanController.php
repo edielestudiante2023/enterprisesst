@@ -38,7 +38,8 @@ class PlanController extends Controller
                     'phva_plandetrabajo',
                     'numeral_plandetrabajo',
                     'actividad_plandetrabajo',
-                    'responsable_sugerido_plandetrabajo'
+                    'responsable_sugerido_plandetrabajo',
+                    'observaciones'
                 ];
 
                 if ($headers !== $requiredHeaders) {
@@ -56,6 +57,7 @@ class PlanController extends Controller
                         'numeral_plandetrabajo' => $row[2],
                         'actividad_plandetrabajo' => $row[3],
                         'responsable_sugerido_plandetrabajo' => $row[4],
+                        'observaciones' => $row[5],
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s'),
                     ];

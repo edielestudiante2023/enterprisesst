@@ -8,13 +8,10 @@
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons CSS (Opcional) -->
+    <!-- Bootstrap Icons CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-
     <!-- DataTables Buttons CSS -->
     <link href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.bootstrap5.min.css" rel="stylesheet">
 
@@ -36,12 +33,10 @@
             font-size: 0.85rem;
         }
 
-        /* Ajustes para el botón "Restablecer Filtros" */
         #clearState {
             margin-bottom: 15px;
         }
 
-        /* Establecer altura fija para las filas de la tabla */
         table tbody tr td,
         table thead tr th,
         table tfoot tr th {
@@ -52,7 +47,6 @@
             text-overflow: ellipsis;
         }
 
-        /* Estilos para celdas editables */
         .editable {
             background-color: #fff3cd;
             cursor: pointer;
@@ -67,13 +61,21 @@
             background-color: #d1ecf1;
             cursor: pointer;
         }
+
+        td.details-control {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        tr.shown td.details-control i {
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center w-100">
                 <!-- Logos -->
@@ -103,12 +105,17 @@
         </div>
     </nav>
 
-    <!-- Espaciador para evitar que el contenido se oculte bajo el navbar fijo -->
-    <div style="height: 160px;"></div>
+    <!-- Espaciador para el navbar fijo -->
+    <div style="height: 20px;"></div>
 
     <!-- Contenedor Principal -->
-    <div class="container my-4">
+    <div class="container-fluid my-4">
         <h2 class="text-center mb-4">Lista de Cronogramas de Capacitación</h2>
+
+        <!-- Buscador Global -->
+      <!--   <div class="mb-3">
+            <input type="text" id="globalSearch" class="form-control" placeholder="Buscar en todos los campos...">
+        </div> -->
 
         <!-- Mensajes Flash -->
         <?php if (session()->getFlashdata('msg')): ?>
@@ -124,7 +131,9 @@
         <div class="table-responsive">
             <table id="cronogramaTable" class="table table-bordered table-hover" style="width:100%">
                 <thead class="text-center">
+                    <!-- Única fila de encabezados -->
                     <tr>
+                        <th></th>
                         <th>#</th>
                         <th>Nombre de la Capacitación</th>
                         <th>Objetivo de la Capacitación</th>
@@ -145,25 +154,54 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tfoot>
+                <tfoot class="text-center">
+                    <!-- Fila de filtros en el pie de la tabla -->
                     <tr>
                         <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar ID"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar capacitación"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar fases"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar cliente"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar fecha"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar fecha"></th>
+                        <th>
+                            <select class="form-select form-select-sm column-search">
+                                <option value="">Todos</option>
+                                <option value="PROGRAMADA">PROGRAMADA</option>
+                                <option value="EJECUTADA">EJECUTADA</option>
+                                <option value="CANCELADA POR EL CLIENTE">CANCELADA POR EL CLIENTE</option>
+                                <option value="REPROGRAMADA">REPROGRAMADA</option>
+                            </select>
+                        </th>
+                        <th>
+                            <select class="form-select form-select-sm column-search">
+                                <option value="">Todos</option>
+                                <option value="CONTRATISTAS">CONTRATISTAS</option>
+                                <option value="RESIDENTES">RESIDENTES</option>
+                                <option value="TODOS">TODOS</option>
+                                <option value="ASAMBLEA">ASAMBLEA</option>
+                                <option value="CONSEJO DE ADMINISTRACIÓN">CONSEJO DE ADMINISTRACIÓN</option>
+                                <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                            </select>
+                        </th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar capacitador"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar horas"></th>
+                        <th>
+                            <select class="form-select form-select-sm column-search">
+                                <option value="">Todos</option>
+                                <option value="SE EJECUTO EN LA FECHA O ANTES DE LA FECHA">SE EJECUTO EN LA FECHA O ANTES DE LA FECHA</option>
+                                <option value="SE EJECUTO DESPUES DE LA FECHA ACORDADA A CAUSA DEL CLIENTE">SE EJECUTO DESPUES DE LA FECHA ACORDADA A CAUSA DEL CLIENTE</option>
+                                <option value="DECLINADA POR EL CLIENTE">DECLINADA POR EL CLIENTE</option>
+                                <option value="NO HAY JUSTIFICACION PORQUE NO SE REALIZÓ">NO HAY JUSTIFICACION PORQUE NO SE REALIZÓ</option>
+                                <option value="SE EJECUTO DESPUES DE LA FECHA POR CAUSA DEL CAPACITADOR">SE EJECUTO DESPUES DE LA FECHA POR CAUSA DEL CAPACITADOR</option>
+                            </select>
+                        </th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar asistentes"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar total"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar % cobertura"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar evaluadas"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar calificaciones"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" placeholder="Filtrar observaciones"></th>
                         <th></th>
                     </tr>
                 </tfoot>
@@ -171,14 +209,15 @@
                     <?php if (!empty($cronogramas) && is_array($cronogramas)): ?>
                         <?php foreach ($cronogramas as $cronograma): ?>
                             <tr data-id="<?= esc($cronograma['id_cronograma_capacitacion']) ?>">
+                                <td class="details-control"><i class="bi bi-plus-circle"></i></td>
                                 <td><?= esc($cronograma['id_cronograma_capacitacion']) ?></td>
-                                <td class="" data-field="nombre_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_capacitacion']); ?>">
+                                <td data-field="nombre_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_capacitacion']); ?>">
                                     <?= esc($cronograma['nombre_capacitacion']) ?>
                                 </td>
-                                <td class="" data-field="objetivo_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['objetivo_capacitacion']); ?>">
+                                <td data-field="objetivo_capacitacion" data-bs-toggle="tooltip" title="<?= esc($cronograma['objetivo_capacitacion']); ?>">
                                     <?= esc($cronograma['objetivo_capacitacion']) ?>
                                 </td>
-                                <td class="" data-field="nombre_cliente" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_cliente']); ?>">
+                                <td data-field="nombre_cliente" data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_cliente']); ?>">
                                     <?= esc($cronograma['nombre_cliente']) ?>
                                 </td>
                                 <td class="editable-date" data-field="fecha_programada" data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_programada']); ?>">
@@ -228,7 +267,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="18" class="text-center">No hay cronogramas de capacitación registrados</td>
+                            <td colspan="19" class="text-center">No hay cronogramas de capacitación registrados</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -243,7 +282,8 @@
             <p class="mb-1">Todos los derechos reservados © 2024</p>
             <p class="mb-1">NIT: 901.653.912</p>
             <p class="mb-3">
-                Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" class="text-primary text-decoration-none">https://cycloidtalent.com/</a>
+                Sitio oficial:
+                <a href="https://cycloidtalent.com/" target="_blank" class="text-primary text-decoration-none">https://cycloidtalent.com/</a>
             </p>
             <p class="mb-2"><strong>Nuestras Redes Sociales:</strong></p>
             <div class="d-flex justify-content-center gap-3">
@@ -265,14 +305,11 @@
 
     <!-- jQuery 3.6.0 -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- Bootstrap 5 JS Bundle (Includes Popper) -->
+    <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
-
     <!-- DataTables Buttons JS -->
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.bootstrap5.min.js"></script>
@@ -280,30 +317,100 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
 
-    <!-- DataTables Spanish Language -->
-    <!-- Se eliminó la carga incorrecta del archivo JSON como script -->
-
     <script>
-        // Verificar si ya existe un campo de entrada en la celda para evitar duplicados
-        $(document).on('click', '.editable, .editable-date, .editable-select', function() {
-            if ($(this).find('input, select').length) return;  // Si ya hay un input o select, no hacer nada
+        function format(rowData) {
+            var table = '<table class="table table-sm table-borderless">';
+            // Obtenemos los headers del thead (tomando la primera fila de encabezados)
+            var headers = $('#cronogramaTable thead tr').first().find('th');
 
+            // Iteramos sobre los datos, comenzando en el índice 1 (omitiendo el control) y hasta el penúltimo (omitiendo la columna de acciones)
+            for (var i = 1; i < rowData.length - 1; i++) {
+                // Obtenemos el texto del header correspondiente
+                var headerText = $(headers[i]).text().trim();
+                // Construimos una fila de la tabla de detalles
+                table += '<tr><td><strong>' + headerText + ':</strong></td><td>' + rowData[i] + '</td></tr>';
+            }
+            table += '</table>';
+            return table;
+        }
+
+        $(document).ready(function() {
+            var table = $('#cronogramaTable').DataTable({
+                dom: 'Bfrtip',
+                buttons: [{
+                        extend: 'excelHtml5',
+                        title: 'Cronogramas de Capacitación',
+                        text: '<i class="bi bi-file-earmark-excel"></i> Exportar a Excel',
+                        className: 'btn btn-success btn-sm',
+                        exportOptions: {
+                            columns: ':not(:first-child)' // Se excluye la columna de control
+                        }
+                    },
+                    'colvis'
+                ],
+                order: [
+                    [1, 'asc']
+                ],
+                columnDefs: [{
+                    targets: 0,
+                    orderable: false,
+                    searchable: false,
+                    className: 'details-control'
+                }]
+            });
+
+            // Buscador global
+            $('#globalSearch').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+
+            // Buscador por columna (si los filtros están en el thead o tfoot según convenga)
+            $('.column-search').on('keyup change', function() {
+                var index = $(this).parent().index();
+                table.column(index).search(this.value).draw();
+            });
+
+            // Botón para restablecer filtros
+            $('#clearState').click(function() {
+                $('#globalSearch').val('');
+                $('.column-search').each(function() {
+                    $(this).val('');
+                });
+                table.search('').columns().search('').draw();
+            });
+
+            // Evento para expandir/contraer la fila
+            $('#cronogramaTable tbody').on('click', 'td.details-control', function() {
+                var tr = $(this).closest('tr');
+                var row = table.row(tr);
+
+                if (row.child.isShown()) {
+                    row.child.hide();
+                    tr.removeClass('shown');
+                    $(this).html('<i class="bi bi-plus-circle"></i>');
+                } else {
+                    row.child(format(row.data())).show();
+                    tr.addClass('shown');
+                    $(this).html('<i class="bi bi-dash-circle"></i>');
+                }
+            });
+        });
+
+        // Edición en línea
+        $(document).on('click', '.editable, .editable-date, .editable-select', function() {
+            if ($(this).find('input, select').length) return;
             var cell = $(this);
             var field = cell.data('field');
             var id = cell.closest('tr').data('id');
-
             if (cell.hasClass('editable-date')) {
-                // Manejo de fechas
                 var currentValue = cell.text().trim();
                 var input = $('<input>', {
                     type: 'date',
                     class: 'form-control',
                     value: currentValue
                 });
-
                 cell.html(input);
                 input.focus();
-
                 input.on('blur change', function() {
                     var newValue = input.val();
                     if (newValue) {
@@ -313,9 +420,7 @@
                         cell.text(currentValue);
                     }
                 });
-
             } else if (cell.hasClass('editable-select')) {
-                // Manejo de listas desplegables
                 var currentValue = cell.text().trim();
                 var options = [];
                 if (field === 'estado') {
@@ -331,11 +436,9 @@
                         'SE EJECUTO DESPUES DE LA FECHA POR CAUSA DEL CAPACITADOR'
                     ];
                 }
-
                 var select = $('<select>', {
                     class: 'form-select form-select-sm'
                 });
-
                 options.forEach(function(option) {
                     select.append($('<option>', {
                         value: option,
@@ -343,10 +446,8 @@
                         selected: option === currentValue
                     }));
                 });
-
                 cell.html(select);
                 select.focus();
-
                 select.on('blur change', function() {
                     setTimeout(function() {
                         var newValue = select.val();
@@ -358,19 +459,15 @@
                         }
                     }, 200);
                 });
-
             } else {
-                // Manejo de texto estándar
                 var currentValue = cell.text().trim();
                 var input = $('<input>', {
                     type: 'text',
                     class: 'form-control',
                     value: currentValue
                 });
-
                 cell.html(input);
                 input.focus();
-
                 input.on('blur', function() {
                     var newValue = input.val();
                     if (newValue) {
@@ -383,7 +480,6 @@
             }
         });
 
-        // Función para enviar datos al servidor
         function updateField(id, field, value) {
             $.ajax({
                 url: '<?= base_url('/updatecronogCapacitacion') ?>',

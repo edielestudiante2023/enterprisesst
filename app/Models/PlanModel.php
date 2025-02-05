@@ -14,7 +14,8 @@ class PlanModel extends Model
         'phva_plandetrabajo',
         'numeral_plandetrabajo',
         'actividad_plandetrabajo',
-        'responsable_sugerido_plandetrabajo'
+        'responsable_sugerido_plandetrabajo',
+        'observaciones'
     ];
     protected $useTimestamps = true; // Para manejar created_at y updated_at automáticamente
 }

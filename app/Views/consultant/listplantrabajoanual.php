@@ -63,7 +63,8 @@
         }
 
         /* Ajustes adicionales para mejorar la apariencia de los filtros */
-        tfoot select {
+        tfoot select,
+        tfoot input {
             width: 100%;
             padding: 4px;
         }
@@ -85,21 +86,28 @@
         /* Estilo para celdas editables de texto */
         .editable {
             background-color: #fff3cd;
-            /* Color suave, por ejemplo amarillo claro */
             cursor: pointer;
         }
 
         /* Estilo para celdas editables con selector de fecha */
         .editable-date {
             background-color: #d1ecf1;
-            /* Color suave, por ejemplo azul claro */
             cursor: pointer;
         }
 
         .editable-select {
             background-color: #e2f0fb;
-            /* Azul claro para distinguir celdas con select */
             cursor: pointer;
+        }
+
+        /* Icono para expandir/contraer detalle */
+        td.details-control {
+            background: url('https://www.datatables.net/examples/resources/details_open.png') no-repeat center center;
+            cursor: pointer;
+        }
+
+        tr.shown td.details-control {
+            background: url('https://www.datatables.net/examples/resources/details_close.png') no-repeat center center;
         }
     </style>
 </head>
@@ -138,129 +146,117 @@
     <!-- Espaciado para el navbar fijo -->
     <div style="height: 100px;"></div>
 
-    <div class="container mt-5">
+    <div class="container-fluid mt-5">
         <h2 class="text-center mb-4">Lista de Actividades del Plan de Trabajo Anual</h2>
 
         <button id="clearState" class="btn btn-danger btn-sm mb-3">Restablecer Filtros</button>
         <div id="notification" class="alert alert-success" style="display: none;" role="alert"></div>
 
-
         <div class="table-responsive">
-            <table id="actividadesTable" class="table table-striped table-bordered nowrap" style="width:100%">
+            <table id="actividadesTable" class="table table-striped table-bordered" style="width:100%">
                 <thead class="table-light">
                     <tr>
+                        <!-- Columna para expandir detalles -->
+                        <th></th>
                         <th>ID</th>
+                        <th>Acciones</th>
                         <th>Cliente</th>
-                        <!-- <th>Tipo de Servicio</th> -->
                         <th>PHVA</th>
                         <th>Numeral</th>
                         <th>Actividad</th>
                         <th>*Responsable</th>
                         <th>*Fecha Propuesta</th>
                         <th>*Fecha Cierre</th>
-                        <!-- <th>*Responsable Definido</th> -->
                         <th>*Estado Actividad</th>
                         <th>*Porcentaje Avance</th>
                         <th>Semana</th>
                         <th>*Observaciones</th>
                         <th>Creado en</th>
                         <th>Actualizado en</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tfoot>
                     <tr>
-                        <!-- Filtros para cada columna -->
                         <th></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Cliente">
+                        <th></th>
+                        <th></th>
+                        <!-- Filtro de búsqueda para Cliente -->
+                        <th><input type="text" class="form-control form-control-sm filter-text" placeholder="Buscar Cliente"></th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro PHVA">
                                 <option value="">Todos</option>
-                            </select></th>
-                        <!-- <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Tipo de Servicio">
+                            </select>
+                        </th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Numeral">
                                 <option value="">Todos</option>
-                                <option value="7A">7A</option>
-                                <option value="7B">7B</option>
-                                <option value="7C">7C</option>
-                                <option value="7D">7D</option>
-                                <option value="7E">7E</option>
-                                <option value="21A">21A</option>
-                                <option value="21B">21B</option>
-                                <option value="21C">21C</option>
-                                <option value="21D">21D</option>
-                                <option value="21E">21E</option>
-                                <option value="60A">60A</option>
-                                <option value="60B">60B</option>
-                                <option value="60C">60C</option>
-                                <option value="60D">60D</option>
-                                <option value="60E">60E</option>
-                            </select></th> -->
-
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro PHVA">
+                            </select>
+                        </th>
+                        <!-- Filtro de búsqueda para Actividad -->
+                        <th><input type="text" class="form-control form-control-sm filter-text" placeholder="Buscar Actividad"></th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Responsable Sugerido">
                                 <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Numeral">
+                            </select>
+                        </th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Fecha Propuesta">
                                 <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Actividad">
+                            </select>
+                        </th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Fecha Cierre">
                                 <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Responsable Sugerido">
+                            </select>
+                        </th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Estado Actividad">
                                 <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Fecha Propuesta">
+                            </select>
+                        </th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Porcentaje Avance">
                                 <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Fecha Cierre">
+                            </select>
+                        </th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Semana">
                                 <option value="">Todos</option>
-                            </select></th>
-                        <!-- <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Responsable Definido">
+                            </select>
+                        </th>
+                        <!-- Filtro de búsqueda para Observaciones -->
+                        <th><input type="text" class="form-control form-control-sm filter-text" placeholder="Buscar Observaciones"></th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Creado en">
                                 <option value="">Todos</option>
-                            </select></th> -->
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Estado Actividad">
+                            </select>
+                        </th>
+                        <th>
+                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Actualizado en">
                                 <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Porcentaje Avance">
-                                <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Semana">
-                                <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Observaciones">
-                                <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Creado en">
-                                <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Actualizado en">
-                                <option value="">Todos</option>
-                            </select></th>
-                        <th><select class="form-select form-select-sm filter-select" aria-label="Filtro Acciones">
-                                <option value="">Todos</option>
-                            </select></th>
+                            </select>
+                        </th>
                     </tr>
                 </tfoot>
                 <tbody>
                     <?php if (!empty($actividades)) : ?>
                         <?php foreach ($actividades as $actividad) : ?>
                             <tr data-id="<?= esc($actividad['id_ptacliente']) ?>">
+                                <!-- Celda para activar el detalle expandible -->
+                                <td class="details-control"></td>
                                 <td><?= esc($actividad['id_ptacliente']) ?></td>
+                                <!-- Columna de acciones movida antes de Cliente -->
+                                <td>
+                                    <a href="<?= base_url('editPlanDeTrabajoAnual/' . $actividad['id_ptacliente']) ?>" class="btn btn-warning btn-sm">Editar</a>
+                                    <a href="<?= base_url('deletePlanDeTrabajoAnual/' . $actividad['id_ptacliente']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta actividad?')">Eliminar</a>
+                                </td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($actividad['nombre_cliente']) ?>"><?= esc($actividad['nombre_cliente']) ?></td>
-                                <!-- <td><?= esc($actividad['tipo_servicio']) ?></td> -->
                                 <td data-bs-toggle="tooltip" title="<?= esc($actividad['phva_plandetrabajo']) ?>"><?= esc($actividad['phva_plandetrabajo']) ?></td>
                                 <td><?= esc($actividad['numeral_plandetrabajo']) ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($actividad['actividad_plandetrabajo']) ?>"><?= esc($actividad['actividad_plandetrabajo']) ?></td>
-
-
-                                <td contenteditable="true"
-                                    class="editable"
-                                    data-field="responsable_sugerido_plandetrabajo"
-                                    data-bs-toggle="tooltip"
-                                    title="<?= esc($actividad['responsable_sugerido_plandetrabajo']) ?>">
+                                <td contenteditable="true" class="editable" data-field="responsable_sugerido_plandetrabajo" data-bs-toggle="tooltip" title="<?= esc($actividad['responsable_sugerido_plandetrabajo']) ?>">
                                     <?= esc($actividad['responsable_sugerido_plandetrabajo']) ?>
                                 </td>
-
-
-
-
                                 <!-- Celda editable para Fecha Propuesta con calendario -->
                                 <td contenteditable="false" class="editable-date" data-field="fecha_propuesta" data-bs-toggle="tooltip" title="<?= esc($actividad['fecha_propuesta']) ?>">
                                     <?= esc($actividad['fecha_propuesta']) ?>
@@ -268,46 +264,23 @@
                                 <td contenteditable="false" class="editable-date" data-field="fecha_cierre" data-bs-toggle="tooltip" title="<?= esc($actividad['fecha_cierre']) ?>">
                                     <?= esc($actividad['fecha_cierre']) ?>
                                 </td>
-                               <!--  <td contenteditable="true"
-                                    class="editable"
-                                    data-field="responsable_definido_paralaactividad"
-                                    data-bs-toggle="tooltip"
-                                    title="<?= esc($actividad['responsable_definido_paralaactividad']) ?>">
-                                    <?= esc($actividad['responsable_definido_paralaactividad']) ?>
-                                </td> -->
-
-
-                                <td contenteditable="false"
-                                    class="editable-select"
-                                    data-field="estado_actividad"
-                                    data-bs-toggle="tooltip"
-                                    title="<?= esc($actividad['estado_actividad']) ?>">
+                                <td contenteditable="false" class="editable-select" data-field="estado_actividad" data-bs-toggle="tooltip" title="<?= esc($actividad['estado_actividad']) ?>">
                                     <?= esc($actividad['estado_actividad']) ?>
                                 </td>
-                                <td contenteditable="false"
-                                    class="editable-select"
-                                    data-field="porcentaje_avance"
-                                    data-bs-toggle="tooltip"
-                                    title="<?= esc($actividad['porcentaje_avance']) ?>%">
+                                <td contenteditable="false" class="editable-select" data-field="porcentaje_avance" data-bs-toggle="tooltip" title="<?= esc($actividad['porcentaje_avance']) ?>%">
                                     <?= esc($actividad['porcentaje_avance']) ?>%
                                 </td>
                                 <td><?= esc($actividad['semana']) ?></td>
-
                                 <td contenteditable="true" class="editable" data-field="observaciones" data-bs-toggle="tooltip" title="<?= esc($actividad['observaciones']) ?>">
                                     <?= esc($actividad['observaciones']) ?>
                                 </td>
-
                                 <td data-bs-toggle="tooltip" title="<?= esc($actividad['created_at']) ?>"><?= esc($actividad['created_at']) ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($actividad['updated_at']) ?>"><?= esc($actividad['updated_at']) ?></td>
-                                <td>
-                                    <a href="<?= base_url('editPlanDeTrabajoAnual/' . $actividad['id_ptacliente']) ?>" class="btn btn-warning btn-sm">Editar</a>
-                                    <a href="<?= base_url('deletePlanDeTrabajoAnual/' . $actividad['id_ptacliente']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta actividad?')">Eliminar</a>
-                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="17" class="text-center">No se encontraron actividades.</td>
+                            <td colspan="16" class="text-center">No se encontraron actividades.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -340,8 +313,8 @@
         </div>
     </footer>
 
-    <!-- Scripts unificados -->
-    <!-- jQuery, Bootstrap, DataTables y extensiones se cargan aquí arriba en el bloque unificado -->
+    <!-- Scripts -->
+    <!-- jQuery, Bootstrap, DataTables y extensiones -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
@@ -353,6 +326,22 @@
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
 
     <script>
+        // Función para formatear la fila expandible de forma legible
+        function format(rowData) {
+            // Definimos los encabezados de las columnas (omitiendo la primera columna vacía de detalles)
+            var headers = ["ID", "Acciones", "Cliente", "PHVA", "Numeral", "Actividad", "*Responsable", "*Fecha Propuesta", "*Fecha Cierre", "*Estado Actividad", "*Porcentaje Avance", "Semana", "*Observaciones", "Creado en", "Actualizado en"];
+            var html = '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
+            // Comenzamos en el índice 1 para omitir la columna de control
+            for (var i = 1; i < rowData.length; i++) {
+                html += '<tr>' +
+                    '<td style="white-space: nowrap;"><strong>' + headers[i - 1] + ':</strong></td>' +
+                    '<td>' + rowData[i] + '</td>' +
+                    '</tr>';
+            }
+            html += '</table>';
+            return html;
+        }
+
         $(document).ready(function() {
             // Inicializar DataTables con Buttons
             var table = $('#actividadesTable').DataTable({
@@ -362,8 +351,8 @@
                 },
                 pagingType: "full_numbers",
                 responsive: true,
-                autoWidth: false,
-                dom: 'Bfltip', // Añadir Buttons al DOM
+                autoWidth: true,
+                dom: 'Bfltip',
                 buttons: [{
                         extend: 'excelHtml5',
                         text: 'Exportar a Excel',
@@ -377,19 +366,19 @@
                 ],
                 initComplete: function() {
                     var api = this.api();
-                    // Para cada columna, crear un filtro desplegable en el <tfoot>
+                    // Para cada columna, si el footer tiene un <select> se rellenan las opciones
                     api.columns().every(function() {
                         var column = this;
-                        var select = $(column.footer()).find('select');
-                        if (select.length) {
-                            column.data().unique().sort().each(function(d, j) {
+                        var footer = $(column.footer());
+                        if (footer.find('select').length) {
+                            column.data().unique().sort().each(function(d) {
                                 if (d) {
-                                    select.append('<option value="' + d + '">' + d + '</option>');
+                                    footer.find('select').append('<option value="' + d + '">' + d + '</option>');
                                 }
                             });
                             var search = column.search();
                             if (search) {
-                                select.val(search);
+                                footer.find('select').val(search);
                             }
                         }
                     });
@@ -399,11 +388,17 @@
             // Colocar los botones de DataTables antes del botón de restablecer filtros
             table.buttons().container().prependTo('.container');
 
-            // Evento al cambiar cualquier filtro
+            // Evento para filtros con <select>
             $('.filter-select').on('change', function() {
-                var columnIndex = $(this).closest('th').index();
+                var columnIndex = $(this).parent().index();
                 var value = $(this).val();
                 table.column(columnIndex).search(value).draw();
+            });
+
+            // Evento para filtros de texto
+            $('.filter-text').on('keyup change', function() {
+                var columnIndex = $(this).parent().index();
+                table.column(columnIndex).search(this.value).draw();
             });
 
             // Inicializar tooltips de Bootstrap 5
@@ -412,14 +407,14 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
 
-            // Botón para borrar el estado
+            // Botón para borrar el estado y recargar
             $('#clearState').on('click', function() {
                 localStorage.removeItem('DataTables_actividadesTable_/');
                 table.state.clear();
                 location.reload();
             });
 
-            // Manejador para campos editables estándar (no fechas)
+            // Manejador para campos editables (texto)
             $('.editable').off('blur').on('blur', function() {
                 const cell = $(this);
                 const value = cell.text().trim();
@@ -439,23 +434,20 @@
                             $('#notification').text('Registro actualizado correctamente').fadeIn();
                             setTimeout(function() {
                                 $('#notification').fadeOut();
-                            }, 3000); // Oculta la notificación después de 3 segundos
+                            }, 3000);
                         } else {
                             alert('Error: ' + response.message);
                         }
                     },
-
                     error: function() {
                         alert('Error al comunicarse con el servidor');
                     }
                 });
             });
 
-            // Manejador para celdas de fecha propuesta con selector de fecha
+            // Manejador para celdas de fecha (con selector de fecha)
             $(document).on('click', '.editable-date', function() {
                 var cell = $(this);
-                console.log("Editando fecha propuesta en registro:", cell.closest('tr').data('id'));
-                // Evitar reinicializar si ya existe un input
                 if (cell.find('input').length === 0) {
                     var currentValue = cell.text().trim();
                     var input = $('<input>', {
@@ -469,13 +461,9 @@
                         var newValue = $(this).val();
                         const field = cell.data('field');
                         const id = cell.closest('tr').data('id');
-
-                        // Actualiza la celda con el nuevo valor
                         cell.text(newValue);
-                        // Reinicializar tooltip si es necesario
                         cell.attr('title', newValue).tooltip('dispose').tooltip();
 
-                        // Enviar actualización vía AJAX
                         $.ajax({
                             url: '<?= base_url('/updatePlanDeTrabajo') ?>',
                             method: 'POST',
@@ -498,9 +486,10 @@
                     });
                 }
             });
+
+            // Manejador para celdas con select (por ejemplo, estado y porcentaje)
             $(document).on('click', '.editable-select', function() {
                 var cell = $(this);
-                // Evitar reinicializar si ya existe un <select> en la celda
                 if (cell.find('select').length === 0) {
                     var field = cell.data('field');
                     var currentValue = cell.text().trim();
@@ -520,13 +509,12 @@
                         });
                     } else if (field === 'porcentaje_avance') {
                         for (var i = 0; i <= 100; i += 10) {
-                            var perc = i ;
+                            var perc = i;
                             var optionElem = $('<option>', {
                                 value: perc,
                                 text: perc
                             });
-                            // Eliminar porcentaje del texto de la celda para comparar correctamente
-                            if (perc === currentValue || perc === currentValue.replace('%', '') + '%') {
+                            if (perc == currentValue.replace('%', '')) {
                                 optionElem.attr('selected', 'selected');
                             }
                             select.append(optionElem);
@@ -553,9 +541,7 @@
                                 value: newValue
                             },
                             success: function(response) {
-                                if (response.success) {
-                                    console.log('Actualizado correctamente');
-                                } else {
+                                if (!response.success) {
                                     alert('Error: ' + response.message);
                                 }
                             },
@@ -567,6 +553,21 @@
                 }
             });
 
+            // Manejador para la fila expandible (row child details)
+            $('#actividadesTable tbody').on('click', 'td.details-control', function() {
+                var tr = $(this).closest('tr');
+                var row = table.row(tr);
+
+                if (row.child.isShown()) {
+                    // Si ya está abierta, se oculta
+                    row.child.hide();
+                    tr.removeClass('shown');
+                } else {
+                    // Se muestra la fila de detalles con la función format() actualizada
+                    row.child(format(row.data())).show();
+                    tr.addClass('shown');
+                }
+            });
         });
     </script>
 </body>
