@@ -15,7 +15,8 @@ class PlanModel extends Model
         'numeral_plandetrabajo',
         'actividad_plandetrabajo',
         'responsable_sugerido_plandetrabajo',
-        'observaciones'
+        'observaciones',
+        'fecha_propuesta'
     ];
     protected $useTimestamps = true; // Para manejar created_at y updated_at automáticamente
 }

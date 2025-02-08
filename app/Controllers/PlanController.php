@@ -17,7 +17,7 @@ class PlanController extends Controller
     public function upload()
     {
         $file = $this->request->getFile('file');
-        
+
         if ($file && $file->isValid() && !$file->hasMoved()) {
             // Mover el archivo a la carpeta writable/uploads
             $newName = $file->getRandomName();
@@ -34,12 +34,12 @@ class PlanController extends Controller
                 $headers = $rows[0];
                 $requiredHeaders = [
                     'id_cliente',
-                    
                     'phva_plandetrabajo',
                     'numeral_plandetrabajo',
                     'actividad_plandetrabajo',
                     'responsable_sugerido_plandetrabajo',
-                    'observaciones'
+                    'observaciones',
+                    'fecha_propuesta'
                 ];
 
                 if ($headers !== $requiredHeaders) {
@@ -52,12 +52,12 @@ class PlanController extends Controller
                 foreach (array_slice($rows, 1) as $row) {
                     $data = [
                         'id_cliente' => $row[0],
-                        
                         'phva_plandetrabajo' => $row[1],
                         'numeral_plandetrabajo' => $row[2],
                         'actividad_plandetrabajo' => $row[3],
                         'responsable_sugerido_plandetrabajo' => $row[4],
                         'observaciones' => $row[5],
+                        'fecha_propuesta' => $this->formatDate($row[6]),
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s'),
                     ];
@@ -79,5 +79,18 @@ class PlanController extends Controller
 
         return redirect()->to(base_url('consultant/plan'))
             ->with('error', 'Error al subir el archivo.');
+    }
+
+    // Definir el método formatDate para formatear la fecha
+    private function formatDate($date)
+    {
+        // Convertir la fecha a timestamp
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            // Si no se puede convertir, puedes devolver null o manejar el error como prefieras
+            return null;
+        }
+        // Retorna la fecha en formato 'YYYY-MM-DD' (por ejemplo: 2025-02-07)
+        return date('Y-m-d', $timestamp);
     }
 }
