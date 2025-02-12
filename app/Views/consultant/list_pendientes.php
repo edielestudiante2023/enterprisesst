@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,36 +18,44 @@
       background-color: #f9f9f9;
       font-family: Arial, sans-serif;
     }
+
     h1 {
       margin: 20px 0;
       text-align: center;
       color: #333;
     }
+
     table {
       width: 100%;
     }
+
     .dataTables_filter input {
       background-color: #f0f0f0;
       border-radius: 5px;
       border: 1px solid #ccc;
       padding: 6px;
     }
+
     .dataTables_length select {
       background-color: #f0f0f0;
       border-radius: 5px;
       padding: 6px;
     }
-    td, th {
+
+    td,
+    th {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       height: 25px;
     }
+
     .tooltip-inner {
       max-width: 300px;
       word-wrap: break-word;
       z-index: 1050;
     }
+
     .filters select,
     .filters input {
       width: 100%;
@@ -54,20 +63,33 @@
       border-radius: 4px;
       border: 1px solid #ccc;
     }
+
     /* Fila expandible */
     td.details-control {
       background: url('https://www.datatables.net/examples/resources/details_open.png') no-repeat center center;
       cursor: pointer;
     }
+
     tr.shown td.details-control {
       background: url('https://www.datatables.net/examples/resources/details_close.png') no-repeat center center;
     }
+
     /* Aseguramos que las celdas editables tengan un mínimo de contenido para ser clicables */
-    .editable, .editable-select, .editable-date {
+    .editable,
+    .editable-select,
+    .editable-date {
       min-height: 1em;
+    }
+
+    th:nth-child(7),
+    td:nth-child(7) {
+      max-width: 200px;
+      word-wrap: break-word;
+      white-space: normal;
     }
   </style>
 </head>
+
 <body>
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
@@ -101,7 +123,7 @@
 
   <div class="container-fluid mt-5">
     <h1 class="text-center mb-4">Lista de Pendientes</h1>
-    
+
     <!-- Selección de Cliente -->
     <div class="row mb-3">
       <div class="col-md-4">
@@ -194,7 +216,7 @@
   <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
-  
+
   <script>
     // Función para formatear la fila expandible (child row) si se requiere
     function format(rowData) {
@@ -213,7 +235,7 @@
       return html;
     }
 
-    $(document).ready(function(){
+    $(document).ready(function() {
       // Inicializar el select con Select2
       $('#clientSelect').select2({
         placeholder: 'Seleccione un cliente',
@@ -231,7 +253,7 @@
             $("#clientSelect").append('<option value="' + cliente.id + '">' + cliente.nombre + '</option>');
           });
           var storedClient = localStorage.getItem('selectedClient');
-          if(storedClient) {
+          if (storedClient) {
             $("#clientSelect").val(storedClient).trigger('change');
           }
         },
@@ -254,8 +276,7 @@
         autoWidth: false,
         dom: 'Bfltip',
         pageLength: 10,
-        buttons: [
-          {
+        buttons: [{
             extend: 'excelHtml5',
             text: 'Exportar a Excel',
             className: 'btn btn-success btn-sm'
@@ -273,31 +294,39 @@
           },
           dataSrc: ''
         },
-        columns: [
-          {
+        columns: [{
             data: null,
             orderable: false,
             className: 'details-control',
             defaultContent: ''
           },
-          { data: 'id_pendientes' },
-          { data: 'acciones', orderable: false },
-          { data: 'nombre_cliente' },
+          {
+            data: 'id_pendientes'
+          },
+          {
+            data: 'acciones',
+            orderable: false
+          },
+          {
+            data: 'nombre_cliente'
+          },
           {
             data: 'fecha_asignacion',
             render: function(data, type, row) {
               data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable-date" data-field="fecha_asignacion" data-id="'+row.id_pendientes+'" data-bs-toggle="tooltip" title="'+data+'">' + displayText + '</span>';
+              return '<span class="editable-date" data-field="fecha_asignacion" data-id="' + row.id_pendientes + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
           },
-          { data: 'responsable' },
+          {
+            data: 'responsable'
+          },
           {
             data: 'tarea_actividad',
             render: function(data, type, row) {
               data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable" data-field="tarea_actividad" data-id="'+row.id_pendientes+'" data-bs-toggle="tooltip" title="'+data+'">' + displayText + '</span>';
+              return '<span class="editable" data-field="tarea_actividad" data-id="' + row.id_pendientes + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
           },
           {
@@ -305,7 +334,7 @@
             render: function(data, type, row) {
               data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable-date" data-field="fecha_cierre" data-id="'+row.id_pendientes+'" data-bs-toggle="tooltip" title="'+data+'">' + displayText + '</span>';
+              return '<span class="editable-date" data-field="fecha_cierre" data-id="' + row.id_pendientes + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
           },
           {
@@ -313,16 +342,18 @@
             render: function(data, type, row) {
               data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable-select" data-field="estado" data-id="'+row.id_pendientes+'" data-bs-toggle="tooltip" title="'+data+'">' + displayText + '</span>';
+              return '<span class="editable-select" data-field="estado" data-id="' + row.id_pendientes + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
           },
-          { data: 'conteo_dias' },
+          {
+            data: 'conteo_dias'
+          },
           {
             data: 'estado_avance',
             render: function(data, type, row) {
               data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable" data-field="estado_avance" data-id="'+row.id_pendientes+'" data-bs-toggle="tooltip" title="'+data+'">' + displayText + '</span>';
+              return '<span class="editable" data-field="estado_avance" data-id="' + row.id_pendientes + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
           },
           {
@@ -330,25 +361,25 @@
             render: function(data, type, row) {
               data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable" data-field="evidencia_para_cerrarla" data-id="'+row.id_pendientes+'" data-bs-toggle="tooltip" title="'+data+'">' + displayText + '</span>';
+              return '<span class="editable" data-field="evidencia_para_cerrarla" data-id="' + row.id_pendientes + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
           }
         ],
-        initComplete: function(){
+        initComplete: function() {
           var api = this.api();
-          api.columns().every(function(){
+          api.columns().every(function() {
             var column = this;
             var index = column.index();
             // Se actualizó el selector para usar .filter-search
             var filterElement = $('tfoot tr.filters th').eq(index).find('.filter-search');
-            if(filterElement.length){
-              column.data().unique().sort().each(function(d){
-                if(d !== null && d !== '' && filterElement.find('option[value="'+ d +'"]').length === 0){
-                  filterElement.append('<option value="'+ d +'">'+ d +'</option>');
+            if (filterElement.length) {
+              column.data().unique().sort().each(function(d) {
+                if (d !== null && d !== '' && filterElement.find('option[value="' + d + '"]').length === 0) {
+                  filterElement.append('<option value="' + d + '">' + d + '</option>');
                 }
               });
               var search = column.search();
-              if(search){
+              if (search) {
                 filterElement.val(search);
               }
             }
@@ -359,16 +390,16 @@
       table.buttons().container().appendTo('#buttonsContainer');
 
       // Filtros por columna en el tfoot (se actualizó el selector a .filter-search)
-      $('tfoot .filter-search').on('keyup change', function(){
+      $('tfoot .filter-search').on('keyup change', function() {
         var index = $(this).parent().index();
         table.column(index).search($(this).val()).draw();
       });
 
       // Evento para expandir/contraer fila (child row)
-      $('#pendientesTable tbody').on('click', 'td.details-control', function(){
+      $('#pendientesTable tbody').on('click', 'td.details-control', function() {
         var tr = $(this).closest('tr');
         var row = table.row(tr);
-        if(row.child.isShown()){
+        if (row.child.isShown()) {
           row.child.hide();
           tr.removeClass('shown');
         } else {
@@ -389,7 +420,11 @@
         currentValue = currentValue === '' ? '' : currentValue;
 
         if (cell.hasClass('editable-date')) {
-          var input = $('<input>', { type: 'date', class: 'form-control form-control-sm', value: currentValue });
+          var input = $('<input>', {
+            type: 'date',
+            class: 'form-control form-control-sm',
+            value: currentValue
+          });
           cell.html(input);
           input.focus();
           input.on('blur change', function() {
@@ -397,14 +432,15 @@
             cell.html(newValue || '&nbsp;');
             updateField(id, field, newValue, cell);
           });
-        }
-        else if (cell.hasClass('editable-select')) {
+        } else if (cell.hasClass('editable-select')) {
           var options = [];
           if (field === 'estado') {
             options = ['ABIERTA', 'CERRADA'];
           }
           // Agregar otras opciones si es necesario
-          var select = $('<select>', { class: 'form-control form-control-sm' });
+          var select = $('<select>', {
+            class: 'form-control form-control-sm'
+          });
           options.forEach(function(option) {
             select.append($('<option>', {
               value: option,
@@ -421,9 +457,12 @@
               updateField(id, field, newValue, cell);
             }, 200);
           });
-        }
-        else {
-          var input = $('<input>', { type: 'text', class: 'form-control form-control-sm', value: currentValue });
+        } else {
+          var input = $('<input>', {
+            type: 'text',
+            class: 'form-control form-control-sm',
+            value: currentValue
+          });
           cell.html(input);
           input.focus();
           input.on('blur', function() {
@@ -438,10 +477,14 @@
         $.ajax({
           url: '<?= base_url('/api/updatePendiente') ?>',
           method: 'POST',
-          data: { id: id, field: field, value: value },
+          data: {
+            id: id,
+            field: field,
+            value: value
+          },
           dataType: 'json',
           success: function(response) {
-            if(response.success) {
+            if (response.success) {
               console.log('Registro actualizado correctamente');
               // Si se actualiza algún campo que afecte otros valores (ej. conteo_dias), se puede actualizar aquí
             } else {
@@ -456,9 +499,9 @@
       }
 
       // Botón para cargar datos
-      $("#loadData").click(function(){
+      $("#loadData").click(function() {
         var clientId = $("#clientSelect").val();
-        if(clientId) {
+        if (clientId) {
           localStorage.setItem('selectedClient', clientId);
           table.ajax.reload();
         } else {
@@ -467,16 +510,16 @@
       });
 
       // Actualizar automáticamente al cambiar el select
-      $('#clientSelect').on('change', function(){
+      $('#clientSelect').on('change', function() {
         var clientId = $(this).val();
-        if(clientId) {
+        if (clientId) {
           localStorage.setItem('selectedClient', clientId);
           table.ajax.reload();
         }
       });
 
       // Botón para restablecer filtros y estado
-      $("#clearState").on("click", function(){
+      $("#clearState").on("click", function() {
         localStorage.removeItem('selectedClient');
         var storageKey = 'DataTables_' + table.table().node().id + '_' + window.location.pathname;
         localStorage.removeItem(storageKey);
@@ -487,17 +530,18 @@
       });
 
       // Inicializar tooltips de Bootstrap
-      function initializeTooltips(){
+      function initializeTooltips() {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function(tooltipTriggerEl){
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
           return new bootstrap.Tooltip(tooltipTriggerEl);
         });
       }
       initializeTooltips();
-      table.on('draw.dt', function(){
+      table.on('draw.dt', function() {
         initializeTooltips();
       });
     });
   </script>
 </body>
+
 </html>

@@ -17,7 +17,7 @@ class CsvPendientes extends Controller
     public function upload()
     {
         $file = $this->request->getFile('file');
-        
+
         if ($file && $file->isValid() && !$file->hasMoved()) {
             // Mover el archivo a la carpeta writable/uploads
             $newName = $file->getRandomName();
@@ -32,7 +32,7 @@ class CsvPendientes extends Controller
 
                 // Validar encabezados
                 $headers = $rows[0];
-                $requiredHeaders = ['id_cliente', 'responsable', 'tarea_actividad', 'fecha_asignacion','fecha_cierre', 'estado'];
+                $requiredHeaders = ['id_cliente', 'responsable', 'tarea_actividad', 'fecha_asignacion', 'fecha_cierre', 'estado'];
 
                 if ($headers !== $requiredHeaders) {
                     return redirect()->to(base_url('consultant/csvpendientes'))
@@ -78,6 +78,20 @@ class CsvPendientes extends Controller
      */
     private function formatDate($date)
     {
-        return date('Y-m-d', strtotime($date));
+        // Eliminar espacios en blanco
+        $date = trim($date);
+
+        // Validar si la fecha tiene un formato esperable (YYYY-MM-DD)
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return $date;
+        }
+
+        // Convertir con strtotime si es un formato diferente
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return null; // Si la conversión falla, devolver NULL en lugar de la fecha actual
+        }
+
+        return date('Y-m-d', $timestamp);
     }
 }
