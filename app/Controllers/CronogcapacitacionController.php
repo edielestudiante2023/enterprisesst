@@ -9,6 +9,97 @@ use CodeIgniter\Controller;
 
 class CronogcapacitacionController extends Controller
 {
+
+    public function listcronogCapacitacionAjax()
+    {
+        return view('consultant/list_cronogramas_ajax');
+    }
+
+    // API: Retorna la lista de clientes en formato JSON (igual que en otros módulos)
+    public function getClientes()
+    {
+        $clientModel = new ClientModel();
+        $clientes = $clientModel->findAll();
+        $data = [];
+        foreach ($clientes as $cliente) {
+            $data[] = [
+                'id'     => $cliente['id_cliente'],
+                'nombre' => $cliente['nombre_cliente']
+            ];
+        }
+        return $this->response->setJSON($data);
+    }
+
+    // API: Retorna la lista de cronogramas filtrada por el parámetro 'cliente'
+    public function getCronogramasAjax()
+    {
+        $clienteID = $this->request->getGet('cliente');
+        $cronogModel = new CronogcapacitacionModel();
+        $clientModel = new ClientModel();
+        $capacitacionModel = new CapacitacionModel();
+
+        if (empty($clienteID)) {
+            return $this->response->setJSON([]);
+        }
+
+        $cronogramas = $cronogModel->where('id_cliente', $clienteID)->findAll();
+
+        // Enriquecer cada registro con datos del cliente y capacitación
+        foreach ($cronogramas as &$cronograma) {
+            $cliente = $clientModel->find($cronograma['id_cliente']);
+            $cronograma['nombre_cliente'] = $cliente['nombre_cliente'] ?? 'Cliente no encontrado';
+
+            $capacitacion = $capacitacionModel->find($cronograma['id_capacitacion']);
+            $cronograma['nombre_capacitacion'] = $capacitacion['capacitacion'] ?? 'Capacitación no encontrada';
+            $cronograma['objetivo_capacitacion'] = $capacitacion['objetivo_capacitacion'] ?? 'Objetivo no disponible';
+
+            // Generar botones de acciones
+            $cronograma['acciones'] = '<a href="' . base_url('/editcronogCapacitacion/' . $cronograma['id_cronograma_capacitacion']) . '" class="btn btn-warning btn-sm">Editar</a> ' .
+                '<a href="' . base_url('/deletecronogCapacitacion/' . $cronograma['id_cronograma_capacitacion']) . '" class="btn btn-danger btn-sm" onclick="return confirm(\'¿Estás seguro de eliminar este cronograma?\');">Eliminar</a>';
+        }
+
+        return $this->response->setJSON($cronogramas);
+    }
+
+    // API: Actualiza campos específicos del cronograma de capacitación (para edición inline)
+    public function updatecronogCapacitacion()
+    {
+        log_message('debug', 'Datos recibidos: ' . print_r($this->request->getPost(), true));
+        $id = $this->request->getPost('id');
+        $field = $this->request->getPost('field');
+        $value = $this->request->getPost('value');
+
+        $allowedFields = [
+            'fecha_programada',
+            'fecha_de_realizacion',
+            'estado',
+            'perfil_de_asistentes',
+            'nombre_del_capacitador',
+            'horas_de_duracion_de_la_capacitacion',
+            'indicador_de_realizacion_de_la_capacitacion',
+            'numero_de_asistentes_a_capacitacion',
+            'numero_total_de_personas_programadas',
+            'numero_de_personas_evaluadas',
+            'promedio_de_calificaciones',
+            'observaciones'
+        ];
+
+        if (!in_array($field, $allowedFields)) {
+            log_message('error', 'Campo no permitido: ' . $field);
+            return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
+        }
+
+        $cronogModel = new CronogcapacitacionModel();
+        $updateData = [$field => $value];
+
+        if ($cronogModel->update($id, $updateData)) {
+            log_message('debug', 'Registro actualizado correctamente');
+            return $this->response->setJSON(['success' => true, 'message' => 'Registro actualizado correctamente']);
+        } else {
+            log_message('error', 'Error al actualizar el registro');
+            return $this->response->setJSON(['success' => false, 'message' => 'No se pudo actualizar el registro']);
+        }
+    }
     // Listar todos los cronogramas de capacitación
     public function listcronogCapacitacion()
     {
@@ -176,43 +267,5 @@ class CronogcapacitacionController extends Controller
     }
 
     // Actualizar campos específicos del cronograma de capacitación
-    public function updatecronogCapacitacion()
-    {
-        log_message('debug', 'Datos recibidos: ' . print_r($this->request->getPost(), true));
 
-        $id = $this->request->getPost('id');
-        $field = $this->request->getPost('field');
-        $value = $this->request->getPost('value');
-
-        $allowedFields = [
-            'fecha_programada',
-            'fecha_de_realizacion',
-            'estado',
-            'perfil_de_asistentes',
-            'nombre_del_capacitador',
-            'horas_de_duracion_de_la_capacitacion',
-            'indicador_de_realizacion_de_la_capacitacion',
-            'numero_de_asistentes_a_capacitacion',
-            'numero_total_de_personas_programadas',
-            'numero_de_personas_evaluadas',
-            'promedio_de_calificaciones',
-            'observaciones'
-        ];
-
-        if (!in_array($field, $allowedFields)) {
-            log_message('error', 'Campo no permitido: ' . $field);
-            return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
-        }
-
-        $cronogModel = new CronogcapacitacionModel();
-        $updateData = [$field => $value];
-
-        if ($cronogModel->update($id, $updateData)) {
-            log_message('debug', 'Registro actualizado correctamente');
-            return $this->response->setJSON(['success' => true, 'message' => 'Registro actualizado correctamente']);
-        } else {
-            log_message('error', 'Error al actualizar el registro');
-            return $this->response->setJSON(['success' => false, 'message' => 'No se pudo actualizar el registro']);
-        }
-    }
 }

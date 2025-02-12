@@ -8,6 +8,90 @@ use CodeIgniter\Controller;
 
 class EvaluationController extends Controller
 {
+
+    public function listEvaluacionesAjax()
+    {
+        return view('consultant/list_evaluaciones_ajax');
+    }
+    
+    // API: Retorna la lista de clientes en formato JSON con las claves "id" y "nombre"
+    public function getClientes()
+    {
+        $clientModel = new ClientModel();
+        $clientes = $clientModel->findAll();
+        $data = [];
+
+        foreach ($clientes as $cliente) {
+            $data[] = [
+                'id'     => $cliente['id_cliente'],
+                'nombre' => $cliente['nombre_cliente']
+            ];
+        }
+
+        return $this->response->setJSON($data);
+    }
+    
+    // API: Retorna la lista de evaluaciones filtrada por el parámetro 'cliente'
+    public function getEvaluaciones()
+    {
+        $clienteID = $this->request->getGet('cliente');
+        $evaluationModel = new EvaluationModel();
+        $clientModel = new ClientModel();
+        
+        if (empty($clienteID)) {
+            return $this->response->setJSON([]);
+        }
+        
+        $evaluaciones = $evaluationModel->where('id_cliente', $clienteID)->findAll();
+        
+        $clientes = $clientModel->findAll();
+        $clientsMap = [];
+        foreach ($clientes as $cliente) {
+            $clientsMap[$cliente['id_cliente']] = $cliente['nombre_cliente'];
+        }
+        
+        foreach ($evaluaciones as &$evaluacion) {
+            $evaluacion['nombre_cliente'] = isset($clientsMap[$evaluacion['id_cliente']]) ? $clientsMap[$evaluacion['id_cliente']] : 'Cliente no encontrado';
+            $evaluacion['acciones'] = '<a href="' . base_url('editEvaluacion/' . $evaluacion['id_ev_ini']) . '" class="btn btn-sm btn-warning">Editar</a> ' .
+                                      '<a href="' . base_url('deleteEvaluacion/' . $evaluacion['id_ev_ini']) . '" class="btn btn-sm btn-danger" onclick="return confirm(\'¿Estás seguro de que quieres eliminar esta evaluación?\');">Eliminar</a>';
+        }
+        
+        return $this->response->setJSON($evaluaciones);
+    }
+    
+    // API: Actualiza la evaluación vía AJAX para edición inline
+    public function updateEvaluacion()
+    {
+        $id = $this->request->getPost('id');
+        $field = $this->request->getPost('field');
+        $value = $this->request->getPost('value');
+        
+        $allowedFields = ['evaluacion_inicial', 'observaciones'];
+        if (!in_array($field, $allowedFields)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
+        }
+        
+        $model = new EvaluationModel();
+        $updateData = [$field => $value];
+        
+        if ($field === 'evaluacion_inicial') {
+            $evaluation = $model->find($id);
+            $valor = isset($evaluation['valor']) ? $evaluation['valor'] : 0;
+            $puntaje_cuantitativo = in_array($value, ['CUMPLE TOTALMENTE', 'NO APLICA']) ? $valor : 0;
+            $updateData['puntaje_cuantitativo'] = $puntaje_cuantitativo;
+        }
+        
+        if ($model->update($id, $updateData)) {
+            $updatedRecord = $model->find($id);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Registro actualizado correctamente',
+                'puntaje_cuantitativo' => $updatedRecord['puntaje_cuantitativo']
+            ]);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el registro']);
+        }
+    }
     // Listar las evaluaciones
     public function listEvaluaciones()
     {
@@ -156,38 +240,5 @@ class EvaluationController extends Controller
     }
 
     // Función para actualización en línea
-    public function updateEvaluacion()
-    {
-        $id = $this->request->getPost('id');
-        $field = $this->request->getPost('field');
-        $value = $this->request->getPost('value');
-
-        $allowedFields = ['evaluacion_inicial', 'observaciones'];
-        if (!in_array($field, $allowedFields)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
-        }
-
-        $model = new EvaluationModel();
-        $updateData = [$field => $value];
-
-        // Si se actualiza "evaluacion_inicial", recalcular puntaje_cuantitativo
-        if ($field === 'evaluacion_inicial') {
-            $evaluation = $model->find($id);
-            $valor = isset($evaluation['valor']) ? $evaluation['valor'] : 0;
-            $puntaje_cuantitativo = in_array($value, ['CUMPLE TOTALMENTE', 'NO APLICA']) ? $valor : 0;
-            $updateData['puntaje_cuantitativo'] = $puntaje_cuantitativo;
-        }
-
-        if ($model->update($id, $updateData)) {
-            // Obtener el registro actualizado para recuperar el nuevo puntaje_cuantitativo
-            $updatedRecord = $model->find($id);
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Registro actualizado correctamente',
-                'puntaje_cuantitativo' => $updatedRecord['puntaje_cuantitativo']
-            ]);
-        } else {
-            return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el registro']);
-        }
-    }
+    
 }

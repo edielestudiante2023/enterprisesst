@@ -11,8 +11,10 @@
     <link href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- DataTables Buttons CSS -->
     <link href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <!-- Select2 CSS para select buscable -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <style>
-        /* Tus estilos personalizados */
         body {
             background-color: #f9f9f9;
             font-family: Arial, sans-serif;
@@ -22,10 +24,6 @@
             margin: 20px 0;
             text-align: center;
             color: #333;
-        }
-
-        .btn-custom {
-            margin-bottom: 20px;
         }
 
         table {
@@ -67,18 +65,14 @@
             border: 1px solid #ccc;
         }
 
-        footer a {
-            color: #007BFF;
-            text-decoration: none;
+        /* Estilo para la columna de fila expandible */
+        td.details-control {
+            background: url('https://www.datatables.net/examples/resources/details_open.png') no-repeat center center;
+            cursor: pointer;
         }
 
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        .social-icons img {
-            height: 24px;
-            width: 24px;
+        tr.shown td.details-control {
+            background: url('https://www.datatables.net/examples/resources/details_close.png') no-repeat center center;
         }
     </style>
 </head>
@@ -87,7 +81,6 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
         <div class="container-fluid">
-            <!-- Logos -->
             <div class="d-flex align-items-center">
                 <a href="https://dashboard.cycloidtalent.com/login" class="me-3">
                     <img src="<?= base_url('uploads/logoenterprisesstblancoslogan.png') ?>" alt="Enterprisesst Logo" height="60">
@@ -99,8 +92,6 @@
                     <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Cycloids Logo" height="60">
                 </a>
             </div>
-
-            <!-- Botones Dashboard y Añadir Registro -->
             <div class="ms-auto d-flex">
                 <div class="text-center me-3">
                     <h6 class="mb-1" style="font-size: 16px;">Ir a Dashboard</h6>
@@ -117,17 +108,28 @@
     <!-- Espaciado para el navbar fijo -->
     <div style="height: 100px;"></div>
 
-    <div class="container mt-5">
-        <!-- Botón para restablecer filtros y DataTables Buttons -->
+    <div class="container-fluid mt-5">
         <h1 class="text-center mb-4">Lista de Evaluaciones</h1>
-        <div class="d-flex justify-content-between mb-3">
-            <button id="clearState" class="btn btn-danger btn-sm">Restablecer Filtros</button>
-            <div id="buttonsContainer"></div>
+        <!-- Bloque para seleccionar cliente -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="clientSelect">Selecciona un Cliente:</label>
+                <select id="clientSelect" class="form-select">
+                    <option value="">Seleccione un cliente</option>
+                </select>
+            </div>
+            <div class="col-md-2 align-self-end">
+                <button id="loadData" class="btn btn-primary">Cargar Datos</button>
+            </div>
         </div>
+        <button id="clearState" class="btn btn-danger btn-sm mb-3">Restablecer Filtros</button>
+        <div id="buttonsContainer"></div>
         <div class="table-responsive">
             <table id="evaluacionesTable" class="table table-striped table-bordered nowrap" style="width:100%">
                 <thead class="table-light">
                     <tr>
+                        <!-- Columna para fila expandible -->
+                        <th></th>
                         <th>Acciones</th>
                         <th>Cliente</th>
                         <th>Ciclo</th>
@@ -142,151 +144,93 @@
                         <th>Observaciones</th>
                     </tr>
                 </thead>
+                <tbody>
+                    <!-- Los datos se cargarán vía AJAX -->
+                </tbody>
+                <!-- Se reubica el tfoot debajo del tbody -->
                 <tfoot class="table-light">
                     <tr class="filters">
+                        <th></th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Acciones" disabled>
+                            <select class="form-select form-select-sm filter-select" disabled>
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Cliente">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Ciclo">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Estándar">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Item del Estándar">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Evaluación Inicial">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Valor">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Puntaje">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Item">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Criterio">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                         <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Modo de Verificación">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Observaciones">
+                            <select class="form-select form-select-sm filter-select">
                                 <option value="">Todos</option>
                             </select>
                         </th>
                     </tr>
                 </tfoot>
-
-                <tbody>
-                    <?php if (!empty($evaluaciones) && is_array($evaluaciones)): ?>
-                        <?php foreach ($evaluaciones as $evaluacion): ?>
-                            <tr>
-                                <td>
-                                    <a href="<?= base_url('editEvaluacion/' . $evaluacion['id_ev_ini']); ?>" class="btn btn-sm btn-warning">Editar</a>
-                                    <a href="<?= base_url('deleteEvaluacion/' . $evaluacion['id_ev_ini']); ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar esta evaluación?');">Eliminar</a>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['nombre_cliente']); ?>"><?= esc($evaluacion['nombre_cliente']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['ciclo']); ?>"><?= esc($evaluacion['ciclo']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['estandar']); ?>"><?= esc($evaluacion['estandar']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['item_del_estandar']); ?>"><?= esc($evaluacion['item_del_estandar']); ?></td>
-
-                                <!-- Celda editable para "Evaluación Inicial" -->
-                                <td class="editable-select"
-                                    data-field="evaluacion_inicial"
-                                    data-id="<?= $evaluacion['id_ev_ini']; ?>"
-                                    title="<?= esc($evaluacion['evaluacion_inicial']); ?>">
-                                    <?= esc($evaluacion['evaluacion_inicial']); ?>
-                                </td>
-
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['valor']); ?>"><?= esc($evaluacion['valor']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['puntaje_cuantitativo']); ?>"><?= esc($evaluacion['puntaje_cuantitativo']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['item']); ?>"><?= esc($evaluacion['item']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['criterio']); ?>"><?= esc($evaluacion['criterio']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['modo_de_verificacion']); ?>"><?= esc($evaluacion['modo_de_verificacion']); ?></td>
-
-                                <!-- Celda editable para "Observaciones" -->
-                                <td class="editable"
-                                    data-field="observaciones"
-                                    data-id="<?= $evaluacion['id_ev_ini']; ?>"
-                                    data-bs-toggle="tooltip"
-                                    title="<?= esc($evaluacion['observaciones']); ?>">
-                                    <?= esc($evaluacion['observaciones']); ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="12" class="text-center">No se encontraron evaluaciones.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-
             </table>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="bg-white py-4 border-top">
+    <footer class="bg-white py-4 border-top mt-5">
         <div class="container text-center">
             <p class="fw-bold mb-1">Cycloid Talent SAS</p>
             <p class="mb-1">Todos los derechos reservados © 2024</p>
             <p class="mb-1">NIT: 901.653.912</p>
-            <p class="mb-3">
-                Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank">https://cycloidtalent.com/</a>
+            <p class="mb-3">Sitio oficial:
+                <a href="https://cycloidtalent.com/" target="_blank">https://cycloidtalent.com/</a>
             </p>
-            <p><strong>Nuestras Redes Sociales:</strong></p>
-            <div class="social-icons d-flex justify-content-center gap-3">
-                <a href="https://www.facebook.com/CycloidTalent" target="_blank">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook">
-                </a>
-                <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn">
-                </a>
-                <a href="https://www.instagram.com/cycloid_talent?igsh=Nmo4d2QwZDg5dHh0" target="_blank">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram">
-                </a>
-                <a href="https://www.tiktok.com/@cycloid_talent?_t=8qBSOu0o1ZN&_r=1" target="_blank">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok">
-                </a>
-            </div>
         </div>
     </footer>
 
-    <!-- Scripts al final del body para mejor rendimiento -->
+    <!-- Scripts -->
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap Bundle (Incluye Popper.js) -->
+    <!-- Bootstrap Bundle (incluye Popper.js) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
@@ -298,89 +242,116 @@
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
 
     <script>
+        // Función para formatear la fila expandible (detalles)
+        function format(rowData) {
+            var html = '<table cellpadding="5" cellspacing="0" border="0" style="width: 60%; table-layout: auto; word-wrap: break-word;">';
+            var fields = [{
+                    label: 'Cliente',
+                    value: rowData.nombre_cliente
+                },
+                {
+                    label: 'Ciclo',
+                    value: rowData.ciclo
+                },
+                {
+                    label: 'Estándar',
+                    value: rowData.estandar
+                },
+                {
+                    label: 'Item del Estándar',
+                    value: rowData.item_del_estandar
+                },
+                {
+                    label: 'Evaluación Inicial',
+                    value: rowData.evaluacion_inicial
+                },
+                {
+                    label: 'Valor',
+                    value: rowData.valor
+                },
+                {
+                    label: 'Puntaje Cuantitativo',
+                    value: rowData.puntaje_cuantitativo
+                },
+                {
+                    label: 'Item',
+                    value: rowData.item
+                },
+                {
+                    label: 'Criterio',
+                    value: rowData.criterio
+                },
+                {
+                    label: 'Modo de Verificación',
+                    value: rowData.modo_de_verificacion
+                },
+                {
+                    label: 'Observaciones',
+                    value: rowData.observaciones
+                }
+            ];
+
+            fields.forEach(function(field) {
+                html += '<tr>';
+                html += '<td style="white-space: normal; padding: 5px;"><strong>' + field.label + ':</strong></td>';
+                html += '<td style="white-space: normal; padding: 5px;">' + (field.value || '') + '</td>';
+                html += '</tr>';
+            });
+
+            html += '</table>';
+            return html;
+        }
+
+        // Función para actualizar los filtros en el <tfoot>
+        function updateFilters(api) {
+            api.columns().every(function() {
+                var column = this;
+                var headerIndex = column.index();
+                var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-select');
+                if (filterElement.length && !filterElement.prop('disabled')) {
+                    filterElement.empty().append('<option value="">Todos</option>');
+                    column.data().unique().sort().each(function(d) {
+                        if (d && filterElement.find('option[value="' + d + '"]').length === 0) {
+                            filterElement.append('<option value="' + d + '">' + d + '</option>');
+                        }
+                    });
+                    var search = column.search();
+                    if (search) {
+                        filterElement.val(search);
+                    }
+                }
+            });
+        }
+
+        // Inicialización una vez cargado el documento
         $(document).ready(function() {
-            // 1. Configuración para edición en línea
-            $(document).on('click', '.editable-select, .editable', function() {
-                if ($(this).find('input, select').length) return; // Evitar duplicados
+            // Inicializar el select con Select2
+            $('#clientSelect').select2({
+                placeholder: 'Seleccione un cliente',
+                allowClear: true,
+                width: '100%'
+            });
 
-                var cell = $(this);
-                var field = cell.data('field');
-                var id = cell.data('id');
-                var currentValue = cell.text().trim();
-
-                if (field === 'evaluacion_inicial') {
-                    var options = ['CUMPLE TOTALMENTE', 'NO CUMPLE', 'NO APLICA'];
-                    var select = $('<select>', {
-                        class: 'form-select form-select-sm'
+            // Cargar clientes vía AJAX usando las claves 'id' y 'nombre'
+            $.ajax({
+                url: "<?= base_url('/api/getClientes') ?>",
+                method: "GET",
+                dataType: "json",
+                success: function(data) {
+                    data.forEach(function(cliente) {
+                        $("#clientSelect").append('<option value="' + cliente.id + '">' + cliente.nombre + '</option>');
                     });
-
-                    options.forEach(function(option) {
-                        select.append($('<option>', {
-                            value: option,
-                            text: option,
-                            selected: option === currentValue
-                        }));
-                    });
-
-                    cell.html(select);
-                    select.focus();
-
-                    select.on('blur change', function() {
-                        var newValue = select.val();
-                        cell.text(newValue);
-                        // Pasar 'cell' como argumento adicional
-                        updateField(id, field, newValue, cell);
-                    });
-
-                } else if (field === 'observaciones') {
-                    var input = $('<input>', {
-                        type: 'text',
-                        class: 'form-control',
-                        value: currentValue
-                    });
-
-                    cell.html(input);
-                    input.focus();
-
-                    input.on('blur', function() {
-                        var newValue = input.val();
-                        cell.text(newValue);
-                        // Pasar 'cell' como argumento adicional
-                        updateField(id, field, newValue, cell);
-                    });
+                    var storedClient = localStorage.getItem('selectedClient');
+                    if (storedClient) {
+                        $("#clientSelect").val(storedClient).trigger('change');
+                    }
+                },
+                error: function() {
+                    alert('Error al cargar la lista de clientes.');
                 }
             });
 
-            function updateField(id, field, value, cell) {
-                $.ajax({
-                    url: '<?= base_url('/updateEvaluacion') ?>',
-                    method: 'POST',
-                    data: {
-                        id: id,
-                        field: field,
-                        value: value
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            console.log(response.message);
-                            // Si se actualizó "evaluacion_inicial", actualizar puntaje_cuantitativo en la fila
-                            if (field === 'evaluacion_inicial' && response.puntaje_cuantitativo !== undefined) {
-                                var row = cell.closest('tr');
-                                // Asegúrate de que el índice de la columna coincide con la columna puntaje_cuantitativo en tu tabla
-                                row.find('td').eq(7).text(response.puntaje_cuantitativo);
-                            }
-                        } else {
-                            alert('Error: ' + response.message);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error al comunicarse con el servidor:', error);
-                        alert('Error al comunicarse con el servidor: ' + error);
-                    }
-                });
-            }
-
-            // 2. Inicialización de DataTables
+            // Inicializar DataTable con fila expandible y render para inline editing
             var table = $('#evaluacionesTable').DataTable({
                 stateSave: true,
                 language: {
@@ -402,38 +373,201 @@
                         className: 'btn btn-secondary btn-sm'
                     }
                 ],
+                ajax: {
+                    url: "<?= base_url('/api/getEvaluaciones') ?>",
+                    data: function(d) {
+                        d.cliente = $("#clientSelect").val();
+                    },
+                    dataSrc: ''
+                },
+                columns: [{
+                        data: null,
+                        orderable: false,
+                        className: 'details-control',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'acciones',
+                        orderable: false
+                    },
+                    {
+                        data: 'nombre_cliente'
+                    },
+                    {
+                        data: 'ciclo'
+                    },
+                    {
+                        data: 'estandar'
+                    },
+                    {
+                        data: 'item_del_estandar'
+                    },
+                    {
+                        data: 'evaluacion_inicial',
+                        render: function(data, type, row) {
+                            if (type === 'filter') {
+                                return data;
+                            }
+                            data = (data === null || data === "") ? "-" : data;
+                            var displayText = data || '&nbsp;';
+                            return '<span class="editable-select" data-field="evaluacion_inicial" data-id="' + row.id_ev_ini + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+                        }
+                    },
+                    {
+                        data: 'valor'
+                    },
+                    {
+                        data: 'puntaje_cuantitativo'
+                    },
+                    {
+                        data: 'item'
+                    },
+                    {
+                        data: 'criterio'
+                    },
+                    {
+                        data: 'modo_de_verificacion'
+                    },
+                    {
+                        data: 'observaciones',
+                        render: function(data, type, row) {
+                            if (type === 'filter') {
+                                return data;
+                            }
+                            data = (data === null || data === "") ? "-" : data;
+                            var displayText = data || '&nbsp;';
+                            return '<span class="editable" data-field="observaciones" data-id="' + row.id_ev_ini + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+                        }
+                    }
+                ],
                 initComplete: function() {
                     var api = this.api();
-                    // Para cada columna, crear un filtro en el <tfoot>
-                    api.columns().every(function() {
-                        var column = this;
-                        var headerIndex = column.index();
-                        var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-select');
-
-                        if (filterElement.length && !filterElement.prop('disabled')) {
-                            column.data().unique().sort().each(function(d) {
-                                if (d) {
-                                    if (filterElement.find('option[value="' + d + '"]').length === 0) {
-                                        filterElement.append('<option value="' + d + '">' + d + '</option>');
-                                    }
-                                }
-                            });
-
-                            var search = column.search();
-                            if (search) {
-                                filterElement.val(search);
-                            }
-                        }
-                    });
+                    updateFilters(api);
                 }
             });
 
             table.buttons().container().appendTo('#buttonsContainer');
 
-            $('tfoot .filter-select').on('change', function() {
+            // Evento para actualizar filtro al cambiar alguna opción en el <tfoot>
+            $('tfoot').on('change', '.filter-select', function() {
                 var columnIndex = $(this).closest('th').index();
                 var value = $(this).val();
                 table.column(columnIndex).search(value).draw();
+            });
+
+            // Evento para fila expandible (row child details)
+            $('#evaluacionesTable tbody').on('click', 'td.details-control', function() {
+                var tr = $(this).closest('tr');
+                var row = table.row(tr);
+                if (row.child.isShown()) {
+                    row.child.hide();
+                    tr.removeClass('shown');
+                } else {
+                    row.child(format(row.data())).show();
+                    tr.addClass('shown');
+                }
+            });
+
+            // Funcionalidad de edición en línea con stopPropagation
+            $(document).on('click', '.editable-select, .editable', function(e) {
+                e.stopPropagation(); // Evita que se active la fila expandible
+                if ($(this).find('input, select').length) return;
+
+                var cell = $(this);
+                var field = cell.data('field');
+                var id = cell.data('id');
+                var currentValue = cell.text().trim();
+
+                if (field === 'evaluacion_inicial') {
+                    var options = ['CUMPLE TOTALMENTE', 'NO CUMPLE', 'NO APLICA'];
+                    var select = $('<select>', {
+                        class: 'form-select form-select-sm'
+                    });
+                    options.forEach(function(option) {
+                        select.append($('<option>', {
+                            value: option,
+                            text: option,
+                            selected: option === currentValue
+                        }));
+                    });
+                    cell.html(select);
+                    select.focus();
+                    select.on('blur change', function() {
+                        var newValue = select.val();
+                        cell.text(newValue);
+                        updateField(id, field, newValue, cell);
+                    });
+                } else if (field === 'observaciones') {
+                    var input = $('<input>', {
+                        type: 'text',
+                        class: 'form-control',
+                        value: currentValue
+                    });
+                    cell.html(input);
+                    input.focus();
+                    input.on('blur', function() {
+                        var newValue = input.val();
+                        cell.text(newValue);
+                        updateField(id, field, newValue, cell);
+                    });
+                }
+            });
+
+            function updateField(id, field, value, cell) {
+                $.ajax({
+                    url: '<?= base_url('/api/updateEvaluacion') ?>',
+                    method: 'POST',
+                    data: {
+                        id: id,
+                        field: field,
+                        value: value
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            console.log(response.message);
+                            if (field === 'evaluacion_inicial' && response.puntaje_cuantitativo !== undefined) {
+                                var row = cell.closest('tr');
+                                row.find('td').eq(8).text(response.puntaje_cuantitativo);
+                            }
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error al comunicarse con el servidor:', error);
+                        alert('Error al comunicarse con el servidor: ' + error);
+                    }
+                });
+            }
+
+            $("#loadData").click(function() {
+                var clientId = $("#clientSelect").val();
+                if (clientId) {
+                    localStorage.setItem('selectedClient', clientId);
+                    table.ajax.reload();
+                } else {
+                    alert('Por favor, seleccione un cliente.');
+                }
+            });
+
+            $('#clientSelect').on('change', function() {
+                var clientId = $(this).val();
+                if (clientId) {
+                    localStorage.setItem('selectedClient', clientId);
+                    table.ajax.reload();
+                }
+            });
+
+            $("#clearState").on("click", function() {
+                localStorage.removeItem('selectedClient');
+                var storageKey = 'DataTables_' + table.table().node().id + '_' + window.location.pathname;
+                localStorage.removeItem(storageKey);
+                table.state.clear();
+                $('tfoot .filter-select').each(function() {
+                    $(this).val('');
+                });
+                table.columns().search('').draw();
+                $("#clientSelect").val(null).trigger("change");
             });
 
             function initializeTooltips() {
@@ -443,24 +577,14 @@
                 });
             }
             initializeTooltips();
+
+            // Actualizar filtros y tooltips en cada redibujado de la tabla
             table.on('draw.dt', function() {
+                updateFilters(table);
                 initializeTooltips();
-            });
-
-            $('#clearState').on('click', function() {
-                var storageKey = 'DataTables_' + table.table().node().id + '_' + window.location.pathname;
-                localStorage.removeItem(storageKey);
-                table.state.clear();
-
-                $('tfoot .filter-select').each(function() {
-                    $(this).val('');
-                });
-
-                table.columns().search('').draw();
             });
         });
     </script>
-
 </body>
 
 </html>
