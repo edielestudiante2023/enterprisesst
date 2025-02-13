@@ -6,6 +6,9 @@
     <title>Agregar Dashboard</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 </head>
 <body>
     <div class="container mt-4">
@@ -57,9 +60,31 @@
         </div>
     </div>
 
+    <!-- jQuery (necesario para Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap 5 JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Select2 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        // Inicializar Select2
+        $(document).ready(function() {
+            $('#id_cliente').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'Buscar cliente...',
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return "No se encontraron resultados";
+                    },
+                    searching: function() {
+                        return "Buscando...";
+                    }
+                }
+            });
+        });
+
         // Activar validación de Bootstrap
         (function () {
             'use strict';
