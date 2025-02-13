@@ -84,8 +84,10 @@
     th:nth-child(7),
     td:nth-child(7) {
       max-width: 200px;
-      word-wrap: break-word;
-      white-space: normal;
+      /* Ajusta el valor según necesites */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   </style>
 </head>
