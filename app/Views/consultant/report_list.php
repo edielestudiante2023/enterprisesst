@@ -44,7 +44,7 @@
       text-overflow: ellipsis;
     }
 
-    /* Columna Enlace: ahora muestra solo un icono */
+    /* Columna Enlace: muestra solo un icono */
     td.enlace-col {
       text-align: center;
     }
@@ -115,7 +115,7 @@
 
     <h3 class="mb-3">Reportes</h3>
 
-    <?php if (session()->get('msg')): ?>
+    <?php if (session()->get('msg')) : ?>
       <div class="alert alert-info">
         <?= session()->get('msg') ?>
       </div>
@@ -131,6 +131,7 @@
         <thead>
           <tr>
             <th>Acciones</th>
+            <th>Fecha de Creación</th>
             <th>Enlace</th>
             <th>ID</th>
             <th>Título del Reporte</th>
@@ -140,20 +141,23 @@
             <th>Observaciones</th>
             <th>ID Cliente</th>
             <th>Nombre del Cliente</th>
-            <th>Fecha de Creación</th>
           </tr>
         </thead>
         <tfoot>
           <tr>
             <!-- Sin filtro -->
             <th>Acciones</th>
+            <!-- Dropdown Filtering -->
+            <th>Fecha de Creación</th>
             <th>Enlace</th>
+            <!-- Sin filtro -->
             <th>ID</th>
             <!-- Text Input Filtering -->
             <th>Título del Reporte</th>
             <!-- Dropdown Filtering -->
             <th>Tipo de Documento</th>
             <th>Tipo de Reporte</th>
+            <!-- Dropdown Filtering -->
             <th>Estado</th>
             <!-- Text Input Filtering -->
             <th>Observaciones</th>
@@ -161,8 +165,6 @@
             <th>ID Cliente</th>
             <!-- Text Input Filtering -->
             <th>Nombre del Cliente</th>
-            <!-- Dropdown Filtering -->
-            <th>Fecha de Creación</th>
           </tr>
         </tfoot>
         <tbody>
@@ -174,38 +176,47 @@
                 <a href="<?= base_url('/editReport/' . $report['id_reporte']) ?>" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="Editar Reporte">Editar</a>
                 <a href="<?= base_url('/deleteReport/' . $report['id_reporte']) ?>" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" title="Eliminar Reporte" onclick="return confirm('¿Está seguro de eliminar este reporte?');">Eliminar</a>
               </td>
+              <!-- Columna Fecha de Creación -->
+              <td data-bs-toggle="tooltip" title="Fecha de Creación: <?= htmlspecialchars($report['created_at']) ?>">
+                <?= htmlspecialchars($report['created_at']) ?>
+              </td>
               <!-- Columna Enlace: se muestra un icono; se guarda el link en data-link -->
               <td class="enlace-col" data-link="<?= htmlspecialchars($report['enlace']) ?>" data-bs-toggle="tooltip" title="Abrir documento">
                 <a href="<?= htmlspecialchars($report['enlace']) ?>" target="_blank">
                   <i class="bi bi-link-45deg"></i>
                 </a>
               </td>
+              <!-- Columna ID -->
               <td data-bs-toggle="tooltip" title="ID Reporte: <?= $report['id_reporte'] ?>">
                 <?= $report['id_reporte'] ?>
               </td>
+              <!-- Columna Título del Reporte -->
               <td data-bs-toggle="tooltip" title="Título: <?= htmlspecialchars($report['titulo_reporte']) ?>">
                 <?= htmlspecialchars($report['titulo_reporte']) ?>
               </td>
+              <!-- Columna Tipo de Documento -->
               <td data-bs-toggle="tooltip" title="Tipo de Documento: <?= htmlspecialchars($details[array_search($report['id_detailreport'], array_column($details, 'id_detailreport'))]['detail_report'] ?? 'N/A') ?>">
                 <?= htmlspecialchars($details[array_search($report['id_detailreport'], array_column($details, 'id_detailreport'))]['detail_report'] ?? 'N/A') ?>
               </td>
+              <!-- Columna Tipo de Reporte -->
               <td data-bs-toggle="tooltip" title="Tipo de Reporte: <?= htmlspecialchars($reportTypes[array_search($report['id_report_type'], array_column($reportTypes, 'id_report_type'))]['report_type'] ?? '') ?>">
                 <?= htmlspecialchars($reportTypes[array_search($report['id_report_type'], array_column($reportTypes, 'id_report_type'))]['report_type'] ?? '') ?>
               </td>
+              <!-- Columna Estado -->
               <td data-bs-toggle="tooltip" title="Estado: <?= htmlspecialchars($report['estado']) ?>">
                 <?= htmlspecialchars($report['estado']) ?>
               </td>
+              <!-- Columna Observaciones -->
               <td class="observaciones-col" data-bs-toggle="tooltip" title="Observaciones: <?= htmlspecialchars($report['observaciones']) ?>">
                 <?= htmlspecialchars($report['observaciones']) ?>
               </td>
+              <!-- Columna ID Cliente -->
               <td data-bs-toggle="tooltip" title="ID Cliente: <?= htmlspecialchars($report['id_cliente']) ?>">
                 <?= htmlspecialchars($report['id_cliente']) ?>
               </td>
+              <!-- Columna Nombre del Cliente -->
               <td data-bs-toggle="tooltip" title="Nombre del Cliente: <?= htmlspecialchars($clients[array_search($report['id_cliente'], array_column($clients, 'id_cliente'))]['nombre_cliente'] ?? '') ?>">
                 <?= htmlspecialchars($clients[array_search($report['id_cliente'], array_column($clients, 'id_cliente'))]['nombre_cliente'] ?? '') ?>
-              </td>
-              <td data-bs-toggle="tooltip" title="Fecha de Creación: <?= htmlspecialchars($report['created_at']) ?>">
-                <?= htmlspecialchars($report['created_at']) ?>
               </td>
             </tr>
           <?php endforeach; ?>
@@ -260,73 +271,74 @@
   <script>
     // Función para generar el contenido del row child details
     function format(d) {
-      // 'd' es un array con los datos de la fila.
-      // Para el enlace, extraemos el valor desde el data attribute
-      var enlace = $('<div>' + d[1] + '</div>').attr('data-link');
-      if (!enlace) {
-        enlace = '';
-      }
+      // d[0]: Acciones (omitido)
+      // d[1]: Fecha de Creación
+      // d[2]: Enlace
+      // d[3]: ID
+      // d[4]: Título del Reporte
+      // d[5]: Tipo de Documento
+      // d[6]: Tipo de Reporte
+      // d[7]: Estado
+      // d[8]: Observaciones
+      // d[9]: ID Cliente
+      // d[10]: Nombre del Cliente
       return '<div style="overflow:auto;">' +
         '<table style="width:100%;" class="table table-sm table-borderless">' +
-        '<tr><td style="width:30%;"><strong>ID:</strong></td><td style="width:70%;">' + d[2] + '</td></tr>' +
-        '<tr><td style="width:30%;"><strong>Título del Reporte:</strong></td><td style="width:70%;">' + d[3] + '</td></tr>' +
-        '<tr><td style="width:30%;"><strong>Tipo de Documento:</strong></td><td style="width:70%;">' + d[4] + '</td></tr>' +
-        '<tr><td style="width:30%;"><strong>Tipo de Reporte:</strong></td><td style="width:70%;">' + d[5] + '</td></tr>' +
-        '<tr><td style="width:30%;"><strong>Estado:</strong></td><td style="width:70%;">' + d[6] + '</td></tr>' +
-        '<tr><td style="width:30%;"><strong>Observaciones:</strong></td><td style="width:70%;">' + d[7] + '</td></tr>' +
-        '<tr><td style="width:30%;"><strong>ID Cliente:</strong></td><td style="width:70%;">' + d[8] + '</td></tr>' +
-        '<tr><td style="width:30%;"><strong>Nombre del Cliente:</strong></td><td style="width:70%;">' + d[9] + '</td></tr>' +
-        '<tr><td style="width:30%;"><strong>Fecha de Creación:</strong></td><td style="width:70%;">' + d[10] + '</td></tr>' +
-        '<tr><td style="width:30%;"><strong>Enlace:</strong></td><td style="width:70%;">' + $('<div>' + d[1] + '</div>').attr('data-link') + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>Fecha de Creación:</strong></td><td style="width:70%;">' + d[1] + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>Enlace:</strong></td><td style="width:70%;">' + d[2] + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>ID:</strong></td><td style="width:70%;">' + d[3] + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>Título del Reporte:</strong></td><td style="width:70%;">' + d[4] + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>Tipo de Documento:</strong></td><td style="width:70%;">' + d[5] + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>Tipo de Reporte:</strong></td><td style="width:70%;">' + d[6] + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>Estado:</strong></td><td style="width:70%;">' + d[7] + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>Observaciones:</strong></td><td style="width:70%;">' + d[8] + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>ID Cliente:</strong></td><td style="width:70%;">' + d[9] + '</td></tr>' +
+        '<tr><td style="width:30%;"><strong>Nombre del Cliente:</strong></td><td style="width:70%;">' + d[10] + '</td></tr>' +
         '</table>' +
         '</div>';
     }
 
     $(document).ready(function() {
       const table = $('#reportTable').DataTable({
-        "language": {
-          "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+        language: {
+          url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
         },
-        "pageLength": 20,
-        "lengthMenu": [
+        pageLength: 20,
+        lengthMenu: [
           [20, 50, 100],
           [20, 50, 100]
         ],
-        // Ordenamos por ID (columna 2, ya que las dos primeras son Acciones y Enlace)
-        "order": [
-          [2, "desc"]
+        // Ordenación por defecto por la columna ID (índice 3)
+        order: [
+          [3, "desc"]
         ],
-        "orderFixed": [
-          [2, "desc"]
-        ],
-        "columnDefs": [
-          {
-            "targets": [0, 1],
-            "orderable": false,
-            "searchable": false
+        // Se deshabilita el ordenamiento en las columnas "Acciones" (índice 0) y "Enlace" (índice 2)
+        columnDefs: [{
+            targets: [0, 2],
+            orderable: false,
+            searchable: false
           },
           {
-            "targets": 7,
-            "className": "observaciones-col"
+            targets: 8, // "Observaciones" ahora es la columna índice 8
+            className: "observaciones-col"
           }
         ],
-        "stateSave": true,
-        "stateSaveCallback": function(settings, data) {
+        stateSave: true,
+        stateSaveCallback: function(settings, data) {
           localStorage.setItem('DataTables_reportTable', JSON.stringify(data));
         },
-        "stateLoadCallback": function(settings) {
+        stateLoadCallback: function(settings) {
           return JSON.parse(localStorage.getItem('DataTables_reportTable'));
         },
-        "dom": 'Bfrtip',
-        "buttons": [
-          {
+        dom: 'Bfrtip',
+        buttons: [{
             extend: 'excelHtml5',
             text: '<i class="bi bi-file-earmark-excel"></i> Exportar a Excel',
             className: 'btn btn-success btn-sm',
             exportOptions: {
-              // Excluir columnas Acciones y Enlace (índices 0 y 1)
+              // Excluir columnas "Acciones" (índice 0) y "Enlace" (índice 2)
               columns: function(idx, data, node) {
-                return idx > 1;
+                return idx !== 0 && idx !== 2;
               }
             },
             title: 'Lista de Reportes',
@@ -344,17 +356,17 @@
             titleAttr: 'Mostrar u Ocultar Columnas'
           }
         ],
-        "initComplete": function() {
+        initComplete: function() {
           var api = this.api();
-          // Para cada columna, agregamos el filtro correspondiente según el índice:
+          // Recorremos todas las columnas para colocar los filtros en el footer
           api.columns().every(function() {
             var column = this;
             var columnIdx = column.index();
             var $footerCell = $(column.footer()).empty();
 
-            // Definimos qué columnas tienen filtro de texto y cuáles dropdown
-            if ([3, 7, 9].indexOf(columnIdx) !== -1) {
-              // Text Input Filtering
+            // Definimos los filtros según la nueva posición de las columnas:
+            // Filtros de tipo input (texto) para: Título del Reporte (índice 4), Observaciones (índice 8) y Nombre del Cliente (índice 10)
+            if ([4, 8, 10].indexOf(columnIdx) !== -1) {
               var input = $('<input type="text" class="form-control form-control-sm" placeholder="Buscar...">')
                 .appendTo($footerCell)
                 .on('keyup change', function() {
@@ -362,37 +374,50 @@
                     column.search(this.value).draw();
                   }
                 });
-              // Si existe estado guardado, lo asignamos
               var state = api.state.loaded();
-              if (state && state.columns && state.columns[columnIdx].search && state.columns[columnIdx].search.search) {
+              if (state && state.columns[columnIdx].search && state.columns[columnIdx].search.search) {
                 input.val(state.columns[columnIdx].search.search);
               }
-            } else if ([4, 5, 6, 10].indexOf(columnIdx) !== -1) {
-              // Dropdown Filtering
+            }
+            // Filtros dropdown para: Fecha de Creación (índice 1), Tipo de Documento (índice 5), Tipo de Reporte (índice 6) y Estado (índice 7)
+            else if ([1, 5, 6, 7].indexOf(columnIdx) !== -1) {
               var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
                 .appendTo($footerCell)
                 .on('change', function() {
                   var val = $.fn.dataTable.util.escapeRegex($(this).val());
                   column.search(val ? '^' + val + '$' : '', true, false).draw();
                 });
-              column.data().unique().sort().each(function(d, j) {
-                // Convertir HTML a texto para evitar etiquetas
-                var div = $('<div>').html(d);
-                var text = div.text() || d;
-                select.append('<option value="' + text + '">' + text + '</option>');
-              });
-              // Asignar valor del estado guardado si existe
+              $footerCell.data('select', select);
+
               var state = api.state.loaded();
-              if (state && state.columns && state.columns[columnIdx].search && state.columns[columnIdx].search.search) {
+              if (state && state.columns[columnIdx].search && state.columns[columnIdx].search.search) {
                 var searchVal = state.columns[columnIdx].search.search.replace(/^\^|\$$/g, '');
                 select.val(searchVal);
               }
-            } // Para las columnas sin filtro (0,1,2,8) dejamos la celda vacía.
+            }
           });
-          // Reinicializar tooltips
-          var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-          tooltipTriggerList.map(function(tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
+        },
+        // Actualizar opciones de filtros dropdown en cada draw
+        drawCallback: function(settings) {
+          var api = this.api();
+          api.columns().every(function() {
+            var column = this;
+            var columnIdx = column.index();
+            if ([1, 5, 6, 7].indexOf(columnIdx) !== -1) {
+              var $footerCell = $(column.footer());
+              var select = $footerCell.data('select');
+              if (select) {
+                var currentVal = select.val();
+                select.find('option:not(:first)').remove();
+                column.data({
+                  filter: 'applied'
+                }).unique().sort().each(function(d, j) {
+                  var text = $('<div>').html(d).text();
+                  select.append('<option value="' + text + '">' + text + '</option>');
+                });
+                select.val(currentVal);
+              }
+            }
           });
         }
       });
@@ -403,11 +428,9 @@
         var row = table.row(tr);
 
         if (row.child.isShown()) {
-          // Si ya está abierta, la cerramos
           row.child.hide();
           $(this).removeClass('bi-dash-square').addClass('bi-plus-square');
         } else {
-          // Abrir la fila hijo con los detalles
           row.child(format(row.data())).show();
           $(this).removeClass('bi-plus-square').addClass('bi-dash-square');
         }

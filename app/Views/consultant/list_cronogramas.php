@@ -141,6 +141,7 @@
                         <!-- Columna para fila expandible -->
                         <th></th>
                         <th>#</th>
+                        <th>Acciones</th>
                         <th>Capacitación</th>
                         <th>Objetivo</th>
                         <th>Cliente</th>
@@ -157,13 +158,13 @@
                         <th>*Evaluadas</th>
                         <th>*Promedio</th>
                         <th>*Observaciones</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tfoot class="table-light">
                     <tr class="filters">
                         <th></th>
                         <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar ID"></th>
+                        <th></th>
                         <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Capacitación"></th>
                         <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Objetivo"></th>
                         <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Cliente"></th>
@@ -206,7 +207,6 @@
                         <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Evaluadas"></th>
                         <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Promedio"></th>
                         <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Observaciones"></th>
-                        <th></th>
                     </tr>
                 </tfoot>
                 <tbody>
@@ -246,25 +246,25 @@
     <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
 
     <script>
-        // Función para formatear la fila expandible (detalles)
+        // Función para formatear la fila expandible (detalles) con 30% para el nombre y 70% para el texto (con overflow auto)
         function format(rowData) {
-            var html = '<table class="table table-sm table-borderless" style="width: 30%; table-layout: auto; word-wrap: break-word;">';
-            html += '<tr><td><strong>Capacitación:</strong></td><td>' + (rowData.nombre_capacitacion || '') + '</td></tr>';
-            html += '<tr><td><strong>Objetivo:</strong></td><td>' + (rowData.objetivo_capacitacion || '') + '</td></tr>';
-            html += '<tr><td><strong>Cliente:</strong></td><td>' + (rowData.nombre_cliente || '') + '</td></tr>';
-            html += '<tr><td><strong>Fecha Programada:</strong></td><td>' + (rowData.fecha_programada || '') + '</td></tr>';
-            html += '<tr><td><strong>Fecha de Realización:</strong></td><td>' + (rowData.fecha_de_realizacion || '') + '</td></tr>';
-            html += '<tr><td><strong>Estado:</strong></td><td>' + (rowData.estado || '') + '</td></tr>';
-            html += '<tr><td><strong>Perfil de Asistentes:</strong></td><td>' + (rowData.perfil_de_asistentes || '') + '</td></tr>';
-            html += '<tr><td><strong>Capacitador:</strong></td><td>' + (rowData.nombre_del_capacitador || '') + '</td></tr>';
-            html += '<tr><td><strong>Horas de Duración:</strong></td><td>' + (rowData.horas_de_duracion_de_la_capacitacion || '') + '</td></tr>';
-            html += '<tr><td><strong>Indicador de Realización:</strong></td><td>' + (rowData.indicador_de_realizacion_de_la_capacitacion || '') + '</td></tr>';
-            html += '<tr><td><strong>Nº Asistentes:</strong></td><td>' + (rowData.numero_de_asistentes_a_capacitacion || '') + '</td></tr>';
-            html += '<tr><td><strong>Total Programados:</strong></td><td>' + (rowData.numero_total_de_personas_programadas || '') + '</td></tr>';
-            html += '<tr><td><strong>% Cobertura:</strong></td><td>' + (rowData.porcentaje_cobertura || '') + '</td></tr>';
-            html += '<tr><td><strong>Personas Evaluadas:</strong></td><td>' + (rowData.numero_de_personas_evaluadas || '') + '</td></tr>';
-            html += '<tr><td><strong>Promedio:</strong></td><td>' + (rowData.promedio_de_calificaciones || '') + '</td></tr>';
-            html += '<tr><td><strong>Observaciones:</strong></td><td>' + (rowData.observaciones || '') + '</td></tr>';
+            var html = '<table class="table table-sm table-borderless" style="width:100%;">';
+            html += '<tr><td style="width:30%;"><strong>Capacitación:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.nombre_capacitacion || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Objetivo:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.objetivo_capacitacion || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Cliente:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.nombre_cliente || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Fecha Programada:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.fecha_programada || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Fecha de Realización:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.fecha_de_realizacion || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Estado:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.estado || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Perfil de Asistentes:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.perfil_de_asistentes || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Capacitador:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.nombre_del_capacitador || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Horas de Duración:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.horas_de_duracion_de_la_capacitacion || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Indicador de Realización:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.indicador_de_realizacion_de_la_capacitacion || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Nº Asistentes:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.numero_de_asistentes_a_capacitacion || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Total Programados:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.numero_total_de_personas_programadas || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>% Cobertura:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.porcentaje_cobertura || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Personas Evaluadas:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.numero_de_personas_evaluadas || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Promedio:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.promedio_de_calificaciones || '') + '</td></tr>';
+            html += '<tr><td style="width:30%;"><strong>Observaciones:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.observaciones || '') + '</td></tr>';
             html += '</table>';
             return html;
         }
@@ -335,7 +335,16 @@
                         data: 'id_cronograma_capacitacion'
                     },
                     {
-                        data: 'nombre_capacitacion'
+                        data: 'acciones',
+                        orderable: false
+                    },
+                    {
+                        data: 'nombre_capacitacion',
+                        render: function(data, type, row) {
+                            data = (data === null || data === "") ? "--" : data;
+                            var displayText = data || '&nbsp;';
+                            return '<span class="editable" data-field="nombre_capacitacion" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+                        }
                     },
                     {
                         data: 'objetivo_capacitacion'
@@ -441,10 +450,6 @@
                             var displayText = data || '&nbsp;';
                             return '<span class="editable" data-field="observaciones" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
                         }
-                    },
-                    {
-                        data: 'acciones',
-                        orderable: false
                     }
                 ],
                 initComplete: function() {
@@ -495,11 +500,8 @@
                 if ($(this).find('input, select').length) return;
                 var cell = $(this);
                 var field = cell.data('field');
-                // Se obtiene el id desde el atributo data-id que en este caso está en el <tr> o en el propio elemento
-                // En este ejemplo, usamos el atributo data-id en el elemento <span>
                 var id = cell.data('id');
                 var currentValue = cell.text().trim();
-                // Si la celda está vacía, se asigna un espacio no separable
                 currentValue = currentValue === '' ? '' : currentValue;
 
                 if (cell.hasClass('editable-date')) {
