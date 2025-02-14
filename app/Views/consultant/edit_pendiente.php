@@ -7,6 +7,9 @@
     <title>Editar Pendiente</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-4-theme@1.0.0/dist/select2-bootstrap-4.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
@@ -113,7 +116,7 @@
                 <?= csrf_field() ?>
                 <div class="form-group">
                     <label for="id_cliente">Cliente <span class="text-danger">*</span></label>
-                    <select name="id_cliente" id="id_cliente" class="form-control" required>
+                    <select name="id_cliente" id="id_cliente" class="form-control select2" required>
                         <option value="">Seleccione un cliente</option>
                         <?php foreach ($clientes as $cliente) : ?>
                             <option value="<?= esc($cliente['id_cliente']); ?>" <?= set_select('id_cliente', $cliente['id_cliente'], ($pendiente['id_cliente'] == $cliente['id_cliente'])); ?>>
@@ -234,9 +237,29 @@
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
+        <!-- Select2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        
         <!-- Scripts para calcular conteo_dias automáticamente -->
         <script>
             $(document).ready(function() {
+                // Inicializar Select2
+                $('.select2').select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    placeholder: 'Buscar un cliente...',
+                    allowClear: true,
+                    minimumInputLength: 1,
+                    language: {
+                        noResults: function() {
+                            return "No se encontraron resultados";
+                        },
+                        inputTooShort: function() {
+                            return "Por favor ingrese 1 o más caracteres";
+                        }
+                    }
+                });
+
                 function calculateConteoDias() {
                     var fechaAsignacion = $('#fecha_asignacion').val();
                     var fechaCierre = $('#fecha_cierre').val();

@@ -7,6 +7,9 @@
     <title>Agregar Pendiente</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <style>
         body {
             background-color: #f8f9fa;
@@ -84,7 +87,7 @@
                 <?= csrf_field() ?>
                 <div class="mb-3">
                     <label for="id_cliente" class="form-label">Cliente <span class="text-danger">*</span></label>
-                    <select name="id_cliente" id="id_cliente" class="form-select" required>
+                    <select name="id_cliente" id="id_cliente" class="form-select select2" required>
                         <option value="">Seleccione un cliente</option>
                         <?php foreach ($clientes as $cliente): ?>
                             <option value="<?= esc($cliente['id_cliente']); ?>" <?= set_select('id_cliente', $cliente['id_cliente']); ?>>
@@ -170,8 +173,27 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <!-- Bootstrap 5 JS Bundle (includes Popper) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Select2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script>
             $(document).ready(function() {
+                // Inicializar Select2
+                $('.select2').select2({
+                    theme: 'bootstrap-5',
+                    width: '100%',
+                    placeholder: 'Buscar un cliente...',
+                    allowClear: true,
+                    minimumInputLength: 1,
+                    language: {
+                        noResults: function() {
+                            return "No se encontraron resultados";
+                        },
+                        inputTooShort: function() {
+                            return "Por favor ingrese 1 o más caracteres";
+                        }
+                    }
+                });
+
                 function calculateConteoDias() {
                     var fechaAsignacion = $('#fecha_asignacion').val();
                     var fechaCierre = $('#fecha_cierre').val();
