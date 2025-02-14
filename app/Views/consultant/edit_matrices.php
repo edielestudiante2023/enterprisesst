@@ -8,6 +8,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- SweetAlert2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.1/dist/sweetalert2.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 </head>
 <body>
     <div class="container mt-5">
@@ -17,7 +20,7 @@
                 <h2>Editar Matrices</h2>
             </div>
             <div class="card-body">
-                <form action="<?= base_url('matrices/editPost/' . $matrices['id_matriz']) ?>" method="post" id="editForm">
+                <form action="<?= base_url('matrices/editPost/' . $matrices['id_matriz']) ?>" method="post" id="editForm" class="needs-validation">
                     <div class="mb-3">
                         <label for="tipo" class="form-label">Tipo de Documento</label>
                         <input 
@@ -27,7 +30,8 @@
                             name="tipo" 
                             value="<?= htmlspecialchars($matrices['tipo'], ENT_QUOTES, 'UTF-8') ?>" 
                             required>
-                        <div class="invalid-feedback">Por favor, ingrese el tipo de dashboard.</div>
+                        <div class="invalid-feedback">Por favor, ingrese el tipo de documento.</div>
+                    </div>
                     <div class="mb-3">
                         <label for="descripcion" class="form-label">Detalle de la Documentación</label>
                         <input 
@@ -37,7 +41,8 @@
                             name="descripcion" 
                             value="<?= htmlspecialchars($matrices['descripcion'], ENT_QUOTES, 'UTF-8') ?>" 
                             required>
-                        <div class="invalid-feedback">Por favor, ingrese el tipo de dashboard.</div>
+                        <div class="invalid-feedback">Por favor, ingrese el detalle de la documentación.</div>
+                    </div>
                     <div class="mb-3">
                         <label for="observaciones" class="form-label">Tipo de Dashboard</label>
                         <input 
@@ -47,7 +52,7 @@
                             name="observaciones" 
                             value="<?= htmlspecialchars($matrices['observaciones'], ENT_QUOTES, 'UTF-8') ?>" 
                             required>
-                        <div class="invalid-feedback">Observaciones.</div>
+                        <div class="invalid-feedback">Por favor, ingrese el tipo de dashboard.</div>
                     </div>
                     <div class="mb-3">
                         <label for="enlace" class="form-label">Enlace</label>
@@ -63,7 +68,7 @@
                     <div class="mb-3">
                         <label for="id_cliente" class="form-label">Cliente</label>
                         <select class="form-select" id="id_cliente" name="id_cliente" required>
-                            <option value="" disabled>Seleccione un cliente</option>
+                            <option value="">Seleccione un cliente</option>
                             <?php foreach ($clients as $client): ?>
                                 <option value="<?= $client['id_cliente'] ?>" 
                                     <?= $client['id_cliente'] == $matrices['id_cliente'] ? 'selected' : '' ?>>
@@ -86,38 +91,58 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.1/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
     <script>
-        // Validación nativa de Bootstrap
-        (function () {
-            'use strict';
-            var forms = document.querySelectorAll('.needs-validation');
-            Array.prototype.slice.call(forms).forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
+        $(document).ready(function() {
+            // Inicializar Select2
+            $('#id_cliente').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'Buscar cliente...',
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return "No se encontraron resultados";
+                    },
+                    searching: function() {
+                        return "Buscando...";
                     }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-        })();
-
-        // Confirmación con SweetAlert2
-        $('#editForm').on('submit', function(e) {
-            e.preventDefault(); // Evita el envío inmediato del formulario
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Los cambios serán guardados",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, guardar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.submit(); // Enviar el formulario si el usuario confirma
                 }
+            });
+
+            // Validación nativa de Bootstrap
+            (function () {
+                'use strict';
+                var forms = document.querySelectorAll('.needs-validation');
+                Array.prototype.slice.call(forms).forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            })();
+
+            // Confirmación con SweetAlert2
+            $('#editForm').on('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "Los cambios serán guardados",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, guardar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
             });
         });
     </script>

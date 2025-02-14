@@ -6,6 +6,28 @@
     <title>Agregar Matriz o Carpeta de Matrices</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <style>
+        .select2-container--bootstrap-5 .select2-selection {
+            min-height: 38px;
+            padding: 0.375rem 0.75rem;
+        }
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            padding: 0;
+            line-height: 1.5;
+        }
+        .select2-container--bootstrap-5 .select2-dropdown {
+            border-color: #ced4da;
+        }
+        .select2-container--bootstrap-5 .select2-search__field:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-4">
@@ -63,7 +85,41 @@
 
     <!-- Bootstrap 5 JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Select2 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        // Initialize Select2
+        $(document).ready(function() {
+            $('#id_cliente').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'Buscar cliente...',
+                allowClear: true,
+                minimumInputLength: 0,
+                language: {
+                    noResults: function() {
+                        return "No se encontraron resultados";
+                    },
+                    searching: function() {
+                        return "Buscando...";
+                    }
+                },
+                matcher: function(params, data) {
+                    // Si no hay término de búsqueda, mostrar todas las opciones
+                    if ($.trim(params.term) === '') {
+                        return data;
+                    }
+                    
+                    // Búsqueda insensible a mayúsculas/minúsculas
+                    if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
+                        return data;
+                    }
+                    
+                    return null;
+                }
+            });
+        });
+
         // Activar validación de Bootstrap
         (function () {
             'use strict';
