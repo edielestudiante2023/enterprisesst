@@ -298,7 +298,7 @@
         '</div>';
     }
 
-    $(document).ready(function() {
+    $(document).ready(function () {
       const table = $('#reportTable').DataTable({
         language: {
           url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
@@ -313,7 +313,8 @@
           [3, "desc"]
         ],
         // Se deshabilita el ordenamiento en las columnas "Acciones" (índice 0) y "Enlace" (índice 2)
-        columnDefs: [{
+        columnDefs: [
+          {
             targets: [0, 2],
             orderable: false,
             searchable: false
@@ -324,27 +325,28 @@
           }
         ],
         stateSave: true,
-        stateSaveCallback: function(settings, data) {
+        stateSaveCallback: function (settings, data) {
           localStorage.setItem('DataTables_reportTable', JSON.stringify(data));
         },
-        stateLoadCallback: function(settings) {
+        stateLoadCallback: function (settings) {
           return JSON.parse(localStorage.getItem('DataTables_reportTable'));
         },
         dom: 'Bfrtip',
-        buttons: [{
+        buttons: [
+          {
             extend: 'excelHtml5',
             text: '<i class="bi bi-file-earmark-excel"></i> Exportar a Excel',
             className: 'btn btn-success btn-sm',
             exportOptions: {
               // Excluir columnas "Acciones" (índice 0) y "Enlace" (índice 2)
-              columns: function(idx, data, node) {
+              columns: function (idx, data, node) {
                 return idx !== 0 && idx !== 2;
               }
             },
             title: 'Lista de Reportes',
             filename: 'Lista_de_Reportes',
             titleAttr: 'Exportar a Excel',
-            customize: function(xlsx) {
+            customize: function (xlsx) {
               var sheet = xlsx.xl.worksheets['sheet1.xml'];
               $('row:first c', sheet).attr('s', '2');
             }
@@ -356,10 +358,10 @@
             titleAttr: 'Mostrar u Ocultar Columnas'
           }
         ],
-        initComplete: function() {
+        initComplete: function () {
           var api = this.api();
           // Recorremos todas las columnas para colocar los filtros en el footer
-          api.columns().every(function() {
+          api.columns().every(function () {
             var column = this;
             var columnIdx = column.index();
             var $footerCell = $(column.footer()).empty();
@@ -369,7 +371,7 @@
             if ([4, 8, 10].indexOf(columnIdx) !== -1) {
               var input = $('<input type="text" class="form-control form-control-sm" placeholder="Buscar...">')
                 .appendTo($footerCell)
-                .on('keyup change', function() {
+                .on('keyup change', function () {
                   if (column.search() !== this.value) {
                     column.search(this.value).draw();
                   }
@@ -383,7 +385,7 @@
             else if ([1, 5, 6, 7].indexOf(columnIdx) !== -1) {
               var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
                 .appendTo($footerCell)
-                .on('change', function() {
+                .on('change', function () {
                   var val = $.fn.dataTable.util.escapeRegex($(this).val());
                   column.search(val ? '^' + val + '$' : '', true, false).draw();
                 });
@@ -398,9 +400,9 @@
           });
         },
         // Actualizar opciones de filtros dropdown en cada draw
-        drawCallback: function(settings) {
+        drawCallback: function (settings) {
           var api = this.api();
-          api.columns().every(function() {
+          api.columns().every(function () {
             var column = this;
             var columnIdx = column.index();
             if ([1, 5, 6, 7].indexOf(columnIdx) !== -1) {
@@ -409,9 +411,7 @@
               if (select) {
                 var currentVal = select.val();
                 select.find('option:not(:first)').remove();
-                column.data({
-                  filter: 'applied'
-                }).unique().sort().each(function(d, j) {
+                column.data({ filter: 'applied' }).unique().sort().each(function (d, j) {
                   var text = $('<div>').html(d).text();
                   select.append('<option value="' + text + '">' + text + '</option>');
                 });
@@ -423,7 +423,7 @@
       });
 
       // Evento para la fila expandible (row child details)
-      $('#reportTable tbody').on('click', 'td .details-control', function() {
+      $('#reportTable tbody').on('click', 'td .details-control', function () {
         var tr = $(this).closest('tr');
         var row = table.row(tr);
 
@@ -437,7 +437,7 @@
       });
 
       // Botón para restablecer estado y recargar la página
-      $('#clearState').on('click', function() {
+      $('#clearState').on('click', function () {
         localStorage.removeItem('DataTables_reportTable');
         table.state.clear();
         location.reload();
