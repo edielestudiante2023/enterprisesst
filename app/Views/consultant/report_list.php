@@ -36,6 +36,14 @@
       text-overflow: clip;
     }
 
+    /* Título del reporte (max-width 200px) */
+    td[data-bs-toggle="tooltip"]:nth-child(5) {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     /* Columna Observaciones (se trunca a 40 caracteres) */
     td.observaciones-col {
       max-width: 40ch;
@@ -65,6 +73,8 @@
       cursor: pointer;
       margin-right: 5px;
     }
+
+    
   </style>
 </head>
 
