@@ -33,26 +33,26 @@
                         <div class="invalid-feedback">Por favor, ingrese el tipo de documento.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="descripcion" class="form-label">Detalle de la Documentación</label>
+                        <label for="descripcion" class="form-label">Detalle del Contenido</label>
                         <input 
                             type="text" 
                             class="form-control" 
                             id="descripcion" 
                             name="descripcion" 
                             value="<?= htmlspecialchars($matrices['descripcion'], ENT_QUOTES, 'UTF-8') ?>" 
-                            required>
+                            >
                         <div class="invalid-feedback">Por favor, ingrese el detalle de la documentación.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="observaciones" class="form-label">Tipo de Dashboard</label>
+                        <label for="observaciones" class="form-label">Observaciones</label>
                         <input 
                             type="text" 
                             class="form-control" 
                             id="observaciones" 
                             name="observaciones" 
                             value="<?= htmlspecialchars($matrices['observaciones'], ENT_QUOTES, 'UTF-8') ?>" 
-                            required>
-                        <div class="invalid-feedback">Por favor, ingrese el tipo de dashboard.</div>
+                            >
+                        <div class="invalid-feedback">Observaciones</div>
                     </div>
                     <div class="mb-3">
                         <label for="enlace" class="form-label">Enlace</label>
