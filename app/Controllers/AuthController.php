@@ -58,7 +58,7 @@ class AuthController extends Controller
                         'role'      => $consultant['rol'],
                         'isLoggedIn' => true
                     ]);
-                    return redirect()->to('/dashboardconsultant');
+                    return redirect()->to('/consultor/dashboard');
                 }
             }
         }

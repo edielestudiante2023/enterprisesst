@@ -488,3 +488,6 @@ $routes->get('api/getClientes', 'PendientesController::getClientes');
 $routes->get('api/getPendientesAjax', 'PendientesController::getPendientesAjax');
 $routes->post('api/updatePendiente', 'PendientesController::updatePendiente');
 $routes->get('listPendientesAjax', 'PendientesController::listPendientesAjax');
+
+$routes->get('consultor/dashboard', 'ConsultorTablaItemsController::index');
+$routes->get('consultant/dashboard', 'ConsultantDashboardController::index');
