@@ -204,7 +204,7 @@
 
     <main class="container-fluid content">
         <div class="welcome-banner p-4 mb-4 rounded">
-            <h3 class="mb-3">¡Bienvenido al Dashboard de Administración <strong>Empresas</strong> Cycloid Talent!</h3>
+            <h3 class="mb-3">¡Bienvenido al Dashboard de Administración en Propiedad Horizontal de Cycloid Talent!</h3>
             <p class="mt-3">Explora las diferentes secciones y aprovecha las herramientas disponibles para optimizar tu desempeño.</p>
         </div>
 
@@ -249,10 +249,11 @@
                             </td>
                             <td><?= esc($item['orden']) ?></td>
                             <td>
-                                <a href="<?= base_url('consultant/edititemdashboar/' . $item['id']) ?>" class="btn btn-warning btn-sm">
+                                <a href="<?= base_url('consultant/edititemdashboar/' . $item['id']) ?>" class="btn btn-warning btn-sm" target="_blank">
                                     <i class="bi bi-pencil-square"></i> Edit
-                                <!-- </a>
-                                <a href="<?= base_url('consultant/deleteitemdashboard/' . $item['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
+                                </a>
+
+                                <!-- <a href="<?= base_url('consultant/deleteitemdashboard/' . $item['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
                                     <i class="bi bi-trash"></i> Delete
                                 </a> -->
                             </td>
@@ -305,9 +306,17 @@
     <script>
         $(document).ready(function() {
             $('#itemTable').DataTable({
-                columnDefs: [
-                    { targets: 0, visible: false },  // Oculta la columna "ID" (índice 0)
-                    { targets: 6, visible: false }   // Oculta la columna "Orden" (índice 6)
+                order: [
+                    [6, 'asc']
+                ], // Ordena por la columna "Orden" (índice 6) de forma ascendente
+                columnDefs: [{
+                        targets: 0,
+                        visible: false
+                    }, // Oculta la columna "ID" (índice 0)
+                    {
+                        targets: 6,
+                        visible: false
+                    } // Oculta la columna "Orden" (índice 6), pero se usa para el ordenamiento
                 ],
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
