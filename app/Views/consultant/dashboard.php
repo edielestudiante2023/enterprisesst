@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard Consultor Moderno</title>
-    <link rel="icon" href="<?= base_url('path/to/favicon.ico') ?>" type="image/x-icon">
+    <title>Dashboard Consultor 2025</title>
+    <link rel="icon" href="<?= base_url('favicon.ico') ?>" type="image/x-icon">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
@@ -173,7 +173,7 @@
     <main class="container-fluid my-5">
         <!-- Banner de Bienvenida -->
         <div class="welcome-banner">
-            <h3>Enterprisesst - Consultor</h3>
+            <h3>Enterprisesst - PH // Consultor</h3>
             <h4>Hola mi Nata, Dianita y Eleyson</h4>
             <p class="mb-0">¡Con Enterprisesst - PH nos vamos a Comer el Mundo!</p>
         </div>
