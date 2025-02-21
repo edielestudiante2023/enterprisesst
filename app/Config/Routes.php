@@ -491,3 +491,21 @@ $routes->get('listPendientesAjax', 'PendientesController::listPendientesAjax');
 
 $routes->get('consultor/dashboard', 'ConsultorTablaItemsController::index');
 $routes->get('consultant/dashboard', 'ConsultantDashboardController::index');
+
+// Vista de listado (ya existente)
+$routes->get('/pta-cliente-nueva/list', 'PtaClienteNuevaController::listPtaClienteNuevaModel');
+
+// Rutas para Agregar Registro
+$routes->get('/pta-cliente-nueva/add', 'PtaClienteNuevaController::addPtaClienteNuevaModel');
+$routes->post('/pta-cliente-nueva/addpost', 'PtaClienteNuevaController::addpostPtaClienteNuevaModel');
+
+// Rutas para Editar Registro
+$routes->get('/pta-cliente-nueva/edit/(:num)', 'PtaClienteNuevaController::editPtaClienteNuevaModel/$1');
+$routes->post('/pta-cliente-nueva/editpost/(:num)', 'PtaClienteNuevaController::editpostPtaClienteNuevaModel/$1');
+
+// Ruta para edición inline (ya definida)
+$routes->post('/pta-cliente-nueva/editinginline', 'PtaClienteNuevaController::editinginlinePtaClienteNuevaModel');
+
+// Ruta para exportar a Excel (CSV)
+$routes->get('/pta-cliente-nueva/excel', 'PtaClienteNuevaController::exportExcelPtaClienteNuevaModel');
+$routes->get('/pta-cliente-nueva/delete/(:num)', 'PtaClienteNuevaController::deletePtaClienteNuevaModel/$1');
