@@ -204,7 +204,7 @@
 
     <main class="container-fluid content">
         <div class="welcome-banner p-4 mb-4 rounded">
-            <h3 class="mb-3">¡Bienvenido al Dashboard de Administración en Propiedad Horizontal de Cycloid Talent!</h3>
+            <h3 class="mb-3">¡Bienvenido al Dashboard de Administración Empresas de Cycloid Talent!</h3>
             <p class="mt-3">Explora las diferentes secciones y aprovecha las herramientas disponibles para optimizar tu desempeño.</p>
         </div>
 
