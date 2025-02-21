@@ -457,8 +457,17 @@
                         extend: 'excelHtml5',
                         text: 'Exportar a Excel',
                         className: 'btn btn-success btn-sm me-2',
-                        exportOptions: {
-                            columns: ':visible'
+exportOptions: {
+    columns: ':visible',
+    format: {
+        body: function(data, row, column, node) {
+            // Return the full content from the title attribute if it exists
+            if (column === 6) { // Assuming "Actividad" is the 6th column (0-indexed)
+                return $(node).attr('title') || data;
+            }
+            return data;
+        }
+    }
                         }
                     },
                     {

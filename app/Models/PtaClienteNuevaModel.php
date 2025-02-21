@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class PtaClienteNuevaModel extends Model
 {
-    protected $table = 'tbl_pta_cliente_nueva'; // Nombre de la tabla
+    protected $table = 'tbl_pta_cliente'; // Nombre de la tabla
     protected $primaryKey = 'id_ptacliente'; // Clave primaria
 
     protected $allowedFields = [
