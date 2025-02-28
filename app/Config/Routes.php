@@ -509,3 +509,5 @@ $routes->post('/pta-cliente-nueva/editinginline', 'PtaClienteNuevaController::ed
 // Ruta para exportar a Excel (CSV)
 $routes->get('/pta-cliente-nueva/excel', 'PtaClienteNuevaController::exportExcelPtaClienteNuevaModel');
 $routes->get('/pta-cliente-nueva/delete/(:num)', 'PtaClienteNuevaController::deletePtaClienteNuevaModel/$1');
+
+$routes->get('/getVersionsByClient/(:num)', 'VersionController::getVersionsByClient/$1');

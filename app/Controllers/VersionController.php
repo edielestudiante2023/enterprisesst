@@ -11,27 +11,43 @@ class VersionController extends BaseController
     // Método para listar las versiones de un cliente y tipo de política
     public function listVersions()
     {
+        $clientModel = new ClientModel();
+        
+        // Get all active clients for the dropdown only
+        $clients = $clientModel->where('estado', 'activo')->findAll();
+        
+        $data = [
+            'clients' => $clients
+        ];
+        
+        return view('consultant/list_versions', $data);
+    }
+
+    // Nuevo método para obtener versiones por cliente
+    public function getVersionsByClient($clientId)
+    {
         $versionModel = new DocumentVersionModel();
         $clientModel = new ClientModel();
         $policyTypeModel = new PolicyTypeModel();
-
-        // Obtener todas las versiones
-        $versions = $versionModel->findAll();
-
+        
+        // Obtener solo las versiones del cliente seleccionado
+        $versions = $versionModel->where('client_id', $clientId)->findAll();
+        
         // Recorremos las versiones y añadimos los datos del cliente y la política
         foreach ($versions as &$version) {
             // Obtener el nombre del cliente
             $client = $clientModel->find($version['client_id']);
-            $version['nombre_cliente'] = $client['nombre_cliente'];
-
+            $version['nombre_cliente'] = $client ? $client['nombre_cliente'] : 'Desconocido';
+            
             // Obtener el nombre de la política
             $policyType = $policyTypeModel->find($version['policy_type_id']);
-            $version['type_name'] = $policyType['type_name'];
+            $version['type_name'] = $policyType ? $policyType['type_name'] : 'Sin Tipo';
         }
-
-        $data = ['versions' => $versions];
-        return view('consultant/list_versions', $data);
+        
+        // Devolver JSON con los datos
+        return $this->response->setJSON($versions);
     }
+    
 
 
 

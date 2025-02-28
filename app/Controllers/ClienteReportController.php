@@ -23,7 +23,7 @@ class ClienteReportController extends Controller
         // Crear una instancia del modelo del reporte
         $reportModel = new ClienteReportModel();
 
-        // Realizar la consulta con joins para traer los datos relacionados
+        // Realizar la consulta con joins para traer los datos relacionados y asegurar que se ordenen correctamente
         $reports = $reportModel
             ->select('
                 tbl_reporte.id_reporte,

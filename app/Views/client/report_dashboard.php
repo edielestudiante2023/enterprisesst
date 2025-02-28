@@ -201,8 +201,8 @@
           }
         ],
         order: [
-          [4, 'asc'],   // Primero por "Detalle Reporte"
           [6, 'desc'],  // Luego por "Fecha Creación" descendente
+          [4, 'asc'],   // Primero por "Detalle Reporte"
           [0, 'asc'],   // Luego por "Título"
           [2, 'asc']    // Finalmente por "Estado"
         ],
