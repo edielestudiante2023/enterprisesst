@@ -514,3 +514,5 @@ $routes->get('/getVersionsByClient/(:num)', 'VersionController::getVersionsByCli
 
 $routes->get('consultant/actualizar_pta_cliente', 'CsvUploadController::index'); // Carga la vista
 $routes->post('csv/upload', 'CsvUploadController::upload'); // Procesa el CSV
+
+$routes->post('/pta-cliente-nueva/updateCerradas', 'PtaClienteNuevaController::updateCerradas');

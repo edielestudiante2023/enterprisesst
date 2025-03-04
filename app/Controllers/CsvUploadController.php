@@ -26,11 +26,9 @@ class CsvUploadController extends Controller
         }
 
         // 3. Leer el contenido del CSV en un array
-        // Leer el archivo CSV
-        // Leer el archivo CSV
         $csvData = [];
         if (($handle = fopen($file->getTempName(), "r")) !== FALSE) {
-            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+            while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
                 $csvData[] = $data;
             }
             fclose($handle);
@@ -53,13 +51,11 @@ class CsvUploadController extends Controller
                 ->with('error', 'El archivo CSV está vacío o no tiene datos válidos.');
         }
 
-  
-
-        // 6. Enviar los datos al modelo para su procesamiento
+        // Enviar los datos al modelo para su procesamiento
         $csvModel = new CsvUploadModel();
         $result   = $csvModel->processCsvData($csvData);
 
-        // 7. Redirigir a la misma vista con un mensaje de resultado
+        // Redirigir a la misma vista con un mensaje de resultado
         return redirect()
             ->to(base_url('consultant/actualizar_pta_cliente'))
             ->with('message', $result['message']);

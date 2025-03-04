@@ -233,8 +233,38 @@ class PtaClienteNuevaController extends Controller
     }
 
     /**
-     * Exporta los registros filtrados a un archivo Excel (en este caso, CSV con encabezados para Excel).
+     * Actualiza el porcentaje de avance a 100 para registros cerrados
      */
+    public function updateCerradas()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Invalid request method']);
+        }
+
+        $ids = $this->request->getPost('ids');
+        if (empty($ids)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'No IDs provided']);
+        }
+
+        $ptaModel = new PtaClienteNuevaModel();
+        $data = ['porcentaje_avance' => 100];
+        
+        try {
+            foreach ($ids as $id) {
+                $ptaModel->update($id, $data);
+            }
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Todos los cerrados quedaron calificados con 100'
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Error updating records: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     public function exportExcelPtaClienteNuevaModel()
     {
         $clientModel = new ClientModel();

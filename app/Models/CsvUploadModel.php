@@ -56,11 +56,12 @@ class CsvUploadModel extends Model
         $deletedCount = 0;
 
         foreach ($csvData as $row) {
-            // Si la fila no tiene al menos 6 elementos, forzamos la división usando el delimitador ";"
-            if (count($row) < 6) {
+            // Validamos que la fila tenga al menos 9 columnas
+            if (count($row) < 9) {
+                // Si no se tienen 9 columnas, se intenta forzar la división usando el delimitador ";"
                 $row = explode(";", $row[0]);
             }
-            if (count($row) < 6) {
+            if (count($row) < 9) {
                 continue;
             }
 
@@ -72,14 +73,20 @@ class CsvUploadModel extends Model
             // 1: actividad_plandetrabajo
             // 2: responsable_sugerido_plandetrabajo
             // 3: fecha_propuesta
-            // 4: estado_actividad
-            // 5: accion
-            $id_ptacliente = (int)$this->cleanString($row[0]);
-            $actividad_plandetrabajo = $this->cleanString($row[1]);
-            $responsable_plandetrabajo = $this->cleanString($row[2]);
-            $fecha_propuesta = $this->parseDate($row[3]);
-            $estado_actividad = $this->cleanString($row[4]);
-            $accion = strtolower($this->cleanString($row[5]));
+            // 4: fecha_cierre
+            // 5: estado_actividad
+            // 6: porcentaje_avance
+            // 7: observaciones
+            // 8: accion
+            $id_ptacliente               = (int)$this->cleanString($row[0]);
+            $actividad_plandetrabajo     = $this->cleanString($row[1]);
+            $responsable_plandetrabajo   = $this->cleanString($row[2]);
+            $fecha_propuesta             = $this->parseDate($row[3]);
+            $fecha_cierre                = $this->parseDate($row[4]);
+            $estado_actividad            = $this->cleanString($row[5]);
+            $porcentaje_avance           = !empty($this->cleanString($row[6])) ? (int)$this->cleanString($row[6]) : 0;
+            $observaciones               = $this->cleanString($row[7]);
+            $accion                      = strtolower($this->cleanString($row[8]));
 
             if ($id_ptacliente <= 0) {
                 continue;
@@ -90,7 +97,6 @@ class CsvUploadModel extends Model
                 $db->table($this->table)
                     ->where('id_ptacliente', $id_ptacliente)
                     ->delete();
-                // Incrementamos el contador de eliminaciones (se asume 1 por cada eliminación)
                 $deletedCount++;
                 continue;
             }
@@ -101,11 +107,13 @@ class CsvUploadModel extends Model
                     'actividad_plandetrabajo'          => $actividad_plandetrabajo,
                     'responsable_sugerido_plandetrabajo' => $responsable_plandetrabajo,
                     'fecha_propuesta'                  => $fecha_propuesta,
+                    'fecha_cierre'                     => $fecha_cierre,
                     'estado_actividad'                 => $estado_actividad,
+                    'porcentaje_avance'                => $porcentaje_avance,
+                    'observaciones'                    => $observaciones,
                 ];
                 $builder->where('id_ptacliente', $id_ptacliente)->update($dataToUpdate);
                 $affected = $db->affectedRows();
-                // Si se afectó al menos 1 fila, se cuenta como modificada; si no, se cuenta como sin cambio.
                 if ($affected > 0) {
                     $modifiedCount++;
                 } else {

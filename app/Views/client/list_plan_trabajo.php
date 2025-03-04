@@ -212,6 +212,11 @@
     <!-- Script para inicializar DataTables -->
     <script>
         $(document).ready(function () {
+            // Función para obtener el valor de ordenamiento para el estado
+            function getEstadoPrioridad(estado) {
+                return estado === 'ABIERTA' ? 0 : 1;
+            }
+
             var table = $('#planesTable').DataTable({
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json'
@@ -220,6 +225,39 @@
                 responsive: true,
                 stateSave: true,
                 dom: 'Bfrtip',
+                // Configuración de ordenamiento inicial
+                order: [
+                    [5, 'asc'],  // Primero por estado (columna 5)
+                    [2, 'asc']   // Luego por fecha propuesta (columna 2)
+                ],
+                // Definición de columnas personalizadas
+                columnDefs: [
+                    {
+                        // Personalizar ordenamiento de la columna estado
+                        targets: 5,
+                        type: 'string',
+                        render: function(data, type, row) {
+                            if (type === 'display') {
+                                return data;
+                            }
+                            if (type === 'sort') {
+                                return getEstadoPrioridad(data) + data;
+                            }
+                            return data;
+                        }
+                    },
+                    {
+                        // Asegurar que la fecha se ordene correctamente
+                        targets: 2,
+                        type: 'date',
+                        render: function(data, type, row) {
+                            if (type === 'sort') {
+                                return moment(data, 'YYYY-MM-DD').format('YYYYMMDD');
+                            }
+                            return data;
+                        }
+                    }
+                ],
                 buttons: [
                     {
                         extend: 'colvis',

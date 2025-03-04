@@ -23,7 +23,7 @@
         <?php endif; ?>
 
         <div class="row justify-content-center">
-            <div class="col-md-8">
+            <div class="col-md-10">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white">
                         <h2 class="card-title h4 mb-0">Subir Archivo CSV para Actualizar Actividades</h2>
@@ -43,7 +43,10 @@
                             <li><b>actividad_plandetrabajo</b> (texto)</li>
                             <li><b>responsable_sugerido_plandetrabajo</b> (texto)</li>
                             <li><b>fecha_propuesta</b> (en formato dd/mm/yyyy o yyyy-mm-dd)</li>
+                            <li><b>fecha_cierre</b> (en formato dd/mm/yyyy o yyyy-mm-dd, puede estar vacía)</li>
                             <li><b>estado_actividad</b> (texto)</li>
+                            <li><b>porcentaje_avance</b> (entero, 0 por defecto si está vacío)</li>
+                            <li><b>observaciones</b> (texto, se mantendrá vacío si no se envía nada)</li>
                             <li><b>accion</b> ("actualizar" o "eliminar")</li>
                         </ul>
                     </div>

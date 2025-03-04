@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css" rel="stylesheet">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
@@ -22,6 +23,30 @@
         }
         td.editable {
             cursor: pointer;
+        }
+        .dt-buttons {
+            margin-bottom: 15px;
+        }
+        .dt-buttons .btn {
+            margin-right: 5px;
+        }
+        .dt-button-collection {
+            padding: 8px;
+        }
+        .dt-button {
+            display: inline-block !important;
+            padding: 8px 16px !important;
+            margin: 5px !important;
+        }
+        .btn-warning {
+            color: #000;
+            background-color: #ffc107;
+            border-color: #ffc107;
+        }
+        .btn-warning:hover {
+            color: #000;
+            background-color: #ffca2c;
+            border-color: #ffc720;
         }
     </style>
 </head>
@@ -72,14 +97,19 @@
             </div>
             <div class="row mb-4">
                 <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary" id="btnBuscar">Buscar</button>
-                    <button type="reset" id="resetFilters" class="btn btn-secondary">Resetear Filtros</button>
-                    <!-- Botón para descargar Excel (visible solo si hay registros) -->
-                    <?php if (!empty($records)): ?>
-                        <a href="<?= site_url('pta-cliente-nueva/excel') . '?' . http_build_query($filters) ?>" class="btn btn-success">Descargar Excel</a>
-                    <?php endif; ?>
+                    <button type="submit" class="btn btn-primary" id="btnBuscar">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <button type="reset" id="resetFilters" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Resetear Filtros
+                    </button>
+                    <button type="button" id="btnCalificarCerradas" class="btn btn-warning">
+                        <i class="fas fa-check-double"></i> Calificar Cerradas
+                    </button>
                     <!-- Botón para Añadir Registro con filtros en la URL -->
-                    <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-info">Añadir Registro</a>
+                    <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-info">
+                        <i class="fas fa-plus"></i> Añadir Registro
+                    </a>
                 </div>
             </div>
         </form>
@@ -188,6 +218,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
@@ -235,11 +268,31 @@
                     }
                 });
 
-                var table = $('#ptaTable').DataTable({
+            var table = $('#ptaTable').DataTable({
                     "lengthChange": true,
                     "responsive": true,
                     "autoWidth": false,
                     "order": [],
+                    "dom": '<"row"<"col-sm-12"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
+                    "buttons": [
+                        {
+                            extend: 'excel',
+                            text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
+                            className: 'btn btn-success',
+                            title: 'Lista_PTA_Cliente',
+                            charset: 'UTF-8',
+                            bom: true,
+                            exportOptions: {
+                                columns: ':visible',
+                                format: {
+                                    body: function(data, row, column, node) {
+                                        // Decode HTML entities
+                                        return $('<div/>').html(data).text();
+                                    }
+                                }
+                            }
+                        }
+                    ],
                     "initComplete": function() {
                         this.api().columns().every(function() {
                             var column = this;
@@ -348,6 +401,54 @@
             $('#resetFilters').click(function() {
                 $('#filterForm')[0].reset();
                 window.location.href = "<?= site_url('/pta-cliente-nueva/list') ?>";
+            });
+
+            // Manejador para el botón Calificar Cerradas
+            $('#btnCalificarCerradas').click(function() {
+                if (!$('#ptaTable').length) {
+                    alert('Primero debe realizar una búsqueda para obtener registros');
+                    return;
+                }
+
+                var ids = [];
+                table.rows().every(function() {
+                    var data = this.data();
+                    if (data[10] === 'CERRADA') {
+                        ids.push(data[1]);
+                    }
+                });
+
+                if (ids.length === 0) {
+                    alert('No se encontraron registros con estado CERRADA');
+                    return;
+                }
+
+                $.ajax({
+                    url: '<?= site_url('/pta-cliente-nueva/updateCerradas') ?>',
+                    method: 'POST',
+                    data: {
+                        ids: ids,
+                        '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            table.rows().every(function() {
+                                var data = this.data();
+                                if (data[10] === 'CERRADA') {
+                                    data[11] = '100';
+                                    this.data(data);
+                                }
+                            });
+                            alert(response.message);
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Error en la comunicación con el servidor');
+                        console.error(error);
+                    }
+                });
             });
         });
     </script>
