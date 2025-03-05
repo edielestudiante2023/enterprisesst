@@ -14,6 +14,16 @@ class CsvCronogramaDeCapacitacion extends Controller
         return view('consultant/csvcronogramadecapacitacion');
     }
 
+    private function formatDate($date) {
+        if (empty($date)) return null;
+        
+        // Intenta convertir la fecha al formato correcto
+        $timestamp = strtotime($date);
+        if ($timestamp === false) return null;
+        
+        return date('Y-m-d', $timestamp);
+    }
+
     public function upload()
     {
         $file = $this->request->getFile('file');
@@ -35,6 +45,7 @@ class CsvCronogramaDeCapacitacion extends Controller
                 $requiredHeaders = [
                     'id_capacitacion',
                     'id_cliente',
+                    'fecha_programada',
                     'estado',
                     'perfil_de_asistentes',
                     'nombre_del_capacitador',
@@ -53,11 +64,12 @@ class CsvCronogramaDeCapacitacion extends Controller
                     $data = [
                         'id_capacitacion' => $row[0],
                         'id_cliente' => $row[1],
-                        'estado' => $row[2],
-                        'perfil_de_asistentes' => $row[3],
-                        'nombre_del_capacitador' => $row[4],
-                        'horas_de_duracion_de_la_capacitacion' => $row[5],
-                        'indicador_de_realizacion_de_la_capacitacion' => $row[6],
+                        'fecha_programada' => $this->formatDate($row[2]),
+                        'estado' => $row[3],
+                        'perfil_de_asistentes' => $row[4],
+                        'nombre_del_capacitador' => $row[5],
+                        'horas_de_duracion_de_la_capacitacion' => $row[6],
+                        'indicador_de_realizacion_de_la_capacitacion' => $row[7],
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s'),
                     ];
