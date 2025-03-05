@@ -17,18 +17,43 @@ class CronogramaCapacitacionController extends Controller
         $capacitacionModel = new CapacitacionModel(); // Modelo para las capacitaciones
     
         // Obtener cronogramas filtrados por el id_cliente de la sesión activa
-        $cronogramas = $cronogcapacitacionModel->where('id_cliente', $id_cliente)->findAll();
+        $cronogramas = $cronogcapacitacionModel
+            ->select('cronogcapacitacion.*, clients.nombre_cliente, capacitaciones.capacitacion')
+            ->join('clients', 'clients.id_cliente = cronogcapacitacion.id_cliente')
+            ->join('capacitaciones', 'capacitaciones.id_capacitacion = cronogcapacitacion.id_capacitacion')
+            ->where('cronogcapacitacion.id_cliente', $id_cliente)
+            ->findAll();
 
         // Obtener nombres de cliente y capacitaciones
         foreach ($cronogramas as &$cronograma) {
-            $cronograma['nombre_cliente'] = $clientModel->find($cronograma['id_cliente'])['nombre_cliente'] ?? 'No disponible';
-            $cronograma['nombre_capacitacion'] = $capacitacionModel->find($cronograma['id_capacitacion'])['capacitacion'] ?? 'No disponible';
-
+            $cronograma['nombre_cliente'] = $cronograma['nombre_cliente'] ?? 'No disponible';
+            $cronograma['nombre_capacitacion'] = $cronograma['capacitacion'] ?? 'No disponible';
         }
 
         // Envío de datos a la vista
         return view('client/list_cronogramas', [
             'cronogramas' => $cronogramas
         ]);
+    }
+
+    // Método para obtener cronogramas con detalles para DataTables
+    public function getCronogramasAjax()
+    {
+        $request = \Config\Services::request();
+        $id_cliente = $request->getPost('id_cliente'); // Assuming the client ID is sent in the request
+
+        // Fetch cronogramas with details
+        $cronogcapacitacionModel = new CronogcapacitacionModel();
+        $data = $cronogcapacitacionModel->getCronogramasWithDetails($id_cliente);
+
+        // Prepare response for DataTables
+        $response = [
+            "draw" => intval($request->getPost('draw')),
+            "recordsTotal" => count($data),
+            "recordsFiltered" => count($data), // Adjust this if you implement filtering
+            "data" => $data
+        ];
+
+        return $this->response->setJSON($response);
     }
 }

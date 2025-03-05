@@ -516,3 +516,4 @@ $routes->get('consultant/actualizar_pta_cliente', 'CsvUploadController::index');
 $routes->post('csv/upload', 'CsvUploadController::upload'); // Procesa el CSV
 
 $routes->post('/pta-cliente-nueva/updateCerradas', 'PtaClienteNuevaController::updateCerradas');
+$routes->post('api/getCronogramasAjax', 'CronogramaCapacitacionController::getCronogramasAjax');
