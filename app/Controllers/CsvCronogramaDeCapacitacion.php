@@ -14,15 +14,26 @@ class CsvCronogramaDeCapacitacion extends Controller
         return view('consultant/csvcronogramadecapacitacion');
     }
 
-    private function formatDate($date) {
+    private function formatDate($date)
+    {
         if (empty($date)) return null;
-        
-        // Intenta convertir la fecha al formato correcto
-        $timestamp = strtotime($date);
-        if ($timestamp === false) return null;
-        
-        return date('Y-m-d', $timestamp);
+
+        // Quitar espacios en blanco adicionales
+        $date = trim($date);
+
+        // Lista de formatos aceptados
+        $formats = ['d/m/Y', 'm-d-Y', 'Y-m-d'];
+
+        foreach ($formats as $format) {
+            $dt = \DateTime::createFromFormat($format, $date);
+            if ($dt && $dt->format($format) === $date) {
+                return $dt->format('Y-m-d');
+            }
+        }
+
+        return null;
     }
+
 
     public function upload()
     {
