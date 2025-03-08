@@ -56,10 +56,7 @@
     <!-- Ajustar el espaciado para evitar que el contenido se oculte bajo el navbar fijo -->
     <div style="height: 160px;"></div>
 
-
     <div class="container my-5">
-
-
         <h2 class="mb-4">Lista de Tipos de Reportes</h2>
         <table id="reportTable" class="table table-striped table-bordered">
             <thead>
@@ -69,6 +66,20 @@
                     <th>Acciones</th>
                 </tr>
             </thead>
+
+            <!-- TFOOT para filtros -->
+            <tfoot>
+                <tr>
+                    <th></th>
+                    <th>
+                        <select id="filterReportType" class="form-control">
+                            <option value="">Todos</option>
+                        </select>
+                    </th>
+                    <th></th>
+                </tr>
+            </tfoot>
+
             <tbody>
                 <?php foreach ($reportTypes as $type): ?>
                     <tr>
@@ -82,9 +93,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
-
     </div>
-
 
     <footer style="background-color: white; padding: 20px 0; border-top: 1px solid #B0BEC5; margin-top: 40px; color: #3A3F51; font-size: 14px; text-align: center;">
         <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
@@ -95,7 +104,10 @@
 
             <!-- Website Link -->
             <p style="margin: 5px 0;">
-                Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" style="color: #007BFF; text-decoration: none;">https://cycloidtalent.com/</a>
+                Sitio oficial:
+                <a href="https://cycloidtalent.com/" target="_blank" style="color: #007BFF; text-decoration: none;">
+                    https://cycloidtalent.com/
+                </a>
             </p>
 
             <!-- Social Media Links -->
@@ -117,19 +129,38 @@
         </div>
     </footer>
 
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#reportTable').DataTable({
+            var table = $('#reportTable').DataTable({
+                "order": [
+                    [0, "desc"]
+                ], // Ordenar por ID de forma descendente
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+                },
+                initComplete: function() {
+                    // Referencia a la columna de Tipo de Reporte (índice 1)
+                    var column = this.api().column(1);
+                    var select = $('#filterReportType');
+
+                    // Obtener valores únicos para el filtro
+                    column.data().unique().sort().each(function(d) {
+                        select.append('<option value="' + d + '">' + d + '</option>');
+                    });
+
+                    // Aplicar filtro cuando se cambia el select
+                    select.on('change', function() {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                        column.search(val ? '^' + val + '$' : '', true, false).draw();
+                    });
                 }
             });
         });
     </script>
+
 </body>
 
 </html>
