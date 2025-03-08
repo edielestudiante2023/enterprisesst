@@ -152,7 +152,7 @@ class ClientController extends Controller
         'organigrama'            => ['id' => 11, 'titulo' => 'Organigrama'],
         'documentacionNormativa' => ['id' => 12, 'titulo' => 'Reportes SST'],
         'proveedoresExternos'    => ['id' => 13, 'titulo' => 'Proveedores Externos'],
-        'programaErgonomia'      => ['id' => 14, 'titulo' => 'Programa de Ergonomía'],
+        'cierreNumerales'        => ['id' => 14, 'titulo' => 'Cierre de Numerales'],
         'gestionResiduos'        => ['id' => 15, 'titulo' => 'Gestión de Residuos Peligrosos'],
         'seguimientoPlanes'      => ['id' => 16, 'titulo' => 'Seguimiento a Planes de Acción'],
         'programaRiesgos'        => ['id' => 17, 'titulo' => 'Programa de Gestión de Riesgos'],
