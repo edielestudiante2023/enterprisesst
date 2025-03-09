@@ -181,7 +181,7 @@
             </th>
             <th>
               <select class="form-select form-select-sm filter-search">
-                <option value="GERENTE_GENERAL">Gerente General</option>
+                <option value="TODOS">TODOS</option>
                 <option value="MIEMBROS_COPASST">Miembros del COPASST</option>
                 <option value="RESPONSABLE_SST">Responsable de SST</option>
                 <option value="SUPERVISORES">Supervisores o Jefes de Área</option>
@@ -530,17 +530,17 @@
           if (field === 'estado') {
             options = ['PROGRAMADA', 'EJECUTADA', 'CANCELADA POR EL CLIENTE', 'REPROGRAMADA'];
           } else if (field === 'perfil_de_asistentes') {
-            options = [
-              'GERENTE_GENERAL',
-              'MIEMBROS_COPASST',
-              'RESPONSABLE_SST',
-              'SUPERVISORES',
-              'TRABAJADORES_REPRESENTANTES',
-              'MIEMBROS_COMITE_CONVIVENCIA',
-              'RECURSOS_HUMANOS',
-              'PERSONAL_MANTENIMIENTO',
-              'ENCARGADO_AMBIENTAL',
-              'TRABAJADORES_RIESGOS_CRITICOS'
+            options = options = [
+              'TODOS',
+              'Miembros COPASST',
+              'Responsable SST',
+              'Supervisores o Jefes de Área',
+              'Trabajadores Representantes',
+              'Miembros Comité de Convivencia',
+              'Recursos Humanos',
+              'Personal de Mantenimiento o Producción',
+              'Encargado de Gestión Ambiental',
+              'Trabajadores con Riesgos Críticos'
             ];
           } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
             options = ['SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ'];

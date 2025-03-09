@@ -159,7 +159,7 @@
 
                         <!-- Roles Internos -->
                         <optgroup label="Roles Internos">
-                            <option value="GERENTE_GENERAL">Gerente General</option>
+                            <option value="TODOS">TODOS</option>
                             <option value="MIEMBROS_COPASST">Miembros del COPASST</option>
                             <option value="RESPONSABLE_SST">Responsable de SST</option>
                             <option value="SUPERVISORES">Supervisores o Jefes de Área</option>

@@ -164,7 +164,7 @@
                             <option value="" disabled>Selecciona un perfil</option>
 
                             <!-- Roles Internos -->
-                            <option value="GERENTE_GENERAL" <?= ($cronograma['perfil_de_asistentes'] == 'GERENTE_GENERAL') ? 'selected' : '' ?>>Gerente General</option>
+                            <option value="TODOS" <?= ($cronograma['perfil_de_asistentes'] == 'TODOS') ? 'selected' : '' ?>>TODOS</option>
                             <option value="MIEMBROS_COPASST" <?= ($cronograma['perfil_de_asistentes'] == 'MIEMBROS_COPASST') ? 'selected' : '' ?>>Miembros del COPASST</option>
                             <option value="RESPONSABLE_SST" <?= ($cronograma['perfil_de_asistentes'] == 'RESPONSABLE_SST') ? 'selected' : '' ?>>Responsable de SST</option>
                             <option value="SUPERVISORES" <?= ($cronograma['perfil_de_asistentes'] == 'SUPERVISORES') ? 'selected' : '' ?>>Supervisores o Jefes de Área</option>
