@@ -181,13 +181,16 @@
             </th>
             <th>
               <select class="form-select form-select-sm filter-search">
-                <option value="">Todos</option>
-                <option value="CONTRATISTAS">CONTRATISTAS</option>
-                <option value="RESIDENTES">RESIDENTES</option>
-                <option value="TODOS">TODOS</option>
-                <option value="ASAMBLEA">ASAMBLEA</option>
-                <option value="CONSEJO DE ADMINISTRACIÓN">CONSEJO DE ADMINISTRACIÓN</option>
-                <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                <option value="GERENTE_GENERAL">Gerente General</option>
+                <option value="MIEMBROS_COPASST">Miembros del COPASST</option>
+                <option value="RESPONSABLE_SST">Responsable de SST</option>
+                <option value="SUPERVISORES">Supervisores o Jefes de Área</option>
+                <option value="TRABAJADORES_REPRESENTANTES">Trabajadores Representantes</option>
+                <option value="MIEMBROS_COMITE_CONVIVENCIA">Miembros del Comité de Convivencia Laboral</option>
+                <option value="RECURSOS_HUMANOS">Departamento de Recursos Humanos</option>
+                <option value="PERSONAL_MANTENIMIENTO">Personal de Mantenimiento o Producción</option>
+                <option value="ENCARGADO_AMBIENTAL">Encargado de Gestión Ambiental</option>
+                <option value="TRABAJADORES_RIESGOS_CRITICOS">Trabajadores con Riesgos Críticos</option>
               </select>
             </th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Capacitador"></th>
@@ -527,7 +530,18 @@
           if (field === 'estado') {
             options = ['PROGRAMADA', 'EJECUTADA', 'CANCELADA POR EL CLIENTE', 'REPROGRAMADA'];
           } else if (field === 'perfil_de_asistentes') {
-            options = ['CONTRATISTAS', 'RESIDENTES', 'TODOS', 'ASAMBLEA', 'CONSEJO DE ADMINISTRACIÓN', 'ADMINISTRADOR'];
+            options = [
+              'GERENTE_GENERAL',
+              'MIEMBROS_COPASST',
+              'RESPONSABLE_SST',
+              'SUPERVISORES',
+              'TRABAJADORES_REPRESENTANTES',
+              'MIEMBROS_COMITE_CONVIVENCIA',
+              'RECURSOS_HUMANOS',
+              'PERSONAL_MANTENIMIENTO',
+              'ENCARGADO_AMBIENTAL',
+              'TRABAJADORES_RIESGOS_CRITICOS'
+            ];
           } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
             options = ['SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ'];
           }
