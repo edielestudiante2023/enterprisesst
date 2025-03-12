@@ -9,6 +9,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
   <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet" />
+  <!-- Select2 CSS para el select con input text -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
   <!-- Iconos Bootstrap -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <style>
@@ -34,14 +36,6 @@
       white-space: normal;
       overflow: visible;
       text-overflow: clip;
-    }
-
-    /* Título del reporte (max-width 200px) */
-    td[data-bs-toggle="tooltip"]:nth-child(5) {
-      max-width: 200px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     /* Columna Observaciones (se trunca a 40 caracteres) */
@@ -73,8 +67,6 @@
       cursor: pointer;
       margin-right: 5px;
     }
-
-    
   </style>
 </head>
 
@@ -121,7 +113,19 @@
 
   <!-- Contenedor fluid -->
   <div class="container-fluid my-4">
-    <h2 class="text-center mb-4">Lista de Reportes</h2>
+    <!-- Encabezado con título y filtro por cliente -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">Lista de Reportes</h2>
+      <div class="d-flex align-items-center">
+        <label for="clientFilter" class="me-2 mb-0">Filtrar por Cliente:</label>
+        <select id="clientFilter" style="width: 600px;">
+          <option value="">Todos</option>
+          <?php foreach ($clients as $client) : ?>
+            <option value="<?= htmlspecialchars($client['nombre_cliente']) ?>"><?= htmlspecialchars($client['nombre_cliente']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+    </div>
 
     <h3 class="mb-3">Reportes</h3>
 
@@ -277,6 +281,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js"></script>
+  <!-- Select2 JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
   <script>
     // Función para generar el contenido del row child details
@@ -376,7 +382,6 @@
             var columnIdx = column.index();
             var $footerCell = $(column.footer()).empty();
 
-            // Definimos los filtros según la nueva posición de las columnas:
             // Filtros de tipo input (texto) para: Título del Reporte (índice 4), Observaciones (índice 8) y Nombre del Cliente (índice 10)
             if ([4, 8, 10].indexOf(columnIdx) !== -1) {
               var input = $('<input type="text" class="form-control form-control-sm" placeholder="Buscar...">')
@@ -444,6 +449,19 @@
           row.child(format(row.data())).show();
           $(this).removeClass('bi-plus-square').addClass('bi-dash-square');
         }
+      });
+
+      // Inicializamos Select2 en el select de clientes
+      $('#clientFilter').select2({
+        placeholder: "Seleccione un cliente",
+        allowClear: true,
+        width: 'resolve'
+      });
+
+      // Evento para filtrar la tabla según el cliente seleccionado
+      $('#clientFilter').on('change', function () {
+        var selected = $(this).val();
+        table.column(10).search(selected ? '^' + selected + '$' : '', true, false).draw();
       });
 
       // Botón para restablecer estado y recargar la página
