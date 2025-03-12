@@ -305,23 +305,30 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th>Acciones</th>
-                            <th>ID</th>
-                            <th>Cliente</th>
-                            <th class="d-none">Tipo Servicio</th>
-                            <th>PHVA</th>
-                            <th>Numeral Plan Trabajo</th>
-                            <th>Actividad</th>
-                            <th>Responsable Sugerido</th>
-                            <th>Fecha Propuesta</th>
-                            <th>Fecha Cierre</th>
-                            <th>Estado Actividad</th>
-                            <th>Porcentaje Avance</th>
-                            <th>Observaciones</th>
-                            <th class="d-none">Responsable Definido</th>
-                            <th class="d-none">Semana</th>
-                            <th class="d-none">Created At</th>
-                            <th class="d-none">Updated At</th>
+                            <th></th>
+                            <th><input type="text" placeholder="Buscar ID" class="form-control form-control-sm"></th>
+                            <th><input type="text" placeholder="Buscar Cliente" class="form-control form-control-sm"></th>
+                            <th class="d-none"></th>
+                            <th><input type="text" placeholder="Buscar PHVA" class="form-control form-control-sm"></th>
+                            <th><input type="text" placeholder="Buscar Numeral Plan Trabajo" class="form-control form-control-sm"></th>
+                            <th><input type="text" placeholder="Buscar Actividad" class="form-control form-control-sm"></th>
+                            <th><input type="text" placeholder="Buscar Responsable Sugerido" class="form-control form-control-sm"></th>
+                            <th><input type="date" placeholder="Buscar Fecha Propuesta" class="form-control form-control-sm"></th>
+                            <th><input type="date" placeholder="Buscar Fecha Cierre" class="form-control form-control-sm"></th>
+                            <th>
+                                <select class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <option value="ABIERTA">ABIERTA</option>
+                                    <option value="CERRADA">CERRADA</option>
+                                    <option value="GESTIONANDO">GESTIONANDO</option>
+                                </select>
+                            </th>
+                            <th><input type="text" placeholder="Buscar Porcentaje Avance" class="form-control form-control-sm"></th>
+                            <th><input type="text" placeholder="Buscar Observaciones" class="form-control form-control-sm"></th>
+                            <th class="d-none"></th>
+                            <th class="d-none"></th>
+                            <th class="d-none"></th>
+                            <th class="d-none"></th>
                         </tr>
                     </tfoot>
                 </table>
