@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Plan de Trabajo Anual</title>
@@ -17,32 +18,40 @@
         body {
             padding: 20px;
         }
+
         .dataTables_wrapper .dataTables_filter {
             float: right;
             text-align: right;
         }
+
         td.editable {
             cursor: pointer;
         }
+
         .dt-buttons {
             margin-bottom: 15px;
         }
+
         .dt-buttons .btn {
             margin-right: 5px;
         }
+
         .dt-button-collection {
             padding: 8px;
         }
+
         .dt-button {
             display: inline-block !important;
             padding: 8px 16px !important;
             margin: 5px !important;
         }
+
         .btn-warning {
             color: #000;
             background-color: #ffc107;
             border-color: #ffc107;
         }
+
         .btn-warning:hover {
             color: #000;
             background-color: #ffca2c;
@@ -50,11 +59,12 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
         <!-- Enlace a Dashboard -->
         <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm mb-3">Ir a DashBoard</a>
-        
+
         <!-- Tarjetas de conteo superiores -->
         <div class="row mb-4">
             <div class="col-md-3">
@@ -91,7 +101,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Tarjetas mensuales -->
         <div class="row mb-4">
             <!-- Cada tarjeta ocupa 1 columna en md y 6 en xs -->
@@ -192,7 +202,7 @@
                 </div>
             </div>
         </div>
-        
+
         <h1 class="mb-4">Plan de Trabajo Anual Cliente</h1>
         <!-- FORMULARIO DE FILTROS -->
         <form id="filterForm" method="get" action="<?= site_url('/pta-cliente-nueva/list') ?>">
@@ -408,38 +418,45 @@
                     "lengthChange": true,
                     "responsive": true,
                     "autoWidth": false,
-                    "order": [[10, 'asc'], [8, 'asc'], [4, 'asc'], [6, 'asc']],
+                    "order": [
+                        [10, 'asc'],
+                        [8, 'asc'],
+                        [4, 'asc'],
+                        [6, 'asc']
+                    ],
                     "dom": '<"row"<"col-sm-12"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
-                    "buttons": [
-                        {
-                            extend: 'excel',
-                            text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
-                            className: 'btn btn-success',
-                            title: 'Lista_PTA_Cliente',
-                            charset: 'UTF-8',
-                            bom: true,
-                            exportOptions: {
-                                columns: ':visible',
-                                format: {
-                                    body: function(data, row, column, node) {
-                                        // Decode HTML entities
-                                        return $('<div/>').html(data).text();
-                                    }
+                    "buttons": [{
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
+                        className: 'btn btn-success',
+                        title: 'Lista_PTA_Cliente',
+                        charset: 'UTF-8',
+                        bom: true,
+                        exportOptions: {
+                            columns: ':visible',
+                            format: {
+                                body: function(data, row, column, node) {
+                                    // Decode HTML entities
+                                    return $('<div/>').html(data).text();
                                 }
                             }
                         }
-                    ],
+                    }],
                     "initComplete": function() {
                         this.api().columns().every(function() {
                             var column = this;
                             var select = $('select', column.footer());
                             var input = $('input', column.footer());
                             if (select.length) {
-                                column.data().unique().sort().each(function(d) {
-                                    if (d) {
-                                        select.append('<option value="' + d + '">' + d + '</option>');
-                                    }
-                                });
+                                // Si la columna no es "Estado Actividad" (índice 10), agregamos las opciones
+                                if (column.index() !== 10) {
+                                    column.data().unique().sort().each(function(d) {
+                                        if (d) {
+                                            select.append('<option value="' + d + '">' + d + '</option>');
+                                        }
+                                    });
+                                }
+                                // En cualquier caso, asignamos el evento change
                                 select.on('change', function() {
                                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
                                     column.search(val ? '^' + val + '$' : '', true, false).draw();
@@ -454,25 +471,38 @@
                             }
                         });
                     }
+
                 });
 
                 // Función para actualizar los contadores de las tarjetas superiores
                 function updateCardCounts() {
-                    var data = table.column(10, { search: 'applied' }).data().toArray();
-                    var countActivas = data.filter(function(x){ return x.trim() === 'ABIERTA'; }).length;
-                    var countCerradas = data.filter(function(x){ return x.trim() === 'CERRADA'; }).length;
-                    var countGestionando = data.filter(function(x){ return x.trim() === 'GESTIONANDO'; }).length;
+                    var data = table.column(10, {
+                        search: 'applied'
+                    }).data().toArray();
+                    var countActivas = data.filter(function(x) {
+                        return x.trim() === 'ABIERTA';
+                    }).length;
+                    var countCerradas = data.filter(function(x) {
+                        return x.trim() === 'CERRADA';
+                    }).length;
+                    var countGestionando = data.filter(function(x) {
+                        return x.trim() === 'GESTIONANDO';
+                    }).length;
                     $('#countActivas').text(countActivas);
                     $('#countCerradas').text(countCerradas);
                     $('#countGestionando').text(countGestionando);
                     // Total es la suma de todas las filas filtradas
-                    $('#countTotal').text(table.rows({ search: 'applied' }).data().length);
+                    $('#countTotal').text(table.rows({
+                        search: 'applied'
+                    }).data().length);
                 }
 
                 // Función para actualizar los contadores mensuales basado en la fecha propuesta (columna 8)
                 function updateMonthlyCounts() {
                     var monthlyCounts = Array(12).fill(0);
-                    var data = table.rows({ search: 'applied' }).data().toArray();
+                    var data = table.rows({
+                        search: 'applied'
+                    }).data().toArray();
                     data.forEach(function(row) {
                         var fechaPropuesta = row[8]; // Columna "Fecha Propuesta"
                         if (fechaPropuesta) {
@@ -522,7 +552,7 @@
                         cell.data(originalValue).draw();
                         return;
                     }
-                    
+
                     var inputElement;
                     if (colIndex === 8 || colIndex === 9) {
                         inputElement = $('<input type="date" class="form-control form-control-sm" />').val(originalValue);
@@ -536,10 +566,10 @@
                     } else {
                         inputElement = $('<input type="text" class="form-control form-control-sm" />').val(originalValue);
                     }
-                    
+
                     $td.empty().append(inputElement);
                     inputElement.focus();
-                    
+
                     inputElement.on('blur keydown', function(e) {
                         if (e.type === 'blur' || (e.type === 'keydown' && e.which === 13)) {
                             var newValue = (colIndex === 10) ? inputElement.find("option:selected").val() : $(this).val();
@@ -550,10 +580,12 @@
                             var fieldName = editableMapping[colIndex];
                             var rowData = table.row($td.closest('tr')).data();
                             var id = rowData[1];
-                            var dataToSend = { id: id };
+                            var dataToSend = {
+                                id: id
+                            };
                             dataToSend[fieldName] = newValue;
                             dataToSend["<?= csrf_token() ?>"] = "<?= csrf_hash() ?>";
-                            
+
                             $.ajax({
                                 url: "<?= site_url('/pta-cliente-nueva/editinginline') ?>",
                                 method: "POST",
@@ -637,4 +669,5 @@
         });
     </script>
 </body>
+
 </html>
