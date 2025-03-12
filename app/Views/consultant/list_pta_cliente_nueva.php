@@ -51,13 +51,149 @@
     </style>
 </head>
 <body>
-
-
     <div class="container-fluid">
         <!-- Enlace a Dashboard -->
         <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm mb-3">Ir a DashBoard</a>
+        
+        <!-- Tarjetas de conteo superiores -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Activas</h5>
+                        <p class="card-text" id="countActivas">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-danger">
+                    <div class="card-body">
+                        <h5 class="card-title">Cerradas</h5>
+                        <p class="card-text" id="countCerradas">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">Gestionando</h5>
+                        <p class="card-text" id="countGestionando">0</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Tarjeta para total de actividades -->
+            <div class="col-md-3">
+                <div class="card text-white bg-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title">Total</h5>
+                        <p class="card-text" id="countTotal">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tarjetas mensuales -->
+        <div class="row mb-4">
+            <!-- Cada tarjeta ocupa 1 columna en md y 6 en xs -->
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Enero</h6>
+                        <p class="card-text text-center" id="countEnero">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Febrero</h6>
+                        <p class="card-text text-center" id="countFebrero">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Marzo</h6>
+                        <p class="card-text text-center" id="countMarzo">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Abril</h6>
+                        <p class="card-text text-center" id="countAbril">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Mayo</h6>
+                        <p class="card-text text-center" id="countMayo">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Junio</h6>
+                        <p class="card-text text-center" id="countJunio">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Julio</h6>
+                        <p class="card-text text-center" id="countJulio">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Agosto</h6>
+                        <p class="card-text text-center" id="countAgosto">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Sept.</h6>
+                        <p class="card-text text-center" id="countSeptiembre">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Oct.</h6>
+                        <p class="card-text text-center" id="countOctubre">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Nov.</h6>
+                        <p class="card-text text-center" id="countNoviembre">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Dic.</h6>
+                        <p class="card-text text-center" id="countDiciembre">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <h1 class="mb-4">Plan de Trabajo Anual Cliente</h1>
-
         <!-- FORMULARIO DE FILTROS -->
         <form id="filterForm" method="get" action="<?= site_url('/pta-cliente-nueva/list') ?>">
             <div class="row mb-3">
@@ -92,6 +228,7 @@
                         <option value="">Todas</option>
                         <option value="ABIERTA" <?= (service('request')->getGet('estado') == 'ABIERTA') ? 'selected' : '' ?>>ABIERTA</option>
                         <option value="CERRADA" <?= (service('request')->getGet('estado') == 'CERRADA') ? 'selected' : '' ?>>CERRADA</option>
+                        <option value="GESTIONANDO" <?= (service('request')->getGet('estado') == 'GESTIONANDO') ? 'selected' : '' ?>>GESTIONANDO</option>
                     </select>
                 </div>
             </div>
@@ -258,21 +395,13 @@
                 }
             });
 
+            var table;
             if ($('#ptaTable').length) {
-                $('#ptaTable tfoot th').each(function() {
-                    var title = $(this).text();
-                    if (title === 'Cliente' || title === 'Actividad') {
-                        $(this).html('<input type="text" placeholder="Buscar ' + title + '" class="form-control form-control-sm" />');
-                    } else if (title !== '') {
-                        $(this).html('<select class="form-select form-select-sm"><option value="">Todos</option></select>');
-                    }
-                });
-
-            var table = $('#ptaTable').DataTable({
+                table = $('#ptaTable').DataTable({
                     "lengthChange": true,
                     "responsive": true,
                     "autoWidth": false,
-                    "order": [],
+                    "order": [[10, 'asc'], [8, 'asc'], [4, 'asc'], [6, 'asc']],
                     "dom": '<"row"<"col-sm-12"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
                     "buttons": [
                         {
@@ -319,6 +448,50 @@
                         });
                     }
                 });
+
+                // Función para actualizar los contadores de las tarjetas superiores
+                function updateCardCounts() {
+                    var data = table.column(10, { search: 'applied' }).data().toArray();
+                    var countActivas = data.filter(function(x){ return x.trim() === 'ABIERTA'; }).length;
+                    var countCerradas = data.filter(function(x){ return x.trim() === 'CERRADA'; }).length;
+                    var countGestionando = data.filter(function(x){ return x.trim() === 'GESTIONANDO'; }).length;
+                    $('#countActivas').text(countActivas);
+                    $('#countCerradas').text(countCerradas);
+                    $('#countGestionando').text(countGestionando);
+                    // Total es la suma de todas las filas filtradas
+                    $('#countTotal').text(table.rows({ search: 'applied' }).data().length);
+                }
+
+                // Función para actualizar los contadores mensuales basado en la fecha propuesta (columna 8)
+                function updateMonthlyCounts() {
+                    var monthlyCounts = Array(12).fill(0);
+                    var data = table.rows({ search: 'applied' }).data().toArray();
+                    data.forEach(function(row) {
+                        var fechaPropuesta = row[8]; // Columna "Fecha Propuesta"
+                        if (fechaPropuesta) {
+                            // Se asume formato YYYY-MM-DD
+                            var parts = fechaPropuesta.split("-");
+                            if (parts.length >= 2) {
+                                var month = parseInt(parts[1], 10);
+                                if (!isNaN(month) && month >= 1 && month <= 12) {
+                                    monthlyCounts[month - 1]++;
+                                }
+                            }
+                        }
+                    });
+                    // Actualizar las cajitas de cada mes
+                    var monthIds = ["countEnero", "countFebrero", "countMarzo", "countAbril", "countMayo", "countJunio", "countJulio", "countAgosto", "countSeptiembre", "countOctubre", "countNoviembre", "countDiciembre"];
+                    monthIds.forEach(function(id, index) {
+                        $('#' + id).text(monthlyCounts[index]);
+                    });
+                }
+
+                table.on('draw', function() {
+                    updateCardCounts();
+                    updateMonthlyCounts();
+                });
+                updateCardCounts();
+                updateMonthlyCounts();
 
                 $('#ptaTable tbody').on('dblclick', 'td.editable', function() {
                     var cell = table.cell(this);
@@ -382,6 +555,8 @@
                                 success: function(response) {
                                     if (response.status === 'success') {
                                         cell.data(newValue).draw();
+                                        updateCardCounts();
+                                        updateMonthlyCounts();
                                     } else {
                                         alert('Error: ' + response.message);
                                         cell.data(originalValue).draw();
@@ -439,6 +614,8 @@
                                     this.data(data);
                                 }
                             });
+                            updateCardCounts();
+                            updateMonthlyCounts();
                             alert(response.message);
                         } else {
                             alert('Error: ' + response.message);
