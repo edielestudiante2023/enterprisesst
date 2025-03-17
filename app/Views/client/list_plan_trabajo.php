@@ -6,62 +6,32 @@
     <title>Plan de Trabajo Anual</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- DataTables CSS para Bootstrap 5 -->
-    <link href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <!-- DataTables Buttons CSS -->
-    <link href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
         body {
-            background-color: #f9f9f9;
-            font-family: Arial, sans-serif;
+            padding: 20px;
         }
-        h2 {
-            color: #343a40;
-            font-weight: 600;
+        .dataTables_wrapper .dataTables_filter {
+            float: right;
+            text-align: right;
         }
-        .container {
-            background-color: #ffffff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        }
-        .btn-dashboard {
-            margin-bottom: 1.5rem;
-        }
-        /* Estilo para el tooltip */
-        .tooltip-inner {
-            max-width: 300px;
-            white-space: normal;
-        }
-        /* Ajuste de altura de filas */
-        tbody tr {
-            height: 45px;
-        }
-        /* Ancho máximo de la columna "Actividad" (visualmente truncado con CSS) */
-        .actividad-column {
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        /* Estilos adicionales para asegurar la responsividad y apariencia */
-        table.dataTable thead th,
-        table.dataTable tfoot th {
-            vertical-align: middle;
-            text-align: center;
-        }
-        table.dataTable tbody td {
-            vertical-align: middle;
-            text-align: center;
-        }
-        /* Ajuste de ancho de columnas para evitar espacios excesivos */
-        #planesTable th:nth-child(4),
-        #planesTable th:nth-child(10) {
-            width: 150px;
-        }
-        /* Botones adicionales */
         .dt-buttons {
-            margin-bottom: 1rem;
+            margin-bottom: 15px;
+        }
+        .dt-buttons .btn {
+            margin-right: 5px;
+        }
+        .dt-button-collection {
+            padding: 8px;
+        }
+        .dt-button {
+            display: inline-block !important;
+            padding: 8px 16px !important;
+            margin: 5px !important;
         }
     </style>
 </head>
@@ -91,11 +61,173 @@
     <!-- Espaciador para evitar que el contenido quede oculto debajo del navbar fijo -->
     <div style="height: 160px;"></div>
 
-    <div class="container-fluid mt-5">
-        <h2 class="text-center mb-4">Plan de Trabajo Anual</h2>
+    <div class="container-fluid">
+        <!-- Tarjetas de conteo superiores -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Activas</h5>
+                        <p class="card-text" id="countActivas">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-danger">
+                    <div class="card-body">
+                        <h5 class="card-title">Cerradas</h5>
+                        <p class="card-text" id="countCerradas">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">Gestionando</h5>
+                        <p class="card-text" id="countGestionando">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title">Total</h5>
+                        <p class="card-text" id="countTotal">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- Botón para restablecer filtros -->
-        <div class="d-flex justify-content-end mb-3">
+        <!-- Tarjetas mensuales -->
+        <div class="row mb-4">
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Enero</h6>
+                        <p class="card-text text-center" id="countEnero">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Febrero</h6>
+                        <p class="card-text text-center" id="countFebrero">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Marzo</h6>
+                        <p class="card-text text-center" id="countMarzo">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Abril</h6>
+                        <p class="card-text text-center" id="countAbril">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Mayo</h6>
+                        <p class="card-text text-center" id="countMayo">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Junio</h6>
+                        <p class="card-text text-center" id="countJunio">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Julio</h6>
+                        <p class="card-text text-center" id="countJulio">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Agosto</h6>
+                        <p class="card-text text-center" id="countAgosto">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Sept.</h6>
+                        <p class="card-text text-center" id="countSeptiembre">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Oct.</h6>
+                        <p class="card-text text-center" id="countOctubre">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Nov.</h6>
+                        <p class="card-text text-center" id="countNoviembre">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-1">
+                <div class="card text-white bg-info">
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-center mb-0">Dic.</h6>
+                        <p class="card-text text-center" id="countDiciembre">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Título y nombre del cliente -->
+        <div class="text-center mb-4">
+            <h2 class="mb-2">Plan de Trabajo Anual</h2>
+            <h3 class="mb-4"><?= esc($nombre_cliente) ?></h3>
+        </div>
+
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label for="estadoFilter" class="form-label">Estado de Actividad</label>
+                <select id="estadoFilter" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="ABIERTA">ABIERTA</option>
+                    <option value="CERRADA">CERRADA</option>
+                    <option value="GESTIONANDO">GESTIONANDO</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="fechaDesde" class="form-label">Fecha Desde</label>
+                <input type="date" id="fechaDesde" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="fechaHasta" class="form-label">Fecha Hasta</label>
+                <input type="date" id="fechaHasta" class="form-control">
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="d-flex justify-content-end gap-2 mb-3">
+            <button id="aplicarFiltros" class="btn btn-primary">Aplicar Filtros</button>
             <button id="clearState" class="btn btn-secondary">Restablecer Filtros</button>
         </div>
 
@@ -109,14 +241,13 @@
             <table id="planesTable" class="table table-bordered table-striped">
                 <thead class="table-dark">
                     <tr>
+                        <th>Estado de Actividad</th>
+                        <th>Fecha Propuesta</th>
                         <th>PHVA</th>
                         <th>Actividad</th>
-                        <th>Fecha Propuesta</th>
                         <th>Fecha Cierre</th>
                         <th>Responsable</th>
-                        <th>Estado de Actividad</th>
                         <th>Porcentaje de Avance</th>
-                        <th>Semana</th>
                         <th>Observaciones</th>
                     </tr>
                 </thead>
@@ -130,20 +261,22 @@
                         <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
                         <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
                         <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
-                        <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
                     </tr>
                 </tfoot>
                 <tbody>
                     <?php foreach ($planes as $plan): ?>
                         <tr>
+                            <td data-bs-toggle="tooltip" title="<?= esc($plan['estado_actividad']) ?>">
+                                <?= esc($plan['estado_actividad']) ?>
+                            </td>
+                            <td data-bs-toggle="tooltip" title="<?= esc($plan['fecha_propuesta']) ?>">
+                                <?= esc($plan['fecha_propuesta']) ?>
+                            </td>
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['phva_plandetrabajo']) ?>">
                                 <?= esc($plan['phva_plandetrabajo']) ?>
                             </td>
                             <td class="actividad-column" data-full="<?= esc($plan['nombre_actividad']) ?>" data-bs-toggle="tooltip" title="<?= esc($plan['nombre_actividad']) ?>">
                                 <?= esc($plan['nombre_actividad']) ?>
-                            </td>
-                            <td data-bs-toggle="tooltip" title="<?= esc($plan['fecha_propuesta']) ?>">
-                                <?= esc($plan['fecha_propuesta']) ?>
                             </td>
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['fecha_cierre']) ?>">
                                 <?= esc($plan['fecha_cierre']) ?>
@@ -151,14 +284,8 @@
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['responsable_sugerido_plandetrabajo']) ?>">
                                 <?= esc($plan['responsable_sugerido_plandetrabajo']) ?>
                             </td>
-                            <td data-bs-toggle="tooltip" title="<?= esc($plan['estado_actividad']) ?>">
-                                <?= esc($plan['estado_actividad']) ?>
-                            </td>
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['porcentaje_avance']) ?>%">
                                 <?= esc($plan['porcentaje_avance']) ?>%
-                            </td>
-                            <td data-bs-toggle="tooltip" title="<?= esc($plan['semana']) ?>">
-                                <?= esc($plan['semana']) ?>
                             </td>
                             <td data-bs-toggle="tooltip" title="<?= esc($plan['observaciones']) ?>">
                                 <?= esc($plan['observaciones']) ?>
@@ -197,120 +324,58 @@
         </div>
     </footer>
 
-    <!-- Librerías necesarias -->
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.13.4/sorting/datetime-moment.js"></script>
 
-    <!-- Script para inicializar DataTables -->
     <script>
-        $(document).ready(function () {
-            // Función para obtener el valor de ordenamiento para el estado
-            function getEstadoPrioridad(estado) {
-                return estado === 'ABIERTA' ? 0 : 1;
-            }
-
+        $(document).ready(function() {
+            // Configurar moment.js para el formato de fecha dd-mm-yyyy
+            $.fn.dataTable.moment('DD-MM-YYYY');
+            
+            // Inicializar DataTable con orden específico
             var table = $('#planesTable').DataTable({
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json'
                 },
                 pageLength: 10,
                 responsive: true,
-                stateSave: true,
+                stateSave: false,
                 dom: 'Bfrtip',
-                // Configuración de ordenamiento inicial
                 order: [
-                    [5, 'asc'],  // Primero por estado (columna 5)
-                    [2, 'asc']   // Luego por fecha propuesta (columna 2)
-                ],
-                // Definición de columnas personalizadas
-                columnDefs: [
-                    {
-                        // Personalizar ordenamiento de la columna estado
-                        targets: 5,
-                        type: 'string',
-                        render: function(data, type, row) {
-                            if (type === 'display') {
-                                return data;
-                            }
-                            if (type === 'sort') {
-                                return getEstadoPrioridad(data) + data;
-                            }
-                            return data;
-                        }
-                    },
-                    {
-                        // Asegurar que la fecha se ordene correctamente
-                        targets: 2,
-                        type: 'date',
-                        render: function(data, type, row) {
-                            if (type === 'sort') {
-                                return moment(data, 'YYYY-MM-DD').format('YYYYMMDD');
-                            }
-                            return data;
-                        }
-                    }
+                    [0, 'asc'], // Estado actividad
+                    [1, 'asc'], // Fecha propuesta
+                    [2, 'asc'], // PHVA
+                    [3, 'asc']  // Actividad
                 ],
                 buttons: [
                     {
-                        extend: 'colvis',
-                        text: 'Mostrar/Ocultar Columnas',
-                        className: 'btn btn-secondary btn-sm'
-                    },
-                    {
                         extend: 'excelHtml5',
-                        text: 'Descargar Excel',
-                        className: 'btn btn-success btn-sm',
-                        filename: 'Plan de Trabajo',
+                        text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
+                        className: 'btn btn-success',
                         title: 'Plan de Trabajo',
                         exportOptions: {
                             columns: ':visible'
-                        },
-                        action: function(e, dt, button, config) {
-                            // Before export, temporarily replace truncated text with full text
-                            $('.actividad-column').each(function() {
-                                var $cell = $(this);
-                                var fullText = $cell.attr('data-full');
-                                var displayText = $cell.text();
-                                $cell.text(fullText);
-                            });
-
-                            // Perform export
-                            $.fn.dataTable.ext.buttons.excelHtml5.action.call(this, e, dt, button, config);
-
-                            // Restore truncated text
-                            $('.actividad-column').each(function() {
-                                var $cell = $(this);
-                                var fullText = $cell.attr('data-full');
-                                if (fullText && fullText.length > 40) {
-                                    $cell.text(fullText.substring(0, 40) + '...');
-                                }
-                            });
                         }
                     }
                 ],
-                initComplete: function () {
-                    var api = this.api();
-                    api.columns().every(function () {
+                initComplete: function() {
+                    this.api().columns().every(function() {
                         var column = this;
                         var select = $('select', column.footer());
-                        var uniqueData = [];
-                        column.data().unique().sort().each(function (d) {
+                        column.data().unique().sort().each(function(d) {
                             if (d) {
-                                uniqueData.push(d);
+                                select.append('<option value="' + d + '">' + d + '</option>');
                             }
                         });
-                        uniqueData.forEach(function (d) {
-                            select.append('<option value="' + d + '">' + d + '</option>');
-                        });
-                        select.on('change', function () {
+                        select.on('change', function() {
                             var val = $.fn.dataTable.util.escapeRegex($(this).val());
                             column.search(val ? '^' + val + '$' : '', true, false).draw();
                         });
@@ -318,21 +383,97 @@
                 }
             });
 
-            $('#clearState').on('click', function () {
-                table.state.clear();
-                localStorage.removeItem('DataTables_planesTable');
-                location.reload();
-            });
+            // Función para actualizar los contadores de las tarjetas superiores
+            function updateCardCounts() {
+                var data = table.column(0, {search: 'applied'}).data().toArray();
+                var countActivas = data.filter(function(x) { return x.trim() === 'ABIERTA'; }).length;
+                var countCerradas = data.filter(function(x) { return x.trim() === 'CERRADA'; }).length;
+                var countGestionando = data.filter(function(x) { return x.trim() === 'GESTIONANDO'; }).length;
+                $('#countActivas').text(countActivas);
+                $('#countCerradas').text(countCerradas);
+                $('#countGestionando').text(countGestionando);
+                $('#countTotal').text(table.rows({search: 'applied'}).data().length);
+            }
 
-            function initializeTooltips() {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
+            // Función para actualizar los contadores mensuales
+            function updateMonthlyCounts() {
+                var monthlyCounts = Array(12).fill(0);
+                var data = table.rows({search: 'applied'}).data().toArray();
+                data.forEach(function(row) {
+                    var fechaPropuesta = row[1]; // Columna "Fecha Propuesta"
+                    if (fechaPropuesta) {
+                        var parts = fechaPropuesta.split("-");
+                        if (parts.length >= 2) {
+                            var month = parseInt(parts[1], 10);
+                            if (!isNaN(month) && month >= 1 && month <= 12) {
+                                monthlyCounts[month - 1]++;
+                            }
+                        }
+                    }
+                });
+
+                var monthIds = ["countEnero", "countFebrero", "countMarzo", "countAbril", "countMayo", "countJunio", 
+                              "countJulio", "countAgosto", "countSeptiembre", "countOctubre", "countNoviembre", "countDiciembre"];
+                monthIds.forEach(function(id, index) {
+                    $('#' + id).text(monthlyCounts[index]);
                 });
             }
-            initializeTooltips();
-            table.on('draw', function () {
-                initializeTooltips();
+
+            // Actualizar contadores cuando se filtra la tabla
+            table.on('draw', function() {
+                updateCardCounts();
+                updateMonthlyCounts();
+            });
+
+            // Inicializar contadores
+            updateCardCounts();
+            updateMonthlyCounts();
+
+            // Función para aplicar filtros
+            function aplicarFiltros() {
+                var estado = $('#estadoFilter').val();
+                var fechaDesde = $('#fechaDesde').val();
+                var fechaHasta = $('#fechaHasta').val();
+
+                // Filtrar por estado
+                if (estado) {
+                    table.column(0).search(estado).draw();
+                }
+
+                // Filtrar por rango de fechas
+                if (fechaDesde && fechaHasta) {
+                    $.fn.dataTable.ext.search.push(
+                        function(settings, data, dataIndex) {
+                            var fecha = moment(data[1], 'DD-MM-YYYY').toDate();
+                            var min = new Date(fechaDesde);
+                            var max = new Date(fechaHasta);
+                            return (fecha >= min && fecha <= max);
+                        }
+                    );
+                    table.draw();
+                }
+            }
+
+            // Evento click para aplicar filtros
+            $('#aplicarFiltros').click(function() {
+                aplicarFiltros();
+            });
+
+            // Restablecer filtros
+            $('#clearState').click(function() {
+                table.state.clear();
+                $('#estadoFilter').val('');
+                $('#fechaDesde').val('');
+                $('#fechaHasta').val('');
+                $.fn.dataTable.ext.search.pop(); // Remover filtro de fechas
+                table.column(0).search('').draw();
+                window.location.reload();
+            });
+
+            // Inicializar tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         });
     </script>
