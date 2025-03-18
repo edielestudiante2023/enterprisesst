@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Editar Reporte</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 </head>
 
 <body class="bg-light">
@@ -36,12 +38,8 @@
 
           <!-- Tipo de Documento -->
           <div class="form-group">
-            <label for="search_detailreport">Buscar Tipo de Documento:</label>
-            <input type="text" class="form-control search-field" id="search_detailreport" data-target="#id_detailreport" placeholder="Escribe para buscar...">
-          </div>
-          <div class="form-group">
             <label for="id_detailreport">Tipo de Documento:</label>
-            <select class="form-control" id="id_detailreport" name="id_detailreport" required>
+            <select class="form-control select2" id="id_detailreport" name="id_detailreport" required>
               <?php foreach ($details as $detail) : ?>
                 <option value="<?= $detail['id_detailreport'] ?>" <?= $detail['id_detailreport'] == $report['id_detailreport'] ? 'selected' : '' ?>>
                   <?= $detail['detail_report'] ?>
@@ -52,12 +50,8 @@
 
           <!-- Tipo de Reporte -->
           <div class="form-group">
-            <label for="search_report_type">Buscar Tipo de Reporte:</label>
-            <input type="text" class="form-control search-field" id="search_report_type" data-target="#id_report_type" placeholder="Escribe para buscar...">
-          </div>
-          <div class="form-group">
             <label for="id_report_type">Tipo de Reporte:</label>
-            <select class="form-control" id="id_report_type" name="id_report_type" required>
+            <select class="form-control select2" id="id_report_type" name="id_report_type" required>
               <?php foreach ($reportTypes as $type) : ?>
                 <option value="<?= $type['id_report_type'] ?>" <?= $type['id_report_type'] == $report['id_report_type'] ? 'selected' : '' ?>>
                   <?= $type['report_type'] ?>
@@ -80,12 +74,8 @@
 
           <!-- Estado -->
           <div class="form-group">
-            <label for="search_estado">Buscar Estado:</label>
-            <input type="text" class="form-control search-field" id="search_estado" data-target="#estado" placeholder="Escribe para buscar...">
-          </div>
-          <div class="form-group">
             <label for="estado">Estado:</label>
-            <select class="form-control" id="estado" name="estado" required>
+            <select class="form-control select2" id="estado" name="estado" required>
               <option value="ABIERTO" <?= $report['estado'] == 'ABIERTO' ? 'selected' : '' ?>>ABIERTO</option>
               <option value="GESTIONANDO" <?= $report['estado'] == 'GESTIONANDO' ? 'selected' : '' ?>>GESTIONANDO</option>
               <option value="CERRADO" <?= $report['estado'] == 'CERRADO' ? 'selected' : '' ?>>CERRADO</option>
@@ -100,12 +90,8 @@
 
           <!-- Cliente -->
           <div class="form-group">
-            <label for="search_cliente">Buscar Cliente:</label>
-            <input type="text" class="form-control search-field" id="search_cliente" data-target="#id_cliente" placeholder="Escribe para buscar...">
-          </div>
-          <div class="form-group">
             <label for="id_cliente">Cliente:</label>
-            <select class="form-control" id="id_cliente" name="id_cliente" required>
+            <select class="form-control select2" id="id_cliente" name="id_cliente" required>
               <?php foreach ($clients as $client) : ?>
                 <option value="<?= $client['id_cliente'] ?>" <?= $client['id_cliente'] == $report['id_cliente'] ? 'selected' : '' ?>>
                   <?= $client['nombre_cliente'] ?>
@@ -124,20 +110,18 @@
     <p>© 2025 Cycloid Talent SAS - Todos los derechos reservados</p>
   </footer>
 
+  <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- Select2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
     $(document).ready(function () {
-      $('.search-field').on('input', function () {
-        var term = $(this).val().toLowerCase();
-        var targetSelect = $($(this).data('target'));
-        targetSelect.find('option').each(function () {
-          var text = $(this).text().toLowerCase();
-          if (text.indexOf(term) === -1) {
-            $(this).hide();
-          } else {
-            $(this).show();
-          }
-        });
+      $('.select2').select2({
+        placeholder: "Seleccione una opción",
+        allowClear: true,
+        width: '100%'
       });
     });
   </script>
