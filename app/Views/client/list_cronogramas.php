@@ -30,7 +30,7 @@
 
         .container {
             margin-top: 30px;
-            max-width: 1200px;
+            max-width: 100%;
         }
 
         h2 {
@@ -128,7 +128,7 @@
             <table id="cronogramasTable" class="styled-table table table-hover table-bordered nowrap" style="width:100%">
                 <thead class="table-light">
                     <tr>
-                        <!-- Columnas eliminadas: Acciones, ID Cronograma, Cliente -->
+                        <!-- Se muestran las columnas definidas -->
                         <th>Capacitación</th>
                         <th>Fecha Programada</th>
                         <th>Fecha de Realización</th>
@@ -147,7 +147,7 @@
                 </thead>
                 <tfoot class="table-light">
                     <tr class="filters">
-                        <!-- Columnas eliminadas: Acciones, ID Cronograma, Cliente -->
+                        <!-- Filtros para cada columna -->
                         <th>
                             <select class="form-select form-select-sm filter-select" aria-label="Filtro Capacitación">
                                 <option value="">Todos</option>
@@ -225,21 +225,48 @@
                     <?php if (!empty($cronogramas) && is_array($cronogramas)): ?>
                         <?php foreach ($cronogramas as $cronograma): ?>
                             <tr>
-                                <!-- Columnas eliminadas: Acciones, ID Cronograma, Cliente -->
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_capacitacion']); ?>"><?= esc($cronograma['nombre_capacitacion']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_programada']); ?>"><?= esc($cronograma['fecha_programada']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_de_realizacion']); ?>"><?= esc($cronograma['fecha_de_realizacion']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['estado']); ?>"><?= esc($cronograma['estado']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['perfil_de_asistentes']); ?>"><?= esc($cronograma['perfil_de_asistentes']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_del_capacitador']); ?>"><?= esc($cronograma['nombre_del_capacitador']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['horas_de_duracion_de_la_capacitacion']); ?>"><?= esc($cronograma['horas_de_duracion_de_la_capacitacion']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']); ?>"><?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_asistentes_a_capacitacion']); ?>"><?= esc($cronograma['numero_de_asistentes_a_capacitacion']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_total_de_personas_programadas']); ?>"><?= esc($cronograma['numero_total_de_personas_programadas']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['porcentaje_cobertura']); ?>"><?= esc($cronograma['porcentaje_cobertura']); ?>%</td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_personas_evaluadas']); ?>"><?= esc($cronograma['numero_de_personas_evaluadas']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['promedio_de_calificaciones']); ?>"><?= esc($cronograma['promedio_de_calificaciones']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['observaciones']); ?>"><?= esc($cronograma['observaciones']); ?></td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_capacitacion']); ?>">
+                                    <?= esc($cronograma['nombre_capacitacion']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_programada']); ?>">
+                                    <?= esc($cronograma['fecha_programada']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_de_realizacion']); ?>">
+                                    <?= esc($cronograma['fecha_de_realizacion']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['estado']); ?>">
+                                    <?= esc($cronograma['estado']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['perfil_de_asistentes']); ?>">
+                                    <?= esc($cronograma['perfil_de_asistentes']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_del_capacitador']); ?>">
+                                    <?= esc($cronograma['nombre_del_capacitador']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['horas_de_duracion_de_la_capacitacion']); ?>">
+                                    <?= esc($cronograma['horas_de_duracion_de_la_capacitacion']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']); ?>">
+                                    <?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_asistentes_a_capacitacion']); ?>">
+                                    <?= esc($cronograma['numero_de_asistentes_a_capacitacion']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_total_de_personas_programadas']); ?>">
+                                    <?= esc($cronograma['numero_total_de_personas_programadas']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['porcentaje_cobertura']); ?>">
+                                    <?= esc($cronograma['porcentaje_cobertura']); ?>%
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_personas_evaluadas']); ?>">
+                                    <?= esc($cronograma['numero_de_personas_evaluadas']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['promedio_de_calificaciones']); ?>">
+                                    <?= esc($cronograma['promedio_de_calificaciones']); ?>
+                                </td>
+                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['observaciones']); ?>">
+                                    <?= esc($cronograma['observaciones']); ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else : ?>
@@ -279,7 +306,6 @@
         </div>
     </footer>
 
-
     <!-- Scripts al final del body para mejor rendimiento -->
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -297,9 +323,9 @@
 
     <script>
         $(document).ready(function () {
-            // Inicializar DataTables con Buttons, Filtros en <tfoot>, y Configuración de Ancho de Columnas
+            // Inicializar DataTables con Buttons, filtros en el <tfoot> y configuración de columnas
             var table = $('#cronogramasTable').DataTable({
-                stateSave: true, // Habilitar la persistencia del estado de la tabla
+                stateSave: true,
                 language: {
                     url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                 },
@@ -309,7 +335,7 @@
                 pageLength: 5,
                 responsive: true,
                 autoWidth: false,
-                dom: 'Bfltip', // Integrar Buttons en el DOM
+                dom: 'Bfltip',
                 buttons: [
                     {
                         extend: 'excelHtml5',
@@ -324,28 +350,21 @@
                 ],
                 initComplete: function () {
                     var api = this.api();
-
                     // Para cada columna, crear un filtro en el <tfoot>
                     api.columns().every(function () {
                         var column = this;
                         var headerIndex = column.index();
                         var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-select');
-
-                        if (filterElement.length && !filterElement.prop('disabled')) { // Solo si existe un filtro select y no está deshabilitado
-                            // Obtener los valores únicos de la columna
-                            column.data().unique().sort().each(function (d, j) {
-                                if (d) { // Evitar valores vacíos
-                                    // Verificar si la opción ya existe para evitar duplicados
+                        if (filterElement.length && !filterElement.prop('disabled')) {
+                            column.data().unique().sort().each(function (d) {
+                                if (d) {
                                     if (filterElement.find('option[value="' + d + '"]').length === 0) {
                                         filterElement.append('<option value="' + d + '">' + d + '</option>');
                                     }
                                 }
                             });
-
-                            // Restaurar el valor del filtro si existe en el estado guardado
                             var search = column.search();
                             if (search) {
-                                // Eliminar los caracteres de expresión regular para coincidir con el valor
                                 var cleanedSearch = search.replace(/[\^\$(){}.+*?\\|]/g, '');
                                 filterElement.val(cleanedSearch);
                             }
@@ -357,7 +376,7 @@
             // Colocar los botones de DataTables en el contenedor específico
             table.buttons().container().appendTo('#buttonsContainer');
 
-            // Evento al cambiar cualquier filtro (select)
+            // Evento para los filtros del <tfoot>
             $('tfoot .filter-select').on('change', function () {
                 var columnIndex = $(this).closest('th').index();
                 var value = $(this).val();
@@ -372,30 +391,19 @@
                 });
             }
 
-            initializeTooltips(); // Inicializar al cargar la página
-
-            // Re-inicializar tooltips después de cada redibujado de la tabla
+            initializeTooltips();
             table.on('draw.dt', function () {
                 initializeTooltips();
             });
 
-            // Botón para borrar el estado y restablecer filtros
+            // Botón para restablecer el estado y filtros
             $('#clearState').on('click', function () {
-                // Construir la clave de localStorage utilizada por DataTables
                 var storageKey = 'DataTables_' + table.table().node().id + '_' + window.location.pathname;
-
-                // Borrar estado guardado en localStorage
                 localStorage.removeItem(storageKey);
-
-                // Limpiar estado en DataTables
                 table.state.clear();
-
-                // Restablecer todos los filtros a sus valores predeterminados
                 $('tfoot .filter-select').each(function () {
                     $(this).val('');
                 });
-
-                // Restablecer las búsquedas de las columnas y redibujar la tabla
                 table.columns().search('').draw();
             });
         });
