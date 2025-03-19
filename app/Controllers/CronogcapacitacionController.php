@@ -79,6 +79,7 @@ class CronogcapacitacionController extends Controller
             'indicador_de_realizacion_de_la_capacitacion',
             'numero_de_asistentes_a_capacitacion',
             'numero_total_de_personas_programadas',
+            'porcentaje_cobertura',
             'numero_de_personas_evaluadas',
             'promedio_de_calificaciones',
             'observaciones'
@@ -90,9 +91,39 @@ class CronogcapacitacionController extends Controller
         }
 
         $cronogModel = new CronogcapacitacionModel();
-        $updateData = [$field => $value];
 
-        if ($cronogModel->update($id, $updateData)) {
+        // Si se actualiza alguno de los campos que afectan el porcentaje, recalcúlalo
+        if (in_array($field, ['numero_de_asistentes_a_capacitacion', 'numero_total_de_personas_programadas'])) {
+            // Obtén el registro actual para el otro valor
+            $registro = $cronogModel->find($id);
+            if ($field == 'numero_de_asistentes_a_capacitacion') {
+                $numero_asistentes = $value;
+                $numero_total_programados = $registro['numero_total_de_personas_programadas'];
+            } else {
+                $numero_asistentes = $registro['numero_de_asistentes_a_capacitacion'];
+                $numero_total_programados = $value;
+            }
+            $porcentaje_cobertura = ($numero_total_programados > 0)
+                ? number_format(($numero_asistentes / $numero_total_programados) * 100, 2)
+                : 0;
+
+            // Actualiza el campo modificado y el porcentaje en conjunto
+            $updateData = [
+                $field => $value,
+                'porcentaje_cobertura' => $porcentaje_cobertura . '%'
+            ];
+        } else {
+            $updateData = [$field => $value];
+        }
+
+    if ($cronogModel->update($id, $updateData)) {
+        log_message('debug', 'Registro actualizado correctamente');
+        return $this->response->setJSON([
+            'success' => true, 
+            'message' => 'Registro actualizado correctamente',
+            'newValue' => isset($porcentaje_cobertura) ? $porcentaje_cobertura . '%' : $value
+        ]);
+
             log_message('debug', 'Registro actualizado correctamente');
             return $this->response->setJSON(['success' => true, 'message' => 'Registro actualizado correctamente']);
         } else {
@@ -100,6 +131,7 @@ class CronogcapacitacionController extends Controller
             return $this->response->setJSON(['success' => false, 'message' => 'No se pudo actualizar el registro']);
         }
     }
+
     // Listar todos los cronogramas de capacitación
     public function listcronogCapacitacion()
     {
