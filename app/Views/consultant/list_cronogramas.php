@@ -402,7 +402,8 @@
             render: function(data, type, row) {
               data = (data === null || data === "") ? "--" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable" data-field="horas_de_duracion_de_la_capacitacion" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="horas_de_duracion_de_la_capacitacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
             }
           },
           {
@@ -418,7 +419,8 @@
             render: function(data, type, row) {
               data = (data === null || data === "") ? "--" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable" data-field="numero_de_asistentes_a_capacitacion" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="numero_de_asistentes_a_capacitacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
             }
           },
           {
@@ -426,7 +428,8 @@
             render: function(data, type, row) {
               data = (data === null || data === "") ? "--" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable" data-field="numero_total_de_personas_programadas" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="numero_total_de_personas_programadas" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
             }
           },
           {
@@ -437,7 +440,8 @@
             render: function(data, type, row) {
               data = (data === null || data === "") ? "--" : data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable" data-field="numero_de_personas_evaluadas" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="numero_de_personas_evaluadas" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
             }
           },
           {
@@ -445,7 +449,8 @@
             render: function(data, type, row) {
               data = (data === null || data === "") ? "--" : data;
               var displayText = data ? data + '%' : '&nbsp;';
-              return '<span class="editable" data-field="promedio_de_calificaciones" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="promedio_de_calificaciones" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
             }
           },
           {
@@ -636,7 +641,7 @@
       });
     });
 
-$.ajax({
+    $.ajax({
       url: '<?= base_url("updatecronogCapacitacion") ?>',
       type: 'POST',
       data: {
@@ -655,7 +660,6 @@ $.ajax({
         console.log(error);
       }
     });
-
   </script>
 </body>
 
