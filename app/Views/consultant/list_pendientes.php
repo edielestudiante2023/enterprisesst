@@ -534,10 +534,17 @@
       // Inicializar tooltips de Bootstrap
       function initializeTooltips() {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function(tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl);
+        tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+          // Si ya existe una instancia, la eliminamos
+          var tooltipInstance = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+          if (tooltipInstance) {
+            tooltipInstance.dispose();
+          }
+          // Creamos una nueva instancia del tooltip
+          new bootstrap.Tooltip(tooltipTriggerEl);
         });
       }
+
       initializeTooltips();
       table.on('draw.dt', function() {
         initializeTooltips();

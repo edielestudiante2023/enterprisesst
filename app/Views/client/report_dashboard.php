@@ -12,22 +12,39 @@
   <!-- DataTables Buttons CSS para Bootstrap 5 -->
   <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css" />
   <style>
+    /* Asegura que html y body ocupen toda la pantalla */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    
     body {
       background-color: #f9f9f9;
       color: #333;
     }
 
-    .container {
+    /* Utilizamos container-fluid para que ocupe el 100% del ancho */
+    .container-fluid {
       margin-top: 30px;
-      max-width: 1200px;
+      width: 100%;
+      height: calc(100vh - 140px); /* Ajuste para navbar y footer */
+      display: flex;
+      flex-direction: column;
     }
 
+    /* Contenedor de la tabla que se expande y permite scroll interno */
     .table-container {
       background-color: #fff;
       border-radius: 8px;
       padding: 20px;
       margin-top: 20px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
     }
 
     .table-container h2 {
@@ -35,6 +52,11 @@
       font-weight: 600;
       font-size: 24px;
       margin-bottom: 15px;
+    }
+
+    /* La tabla ocupará todo el ancho del contenedor */
+    table {
+      width: 100%;
     }
 
     .table th {
@@ -84,7 +106,8 @@
       border: 1px solid #ccc;
     }
 
-    #clearState {
+    /* Espaciado para los botones de filtros */
+    .button-group {
       margin-bottom: 10px;
     }
   </style>
@@ -116,15 +139,19 @@
   <!-- Espacio para el Navbar Fijo -->
   <div style="height: 120px;"></div>
 
-  <div class="container">
+  <div class="container-fluid">
     <!-- Tabla de Reportes -->
     <div class="table-container">
       <h2>Reportes</h2>
-      <?php if (!empty($reports)) : ?>
-      <!-- Botón para Restablecer Filtros -->
-      <button id="clearState" class="btn btn-danger btn-sm">Restablecer Filtros</button>
+      <div class="button-group">
+        <!-- Botón para Restablecer Filtros del stateSave -->
+        <button id="clearState" class="btn btn-danger btn-sm">Restablecer Filtros</button>
+        <!-- Botón para limpiar los filtros de los tfoot -->
+        <button id="clearFilters" class="btn btn-secondary btn-sm">Soltar Filtros</button>
+      </div>
 
-      <table id="reportsTable" class="table table-striped table-hover" style="width:100%">
+      <?php if (!empty($reports)) : ?>
+      <table id="reportsTable" class="table table-striped table-hover">
         <thead>
           <tr>
             <th>Título</th>
@@ -190,9 +217,9 @@
 
   <script>
     $(document).ready(function () {
-      // Inicializar DataTable con botones, stateSave y filtros por columna
+      // Inicializar DataTable con botones, stateSave, filtros por columna y opciones de registros
       var table = $("#reportsTable").DataTable({
-        dom: 'Bfrtip',  // Incluir botones en el DOM
+        dom: 'lBfrtip', // Se incluye "l" para mostrar el selector de cantidad de registros
         buttons: [
           {
             extend: 'excelHtml5',
@@ -201,15 +228,16 @@
           }
         ],
         order: [
-          [6, 'desc'],  // Luego por "Fecha Creación" descendente
-          [4, 'asc'],   // Primero por "Detalle Reporte"
-          [0, 'asc'],   // Luego por "Título"
-          [2, 'asc']    // Finalmente por "Estado"
+          [6, 'desc'],  // Por "Fecha Creación" descendente
+          [4, 'asc'],   // Por "Detalle Reporte"
+          [0, 'asc'],   // Por "Título"
+          [2, 'asc']    // Por "Estado"
         ],
         paging: true,
         searching: true,
         lengthChange: true,
-        pageLength: 20,
+        pageLength: 10, // Registros por defecto
+        lengthMenu: [[5, 10, 20, 50, 100], [5, 10, 20, 50, 100]], // Opciones de registros
         stateSave: true,
         language: {
           url: "//cdn.datatables.net/plug-ins/1.11.3/i18n/es_es.json"
@@ -217,37 +245,35 @@
         initComplete: function () {
           this.api().columns().every(function () {
             var column = this;
-            var select = $(
-              '<select class="filter-select"><option value="">Todos</option></select>'
-            )
+            var select = $('<select class="filter-select"><option value="">Todos</option></select>')
               .appendTo($(column.footer()).empty())
               .on("change", function () {
                 var val = $.fn.dataTable.util.escapeRegex($(this).val());
                 column.search(val ? "^" + val + "$" : "", true, false).draw();
               });
 
-            column
-              .data()
-              .unique()
-              .sort()
-              .each(function (d, j) {
-                if (d) {
-                  select.append('<option value="' + d + '">' + d + "</option>");
-                }
-              });
+            column.data().unique().sort().each(function (d, j) {
+              if (d) {
+                select.append('<option value="' + d + '">' + d + "</option>");
+              }
+            });
           });
         }
       });
 
+      // Botón para restablecer el stateSave
       $("#clearState").on("click", function () {
         localStorage.removeItem("DataTables_reportsTable_/");
         table.state.clear();
         location.reload();
       });
 
-      var tooltipTriggerList = [].slice.call(
-        document.querySelectorAll('[data-bs-toggle="tooltip"]')
-      );
+      // Botón para limpiar los filtros del tfoot
+      $("#clearFilters").on("click", function(){
+        $('#reportsTable tfoot select').val('').trigger('change');
+      });
+
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
       var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
       });
