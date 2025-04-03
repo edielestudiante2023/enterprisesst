@@ -242,18 +242,8 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
             <thead>
                 <tr>
                     <th>Variables</th>
-                    <th>Ene</th>
-                    <th>Feb</th>
-                    <th>Mar</th>
-                    <th>Abr</th>
-                    <th>May</th>
-                    <th>Jun</th>
-                    <th>Jul</th>
-                    <th>Ago</th>
-                    <th>Sep</th>
-                    <th>Oct</th>
-                    <th>Nov</th>
-                    <th>Dic</th>
+                    <th>Ene-Jun</th>
+                    <th>Jul-Dic</th>
                     <th>Media Aritmética</th>
                 </tr>
             </thead>
@@ -262,70 +252,28 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
                     <td><?= $periodos[0]['numerador'] ?></td>
                     <td><?= $periodos[0]['dato_variable_numerador'] ?></td>
                     <td><?= $periodos[1]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[2]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[3]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[4]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[5]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[6]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[7]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[8]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[9]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[10]['dato_variable_numerador'] ?></td>
-                    <td><?= $periodos[11]['dato_variable_numerador'] ?></td>
                     <td><?= $promedioNumerador ?></td>
                 </tr>
                 <tr>
                     <td><?= $periodos[0]['denominador'] ?></td>
                     <td><?= $periodos[0]['dato_variable_denominador'] ?></td>
                     <td><?= $periodos[1]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[2]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[3]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[4]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[5]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[6]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[7]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[8]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[9]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[10]['dato_variable_denominador'] ?></td>
-                    <td><?= $periodos[11]['dato_variable_denominador'] ?></td>
                     <td><?= $promedioDenominador ?></td>
                 </tr>
                 <tr>
                     <td>Valor Real</td>
                     <td><?= number_format($periodos[0]['valor_indicador'], 2) ?></td>
                     <td><?= number_format($periodos[1]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[2]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[3]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[4]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[5]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[6]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[7]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[8]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[9]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[10]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[11]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($promedioIndicadores * 100, 2) ?>%</td>
+                    <td><?= number_format($promedioIndicadores * 100, 2) ?>%</td> <!-- Mostrar el promedio del indicador -->
                 </tr>
                 <tr>
                     <td>Meta</td>
                     <td><?= $clientKpi['kpi_target'] ?>%</td>
                     <td><?= $clientKpi['kpi_target'] ?>%</td>
                     <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
                 </tr>
             </tbody>
         </table>
-
-
 
         <!-- 3. Gráfica -->
         <!-- <h3 class="alpha-title">3. GRÁFICA</h3>
@@ -426,7 +374,7 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
 
     <br>
 
-    
+   
 
 </body>
 
