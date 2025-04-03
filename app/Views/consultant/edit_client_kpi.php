@@ -173,7 +173,7 @@
             <!-- Meta del KPI -->
             <div class="mb-3">
                 <label for="kpi_target" class="form-label">Meta del KPI:</label>
-                <input type="number" name="kpi_target" id="kpi_target" class="form-control" value="<?= $clientKpi['kpi_target'] ?>" required>
+                <input type="number" name="kpi_target" id="kpi_target" class="form-control" value="<?= number_format($clientKpi['kpi_target'], 0, '', '') ?>" required>
             </div>
 
             <!-- Interpretación del KPI -->

@@ -51,6 +51,12 @@
     #kpisTable td:nth-child(5) { width: 15% !important; } /* Promedio del Indicador */
     #kpisTable th:nth-child(6),
     #kpisTable td:nth-child(6) { width: 20% !important; } /* Acciones */
+    
+    /* Estilos para los selects en el footer */
+    #kpisTable tfoot select {
+      width: 100% !important;
+      margin: 3px 0 !important;
+    }
   </style>
 </head>
 
@@ -81,7 +87,7 @@
 
   <div style="height: 60px;"></div>
 
-  <div class="container my-5">
+  <div class="container-fluid my-5">
     <h2 class="text-center mb-4">Lista de KPIs de Clientes</h2>
     
     <!-- Formulario para filtrar por Cliente -->
@@ -124,40 +130,53 @@
             <?php foreach ($clientKpis as $kpi) : ?>
               <tr>
                 <td><?= $kpi['cliente'] ?></td>
-                <td><?= $kpi['kpi'] ?></td>
-                <td><?= $kpi['kpi_definition'] ?></td>
+                <td data-bs-toggle="tooltip" data-bs-placement="top" title="<?= $kpi['kpi'] ?>">
+                  <?= $kpi['kpi'] ?>
+                </td>
+                <td data-bs-toggle="tooltip" data-bs-placement="top" title="<?= $kpi['kpi_definition'] ?>">
+                  <?= $kpi['kpi_definition'] ?>
+                </td>
                 <td><?= $kpi['kpi_target'] ?>%</td>
                 <td><?= number_format($kpi['promedio_indicadores'], 2) ?>%</td>
                 <td>
-                  <a href="<?= base_url('/listClientKpisFull/' . $kpi['id_client_kpi']) ?>" class="btn btn-info btn-sm">Ver completo</a>
+                  <a href="<?= base_url('listClientKpisFull') ?>" class="btn btn-info btn-sm" target="_blank" rel="noopener noreferrer">Ver completo</a>
                   <a href="<?= base_url('/editClientKpi/' . $kpi['id_client_kpi']) ?>" class="btn btn-warning btn-sm">Editar</a>
                   <a href="<?= base_url('/deleteClientKpi/' . $kpi['id_client_kpi']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este KPI?')">Eliminar</a>
                 </td>
               </tr>
             <?php endforeach; ?>
-          <?php else : ?>
-            <tr>
-              <!-- Se crean 6 celdas vacías, colocando el mensaje en la primera -->
-              <td class="text-center">No hay KPIs registrados</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
           <?php endif; ?>
         </tbody>
+        <tfoot>
+          <tr>
+            <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+            <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+            <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+            <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+            <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+            <th></th>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </div>
 
   <footer style="background-color: white; padding: 20px 0; border-top: 1px solid #B0BEC5; margin-top: 40px; color: #3A3F51; font-size: 14px; text-align: center;">
-    <!-- Contenido del footer (sin cambios) -->
+    <!-- Contenido del footer -->
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
   <script>
     $(document).ready(function() {
-      $('#kpisTable').DataTable({
+      // Inicializar tooltips de Bootstrap
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+
+      // Inicializar DataTable con configuración mejorada
+      var table = $('#kpisTable').DataTable({
         stateSave: true,
         language: {
           url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json",
@@ -168,13 +187,57 @@
           {
             extend: 'excelHtml5',
             text: 'Exportar a Excel',
-            titleAttr: 'Exportar a Excel'
+            titleAttr: 'Exportar a Excel',
+            className: 'btn btn-success btn-sm'
           }
-        ]
+        ],
+        initComplete: function() {
+          // Configurar filtros para cada columna (excepto Acciones)
+          this.api().columns().every(function(index) {
+            if (index === 5) return; // Saltar columna de Acciones
+            
+            var column = this;
+            var select = $('select', column.footer())
+              .empty()
+              .append('<option value="">Todos</option>')
+              .on('change', function() {
+                var val = $(this).val();
+                
+                // Manejo especial para columnas de porcentaje
+                if (index === 3 || index === 4) {
+                  column.search(val ? '^' + val + '\\s*%?$' : '', true, false).draw();
+                } else {
+                  column.search(val).draw();
+                }
+              });
+            
+            // Obtener datos para los filtros
+            column.data().unique().sort().each(function(d) {
+              // Para columnas con porcentajes
+              if (index === 3 || index === 4) {
+                var num = d.toString().replace('%', '').trim();
+                if (num && !isNaN(num)) {
+                  select.append('<option value="' + num + '">' + num + '%</option>');
+                }
+              } 
+              // Para otras columnas
+              else {
+                var text = $('<div>').html(d).text().trim();
+                if (text) {
+                  select.append('<option value="' + text + '">' + text + '</option>');
+                }
+              }
+            });
+          });
+        }
+      });
+
+      // Restablecer filtros al hacer clic en el botón de restablecer
+      $('a[href="<?= base_url('/listClientKpis') ?>"]').on('click', function() {
+        table.state.clear();
+        window.location.href = $(this).attr('href');
       });
     });
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -65,6 +65,7 @@ $routes->get('/deleteClient/(:num)', 'ConsultantController::deleteClient/$1');
 $routes->post('/addClientPost', 'ConsultantController::addClientPost');
 $routes->get('/responsableSGSST/(:num)', 'SGSSTPlanear::responsableDelSGSST/$1');
 
+
 $routes->get('/error', 'ErrorController::index');
 
 $routes->get('/reportTypes', 'ReportTypeController::index');
@@ -278,7 +279,9 @@ $routes->get('/editClientKpi/(:num)', 'ClientKpiController::editClientKpi/$1');
 $routes->post('/editClientKpiPost/(:num)', 'ClientKpiController::editClientKpiPost/$1');
 $routes->get('/deleteClientKpi/(:num)', 'ClientKpiController::deleteClientKpi/$1');
 
-$routes->get('/listClientKpisFull/(:num)', 'ClientKpiController::listClientKpisFull/$1');
+/* $routes->get('/listClientKpisFull/(:num)', 'ClientKpiController::listClientKpisFull/$1'); */
+$routes->get('/listClientKpisFull', 'ClientKpiController::listClientKpisFull');
+
 
 $routes->get('/planDeTrabajoKpi/(:num)', 'kpiplandetrabajoController::plandetrabajoKpi/$1');
 $routes->get('/indicadorTresPeriodos/(:num)', 'kpitresperiodosController::indicadorTresPeriodos/$1');
