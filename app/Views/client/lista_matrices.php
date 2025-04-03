@@ -71,7 +71,7 @@
 
     <!-- Contenedor Principal -->
     <div class="container mt-5">
-        <h1 class="text-center text-primary mb-4">Mis Matrices Interactivas</h1>
+        <h1 class="text-center text-primary mb-4">Plataformas con colaboración en tiempo real</h1>
         
         <!-- Botón Restablecer Filtros -->
         <div class="mb-3">

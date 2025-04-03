@@ -98,11 +98,11 @@ class ClientKpiController extends Controller
         if (!$this->validate($validation->getRules())) {
             // Registrar los errores de validación en los logs
             log_message('error', 'Errores de validación: ' . json_encode($validation->getErrors()));
-            
+
             // Redirigir con los errores
             return redirect()->back()->withInput()->with('errors', $validation->getErrors());
         }
-        
+
 
         // Preparar los datos para insertarlos en la base de datos
         // Preparar los datos para insertar en la base de datos
@@ -338,32 +338,43 @@ class ClientKpiController extends Controller
 
     public function listClientKpis()
     {
-        $clientKpiModel = new ClientKpiModel();
-        $clientModel = new ClientModel();
-        $kpiPolicyModel = new KpiPolicyModel();
-        $objectivesModel = new ObjectivesPolicyModel();
-        $kpisModel = new KpisModel();
-        $kpiTypeModel = new KpiTypeModel();
+        $clientKpiModel    = new ClientKpiModel();
+        $clientModel       = new ClientModel();
+        $kpiPolicyModel    = new KpiPolicyModel();
+        $objectivesModel   = new ObjectivesPolicyModel();
+        $kpisModel         = new KpisModel();
+        $kpiTypeModel      = new KpiTypeModel();
         $kpiDefinitionModel = new KpiDefinitionModel();
-        $dataOwnerModel = new DataOwnerModel();
-        $numeratorModel = new VariableNumeratorModel();
-        $denominatorModel = new VariableDenominatorModel();
+        $dataOwnerModel    = new DataOwnerModel();
+        $numeratorModel    = new VariableNumeratorModel();
+        $denominatorModel  = new VariableDenominatorModel();
 
-        // Obtener todos los KPIs del cliente
-        $clientKpis = $clientKpiModel->findAll();
+        // Obtener todos los clientes para el filtro
+        $clientes = $clientModel->findAll();
+
+        // Obtener el filtro enviado por GET (si existe)
+        $id_cliente = $this->request->getGet('id_cliente');
+
+        if (!empty($id_cliente)) {
+            // Filtrar solo los KPIs del cliente seleccionado
+            $clientKpis = $clientKpiModel->where('id_cliente', $id_cliente)->findAll();
+        } else {
+            // Si no se selecciona filtro, no se cargan datos en la tabla
+            $clientKpis = [];
+        }
 
         // Crear un array para almacenar los datos procesados
         $data = [];
 
         foreach ($clientKpis as $kpi) {
             // Obtener los nombres correspondientes a partir de los IDs
-            $cliente = $clientModel->find($kpi['id_cliente']);
-            $kpiPolicy = $kpiPolicyModel->find($kpi['id_kpi_policy']);
-            $objective = $objectivesModel->find($kpi['id_objectives']);
-            $kpiData = $kpisModel->find($kpi['id_kpis']);
-            $kpiType = $kpiTypeModel->find($kpi['id_kpi_type']);
+            $cliente    = $clientModel->find($kpi['id_cliente']);
+            $kpiPolicy  = $kpiPolicyModel->find($kpi['id_kpi_policy']);
+            $objective  = $objectivesModel->find($kpi['id_objectives']);
+            $kpiData    = $kpisModel->find($kpi['id_kpis']);
+            $kpiType    = $kpiTypeModel->find($kpi['id_kpi_type']);
             $kpiDefinition = $kpiDefinitionModel->find($kpi['id_kpi_definition']);
-            $dataOwner = $dataOwnerModel->find($kpi['id_data_owner']);
+            $dataOwner  = $dataOwnerModel->find($kpi['id_data_owner']);
 
             // Variables para el cálculo del promedio
             $sumIndicadores = 0;
@@ -385,27 +396,33 @@ class ClientKpiController extends Controller
 
             // Agregar los datos del KPI al arreglo de datos
             $data[] = [
-                'id_client_kpi' => $kpi['id_client_kpi'],
-                'year' => $kpi['year'],
-                'month' => $kpi['month'],
-                'kpi_interpretation' => $kpi['kpi_interpretation'],
-                'cliente' => $cliente['nombre_cliente'] ?? 'Cliente no encontrado',
-                'kpi_policy' => $kpiPolicy['policy_kpi_definition'] ?? 'Política no encontrada',
-                'objective' => $objective['name_objectives'] ?? 'Objetivo no encontrado',
-                'kpi' => $kpiData['kpi_name'] ?? 'KPI no encontrado',
-                'kpi_type' => $kpiType['kpi_type'] ?? 'Tipo de KPI no encontrado',
-                'kpi_definition' => $kpiDefinition['name_kpi_definition'] ?? 'Definición no encontrada',
-                'kpi_target' => $kpi['kpi_target'],
-                'data_source' => $kpi['data_source'],
-                'data_owner' => isset($dataOwner['data_owner']) ? $dataOwner['data_owner'] : 'Sin responsable',
+                'id_client_kpi'       => $kpi['id_client_kpi'],
+                'year'                => $kpi['year'],
+                'month'               => $kpi['month'],
+                'kpi_interpretation'  => $kpi['kpi_interpretation'],
+                'cliente'             => $cliente['nombre_cliente'] ?? 'Cliente no encontrado',
+                'kpi_policy'          => $kpiPolicy['policy_kpi_definition'] ?? 'Política no encontrada',
+                'objective'           => $objective['name_objectives'] ?? 'Objetivo no encontrado',
+                'kpi'                 => $kpiData['kpi_name'] ?? 'KPI no encontrado',
+                'kpi_type'            => $kpiType['kpi_type'] ?? 'Tipo de KPI no encontrado',
+                'kpi_definition'      => $kpiDefinition['name_kpi_definition'] ?? 'Definición no encontrada',
+                'kpi_target'          => $kpi['kpi_target'],
+                'data_source'         => $kpi['data_source'],
+                'data_owner'          => isset($dataOwner['data_owner']) ? $dataOwner['data_owner'] : 'Sin responsable',
                 'gran_total_indicador' => $kpi['gran_total_indicador'],
                 'promedio_indicadores' => $promedioIndicadores * 100 // Promedio en formato de porcentaje
             ];
         }
 
-        // Pasar los datos a la vista
-        return view('consultant/list_client_kpis', ['clientKpis' => $data]);
+        // Pasar los datos a la vista, incluyendo los clientes para el select y el filtro actual
+        return view('consultant/list_client_kpis', [
+            'clientKpis' => $data,
+            'clientes' => $clientes,
+            'selectedCliente' => $id_cliente
+        ]);
     }
+
+
 
 
 

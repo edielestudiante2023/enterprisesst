@@ -22,16 +22,14 @@
   <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
 
   <style>
-    /* Asegurarse de que nuestros estilos se apliquen */
+    /* Estilos para la tabla */
     #kpisTable {
       table-layout: fixed !important;
       width: 100% !important;
     }
-    /* Fijar la altura de cada fila de la tabla */
     #kpisTable tbody tr {
       height: 50px !important;
     }
-    /* Evitar que el texto se ajuste a varias líneas y agregar puntos suspensivos */
     #kpisTable th,
     #kpisTable td {
       white-space: nowrap !important;
@@ -41,7 +39,6 @@
       padding: 8px !important;
       border: 1px solid #dee2e6 !important;
     }
-    /* Definir anchos razonables para cada columna usando nth-child */
     #kpisTable th:nth-child(1),
     #kpisTable td:nth-child(1) { width: 15% !important; } /* Cliente */
     #kpisTable th:nth-child(2),
@@ -60,9 +57,6 @@
 <body class="bg-light text-dark">
 
   <nav style="background-color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 10px 0; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
-  
-
-  
     <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 10px auto 0; padding: 0 20px;">
       <!-- Botón izquierdo -->
       <div style="text-align: center;">
@@ -73,7 +67,8 @@
       <!-- Botón para Restablecer Filtros -->
       <div style="text-align: center;">
         <h2 style="margin: 0; font-size: 16px;">Restablecer Filtros</h2>
-        <button id="clearState" class="btn btn-danger btn-sm" style="margin-top: 5px;">Restablecer Filtros</button>
+        <!-- Redirige sin parámetros GET -->
+        <a href="<?= base_url('/listClientKpis') ?>" class="btn btn-danger btn-sm" style="margin-top: 5px;">Restablecer Filtros</a>
       </div>
       
       <!-- Botón derecho -->
@@ -88,6 +83,30 @@
 
   <div class="container my-5">
     <h2 class="text-center mb-4">Lista de KPIs de Clientes</h2>
+    
+    <!-- Formulario para filtrar por Cliente -->
+    <form method="GET" action="<?= base_url('/listClientKpis') ?>" class="mb-4">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label for="id_cliente" class="form-label">Filtrar por Cliente:</label>
+          <select name="id_cliente" id="id_cliente" class="form-select">
+            <option value="">Todos los Clientes</option>
+            <?php if (!empty($clientes)) : ?>
+              <?php foreach ($clientes as $cliente): ?>
+                <option value="<?= $cliente['id_cliente'] ?>" <?= (isset($selectedCliente) && $selectedCliente == $cliente['id_cliente']) ? 'selected' : '' ?>>
+                  <?= $cliente['nombre_cliente'] ?>
+                </option>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+      </div>
+    </form>
+    
+    <!-- Tabla de KPIs -->
     <div class="table-responsive">
       <table id="kpisTable" class="table table-striped table-bordered">
         <thead class="table-light">
@@ -98,14 +117,6 @@
             <th>Meta</th>
             <th>Promedio del Indicador</th>
             <th>Acciones</th>
-          </tr>
-          <tr>
-            <th>
-              <select id="clienteFilter" class="form-select">
-                <option value="">Todos los Clientes</option>
-              </select>
-            </th>
-            <th colspan="5"></th>
           </tr>
         </thead>
         <tbody>
@@ -126,7 +137,13 @@
             <?php endforeach; ?>
           <?php else : ?>
             <tr>
-              <td colspan="6" class="text-center">No hay KPIs registrados</td>
+              <!-- Se crean 6 celdas vacías, colocando el mensaje en la primera -->
+              <td class="text-center">No hay KPIs registrados</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
             </tr>
           <?php endif; ?>
         </tbody>
@@ -136,15 +153,15 @@
 
   <footer style="background-color: white; padding: 20px 0; border-top: 1px solid #B0BEC5; margin-top: 40px; color: #3A3F51; font-size: 14px; text-align: center;">
     <!-- Contenido del footer (sin cambios) -->
-    <!-- ... -->
   </footer>
 
   <script>
     $(document).ready(function() {
-      const table = $('#kpisTable').DataTable({
+      $('#kpisTable').DataTable({
         stateSave: true,
         language: {
-          url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+          url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json",
+          emptyTable: "No hay KPIs registrados"
         },
         dom: 'Bfrtip',
         buttons: [
@@ -153,26 +170,7 @@
             text: 'Exportar a Excel',
             titleAttr: 'Exportar a Excel'
           }
-        ],
-        initComplete: function() {
-          // Rellenar select de filtro "Cliente" con valores únicos
-          const clienteFilter = $('#clienteFilter');
-          table.column(0).data().unique().sort().each(function(d) {
-            clienteFilter.append(`<option value="${d}">${d}</option>`);
-          });
-        }
-      });
-
-      $('#clienteFilter').on('change', function() {
-        const val = $.fn.dataTable.util.escapeRegex($(this).val());
-        table.column(0).search(val ? '^' + val + '$' : '', true, false).draw();
-      });
-
-      $('#clearState').on('click', function() {
-        localStorage.removeItem('DataTables_kpisTable_/');
-        table.state.clear();
-        $('#clienteFilter').val('');
-        table.column(0).search('').draw();
+        ]
       });
     });
   </script>
