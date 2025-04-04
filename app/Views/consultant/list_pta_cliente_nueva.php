@@ -242,12 +242,13 @@
                     </select>
                 </div>
             </div>
-            <!-- Desplegable para selección rápida de mes -->
+            <!-- Desplegable para selección rápida de mes o todo el año -->
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <label for="mesSeleccionado" class="form-label">Seleccionar Mes</label>
+                    <label for="mesSeleccionado" class="form-label">Seleccionar Mes o Todo el Año</label>
                     <select id="mesSeleccionado" class="form-select">
-                        <option value="">-- Seleccione un Mes --</option>
+                        <option value="">-- Seleccione una opción --</option>
+                        <option value="all">Todo el Año</option>
                         <option value="1">Enero</option>
                         <option value="2">Febrero</option>
                         <option value="3">Marzo</option>
@@ -419,14 +420,23 @@
 
             // Al cambiar el mes, se asignan las fechas correspondientes
             $('#mesSeleccionado').on('change', function() {
-                var mes = parseInt($(this).val());
-                if (!mes) return; // Si no se selecciona ningún mes, salir
-
+                var valor = $(this).val();
                 var anio = new Date().getFullYear();
-                // Primer día del mes
-                var primerDia = new Date(anio, mes - 1, 1);
-                // Último día del mes (crea una fecha del mes siguiente y resta un día)
-                var ultimoDia = new Date(anio, mes, 0);
+                var primerDia, ultimoDia;
+
+                if (valor === "all") {
+                    // Todo el año: desde el 1 de enero hasta el 31 de diciembre
+                    primerDia = new Date(anio, 0, 1);
+                    ultimoDia = new Date(anio, 11, 31);
+                } else {
+                    var mes = parseInt(valor);
+                    if (!mes) return; // Si no se selecciona ningún mes, salir
+
+                    // Primer día del mes
+                    primerDia = new Date(anio, mes - 1, 1);
+                    // Último día del mes (crea una fecha del mes siguiente y resta un día)
+                    ultimoDia = new Date(anio, mes, 0);
+                }
 
                 // Función para formatear la fecha a YYYY-MM-DD
                 function formatearFecha(fecha) {
