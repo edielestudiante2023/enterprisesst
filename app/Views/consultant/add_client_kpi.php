@@ -101,6 +101,10 @@
                     <?php endforeach; ?>
                 </select>
             </div>
+            <div class="mb-3">
+                <label for="kpi_formula" class="form-label">Fórmula del KPI:</label>
+                <input type="text" name="kpi_formula" id="kpi_formula" class="form-control">
+            </div>
 
             <div class="mb-3">
                 <label for="id_objectives" class="form-label">Objetivo:</label>
@@ -119,7 +123,7 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-
+            
             <div class="mb-3">
                 <label for="id_kpi_type" class="form-label">Tipo de KPI:</label>
                 <select name="id_kpi_type" id="id_kpi_type" class="form-select" required>
@@ -148,10 +152,6 @@
                 <input type="number" name="kpi_target" id="kpi_target" class="form-control" required>
             </div>
 
-            <div class="mb-3">
-                <label for="kpi_formula" class="form-label">Fórmula del KPI:</label>
-                <input type="text" name="kpi_formula" id="kpi_formula" class="form-control">
-            </div>
 
             <div class="mb-3">
                 <label for="positions_should_know_result" class="form-label">Posiciones que deben conocer el resultado:</label>

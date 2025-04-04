@@ -121,8 +121,8 @@
                                 <td><?= $kpi['cliente'] ?></td>
                             </tr>
                             <tr>
-                                <th>Política KPI</th>
-                                <td><?= $kpi['kpi_policy'] ?></td>
+                                <th>Formula KPI</th>
+                                <td><?= $kpi['kpi_formula'] ?></td>
                             </tr>
                             <tr>
                                 <th>Objetivo</th>

@@ -116,6 +116,11 @@
                 </select>
             </div>
 
+            <div class="mb-3">
+                <label for="kpi_formula" class="form-label">Fórmula KPI:</label>
+                <input type="text" name="kpi_formula" id="kpi_formula" class="form-control" value="<?= $clientKpi['kpi_formula'] ?>" required>
+            </div>
+
             <!-- Objetivo -->
             <div class="mb-3">
                 <label for="id_objectives" class="form-label">Objetivo:</label>

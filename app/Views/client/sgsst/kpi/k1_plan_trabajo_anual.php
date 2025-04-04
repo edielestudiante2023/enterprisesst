@@ -188,10 +188,10 @@
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
                     <?php
-setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-?>
+                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+                    ?>
 
-Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+                    Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
                 </td>
             </tr>
@@ -204,7 +204,7 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
         <table class="alpha-table">
             <tr>
                 <th>Nombre del Indicador</th>
-                <td colspan="3"><?= $kpiData['kpi_name']. ' - ' . $kpiType['kpi_type']?></td>
+                <td colspan="3"><?= $kpiData['kpi_name'] . ' - ' . $kpiType['kpi_type'] ?></td>
             </tr>
             <tr>
                 <th>Definición del Indicador</th>
@@ -254,7 +254,7 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
                     <th>Oct</th>
                     <th>Nov</th>
                     <th>Dic</th>
-                    <th>Media Aritmética</th>
+                    <th>Resultado</th>
                 </tr>
             </thead>
             <tbody>
@@ -272,7 +272,8 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
                     <td><?= $periodos[9]['dato_variable_numerador'] ?></td>
                     <td><?= $periodos[10]['dato_variable_numerador'] ?></td>
                     <td><?= $periodos[11]['dato_variable_numerador'] ?></td>
-                    <td><?= $promedioNumerador ?></td>
+                    <td><?= $promedioNumerador ?>  (∑)</td>
+
                 </tr>
                 <tr>
                     <td><?= $periodos[0]['denominador'] ?></td>
@@ -288,23 +289,26 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
                     <td><?= $periodos[9]['dato_variable_denominador'] ?></td>
                     <td><?= $periodos[10]['dato_variable_denominador'] ?></td>
                     <td><?= $periodos[11]['dato_variable_denominador'] ?></td>
-                    <td><?= $promedioDenominador ?></td>
+                    <td><?= $promedioDenominador ?> (∑)</td>
                 </tr>
                 <tr>
-                    <td>Valor Real</td>
-                    <td><?= number_format($periodos[0]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[1]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[2]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[3]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[4]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[5]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[6]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[7]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[8]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[9]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[10]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($periodos[11]['valor_indicador'], 2) ?></td>
-                    <td><?= number_format($promedioIndicadores * 100, 2) ?>%</td>
+                    <td>Indicador</td>
+                    <td><?= number_format((float)$periodos[0]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[1]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[2]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[3]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[4]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[5]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[6]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[7]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[8]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[9]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[10]['valor_indicador'] * 100, 2) ?>%</td>
+                    <td><?= number_format((float)$periodos[11]['valor_indicador'] * 100, 2) ?>%</td>
+
+                    <td><?= number_format((float)$promedioIndicadores * 100, 2) ?>% (x̄)</td>
+
+
                 </tr>
                 <tr>
                     <td>Meta</td>
@@ -320,7 +324,7 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
                     <td><?= $clientKpi['kpi_target'] ?>%</td>
                     <td><?= $clientKpi['kpi_target'] ?>%</td>
                     <td><?= $clientKpi['kpi_target'] ?>%</td>
-                    <td><?= $clientKpi['kpi_target'] ?>%</td>
+                    <td><?= $clientKpi['kpi_target'] ?>% (x̄)</td>
                 </tr>
             </tbody>
         </table>
@@ -361,72 +365,83 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
         </table>
     </div>
 
-<footer>
-    <h2>Historial de Versiones</h2>
-    <style>
-        footer table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        footer table th, footer table td {
-            border: 1px solid #ddd;
-            text-align: center;
-            vertical-align: middle;
-            padding: 8px;
-            word-wrap: break-word;
-        }
-        footer table th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-        footer table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        footer table tr:hover {
-            background-color: #f1f1f1;
-        }
-        /* Ajuste del ancho de las columnas */
-        footer table th:nth-child(5),
-        footer table td:nth-child(5) {
-            width: 35%; /* Más ancho para la columna Observaciones */
-        }
-        footer table th:nth-child(1),
-        footer table td:nth-child(1) {
-            width: 10%; /* Más estrecho para la columna Versión */
-        }
-        footer table th:nth-child(2),
-        footer table td:nth-child(2),
-        footer table th:nth-child(3),
-        footer table td:nth-child(3),
-        footer table th:nth-child(4),
-        footer table td:nth-child(4) {
-            width: 15%; /* Ancho uniforme para las demás columnas */
-        }
-    </style>
-    <table>
-        <tr>
-            <th>Versión</th>
-            <th>Tipo de Documento</th>
-            <th>Acrónimo</th>
-            <th>Fecha de Creación</th>
-            <th>Observaciones</th>
-        </tr>
-        <?php foreach ($allVersions as $version): ?>
+    <footer>
+        <h2>Historial de Versiones</h2>
+        <style>
+            footer table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
+
+            footer table th,
+            footer table td {
+                border: 1px solid #ddd;
+                text-align: center;
+                vertical-align: middle;
+                padding: 8px;
+                word-wrap: break-word;
+            }
+
+            footer table th {
+                background-color: #f4f4f4;
+                font-weight: bold;
+            }
+
+            footer table tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            footer table tr:hover {
+                background-color: #f1f1f1;
+            }
+
+            /* Ajuste del ancho de las columnas */
+            footer table th:nth-child(5),
+            footer table td:nth-child(5) {
+                width: 35%;
+                /* Más ancho para la columna Observaciones */
+            }
+
+            footer table th:nth-child(1),
+            footer table td:nth-child(1) {
+                width: 10%;
+                /* Más estrecho para la columna Versión */
+            }
+
+            footer table th:nth-child(2),
+            footer table td:nth-child(2),
+            footer table th:nth-child(3),
+            footer table td:nth-child(3),
+            footer table th:nth-child(4),
+            footer table td:nth-child(4) {
+                width: 15%;
+                /* Ancho uniforme para las demás columnas */
+            }
+        </style>
+        <table>
             <tr>
-                <td><?= $version['version_number'] ?></td>
-                <td><?= $version['document_type'] ?></td>
-                <td><?= $version['acronym'] ?></td>
-                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                <td><?= $version['change_control'] ?></td>
+                <th>Versión</th>
+                <th>Tipo de Documento</th>
+                <th>Acrónimo</th>
+                <th>Fecha de Creación</th>
+                <th>Observaciones</th>
             </tr>
-        <?php endforeach; ?>
-    </table>
-</footer>
+            <?php foreach ($allVersions as $version): ?>
+                <tr>
+                    <td><?= $version['version_number'] ?></td>
+                    <td><?= $version['document_type'] ?></td>
+                    <td><?= $version['acronym'] ?></td>
+                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                    <td><?= $version['change_control'] ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    </footer>
 
     <br>
 
-    
+
 
 </body>
 

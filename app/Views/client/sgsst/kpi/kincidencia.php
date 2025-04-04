@@ -261,7 +261,7 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
                     <td><?= $promedioDenominador ?></td>
                 </tr>
                 <tr>
-                    <td>Valor Real</td>
+                    <td>Indicador</td>
                     <td><?= number_format(($periodos[0]['valor_indicador']) * 100000, 2) ?></td>
                     
                     <td><?= number_format($promedioIndicadores * 100000, 2) ?></td> <!-- Mostrar el promedio del indicador -->
