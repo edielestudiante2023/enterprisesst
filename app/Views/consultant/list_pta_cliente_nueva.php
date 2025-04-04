@@ -405,11 +405,11 @@
                     e.preventDefault();
                     return false;
                 }
-                if (!fechaDesde || !fechaHasta) {
+                /* if (!fechaDesde || !fechaHasta) {
                     alert('Debe seleccionar el rango de fechas (Fecha Desde y Fecha Hasta).');
                     e.preventDefault();
                     return false;
-                }
+                } */
             });
 
             var table;
