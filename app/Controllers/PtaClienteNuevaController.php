@@ -43,7 +43,7 @@ class PtaClienteNuevaController extends Controller
             if (!empty($estado)) {
                 $ptaModel->where('estado_actividad', $estado);
             }
-            $limit = 50;
+            $limit = 100;
             $records = $ptaModel->paginate($limit, 'pta_cliente_nueva');
             $pager = $ptaModel->pager;
 

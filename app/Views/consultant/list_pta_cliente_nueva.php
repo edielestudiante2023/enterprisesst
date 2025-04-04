@@ -242,6 +242,27 @@
                     </select>
                 </div>
             </div>
+            <!-- Desplegable para selección rápida de mes -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <label for="mesSeleccionado" class="form-label">Seleccionar Mes</label>
+                    <select id="mesSeleccionado" class="form-select">
+                        <option value="">-- Seleccione un Mes --</option>
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </div>
+            </div>
             <div class="row mb-4">
                 <div class="col-md-12">
                     <button type="submit" class="btn btn-primary" id="btnBuscar">
@@ -396,6 +417,28 @@
                 }
             });
 
+            // Al cambiar el mes, se asignan las fechas correspondientes
+            $('#mesSeleccionado').on('change', function() {
+                var mes = parseInt($(this).val());
+                if (!mes) return; // Si no se selecciona ningún mes, salir
+
+                var anio = new Date().getFullYear();
+                // Primer día del mes
+                var primerDia = new Date(anio, mes - 1, 1);
+                // Último día del mes (crea una fecha del mes siguiente y resta un día)
+                var ultimoDia = new Date(anio, mes, 0);
+
+                // Función para formatear la fecha a YYYY-MM-DD
+                function formatearFecha(fecha) {
+                    var dia = ("0" + fecha.getDate()).slice(-2);
+                    var mesFormateado = ("0" + (fecha.getMonth() + 1)).slice(-2);
+                    return fecha.getFullYear() + '-' + mesFormateado + '-' + dia;
+                }
+
+                $('#fecha_desde').val(formatearFecha(primerDia));
+                $('#fecha_hasta').val(formatearFecha(ultimoDia));
+            });
+
             $('#filterForm').on('submit', function(e) {
                 var cliente = $('#cliente').val();
                 var fechaDesde = $('#fecha_desde').val();
@@ -405,11 +448,11 @@
                     e.preventDefault();
                     return false;
                 }
-                /* if (!fechaDesde || !fechaHasta) {
+                if (!fechaDesde || !fechaHasta) {
                     alert('Debe seleccionar el rango de fechas (Fecha Desde y Fecha Hasta).');
                     e.preventDefault();
                     return false;
-                } */
+                }
             });
 
             var table;
@@ -471,7 +514,6 @@
                             }
                         });
                     }
-
                 });
 
                 // Función para actualizar los contadores de las tarjetas superiores
