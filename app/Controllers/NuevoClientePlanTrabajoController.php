@@ -14,20 +14,40 @@ class NuevoClientePlanTrabajoController extends BaseController
         $clientModel = new ClientModel();
         $actividadesModel = new InventarioActividadesArrayModel();
 
-        // Obtener el cliente primero
+        // Obtener el cliente
         $cliente = $clientModel->find($id);
         $nombre_cliente = $cliente ? $cliente['nombre_cliente'] : 'No disponible';
 
-        // Obtenemos los planes de trabajo relacionados con el ID proporcionado
+        // Obtener los planes de trabajo relacionados con el ID del cliente
         $planes = $ptaModel->asArray()->where('id_cliente', $id)->findAll();
 
+        // Ordenar los planes utilizando la fecha original (formato ISO "YYYY-MM-DD")
+        usort($planes, function($a, $b) {
+            // Primero por estado de actividad
+            $cmp = strcmp($a['estado_actividad'], $b['estado_actividad']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            // Luego por fecha propuesta (comparando las fechas en su formato original)
+            $date1 = strtotime($a['fecha_propuesta']);
+            $date2 = strtotime($b['fecha_propuesta']);
+            if ($date1 !== $date2) {
+                return $date1 - $date2;
+            }
+
+            // Finalmente por PHVA
+            return strcmp($a['phva_plandetrabajo'], $b['phva_plandetrabajo']);
+        });
+
+        // Procesar cada plan: obtener información adicional y formatear fechas
         foreach ($planes as &$plan) {
-            // Intentamos obtener información de la actividad
+            // Obtener la información de la actividad
             $actividad = $actividadesModel->asArray()
                 ->where('actividad_plandetrabajo', $plan['actividad_plandetrabajo'])
                 ->first();
 
-            // Formatear fechas a dd-mm-yyyy
+            // Formatear fechas a "d-m-Y" (con ceros a la izquierda)
             if (!empty($plan['fecha_propuesta'])) {
                 $fecha = new \DateTime($plan['fecha_propuesta']);
                 $plan['fecha_propuesta'] = $fecha->format('d-m-Y');
@@ -37,26 +57,11 @@ class NuevoClientePlanTrabajoController extends BaseController
                 $plan['fecha_cierre'] = $fecha->format('d-m-Y');
             }
 
-            // Asignamos la información a la variable del plan
+            // Asignar información adicional al plan
             $plan['nombre_cliente'] = $nombre_cliente;
             $plan['nombre_actividad'] = $actividad ? $actividad['actividad_plandetrabajo'] : $plan['actividad_plandetrabajo'];
             $plan['numeral_actividad'] = $actividad ? $actividad['numeral_plandetrabajo'] : 'No disponible';
         }
-
-        // Ordenar los planes por estado, fecha y PHVA
-        usort($planes, function($a, $b) {
-            // Primero por estado
-            $cmp = strcmp($a['estado_actividad'], $b['estado_actividad']);
-            if ($cmp !== 0) return $cmp;
-            
-            // Luego por fecha propuesta
-            $date1 = strtotime($a['fecha_propuesta']);
-            $date2 = strtotime($b['fecha_propuesta']);
-            if ($date1 !== $date2) return $date1 - $date2;
-            
-            // Finalmente por PHVA
-            return strcmp($a['phva_plandetrabajo'], $b['phva_plandetrabajo']);
-        });
 
         // Pasar los planes y el nombre del cliente a la vista
         return view('client/list_plan_trabajo', [

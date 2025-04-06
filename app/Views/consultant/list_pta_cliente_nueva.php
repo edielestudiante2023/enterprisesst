@@ -208,7 +208,7 @@
         <form id="filterForm" method="get" action="<?= site_url('/pta-cliente-nueva/list') ?>">
             <div class="row mb-3">
                 <!-- Seleccionar Cliente -->
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label for="cliente" class="form-label">Cliente</label>
                     <select name="cliente" id="cliente" class="form-select">
                         <option value="">Seleccione un Cliente</option>
@@ -223,16 +223,16 @@
                     </select>
                 </div>
                 <!-- Rango de Fechas -->
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="fecha_desde" class="form-label">Fecha Desde</label>
                     <input type="date" name="fecha_desde" id="fecha_desde" class="form-control" value="<?= esc(service('request')->getGet('fecha_desde')) ?>">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="fecha_hasta" class="form-label">Fecha Hasta</label>
                     <input type="date" name="fecha_hasta" id="fecha_hasta" class="form-control" value="<?= esc(service('request')->getGet('fecha_hasta')) ?>">
                 </div>
                 <!-- Estado de Actividad -->
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="estado" class="form-label">Estado de Actividad</label>
                     <select name="estado" id="estado" class="form-select">
                         <option value="">Todas</option>
@@ -241,10 +241,8 @@
                         <option value="GESTIONANDO" <?= (service('request')->getGet('estado') == 'GESTIONANDO') ? 'selected' : '' ?>>GESTIONANDO</option>
                     </select>
                 </div>
-            </div>
-            <!-- Desplegable para selección rápida de mes o todo el año -->
-            <div class="row mb-4">
-                <div class="col-md-3">
+
+                <div class="col-md-2">
                     <label for="mesSeleccionado" class="form-label">Seleccionar Mes o Todo el Año</label>
                     <select id="mesSeleccionado" class="form-select">
                         <option value="">-- Seleccione una opción --</option>
@@ -262,25 +260,26 @@
                         <option value="11">Noviembre</option>
                         <option value="12">Diciembre</option>
                     </select>
+
                 </div>
-            </div>
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary" id="btnBuscar">
-                        <i class="fas fa-search"></i> Buscar
-                    </button>
-                    <button type="reset" id="resetFilters" class="btn btn-secondary">
-                        <i class="fas fa-undo"></i> Resetear Filtros
-                    </button>
-                    <button type="button" id="btnCalificarCerradas" class="btn btn-warning">
-                        <i class="fas fa-check-double"></i> Calificar Cerradas
-                    </button>
-                    <!-- Botón para Añadir Registro con filtros en la URL -->
-                    <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-info">
-                        <i class="fas fa-plus"></i> Añadir Registro
-                    </a>
+                <div style="height: 10px;"></div>
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary" id="btnBuscar">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                        <button type="reset" id="resetFilters" class="btn btn-secondary">
+                            <i class="fas fa-undo"></i> Resetear Filtros
+                        </button>
+                        <button type="button" id="btnCalificarCerradas" class="btn btn-warning">
+                            <i class="fas fa-check-double"></i> Calificar Cerradas
+                        </button>
+                        <!-- Botón para Añadir Registro con filtros en la URL -->
+                        <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-info">
+                            <i class="fas fa-plus"></i> Añadir Registro
+                        </a>
+                    </div>
                 </div>
-            </div>
         </form>
 
         <!-- Mostrar la tabla solo si existen registros -->
