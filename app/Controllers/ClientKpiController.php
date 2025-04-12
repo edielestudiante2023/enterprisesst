@@ -438,24 +438,25 @@ class ClientKpiController extends Controller
             $clientKpiModel = new ClientKpiModel();
             $clientKpis = $clientKpiModel
                 ->select('
-                client_kpi.*,
-                cli.nombre_cliente AS cliente,
-                kpi_policy.policy_kpi_definition,
-                obj.name_objectives AS objective,
-                kpi.kpi_name,
-                kpi_type.kpi_type,
-                kpi_def.name_kpi_definition,
-                owner.data_owner
-            ')
+        client_kpi.*,
+        cli.nombre_cliente,
+        kpi_policy.policy_kpi_definition,
+        obj.name_objectives,
+        kpi.kpi_name,
+        kpi_type.kpi_type,
+        kpi_def.name_kpi_definition,
+        owner.[campo_data_owner] AS data_owner
+    ')
                 ->join('tbl_clientes as cli', 'cli.id_cliente = client_kpi.id_cliente')
-                ->join('kpi_policy', 'kpi_policy.id = client_kpi.id_kpi_policy')
-                ->join('objectives as obj', 'obj.id = client_kpi.id_objectives')
-                ->join('kpis as kpi', 'kpi.id = client_kpi.id_kpis')
-                ->join('kpi_type', 'kpi_type.id = client_kpi.id_kpi_type')
-                ->join('kpi_definition as kpi_def', 'kpi_def.id = client_kpi.id_kpi_definition')
-                ->join('data_owner as owner', 'owner.id = client_kpi.id_data_owner')
+                ->join('tbl_kpi_policy as kpi_policy', 'kpi_policy.id_kpi_policy = client_kpi.id_kpi_policy')
+                ->join('tbl_objectives_policy as obj', 'obj.id_objectives = client_kpi.id_objectives')
+                ->join('tbl_kpis as kpi', 'kpi.id_kpis = client_kpi.id_kpis')
+                ->join('tbl_kpi_type as kpi_type', 'kpi_type.id_kpi_type = client_kpi.id_kpi_type')
+                ->join('tbl_kpi_definition as kpi_def', 'kpi_def.id_kpi_definition = client_kpi.id_kpi_definition')
+                ->join('tbl_data_owner as owner', 'owner.[campo_data_owner_id] = client_kpi.id_data_owner')
                 ->where('client_kpi.id_cliente', $id_cliente)
                 ->findAll();
+
 
             // Pre-cargar numeradores y denominadores para evitar queries repetitivas en cada iteración
             $numeratorModel = new VariableNumeratorModel();
