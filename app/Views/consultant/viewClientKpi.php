@@ -211,8 +211,9 @@
 
                     <!-- Botón de edición para cada KPI -->
                     <div class="text-center mt-3">
-                        <a href="<?= base_url('/editClientKpi/' . $kpi['id_client_kpi'] . '?id_cliente=' . $selectedClient) ?>" class="btn btn-secondary btn-edit">Editar Indicador</a>
+                        <a href="<?= base_url('/editClientKpi/' . $kpi['id_client_kpi'] . '?id_cliente=' . $selectedClient) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-edit">Editar Indicador</a>
                     </div>
+
                 </div>
                 <br>
             <?php endforeach; ?>
@@ -255,17 +256,17 @@
             if (storedClient && !urlParams.has('id_cliente')) {
                 window.location.href = window.location.pathname + '?id_cliente=' + storedClient;
             }
-            
+
             // Si hay valor en sessionStorage, se asigna al select
             if (storedClient) {
                 $('#id_cliente').val(storedClient);
             }
-            
+
             // Al cambiar la selección, se guarda el valor en sessionStorage
             $('#id_cliente').on('change', function() {
                 sessionStorage.setItem('selectedClient', $(this).val());
             });
-            
+
             // Inicializar DataTable
             $('.datatable').DataTable({
                 language: {
