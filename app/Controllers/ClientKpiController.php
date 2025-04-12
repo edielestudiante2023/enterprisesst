@@ -447,7 +447,7 @@ class ClientKpiController extends Controller
                 kpi_def.name_kpi_definition,
                 owner.data_owner
             ')
-                ->join('clients as cli', 'cli.id = client_kpi.id_cliente')
+                ->join('tbl_clientes as cli', 'cli.id_cliente = client_kpi.id_cliente')
                 ->join('kpi_policy', 'kpi_policy.id = client_kpi.id_kpi_policy')
                 ->join('objectives as obj', 'obj.id = client_kpi.id_objectives')
                 ->join('kpis as kpi', 'kpi.id = client_kpi.id_kpis')
