@@ -421,7 +421,6 @@ class ClientKpiController extends Controller
             'selectedCliente' => $id_cliente
         ]);
     }
-
     public function listClientKpisFull()
     {
         // Cargar clientes para el select
@@ -438,35 +437,38 @@ class ClientKpiController extends Controller
             $clientKpiModel = new ClientKpiModel();
             $clientKpis = $clientKpiModel
                 ->select('
-        client_kpi.*,
-        cli.nombre_cliente,
-        kpi_policy.policy_kpi_definition,
-        obj.name_objectives,
-        kpi.kpi_name,
-        kpi_type.kpi_type,
-        kpi_def.name_kpi_definition,
-        owner.[campo_data_owner] AS data_owner
-    ')
+                    client_kpi.*,
+                    cli.nombre_cliente,
+                    kpi_policy.policy_kpi_definition,
+                    obj.name_objectives,
+                    kpi.kpi_name,
+                    kpi_type.kpi_type,
+                    kpi_def.name_kpi_definition,
+                    owner.data_owner
+                ')
+                // Se indica la tabla base con alias 'client_kpi'
+                ->from('tbl_client_kpi as client_kpi')
                 ->join('tbl_clientes as cli', 'cli.id_cliente = client_kpi.id_cliente')
                 ->join('tbl_kpi_policy as kpi_policy', 'kpi_policy.id_kpi_policy = client_kpi.id_kpi_policy')
                 ->join('tbl_objectives_policy as obj', 'obj.id_objectives = client_kpi.id_objectives')
                 ->join('tbl_kpis as kpi', 'kpi.id_kpis = client_kpi.id_kpis')
                 ->join('tbl_kpi_type as kpi_type', 'kpi_type.id_kpi_type = client_kpi.id_kpi_type')
                 ->join('tbl_kpi_definition as kpi_def', 'kpi_def.id_kpi_definition = client_kpi.id_kpi_definition')
-                ->join('tbl_data_owner as owner', 'owner.[campo_data_owner_id] = client_kpi.id_data_owner')
+                ->join('tbl_data_owner as owner', 'owner.id_data_owner = client_kpi.id_data_owner')
                 ->where('client_kpi.id_cliente', $id_cliente)
                 ->findAll();
 
-
-            // Pre-cargar numeradores y denominadores para evitar queries repetitivas en cada iteración
+            // Pre-cargar numeradores y denominadores para evitar queries repetitivas en cada iteración.
+            // (Asegúrate de que en estos modelos se defina correctamente el nombre de la tabla y campos de índice)
             $numeratorModel = new VariableNumeratorModel();
             $denominatorModel = new VariableDenominatorModel();
             $allNumeradores = $numeratorModel->findAll();
             $allDenominadores = $denominatorModel->findAll();
 
-            // Indexar los arreglos por ID para rápido acceso
+            // Indexar los arreglos por ID para rápido acceso.
             $numeradoresIndexed = [];
             foreach ($allNumeradores as $num) {
+                // Suponiendo que el campo identificador es 'id'
                 $numeradoresIndexed[$num['id']] = $num;
             }
             $denominadoresIndexed = [];
@@ -474,21 +476,26 @@ class ClientKpiController extends Controller
                 $denominadoresIndexed[$den['id']] = $den;
             }
 
-            // Procesar cada KPI para agregar datos de periodos y calcular el promedio
+            // Procesar cada KPI para agregar datos de periodos y calcular el promedio.
             foreach ($clientKpis as $kpi) {
                 $sumIndicadores   = 0;
                 $validIndicadores = 0;
                 $periodos = [];
 
                 for ($i = 1; $i <= 12; $i++) {
-                    // Acceder a numerador y denominador previamente indexados
+                    // Obtener IDs de numerador y denominador según el período (asegúrate de que estos campos existan en la tabla base)
                     $numeradorId   = $kpi['variable_numerador_' . $i];
                     $denominadorId = $kpi['variable_denominador_' . $i];
 
-                    $numerador   = isset($numeradoresIndexed[$numeradorId]) ? $numeradoresIndexed[$numeradorId]['numerator_variable_text'] : 'Numerador no encontrado';
-                    $denominador = isset($denominadoresIndexed[$denominadorId]) ? $denominadoresIndexed[$denominadorId]['denominator_variable_text'] : 'Denominador no encontrado';
-                    $indicador   = $kpi['valor_indicador_' . $i];
+                    $numerador = isset($numeradoresIndexed[$numeradorId])
+                        ? $numeradoresIndexed[$numeradorId]['numerator_variable_text']
+                        : 'Numerador no encontrado';
+                    $denominador = isset($denominadoresIndexed[$denominadorId])
+                        ? $denominadoresIndexed[$denominadorId]['denominator_variable_text']
+                        : 'Denominador no encontrado';
+                    $indicador = $kpi['valor_indicador_' . $i];
 
+                    // Sumar el indicador si las variables tienen datos válidos
                     if ($kpi['dato_variable_numerador_' . $i] != 0 && $kpi['dato_variable_denominador_' . $i] != 0) {
                         $sumIndicadores += $indicador;
                         $validIndicadores++;
@@ -510,9 +517,10 @@ class ClientKpiController extends Controller
                     'year'                    => $kpi['year'],
                     'month'                   => $kpi['month'],
                     'kpi_interpretation'      => $kpi['kpi_interpretation'],
-                    'cliente'                 => $kpi['cliente'],
+                    // Se utiliza el alias del join para el cliente
+                    'cliente'                 => $kpi['nombre_cliente'],
                     'kpi_policy'              => $kpi['policy_kpi_definition'],
-                    'objective'               => $kpi['objective'],
+                    'objective'               => $kpi['name_objectives'],
                     'kpi'                     => $kpi['kpi_name'],
                     'kpi_type'                => $kpi['kpi_type'],
                     'kpi_definition'          => $kpi['name_kpi_definition'],
