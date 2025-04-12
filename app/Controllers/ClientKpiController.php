@@ -424,93 +424,102 @@ class ClientKpiController extends Controller
 
     public function listClientKpisFull()
     {
-        // Cargar el modelo de clientes para obtener la lista para el select
+        // Cargar clientes para el select
         $clientModel = new ClientModel();
         $clientes = $clientModel->findAll();
 
-        // Obtener el id del cliente seleccionado (si lo hay) desde GET
+        // Obtener el id del cliente seleccionado
         $id_cliente = $this->request->getGet('id_cliente');
 
-        // Inicializamos el array de KPIs filtrados
         $dataKPIs = [];
 
-        // Si se ha seleccionado un cliente, filtramos los KPIs
         if ($id_cliente) {
-            // Instanciar los modelos necesarios
-            $clientKpiModel   = new ClientKpiModel();
-            $kpiPolicyModel   = new KpiPolicyModel();
-            $objectivesModel  = new ObjectivesPolicyModel();
-            $kpisModel        = new KpisModel();
-            $kpiTypeModel     = new KpiTypeModel();
-            $kpiDefinitionModel = new KpiDefinitionModel();
-            $dataOwnerModel   = new DataOwnerModel();
-            $numeratorModel   = new VariableNumeratorModel();
+            // Usar join para obtener todos los datos relacionados en una sola consulta.
+            $clientKpiModel = new ClientKpiModel();
+            $clientKpis = $clientKpiModel
+                ->select('
+                client_kpi.*,
+                cli.nombre_cliente AS cliente,
+                kpi_policy.policy_kpi_definition,
+                obj.name_objectives AS objective,
+                kpi.kpi_name,
+                kpi_type.kpi_type,
+                kpi_def.name_kpi_definition,
+                owner.data_owner
+            ')
+                ->join('clients as cli', 'cli.id = client_kpi.id_cliente')
+                ->join('kpi_policy', 'kpi_policy.id = client_kpi.id_kpi_policy')
+                ->join('objectives as obj', 'obj.id = client_kpi.id_objectives')
+                ->join('kpis as kpi', 'kpi.id = client_kpi.id_kpis')
+                ->join('kpi_type', 'kpi_type.id = client_kpi.id_kpi_type')
+                ->join('kpi_definition as kpi_def', 'kpi_def.id = client_kpi.id_kpi_definition')
+                ->join('data_owner as owner', 'owner.id = client_kpi.id_data_owner')
+                ->where('client_kpi.id_cliente', $id_cliente)
+                ->findAll();
+
+            // Pre-cargar numeradores y denominadores para evitar queries repetitivas en cada iteración
+            $numeratorModel = new VariableNumeratorModel();
             $denominatorModel = new VariableDenominatorModel();
+            $allNumeradores = $numeratorModel->findAll();
+            $allDenominadores = $denominatorModel->findAll();
 
-            // Consultar únicamente los KPIs asociados al cliente seleccionado
-            $clientKpis = $clientKpiModel->where('id_cliente', $id_cliente)->findAll();
+            // Indexar los arreglos por ID para rápido acceso
+            $numeradoresIndexed = [];
+            foreach ($allNumeradores as $num) {
+                $numeradoresIndexed[$num['id']] = $num;
+            }
+            $denominadoresIndexed = [];
+            foreach ($allDenominadores as $den) {
+                $denominadoresIndexed[$den['id']] = $den;
+            }
 
-            // Procesar cada KPI para agregar los datos relacionados y calcular el promedio
+            // Procesar cada KPI para agregar datos de periodos y calcular el promedio
             foreach ($clientKpis as $kpi) {
-                // Obtener datos relacionados a partir de los IDs
-                $cliente       = $clientModel->find($kpi['id_cliente']);
-                $kpiPolicy     = $kpiPolicyModel->find($kpi['id_kpi_policy']);
-                $objective     = $objectivesModel->find($kpi['id_objectives']);
-                $kpiData       = $kpisModel->find($kpi['id_kpis']);
-                $kpiType       = $kpiTypeModel->find($kpi['id_kpi_type']);
-                $kpiDefinition = $kpiDefinitionModel->find($kpi['id_kpi_definition']);
-                $dataOwner     = $dataOwnerModel->find($kpi['id_data_owner']);
-
-                // Variables para el cálculo del promedio
                 $sumIndicadores   = 0;
                 $validIndicadores = 0;
-
-                // Construir la estructura de periodos (12 meses)
                 $periodos = [];
+
                 for ($i = 1; $i <= 12; $i++) {
-                    // Consultar las descripciones de numerador y denominador
-                    $numerador   = $numeratorModel->find($kpi['variable_numerador_' . $i]);
-                    $denominador = $denominatorModel->find($kpi['variable_denominador_' . $i]);
+                    // Acceder a numerador y denominador previamente indexados
+                    $numeradorId   = $kpi['variable_numerador_' . $i];
+                    $denominadorId = $kpi['variable_denominador_' . $i];
 
-                    // Obtener el valor del indicador para este periodo
-                    $indicador = $kpi['valor_indicador_' . $i];
+                    $numerador   = isset($numeradoresIndexed[$numeradorId]) ? $numeradoresIndexed[$numeradorId]['numerator_variable_text'] : 'Numerador no encontrado';
+                    $denominador = isset($denominadoresIndexed[$denominadorId]) ? $denominadoresIndexed[$denominadorId]['denominator_variable_text'] : 'Denominador no encontrado';
+                    $indicador   = $kpi['valor_indicador_' . $i];
 
-                    // Sumar el indicador si ambos datos son diferentes de 0
                     if ($kpi['dato_variable_numerador_' . $i] != 0 && $kpi['dato_variable_denominador_' . $i] != 0) {
                         $sumIndicadores += $indicador;
                         $validIndicadores++;
                     }
 
-                    // Agregar datos del periodo al arreglo
                     $periodos[] = [
-                        'numerador'                => $numerador['numerator_variable_text'] ?? 'Numerador no encontrado',
-                        'denominador'              => $denominador['denominator_variable_text'] ?? 'Denominador no encontrado',
+                        'numerador'                => $numerador,
+                        'denominador'              => $denominador,
                         'dato_variable_numerador'  => $kpi['dato_variable_numerador_' . $i],
                         'dato_variable_denominador' => $kpi['dato_variable_denominador_' . $i],
                         'valor_indicador'          => $indicador
                     ];
                 }
 
-                // Calcular el promedio de indicadores válidos
                 $promedioIndicadores = ($validIndicadores > 0) ? ($sumIndicadores / $validIndicadores) : 0;
 
-                // Agregar los datos del KPI al arreglo final
                 $dataKPIs[] = [
                     'id_client_kpi'           => $kpi['id_client_kpi'],
                     'year'                    => $kpi['year'],
                     'month'                   => $kpi['month'],
                     'kpi_interpretation'      => $kpi['kpi_interpretation'],
-                    'cliente'                 => $cliente['nombre_cliente'] ?? 'Cliente no encontrado',
-                    'kpi_policy'              => $kpiPolicy['policy_kpi_definition'] ?? 'Política no encontrada',
-                    'objective'               => $objective['name_objectives'] ?? 'Objetivo no encontrado',
-                    'kpi'                     => $kpiData['kpi_name'] ?? 'KPI no encontrado',
-                    'kpi_type'                => $kpiType['kpi_type'] ?? 'Tipo de KPI no encontrado',
-                    'kpi_definition'          => $kpiDefinition['name_kpi_definition'] ?? 'Definición no encontrada',
+                    'cliente'                 => $kpi['cliente'],
+                    'kpi_policy'              => $kpi['policy_kpi_definition'],
+                    'objective'               => $kpi['objective'],
+                    'kpi'                     => $kpi['kpi_name'],
+                    'kpi_type'                => $kpi['kpi_type'],
+                    'kpi_definition'          => $kpi['name_kpi_definition'],
                     'kpi_target'              => $kpi['kpi_target'],
                     'kpi_formula'             => $kpi['kpi_formula'],
                     'positions_should_know_result' => $kpi['positions_should_know_result'],
                     'data_source'             => $kpi['data_source'],
-                    'data_owner'              => isset($dataOwner['data_owner']) ? $dataOwner['data_owner'] : 'Sin responsable',
+                    'data_owner'              => $kpi['data_owner'] ?? 'Sin responsable',
                     'gran_total_indicador'    => $kpi['gran_total_indicador'],
                     'periodicidad'            => $kpi['periodicidad'],
                     'promedio_indicadores'    => $promedioIndicadores,
@@ -523,11 +532,10 @@ class ClientKpiController extends Controller
             }
         }
 
-        // Pasar a la vista tanto la lista de clientes para el select como los KPIs filtrados (si hay)
         return view('consultant/viewClientKpi', [
             'clientes'       => $clientes,
             'clientKpis'     => $dataKPIs,
-            'selectedClient' => $id_cliente // puede ser null o vacío si no se ha seleccionado
+            'selectedClient' => $id_cliente
         ]);
     }
 }
