@@ -59,7 +59,7 @@ class kpimipvrdcController
 
         // Obtener la política (por ejemplo, de alcohol y drogas) del cliente
         $policyTypeId = 46; // ID de la política
-        $id_kpis = 1; // Primer indicador: Plan de Trabajo Anual
+        $id_kpis = 2; // Primer indicador: Plan de Trabajo Anual
         $clientPolicy = $clientPoliciesModel->where('client_id', $clientId)
             ->where('policy_type_id', $policyTypeId)
             ->orderBy('id', 'DESC')
