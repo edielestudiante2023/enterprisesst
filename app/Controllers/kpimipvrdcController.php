@@ -45,7 +45,6 @@ class kpimipvrdcController
         $denominatorModel = new VariableDenominatorModel();
         $kpiTypeModel = new KpiTypeModel();
 
-
         // Obtener los datos del cliente
         $client = $clientModel->find($clientId);
         if (!$client) {
@@ -58,14 +57,9 @@ class kpimipvrdcController
             return redirect()->to('/dashboardclient')->with('error', 'No se pudo encontrar la información del consultor');
         }
 
-        
-
-        
-
-
-        // Obtener la política de alcohol y drogas del cliente
-        $policyTypeId = 46; // Supongamos que el ID de la política de alcohol y drogas es 1
-        $id_kpis = 2; // Primer indicador: Plan de Trabajo Anual
+        // Obtener la política (por ejemplo, de alcohol y drogas) del cliente
+        $policyTypeId = 46; // ID de la política
+        $id_kpis = 1; // Primer indicador: Plan de Trabajo Anual
         $clientPolicy = $clientPoliciesModel->where('client_id', $clientId)
             ->where('policy_type_id', $policyTypeId)
             ->orderBy('id', 'DESC')
@@ -82,7 +76,6 @@ class kpimipvrdcController
             ->where('policy_type_id', $policyTypeId)
             ->orderBy('created_at', 'DESC')
             ->first();
-
         if (!$latestVersion) {
             return redirect()->to('/dashboardclient')->with('error', 'No se encontró un versionamiento para este documento de este cliente.');
         }
@@ -92,35 +85,33 @@ class kpimipvrdcController
             ->where('policy_type_id', $policyTypeId)
             ->orderBy('created_at', 'DESC')
             ->findAll();
-
         if (!$allVersions) {
             return redirect()->to('/dashboardclient')->with('error', 'No se encontró un versionamiento para este documento de este cliente.');
         }
 
+        // Obtener el KPI del cliente
         $clientKpi = $clientKpiModel->where('id_cliente', $clientId)
             ->where('id_kpis', $id_kpis)
             ->first();
-
         if (!$clientKpi) {
             return redirect()->to('/dashboardclient')->with('error', 'KPI no encontrado');
         }
 
-        // Obtener la definición del KPI
+        // Obtener la definición del KPI y otros datos relacionados
         $kpiDefinition = $kpiDefinitionModel->find($clientKpi['id_kpi_definition']);
         $kpiData = $kpisModel->find($id_kpis);
         $kpiType = $kpiTypeModel->find($clientKpi['id_kpi_type']);
         if (!$kpiType) {
             return redirect()->to('/dashboardclient')->with('error', 'No se encontró el tipo de KPI');
         }
-
-        // Obtener los datos del responsable del dato
         $dataOwner = $dataOwnerModel->find($clientKpi['id_data_owner']);
 
-        // Obtener numeradores y denominadores para los periodos de medición
+        // Inicializar variables para acumular la suma de numerador y denominador
+        // (queremos sumarlos, sin dividir por el número de valores)
         $sumNumerador = 0;
-        $countNumerador = 0;
         $sumDenominador = 0;
-        $countDenominador = 0;
+
+        // Para el indicador, se calculará el promedio
         $sumIndicadores = 0;
         $countIndicadores = 0;
 
@@ -131,45 +122,43 @@ class kpimipvrdcController
 
             $datoNumerador = $clientKpi['dato_variable_numerador_' . $i];
             $datoDenominador = $clientKpi['dato_variable_denominador_' . $i];
-            $valorIndicador = $clientKpi['valor_indicador_' . $i];
+            $valorIndicador = floatval(str_replace(',', '.', $clientKpi['valor_indicador_' . $i]));
 
-            // Sumar los valores del numerador y denominador, omitiendo los ceros
+
+            // Para numerador y denominador: sumar solo si el valor es distinto de cero
             if ($datoNumerador != 0) {
                 $sumNumerador += $datoNumerador;
-                $countNumerador++;
             }
 
             if ($datoDenominador != 0) {
                 $sumDenominador += $datoDenominador;
-                $countDenominador++;
             }
 
-            // Sumar el valor del indicador, omitiendo los ceros
+            // Para el indicador: calcular el promedio (suma y conteo de valores no cero)
             if ($valorIndicador != 0) {
                 $sumIndicadores += $valorIndicador;
                 $countIndicadores++;
             }
 
-
             $periodos[] = [
                 'numerador' => $numerador['numerator_variable_text'] ?? 'No definido',
                 'denominador' => $denominador['denominator_variable_text'] ?? 'No definido',
-                'dato_variable_numerador' => $clientKpi['dato_variable_numerador_' . $i],
-                'dato_variable_denominador' => $clientKpi['dato_variable_denominador_' . $i],
-                'valor_indicador' => $clientKpi['valor_indicador_' . $i],
+                'dato_variable_numerador' => $datoNumerador,
+                'dato_variable_denominador' => $datoDenominador,
+                'valor_indicador' => $valorIndicador,
             ];
         }
 
-        // Calcular los promedios de los numeradores, denominadores y el valor real (indicador)
-        $promedioNumerador = $countNumerador > 0 ? ($sumNumerador / $countNumerador) : 0;
-        $promedioDenominador = $countDenominador > 0 ? ($sumDenominador / $countDenominador) : 0;
-        $promedioIndicadores = $countIndicadores > 0 ? ($sumIndicadores / $countIndicadores) : 0;
+        // Asignar la suma (no el promedio) para numerador y denominador
+        $sumaNumerador = $sumNumerador;
+        $sumaDenominador = $sumDenominador;
+
+        // Calcular el promedio del indicador (sólo con los valores diferentes de cero)
+        $promedioIndicadores = $countIndicadores > 0 ? ((float)$sumIndicadores / (float)$countIndicadores) : 0;
 
 
-
-        // Calcular el gran total del indicador
-        $granTotalIndicador = $clientKpi['gran_total_indicador']; // O usar el promedio de indicadores ya calculado
-
+        // Se mantiene el gran total del indicador según lo definido en la base de datos
+        $granTotalIndicador = $clientKpi['gran_total_indicador'];
 
         // Obtener el seguimiento y análisis de datos
         $analisis_datos = $clientKpi['analisis_datos'];
@@ -177,15 +166,16 @@ class kpimipvrdcController
         $seguimiento2 = $clientKpi['seguimiento2'];
         $seguimiento3 = $clientKpi['seguimiento3'];
 
-
-        // Pasar los datos a la vista
+        // Preparar los datos para la vista
+        // En la vista, se usa $promedioNumerador y $promedioDenominador para mostrar la suma
+        // y se usa $promedioIndicadores (multiplicado por 100) para mostrar el promedio en porcentaje.
         $data = [
             'client' => $client,
             'consultant' => $consultant,
             'clientPolicy' => $clientPolicy,
             'policyType' => $policyType,
             'latestVersion' => $latestVersion,
-            'allVersions' => $allVersions,  // Pasamos todas las versiones al footer
+            'allVersions' => $allVersions,  // Se pasan todas las versiones al footer
             'clientKpi' => $clientKpi,
             'kpiDefinition' => $kpiDefinition,
             'kpiData' => $kpiData,
@@ -196,12 +186,10 @@ class kpimipvrdcController
             'seguimiento1' => $seguimiento1,
             'seguimiento2' => $seguimiento2,
             'seguimiento3' => $seguimiento3,
-            'clientKpi' => $clientKpi,
-            'periodos' => $periodos,
-            'promedioNumerador' => $promedioNumerador,
-            'promedioDenominador' => $promedioDenominador,
+            'promedioNumerador' => $sumaNumerador,     // Suma total del numerador
+            'promedioDenominador' => $sumaDenominador,   // Suma total del denominador
             'granTotalIndicador' => $granTotalIndicador,
-            'promedioIndicadores' => $promedioIndicadores,
+            'promedioIndicadores' => $promedioIndicadores, // Promedio (para mostrar como % en la vista)
         ];
 
         return view('client/sgsst/kpi/k2mipvrdc', $data);
