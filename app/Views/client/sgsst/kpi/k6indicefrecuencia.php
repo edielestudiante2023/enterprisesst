@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -168,6 +171,13 @@
 </head>
 
 <body>
+
+<?php if (isset($advertencia)): ?>
+    <div class="alert alert-warning text-center">
+        <?= esc($advertencia) ?>
+    </div>
+<?php endif; ?>
+
     <div class="centered-content">
         <table>
             <tr>

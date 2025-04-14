@@ -96,8 +96,11 @@ class kpatelController extends Controller
             ->first();
 
         if (!$clientKpi) {
-            return redirect()->to('/dashboardclient')->with('error', 'KPI no encontrado');
-        }
+                return view('client/sgsst/kpi/kpi_incompleto', [
+                    'client' => $client,
+                    'advertencia' => 'Este indicador no ha sido configurado. Por favor contacte a su consultor.',
+                ]);
+            }
 
         // Obtener la definición del KPI
         $kpiDefinition = $kpiDefinitionModel->find($clientKpi['id_kpi_definition']);
@@ -154,11 +157,14 @@ class kpatelController extends Controller
             ];
         }
 
-        // Calcular los promedios de los numeradores, denominadores y el valor real (indicador)
-        $promedioNumerador = $countNumerador > 0 ? ($sumNumerador / $countNumerador) : 0;
+         // Calcular los promedios de los numeradores, denominadores y el valor real (indicador)
+        /* $promedioNumerador = $countNumerador > 0 ? ($sumNumerador / $countNumerador) : 0;
         $promedioDenominador = $countDenominador > 0 ? ($sumDenominador / $countDenominador) : 0;
-        $promedioIndicadores = $countIndicadores > 0 ? ($sumIndicadores / $countIndicadores) : 0;
+        $promedioIndicadores = $countIndicadores > 0 ? ($sumIndicadores / $countIndicadores) : 0; */
 
+        $promedioNumerador = $sumNumerador;     // suma total
+        $promedioDenominador = $sumDenominador; // suma total
+        $promedioIndicadores = $countIndicadores > 0 ? ($sumIndicadores / $countIndicadores) : 0; // este sí va como promedio
 
 
         // Calcular el gran total del indicador
