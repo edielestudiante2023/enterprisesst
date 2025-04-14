@@ -102,8 +102,11 @@ class kpimipvrdcController
             ->first();
 
         if (!$clientKpi) {
-            return redirect()->to('/dashboardclient')->with('error', 'KPI no encontrado');
-        }
+                return view('client/sgsst/kpi/kpi_incompleto', [
+                    'client' => $client,
+                    'advertencia' => 'Este indicador no ha sido configurado. Por favor contacte a su consultor.',
+                ]);
+            }
 
         // Obtener la definición del KPI
         $kpiDefinition = $kpiDefinitionModel->find($clientKpi['id_kpi_definition']);
