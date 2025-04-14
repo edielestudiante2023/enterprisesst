@@ -164,11 +164,11 @@
                         </table>
 
                         <h3 class="text-center mt-4">PERIODOS</h3>
-                        <!-- Se agrega contenedor responsivo para la tabla -->
                         <div class="table-responsive">
                             <table class="table table-striped table-bordered datatable" style="width:100%">
                                 <thead>
                                     <tr>
+                                        <th>Periodo</th>
                                         <th>Numerador</th>
                                         <th>Valor Numerador</th>
                                         <th>Denominador</th>
@@ -177,15 +177,18 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <?php $counter = 1; ?>
                                     <?php foreach ($kpi['periodos'] as $periodo): ?>
                                         <?php if ($periodo['dato_variable_numerador'] > 0 && $periodo['dato_variable_denominador'] > 0): ?>
                                             <tr>
+                                                <td class="text-center"><?= $counter ?></td>
                                                 <td><?= $periodo['numerador'] ?></td>
                                                 <td class="text-center"><?= $periodo['dato_variable_numerador'] ?></td>
                                                 <td><?= $periodo['denominador'] ?></td>
                                                 <td class="text-center"><?= $periodo['dato_variable_denominador'] ?></td>
                                                 <td class="text-center"><?= $periodo['valor_indicador'] ?></td>
                                             </tr>
+                                            <?php $counter++; ?>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -270,7 +273,7 @@
             $('#id_cliente').on('change', function() {
                 sessionStorage.setItem('selectedClient', $(this).val());
             });
-            // Inicializar DataTable con 12 filas por defecto si existen registros
+            // Inicializar DataTable con 12 filas por defecto en la tabla de periodos
             $('.datatable').DataTable({
                 pageLength: 12,
                 language: {
