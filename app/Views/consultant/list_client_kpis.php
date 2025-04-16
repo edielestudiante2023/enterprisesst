@@ -140,7 +140,7 @@
                 <td><?= number_format($kpi['promedio_indicadores'], 2) ?>%</td>
                 <td>
                   <a href="<?= base_url('listClientKpisFull') ?>" class="btn btn-info btn-sm" target="_blank" rel="noopener noreferrer">Ver completo</a>
-                  <a href="<?= base_url('/editClientKpi/' . $kpi['id_client_kpi']) ?>" class="btn btn-warning btn-sm">Editar</a>
+                  <a href="<?= base_url('/editClientKpi/' . $kpi['id_client_kpi']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-warning btn-sm">Editar</a>
                   <a href="<?= base_url('/deleteClientKpi/' . $kpi['id_client_kpi']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este KPI?')">Eliminar</a>
                 </td>
               </tr>
