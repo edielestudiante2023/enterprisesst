@@ -25,7 +25,7 @@
 
         .card {
             margin: 20px auto;
-            max-width: 1200px;
+            max-width: 1600px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
@@ -97,7 +97,7 @@
             <?php foreach ($clientKpis as $kpi): ?>
                 <div class="card">
                     <div class="card-body">
-                        <table class="table table-bordered">
+                        <table class="table table-bordered" style="width: 100%;">
                             <tbody>
                                 <!-- Se asigna id para navegación interna -->
                                 <tr id="kpi-<?= $kpi['id_client_kpi'] ?>">
@@ -196,7 +196,7 @@
                         </div>
 
                         <h3 class="text-center mt-4">ANÁLISIS Y SEGUIMIENTOS</h3>
-                        <table class="table table-bordered">
+                        <table class="table table-bordered" style="width: 100%;">
                             <tbody>
                                 <tr>
                                     <th>Análisis de los Datos</th>
@@ -219,7 +219,7 @@
 
                         <!-- Botón de edición para cada KPI -->
                         <div class="text-center mt-3">
-                            <a href="<?= base_url('/editClientKpi/' . $kpi['id_client_kpi'] . '?id_cliente=' . $selectedClient) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-edit">
+                            <a href="<?= base_url('/editClientKpi/' . $kpi['id_client_kpi'] . '?id_cliente=' . $selectedClient) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-edit" style="background-color: purple; border-color: purple; font-size: 18px;">
                                 Editar Indicador
                             </a>
                         </div>
