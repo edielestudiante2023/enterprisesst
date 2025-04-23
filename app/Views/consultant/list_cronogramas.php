@@ -265,7 +265,6 @@
   <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
 
   <script>
-    // 1. Definimos la lista de perfiles (value + label) una sola vez
     const perfiles = [
       // Internos
       {
@@ -350,51 +349,58 @@
         label: 'Auditores de Normas ISO'
       }
     ];
-
-    // 2. Función para formatear la fila expandible
+    // Función para formatear la fila expandible (detalles) con 30% para el nombre y 70% para el texto (con overflow auto)
     function format(rowData) {
-      let html = '<table class="table table-sm table-borderless" style="width:100%;">';
-      const filas = [
-        ['Capacitación', rowData.nombre_capacitacion],
-        ['Objetivo', rowData.objetivo_capacitacion],
-        ['Cliente', rowData.nombre_cliente],
-        ['Fecha Programada', rowData.fecha_programada],
-        ['Fecha de Realización', rowData.fecha_de_realizacion],
-        ['Estado', rowData.estado],
-        ['Perfil de Asistentes', rowData.perfil_de_asistentes],
-        ['Capacitador', rowData.nombre_del_capacitador],
-        ['Horas de Duración', rowData.horas_de_duracion_de_la_capacitacion],
-        ['Indicador de Realización', rowData.indicador_de_realizacion_de_la_capacitacion],
-        ['Nº Asistentes', rowData.numero_de_asistentes_a_capacitacion],
-        ['Total Programados', rowData.numero_total_de_personas_programadas],
-        ['% Cobertura', rowData.porcentaje_cobertura],
-        ['Personas Evaluadas', rowData.numero_de_personas_evaluadas],
-        ['Promedio', rowData.promedio_de_calificaciones],
-        ['Observaciones', rowData.observaciones]
-      ];
-      filas.forEach(([label, val]) => {
-        html += `<tr><td style="width:30%;"><strong>${label}:</strong></td>` +
-          `<td style="width:70%; overflow:auto;">${val||''}</td></tr>`;
-      });
+      var html = '<table class="table table-sm table-borderless" style="width:100%;">';
+      html += '<tr><td style="width:30%;"><strong>Capacitación:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.nombre_capacitacion || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Objetivo:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.objetivo_capacitacion || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Cliente:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.nombre_cliente || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Fecha Programada:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.fecha_programada || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Fecha de Realización:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.fecha_de_realizacion || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Estado:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.estado || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Perfil de Asistentes:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.perfil_de_asistentes || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Capacitador:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.nombre_del_capacitador || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Horas de Duración:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.horas_de_duracion_de_la_capacitacion || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Indicador de Realización:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.indicador_de_realizacion_de_la_capacitacion || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Nº Asistentes:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.numero_de_asistentes_a_capacitacion || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Total Programados:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.numero_total_de_personas_programadas || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>% Cobertura:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.porcentaje_cobertura || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Personas Evaluadas:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.numero_de_personas_evaluadas || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Promedio:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.promedio_de_calificaciones || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Observaciones:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.observaciones || '') + '</td></tr>';
       html += '</table>';
       return html;
     }
 
     $(document).ready(function() {
-      // 3. Inicializar Select2 para clientes
+      // Inicializar el select con Select2
       $('#clientSelect').select2({
         placeholder: 'Seleccione un cliente',
         allowClear: true,
         width: '100%'
       });
-      $.getJSON("<?= base_url('/api/getClientes') ?>", data => {
-        data.forEach(c => $('#clientSelect').append(`<option value="${c.id}">${c.nombre}</option>`));
-        const sel = localStorage.getItem('selectedClient');
-        if (sel) $('#clientSelect').val(sel).trigger('change');
+
+      // Cargar clientes vía AJAX usando las claves 'id' y 'nombre'
+      $.ajax({
+        url: "<?= base_url('/api/getClientes') ?>",
+        method: "GET",
+        dataType: "json",
+        success: function(data) {
+          data.forEach(function(cliente) {
+            $("#clientSelect").append('<option value="' + cliente.id + '">' + cliente.nombre + '</option>');
+          });
+          var storedClient = localStorage.getItem('selectedClient');
+          if (storedClient) {
+            $("#clientSelect").val(storedClient).trigger('change');
+          }
+        },
+        error: function() {
+          alert('Error al cargar la lista de clientes.');
+        }
       });
 
-      // 4. Inicializar DataTable
-      const table = $('#cronogramaTable').DataTable({
+      // Inicializar DataTable con fila expandible y render para inline editing
+      var table = $('#cronogramaTable').DataTable({
         stateSave: true,
         language: {
           url: "//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
@@ -417,7 +423,9 @@
         ],
         ajax: {
           url: "<?= base_url('/api/getCronogramasAjax') ?>",
-          data: d => d.cliente = $('#clientSelect').val(),
+          data: function(d) {
+            d.cliente = $("#clientSelect").val();
+          },
           dataSrc: ''
         },
         columns: [{
@@ -433,116 +441,329 @@
             data: 'acciones',
             orderable: false
           },
-          // ... tus columnas previas ...
           {
-            data: 'perfil_de_asistentes',
-            render: (d, t, row) => {
-              const txt = d || '&nbsp;';
-              return `<span class="editable-select" data-field="perfil_de_asistentes" data-id="${row.id_cronograma_capacitacion}"` +
-                ` data-bs-toggle="tooltip" title="${d||''}">${txt}</span>`;
+            data: 'nombre_capacitacion',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              return '<span class="editable" data-field="nombre_capacitacion" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
           },
-          // ... resto de columnas ...
-        ],
-        initComplete() {
-          /* tu lógica de filtros dinámicos */ }
-      });
-      table.buttons().container().appendTo('#buttonsContainer');
-
-      // 5. Expandir / contraer fila
-      $('#cronogramaTable tbody').on('click', 'td.details-control', function() {
-        const tr = $(this).closest('tr'),
-          row = table.row(tr);
-        row.child.isShown() ? row.child.hide() && tr.removeClass('shown') :
-          row.child(format(row.data())).show() && tr.addClass('shown');
-      });
-
-      // 6. Inline editing
-      $(document).on('click', '.editable, .editable-select, .editable-date', function(e) {
-        e.stopPropagation();
-        const cell = $(this),
-          field = cell.data('field'),
-          id = cell.data('id'),
-          curr = cell.text().trim() || '';
-
-        if (cell.hasClass('editable-date')) {
-          const inp = $('<input type="date" class="form-control form-control-sm">').val(curr);
-          cell.html(inp).find('input').focus().on('blur change', () => {
-            const v = inp.val();
-            cell.html(v || '&nbsp;');
-            updateField(id, field, v);
-          });
-
-        } else if (cell.hasClass('editable-select')) {
-          let opts = [];
-          if (field === 'estado') {
-            opts = ['PROGRAMADA', 'EJECUTADA', 'CANCELADA POR EL CLIENTE', 'REPROGRAMADA']
-              .map(v => ({
-                value: v,
-                label: v
-              }));
-          } else if (field === 'perfil_de_asistentes') {
-            opts = perfiles;
-          } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
-            opts = ['SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ']
-              .map(v => ({
-                value: v,
-                label: v
-              }));
+          {
+            data: 'objetivo_capacitacion'
+          },
+          {
+            data: 'nombre_cliente',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              return '<span data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'fecha_programada',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "" : data;
+              var displayText = data || '&nbsp;';
+              return '<span class="editable-date" data-field="fecha_programada" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'fecha_de_realizacion',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              return '<span class="editable-date" data-field="fecha_de_realizacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'estado',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              return '<span class="editable-select" data-field="estado" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'perfil_de_asistentes',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              return '<span class="editable-select" data-field="perfil_de_asistentes" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'nombre_del_capacitador',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              return '<span class="editable" data-field="nombre_del_capacitador" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'horas_de_duracion_de_la_capacitacion',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="horas_de_duracion_de_la_capacitacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'indicador_de_realizacion_de_la_capacitacion',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              return '<span class="editable-select" data-field="indicador_de_realizacion_de_la_capacitacion" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'numero_de_asistentes_a_capacitacion',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="numero_de_asistentes_a_capacitacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'numero_total_de_personas_programadas',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="numero_total_de_personas_programadas" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'porcentaje_cobertura'
+          },
+          {
+            data: 'numero_de_personas_evaluadas',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="numero_de_personas_evaluadas" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'promedio_de_calificaciones',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data ? data + '%' : '&nbsp;';
+              // Se elimina tooltip en esta columna
+              return '<span class="editable" data-field="promedio_de_calificaciones" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'observaciones',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "--" : data;
+              var displayText = data || '&nbsp;';
+              return '<span class="editable" data-field="observaciones" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+            }
           }
-          const sel = $('<select class="form-select form-select-sm">');
-          opts.forEach(o => sel.append(new Option(o.label, o.value, o.value === curr, o.value === curr)));
-          cell.html(sel).find('select').focus().on('blur change', () => {
-            const v = sel.val();
-            cell.html(v || '&nbsp;');
-            updateField(id, field, v);
-          });
-
-        } else {
-          const inp = $('<input type="text" class="form-control form-control-sm">').val(curr);
-          cell.html(inp).find('input').focus().on('blur', () => {
-            const v = inp.val();
-            cell.html(v || '&nbsp;');
-            updateField(id, field, v);
+        ],
+        initComplete: function() {
+          var api = this.api();
+          api.columns().every(function() {
+            var column = this;
+            var headerIndex = column.index();
+            var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-search');
+            if (filterElement.length) {
+              column.data().unique().sort().each(function(d) {
+                if (d !== null && d !== '' && filterElement.find('option[value="' + d + '"]').length === 0) {
+                  filterElement.append('<option value="' + d + '">' + d + '</option>');
+                }
+              });
+              var search = column.search();
+              if (search) {
+                filterElement.val(search);
+              }
+            }
           });
         }
       });
 
-      // 7. Función AJAX de actualización
-      function updateField(id, field, value) {
-        $.post('<?= base_url('/api/updatecronogCapacitacion') ?>', {
-            id,
-            field,
-            value
-          })
-          .fail(() => alert('Error al comunicarse con el servidor.'));
+      table.buttons().container().appendTo('#buttonsContainer');
+
+      // Filtros por columna (global o por select en tfoot)
+      $('tfoot .filter-search').on('keyup change', function() {
+        var index = $(this).parent().index();
+        table.column(index).search(this.value).draw();
+      });
+
+      // Evento para expandir/contraer la fila (child row)
+      $('#cronogramaTable tbody').on('click', 'td.details-control', function() {
+        var tr = $(this).closest('tr');
+        var row = table.row(tr);
+        if (row.child.isShown()) {
+          row.child.hide();
+          tr.removeClass('shown');
+        } else {
+          row.child(format(row.data())).show();
+          tr.addClass('shown');
+        }
+      });
+
+      // Inline editing: detecta clic en celdas con clases editable, editable-select o editable-date
+      $(document).on('click', '.editable, .editable-select, .editable-date', function(e) {
+        e.stopPropagation(); // Evita que se active la expansión de fila
+        if ($(this).find('input, select').length) return;
+        var cell = $(this);
+        var field = cell.data('field');
+        var id = cell.data('id');
+        var currentValue = cell.text().trim();
+        currentValue = currentValue === '' ? '' : currentValue;
+
+        if (cell.hasClass('editable-date')) {
+          var input = $('<input>', {
+            type: 'date',
+            class: 'form-control form-control-sm',
+            value: currentValue
+          });
+          cell.html(input);
+          input.focus();
+          input.on('blur change', function() {
+            var newValue = input.val();
+            cell.html(newValue || '&nbsp;');
+            updateField(id, field, newValue, cell);
+          });
+        } else if (cell.hasClass('editable-select')) {
+          var options = [];
+          if (field === 'estado') {
+            options = ['PROGRAMADA', 'EJECUTADA', 'CANCELADA POR EL CLIENTE', 'REPROGRAMADA'];
+          } else if (field === 'perfil_de_asistentes') {
+            options = perfiles;
+          } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
+            options = ['SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ'];
+          }
+          var select = $('<select>', {
+            class: 'form-select form-select-sm'
+          });
+          options.forEach(function(option) {
+            select.append($('<option>', {
+              value: option,
+              text: option,
+              selected: option === currentValue
+            }));
+          });
+          cell.html(select);
+          select.focus();
+          select.on('blur change', function() {
+            setTimeout(function() {
+              var newValue = select.val();
+              cell.html(newValue || '&nbsp;');
+              updateField(id, field, newValue, cell);
+            }, 200);
+          });
+        } else {
+          var input = $('<input>', {
+            type: 'text',
+            class: 'form-control form-control-sm',
+            value: currentValue
+          });
+          cell.html(input);
+          input.focus();
+          input.on('blur', function() {
+            var newValue = input.val();
+            cell.html(newValue || '&nbsp;');
+            updateField(id, field, newValue, cell);
+          });
+        }
+      });
+
+      // Función para enviar la actualización vía AJAX
+      function updateField(id, field, value, cell) {
+        $.ajax({
+          url: '<?= base_url('/api/updatecronogCapacitacion') ?>',
+          method: 'POST',
+          data: {
+            id: id,
+            field: field,
+            value: value
+          },
+          success: function(response) {
+            if (response.success) {
+              console.log('Registro actualizado correctamente');
+            } else {
+              alert('Error: ' + response.message);
+            }
+          },
+          error: function(xhr, status, error) {
+            console.error('Error al comunicarse con el servidor:', error);
+            alert('Error al comunicarse con el servidor: ' + error);
+          }
+        });
       }
 
-      // 8. Cargar/restablecer filtros
-      $('#loadData').click(() => {
-        const c = $('#clientSelect').val();
-        if (c) {
-          localStorage.setItem('selectedClient', c);
+      // Botón para cargar datos cuando se haga clic
+      $("#loadData").click(function() {
+        var clientId = $("#clientSelect").val();
+        if (clientId) {
+          localStorage.setItem('selectedClient', clientId);
           table.ajax.reload();
-        } else alert('Seleccione un cliente.');
-      });
-      $('#clientSelect').change(() => $('#loadData').click());
-      $('#clearState').click(() => {
-        localStorage.removeItem('selectedClient');
-        table.state.clear();
-        table.columns().search('').draw();
-        $('#clientSelect').val(null).trigger('change');
+        } else {
+          alert('Por favor, seleccione un cliente.');
+        }
       });
 
-      // 9. Tooltips
-      function initTooltips() {
-        $('[data-bs-toggle="tooltip"]').each((_, el) => new bootstrap.Tooltip(el));
+      // Recargar la tabla automáticamente al cambiar el select
+      $('#clientSelect').on('change', function() {
+        var clientId = $(this).val();
+        if (clientId) {
+          localStorage.setItem('selectedClient', clientId);
+          table.ajax.reload();
+        }
+      });
+
+      // Botón para restablecer filtros y estado guardado
+      $("#clearState").on("click", function() {
+        localStorage.removeItem('selectedClient');
+        var storageKey = 'DataTables_' + table.table().node().id + '_' + window.location.pathname;
+        localStorage.removeItem(storageKey);
+        table.state.clear();
+        $('tfoot .filter-search').each(function() {
+          $(this).val('');
+        });
+        table.columns().search('').draw();
+        $("#clientSelect").val(null).trigger("change");
+      });
+
+      // Inicializar tooltips de Bootstrap
+      function initializeTooltips() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
       }
-      initTooltips();
-      table.on('draw.dt', initTooltips);
+      initializeTooltips();
+      table.on('draw.dt', function() {
+        initializeTooltips();
+      });
+    });
+
+    $.ajax({
+      url: '<?= base_url("updatecronogCapacitacion") ?>',
+      type: 'POST',
+      data: {
+        id: id,
+        field: field,
+        value: value
+      },
+      success: function(response) {
+        if (response.success) {
+          // Actualiza el elemento del DOM con el nuevo valor
+          $('#porcentaje-cobertura-' + id).text(response.newValue);
+          // También podrías agregar un mensaje de éxito aquí si es necesario
+        }
+      },
+      error: function(error) {
+        console.log(error);
+      }
     });
   </script>
-
 </body>
 
 </html>
