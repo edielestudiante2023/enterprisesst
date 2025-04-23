@@ -609,70 +609,75 @@
 
       // Inline editing: detecta clic en celdas con clases editable, editable-select o editable-date
       $(document).on('click', '.editable, .editable-select, .editable-date', function(e) {
-        e.stopPropagation(); // Evita que se active la expansión de fila
+        e.stopPropagation();
         if ($(this).find('input, select').length) return;
-        var cell = $(this);
-        var field = cell.data('field');
-        var id = cell.data('id');
-        var currentValue = cell.text().trim();
-        currentValue = currentValue === '' ? '' : currentValue;
+
+        const cell = $(this),
+          field = cell.data('field'),
+          id = cell.data('id'),
+          curr = cell.text().trim();
 
         if (cell.hasClass('editable-date')) {
-          var input = $('<input>', {
+          const input = $('<input>', {
             type: 'date',
             class: 'form-control form-control-sm',
-            value: currentValue
+            value: curr
           });
           cell.html(input);
-          input.focus();
-          input.on('blur change', function() {
-            var newValue = input.val();
-            cell.html(newValue || '&nbsp;');
-            updateField(id, field, newValue, cell);
+          input.on('blur change', () => {
+            const nv = input.val();
+            cell.html(nv || '&nbsp;');
+            updateField(id, field, nv, cell);
           });
         } else if (cell.hasClass('editable-select')) {
-          var options = [];
+          let options = [];
           if (field === 'estado') {
             options = ['PROGRAMADA', 'EJECUTADA', 'CANCELADA POR EL CLIENTE', 'REPROGRAMADA'];
           } else if (field === 'perfil_de_asistentes') {
-            options = perfiles;
-          } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
+            options = perfiles; // tu array de objetos {value,label}
+          } else {
             options = ['SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ'];
           }
-          var select = $('<select>', {
+
+          const select = $('<select>', {
             class: 'form-select form-select-sm'
           });
-          options.forEach(function(option) {
-            select.append($('<option>', {
-              value: option,
-              text: option,
-              selected: option === currentValue
-            }));
+          options.forEach(opt => {
+            if (typeof opt === 'object') {
+              select.append($('<option>', {
+                value: opt.value,
+                text: opt.label,
+                selected: opt.label === curr
+              }));
+            } else {
+              select.append($('<option>', {
+                value: opt,
+                text: opt,
+                selected: opt === curr
+              }));
+            }
           });
           cell.html(select);
-          select.focus();
-          select.on('blur change', function() {
-            setTimeout(function() {
-              var newValue = select.val();
-              cell.html(newValue || '&nbsp;');
-              updateField(id, field, newValue, cell);
-            }, 200);
+          select.on('blur change', () => {
+            const nv = select.val();
+            cell.html(nv || '&nbsp;');
+            updateField(id, field, nv, cell);
           });
         } else {
-          var input = $('<input>', {
+          const input = $('<input>', {
             type: 'text',
             class: 'form-control form-control-sm',
-            value: currentValue
+            value: curr
           });
           cell.html(input);
-          input.focus();
-          input.on('blur', function() {
-            var newValue = input.val();
-            cell.html(newValue || '&nbsp;');
-            updateField(id, field, newValue, cell);
+          input.on('blur', () => {
+            const nv = input.val();
+            cell.html(nv || '&nbsp;');
+            updateField(id, field, nv, cell);
           });
         }
       });
+
 
       // Función para enviar la actualización vía AJAX
       function updateField(id, field, value, cell) {
