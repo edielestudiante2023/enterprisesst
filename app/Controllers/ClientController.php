@@ -149,7 +149,7 @@ class ClientController extends Controller
         'evaluacionFactores'     => ['id' => 8,  'titulo' => 'Evaluación de Factores Psicosociales'],
         'inspeccionPuestos'      => ['id' => 9,  'titulo' => 'Inspección de Puestos de Trabajo'],
         'planGestionAmbiental'   => ['id' => 10, 'titulo' => 'Plan de Gestión Ambiental'],
-        'organigrama'            => ['id' => 11, 'titulo' => 'Organigrama'],
+        'brigada'                => ['id' => 11, 'titulo' => 'Brigada de Emergencia'],
         'documentacionNormativa' => ['id' => 12, 'titulo' => 'Reportes SST'],
         'proveedoresExternos'    => ['id' => 13, 'titulo' => 'Proveedores Externos'],
         'cierreNumerales'        => ['id' => 14, 'titulo' => 'Cierre de Numerales'],
