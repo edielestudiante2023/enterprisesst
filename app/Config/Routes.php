@@ -520,3 +520,5 @@ $routes->post('csv/upload', 'CsvUploadController::upload'); // Procesa el CSV
 
 $routes->post('/pta-cliente-nueva/updateCerradas', 'PtaClienteNuevaController::updateCerradas');
 $routes->post('api/getCronogramasAjax', 'CronogramaCapacitacionController::getCronogramasAjax');
+
+$routes->post('api/recalcularConteoDias', 'PendientesController::recalcularConteoDias');
