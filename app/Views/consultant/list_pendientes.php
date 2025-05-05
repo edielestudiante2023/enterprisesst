@@ -237,6 +237,22 @@
       return html;
     }
 
+    function reloadTableWithRecalc() {
+      $.ajax({
+        url: "<?= base_url('/api/recalcularConteoDias') ?>",
+        method: "POST",
+        dataType: "json",
+        success: function(response) {
+          console.log(response.message);
+          table.ajax.reload();
+        },
+        error: function() {
+          console.error('No se pudo recalcular los días automáticamente.');
+          table.ajax.reload();
+        }
+      });
+    }
+
     $(document).ready(function() {
       // Inicializar el select con Select2
       $('#clientSelect').select2({
@@ -321,7 +337,12 @@
             }
           },
           {
-            data: 'responsable'
+            data: 'responsable',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "" : data;
+              var displayText = data || '&nbsp;';
+              return '<span class="editable-select" data-field="responsable" data-id="' + row.id_pendientes + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+            }
           },
           {
             data: 'tarea_actividad',
@@ -438,8 +459,9 @@
           var options = [];
           if (field === 'estado') {
             options = ['ABIERTA', 'CERRADA'];
+          } else if (field === 'responsable') {
+            options = ['CLIENTE', 'CYCLOID TALENT'];
           }
-          // Agregar otras opciones si es necesario
           var select = $('<select>', {
             class: 'form-control form-control-sm'
           });
@@ -505,7 +527,7 @@
         var clientId = $("#clientSelect").val();
         if (clientId) {
           localStorage.setItem('selectedClient', clientId);
-          table.ajax.reload();
+          reloadTableWithRecalc();
         } else {
           alert('Por favor, seleccione un cliente.');
         }
@@ -516,7 +538,7 @@
         var clientId = $(this).val();
         if (clientId) {
           localStorage.setItem('selectedClient', clientId);
-          table.ajax.reload();
+          reloadTableWithRecalc();
         }
       });
 
