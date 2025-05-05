@@ -140,6 +140,7 @@
     </div>
 
     <button id="clearState" class="btn btn-danger btn-sm mb-3">Restablecer Filtros</button>
+    <button id="btnRecalcularDias" class="btn btn-warning btn-sm mb-3">Recalcular Conteo de Días</button>
     <div id="buttonsContainer"></div>
 
     <div class="table-responsive">
@@ -529,6 +530,22 @@
         $('tfoot .filter-search').val('');
         table.search('').columns().search('').draw();
         $("#clientSelect").val(null).trigger("change");
+      });
+
+      // Nuevo manejador para recalcular el conteo de días
+      $("#btnRecalcularDias").on("click", function () {
+        $.ajax({
+          url: "<?= base_url('/api/recalcularConteoDias') ?>",
+          method: "POST",
+          dataType: "json",
+          success: function (response) {
+            alert(response.message || 'Conteo de días recalculado');
+            $('#pendientesTable').DataTable().ajax.reload();
+          },
+          error: function () {
+            alert("Error al recalcular el conteo de días.");
+          }
+        });
       });
 
       // Inicializar tooltips de Bootstrap
