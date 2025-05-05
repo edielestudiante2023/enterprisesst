@@ -138,14 +138,18 @@
                 </div>
 
                 <div class="form-group">
-
                     <label for="responsable">Responsable:</label>
-                    <input type="text" name="responsable" id="responsable" class="form-control" placeholder="Ingrese el nombre del responsable" required value="<?= set_value('responsable', $pendiente['responsable'] ?? ''); ?>">
+                    <select name="responsable" id="responsable" class="form-control" required>
+                        <option value="">Seleccione una opción</option>
+                        <option value="CLIENTE" <?= set_value('responsable', $pendiente['responsable'] ?? '') === 'CLIENTE' ? 'selected' : '' ?>>CLIENTE</option>
+                        <option value="CYCLOID TALENT" <?= set_value('responsable', $pendiente['responsable'] ?? '') === 'CYCLOID TALENT' ? 'selected' : '' ?>>CYCLOID TALENT</option>
+                    </select>
 
                     <?php if (isset($validation) && $validation->hasError('responsable')): ?>
                         <div class="error-message"><?= $validation->getError('responsable') ?></div>
                     <?php endif; ?>
                 </div>
+
 
                 <div class="form-group">
                     <label for="tarea_actividad">Tarea Actividad <span class="text-danger">*</span></label>
@@ -239,7 +243,7 @@
 
         <!-- Select2 JS -->
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-        
+
         <!-- Scripts para calcular conteo_dias automáticamente -->
         <script>
             $(document).ready(function() {
