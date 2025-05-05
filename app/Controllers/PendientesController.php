@@ -62,7 +62,15 @@ class PendientesController extends Controller
         $value = $this->request->getPost('value');
 
         // Definir los campos permitidos para actualización
-        $allowedFields = ['tarea_actividad', 'fecha_cierre', 'estado', 'estado_avance', 'evidencia_para_cerrarla', 'fecha_asignacion'];
+        $allowedFields = [
+            'tarea_actividad',
+            'fecha_cierre',
+            'estado',
+            'estado_avance',
+            'evidencia_para_cerrarla',
+            'fecha_asignacion',
+            'responsable' // ← AGREGA ESTA LÍNEA
+        ];
         if (!in_array($field, $allowedFields)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
         }
@@ -157,9 +165,9 @@ class PendientesController extends Controller
         ];
 
         // Validar que la fecha de cierre no sea menor que la fecha de asignación
-        if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < strtotime($data['fecha_asignacion'])) {
+        /* if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < strtotime($data['fecha_asignacion'])) {
             return redirect()->back()->with('msg', 'Error: La fecha de cierre no puede ser anterior a la fecha de asignación.')->withInput();
-        }
+        } */
 
         // Validar que si hay fecha de cierre, el estado no puede ser ABIERTA
         /* if (!empty($data['fecha_cierre']) && $data['estado'] === 'ABIERTA') {
@@ -248,9 +256,9 @@ class PendientesController extends Controller
         $fechaAsignacion = strtotime($pendienteActual['fecha_asignacion']);
 
         // Validar que la fecha de cierre no sea menor que la fecha de asignación
-        if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < $fechaAsignacion) {
+        /* if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < $fechaAsignacion) {
             return redirect()->back()->with('msg', 'Error: La fecha de cierre no puede ser anterior a la fecha de asignación.')->withInput();
-        }
+        } */
 
         // Validar que si hay fecha de cierre, el estado no puede ser ABIERTA
         /* if (!empty($data['fecha_cierre']) && $data['estado'] === 'ABIERTA') {
