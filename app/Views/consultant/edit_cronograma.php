@@ -172,7 +172,7 @@
                             <option value="MIEMBROS_COMITE_CONVIVENCIA" <?= ($cronograma['perfil_de_asistentes'] == 'MIEMBROS_COMITE_CONVIVENCIA') ? 'selected' : '' ?>>Miembros del Comité de Convivencia Laboral</option>
                             <option value="RECURSOS_HUMANOS" <?= ($cronograma['perfil_de_asistentes'] == 'RECURSOS_HUMANOS') ? 'selected' : '' ?>>Departamento de Recursos Humanos</option>
                             <option value="PERSONAL_MANTENIMIENTO" <?= ($cronograma['perfil_de_asistentes'] == 'PERSONAL_MANTENIMIENTO') ? 'selected' : '' ?>>Personal de Mantenimiento o Producción</option>
-                            <option value="ENCARGADO_AMBIENTAL" <?= ($cronograma['perfil_de_asistentes'] == 'ENCARGADO_AMBIENTAL') ? 'selected' : '' ?>>Encargado de Gestión Ambiental</option>
+                            <option value="BRIGADA" <?= ($cronograma['perfil_de_asistentes'] == 'BRIGADA') ? 'selected' : '' ?>>Brigada</option>
                             <option value="TRABAJADORES_RIESGOS_CRITICOS" <?= ($cronograma['perfil_de_asistentes'] == 'TRABAJADORES_RIESGOS_CRITICOS') ? 'selected' : '' ?>>Trabajadores con Riesgos Críticos</option>
 
                             <!-- Roles Externos -->

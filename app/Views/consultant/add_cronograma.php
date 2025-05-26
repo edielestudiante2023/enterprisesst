@@ -167,7 +167,7 @@
                             <option value="MIEMBROS_COMITE_CONVIVENCIA">Miembros del Comité de Convivencia Laboral</option>
                             <option value="RECURSOS_HUMANOS">Departamento de Recursos Humanos</option>
                             <option value="PERSONAL_MANTENIMIENTO">Personal de Mantenimiento o Producción</option>
-                            <option value="ENCARGADO_AMBIENTAL">Encargado de Gestión Ambiental</option>
+                            <option value="BRIGADA">Brigada</option>
                             <option value="TRABAJADORES_RIESGOS_CRITICOS">Trabajadores con Riesgos Críticos</option>
                         </optgroup>
 
