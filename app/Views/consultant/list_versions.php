@@ -100,6 +100,16 @@
     .table-container {
       display: none;
     }
+
+    /* Estilo para los filtros del footer */
+    #documentTable tfoot th {
+      padding: 5px;
+    }
+
+    #documentTable tfoot select {
+      width: 100%;
+      max-width: 150px;
+    }
   </style>
 </head>
 
@@ -148,9 +158,10 @@
       <h5 class="text-center mb-3">Seleccione un Cliente</h5>
       <select id="clientSelector" class="form-select" style="width: 100%;">
         <option value="">Seleccione un cliente</option>
-        <?php foreach ($clients as $client): ?>
-          <option value="<?= $client['id_cliente'] ?>"><?= $client['nombre_cliente'] ?></option>
-        <?php endforeach; ?>
+        <!-- Simulated clients for demo -->
+        <option value="1">Cliente Demo 1</option>
+        <option value="2">Cliente Demo 2</option>
+        <option value="3">Cliente Demo 3</option>
       </select>
     </div>
 
@@ -200,6 +211,9 @@
 
   <script>
     $(document).ready(function () {
+      let table;
+      let filtersInitialized = false;
+
       // Initialize Select2
       $('#clientSelector').select2({
         theme: 'bootstrap-5',
@@ -207,8 +221,105 @@
         allowClear: true
       });
 
+      // Function to initialize column filters
+      function initializeColumnFilters() {
+        if (filtersInitialized) return;
+        
+        // Only initialize filters for columns that should have them (exclude Actions column)
+        table.columns().every(function (index) {
+          var column = this;
+          
+          // Skip the Actions column (last column)
+          if (index === table.columns().count() - 1) {
+            $(column.footer()).html('');
+            return;
+          }
+
+          var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
+            .appendTo($(column.footer()).empty())
+            .on('change', function () {
+              var val = $.fn.dataTable.util.escapeRegex($(this).val());
+              column.search(val ? '^' + val + '$' : '', true, false).draw();
+            });
+
+          // Get unique values from current data
+          var uniqueValues = [];
+          column.data().unique().each(function (d) {
+            if (d && d !== null && d !== undefined) {
+              uniqueValues.push(d);
+            }
+          });
+
+          // Sort unique values
+          uniqueValues.sort();
+
+          // Add options to select
+          uniqueValues.forEach(function(d) {
+            select.append('<option value="' + d + '">' + d + '</option>');
+          });
+        });
+
+        filtersInitialized = true;
+      }
+
+      // Function to update column filters with new data
+      function updateColumnFilters() {
+        table.columns().every(function (index) {
+          var column = this;
+          
+          // Skip the Actions column
+          if (index === table.columns().count() - 1) {
+            return;
+          }
+
+          var select = $(column.footer()).find('select');
+          if (select.length > 0) {
+            var currentValue = select.val();
+            
+            // Clear existing options except "Todos"
+            select.find('option:not(:first)').remove();
+
+            // Get unique values from current data
+            var uniqueValues = [];
+            column.data().unique().each(function (d) {
+              if (d && d !== null && d !== undefined) {
+                uniqueValues.push(d);
+              }
+            });
+
+            // Sort unique values
+            uniqueValues.sort();
+
+            // Add new options
+            uniqueValues.forEach(function(d) {
+              select.append('<option value="' + d + '">' + d + '</option>');
+            });
+
+            // Restore previous selection if it still exists
+            if (currentValue && uniqueValues.includes(currentValue)) {
+              select.val(currentValue);
+            }
+          }
+        });
+      }
+
+      // Function to clear all filters
+      function clearAllFilters() {
+        if (table && filtersInitialized) {
+          table.columns().every(function (index) {
+            var column = this;
+            if (index !== table.columns().count() - 1) {
+              var select = $(column.footer()).find('select');
+              if (select.length > 0) {
+                select.val('').trigger('change');
+              }
+            }
+          });
+        }
+      }
+
       // Initialize DataTable with empty data
-      var table = $('#documentTable').DataTable({
+      table = $('#documentTable').DataTable({
         data: [],
         scrollX: true,
         autoWidth: false,
@@ -227,10 +338,12 @@
           { data: 'created_at' },
           {
             data: 'id',
+            orderable: false,
+            searchable: false,
             render: function(data, type, row) {
               return `
-                <a href="<?= base_url('editVersion/') ?>${data}" class="btn btn-outline-primary btn-sm me-2">Editar</a>
-                <a href="<?= base_url('deleteVersion/') ?>${data}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar esta versión?');">Eliminar</a>
+                <a href="#" class="btn btn-outline-primary btn-sm me-2" onclick="editVersion(${data})">Editar</a>
+                <a href="#" class="btn btn-outline-danger btn-sm" onclick="deleteVersion(${data})">Eliminar</a>
               `;
             }
           }
@@ -245,22 +358,7 @@
             text: 'Exportar a Excel',
             titleAttr: 'Exportar a Excel'
           }
-        ],
-        initComplete: function () {
-          this.api().columns().every(function () {
-            var column = this;
-            var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
-              .appendTo($(column.footer()).empty())
-              .on('change', function () {
-                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                column.search(val ? '^' + val + '$' : '', true, false).draw();
-              });
-
-            column.data().unique().sort().each(function (d, j) {
-              select.append('<option value="' + d + '">' + d + '</option>');
-            });
-          });
-        }
+        ]
       });
 
       // Hide table container initially
@@ -274,21 +372,27 @@
           // Show table container when a client is selected
           $('.table-container').show();
           
-          // Load data for selected client
-          $.ajax({
-            url: '<?= base_url('getVersionsByClient/') ?>' + selectedClient,
-            method: 'GET',
-            success: function(data) {
-              table.clear().rows.add(data).draw();
-            },
-            error: function(xhr, status, error) {
-              console.error('Error loading versions:', error);
+          // Simulate loading data for selected client
+          // Replace this with your actual AJAX call
+          var mockData = generateMockData(selectedClient);
+          
+          // Clear existing data and add new data
+          table.clear().rows.add(mockData).draw();
+          
+          // Initialize or update filters after data is loaded
+          setTimeout(function() {
+            if (!filtersInitialized) {
+              initializeColumnFilters();
+            } else {
+              updateColumnFilters();
             }
-          });
+          }, 100);
+          
         } else {
           // Hide table and clear data when no client is selected
           $('.table-container').hide();
           table.clear().draw();
+          clearAllFilters();
         }
       });
 
@@ -297,7 +401,45 @@
         $('#clientSelector').val('').trigger('change');
         table.clear().draw();
         $('.table-container').hide();
+        clearAllFilters();
+        filtersInitialized = false;
       });
+
+      // Mock data generator for demonstration
+      function generateMockData(clientId) {
+        const clients = ['Cliente Demo 1', 'Cliente Demo 2', 'Cliente Demo 3'];
+        const documentTypes = ['Manual', 'Procedimiento', 'Instructivo', 'Formato'];
+        const statuses = ['Vigente', 'Obsoleto', 'En Revisión'];
+        const locations = ['SharePoint', 'Drive', 'Servidor Local'];
+        
+        var data = [];
+        for (let i = 1; i <= 10; i++) {
+          data.push({
+            id: clientId + '_' + i,
+            nombre_cliente: clients[clientId - 1],
+            type_name: 'Documento ' + i,
+            document_type: documentTypes[Math.floor(Math.random() * documentTypes.length)],
+            acronym: 'DOC' + i,
+            version_number: '1.' + Math.floor(Math.random() * 10),
+            location: locations[Math.floor(Math.random() * locations.length)],
+            status: statuses[Math.floor(Math.random() * statuses.length)],
+            change_control: 'Control ' + i,
+            created_at: '2024-' + String(Math.floor(Math.random() * 12) + 1).padStart(2, '0') + '-' + String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')
+          });
+        }
+        return data;
+      }
+
+      // Mock functions for edit and delete actions
+      window.editVersion = function(id) {
+        alert('Editar versión: ' + id);
+      };
+
+      window.deleteVersion = function(id) {
+        if (confirm('¿Estás seguro de que deseas eliminar esta versión?')) {
+          alert('Eliminar versión: ' + id);
+        }
+      };
     });
   </script>
 
