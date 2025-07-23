@@ -100,16 +100,6 @@
     .table-container {
       display: none;
     }
-
-    /* Estilo para los filtros del footer */
-    #documentTable tfoot th {
-      padding: 5px;
-    }
-
-    #documentTable tfoot select {
-      width: 100%;
-      max-width: 150px;
-    }
   </style>
 </head>
 
@@ -158,10 +148,9 @@
       <h5 class="text-center mb-3">Seleccione un Cliente</h5>
       <select id="clientSelector" class="form-select" style="width: 100%;">
         <option value="">Seleccione un cliente</option>
-        <!-- Simulated clients for demo -->
-        <option value="1">Cliente Demo 1</option>
-        <option value="2">Cliente Demo 2</option>
-        <option value="3">Cliente Demo 3</option>
+        <?php foreach ($clients as $client): ?>
+          <option value="<?= $client['id_cliente'] ?>"><?= $client['nombre_cliente'] ?></option>
+        <?php endforeach; ?>
       </select>
     </div>
 
@@ -210,238 +199,154 @@
   </footer>
 
   <script>
-    $(document).ready(function () {
-      let table;
-      let filtersInitialized = false;
+  $(document).ready(function () {
+    // Flag para saber si ya se crearon los filtros
+    var filtersInitialized = false;
 
-      // Initialize Select2
-      $('#clientSelector').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Seleccione un cliente',
-        allowClear: true
-      });
-
-      // Function to initialize column filters
-      function initializeColumnFilters() {
-        if (filtersInitialized) return;
-        
-        // Only initialize filters for columns that should have them (exclude Actions column)
-        table.columns().every(function (index) {
-          var column = this;
-          
-          // Skip the Actions column (last column)
-          if (index === table.columns().count() - 1) {
-            $(column.footer()).html('');
-            return;
+    // Inicialización de la DataTable
+    var table = $('#documentTable').DataTable({
+      data: [],
+      scrollX: true,
+      autoWidth: false,
+      stateSave: false,
+      deferRender: true,
+      processing: true,
+      columns: [
+        { data: 'nombre_cliente' },
+        { data: 'type_name' },
+        { data: 'document_type' },
+        { data: 'acronym' },
+        { data: 'version_number' },
+        { data: 'location' },
+        { data: 'status' },
+        { data: 'change_control' },
+        { data: 'created_at' },
+        {
+          data: 'id',
+          orderable: false,
+          searchable: false,
+          render: function(data, type, row) {
+            return `
+              <a href="<?= base_url('editVersion/') ?>${data}" class="btn btn-outline-primary btn-sm me-2">Editar</a>
+              <a href="<?= base_url('deleteVersion/') ?>${data}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar esta versión?');">Eliminar</a>
+            `;
           }
-
-          var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
-            .appendTo($(column.footer()).empty())
-            .on('change', function () {
-              var val = $.fn.dataTable.util.escapeRegex($(this).val());
-              column.search(val ? '^' + val + '$' : '', true, false).draw();
-            });
-
-          // Get unique values from current data
-          var uniqueValues = [];
-          column.data().unique().each(function (d) {
-            if (d && d !== null && d !== undefined) {
-              uniqueValues.push(d);
-            }
-          });
-
-          // Sort unique values
-          uniqueValues.sort();
-
-          // Add options to select
-          uniqueValues.forEach(function(d) {
-            select.append('<option value="' + d + '">' + d + '</option>');
-          });
-        });
-
-        filtersInitialized = true;
-      }
-
-      // Function to update column filters with new data
-      function updateColumnFilters() {
-        table.columns().every(function (index) {
-          var column = this;
-          
-          // Skip the Actions column
-          if (index === table.columns().count() - 1) {
-            return;
-          }
-
-          var select = $(column.footer()).find('select');
-          if (select.length > 0) {
-            var currentValue = select.val();
-            
-            // Clear existing options except "Todos"
-            select.find('option:not(:first)').remove();
-
-            // Get unique values from current data
-            var uniqueValues = [];
-            column.data().unique().each(function (d) {
-              if (d && d !== null && d !== undefined) {
-                uniqueValues.push(d);
-              }
-            });
-
-            // Sort unique values
-            uniqueValues.sort();
-
-            // Add new options
-            uniqueValues.forEach(function(d) {
-              select.append('<option value="' + d + '">' + d + '</option>');
-            });
-
-            // Restore previous selection if it still exists
-            if (currentValue && uniqueValues.includes(currentValue)) {
-              select.val(currentValue);
-            }
-          }
-        });
-      }
-
-      // Function to clear all filters
-      function clearAllFilters() {
-        if (table && filtersInitialized) {
-          table.columns().every(function (index) {
-            var column = this;
-            if (index !== table.columns().count() - 1) {
-              var select = $(column.footer()).find('select');
-              if (select.length > 0) {
-                select.val('').trigger('change');
-              }
-            }
-          });
         }
-      }
-
-      // Initialize DataTable with empty data
-      table = $('#documentTable').DataTable({
-        data: [],
-        scrollX: true,
-        autoWidth: false,
-        stateSave: false,
-        deferRender: true,
-        processing: true,
-        columns: [
-          { data: 'nombre_cliente' },
-          { data: 'type_name' },
-          { data: 'document_type' },
-          { data: 'acronym' },
-          { data: 'version_number' },
-          { data: 'location' },
-          { data: 'status' },
-          { data: 'change_control' },
-          { data: 'created_at' },
-          {
-            data: 'id',
-            orderable: false,
-            searchable: false,
-            render: function(data, type, row) {
-              return `
-                <a href="#" class="btn btn-outline-primary btn-sm me-2" onclick="editVersion(${data})">Editar</a>
-                <a href="#" class="btn btn-outline-danger btn-sm" onclick="deleteVersion(${data})">Eliminar</a>
-              `;
-            }
-          }
-        ],
-        language: {
-          url: "//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
-        },
-        dom: 'Bfrtip',
-        buttons: [
-          {
-            extend: 'excelHtml5',
-            text: 'Exportar a Excel',
-            titleAttr: 'Exportar a Excel'
-          }
-        ]
-      });
-
-      // Hide table container initially
-      $('.table-container').hide();
-
-      // Handle client selection
-      $('#clientSelector').on('change', function() {
-        var selectedClient = $(this).val();
-        
-        if (selectedClient) {
-          // Show table container when a client is selected
-          $('.table-container').show();
-          
-          // Simulate loading data for selected client
-          // Replace this with your actual AJAX call
-          var mockData = generateMockData(selectedClient);
-          
-          // Clear existing data and add new data
-          table.clear().rows.add(mockData).draw();
-          
-          // Initialize or update filters after data is loaded
-          setTimeout(function() {
-            if (!filtersInitialized) {
-              initializeColumnFilters();
-            } else {
-              updateColumnFilters();
-            }
-          }, 100);
-          
-        } else {
-          // Hide table and clear data when no client is selected
-          $('.table-container').hide();
-          table.clear().draw();
-          clearAllFilters();
+      ],
+      language: {
+        url: "//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
+      },
+      dom: 'Bfrtip',
+      buttons: [
+        {
+          extend: 'excelHtml5',
+          text: 'Exportar a Excel',
+          titleAttr: 'Exportar a Excel'
         }
-      });
-
-      // Handle clear state button
-      $('#clearState').on('click', function () {
-        $('#clientSelector').val('').trigger('change');
-        table.clear().draw();
-        $('.table-container').hide();
-        clearAllFilters();
-        filtersInitialized = false;
-      });
-
-      // Mock data generator for demonstration
-      function generateMockData(clientId) {
-        const clients = ['Cliente Demo 1', 'Cliente Demo 2', 'Cliente Demo 3'];
-        const documentTypes = ['Manual', 'Procedimiento', 'Instructivo', 'Formato'];
-        const statuses = ['Vigente', 'Obsoleto', 'En Revisión'];
-        const locations = ['SharePoint', 'Drive', 'Servidor Local'];
-        
-        var data = [];
-        for (let i = 1; i <= 10; i++) {
-          data.push({
-            id: clientId + '_' + i,
-            nombre_cliente: clients[clientId - 1],
-            type_name: 'Documento ' + i,
-            document_type: documentTypes[Math.floor(Math.random() * documentTypes.length)],
-            acronym: 'DOC' + i,
-            version_number: '1.' + Math.floor(Math.random() * 10),
-            location: locations[Math.floor(Math.random() * locations.length)],
-            status: statuses[Math.floor(Math.random() * statuses.length)],
-            change_control: 'Control ' + i,
-            created_at: '2024-' + String(Math.floor(Math.random() * 12) + 1).padStart(2, '0') + '-' + String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')
-          });
-        }
-        return data;
-      }
-
-      // Mock functions for edit and delete actions
-      window.editVersion = function(id) {
-        alert('Editar versión: ' + id);
-      };
-
-      window.deleteVersion = function(id) {
-        if (confirm('¿Estás seguro de que deseas eliminar esta versión?')) {
-          alert('Eliminar versión: ' + id);
-        }
-      };
+      ]
+      // NOTA: NO creamos los filtros aquí en initComplete
     });
-  </script>
+
+    // Función para inicializar filtros por columna (excepto la última de acciones)
+    function initializeColumnFilters() {
+      table.columns().indexes().each(function(idx) {
+        if (idx === table.columns().count() - 1) return; // saltar columna de acciones
+        var column = table.column(idx);
+        var footer = $(column.footer());
+        footer.empty();
+        var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
+          .appendTo(footer)
+          .on('change', function() {
+            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+            column.search(val ? '^' + val + '$' : '', true, false).draw();
+          });
+        column.data().unique().sort().each(function(d) {
+          select.append($('<option>').val(d).text(d));
+        });
+      });
+      filtersInitialized = true;
+    }
+
+    // Función para actualizar los valores de los filtros (guardando la selección si aún existe)
+    function updateColumnFilters() {
+      table.columns().indexes().each(function(idx) {
+        if (idx === table.columns().count() - 1) return;
+        var column = table.column(idx);
+        var footer = $(column.footer());
+        var current = footer.find('select').val() || '';
+        footer.empty();
+        var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
+          .appendTo(footer)
+          .on('change', function() {
+            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+            column.search(val ? '^' + val + '$' : '', true, false).draw();
+          });
+        column.data().unique().sort().each(function(d) {
+          select.append($('<option>').val(d).text(d));
+        });
+        if (current && select.find('option[value="' + current + '"]').length) {
+          select.val(current);
+        }
+      });
+    }
+
+    // Función para limpiar todos los filtros
+    function clearAllFilters() {
+      table.columns().indexes().each(function(idx) {
+        if (idx === table.columns().count() - 1) return;
+        table.column(idx).search('');
+        $(table.column(idx).footer()).find('select').val('');
+      });
+      table.draw();
+    }
+
+    // Cuando se carga nueva data via AJAX, refrescar filtros
+    function loadClientData(clientId) {
+      $.ajax({
+        url: '<?= base_url('getVersionsByClient/') ?>' + clientId,
+        method: 'GET',
+        success: function(data) {
+          table.clear().rows.add(data).draw();
+          if (!filtersInitialized) {
+            initializeColumnFilters();
+          } else {
+            updateColumnFilters();
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('Error loading versions:', error);
+        }
+      });
+    }
+
+    // Mostrar/ocultar tabla según selección de cliente
+    $('#clientSelector').on('change', function() {
+      var selected = $(this).val();
+      if (selected) {
+        $('.table-container').show();
+        loadClientData(selected);
+      } else {
+        $('.table-container').hide();
+        table.clear().draw();
+      }
+    });
+
+    // Botón de restablecer filtros
+    $('#clearState').on('click', function () {
+      $('#clientSelector').val('').trigger('change');
+      clearAllFilters();
+      $('.table-container').hide();
+    });
+
+    // Iniciar Select2
+    $('#clientSelector').select2({
+      theme: 'bootstrap-5',
+      placeholder: 'Seleccione un cliente',
+      allowClear: true
+    });
+  });
+</script>
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
