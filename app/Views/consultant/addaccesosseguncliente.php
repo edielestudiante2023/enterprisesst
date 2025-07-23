@@ -32,7 +32,7 @@
           <div class="mb-3">
             <label for="url" class="form-label fw-bold">URL</label>
             <input 
-              type="url" 
+              type="text" 
               class="form-control" 
               id="url" 
               name="url" 

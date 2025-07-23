@@ -12,12 +12,12 @@ use Dompdf\Dompdf;
 
 use CodeIgniter\Controller;
 
-class PzmedpreventivaController extends Controller
+class PzacososexualController extends Controller
 {
 
 
 
-    public function medPreventiva()
+    public function acosoSexual()
     {
         // Obtener el ID del cliente desde la sesión
         $session = session();
@@ -42,7 +42,7 @@ class PzmedpreventivaController extends Controller
         }
 
         // Obtener la política de alcohol y drogas del cliente
-        $policyTypeId = 33; // Supongamos que el ID de la política de alcohol y drogas es 1
+        $policyTypeId = 48; // Supongamos que el ID de la política de alcohol y drogas es 1
         $clientPolicy = $clientPoliciesModel->where('client_id', $clientId)
             ->where('policy_type_id', $policyTypeId)
             ->orderBy('id', 'DESC')
@@ -85,7 +85,7 @@ class PzmedpreventivaController extends Controller
             'allVersions' => $allVersions,  // Pasamos todas las versiones al footer
         ];
 
-        return view('client/sgsst/1planear/h1_1_2medpreventiva', $data);
+        return view('client/sgsst/1planear/h1_1_9_prc_acososexual', $data);
     }
 
    
