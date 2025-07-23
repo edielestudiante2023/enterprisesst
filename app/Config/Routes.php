@@ -152,7 +152,7 @@ $routes->get('/generatePdf_politicaEmergencias', 'PzpoliticaemergenciasControlle
 $routes->get('/politicaEpps/(:num)', 'PzpoliticaeppsController::politicaEpps/$1');
 $routes->get('/generatePdf_politicaEpps', 'PzpoliticaeppsController::generatePdf_politicaEpps');
 $routes->get('/politicaPesv/(:num)', 'PzpoliticapesvController::politicaPesv/$1');
-$routes->get('/politicaacosoSexual/(:num)', 'PzpoliticapesvController::politicaacosoSexual/$1');
+$routes->get('/politicaacosoSexual/(:num)', 'PzpoliticaacososexualController::politicaacosoSexual/$1');
 $routes->get('/generatePdf_politicaPesv', 'PzpoliticapesvController::generatePdf_politicaPesv');
 $routes->get('/regHigsegind/(:num)', 'PzreghigsegindController::regHigsegind/$1');
 $routes->get('/generatePdf_regHigsegind', 'PzreghigsegindController::generatePdf_regHigsegind');
