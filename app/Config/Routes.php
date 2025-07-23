@@ -152,6 +152,7 @@ $routes->get('/generatePdf_politicaEmergencias', 'PzpoliticaemergenciasControlle
 $routes->get('/politicaEpps/(:num)', 'PzpoliticaeppsController::politicaEpps/$1');
 $routes->get('/generatePdf_politicaEpps', 'PzpoliticaeppsController::generatePdf_politicaEpps');
 $routes->get('/politicaPesv/(:num)', 'PzpoliticapesvController::politicaPesv/$1');
+$routes->get('/politicaacosoSexual/(:num)', 'PzpoliticapesvController::politicaacosoSexual/$1');
 $routes->get('/generatePdf_politicaPesv', 'PzpoliticapesvController::generatePdf_politicaPesv');
 $routes->get('/regHigsegind/(:num)', 'PzreghigsegindController::regHigsegind/$1');
 $routes->get('/generatePdf_regHigsegind', 'PzreghigsegindController::generatePdf_regHigsegind');
@@ -168,6 +169,7 @@ $routes->get('/generatePdf_manProveedores', 'PzmanproveedoresController::generat
 $routes->get('/saneamientoBasico/(:num)', 'PzsaneamientoController::saneamientoBasico/$1');
 $routes->get('/generatePdf_saneamientoBasico', 'PzsaneamientoController::generatePdf_saneamientoBasico');
 $routes->get('/medPreventiva/(:num)', 'PzmedpreventivaController::medPreventiva/$1');
+$routes->get('/acosoSexual/(:num)', 'PzacososexualController::acosoSexual/$1');
 $routes->get('/generatePdf_medPreventiva', 'PzmedpreventivaController::generatePdf_medPreventiva');
 $routes->get('/reporteAccidente/(:num)', 'PzrepoaccidenteController::reporteAccidente/$1');
 $routes->get('/generatePdf_reporteAccidente', 'PzrepoaccidenteController::generatePdf_reporteAccidente');
