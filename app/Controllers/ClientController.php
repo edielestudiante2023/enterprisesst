@@ -70,9 +70,13 @@ class ClientController extends Controller
 
             // Si no hay accesos asociados al estándar
             if (empty($accesosData)) {
-                echo "No hay accesos disponibles para el estándar $estandarNombre.";
-                exit;
+                return view('client/dashboard', [
+                    'accesos' => [],
+                    'client' => $client,
+                    'mensaje' => "No hay accesos disponibles para el estándar $estandarNombre."
+                ]);
             }
+
 
             // Instanciar el modelo de accesos para obtener los detalles de cada acceso ordenado por la dimensión
             $accesoModel = new AccesoModel();
@@ -105,7 +109,8 @@ class ClientController extends Controller
         }
     }
 
-    private function getReportsForTopic($reportModel, $clientId, $reportTypeId) {
+    private function getReportsForTopic($reportModel, $clientId, $reportTypeId)
+    {
         return $reportModel
             ->select('
                 tbl_reporte.id_reporte,
@@ -129,59 +134,59 @@ class ClientController extends Controller
     }
 
     public function viewDocuments()
-{
-    $reportModel = new ReporteModel();
-    $clientId = session()->get('user_id');
+    {
+        $reportModel = new ReporteModel();
+        $clientId = session()->get('user_id');
 
-    if (!$clientId) {
-        return redirect()->to('/login')->with('error', 'Sesión no válida.');
+        if (!$clientId) {
+            return redirect()->to('/login')->with('error', 'Sesión no válida.');
+        }
+
+        // Mapeo de claves con ID de reportes y títulos
+        $topics = [
+            'revisionCopasst'        => ['id' => 1,  'titulo' => 'Revisión del COPASST'],
+            'comiteConvivencia'      => ['id' => 2,  'titulo' => 'Comité de Convivencia Laboral'],
+            'actaVisitasSST'         => ['id' => 3,  'titulo' => 'Acta de Visitas SST'],
+            'capacitacionSST'        => ['id' => 4,  'titulo' => 'Capacitación en SST'],
+            'protocolosEmergencia'   => ['id' => 5,  'titulo' => 'Protocolos de Emergencia'],
+            'talentoHumanoBienestar' => ['id' => 6,  'titulo' => 'Talento Humano y Bienestar'],
+            'analisisAccidentes'     => ['id' => 7,  'titulo' => 'Análisis de Accidentes de Trabajo'],
+            'evaluacionFactores'     => ['id' => 8,  'titulo' => 'Evaluación de Factores Psicosociales'],
+            'inspeccionPuestos'      => ['id' => 9,  'titulo' => 'Inspección de Puestos de Trabajo'],
+            'planGestionAmbiental'   => ['id' => 10, 'titulo' => 'Plan de Gestión Ambiental'],
+            'brigada'                => ['id' => 11, 'titulo' => 'Brigada de Emergencia'],
+            'documentacionNormativa' => ['id' => 12, 'titulo' => 'Reportes SST'],
+            'proveedoresExternos'    => ['id' => 13, 'titulo' => 'Proveedores Externos'],
+            'cierreNumerales'        => ['id' => 14, 'titulo' => 'Cierre de Numerales'],
+            'gestionResiduos'        => ['id' => 15, 'titulo' => 'Gestión de Residuos Peligrosos'],
+            'seguimientoPlanes'      => ['id' => 16, 'titulo' => 'Seguimiento a Planes de Acción'],
+            'programaRiesgos'        => ['id' => 17, 'titulo' => 'Programa de Gestión de Riesgos'],
+            'matrizPeligros'         => ['id' => 19, 'titulo' => 'Matriz de Peligros'],
+            'revisionIluminacion'    => ['id' => 20, 'titulo' => 'Revisión de Sistemas de Iluminación'],
+            'elementosARL'           => ['id' => 21, 'titulo' => 'Elementos Relacionados con la ARL'],
+            'documentosContractuales' => ['id' => 22, 'titulo' => 'Contrato y otros Documentos Contractuales'],
+            'planEmergencia'         => ['id' => 23, 'titulo' => 'Plan de Emergencia'],
+            'inspecciones'           => ['id' => 24, 'titulo' => 'Inspecciones'],
+
+            'examenesMedicos'        => ['id' => 26, 'titulo' => 'Examenes Médicos Ocupacionales']
+        ];
+
+
+        $data = ['topicsList' => []];
+
+        foreach ($topics as $key => $info) {
+            // Guardar título en lista de temas
+            $data['topicsList'][$key] = $info['titulo'];
+
+            // Obtener reportes para el tema actual usando el método auxiliar
+            $data[$key] = $this->getReportsForTopic($reportModel, $clientId, $info['id']);
+        }
+
+        return view('client/document_view', $data);
     }
 
-    // Mapeo de claves con ID de reportes y títulos
-    $topics = [
-        'revisionCopasst'        => ['id' => 1,  'titulo' => 'Revisión del COPASST'],
-        'comiteConvivencia'      => ['id' => 2,  'titulo' => 'Comité de Convivencia Laboral'],
-        'actaVisitasSST'         => ['id' => 3,  'titulo' => 'Acta de Visitas SST'],
-        'capacitacionSST'        => ['id' => 4,  'titulo' => 'Capacitación en SST'],
-        'protocolosEmergencia'   => ['id' => 5,  'titulo' => 'Protocolos de Emergencia'],
-        'talentoHumanoBienestar' => ['id' => 6,  'titulo' => 'Talento Humano y Bienestar'],
-        'analisisAccidentes'     => ['id' => 7,  'titulo' => 'Análisis de Accidentes de Trabajo'],
-        'evaluacionFactores'     => ['id' => 8,  'titulo' => 'Evaluación de Factores Psicosociales'],
-        'inspeccionPuestos'      => ['id' => 9,  'titulo' => 'Inspección de Puestos de Trabajo'],
-        'planGestionAmbiental'   => ['id' => 10, 'titulo' => 'Plan de Gestión Ambiental'],
-        'brigada'                => ['id' => 11, 'titulo' => 'Brigada de Emergencia'],
-        'documentacionNormativa' => ['id' => 12, 'titulo' => 'Reportes SST'],
-        'proveedoresExternos'    => ['id' => 13, 'titulo' => 'Proveedores Externos'],
-        'cierreNumerales'        => ['id' => 14, 'titulo' => 'Cierre de Numerales'],
-        'gestionResiduos'        => ['id' => 15, 'titulo' => 'Gestión de Residuos Peligrosos'],
-        'seguimientoPlanes'      => ['id' => 16, 'titulo' => 'Seguimiento a Planes de Acción'],
-        'programaRiesgos'        => ['id' => 17, 'titulo' => 'Programa de Gestión de Riesgos'],
-        'matrizPeligros'         => ['id' => 19, 'titulo' => 'Matriz de Peligros'],
-        'revisionIluminacion'    => ['id' => 20, 'titulo' => 'Revisión de Sistemas de Iluminación'],
-        'elementosARL'           => ['id' => 21, 'titulo' => 'Elementos Relacionados con la ARL'],
-        'documentosContractuales'=> ['id' => 22, 'titulo' => 'Contrato y otros Documentos Contractuales'],
-        'planEmergencia'         => ['id' => 23, 'titulo' => 'Plan de Emergencia'],
-        'inspecciones'           => ['id' => 24, 'titulo' => 'Inspecciones'],
-        
-        'examenesMedicos'        => ['id' => 26, 'titulo' => 'Examenes Médicos Ocupacionales']
-    ];
-    
 
-    $data = ['topicsList' => []];
-
-    foreach ($topics as $key => $info) {
-        // Guardar título en lista de temas
-        $data['topicsList'][$key] = $info['titulo'];
-
-        // Obtener reportes para el tema actual usando el método auxiliar
-        $data[$key] = $this->getReportsForTopic($reportModel, $clientId, $info['id']);
-    }
-
-    return view('client/document_view', $data);
-}
-
-
-  /*   public function viewDocuments()
+    /*   public function viewDocuments()
     {
         $reportModel = new ReporteModel();
         $clientId = session()->get('user_id');
