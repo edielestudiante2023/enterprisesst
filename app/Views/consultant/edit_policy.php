@@ -1,181 +1,331 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 
 <head>
-    <title>Editar Política</title>
-    <!-- Importar Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Importar DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            color: #343a40;
-            font-family: Arial, sans-serif;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editar Política</title>
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <!-- DataTables CSS (por si en el futuro agregas tablas) -->
+  <link
+    href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css"
+    rel="stylesheet"
+  >
+  <!-- Select2 CSS + tema Bootstrap4 -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+    rel="stylesheet"
+  >
+  <link
+    href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
+    rel="stylesheet"
+  >
 
-        h1,
-        h2 {
-            text-align: center;
-            margin-top: 20px;
-        }
+  <style>
+    body {
+      background-color: #f8f9fa;
+      color: #333;
+    }
 
-        form {
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
+    .container {
+      max-width: 800px;
+      margin-top: 20px;
+    }
 
-        label {
-            font-weight: bold;
-            margin-top: 10px;
-        }
+    h1, h2 {
+      color: #495057;
+    }
 
-        textarea {
-            resize: vertical;
-        }
+    .form-label {
+      font-weight: bold;
+    }
 
-        .btn-primary,
-        .btn-secondary {
-            width: 100%;
-            margin-top: 15px;
-        }
+    .btn-primary,
+    .btn-secondary {
+      margin-top: 10px;
+    }
 
-        .btn-back {
-            display: block;
-            margin: 20px auto;
-        }
-    </style>
+    .dataTable-filter {
+      display: none;
+    }
+
+    /* Mejoras para Select2 */
+    .select2-container--bootstrap4 .select2-selection--single {
+      height: calc(1.5em + 0.75rem + 2px) !important;
+      padding: 0.375rem 0.75rem !important;
+      font-size: 1rem !important;
+      line-height: 1.5 !important;
+      border: 1px solid #ced4da !important;
+      border-radius: 0.375rem !important;
+      background-color: #fff !important;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single:focus {
+      border-color: #80bdff !important;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+      color: #495057 !important;
+      padding-left: 0 !important;
+      padding-right: 20px !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__placeholder {
+      color: #6c757d !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+      height: calc(1.5em + 0.75rem) !important;
+      position: absolute !important;
+      top: 1px !important;
+      right: 1px !important;
+      width: 20px !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow b {
+      border-color: #999 transparent transparent transparent !important;
+      border-style: solid !important;
+      border-width: 5px 4px 0 4px !important;
+      height: 0 !important;
+      left: 50% !important;
+      margin-left: -4px !important;
+      margin-top: -2px !important;
+      position: absolute !important;
+      top: 50% !important;
+      width: 0 !important;
+    }
+
+    .select2-dropdown {
+      border: 1px solid #ced4da !important;
+      border-radius: 0.375rem !important;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    }
+
+    .select2-container--bootstrap4 .select2-results__option {
+      padding: 0.5rem 0.75rem !important;
+    }
+
+    .select2-container--bootstrap4 .select2-results__option--highlighted {
+      background-color: #007bff !important;
+      color: #fff !important;
+    }
+
+    /* Validación visual */
+    .is-invalid {
+      border-color: #dc3545 !important;
+    }
+
+    .select2-container .select2-selection--single.is-invalid {
+      border-color: #dc3545 !important;
+    }
+
+    .invalid-feedback {
+      display: block;
+      width: 100%;
+      margin-top: 0.25rem;
+      font-size: 0.875em;
+      color: #dc3545;
+    }
+
+    /* Mejora para el textarea */
+    #policy_content {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* Estilos para el formulario */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-control:focus {
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+  </style>
 </head>
 
 <body>
 
-    <nav style="background-color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 10px 0; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
-
-            <!-- Logo izquierdo -->
-            <div>
-                <a href="https://dashboard.cycloidtalent.com/login">
-                    <img src="<?= base_url('uploads/logoenterprisesstblancoslogan.png') ?>" alt="Enterprisesst Logo" style="height: 100px;">
-                </a>
-            </div>
-
-            <!-- Logo centro -->
-            <div>
-                <a href="https://cycloidtalent.com/index.php/consultoria-sst">
-                    <img src="<?= base_url('uploads/logosst.png') ?>" alt="SST Logo" style="height: 100px;">
-                </a>
-            </div>
-
-            <!-- Logo derecho -->
-            <div>
-                <a href="https://cycloidtalent.com/">
-                    <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Cycloids Logo" style="height: 100px;">
-                </a>
-            </div>
-
-            <!-- Botón -->
-            <div style="text-align: center;">
-                <h2 style="margin: 0; font-size: 16px;">Ir a Dashboard</h2>
-                <a href="<?= base_url('/dashboardconsultant') ?>" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 14px; margin-top: 5px;">Ir a DashBoard</a>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Ajustar el espaciado para evitar que el contenido se oculte bajo el navbar fijo -->
-    <div style="height: 160px;"></div>
-
-    <div>
-        <h1>Editar Política</h1>
-
-        <form action="<?= base_url('/editPolicyPost/' . $policy['id']) ?>" method="post" class="needs-validation" novalidate>
-            <div class="mb-3">
-                <label for="client_id" class="form-label">Cliente:</label>
-                <select name="client_id" id="client_id" class="form-select" required>
-                    <?php foreach ($clients as $client): ?>
-                        <option value="<?= $client['id_cliente'] ?>" <?= $client['id_cliente'] == $policy['client_id'] ? 'selected' : '' ?>><?= $client['nombre_cliente'] ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label for="policy_type_id" class="form-label">Tipo de Política:</label>
-                <select name="policy_type_id" id="policy_type_id" class="form-select" required>
-                    <?php foreach ($policyTypes as $type): ?>
-                        <option value="<?= $type['id'] ?>" <?= $type['id'] == $policy['policy_type_id'] ? 'selected' : '' ?>><?= $type['type_name'] ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label for="policy_content" class="form-label">Contenido:</label>
-                <textarea name="policy_content" id="policy_content" class="form-control" rows="5" required><?= $policy['policy_content'] ?></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Actualizar Texto</button>
-        </form>
-
+  <nav style="background-color: white; position: fixed; top:0; width:100%; z-index:1000; box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+    <div class="d-flex justify-content-between align-items-center px-4">
+      <a href="https://dashboard.cycloidtalent.com/login">
+        <img src="<?= base_url('uploads/logoenterprisesstblancoslogan.png') ?>" alt="Enterprisesst Logo" height="100">
+      </a>
+      <a href="https://cycloidtalent.com/index.php/consultoria-sst">
+        <img src="<?= base_url('uploads/logosst.png') ?>" alt="SST Logo" height="100">
+      </a>
+      <a href="https://cycloidtalent.com/">
+        <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Cycloids Logo" height="100">
+      </a>
+      <div class="text-center">
+        <h2 class="h6 mb-1">Ir a Dashboard</h2>
+        <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm">Dashboard</a>
+      </div>
     </div>
+  </nav>
 
-    <footer style="background-color: white; padding: 20px 0; border-top: 1px solid #B0BEC5; margin-top: 40px; color: #3A3F51; font-size: 14px; text-align: center;">
-        <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
-            <!-- Company and Rights -->
-            <p style="margin: 0; font-weight: bold;">Cycloid Talent SAS</p>
-            <p style="margin: 5px 0;">Todos los derechos reservados © 2024</p>
-            <p style="margin: 5px 0;">NIT: 901.653.912</p>
+  <div style="height: 160px;"></div> <!-- espacio para el nav fijo -->
 
-            <!-- Website Link -->
-            <p style="margin: 5px 0;">
-                Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" style="color: #007BFF; text-decoration: none;">https://cycloidtalent.com/</a>
-            </p>
+  <div class="container">
+    <h1 class="mb-4">Editar Política</h1>
 
-            <!-- Social Media Links -->
-            <p style="margin: 15px 0 5px;"><strong>Nuestras Redes Sociales:</strong></p>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <a href="https://www.facebook.com/CycloidTalent" target="_blank" style="color: #3A3F51; text-decoration: none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook" style="height: 24px; width: 24px;">
-                </a>
-                <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank" style="color: #3A3F51; text-decoration: none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn" style="height: 24px; width: 24px;">
-                </a>
-                <a href="https://www.instagram.com/cycloid_talent?igsh=Nmo4d2QwZDg5dHh0" target="_blank" style="color: #3A3F51; text-decoration: none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram" style="height: 24px; width: 24px;">
-                </a>
-                <a href="https://www.tiktok.com/@cycloid_talent?_t=8qBSOu0o1ZN&_r=1" target="_blank" style="color: #3A3F51; text-decoration: none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok" style="height: 24px; width: 24px;">
-                </a>
-            </div>
-        </div>
-    </footer>
+    <form id="editPolicyForm" action="<?= base_url('/editPolicyPost/' . $policy['id']) ?>" method="post">
+      <div class="form-group">
+        <label for="client_id" class="form-label">Cliente:</label>
+        <select
+          id="client_id"
+          name="client_id"
+          class="select2bs4 form-control"
+          data-placeholder="Seleccione un cliente"
+          style="width:100%;"
+          required
+        >
+          <option value=""></option>
+          <?php foreach ($clients as $client): ?>
+            <option value="<?= esc($client['id_cliente']) ?>" <?= $client['id_cliente'] == $policy['client_id'] ? 'selected' : '' ?>>
+              <?= esc($client['nombre_cliente']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+        <div class="invalid-feedback" id="client_id_error"></div>
+      </div>
 
-    <!-- Importar Bootstrap JS y dependencias -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <!-- Importar jQuery y DataTables JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Añadir validación a los formularios
-            (function() {
-                'use strict'
-                var forms = document.querySelectorAll('.needs-validation')
-                Array.prototype.slice.call(forms).forEach(function(form) {
-                    form.addEventListener('submit', function(event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-            })()
+      <div class="form-group">
+        <label for="policy_type_id" class="form-label">Tipo de Política:</label>
+        <select
+          id="policy_type_id"
+          name="policy_type_id"
+          class="select2bs4 form-control"
+          data-placeholder="Seleccione un tipo de política"
+          style="width:100%;"
+          required
+        >
+          <option value=""></option>
+          <?php foreach ($policyTypes as $type): ?>
+            <option value="<?= esc($type['id']) ?>" <?= $type['id'] == $policy['policy_type_id'] ? 'selected' : '' ?>>
+              <?= esc($type['type_name']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+        <div class="invalid-feedback" id="policy_type_id_error"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="policy_content" class="form-label">Contenido:</label>
+        <textarea
+          id="policy_content"
+          name="policy_content"
+          class="form-control"
+          rows="5"
+          placeholder="Ingrese el contenido del documento..."
+        ><?= esc($policy['policy_content']) ?></textarea>
+        <div class="invalid-feedback" id="policy_content_error"></div>
+        <small class="form-text text-muted">Campo opcional.</small>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i class="fas fa-edit mr-2"></i>Actualizar Texto
+      </button>
+    </form>
+  </div>
+
+  <footer class="mt-5 py-3 text-center" style="background: #fff; border-top:1px solid #B0BEC5; color:#3A3F51;">
+    <strong>Cycloid Talent SAS</strong> | Todos los derechos reservados © 2024 | NIT: 901.653.912
+    <br>
+    Sitio: <a href="https://cycloidtalent.com/" target="_blank" class="text-primary">cycloidtalent.com</a>
+    <div class="mt-2">
+      <a href="https://www.facebook.com/CycloidTalent" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" height="24"></a>
+      <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" height="24"></a>
+      <a href="https://www.instagram.com/cycloid_talent" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" height="24"></a>
+      <a href="https://www.tiktok.com/@cycloid_talent" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" height="24"></a>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+  <script>
+    $(function() {
+      // DataTables (por si lo necesitas luego)
+      $('table').DataTable();
+
+      // Inicializar cada Select2 leyendo su propio placeholder
+      $('.select2bs4').each(function() {
+        var $sel = $(this);
+        $sel.select2({
+          theme: 'bootstrap4',
+          width: '100%',
+          placeholder: $sel.data('placeholder'),
+          allowClear: false
         });
-    </script>
-</body>
+      });
 
+      // Validación del formulario
+      $('#editPolicyForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        let isValid = true;
+        
+        // Limpiar errores previos
+        $('.form-control, .select2-selection').removeClass('is-invalid');
+        $('.invalid-feedback').text('');
+        
+        // Validar cliente
+        const client_id = $('#client_id').val();
+        if (!client_id || client_id === '') {
+          $('#client_id').next('.select2-container').find('.select2-selection').addClass('is-invalid');
+          $('#client_id_error').text('Por favor seleccione un cliente.');
+          isValid = false;
+        }
+        
+        // Validar tipo de política
+        const policy_type_id = $('#policy_type_id').val();
+        if (!policy_type_id || policy_type_id === '') {
+          $('#policy_type_id').next('.select2-container').find('.select2-selection').addClass('is-invalid');
+          $('#policy_type_id_error').text('Por favor seleccione un tipo de política.');
+          isValid = false;
+        }
+        
+        // Contenido es opcional - no validamos
+        
+        // Si todo es válido, enviar el formulario
+        if (isValid) {
+          this.submit();
+        } else {
+          // Scroll al primer error
+          $('html, body').animate({
+            scrollTop: $('.is-invalid').first().offset().top - 100
+          }, 500);
+        }
+      });
+
+      // Limpiar errores cuando el usuario empiece a corregir
+      $('#client_id').on('change', function() {
+        $(this).next('.select2-container').find('.select2-selection').removeClass('is-invalid');
+        $('#client_id_error').text('');
+      });
+
+      $('#policy_type_id').on('change', function() {
+        $(this).next('.select2-container').find('.select2-selection').removeClass('is-invalid');
+        $('#policy_type_id_error').text('');
+      });
+
+      $('#policy_content').on('input', function() {
+        $(this).removeClass('is-invalid');
+        $('#policy_content_error').text('');
+      });
+    });
+  </script>
+</body>
 </html>
