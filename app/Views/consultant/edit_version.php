@@ -4,47 +4,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <title>Editar Versión</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables Bootstrap 5 CSS -->
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Select2 Bootstrap-5 Theme -->
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 </head>
 
 <body class="bg-light">
 
-    <nav style="background-color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 10px 0; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
-
-            <!-- Logo izquierdo -->
-            <div>
-                <a href="https://dashboard.cycloidtalent.com/login">
-                    <img src="<?= base_url('uploads/logoenterprisesstblancoslogan.png') ?>" alt="Enterprisesst Logo" style="height: 100px;">
-                </a>
-            </div>
-
-            <!-- Logo centro -->
-            <div>
-                <a href="https://cycloidtalent.com/index.php/consultoria-sst">
-                    <img src="<?= base_url('uploads/logosst.png') ?>" alt="SST Logo" style="height: 100px;">
-                </a>
-            </div>
-
-            <!-- Logo derecho -->
-            <div>
-                <a href="https://cycloidtalent.com/">
-                    <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Cycloids Logo" style="height: 100px;">
-                </a>
-            </div>
-
-            <!-- Botón -->
-            <div style="text-align: center;">
-                <h2 style="margin: 0; font-size: 16px;">Ir a Dashboard</h2>
-                <a href="<?= base_url('/dashboardconsultant') ?>" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 14px; margin-top: 5px;">Ir a DashBoard</a>
+    <!-- Navbar fijo -->
+    <nav class="bg-white fixed-top py-2 shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <!-- Logos -->
+            <a href="https://dashboard.cycloidtalent.com/login">
+                <img src="<?= base_url('uploads/logoenterprisesstblancoslogan.png') ?>" alt="Enterprisesst Logo" height="100">
+            </a>
+            <a href="https://cycloidtalent.com/index.php/consultoria-sst">
+                <img src="<?= base_url('uploads/logosst.png') ?>" alt="SST Logo" height="100">
+            </a>
+            <a href="https://cycloidtalent.com/">
+                <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Cycloids Logo" height="100">
+            </a>
+            <!-- Botón Dashboard -->
+            <div class="text-center">
+                <h2 class="h6 mb-1">Ir a Dashboard</h2>
+                <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm">Ir a Dashboard</a>
             </div>
         </div>
     </nav>
 
-    <!-- Ajustar el espaciado para evitar que el contenido se oculte bajo el navbar fijo -->
+    <!-- Espacio para navbar -->
     <div style="height: 160px;"></div>
+
     <div class="container mt-5">
         <h1 class="mb-4">Editar Versión</h1>
 
@@ -67,99 +64,113 @@
                     <tbody>
                         <tr>
                             <td>
-                                <select name="client_id" class="form-select" required>
+                                <select name="client_id" id="client_id" class="form-select select2" required>
+                                    <option value="" disabled>Seleccione un cliente</option>
                                     <?php foreach ($clients as $client): ?>
-                                        <option value="<?= $client['id_cliente'] ?>" <?= $client['id_cliente'] == $version['client_id'] ? 'selected' : '' ?>>
-                                            <?= $client['nombre_cliente'] ?>
+                                        <option value="<?= $client['id_cliente'] ?>"
+                                            <?= $client['id_cliente'] == $version['client_id'] ? 'selected' : '' ?>>
+                                            <?= esc($client['nombre_cliente']) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
                             </td>
                             <td>
-                                <select name="policy_type_id" class="form-select" required>
+                                <select name="policy_type_id" id="policy_type_id" class="form-select select2" required>
+                                    <option value="" disabled>Seleccione un documento</option>
                                     <?php foreach ($policyTypes as $policyType): ?>
-                                        <option value="<?= $policyType['id'] ?>" <?= $policyType['id'] == $version['policy_type_id'] ? 'selected' : '' ?>>
-                                            <?= $policyType['type_name'] ?>
+                                        <option value="<?= $policyType['id'] ?>"
+                                            <?= $policyType['id'] == $version['policy_type_id'] ? 'selected' : '' ?>>
+                                            <?= esc($policyType['type_name']) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
                             </td>
                             <td>
-                                <input type="text" name="document_type" class="form-control" value="<?= $version['document_type'] ?>" required>
+                                <input type="text" name="document_type" class="form-control" value="<?= esc($version['document_type']) ?>" required>
                             </td>
                             <td>
-                                <input type="text" name="acronym" class="form-control" value="<?= $version['acronym'] ?>" required>
+                                <input type="text" name="acronym" class="form-control" value="<?= esc($version['acronym']) ?>" required>
                             </td>
                             <td>
-                                <input type="number" name="version_number" class="form-control" value="<?= $version['version_number'] ?>" required>
+                                <input type="number" name="version_number" class="form-control" value="<?= esc($version['version_number']) ?>" required>
                             </td>
                             <td>
-                                <input type="text" name="location" class="form-control" value="<?= $version['location'] ?>" required>
+                                <input type="text" name="location" class="form-control" value="<?= esc($version['location']) ?>" required>
                             </td>
                             <td>
-                                <input type="text" name="status" class="form-control" value="<?= $version['status'] ?>" required>
+                                <input type="text" name="status" class="form-control" value="<?= esc($version['status']) ?>" required>
                             </td>
                             <td>
-                                <textarea name="change_control" class="form-control" rows="3"><?= $version['change_control'] ?></textarea>
+                                <textarea name="change_control" class="form-control" rows="3"><?= esc($version['change_control']) ?></textarea>
                             </td>
-                            <td><?= $version['created_at'] ?></td>
+                            <td><?= esc($version['created_at']) ?></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <div class="mt-4">
+            <div class="mt-4 d-flex gap-2">
                 <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 <a href="<?= base_url('listVersions') ?>" class="btn btn-secondary">Cancelar</a>
             </div>
 
             <div class="mt-5">
-                <h2>Ir a Dashboard</h2>
-                <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-success">Ir a DashBoard</a>
+                <h2 class="h5">Ir a Dashboard</h2>
+                <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-success btn-sm">Ir a Dashboard</a>
             </div>
         </form>
     </div>
 
-    <footer style="background-color: white; padding: 20px 0; border-top: 1px solid #B0BEC5; margin-top: 40px; color: #3A3F51; font-size: 14px; text-align: center;">
-        <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
-            <!-- Company and Rights -->
-            <p style="margin: 0; font-weight: bold;">Cycloid Talent SAS</p>
-            <p style="margin: 5px 0;">Todos los derechos reservados © 2024</p>
-            <p style="margin: 5px 0;">NIT: 901.653.912</p>
-
-            <!-- Website Link -->
-            <p style="margin: 5px 0;">
-                Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" style="color: #007BFF; text-decoration: none;">https://cycloidtalent.com/</a>
+    <footer class="bg-white border-top mt-5 py-4 text-center" style="color: #3A3F51; font-size: 14px;">
+        <div class="container d-flex flex-column align-items-center">
+            <p class="mb-1 fw-bold">Cycloid Talent SAS</p>
+            <p class="mb-1">Todos los derechos reservados © 2024</p>
+            <p class="mb-1">NIT: 901.653.912</p>
+            <p class="mb-1">
+                Sitio oficial:
+                <a href="https://cycloidtalent.com/" target="_blank" class="text-primary text-decoration-none">
+                    cycloidtalent.com
+                </a>
             </p>
-
-            <!-- Social Media Links -->
-            <p style="margin: 15px 0 5px;"><strong>Nuestras Redes Sociales:</strong></p>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <a href="https://www.facebook.com/CycloidTalent" target="_blank" style="color: #3A3F51; text-decoration: none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook" style="height: 24px; width: 24px;">
+            <p class="mt-3 mb-1"><strong>Nuestras Redes Sociales:</strong></p>
+            <div class="d-flex gap-3">
+                <a href="https://www.facebook.com/CycloidTalent" target="_blank">
+                    <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook" width="24" height="24">
                 </a>
-                <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank" style="color: #3A3F51; text-decoration: none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn" style="height: 24px; width: 24px;">
+                <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank">
+                    <img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn" width="24" height="24">
                 </a>
-                <a href="https://www.instagram.com/cycloid_talent?igsh=Nmo4d2QwZDg5dHh0" target="_blank" style="color: #3A3F51; text-decoration: none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram" style="height: 24px; width: 24px;">
+                <a href="https://www.instagram.com/cycloid_talent" target="_blank">
+                    <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram" width="24" height="24">
                 </a>
-                <a href="https://www.tiktok.com/@cycloid_talent?_t=8qBSOu0o1ZN&_r=1" target="_blank" style="color: #3A3F51; text-decoration: none;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok" style="height: 24px; width: 24px;">
+                <a href="https://www.tiktok.com/@cycloid_talent" target="_blank">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok" width="24" height="24">
                 </a>
             </div>
         </div>
     </footer>
 
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Iniciar DataTable sin paginación ni búsqueda
             $('#versionTable').DataTable({
                 paging: false,
                 searching: false,
                 info: false
+            });
+
+            // Iniciar Select2 en todos los selects con clase .select2
+            $('select.select2').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Seleccione una opción',
+                width: '100%'
             });
         });
     </script>
