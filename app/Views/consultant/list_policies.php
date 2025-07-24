@@ -44,8 +44,10 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <a href="<?= base_url('addPolicy') ?>" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus-circle me-1"></i> Añadir Nueva Política
+                    <i class="fas fa-plus-circle me-1"></i> Añadir Nuevo Texto Particularizado
                 </a>
+                <p>Este es el código para adicionar texto particularizado: <code><?= htmlspecialchars("<?= \$clientPolicy['policy_content'] ?>") ?></code></p>
+
                 <button id="clearState" class="btn btn-danger btn-sm ms-2">
                     <i class="fas fa-eraser me-1"></i> Restablecer Filtros
                 </button>

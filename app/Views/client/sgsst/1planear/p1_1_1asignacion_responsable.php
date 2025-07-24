@@ -131,22 +131,31 @@
         }
 
         .signature-container {
-            display: flex; /* Ensures that the divs are displayed in a row */
-            justify-content: space-evenly; /* Adds space between the items */
-            align-items: center; /* Aligns the items vertically in the center */
+            display: flex;
+            /* Ensures that the divs are displayed in a row */
+            justify-content: space-evenly;
+            /* Adds space between the items */
+            align-items: center;
+            /* Aligns the items vertically in the center */
             margin-top: 20px;
         }
+
         .signature {
             text-align: center;
-            width: 90%; /* Adjust the width of each signature block */
+            width: 90%;
+            /* Adjust the width of each signature block */
         }
+
         .signature img {
-            max-width: 200px; /* Adjust the size of the images as needed */
+            max-width: 200px;
+            /* Adjust the size of the images as needed */
             height: auto;
         }
+
         .signature .name {
             font-weight: bold;
         }
+
         .signature .title {
             font-style: italic;
         }
@@ -174,10 +183,10 @@
             <td class="code right">
                 Versión: <?= $latestVersion['version_number'] ?><br>
                 <?php
-setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-?>
+                setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+                ?>
 
-Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+                Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
 
             </td>
         </tr>
@@ -189,10 +198,10 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
 
         <br>
         <?php
-setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
-?>
+        setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+        ?>
 
-<p>FECHA: <strong><?= strftime('%d de %B de %Y', strtotime($client['fecha_ingreso'])); ?></strong></p>
+        <p>FECHA: <strong><?= strftime('%d de %B de %Y', strtotime($client['fecha_ingreso'])); ?></strong></p>
 
         <p>
             <b><?= $client['nombre_rep_legal'] ?></b> con documento de identidad <b><?= $client['cedula_rep_legal'] ?></b> como representante legal de <b><?= $client['nombre_cliente'] ?></b>, nombró a la empresa CYCLOID TALENT S.A.S, asignando como responsable a la profesional en Seguridad y Salud en el Trabajo, <b><?= $consultant['nombre_consultor'] ?></b> con documento de identidad <b><?= $consultant['cedula_consultor'] ?></b>, con número de licencia <b><?= $consultant['numero_licencia'] ?></b>, asignada para la responsabilidad, <?= $clientPolicy['policy_content'] ?>
@@ -217,68 +226,79 @@ setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idi
 
 
 
-<footer>
-    <h2>Historial de Versiones</h2>
-    <style>
-        footer table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        footer table th, footer table td {
-            border: 1px solid #ddd;
-            text-align: center;
-            vertical-align: middle;
-            padding: 8px;
-            word-wrap: break-word;
-        }
-        footer table th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-        footer table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        footer table tr:hover {
-            background-color: #f1f1f1;
-        }
-        /* Ajuste del ancho de las columnas */
-        footer table th:nth-child(5),
-        footer table td:nth-child(5) {
-            width: 35%; /* Más ancho para la columna Observaciones */
-        }
-        footer table th:nth-child(1),
-        footer table td:nth-child(1) {
-            width: 10%; /* Más estrecho para la columna Versión */
-        }
-        footer table th:nth-child(2),
-        footer table td:nth-child(2),
-        footer table th:nth-child(3),
-        footer table td:nth-child(3),
-        footer table th:nth-child(4),
-        footer table td:nth-child(4) {
-            width: 15%; /* Ancho uniforme para las demás columnas */
-        }
-    </style>
-    <table>
-        <tr>
-            <th>Versión</th>
-            <th>Tipo de Documento</th>
-            <th>Acrónimo</th>
-            <th>Fecha de Creación</th>
-            <th>Observaciones</th>
-        </tr>
-        <?php foreach ($allVersions as $version): ?>
+    <footer>
+        <h2>Historial de Versiones</h2>
+        <style>
+            footer table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
+
+            footer table th,
+            footer table td {
+                border: 1px solid #ddd;
+                text-align: center;
+                vertical-align: middle;
+                padding: 8px;
+                word-wrap: break-word;
+            }
+
+            footer table th {
+                background-color: #f4f4f4;
+                font-weight: bold;
+            }
+
+            footer table tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            footer table tr:hover {
+                background-color: #f1f1f1;
+            }
+
+            /* Ajuste del ancho de las columnas */
+            footer table th:nth-child(5),
+            footer table td:nth-child(5) {
+                width: 35%;
+                /* Más ancho para la columna Observaciones */
+            }
+
+            footer table th:nth-child(1),
+            footer table td:nth-child(1) {
+                width: 10%;
+                /* Más estrecho para la columna Versión */
+            }
+
+            footer table th:nth-child(2),
+            footer table td:nth-child(2),
+            footer table th:nth-child(3),
+            footer table td:nth-child(3),
+            footer table th:nth-child(4),
+            footer table td:nth-child(4) {
+                width: 15%;
+                /* Ancho uniforme para las demás columnas */
+            }
+        </style>
+        <table>
             <tr>
-                <td><?= $version['version_number'] ?></td>
-                <td><?= $version['document_type'] ?></td>
-                <td><?= $version['acronym'] ?></td>
-                <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
-                <td><?= $version['change_control'] ?></td>
+                <th>Versión</th>
+                <th>Tipo de Documento</th>
+                <th>Acrónimo</th>
+                <th>Fecha de Creación</th>
+                <th>Observaciones</th>
             </tr>
-        <?php endforeach; ?>
-    </table>
-</footer>
+            <?php foreach ($allVersions as $version): ?>
+                <tr>
+                    <td><?= $version['version_number'] ?></td>
+                    <td><?= $version['document_type'] ?></td>
+                    <td><?= $version['acronym'] ?></td>
+                    <td><?= strftime('%d de %B de %Y', strtotime($version['created_at'])); ?></td>
+                    <td><?= $version['change_control'] ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    </footer>
 
     <!-- <br>
     <div class="no-print">
