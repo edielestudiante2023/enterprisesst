@@ -8,90 +8,217 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #333;
             line-height: 1.6;
+            margin: 20px;
             background-color: white;
+            color: #333;
         }
-        footer {
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        @media print {
+            .no-print {
+                position: absolute;
+                top: -9999px;
+                /* Mueve el botón fuera de la página */
+            }
+        }
+
+
+
+        h1,
+        h2 {
             text-align: center;
+            color: #2c3e50;
+        }
+
+        p {
+            margin: 15px 0;
+            text-align: justify;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #34495e;
+        }
+
+        .signature,
+        .logo {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .signature img,
+        .logo img {
+            max-width: 200px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .signature p,
+        .logo p {
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 20%;
+            text-align: center;
+        }
+
+        .main-title {
+            width: 50%;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .code {
+            width: 30%;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .subtitle {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .right {
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        footer {
             margin-top: 50px;
             background-color: white;
             padding: 20px;
             border-top: 1px solid #ccc;
             font-size: 14px;
+            text-align: left;
         }
+
         footer table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
         }
-        footer th, footer td {
-            border: 1px solid #ddd;
-            text-align: center;
-            vertical-align: middle;
+
+        footer th,
+        footer td {
+            border: 1px solid black;
             padding: 8px;
-            word-wrap: break-word;
+            text-align: left;
         }
-        footer th {
-            background-color: #f4f4f4;
+
+        .signature-container {
+            display: flex;
+            /* Ensures that the divs are displayed in a row */
+            justify-content: space-evenly;
+            /* Adds space between the items */
+            align-items: center;
+            /* Aligns the items vertically in the center */
+            margin-top: 20px;
+        }
+
+        .signature {
+            text-align: center;
+            width: 90%;
+            /* Adjust the width of each signature block */
+        }
+
+        .signature img {
+            max-width: 200px;
+            /* Adjust the size of the images as needed */
+            height: auto;
+        }
+
+        .signature .name {
             font-weight: bold;
         }
-        footer tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        footer tr:hover {
-            background-color: #f1f1f1;
-        }
-        footer th:nth-child(5), footer td:nth-child(5) {
-            width: 35%;
-        }
-        footer th:nth-child(1), footer td:nth-child(1) {
-            width: 10%;
-        }
-        footer th:nth-child(2), footer td:nth-child(2),
-        footer th:nth-child(3), footer td:nth-child(3),
-        footer th:nth-child(4), footer td:nth-child(4) {
-            width: 15%;
+
+        .signature .title {
+            font-style: italic;
         }
 
-        .centered-content {
-            width: 100%;
-            margin: 0 auto 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+        .alfa-contenedor {
+            font-family: Arial, sans-serif;
+            margin: 20px;
         }
-        .centered-content table {
-            width: 100%;
+
+        .gamma-titulo {
+            font-size: 1.5em;
+            font-weight: bold;
             text-align: center;
-            border-collapse: collapse;
+            margin-bottom: 20px;
         }
-        .logo { width: 20%; text-align: center; }
-        .main-title { width: 50%; font-weight: bold; font-size: 14px; text-align: center; }
-        .code { width: 30%; font-weight: bold; font-size: 14px; }
-        .subtitle { font-weight: bold; font-size: 16px; text-align: center; }
-        .right { text-align: left; padding-left: 10px; }
 
-        .alfa-title { font-size: 1.5em; font-weight: bold; margin-top: 20px; }
-        .beta-parrafo { margin-bottom: 10px; text-align: justify; }
-        .delta-lista { margin-left: 20px; margin-bottom: 10px; }
-        .zeta-table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; }
-        .zeta-table, .zeta-th, .zeta-td { border: 1px solid black; }
-        .zeta-th, .zeta-td { padding: 8px; text-align: left; }
+        .zeta-tabla {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .zeta-tabla th,
+        .zeta-tabla td {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .zeta-tabla th {
+            background-color: #f2f2f2;
+        }
+
+        .delta-lista {
+            list-style-type: none;
+            padding-left: 0;
+            text-align: justify;
+        }
+
+        .delta-lista li::before {
+            content: "• ";
+            font-weight: bold;
+            text-align: justify;
+        }
+
+        .beta-subtitulo {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
     </style>
 </head>
 
 <body>
     <div class="centered-content">
+
         <table>
             <tr>
                 <td rowspan="2" class="logo">
                     <img src="<?= base_url('uploads/' . $client['logo']) ?>" alt="Logo de <?= $client['nombre_cliente'] ?>" width="100%">
                 </td>
                 <td class="main-title">
-                    SISTEMA DE GESTIÓN EN SEGURIDAD Y SALUD EN EL TRABAJO
+                    SISTEMA DE GESTION EN SEGURIDAD Y SALUD EN EL TRABAJO
                 </td>
                 <td class="code">
                     <?= $latestVersion['document_type'] ?>-<?= $latestVersion['acronym'] ?>
@@ -99,12 +226,16 @@
             </tr>
             <tr>
                 <td class="subtitle">
-                    PROCEDIMIENTO DE PREVENCIÓN, ATENCIÓN Y SANCIÓN DEL ACOSO SEXUAL LABORAL
+                    <?= $policyType['type_name'] ?> <!-- Aquí se muestra el Nombre del Tipo de Política desde la tabla policy_types -->
                 </td>
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
-                    <?php setlocale(LC_TIME, 'es_ES.UTF-8'); ?>
+                    <?php
+                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain'); // Configura el idioma español
+                    ?>
+
                     Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
+
                 </td>
             </tr>
         </table>
@@ -145,16 +276,40 @@
         <p class="alfa-title">6. Roles y responsabilidades</p>
         <table class="zeta-table">
             <thead>
-                <tr><th class="zeta-th">Rol</th><th class="zeta-th">Funciones clave</th></tr>
+                <tr>
+                    <th class="zeta-th">Rol</th>
+                    <th class="zeta-th">Funciones clave</th>
+                </tr>
             </thead>
             <tbody>
-                <tr><td class="zeta-td">Alta Dirección</td><td class="zeta-td">Aprobar política y recursos; liderar cultura de respeto.</td></tr>
-                <tr><td class="zeta-td">Talento Humano</td><td class="zeta-td">Difusión, recepción de denuncias, medidas de protección, capacitación.</td></tr>
-                <tr><td class="zeta-td">Comité de Convivencia Laboral</td><td class="zeta-td">Canal de recepción y análisis preliminar.</td></tr>
-                <tr><td class="zeta-td">Investigador/a</td><td class="zeta-td">Investigación imparcial y confidencial.</td></tr>
-                <tr><td class="zeta-td">ARL</td><td class="zeta-td">Apoyo en sensibilización y acompañamiento psicosocial.</td></tr>
-                <tr><td class="zeta-td">Colaboradores/as</td><td class="zeta-td">Cumplir y reportar.</td></tr>
-                <tr><td class="zeta-td">Testigos</td><td class="zeta-td">Cooperar y pueden acceder a protección.</td></tr>
+                <tr>
+                    <td class="zeta-td">Alta Dirección</td>
+                    <td class="zeta-td">Aprobar política y recursos; liderar cultura de respeto.</td>
+                </tr>
+                <tr>
+                    <td class="zeta-td">Talento Humano</td>
+                    <td class="zeta-td">Difusión, recepción de denuncias, medidas de protección, capacitación.</td>
+                </tr>
+                <tr>
+                    <td class="zeta-td">Comité de Convivencia Laboral</td>
+                    <td class="zeta-td">Canal de recepción y análisis preliminar.</td>
+                </tr>
+                <tr>
+                    <td class="zeta-td">Investigador/a</td>
+                    <td class="zeta-td">Investigación imparcial y confidencial.</td>
+                </tr>
+                <tr>
+                    <td class="zeta-td">ARL</td>
+                    <td class="zeta-td">Apoyo en sensibilización y acompañamiento psicosocial.</td>
+                </tr>
+                <tr>
+                    <td class="zeta-td">Colaboradores/as</td>
+                    <td class="zeta-td">Cumplir y reportar.</td>
+                </tr>
+                <tr>
+                    <td class="zeta-td">Testigos</td>
+                    <td class="zeta-td">Cooperar y pueden acceder a protección.</td>
+                </tr>
             </tbody>
         </table>
 
@@ -179,10 +334,18 @@
         <p class="alfa-title">8. Canales de denuncia y recepción</p>
         <table class="zeta-table">
             <thead>
-                <tr><th class="zeta-th">Canal</th><th class="zeta-th">Medio</th><th class="zeta-th">Responsable</th></tr>
+                <tr>
+                    <th class="zeta-th">Canal</th>
+                    <th class="zeta-th">Medio</th>
+                    <th class="zeta-th">Responsable</th>
+                </tr>
             </thead>
             <tbody>
-                <tr><td class="zeta-td">Comité de Convivencia</td><td class="zeta-td">Verbal, digital o escrito</td><td class="zeta-td">Miembros de comité</td></tr>
+                <tr>
+                    <td class="zeta-td">Comité de Convivencia</td>
+                    <td class="zeta-td">Verbal, digital o escrito</td>
+                    <td class="zeta-td">Miembros de comité</td>
+                </tr>
             </tbody>
         </table>
 

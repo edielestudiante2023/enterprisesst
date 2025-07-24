@@ -54,15 +54,23 @@
 
         /* Ajuste de anchos en el historial */
         footer th:nth-child(1),
-        footer td:nth-child(1) { width: 10%; }
+        footer td:nth-child(1) {
+            width: 10%;
+        }
+
         footer th:nth-child(2),
         footer td:nth-child(2),
         footer th:nth-child(3),
         footer td:nth-child(3),
         footer th:nth-child(4),
-        footer td:nth-child(4) { width: 15%; }
+        footer td:nth-child(4) {
+            width: 15%;
+        }
+
         footer th:nth-child(5),
-        footer td:nth-child(5) { width: 35%; }
+        footer td:nth-child(5) {
+            width: 35%;
+        }
 
         /* Estilos del contenido central */
         .centered-content {
@@ -71,7 +79,7 @@
             padding: 0 0 20px;
             background-color: #fff;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .centered-content table {
@@ -80,18 +88,42 @@
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid black;
             padding: 10px;
             text-align: left;
             height: 30px;
         }
 
-        .logo { width: 20%; text-align: center; }
-        .main-title { width: 50%; font-weight: bold; font-size: 14px; text-align: center; }
-        .code { width: 30%; font-weight: bold; font-size: 14px; }
-        .subtitle { font-weight: bold; font-size: 16px; text-align: center; }
-        .right { text-align: left; padding-left: 10px; }
+        .logo {
+            width: 20%;
+            text-align: center;
+        }
+
+        .main-title {
+            width: 50%;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .code {
+            width: 30%;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .subtitle {
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .right {
+            text-align: left;
+            padding-left: 10px;
+        }
 
         .alpha-title {
             font-size: 1.5em;
@@ -140,7 +172,7 @@
             <tr>
                 <td rowspan="2" class="logo">
                     <img src="<?= base_url('uploads/' . $client['logo']) ?>"
-                         alt="Logo de <?= $client['nombre_cliente'] ?>" width="100%">
+                        alt="Logo de <?= $client['nombre_cliente'] ?>" width="100%">
                 </td>
                 <td class="main-title">
                     SISTEMA DE GESTIÓN EN SEGURIDAD Y SALUD EN EL TRABAJO
@@ -156,7 +188,7 @@
                 <td class="code right">
                     Versión: <?= $latestVersion['version_number'] ?><br>
                     <?php
-                        setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain');
+                    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain');
                     ?>
                     Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); ?>
                 </td>
@@ -170,6 +202,8 @@
         <strong><?= strtoupper($client['nombre_cliente']) ?></strong> ha establecido una política clara de prevención del acoso sexual laboral, con el fin de garantizar un ambiente de trabajo seguro, respetuoso y libre de cualquier manifestación de violencia, discriminación o conductas que atenten contra la dignidad de las personas. Esta política busca preservar la integridad física, psicológica y emocional de los trabajadores, promoviendo relaciones laborales sanas y basadas en el respeto mutuo.
     </p>
 
+    <br><br>
+    <?= $clientPolicy['policy_content'] ?> 
     <p class="beta-parrafo">
         Es política de <strong><?= strtoupper($client['nombre_cliente']) ?></strong> prevenir, atender, sancionar y erradicar cualquier tipo de conducta de acoso sexual laboral que pueda generarse dentro del entorno de trabajo o en ocasión del mismo, en cumplimiento de lo establecido en la Ley 1010 de 2006, la Ley 1257 de 2008, la Ley 2365 de 2024 y demás normativas vigentes relacionadas con la convivencia laboral y la protección de los derechos fundamentales.
     </p>
@@ -193,7 +227,7 @@
     <div class="signature-container">
         <div class="signature">
             <img src="<?= base_url('uploads/' . $client['firma_representante_legal']) ?>"
-                 alt="Firma Representante Legal">
+                alt="Firma Representante Legal">
             <div class="name"><?= $client['nombre_rep_legal'] ?></div>
             <div class="title">Representante Legal</div>
         </div>
