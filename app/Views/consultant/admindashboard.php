@@ -11,171 +11,576 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
+        :root {
+            --primary-dark: #1c2437;
+            --secondary-dark: #2c3e50;
+            --gold-primary: #bd9751;
+            --gold-secondary: #d4af37;
+            --white-primary: #ffffff;
+            --white-secondary: #f8f9fa;
+            --gradient-bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --logout-red: #ff4d4d;
+            --logout-red-hover: #e63939;
+            --warning-orange: #f39c12;
+            --warning-orange-hover: #e67e22;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f8f9fa;
-            /* Fondo claro */
-            color: #333333;
-            /* Texto oscuro para mejor legibilidad */
-            font-family: Arial, sans-serif;
+            background: var(--gradient-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--primary-dark);
+            min-height: 100vh;
+            position: relative;
         }
 
-        .navbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid #dee2e6;
-            padding: 15px 0;
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-bg);
+            z-index: -1;
         }
 
-        .navbar-brand img {
-            max-height: 50px;
+        /* Navbar moderna con estilo consistente */
+        .navbar-custom {
+            background: #fff;
+            /* Fondo blanco */
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(28, 36, 55, 0.3);
+            padding: 20px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 2px solid var(--gold-primary);
         }
 
-        .header-logos img {
-            max-height: 50px;
-            margin-right: 10px;
+        .header-logos-custom img {
+            max-height: 70px;
+            margin-right: 20px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+            transition: all 0.3s ease;
         }
 
-        .content {
-            padding: 20px;
+        .header-logos-custom img:hover {
+            transform: translateY(-3px) scale(1.05);
+            filter: drop-shadow(0 8px 20px rgba(189, 151, 81, 0.4));
         }
 
-        .welcome-banner {
-            background-color: #e9ecef;
-            border-left: 5px solid #0d6efd;
-            color: #333333;
+        /* Content wrapper con margin para navbar fija */
+        .content-wrapper-custom {
+            margin-top: 120px;
+            min-height: calc(100vh - 200px);
         }
 
-        .welcome-banner h3 {
-            color: #0d6efd;
-        }
-
-        .table th {
-            background-color: #0d6efd;
-            color: #ffffff;
-        }
-
-        .table td a {
-            color: #0d6efd;
-            text-decoration: none;
-        }
-
-        .table td a:hover {
-            color: #0b5ed7;
-            text-decoration: underline;
-        }
-
-        .logout-button {
+        /* Banner de bienvenida moderno */
+        .welcome-banner-custom {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 50%, var(--gold-primary) 100%);
+            padding: 40px;
+            border-radius: 25px;
             text-align: center;
+            color: var(--white-primary);
+            box-shadow: 0 20px 60px rgba(28, 36, 55, 0.4);
+            margin-bottom: 40px;
+            border: 1px solid rgba(189, 151, 81, 0.3);
+            animation: fadeInUp-custom 1s ease-out;
+        }
+
+        .welcome-banner-custom::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: rotate-custom 12s linear infinite;
+            z-index: 0;
+        }
+
+        .welcome-banner-custom::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(189, 151, 81, 0.1) 50%, transparent 70%);
+            animation: shimmer-custom 3s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        .welcome-banner-custom h3 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(135deg, var(--white-primary) 0%, var(--gold-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-banner-custom p {
+            font-size: 1.4rem;
+            position: relative;
+            z-index: 2;
+            color: var(--white-secondary);
+            margin-bottom: 0;
+        }
+
+        /* Card contenedor de tabla */
+        .table-card-custom {
+            background: var(--white-primary);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(28, 36, 55, 0.15);
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(189, 151, 81, 0.2);
+            backdrop-filter: blur(20px);
+            animation: fadeInUp-custom 1s ease-out 0.3s both;
+        }
+
+        /* Tabla moderna */
+        .table-custom {
+            width: 100% !important;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(28, 36, 55, 0.1);
+        }
+
+        .table-custom thead {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
+            color: var(--white-primary);
+        }
+
+        .table-custom thead th {
+            padding: 20px 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+            position: relative;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .table-custom thead th::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold-primary) 0%, var(--gold-secondary) 100%);
+        }
+
+        .table-custom tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(28, 36, 55, 0.1);
+        }
+
+        .table-custom tbody tr:hover {
+            background: linear-gradient(135deg, rgba(189, 151, 81, 0.05) 0%, rgba(212, 175, 55, 0.05) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(28, 36, 55, 0.1);
+        }
+
+        .table-custom tbody td {
+            padding: 18px 15px;
+            border: none;
+            vertical-align: middle;
+        }
+
+        /* Footer de tabla para filtros */
+        .table-custom tfoot {
+            background: linear-gradient(135deg, var(--white-secondary) 0%, #e9ecef 100%);
+        }
+
+        .table-custom tfoot th {
+            padding: 12px 8px;
+            background: transparent;
+            border: none;
+            font-weight: 500;
+        }
+
+        .table-custom tfoot th::after {
+            display: none;
+        }
+
+        /* Botones de acción modernos */
+        .btn-action-custom {
+            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-secondary) 100%);
+            border: none;
+            color: var(--white-primary);
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-right: 5px;
+        }
+
+        .btn-action-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-action-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(189, 151, 81, 0.4);
+            color: var(--white-primary);
+        }
+
+        .btn-action-custom:hover::before {
+            left: 100%;
+        }
+
+        /* Botón de editar */
+        .btn-edit-custom {
+            background: linear-gradient(135deg, var(--warning-orange) 0%, var(--warning-orange-hover) 100%);
+            border: none;
+            color: var(--white-primary);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-right: 5px;
+        }
+
+        .btn-edit-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-edit-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(243, 156, 18, 0.4);
+            color: var(--white-primary);
+        }
+
+        .btn-edit-custom:hover::before {
+            left: 100%;
+        }
+
+        /* Badge para rol */
+        .role-badge-custom {
+            background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--primary-dark) 100%);
+            color: var(--white-primary);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        /* Badge para tipo de proceso */
+        .process-badge-custom {
+            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-secondary) 100%);
+            color: var(--white-primary);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        /* Botón de logout moderno */
+        .btn-logout-custom {
+            background: linear-gradient(135deg, var(--logout-red) 0%, var(--logout-red-hover) 100%);
+            border: none;
+            color: var(--white-primary);
+            border-radius: 25px;
+            padding: 15px 40px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(255, 77, 77, 0.3);
+            animation: fadeInUp-custom 1s ease-out 0.6s both;
+        }
+
+        .btn-logout-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-logout-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 77, 77, 0.5);
+            color: var(--white-primary);
+        }
+
+        .btn-logout-custom:hover::before {
+            left: 100%;
+        }
+
+        /* Footer moderno */
+        .footer-custom {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
+            color: var(--white-primary);
+            padding: 40px 0;
+            border-top: 3px solid var(--gold-primary);
+            margin-top: 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .footer-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold-primary) 0%, var(--gold-secondary) 50%, var(--gold-primary) 100%);
+            animation: shimmer-custom 3s ease-in-out infinite;
+        }
+
+        .footer-custom a {
+            color: var(--gold-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-custom a:hover {
+            color: var(--white-primary);
+            text-shadow: 0 0 10px var(--gold-primary);
+        }
+
+        .social-icons-custom a {
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .social-icons-custom a:hover {
+            transform: translateY(-3px) scale(1.1);
+            filter: drop-shadow(0 5px 15px rgba(189, 151, 81, 0.5));
+        }
+
+        /* DataTables styling */
+        .dataTables_wrapper {
             margin-top: 20px;
         }
 
-        /* Botones personalizados */
-        .btn-outline-secondary {
-            border-color: #6c757d;
-            color: #6c757d;
+        .dataTables_filter input {
+            border-radius: 12px;
+            border: 2px solid rgba(189, 151, 81, 0.3);
+            padding: 10px 15px;
+            transition: all 0.3s ease;
         }
 
-        .btn-outline-secondary:hover {
-            background-color: #6c757d;
-            color: #ffffff;
+        .dataTables_filter input:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 15px rgba(189, 151, 81, 0.3);
         }
 
-        .btn-primary-custom {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-            color: #ffffff;
+        .dataTables_length select {
+            border-radius: 12px;
+            border: 2px solid rgba(189, 151, 81, 0.3);
+            padding: 8px 12px;
         }
 
-        .btn-primary-custom:hover {
-            background-color: #ffffff;
-            color: #0d6efd;
-            border-color: #0d6efd;
+        .page-link {
+            border-radius: 12px;
+            margin: 0 2px;
+            border: 2px solid rgba(189, 151, 81, 0.3);
+            color: var(--primary-dark);
+            transition: all 0.3s ease;
         }
 
-        .btn-danger-custom {
-            background-color: #dc3545;
-            border-color: #dc3545;
-            color: #ffffff;
+        .page-link:hover {
+            background: var(--gold-primary);
+            border-color: var(--gold-primary);
+            color: var(--white-primary);
+            transform: translateY(-2px);
         }
 
-        .btn-danger-custom:hover {
-            background-color: #ffffff;
-            color: #dc3545;
-            border-color: #dc3545;
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-secondary) 100%);
+            border-color: var(--gold-primary);
         }
 
-        .footer {
-            background-color: #ffffff;
-            color: #333333;
+        /* Filtros del footer de tabla */
+        tfoot select {
+            border-radius: 10px;
+            border: 2px solid rgba(189, 151, 81, 0.3);
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            background-color: var(--white-primary);
+            color: var(--primary-dark);
         }
 
-        .footer a {
-            color: #0d6efd;
-            text-decoration: none;
+        tfoot select:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 10px rgba(189, 151, 81, 0.3);
         }
 
-        .footer a:hover {
-            color: #0b5ed7;
-            text-decoration: underline;
-        }
-
-        .navbar-spacing {
-            height: 100px;
-        }
-
-        @media (max-width: 768px) {
-            .header-logos {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .header-logos img {
-                margin-bottom: 10px;
-            }
-        }
-
-        .highlighted {
-            background-color: #cce5ff !important;
-            transition: background-color 0.5s ease;
-        }
-
-        .custom-search {
-            margin-bottom: 15px;
-        }
-
-        tfoot th {
-            padding: 8px 10px;
-            background-color: #f8f9fa;
-        }
-
-        .description-col {
+        /* Descripción con ellipsis */
+        .description-col-custom {
             max-width: 300px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            position: relative;
         }
 
-        tfoot select {
-            width: 100%;
-            padding: 4px;
-            box-sizing: border-box;
-            background-color: #f8f9fa;
-            color: #333;
+        .description-col-custom:hover {
+            white-space: normal;
+            overflow: visible;
+            position: static;
+            background: var(--white-secondary);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(28, 36, 55, 0.1);
         }
 
-        tfoot th {
-            background-color: #e9ecef;
+        /* Animaciones */
+        @keyframes fadeInUp-custom {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes rotate-custom {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes shimmer-custom {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(100%);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .content-wrapper-custom {
+                margin-top: 100px;
+                padding: 15px;
+            }
+
+            .welcome-banner-custom {
+                padding: 25px;
+                margin-bottom: 25px;
+            }
+
+            .welcome-banner-custom h3 {
+                font-size: 1.8rem;
+            }
+
+            .welcome-banner-custom p {
+                font-size: 1.1rem;
+            }
+
+            .table-card-custom {
+                padding: 20px;
+                border-radius: 15px;
+            }
+
+            .header-logos-custom img {
+                max-height: 50px;
+                margin-right: 10px;
+            }
+
+            .navbar-custom {
+                padding: 15px 0;
+            }
+
+            .header-logos-custom {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .btn-edit-custom,
+            .btn-action-custom {
+                margin-bottom: 5px;
+                font-size: 0.8rem;
+                padding: 6px 10px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .content-wrapper-custom {
+                margin-top: 200px;
+            }
         }
     </style>
 </head>
 
 <body>
+    <!-- Navbar moderna -->
     <header>
-        <nav class="navbar navbar-expand-lg fixed-top">
+        <nav class="navbar navbar-expand-lg navbar-custom">
             <div class="container-fluid">
-                <div class="header-logos d-flex justify-content-between align-items-center w-100">
+                <div class="header-logos-custom d-flex justify-content-between align-items-center w-100">
                     <!-- Logo izquierdo -->
                     <div>
                         <a href="https://dashboard.cycloidtalent.com/login" target="_blank" rel="noopener noreferrer">
@@ -199,99 +604,134 @@
         </nav>
     </header>
 
-    <!-- Espaciador para evitar que el contenido se oculte bajo el navbar fijo -->
-    <div class="navbar-spacing"></div>
+    <!-- Content wrapper -->
+    <div class="content-wrapper-custom">
+        <!-- Contenido principal -->
+        <main class="container-fluid content">
+            <!-- Banner de Bienvenida -->
+            <div class="welcome-banner-custom">
+                <i class="fas fa-shield-alt fa-3x mb-3" style="color: var(--gold-secondary);"></i>
+                <h3><i class="fas fa-users-cog me-2"></i>Dashboard de Administración Empresarial</h3>
+                <p><i class="fas fa-tools me-2"></i>Centro de Control - Gestión Avanzada de Procesos SST</p>
+            </div>
 
-    <main class="container-fluid content">
-        <div class="welcome-banner p-4 mb-4 rounded">
-            <h3 class="mb-3">¡Bienvenido al Dashboard de Administración Empresas de Cycloid Talent!</h3>
-            <p class="mt-3">Explora las diferentes secciones y aprovecha las herramientas disponibles para optimizar tu desempeño.</p>
-        </div>
+            <!-- Card contenedor de tabla -->
+            <div class="table-card-custom">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-database fa-2x me-3" style="color: var(--gold-primary);"></i>
+                    <h2 class="mb-0" style="color: var(--primary-dark); font-weight: 700;">Panel de Administración de Procesos</h2>
+                </div>
 
-        <div class="table-responsive">
-            <table id="itemTable" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Rol</th>
-                        <th>Tipo de Proceso</th>
-                        <th>Detalle</th>
-                        <th>Descripción</th>
-                        <th>Acción URL</th>
-                        <th>Orden</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                        <th>ID</th>
-                        <th>Rol</th>
-                        <th>Tipo de Proceso</th>
-                        <th>Detalle</th>
-                        <th>Descripción</th>
-                        <th>Acción URL</th>
-                        <th>Orden</th>
-                        <th></th>
-                    </tr>
-                </tfoot>
-                <tbody>
-                    <?php foreach ($items as $item): ?>
-                        <tr>
-                            <td><?= esc($item['id']) ?></td>
-                            <td><?= esc($item['rol']) ?></td>
-                            <td><?= esc($item['tipo_proceso']) ?></td>
-                            <td><?= esc($item['detalle']) ?></td>
-                            <td><?= esc($item['descripcion']) ?></td>
-                            <td>
-                                <a href="<?= base_url($item['accion_url']) ?>" target="_blank" class="btn btn-outline-secondary btn-sm" title="Ir a <?= esc($item['detalle']) ?>">
-                                    <i class="bi bi-box-arrow-up-right"></i>
-                                </a>
-                            </td>
-                            <td><?= esc($item['orden']) ?></td>
-                            <td>
-                                <a href="<?= base_url('consultant/edititemdashboar/' . $item['id']) ?>" class="btn btn-warning btn-sm" target="_blank">
-                                    <i class="bi bi-pencil-square"></i> Edit
-                                </a>
+                <!-- Tabla moderna -->
+                <div class="table-responsive">
+                    <table id="itemTable" class="table table-striped table-bordered table-custom">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag me-2"></i>ID</th>
+                                <th><i class="fas fa-user-tag me-2"></i>Rol</th>
+                                <th><i class="fas fa-cogs me-2"></i>Tipo de Proceso</th>
+                                <th><i class="fas fa-info-circle me-2"></i>Detalle</th>
+                                <th><i class="fas fa-file-text me-2"></i>Descripción</th>
+                                <th><i class="fas fa-external-link-alt me-2"></i>Acción URL</th>
+                                <th><i class="fas fa-sort-numeric-up me-2"></i>Orden</th>
+                                <th><i class="fas fa-tools me-2"></i>Actions</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            <?php foreach ($items as $item): ?>
+                                <tr>
+                                    <td><?= esc($item['id']) ?></td>
+                                    <td>
+                                        <span class="role-badge-custom">
+                                            <i class="fas fa-user-shield me-1"></i><?= esc($item['rol']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="process-badge-custom">
+                                            <i class="fas fa-tag me-1"></i><?= esc($item['tipo_proceso']) ?>
+                                        </span>
+                                    </td>
+                                    <td><?= esc($item['detalle']) ?></td>
+                                    <td>
+                                        <div class="description-col-custom" title="<?= esc($item['descripcion']) ?>">
+                                            <?= esc($item['descripcion']) ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="<?= base_url($item['accion_url']) ?>" target="_blank" class="btn btn-action-custom btn-sm" title="Ir a <?= esc($item['detalle']) ?>">
+                                            <i class="fas fa-external-link-alt me-1"></i>Abrir
+                                        </a>
+                                    </td>
+                                    <td><?= esc($item['orden']) ?></td>
+                                    <td>
+                                        <a href="<?= base_url('consultant/edititemdashboar/' . $item['id']) ?>" class="btn btn-edit-custom btn-sm" target="_blank" title="Editar elemento">
+                                            <i class="fas fa-edit me-1"></i>Editar
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-                                <!-- <a href="<?= base_url('consultant/deleteitemdashboard/' . $item['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
-                                    <i class="bi bi-trash"></i> Delete
-                                </a> -->
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="logout-button">
-            <a href="<?= base_url('/logout') ?>" rel="noopener noreferrer">
-                <button type="button" class="btn btn-danger-custom" aria-label="Cerrar Sesión">Cerrar Sesión</button>
-            </a>
-        </div>
-    </main>
-
-    <footer class="footer mt-auto py-3 border-top">
-        <div class="container text-center">
-            <p class="fw-bold mb-0">Cycloid Talent SAS</p>
-            <p class="mb-0">Todos los derechos reservados © <span id="currentYear"></span></p>
-            <p class="mb-0">NIT: 901.653.912</p>
-            <p class="mb-0">
-                Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" rel="noopener noreferrer">https://cycloidtalent.com/</a>
-            </p>
-            <p class="mt-3 mb-0"><strong>Nuestras Redes Sociales:</strong></p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="https://www.facebook.com/CycloidTalent" target="_blank" rel="noopener noreferrer" class="text-secondary text-decoration-none" aria-label="Facebook">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook" style="height: 24px; width: 24px;">
+            <!-- Botón de Cerrar Sesión -->
+            <div class="text-center">
+                <a href="<?= base_url('/logout') ?>" rel="noopener noreferrer">
+                    <button type="button" class="btn btn-logout-custom" aria-label="Cerrar Sesión">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                    </button>
                 </a>
-                <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank" rel="noopener noreferrer" class="text-secondary text-decoration-none" aria-label="LinkedIn">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn" style="height: 24px; width: 24px;">
-                </a>
-                <a href="https://www.instagram.com/cycloid_talent?igsh=Nmo4d2QwZDg5dHh0" target="_blank" rel="noopener noreferrer" class="text-secondary text-decoration-none" aria-label="Instagram">
-                    <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram" style="height: 24px; width: 24px;">
-                </a>
-                <a href="https://www.tiktok.com/@cycloid_talent?_t=8qBSOu0o1ZN&_r=1" target="_blank" rel="noopener noreferrer" class="text-secondary text-decoration-none" aria-label="TikTok">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok" style="height: 24px; width: 24px;">
-                </a>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer moderno -->
+    <footer class="footer-custom">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <p class="fw-bold mb-2 fs-5">
+                        <i class="fas fa-building me-2"></i>Cycloid Talent SAS
+                    </p>
+                    <p class="mb-2">Todos los derechos reservados © <span id="currentYear"></span></p>
+                    <p class="mb-2"><i class="fas fa-id-card me-2"></i>NIT: 901.653.912</p>
+                    <p class="mb-0">
+                        <i class="fas fa-globe me-2"></i>Sitio oficial:
+                        <a href="https://cycloidtalent.com/" target="_blank" rel="noopener noreferrer">https://cycloidtalent.com/</a>
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <div class="mt-3">
+                        <strong><i class="fas fa-share-alt me-2"></i>Nuestras Redes Sociales:</strong>
+                        <div class="d-flex justify-content-center gap-3 mt-3 social-icons-custom">
+                            <a href="https://www.facebook.com/CycloidTalent" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                                <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook" style="height: 32px; width: 32px;">
+                            </a>
+                            <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                                <img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn" style="height: 32px; width: 32px;">
+                            </a>
+                            <a href="https://www.instagram.com/cycloid_talent?igsh=Nmo4d2QwZDg5dHh0" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram" style="height: 32px; width: 32px;">
+                            </a>
+                            <a href="https://www.tiktok.com/@cycloid_talent?_t=8qBSOu0o1ZN&_r=1" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                                <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok" style="height: 32px; width: 32px;">
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </footer>
@@ -305,42 +745,61 @@
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#itemTable').DataTable({
+            var table = $('#itemTable').DataTable({
+                dom: 'lfrtip', // length, filter, processing, table, info, paging
+                searching: true, // activa la búsqueda global
                 order: [
                     [6, 'asc']
-                ], // Ordena por la columna "Orden" (índice 6) de forma ascendente
+                ], // orden inicial por la columna "Orden" oculta
                 columnDefs: [{
                         targets: 0,
                         visible: false
-                    }, // Oculta la columna "ID" (índice 0)
+                    }, // oculta ID
                     {
                         targets: 6,
                         visible: false
-                    } // Oculta la columna "Orden" (índice 6), pero se usa para el ordenamiento
+                    }, // oculta Orden
+                    {
+                        targets: 7,
+                        orderable: false,
+                        searchable: false
+                    } // sin orden ni búsqueda en acciones
                 ],
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                language: {
+                    url: "//cdn.datatables.net/plug‑ins/1.13.4/i18n/es‑ES.json"
                 },
                 initComplete: function() {
-                    this.api().columns().every(function() {
+                    // Aplica filtro a las columnas 1,2,3 y 4
+                    this.api().columns([1, 2, 3, 4]).every(function() {
                         var column = this;
-                        var select = $('<select><option value=""></option></select>')
+                        // Vaciamos el footer y creamos el select
+                        var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
                             .appendTo($(column.footer()).empty())
                             .on('change', function() {
                                 var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                column.search(val ? '^' + val + '$' : '', true, false).draw();
+                                // BUSCA exacto con regex ^valor$
+                                column
+                                    .search(val ? '^' + val + '$' : '', true, false)
+                                    .draw();
                             });
-
-                        column.data().unique().sort().each(function(d, j) {
-                            if (d) {
-                                select.append('<option value="' + d + '">' + d + '</option>');
+                        // Rellena opciones únicas
+                        column.data().unique().sort().each(function(d) {
+                            if (d && d.trim() !== '') {
+                                // si trae <span>…</span>, extrae solo el texto
+                                var text = $('<div>').html(d).text().trim();
+                                select.append('<option value="' + text + '">' + text + '</option>');
                             }
                         });
                     });
                 }
             });
+
+            // Actualiza año en el footer
+            $('#currentYear').text(new Date().getFullYear());
         });
     </script>
+
+
 </body>
 
 </html>
