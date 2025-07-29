@@ -172,7 +172,7 @@
             <!-- Fuente de datos -->
             <div class="mb-3">
                 <label for="data_source" class="form-label">Fuente de datos:</label>
-                <input type="text" name="data_source" id="data_source" class="form-control" value="<?= $clientKpi['data_source'] ?>" required>
+                <textarea name="data_source" id="data_source" class="form-control" required><?= $clientKpi['data_source'] ?></textarea>
             </div>
 
             <!-- Meta del KPI -->

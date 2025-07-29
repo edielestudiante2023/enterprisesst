@@ -144,7 +144,7 @@
 
             <div class="mb-3">
                 <label for="data_source" class="form-label">Fuente de datos:</label>
-                <input type="text" name="data_source" id="data_source" class="form-control" required>
+                <textarea name="data_source" id="data_source" class="form-control" required></textarea>
             </div>
 
             <div class="mb-3">
