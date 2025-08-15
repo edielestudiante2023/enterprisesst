@@ -14,14 +14,96 @@
   <!-- Iconos Bootstrap -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <style>
+    /* Variables CSS para consistencia */
+    :root {
+      --primary-color: #007bff;
+      --primary-dark: #0056b3;
+      --secondary-color: #6c757d;
+      --success-color: #28a745;
+      --warning-color: #ffc107;
+      --danger-color: #dc3545;
+      --light-bg: #f8f9fa;
+      --border-radius: 8px;
+      --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Estilos generales mejorados */
+    .container-fluid {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: var(--border-radius);
+      padding: 30px;
+      margin-top: 20px;
+      box-shadow: var(--box-shadow);
+    }
+
+    h2, h3 {
+      color: var(--primary-dark);
+      font-weight: 600;
+      margin-bottom: 25px;
+    }
+
+    /* Estilos para filtros superiores */
+    .row.g-3 {
+      background: white;
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      margin-bottom: 25px;
+    }
+
+    .form-label {
+      color: var(--primary-dark);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .form-control, .form-select {
+      border: 2px solid #e9ecef;
+      border-radius: var(--border-radius);
+      padding: 10px 15px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
     /* La tabla ocupa el ancho completo */
     table.dataTable {
       width: 100%;
+      background: white;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--box-shadow);
     }
 
     /* Estilos generales para celdas de la tabla */
-    table.dataTable thead th,
-    table.dataTable tbody td,
+    table.dataTable thead th {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      font-weight: 600;
+      border: none;
+      padding: 15px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+
+    table.dataTable tbody td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+      padding: 12px 8px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    table.dataTable tbody tr:hover {
+      background-color: rgba(0, 123, 255, 0.05);
+    }
+
     table.dataTable tfoot th {
       white-space: nowrap;
       overflow: hidden;
@@ -53,19 +135,127 @@
 
     /* Estilo para los filtros en el tfoot */
     tfoot th {
-      padding: 8px 10px;
-      background-color: #f8f9fa;
+      padding: 12px 10px;
+      background: linear-gradient(135deg, var(--light-bg), #dee2e6);
+      border-top: 2px solid var(--primary-color);
     }
 
-    /* Alinear la búsqueda a la izquierda */
+    /* Alinear la búsqueda a la izquierda y mejorar visibilidad */
     div.dataTables_filter {
       text-align: left !important;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+
+    div.dataTables_filter label {
+      color: white !important;
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    div.dataTables_filter input {
+      margin-left: 10px !important;
+      padding: 8px 15px !important;
+      border: 2px solid #ffffff !important;
+      border-radius: 25px !important;
+      font-size: 14px !important;
+      width: 300px !important;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+      transition: all 0.3s ease !important;
+    }
+
+    div.dataTables_filter input:focus {
+      outline: none !important;
+      border-color: #ffc107 !important;
+      box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3) !important;
+      transform: scale(1.02) !important;
+    }
+
+    /* Botones armonizados */
+    .btn {
+      border-radius: var(--border-radius);
+      font-weight: 500;
+      padding: 8px 16px;
+      border: none;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success-color), #1e7e34);
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, var(--warning-color), #d39e00);
+      color: #212529;
+      box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    }
+
+    .btn-warning:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger-color), #bd2130);
+      box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    }
+
+    /* Botones de DataTables */
+    .dt-buttons {
+      margin-bottom: 20px;
+    }
+
+    .dt-buttons .btn {
+      margin-right: 8px;
+      border-radius: var(--border-radius);
     }
 
     /* Icono de detalles: cursor pointer */
     .details-control {
       cursor: pointer;
       margin-right: 5px;
+      color: var(--primary-color);
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+
+    .details-control:hover {
+      color: var(--primary-dark);
+      transform: scale(1.1);
+    }
+
+    /* Alertas mejoradas */
+    .alert {
+      border-radius: var(--border-radius);
+      border: none;
+      box-shadow: var(--box-shadow);
     }
   </style>
 </head>
@@ -113,32 +303,47 @@
 
   <!-- Contenedor fluid -->
   <div class="container-fluid my-4">
-    <!-- Encabezado con título y filtro por cliente -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="mb-0">Lista de Reportes</h2>
-      <div class="d-flex align-items-center">
-        <label for="clientFilter" class="me-2 mb-0">Filtrar por Cliente:</label>
-        <select id="clientFilter" style="width: 600px;">
-          <option value="">Todos</option>
-          <?php foreach ($clients as $client) : ?>
-            <option value="<?= htmlspecialchars($client['nombre_cliente']) ?>"><?= htmlspecialchars($client['nombre_cliente']) ?></option>
-          <?php endforeach; ?>
-        </select>
+    <!-- Encabezado con título y filtros -->
+    <div class="mb-4">
+      <h2 class="mb-3">Lista de Reportes</h2>
+      <div class="row g-3 align-items-end">
+        <!-- Filtro por Cliente -->
+        <div class="col-md-6">
+          <label for="clientFilter" class="form-label">Filtrar por Cliente:</label>
+          <select id="clientFilter" class="form-select">
+            <option value="">Todos</option>
+            <?php foreach ($clients as $client) : ?>
+              <option value="<?= htmlspecialchars($client['nombre_cliente']) ?>"><?= htmlspecialchars($client['nombre_cliente']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <!-- Filtro por Fecha Desde -->
+        <div class="col-md-3">
+          <label for="dateFrom" class="form-label">Fecha Desde:</label>
+          <input type="date" id="dateFrom" class="form-control">
+        </div>
+        <!-- Filtro por Fecha Hasta -->
+        <div class="col-md-3">
+          <label for="dateTo" class="form-label">Fecha Hasta:</label>
+          <input type="date" id="dateTo" class="form-control">
+        </div>
       </div>
     </div>
 
     <h3 class="mb-3">Reportes</h3>
 
     <?php if (session()->get('msg')) : ?>
-      <div class="alert alert-info">
-        <?= session()->get('msg') ?>
+      <div class="alert alert-info" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb); border-left: 4px solid var(--primary-color);">
+        <i class="bi bi-info-circle"></i> <?= session()->get('msg') ?>
       </div>
     <?php endif; ?>
 
     <?php if (isset($reports) && !empty($reports)) : ?>
       <!-- Botón para restablecer filtros y exportar a Excel -->
-      <div class="mb-3">
-        <button id="clearState" class="btn btn-danger btn-sm">Restablecer Filtros</button>
+      <div class="mb-3" style="background: white; padding: 15px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
+        <button id="clearState" class="btn btn-danger">
+          <i class="bi bi-arrow-clockwise"></i> Restablecer Filtros
+        </button>
       </div>
 
       <table id="reportTable" class="table table-striped table-hover">
@@ -464,10 +669,57 @@
         table.column(10).search(selected ? '^' + selected + '$' : '', true, false).draw();
       });
 
+      // Función para aplicar filtro de fechas
+      function applyDateFilter() {
+        var dateFrom = $('#dateFrom').val();
+        var dateTo = $('#dateTo').val();
+        
+        $.fn.dataTable.ext.search.pop(); // Remover filtro anterior si existe
+        
+        if (dateFrom || dateTo) {
+          $.fn.dataTable.ext.search.push(
+            function(settings, data, dataIndex) {
+              if (settings.nTable.id !== 'reportTable') {
+                return true;
+              }
+              
+              var dateCreated = data[1]; // Columna Fecha de Creación (índice 1)
+              
+              // Convertir fecha de la tabla al formato YYYY-MM-DD para comparación
+              var tableDateParts = dateCreated.split(' ')[0]; // Tomar solo la parte de fecha
+              var tableDate = new Date(tableDateParts).getTime();
+              
+              var fromDate = dateFrom ? new Date(dateFrom).getTime() : null;
+              var toDate = dateTo ? new Date(dateTo + ' 23:59:59').getTime() : null;
+              
+              if (fromDate && toDate) {
+                return tableDate >= fromDate && tableDate <= toDate;
+              } else if (fromDate) {
+                return tableDate >= fromDate;
+              } else if (toDate) {
+                return tableDate <= toDate;
+              }
+              
+              return true;
+            }
+          );
+        }
+        
+        table.draw();
+      }
+
+      // Eventos para los campos de fecha
+      $('#dateFrom, #dateTo').on('change', function() {
+        applyDateFilter();
+      });
+
       // Botón para restablecer estado y recargar la página
       $('#clearState').on('click', function () {
         localStorage.removeItem('DataTables_reportTable');
         table.state.clear();
+        // Limpiar filtros de fecha
+        $('#dateFrom, #dateTo').val('');
+        $.fn.dataTable.ext.search.pop(); // Remover filtro de fechas
         location.reload();
       });
     });

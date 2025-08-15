@@ -7,11 +7,13 @@
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     <!-- DataTables Buttons CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.dataTables.min.css">
-    <!-- DataTables Fixed Columns CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+    <!-- DataTables Select CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.7.0/css/select.bootstrap5.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Custom Styles -->
     <style>
         /* Full screen table styles */
@@ -19,12 +21,15 @@
             height: 100%;
             margin: 0;
             padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .table-container {
-            height: calc(100vh - 250px); /* Adjust based on navbar and footer height */
-            overflow: auto;
             margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
         }
 
         /* Child row styles */
@@ -54,22 +59,56 @@
             overflow: auto;
         }
 
-        /* Table footer input styles */
-        tfoot input {
+        /* Enhanced footer input styles */
+        tfoot input, tfoot select {
             width: 100%;
-            padding: 3px;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: all 0.2s;
             box-sizing: border-box;
         }
-
-        /* Asegura que todas las filas tengan la misma altura */
-        table.dataTable tbody tr {
-            height: 60px;
+        
+        tfoot input:focus, tfoot select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+            outline: 0;
+        }
+        
+        tfoot th {
+            padding: 8px !important;
+            background-color: #f8f9fa;
+            border-top: 2px solid #dee2e6;
         }
 
-        /* Ajusta el ancho de las columnas para evitar espacios excesivos */
-        table.dataTable th,
+        /* Enhanced table styling */
+        table.dataTable {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        table.dataTable tbody tr {
+            transition: background-color 0.2s;
+        }
+        
+        table.dataTable tbody tr:hover {
+            background-color: #f8f9fa !important;
+        }
+        
+        table.dataTable th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            border: none;
+            position: relative;
+        }
+        
         table.dataTable td {
-            white-space: nowrap;
+            vertical-align: middle;
+            padding: 12px 8px;
+            border-bottom: 1px solid #dee2e6;
         }
 
         /* Ajustes responsivos */
@@ -91,11 +130,48 @@
             width: 100%;
         }
         
-        /* Asegura que los botones de acción se mantengan en una línea */
-        .btn-group {
-            white-space: nowrap;
+        /* Action buttons styling */
+        .action-buttons {
             display: flex;
             gap: 5px;
+            justify-content: center;
+            flex-wrap: nowrap;
+        }
+        
+        .action-buttons .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .action-buttons .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Enhanced DataTables controls */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 15px;
+        }
+        
+        .dataTables_wrapper .dataTables_info {
+            padding-top: 15px;
+            font-weight: 500;
+        }
+        
+        /* Button styling */
+        .dt-button {
+            margin-right: 5px;
+            border-radius: 4px;
+        }
+        
+        .btn-reset {
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            color: white;
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -164,8 +240,15 @@
         <h2 class="mb-4">Lista de Clientes</h2>
 
         <?php if (isset($clients) && !empty($clients)): ?>
-            <div class="mb-3">
-                <button id="clearState" class="btn btn-warning">Restablecer Filtros</button>
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <button id="clearState" class="btn btn-reset"><i class="fas fa-undo"></i> Restablecer Filtros</button>
+                    <button id="clearFilters" class="btn btn-outline-secondary ms-2"><i class="fas fa-times"></i> Limpiar Búsqueda</button>
+                </div>
+                <div class="table-info">
+                    <span class="badge bg-primary">Total: <span id="totalRecords">0</span></span>
+                    <span class="badge bg-success ms-2">Filtrados: <span id="filteredRecords">0</span></span>
+                </div>
             </div>
             <div class="table-container">
                 <table id="clientsTable" class="table table-bordered table-striped nowrap" style="width:100%">
@@ -198,27 +281,34 @@
                     <tfoot>
                         <tr>
                             <th></th>
-                            <th><input type="text" placeholder="Buscar acciones" /></th>
-                            <th><input type="text" placeholder="Buscar ID" /></th>
-                            <th><input type="text" placeholder="Buscar fecha" /></th>
-                            <th><input type="text" placeholder="Buscar NIT" /></th>
-                            <th><input type="text" placeholder="Buscar nombre" /></th>
-                            <th><input type="text" placeholder="Buscar usuario" /></th>
-                            <th><input type="text" placeholder="Buscar correo" /></th>
-                            <th><input type="text" placeholder="Buscar teléfono 1" /></th>
-                            <th><input type="text" placeholder="Buscar teléfono 2" /></th>
-                            <th><input type="text" placeholder="Buscar dirección" /></th>
-                            <th><input type="text" placeholder="Buscar contacto" /></th>
-                            <th><input type="text" placeholder="Buscar código" /></th>
-                            <th><input type="text" placeholder="Buscar representante" /></th>
-                            <th><input type="text" placeholder="Buscar cédula" /></th>
-                            <th><input type="text" placeholder="Buscar fecha fin" /></th>
-                            <th><input type="text" placeholder="Buscar ciudad" /></th>
-                            <th><input type="text" placeholder="Buscar estado" /></th>
-                            <th><input type="text" placeholder="Buscar consultor" /></th>
-                            <th><input type="text" placeholder="Buscar logo" /></th>
-                            <th><input type="text" placeholder="Buscar firma" /></th>
-                            <th><input type="text" placeholder="Buscar estándares" /></th>
+                            <th></th>
+                            <th><input type="number" placeholder="ID" class="form-control form-control-sm" /></th>
+                            <th><input type="date" class="form-control form-control-sm" /></th>
+                            <th><input type="text" placeholder="NIT" class="form-control form-control-sm" /></th>
+                            <th><input type="text" placeholder="Cliente" class="form-control form-control-sm" /></th>
+                            <th><input type="text" placeholder="Usuario" class="form-control form-control-sm" /></th>
+                            <th><input type="email" placeholder="Correo" class="form-control form-control-sm" /></th>
+                            <th><input type="tel" placeholder="Teléfono" class="form-control form-control-sm" /></th>
+                            <th><input type="tel" placeholder="Teléfono 2" class="form-control form-control-sm" /></th>
+                            <th><input type="text" placeholder="Dirección" class="form-control form-control-sm" /></th>
+                            <th><input type="text" placeholder="Contacto" class="form-control form-control-sm" /></th>
+                            <th><input type="text" placeholder="Código" class="form-control form-control-sm" /></th>
+                            <th><input type="text" placeholder="Representante" class="form-control form-control-sm" /></th>
+                            <th><input type="text" placeholder="Cédula" class="form-control form-control-sm" /></th>
+                            <th><input type="date" class="form-control form-control-sm" /></th>
+                            <th><input type="text" placeholder="Ciudad" class="form-control form-control-sm" /></th>
+                            <th>
+                                <select class="form-select form-select-sm">
+                                    <option value="">Estado</option>
+                                    <option value="Activo">Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                    <option value="Suspendido">Suspendido</option>
+                                </select>
+                            </th>
+                            <th><input type="text" placeholder="Consultor" class="form-control form-control-sm" /></th>
+                            <th></th>
+                            <th></th>
+                            <th><input type="text" placeholder="Estándares" class="form-control form-control-sm" /></th>
                         </tr>
                     </tfoot>
                     <tbody>
@@ -226,8 +316,14 @@
                             <tr>
                                 <td class="details-control"></td>
                                 <td>
-                                    <a href="<?= base_url('/editClient/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar Cliente">Editar</a>
-                                    <a href="<?= base_url('/deleteClient/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este cliente?')" data-bs-toggle="tooltip" title="Eliminar Cliente">Eliminar</a>
+                                    <div class="action-buttons">
+                                        <a href="<?= base_url('/editClient/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar Cliente">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="<?= base_url('/deleteClient/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este cliente?')" data-bs-toggle="tooltip" title="Eliminar Cliente">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
                                 </td>
                                 <td><?= htmlspecialchars($client['id_cliente']) ?></td>
                                 <td><?= htmlspecialchars($client['fecha_ingreso']) ?></td>
@@ -279,12 +375,14 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
-    <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
 
     <script>
         $(document).ready(function () {
@@ -309,56 +407,87 @@
 
             var table = $('#clientsTable').DataTable({
                 "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
+                    "url": "//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json",
+                    "searchPlaceholder": "Buscar en toda la tabla..."
                 },
                 "stateSave": true,
-                "dom": 'Blfrtip',
+                "stateDuration": 60 * 60 * 24, // 24 hours
+                "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                       '<"row"<"col-sm-12"B>>' +
+                       '<"row"<"col-sm-12"tr>>' +
+                       '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
                 "buttons": [
                     {
                         extend: 'colvis',
-                        text: 'Visibilidad de Columnas',
-                        className: 'btn btn-secondary btn-sm'
+                        text: '<i class="fas fa-eye"></i> Columnas',
+                        className: 'btn btn-outline-secondary btn-sm'
                     },
                     {
                         extend: 'excelHtml5',
-                        text: 'Descargar Excel',
+                        text: '<i class="fas fa-file-excel"></i> Excel',
                         className: 'btn btn-success btn-sm',
                         exportOptions: {
-                            columns: ':visible'
-                        }
+                            columns: ':visible:not(:first-child)'
+                        },
+                        filename: 'clientes_' + new Date().toISOString().split('T')[0]
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="fas fa-file-pdf"></i> PDF',
+                        className: 'btn btn-danger btn-sm',
+                        exportOptions: {
+                            columns: [2, 4, 5, 7, 16, 17, 18]
+                        },
+                        filename: 'clientes_' + new Date().toISOString().split('T')[0]
                     }
                 ],
+                "processing": true,
                 "responsive": true,
                 "autoWidth": false,
                 "scrollX": true,
-                "scrollY": true,
+                "scrollY": "60vh",
                 "scrollCollapse": true,
-                "fixedColumns": {
-                    "left": 2
-                },
                 "columnDefs": [
                     {
-                        "targets": 0,
+                        "targets": [0, 1],
                         "orderable": false,
-                        "width": "30px"
+                        "searchable": false,
+                        "className": "text-center"
+                    },
+                    {
+                        "targets": [19, 20],
+                        "orderable": false,
+                        "searchable": false
                     }
                 ],
                 "order": [[2, "desc"]],
-                "pageLength": 10,
-                "lengthMenu": [[10, 20, 50, 100], [10, 20, 50, 100]],
+                "pageLength": 25,
+                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+                "searchDelay": 500,
                 "initComplete": function () {
-                    // Apply the search
                     var api = this.api();
-                    api.columns().every(function () {
+                    
+                    // Update record counts
+                    $('#totalRecords').text(api.data().length);
+                    $('#filteredRecords').text(api.rows({search: 'applied'}).data().length);
+                    
+                    // Apply column filters
+                    api.columns().every(function (index) {
                         var that = this;
-                        $('input', this.footer()).on('keyup change clear', function () {
-                            if (that.search() !== this.value) {
-                                that
-                                    .search(this.value)
-                                    .draw();
-                            }
-                        });
+                        var input = $('input, select', this.footer());
+                        
+                        if (input.length > 0) {
+                            input.on('keyup change clear', function () {
+                                if (that.search() !== this.value) {
+                                    that.search(this.value).draw();
+                                }
+                            });
+                        }
                     });
+                },
+                "drawCallback": function () {
+                    var api = this.api();
+                    $('#filteredRecords').text(api.rows({search: 'applied'}).data().length);
                 }
             });
 
@@ -387,6 +516,20 @@
                 localStorage.removeItem('DataTables_clientsTable_/');
                 table.state.clear();
                 location.reload();
+            });
+            
+            // Clear filters button handler
+            $('#clearFilters').on('click', function () {
+                // Clear all column filters
+                table.columns().every(function () {
+                    this.search('');
+                });
+                
+                // Clear footer inputs
+                $('#clientsTable tfoot input, #clientsTable tfoot select').val('');
+                
+                // Clear global search
+                table.search('').draw();
             });
         });
     </script>
