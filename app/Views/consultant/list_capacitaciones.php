@@ -97,7 +97,7 @@
     <?php endif; ?>
 
     <div class="table-responsive">
-      <table id="capacitacionesTable" class="table table-striped table-bordered">
+      <table id="capacitacionesTable" class="table table-striped table-bordered" style="width: 100%;">
         <thead class="table-light">
           <!-- Fila de títulos -->
           <tr>
@@ -107,7 +107,27 @@
             <th>Observaciones</th>
             <th>Acciones</th>
           </tr>
-          <!-- Fila de filtros en la cabecera -->
+        <tbody>
+          <?php if (empty($capacitaciones)): ?>
+            <tr>
+              <td colspan="5" class="text-center">No hay capacitaciones registradas.</td>
+            </tr>
+          <?php else: ?>
+            <?php foreach ($capacitaciones as $capacitacion): ?>
+              <tr>
+                <td><?= esc($capacitacion['id_capacitacion']) ?></td>
+                <td><?= esc($capacitacion['capacitacion']) ?></td>
+                <td><?= esc($capacitacion['objetivo_capacitacion']) ?></td>
+                <td><?= esc($capacitacion['observaciones']) ?></td>
+                <td>
+                  <a href="<?= base_url('editCapacitacion/' . $capacitacion['id_capacitacion']) ?>" class="btn btn-warning btn-sm">Editar</a>
+                  <a href="<?= base_url('deleteCapacitacion/' . $capacitacion['id_capacitacion']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta capacitación?');">Eliminar</a>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+        <tfoot>
           <tr>
             <!-- Sin filtro para ID -->
             <th></th>
@@ -132,27 +152,7 @@
             <!-- Sin filtro para "Acciones" -->
             <th></th>
           </tr>
-        </thead>
-        <tbody>
-          <?php if (empty($capacitaciones)): ?>
-            <tr>
-              <td colspan="5" class="text-center">No hay capacitaciones registradas.</td>
-            </tr>
-          <?php else: ?>
-            <?php foreach ($capacitaciones as $capacitacion): ?>
-              <tr>
-                <td><?= esc($capacitacion['id_capacitacion']) ?></td>
-                <td><?= esc($capacitacion['capacitacion']) ?></td>
-                <td><?= esc($capacitacion['objetivo_capacitacion']) ?></td>
-                <td><?= esc($capacitacion['observaciones']) ?></td>
-                <td>
-                  <a href="<?= base_url('editCapacitacion/' . $capacitacion['id_capacitacion']) ?>" class="btn btn-warning btn-sm">Editar</a>
-                  <a href="<?= base_url('deleteCapacitacion/' . $capacitacion['id_capacitacion']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta capacitación?');">Eliminar</a>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </tbody>
+        </tfoot>
       </table>
     </div>
   </div>
@@ -194,6 +194,8 @@
 <script>
   $(document).ready(function () {
     var table = $('#capacitacionesTable').DataTable({
+      scrollX: true,
+      autoWidth: false,
       dom: 'Bfrtip', // Contenedor para los botones
       buttons: [
         {
@@ -206,7 +208,7 @@
             format: {
               header: function (data, columnIdx) {
                 // Se retorna el texto del <th> de la primera fila (fila de títulos)
-                return $('#capacitacionesTable thead tr:first-child th').eq(columnIdx).text();
+                return $('#capacitacionesTable thead tr th').eq(columnIdx).text();
               }
             }
           }
