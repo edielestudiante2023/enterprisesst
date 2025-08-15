@@ -428,6 +428,7 @@
           },
           dataSrc: ''
         },
+        order: [[6, 'asc']],
         columns: [{
             data: null,
             orderable: false,
