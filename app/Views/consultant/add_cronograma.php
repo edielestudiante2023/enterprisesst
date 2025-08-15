@@ -121,7 +121,7 @@
                 <!-- Cliente -->
                 <div class="mb-3">
                     <label for="id_cliente" class="form-label">Cliente</label>
-                    <select name="id_cliente" id="id_cliente" class="form-select" required>
+                    <select name="id_cliente" id="id_cliente" class="form-select select2" required>
                         <option value="" disabled selected>Selecciona un cliente</option>
                         <?php foreach ($clientes as $cliente): ?>
                             <option value="<?= $cliente['id_cliente'] ?>">
@@ -307,6 +307,13 @@
             // Inicializar Select2 para capacitación
             $('#id_capacitacion').select2({
                 placeholder: "Buscar y seleccionar capacitación",
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Inicializar Select2 para cliente
+            $('#id_cliente').select2({
+                placeholder: "Buscar y seleccionar cliente",
                 allowClear: true,
                 width: '100%'
             });
