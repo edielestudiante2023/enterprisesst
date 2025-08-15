@@ -9,6 +9,9 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- CSS de DataTables -->
     <link href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <!-- CSS de Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.0.0/dist/select2-bootstrap4.min.css" rel="stylesheet" />
     <style>
         body {
             background-color: #f8f9fa;
@@ -79,10 +82,23 @@
     <div style="height: 160px;"></div>
 
 
-    <div class="container">
-        <h2 class="text-center">Lista de Vigías</h2>
+    <div class="container-fluid px-3">
+        <h2 class="text-center mb-4">Lista de Vigías</h2>
 
-        <table id="vigiaTable" class="table table-bordered table-hover">
+        <!-- Filtro de Cliente -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="clienteFilter" class="form-label">Filtrar por Cliente:</label>
+                <select id="clienteFilter" class="form-control">
+                    <option value="">Todos los clientes</option>
+                    <?php foreach ($clientes as $cliente): ?>
+                        <option value="<?= $cliente['nombre_cliente'] ?>"><?= $cliente['nombre_cliente'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
+        <table id="vigiaTable" class="table table-bordered table-hover w-100">
             <thead class="thead-light">
                 <tr>
                     <th>Nombre del Vigía</th>
@@ -120,6 +136,16 @@
                     </tr>
                 <?php endforeach; ?>
             </tbody>
+            <tfoot>
+                <tr>
+                    <th><input type="text" class="form-control" placeholder="Buscar nombre..." /></th>
+                    <th><input type="text" class="form-control" placeholder="Buscar cédula..." /></th>
+                    <th><input type="text" class="form-control" placeholder="Buscar período..." /></th>
+                    <th></th>
+                    <th><input type="text" class="form-control" placeholder="Buscar cliente..." /></th>
+                    <th></th>
+                </tr>
+            </tfoot>
         </table>
 
     </div>
@@ -162,12 +188,46 @@
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <!-- JS de Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
         $(document).ready(function() {
-            $('#vigiaTable').DataTable({
+            var table = $('#vigiaTable').DataTable({
                 language: {
                     url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+                },
+                initComplete: function () {
+                    // Aplicar filtros de búsqueda en cada columna del tfoot
+                    this.api().columns().every(function (index) {
+                        var that = this;
+                        // Excluir la columna de Firma (índice 3) y Acciones (índice 5)
+                        if (index !== 3 && index !== 5) {
+                            $('input', this.footer()).on('keyup change clear', function () {
+                                if (that.search() !== this.value) {
+                                    that.search(this.value).draw();
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Inicializar Select2 para el filtro de clientes
+            $('#clienteFilter').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Seleccionar cliente...',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Filtro por cliente
+            $('#clienteFilter').on('change', function() {
+                var selectedClient = this.value;
+                if (selectedClient) {
+                    table.column(4).search('^' + selectedClient + '$', true, false).draw();
+                } else {
+                    table.column(4).search('').draw();
                 }
             });
         });

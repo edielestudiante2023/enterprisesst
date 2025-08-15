@@ -115,7 +115,7 @@
   <!-- Espaciado para el navbar fijo -->
   <div style="height: 100px;"></div>
 
-  <div class="container-fluid mt-5">
+  <div class="container-fluid mt-5" style="margin: 0; padding: 20px; max-width: 100%;">
     <h1 class="text-center mb-4">Lista de Cronogramas de Capacitación</h1>
 
     <!-- Bloque para seleccionar cliente -->

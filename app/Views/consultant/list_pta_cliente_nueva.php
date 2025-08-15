@@ -57,6 +57,109 @@
             background-color: #ffca2c;
             border-color: #ffc720;
         }
+
+        /* Estilos mejorados para los filtros */
+        .filter-card {
+            background: #fff;
+            border: 1px solid #e3e6f0;
+            border-radius: 10px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-section {
+            border-left: 3px solid #4e73df;
+            padding-left: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .filter-section h6 {
+            color: #4e73df;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #5a5c69;
+            margin-bottom: 0.3rem;
+        }
+
+        .form-label i {
+            margin-right: 0.5rem;
+            color: #858796;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #d1d3e2;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
+        }
+
+        .required-field {
+            border-left: 3px solid #e74a3b;
+        }
+
+        .btn-group-filters {
+            background: #f8f9fc;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e3e6f0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+        }
+
+        .date-range-group {
+            background: #f1f3ff;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #d1d9ff;
+        }
+
+        .quick-filters {
+            background: #fff8e1;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ffe082;
+        }
     </style>
 </head>
 
@@ -204,83 +307,152 @@
         </div>
 
         <h1 class="mb-4">Plan de Trabajo Anual Cliente</h1>
-        <!-- FORMULARIO DE FILTROS -->
-        <form id="filterForm" method="get" action="<?= site_url('/pta-cliente-nueva/list') ?>">
-            <div class="row mb-3">
-                <!-- Seleccionar Cliente -->
-                <div class="col-md-4">
-                    <label for="cliente" class="form-label">Cliente</label>
-                    <select name="cliente" id="cliente" class="form-select">
-                        <option value="">Seleccione un Cliente</option>
-                        <?php if (isset($clients) && !empty($clients)): ?>
-                            <?php foreach ($clients as $client): ?>
-                                <option value="<?= esc($client['id_cliente']) ?>"
-                                    <?= (service('request')->getGet('cliente') == $client['id_cliente']) ? 'selected' : '' ?>>
-                                    <?= esc($client['nombre_cliente']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                </div>
-                <!-- Rango de Fechas -->
-                <div class="col-md-2">
-                    <label for="fecha_desde" class="form-label">Fecha Desde</label>
-                    <input type="date" name="fecha_desde" id="fecha_desde" class="form-control" value="<?= esc(service('request')->getGet('fecha_desde')) ?>">
-                </div>
-                <div class="col-md-2">
-                    <label for="fecha_hasta" class="form-label">Fecha Hasta</label>
-                    <input type="date" name="fecha_hasta" id="fecha_hasta" class="form-control" value="<?= esc(service('request')->getGet('fecha_hasta')) ?>">
-                </div>
-                <!-- Estado de Actividad -->
-                <div class="col-md-2">
-                    <label for="estado" class="form-label">Estado de Actividad</label>
-                    <select name="estado" id="estado" class="form-select">
-                        <option value="">Todas</option>
-                        <option value="ABIERTA" <?= (service('request')->getGet('estado') == 'ABIERTA') ? 'selected' : '' ?>>ABIERTA</option>
-                        <option value="CERRADA" <?= (service('request')->getGet('estado') == 'CERRADA') ? 'selected' : '' ?>>CERRADA</option>
-                        <option value="GESTIONANDO" <?= (service('request')->getGet('estado') == 'GESTIONANDO') ? 'selected' : '' ?>>GESTIONANDO</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label for="mesSeleccionado" class="form-label">Seleccionar Mes o Todo el Año</label>
-                    <select id="mesSeleccionado" class="form-select">
-                        <option value="">-- Seleccione una opción --</option>
-                        <option value="all">Todo el Año</option>
-                        <option value="1">Enero</option>
-                        <option value="2">Febrero</option>
-                        <option value="3">Marzo</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Mayo</option>
-                        <option value="6">Junio</option>
-                        <option value="7">Julio</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Septiembre</option>
-                        <option value="10">Octubre</option>
-                        <option value="11">Noviembre</option>
-                        <option value="12">Diciembre</option>
-                    </select>
-
-                </div>
-                <div style="height: 10px;"></div>
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <button type="submit" class="btn btn-primary" id="btnBuscar">
-                            <i class="fas fa-search"></i> Buscar
-                        </button>
-                        <button type="reset" id="resetFilters" class="btn btn-secondary">
-                            <i class="fas fa-undo"></i> Resetear Filtros
-                        </button>
-                        <button type="button" id="btnCalificarCerradas" class="btn btn-warning">
-                            <i class="fas fa-check-double"></i> Calificar Cerradas
-                        </button>
-                        <!-- Botón para Añadir Registro con filtros en la URL -->
-                        <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-info">
-                            <i class="fas fa-plus"></i> Añadir Registro
-                        </a>
+        
+        <!-- FORMULARIO DE FILTROS MEJORADO -->
+        <div class="filter-card">
+            <form id="filterForm" method="get" action="<?= site_url('/pta-cliente-nueva/list') ?>">
+                
+                <!-- Sección Principal -->
+                <div class="filter-section">
+                    <h6><i class="fas fa-filter"></i> Filtros Principales</h6>
+                    <div class="row mb-3">
+                        <!-- Cliente (Campo requerido) -->
+                        <div class="col-lg-6">
+                            <label for="cliente" class="form-label">
+                                <i class="fas fa-user-tie"></i> Cliente *
+                            </label>
+                            <select name="cliente" id="cliente" class="form-select required-field">
+                                <option value="">Seleccione un Cliente</option>
+                                <?php if (isset($clients) && !empty($clients)): ?>
+                                    <?php foreach ($clients as $client): ?>
+                                        <option value="<?= esc($client['id_cliente']) ?>"
+                                            <?= (service('request')->getGet('cliente') == $client['id_cliente']) ? 'selected' : '' ?>>
+                                            <?= esc($client['nombre_cliente']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        
+                        <!-- Estado de Actividad -->
+                        <div class="col-lg-3">
+                            <label for="estado" class="form-label">
+                                <i class="fas fa-tasks"></i> Estado de Actividad
+                            </label>
+                            <select name="estado" id="estado" class="form-select">
+                                <option value="">Todas</option>
+                                <option value="ABIERTA" <?= (service('request')->getGet('estado') == 'ABIERTA') ? 'selected' : '' ?>>ABIERTA</option>
+                                <option value="CERRADA" <?= (service('request')->getGet('estado') == 'CERRADA') ? 'selected' : '' ?>>CERRADA</option>
+                                <option value="GESTIONANDO" <?= (service('request')->getGet('estado') == 'GESTIONANDO') ? 'selected' : '' ?>>GESTIONANDO</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-        </form>
+
+                <!-- Sección Fechas -->
+                <div class="filter-section">
+                    <h6><i class="fas fa-calendar-alt"></i> Filtros de Fecha</h6>
+                    <div class="row mb-3">
+                        <!-- Fechas Manuales -->
+                        <div class="col-lg-6">
+                            <div class="date-range-group">
+                                <small class="text-muted mb-2 d-block">
+                                    <i class="fas fa-info-circle"></i> Rango manual de fechas
+                                </small>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="fecha_desde" class="form-label">
+                                            <i class="fas fa-calendar-plus"></i> Fecha Desde
+                                        </label>
+                                        <input type="date" name="fecha_desde" id="fecha_desde" 
+                                               class="form-control" 
+                                               value="<?= esc(service('request')->getGet('fecha_desde')) ?>">
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="fecha_hasta" class="form-label">
+                                            <i class="fas fa-calendar-minus"></i> Fecha Hasta
+                                        </label>
+                                        <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                                               class="form-control" 
+                                               value="<?= esc(service('request')->getGet('fecha_hasta')) ?>">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filtros Rápidos -->
+                        <div class="col-lg-6">
+                            <div class="quick-filters">
+                                <small class="text-muted mb-2 d-block">
+                                    <i class="fas fa-magic"></i> Filtros rápidos
+                                </small>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="anioSeleccionado" class="form-label">
+                                            <i class="fas fa-calendar"></i> Año
+                                        </label>
+                                        <select id="anioSeleccionado" class="form-select">
+                                            <option value="">Seleccione año</option>
+                                            <?php 
+                                            $currentYear = date('Y');
+                                            for($i = $currentYear + 1; $i >= 2020; $i--): ?>
+                                                <option value="<?= $i ?>"><?= $i ?></option>
+                                            <?php endfor; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="mesSeleccionado" class="form-label">
+                                            <i class="fas fa-calendar-week"></i> Período
+                                        </label>
+                                        <select id="mesSeleccionado" class="form-select">
+                                            <option value="">Seleccione período</option>
+                                            <option value="all">Todo el Año</option>
+                                            <option value="1">Enero</option>
+                                            <option value="2">Febrero</option>
+                                            <option value="3">Marzo</option>
+                                            <option value="4">Abril</option>
+                                            <option value="5">Mayo</option>
+                                            <option value="6">Junio</option>
+                                            <option value="7">Julio</option>
+                                            <option value="8">Agosto</option>
+                                            <option value="9">Septiembre</option>
+                                            <option value="10">Octubre</option>
+                                            <option value="11">Noviembre</option>
+                                            <option value="12">Diciembre</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="btn-group-filters">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <button type="submit" class="btn btn-primary me-2" id="btnBuscar">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                            <button type="button" id="btnMostrarTodos" class="btn btn-success me-2">
+                                <i class="fas fa-eye"></i> Ver Todos
+                            </button>
+                            <button type="reset" id="resetFilters" class="btn btn-secondary me-2">
+                                <i class="fas fa-undo"></i> Limpiar
+                            </button>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button type="button" id="btnCalificarCerradas" class="btn btn-warning me-2">
+                                <i class="fas fa-check-double"></i> Calificar Cerradas
+                            </button>
+                            <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-info">
+                                <i class="fas fa-plus"></i> Nuevo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
 
         <!-- Mostrar la tabla solo si existen registros -->
         <?php if (!empty($records)): ?>
@@ -420,7 +592,19 @@
             // Al cambiar el mes, se asignan las fechas correspondientes
             $('#mesSeleccionado').on('change', function() {
                 var valor = $(this).val();
-                var anio = new Date().getFullYear();
+                var valorAnio = $('#anioSeleccionado').val();
+                
+                // Si no hay mes seleccionado, no hacer nada
+                if (!valor) return;
+                
+                // Si hay año seleccionado, usar ese; si no, mostrar alerta y salir
+                if (!valorAnio) {
+                    alert('Primero debe seleccionar un año.');
+                    $(this).val('');
+                    return;
+                }
+                
+                var anio = parseInt(valorAnio);
                 var primerDia, ultimoDia;
 
                 if (valor === "all") {
@@ -429,8 +613,6 @@
                     ultimoDia = new Date(anio, 11, 31);
                 } else {
                     var mes = parseInt(valor);
-                    if (!mes) return; // Si no se selecciona ningún mes, salir
-
                     // Primer día del mes
                     primerDia = new Date(anio, mes - 1, 1);
                     // Último día del mes (crea una fecha del mes siguiente y resta un día)
@@ -448,21 +630,119 @@
                 $('#fecha_hasta').val(formatearFecha(ultimoDia));
             });
 
+            // Al cambiar el año, si hay un mes seleccionado, actualizar las fechas
+            $('#anioSeleccionado').on('change', function() {
+                var valorMes = $('#mesSeleccionado').val();
+                if (valorMes) {
+                    $('#mesSeleccionado').trigger('change');
+                }
+            });
+
+            // Botón para mostrar todos los registros (limpiar filtros de fecha)
+            $('#btnMostrarTodos').on('click', function() {
+                var cliente = $('#cliente').val();
+                if (!cliente) {
+                    showAlert('Primero debe seleccionar un Cliente antes de usar "Ver Todos".', 'warning');
+                    return;
+                }
+                
+                // Limpiar todos los filtros de fecha
+                $('#fecha_desde').val('');
+                $('#fecha_hasta').val('');
+                $('#anioSeleccionado').val('');
+                $('#mesSeleccionado').val('');
+                $('#estado').val(''); // También limpiar el estado para mostrar TODOS los registros
+                
+                showAlert('Mostrando todos los registros del cliente seleccionado...', 'success');
+                
+                // Marcar que viene del botón "Ver Todos" para evitar validación de fechas
+                $('#filterForm').data('via-todos', true);
+                
+                // Enviar automáticamente el formulario después de limpiar las fechas
+                setTimeout(function() {
+                    $('#filterForm').submit();
+                }, 1000); // Esperar 1 segundo para que el usuario vea el mensaje
+            });
+
             $('#filterForm').on('submit', function(e) {
                 var cliente = $('#cliente').val();
                 var fechaDesde = $('#fecha_desde').val();
                 var fechaHasta = $('#fecha_hasta').val();
+                var anioSeleccionado = $('#anioSeleccionado').val();
+                var mesSeleccionado = $('#mesSeleccionado').val();
+                
+                // Validar que se haya seleccionado un cliente
                 if (!cliente) {
-                    alert('Debe seleccionar un Cliente.');
+                    showAlert('Debe seleccionar un Cliente.', 'error');
                     e.preventDefault();
                     return false;
                 }
-                if (!fechaDesde || !fechaHasta) {
-                    alert('Debe seleccionar el rango de fechas (Fecha Desde y Fecha Hasta).');
+                
+                // Validar filtros de búsqueda
+                var esViaTodos = $(this).data('via-todos') === true;
+                var tieneFechas = fechaDesde && fechaHasta;
+                var tieneFiltroRapido = anioSeleccionado || mesSeleccionado;
+                var tieneEstado = $('#estado').val();
+                
+                // PERMITIR búsqueda si:
+                // 1. Viene del botón "Ver Todos"
+                // 2. Tiene fechas completas (manual o rápido)
+                // 3. Tiene solo cliente + estado (sin fechas)
+                var puedeEjecutar = esViaTodos || tieneFechas || tieneFiltroRapido || tieneEstado;
+                
+                if (!puedeEjecutar) {
+                    showAlert('Debe especificar al menos uno de los siguientes filtros:\n• Rango manual de fechas (Fecha Desde y Fecha Hasta)\n• Filtros rápidos (Año y/o Período)\n• Estado de Actividad\n• O hacer clic en "Ver Todos" para mostrar todos los registros', 'warning');
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Limpiar el flag después de usarlo
+                $(this).removeData('via-todos');
+                
+                // Si tiene fechas manuales incompletas, avisar
+                if ((fechaDesde && !fechaHasta) || (!fechaDesde && fechaHasta)) {
+                    showAlert('Para usar rango manual debe completar tanto "Fecha Desde" como "Fecha Hasta".', 'warning');
                     e.preventDefault();
                     return false;
                 }
             });
+
+            // Función para mostrar alertas mejoradas
+            function showAlert(message, type = 'info') {
+                const alertClass = {
+                    'error': 'alert-danger',
+                    'warning': 'alert-warning',
+                    'success': 'alert-success',
+                    'info': 'alert-info'
+                }[type] || 'alert-info';
+                
+                const icon = {
+                    'error': 'fas fa-exclamation-circle',
+                    'warning': 'fas fa-exclamation-triangle',
+                    'success': 'fas fa-check-circle',
+                    'info': 'fas fa-info-circle'
+                }[type] || 'fas fa-info-circle';
+                
+                // Remover alertas previas
+                $('.custom-alert').remove();
+                
+                // Crear nueva alerta
+                const alertHtml = `
+                    <div class="alert ${alertClass} alert-dismissible fade show custom-alert" role="alert" style="position: relative; z-index: 1050;">
+                        <i class="${icon} me-2"></i>
+                        <strong>${message.replace(/\n/g, '<br>')}</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                
+                // Insertar antes del formulario
+                $('.filter-card').before(alertHtml);
+                
+                // Auto-ocultar después de 8 segundos
+                setTimeout(function() {
+                    $('.custom-alert').fadeOut();
+                }, 8000);
+            }
 
             var table;
             if ($('#ptaTable').length) {

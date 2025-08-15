@@ -7,6 +7,8 @@
     <title>Agregar Cronograma de Capacitación</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <style>
         body {
             font-size: 0.9rem;
@@ -99,15 +101,17 @@
                 <!-- Columna Izquierda -->
                 <div class="col-md-6">
                     <!-- Capacitación -->
-
-                    <select name="id_capacitacion" id="id_capacitacion" class="form-select" required>
-                        <option value="" disabled selected>Selecciona una capacitación</option>
-                        <?php foreach ($capacitaciones as $capacitacion): ?>
-                            <option value="<?= htmlspecialchars($capacitacion['id_capacitacion']) ?>">
-                                <?= htmlspecialchars($capacitacion['capacitacion']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="mb-3">
+                        <label for="id_capacitacion" class="form-label">Capacitación</label>
+                        <select name="id_capacitacion" id="id_capacitacion" class="form-select select2" required>
+                            <option value="" disabled selected>Selecciona una capacitación</option>
+                            <?php foreach ($capacitaciones as $capacitacion): ?>
+                                <option value="<?= htmlspecialchars($capacitacion['id_capacitacion']) ?>">
+                                    <?= htmlspecialchars($capacitacion['capacitacion']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
 
 
@@ -295,6 +299,19 @@
     <!-- Bootstrap JS y dependencias (Popper.js y jQuery si es necesario) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Inicializar Select2 para capacitación
+            $('#id_capacitacion').select2({
+                placeholder: "Buscar y seleccionar capacitación",
+                allowClear: true,
+                width: '100%'
+            });
+        });
+    </script>
 </body>
 
 </html>
