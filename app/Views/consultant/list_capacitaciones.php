@@ -87,7 +87,7 @@
   <!-- Espaciado para evitar que el contenido se oculte bajo el navbar fijo -->
   <div style="height: 160px;"></div>
 
-  <div class="container mt-5">
+  <div class="container-fluid mt-5" style="margin: 0; padding: 20px; max-width: 100%;">
     <h2 class="mb-4">Listado de Capacitaciones</h2>
 
     <?php if (session()->getFlashdata('msg')): ?>

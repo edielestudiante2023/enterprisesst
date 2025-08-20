@@ -925,6 +925,13 @@
                                 success: function(response) {
                                     if (response.status === 'success') {
                                         cell.data(newValue).draw();
+                                        
+                                        // Si se cambió el estado y se retornó un porcentaje, actualizar la celda del porcentaje
+                                        if (fieldName === 'estado_actividad' && response.porcentaje_avance !== undefined) {
+                                            var porcentajeCell = table.cell($td.closest('tr'), 11); // Columna 11 es porcentaje_avance
+                                            porcentajeCell.data(response.porcentaje_avance).draw();
+                                        }
+                                        
                                         updateCardCounts();
                                         updateMonthlyCounts();
                                     } else {
