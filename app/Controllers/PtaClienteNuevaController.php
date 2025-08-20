@@ -23,37 +23,57 @@ class PtaClienteNuevaController extends Controller
         $records = null;
         $pager   = null;
 
-        // Solo si se han enviado cliente y rango de fechas se realiza la consulta.
-        if (!empty($cliente) && !empty($fecha_desde) && !empty($fecha_hasta)) {
+        // Si se ha enviado al menos un cliente, realizar la consulta
+        if (!empty($cliente)) {
             $ptaModel = new PtaClienteNuevaModel();
             
-            // Primero verificar si hay datos en un rango más amplio
-            $extendedStart = date('Y-m-d', strtotime($fecha_desde . ' -30 days'));
-            $extendedEnd = date('Y-m-d', strtotime($fecha_hasta . ' +30 days'));
-            
-            $checkExtended = $ptaModel->where('id_cliente', $cliente)
-                                    ->where('fecha_propuesta >=', $extendedStart)
-                                    ->where('fecha_propuesta <=', $extendedEnd)
-                                    ->countAllResults(false);
+            // Si tiene fechas específicas, usar rango de fechas
+            if (!empty($fecha_desde) && !empty($fecha_hasta)) {
+                // Primero verificar si hay datos en un rango más amplio
+                $extendedStart = date('Y-m-d', strtotime($fecha_desde . ' -30 days'));
+                $extendedEnd = date('Y-m-d', strtotime($fecha_hasta . ' +30 days'));
+                
+                $checkExtended = $ptaModel->where('id_cliente', $cliente)
+                                        ->where('fecha_propuesta >=', $extendedStart)
+                                        ->where('fecha_propuesta <=', $extendedEnd)
+                                        ->countAllResults(false);
 
-            // Realizar la consulta con el rango original
-            $ptaModel->where('id_cliente', $cliente);
-            $ptaModel->where('fecha_propuesta >=', $fecha_desde);
-            $ptaModel->where('fecha_propuesta <=', $fecha_hasta);
+                // Realizar la consulta con el rango original
+                $ptaModel->where('id_cliente', $cliente);
+                $ptaModel->where('fecha_propuesta >=', $fecha_desde);
+                $ptaModel->where('fecha_propuesta <=', $fecha_hasta);
+            } else {
+                // Sin fechas: mostrar TODOS los registros del cliente
+                $ptaModel->where('id_cliente', $cliente);
+                $checkExtended = 0; // No aplicable en este caso
+            }
+            
+            // Aplicar filtro de estado si se proporciona
             if (!empty($estado)) {
                 $ptaModel->where('estado_actividad', $estado);
             }
-            $limit = 100;
+            
+            $limit = 50;
             $records = $ptaModel->paginate($limit, 'pta_cliente_nueva');
             $pager = $ptaModel->pager;
 
-            // Si no hay registros en el rango actual pero sí en el rango extendido
-            if (empty($records) && $checkExtended > 0) {
-                session()->setFlashdata('warning', 'No se encontraron registros en el rango de fechas seleccionado. Intente ampliar el rango de fechas para ver más resultados.');
-            } 
-            // Si no hay registros en ningún rango
-            elseif (empty($records)) {
-                session()->setFlashdata('info', 'No se encontraron registros, por defecto prueba con rango 1 ene a 31 dic. Si en definitiva no cargan datos Por favor, comuníquese con su backoffice para verificar la información.');
+            // Mensajes según el resultado
+            if (!empty($fecha_desde) && !empty($fecha_hasta)) {
+                // Si no hay registros en el rango actual pero sí en el rango extendido
+                if (empty($records) && $checkExtended > 0) {
+                    session()->setFlashdata('warning', 'No se encontraron registros en el rango de fechas seleccionado. Intente ampliar el rango de fechas para ver más resultados.');
+                } 
+                // Si no hay registros en ningún rango
+                elseif (empty($records)) {
+                    session()->setFlashdata('info', 'No se encontraron registros, por defecto prueba con rango 1 ene a 31 dic. Si en definitiva no cargan datos Por favor, comuníquese con su backoffice para verificar la información.');
+                }
+            } else {
+                // Sin fechas: mensaje diferente si no hay registros
+                if (empty($records)) {
+                    session()->setFlashdata('info', 'No se encontraron registros para este cliente. Por favor, comuníquese con su backoffice para verificar la información.');
+                } else {
+                    session()->setFlashdata('success', 'Mostrando todos los registros del cliente seleccionado (' . count($records) . ' registros encontrados).');
+                }
             }
 
             // Mapear el nombre del cliente a cada registro
@@ -225,11 +245,36 @@ class PtaClienteNuevaController extends Controller
                 unset($postData[$field]);
             }
         }
+        
+        // Auto-calcular porcentaje basado en el estado
+        if (isset($postData['estado_actividad'])) {
+            $estado = $postData['estado_actividad'];
+            switch ($estado) {
+                case 'CERRADA':
+                    $postData['porcentaje_avance'] = 100;
+                    break;
+                case 'GESTIONANDO':
+                    $postData['porcentaje_avance'] = 50;
+                    break;
+                case 'ABIERTA':
+                    $postData['porcentaje_avance'] = 0;
+                    break;
+            }
+        }
+        
         $ptaModel->update($id, $postData);
-        return $this->response->setJSON([
+        
+        // Retornar también el porcentaje actualizado para actualizar la vista
+        $response = [
             'status'  => 'success',
             'message' => 'Registro actualizado inline correctamente.'
-        ]);
+        ];
+        
+        if (isset($postData['porcentaje_avance'])) {
+            $response['porcentaje_avance'] = $postData['porcentaje_avance'];
+        }
+        
+        return $this->response->setJSON($response);
     }
 
     /**
