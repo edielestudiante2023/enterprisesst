@@ -373,7 +373,7 @@
             <!-- Header -->
             <div class="welcome-header text-center fade-in-up">
                 <h1><i class="fas fa-building"></i> ¡<?= esc($client['nombre_cliente']) ?>!</h1>
-                <p class="lead">Bienvenido a Enterprisesst, tu aplicativo especializado en SG-SST</p>
+                <p>Bienvenido a Enterprisesst, tu aplicativo especializado en SG-SST</p>
             </div>
 
             <!-- Quick Access Buttons -->
@@ -405,22 +405,33 @@
             <!-- Acordeón de Accesos -->
             <div class="accordion custom-accordion fade-in-up" id="accessAccordion">
                 <?php
-                $current_dimension = '';
-                $index = 1;
-                $dimension_items = [];
-                $dimension_count = [];
-                
-                // Primero agrupamos los accesos por dimensión
-                foreach ($accesos as $acceso) {
-                    $dimension_items[$acceso['dimension']][] = $acceso;
-                    if (!isset($dimension_count[$acceso['dimension']])) {
-                        $dimension_count[$acceso['dimension']] = 0;
+                if (isset($accesos) && !empty($accesos)):
+                    $current_dimension = '';
+                    $index = 1;
+                    $dimension_items = [];
+                    $dimension_count = [];
+                    
+                    // Primero agrupamos los accesos por dimensión
+                    foreach ($accesos as $acceso) {
+                        $dimension_items[$acceso['dimension']][] = $acceso;
+                        if (!isset($dimension_count[$acceso['dimension']])) {
+                            $dimension_count[$acceso['dimension']] = 0;
+                        }
+                        $dimension_count[$acceso['dimension']]++;
                     }
-                    $dimension_count[$acceso['dimension']]++;
-                }
+                else:
+                ?>
+                    <div class="alert alert-info text-center fade-in-up">
+                        <i class="fas fa-info-circle mb-2" style="font-size: 2rem;"></i>
+                        <h5>No hay accesos disponibles</h5>
+                        <p class="mb-0">Contáctese con su asesor para desbloquear accesos a la documentación.</p>
+                    </div>
+                <?php
+                endif;
                 
-                $accordion_index = 0;
-                foreach ($dimension_items as $dimension => $items):
+                if (isset($accesos) && !empty($accesos)):
+                    $accordion_index = 0;
+                    foreach ($dimension_items as $dimension => $items):
                     $accordion_id = 'dimension' . $accordion_index;
                     $show_class = ($accordion_index === 0) ? 'show' : '';
                     $collapsed_class = ($accordion_index === 0) ? '' : 'collapsed';
@@ -451,8 +462,9 @@
                         </div>
                     </div>
                 <?php 
-                $accordion_index++;
+                    $accordion_index++;
                 endforeach; 
+                endif;
                 ?>
             </div>
 
