@@ -115,12 +115,12 @@
   <!-- Espaciado para el navbar fijo -->
   <div style="height: 100px;"></div>
 
-  <div class="container-fluid mt-5" style="margin: 0; padding: 20px; max-width: 100%;">
-    <h1 class="text-center mb-4">Lista de Cronogramas de Capacitación</h1>
+  <div class="container-fluid px-2 mt-2">
+    <h1 class="text-center mb-3">Lista de Cronogramas de Capacitación</h1>
 
     <!-- Bloque para seleccionar cliente -->
-    <div class="row mb-3">
-      <div class="col-md-4">
+    <div class="row mb-2">
+      <div class="col-md-3">
         <label for="clientSelect">Selecciona un Cliente:</label>
         <select id="clientSelect" class="form-select">
           <option value="">Seleccione un cliente</option>
@@ -129,10 +129,11 @@
       <div class="col-md-2 align-self-end">
         <button id="loadData" class="btn btn-primary">Cargar Datos</button>
       </div>
+      <div class="col-md-7 align-self-end">
+        <button id="clearState" class="btn btn-danger btn-sm me-2">Restablecer Filtros</button>
+        <div id="buttonsContainer" class="d-inline-block"></div>
+      </div>
     </div>
-
-    <button id="clearState" class="btn btn-danger btn-sm mb-3">Restablecer Filtros</button>
-    <div id="buttonsContainer"></div>
 
     <div class="table-responsive">
       <table id="cronogramaTable" class="table table-striped table-bordered nowrap" style="width:100%">
@@ -182,33 +183,14 @@
             <th>
               <select class="form-select form-select-sm filter-search">
                 <option value="">Todos</option>
-                <optgroup label="Roles Internos">
-                  <option value="TODOS">TODOS</option>
-                  <option value="MIEMBROS_COPASST">Miembros del COPASST</option>
-                  <option value="RESPONSABLE_SST">Responsable de SST</option>
-                  <option value="SUPERVISORES">Supervisores o Jefes de Área</option>
-                  <option value="TRABAJADORES_REPRESENTANTES">Trabajadores Representantes</option>
-                  <option value="MIEMBROS_COMITE_CONVIVENCIA">Miembros del Comité de Convivencia Laboral</option>
-                  <option value="RECURSOS_HUMANOS">Departamento de Recursos Humanos</option>
-                  <option value="PERSONAL_MANTENIMIENTO">Personal de Mantenimiento o Producción</option>
-                  <option value="BRIGADA">Brigada</option>
-                  <option value="TRABAJADORES_RIESGOS_CRITICOS">Trabajadores con Riesgos Críticos</option>
-                </optgroup>
-                <optgroup label="Roles Externos">
-                  <option value="ASESOR_SST">Asesor o Consultor en SST</option>
-                  <option value="AUDITOR_EXTERNO">Auditores Externos</option>
-                  <option value="CAPACITADOR_EXTERNO">Capacitadores Externos</option>
-                  <option value="CONTRATISTAS">Contratistas y Proveedores</option>
-                  <option value="INSPECTORES_GUBERNAMENTALES">Inspectores Gubernamentales</option>
-                  <option value="FISIOTERAPEUTAS_ERGONOMOS">Fisioterapeutas o Ergónomos</option>
-                  <option value="TECNICOS_ESPECIALIZADOS">Técnicos en Riesgos Especializados</option>
-                  <option value="BRIGADISTAS_EXTERNOS">Brigadistas o Personal de Emergencias Externo</option>
-                  <option value="REPRESENTANTES_ARL">Representantes de Aseguradoras (ARL)</option>
-                  <option value="AUDITORES_ISO">Auditores de Normas ISO</option>
-                </optgroup>
+                <option value="CONTRATISTAS">CONTRATISTAS</option>
+                <option value="RESIDENTES">RESIDENTES</option>
+                <option value="TODOS">TODOS</option>
+                <option value="ASAMBLEA">ASAMBLEA</option>
+                <option value="CONSEJO DE ADMINISTRACIÓN">CONSEJO DE ADMINISTRACIÓN</option>
+                <option value="ADMINISTRADOR">ADMINISTRADOR</option>
               </select>
             </th>
-
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Capacitador"></th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Horas"></th>
             <th>
@@ -236,12 +218,12 @@
   </div>
 
   <!-- Footer -->
-  <footer class="bg-white py-4 border-top mt-4">
-    <div class="container text-center">
+  <footer class="bg-white py-2 border-top mt-2">
+    <div class="container-fluid text-center">
       <p class="fw-bold mb-1">Cycloid Talent SAS</p>
       <p class="mb-1">Todos los derechos reservados © 2024</p>
       <p class="mb-1">NIT: 901.653.912</p>
-      <p class="mb-3">
+      <p class="mb-1">
         Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank">https://cycloidtalent.com/</a>
       </p>
     </div>
@@ -265,90 +247,6 @@
   <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
 
   <script>
-    const perfiles = [
-      // Internos
-      {
-        value: 'TODOS',
-        label: 'TODOS'
-      },
-      {
-        value: 'MIEMBROS_COPASST',
-        label: 'Miembros del COPASST'
-      },
-      {
-        value: 'RESPONSABLE_SST',
-        label: 'Responsable de SST'
-      },
-      {
-        value: 'SUPERVISORES',
-        label: 'Supervisores o Jefes de Área'
-      },
-      {
-        value: 'TRABAJADORES_REPRESENTANTES',
-        label: 'Trabajadores Representantes'
-      },
-      {
-        value: 'MIEMBROS_COMITE_CONVIVENCIA',
-        label: 'Miembros del Comité de Convivencia Laboral'
-      },
-      {
-        value: 'RECURSOS_HUMANOS',
-        label: 'Departamento de Recursos Humanos'
-      },
-      {
-        value: 'PERSONAL_MANTENIMIENTO',
-        label: 'Personal de Mantenimiento o Producción'
-      },
-      {
-        value: 'ENCARGADO_AMBIENTAL',
-        label: 'Encargado de Gestión Ambiental'
-      },
-      {
-        value: 'TRABAJADORES_RIESGOS_CRITICOS',
-        label: 'Trabajadores con Riesgos Críticos'
-      },
-      // Externos
-      {
-        value: 'ASESOR_SST',
-        label: 'Asesor o Consultor en SST'
-      },
-      {
-        value: 'AUDITOR_EXTERNO',
-        label: 'Auditores Externos'
-      },
-      {
-        value: 'CAPACITADOR_EXTERNO',
-        label: 'Capacitadores Externos'
-      },
-      {
-        value: 'CONTRATISTAS',
-        label: 'Contratistas y Proveedores'
-      },
-      {
-        value: 'INSPECTORES_GUBERNAMENTALES',
-        label: 'Inspectores Gubernamentales'
-      },
-      {
-        value: 'FISIOTERAPEUTAS_ERGONOMOS',
-        label: 'Fisioterapeutas o Ergónomos'
-      },
-      {
-        value: 'TECNICOS_ESPECIALIZADOS',
-        label: 'Técnicos en Riesgos Especializados'
-      },
-      {
-        value: 'BRIGADISTAS_EXTERNOS',
-        label: 'Brigadistas o Personal de Emergencias Externo'
-      },
-      {
-        value: 'REPRESENTANTES_ARL',
-        label: 'Representantes de Aseguradoras (ARL)'
-      },
-      {
-        value: 'AUDITORES_ISO',
-        label: 'Auditores de Normas ISO'
-      }
-    ];
     // Función para formatear la fila expandible (detalles) con 30% para el nombre y 70% para el texto (con overflow auto)
     function format(rowData) {
       var html = '<table class="table table-sm table-borderless" style="width:100%;">';
@@ -402,6 +300,7 @@
       // Inicializar DataTable con fila expandible y render para inline editing
       var table = $('#cronogramaTable').DataTable({
         stateSave: true,
+        order: [[6, 'asc']], // Ordenar por fecha programada ASC por defecto
         language: {
           url: "//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
         },
@@ -409,7 +308,9 @@
         responsive: true,
         autoWidth: false,
         dom: 'Bfltip',
-        pageLength: 10,
+        pageLength: 25,
+        scrollX: true,
+        scrollCollapse: true,
         buttons: [{
             extend: 'excelHtml5',
             text: 'Exportar a Excel',
@@ -428,7 +329,6 @@
           },
           dataSrc: ''
         },
-        order: [[6, 'asc']],
         columns: [{
             data: null,
             orderable: false,
@@ -445,7 +345,7 @@
           {
             data: 'nombre_capacitacion',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span class="editable" data-field="nombre_capacitacion" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
@@ -456,7 +356,7 @@
           {
             data: 'nombre_cliente',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
@@ -472,7 +372,7 @@
           {
             data: 'fecha_de_realizacion',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span class="editable-date" data-field="fecha_de_realizacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
             }
@@ -480,7 +380,7 @@
           {
             data: 'estado',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span class="editable-select" data-field="estado" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
@@ -488,7 +388,7 @@
           {
             data: 'perfil_de_asistentes',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span class="editable-select" data-field="perfil_de_asistentes" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
@@ -496,7 +396,7 @@
           {
             data: 'nombre_del_capacitador',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span class="editable" data-field="nombre_del_capacitador" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
@@ -504,7 +404,7 @@
           {
             data: 'horas_de_duracion_de_la_capacitacion',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               // Se elimina tooltip en esta columna
               return '<span class="editable" data-field="horas_de_duracion_de_la_capacitacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
@@ -513,7 +413,7 @@
           {
             data: 'indicador_de_realizacion_de_la_capacitacion',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span class="editable-select" data-field="indicador_de_realizacion_de_la_capacitacion" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
@@ -521,7 +421,7 @@
           {
             data: 'numero_de_asistentes_a_capacitacion',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               // Se elimina tooltip en esta columna
               return '<span class="editable" data-field="numero_de_asistentes_a_capacitacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
@@ -530,19 +430,26 @@
           {
             data: 'numero_total_de_personas_programadas',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               // Se elimina tooltip en esta columna
               return '<span class="editable" data-field="numero_total_de_personas_programadas" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
             }
           },
           {
-            data: 'porcentaje_cobertura'
+            data: 'porcentaje_cobertura',
+            render: function(data, type, row) {
+              // Calcular % Cobertura automáticamente
+              var asistentes = parseFloat(row.numero_de_asistentes_a_capacitacion) || 0;
+              var programados = parseFloat(row.numero_total_de_personas_programadas) || 0;
+              var porcentaje = programados > 0 ? Math.round((asistentes / programados) * 100) : 0;
+              return porcentaje + '%';
+            }
           },
           {
             data: 'numero_de_personas_evaluadas',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               // Se elimina tooltip en esta columna
               return '<span class="editable" data-field="numero_de_personas_evaluadas" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
@@ -551,7 +458,7 @@
           {
             data: 'promedio_de_calificaciones',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data ? data + '%' : '&nbsp;';
               // Se elimina tooltip en esta columna
               return '<span class="editable" data-field="promedio_de_calificaciones" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span>';
@@ -560,7 +467,7 @@
           {
             data: 'observaciones',
             render: function(data, type, row) {
-              data = (data === null || data === "") ? "--" : data;
+              data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span class="editable" data-field="observaciones" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
             }
@@ -610,75 +517,70 @@
 
       // Inline editing: detecta clic en celdas con clases editable, editable-select o editable-date
       $(document).on('click', '.editable, .editable-select, .editable-date', function(e) {
-        e.stopPropagation();
+        e.stopPropagation(); // Evita que se active la expansión de fila
         if ($(this).find('input, select').length) return;
-
-        const cell = $(this),
-          field = cell.data('field'),
-          id = cell.data('id'),
-          curr = cell.text().trim();
+        var cell = $(this);
+        var field = cell.data('field');
+        var id = cell.data('id');
+        var currentValue = cell.text().trim();
+        currentValue = currentValue === '' ? '' : currentValue;
 
         if (cell.hasClass('editable-date')) {
-          const input = $('<input>', {
+          var input = $('<input>', {
             type: 'date',
             class: 'form-control form-control-sm',
-            value: curr
+            value: currentValue
           });
           cell.html(input);
-          input.on('blur change', () => {
-            const nv = input.val();
-            cell.html(nv || '&nbsp;');
-            updateField(id, field, nv, cell);
+          input.focus();
+          input.on('blur change', function() {
+            var newValue = input.val();
+            cell.html(newValue || '&nbsp;');
+            updateField(id, field, newValue, cell);
           });
         } else if (cell.hasClass('editable-select')) {
-          let options = [];
+          var options = [];
           if (field === 'estado') {
             options = ['PROGRAMADA', 'EJECUTADA', 'CANCELADA POR EL CLIENTE', 'REPROGRAMADA'];
           } else if (field === 'perfil_de_asistentes') {
-            options = perfiles; // tu array de objetos {value,label}
-          } else {
+            options = ['CONTRATISTAS', 'RESIDENTES', 'TODOS', 'ASAMBLEA', 'CONSEJO DE ADMINISTRACIÓN', 'ADMINISTRADOR'];
+          } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
             options = ['SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ'];
           }
-
-          const select = $('<select>', {
+          var select = $('<select>', {
             class: 'form-select form-select-sm'
           });
-          options.forEach(opt => {
-            if (typeof opt === 'object') {
-              select.append($('<option>', {
-                value: opt.value,
-                text: opt.label,
-                selected: opt.label === curr
-              }));
-            } else {
-              select.append($('<option>', {
-                value: opt,
-                text: opt,
-                selected: opt === curr
-              }));
-            }
+          options.forEach(function(option) {
+            select.append($('<option>', {
+              value: option,
+              text: option,
+              selected: option === currentValue
+            }));
           });
           cell.html(select);
-          select.on('blur change', () => {
-            const nv = select.val();
-            cell.html(nv || '&nbsp;');
-            updateField(id, field, nv, cell);
+          select.focus();
+          select.on('blur change', function() {
+            setTimeout(function() {
+              var newValue = select.val();
+              cell.html(newValue || '&nbsp;');
+              updateField(id, field, newValue, cell);
+            }, 200);
           });
         } else {
-          const input = $('<input>', {
+          var input = $('<input>', {
             type: 'text',
             class: 'form-control form-control-sm',
-            value: curr
+            value: currentValue
           });
           cell.html(input);
-          input.on('blur', () => {
-            const nv = input.val();
-            cell.html(nv || '&nbsp;');
-            updateField(id, field, nv, cell);
+          input.focus();
+          input.on('blur', function() {
+            var newValue = input.val();
+            cell.html(newValue || '&nbsp;');
+            updateField(id, field, newValue, cell);
           });
         }
       });
-
 
       // Función para enviar la actualización vía AJAX
       function updateField(id, field, value, cell) {
@@ -693,6 +595,15 @@
           success: function(response) {
             if (response.success) {
               console.log('Registro actualizado correctamente');
+              
+              // Si se actualizaron los campos que afectan el % Cobertura, recargar la fila
+              if (field === 'numero_de_asistentes_a_capacitacion' || field === 'numero_total_de_personas_programadas') {
+                var row = table.row(cell.closest('tr'));
+                if (row.length) {
+                  // Recargar solo esta fila para actualizar el % Cobertura
+                  row.invalidate('data').draw(false);
+                }
+              }
             } else {
               alert('Error: ' + response.message);
             }
@@ -750,25 +661,6 @@
       });
     });
 
-    $.ajax({
-      url: '<?= base_url("updatecronogCapacitacion") ?>',
-      type: 'POST',
-      data: {
-        id: id,
-        field: field,
-        value: value
-      },
-      success: function(response) {
-        if (response.success) {
-          // Actualiza el elemento del DOM con el nuevo valor
-          $('#porcentaje-cobertura-' + id).text(response.newValue);
-          // También podrías agregar un mensaje de éxito aquí si es necesario
-        }
-      },
-      error: function(error) {
-        console.log(error);
-      }
-    });
   </script>
 </body>
 
