@@ -524,3 +524,4 @@ $routes->post('/pta-cliente-nueva/updateCerradas', 'PtaClienteNuevaController::u
 $routes->post('api/getCronogramasAjax', 'CronogramaCapacitacionController::getCronogramasAjax');
 
 $routes->post('api/recalcularConteoDias', 'PendientesController::recalcularConteoDias');
+$routes->get('api/getClientIndicators', 'EvaluationController::getClientIndicators');

@@ -122,6 +122,58 @@
         <button id="loadData" class="btn btn-primary">Cargar Datos</button>
       </div>
     </div>
+
+    <!-- Tarjetas de indicadores compactas -->
+    <div id="indicatorsRow" class="row mb-4" style="display: none;">
+      <div class="col-md-2">
+        <div class="card shadow-sm border-light h-100">
+          <div class="card-body text-center py-2" style="background-color: #FFE5EC;">
+            <h6 class="card-title text-secondary mb-1" style="font-size: 0.8rem;">Puntuación Actual</h6>
+            <p class="h5 font-weight-bold mb-0" id="puntajeActual">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card shadow-sm border-light h-100">
+          <div class="card-body text-center py-2" style="background-color: #E3FDFD;">
+            <h6 class="card-title text-secondary mb-1" style="font-size: 0.8rem;">Puntuación Máxima</h6>
+            <p class="h5 font-weight-bold mb-0" id="puntajeMaximo">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card shadow-sm border-light h-100">
+          <div class="card-body text-center py-2" style="background-color: #E5FBB8;">
+            <h6 class="card-title text-secondary mb-1" style="font-size: 0.8rem;">Cumplimiento %</h6>
+            <p class="h5 font-weight-bold mb-0" id="indicadorGeneral">0%</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card shadow-sm border-light h-100">
+          <div class="card-body text-center py-2" style="background-color: #D4F6D4;">
+            <h6 class="card-title text-success mb-1" style="font-size: 0.75rem;">Cumple Total</h6>
+            <p class="small mb-0" id="cumpleTotal">0 (0%)</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card shadow-sm border-light h-100">
+          <div class="card-body text-center py-2" style="background-color: #FFEBEE;">
+            <h6 class="card-title text-danger mb-1" style="font-size: 0.75rem;">No Cumple</h6>
+            <p class="small mb-0" id="noCumple">0 (0%)</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card shadow-sm border-light h-100">
+          <div class="card-body text-center py-2" style="background-color: #FFF3E0;">
+            <h6 class="card-title text-warning mb-1" style="font-size: 0.75rem;">No Aplica</h6>
+            <p class="small mb-0" id="noAplica">0 (0%)</p>
+          </div>
+        </div>
+      </div>
+    </div>
     <button id="clearState" class="btn btn-danger btn-sm mb-3">Restablecer Filtros</button>
     <div id="buttonsContainer"></div>
     <div class="table-responsive">
@@ -344,6 +396,7 @@
           var storedClient = localStorage.getItem('selectedClient');
           if (storedClient) {
             $("#clientSelect").val(storedClient).trigger('change');
+            loadClientIndicators(storedClient);
           }
         },
         error: function () {
@@ -552,10 +605,52 @@ columns: [{
         });
       }
 
+      // Función para cargar indicadores del cliente
+      function loadClientIndicators(clientId) {
+        if (!clientId) {
+          $('#indicatorsRow').hide();
+          return;
+        }
+        
+        $.ajax({
+          url: "<?= base_url('/api/getClientIndicators') ?>",
+          method: "GET",
+          data: { cliente_id: clientId },
+          dataType: "json",
+          success: function (data) {
+            if (data.success) {
+              // Mostrar las tarjetas
+              $('#indicatorsRow').show();
+              
+              // Actualizar los valores
+              $('#puntajeActual').text(data.sum_puntaje_cuantitativo || 0);
+              $('#puntajeMaximo').text(data.sum_valor || 0);
+              $('#indicadorGeneral').text(Math.round((data.indicador_general || 0) * 100) + '%');
+              
+              // Calcular porcentajes para las categorías
+              var totalItems = (data.count_cumple || 0) + (data.count_no_cumple || 0) + (data.count_no_aplica || 0);
+              var cumplePct = totalItems > 0 ? Math.round((data.count_cumple / totalItems) * 100) : 0;
+              var noCumplePct = totalItems > 0 ? Math.round((data.count_no_cumple / totalItems) * 100) : 0;
+              var noAplicaPct = totalItems > 0 ? Math.round((data.count_no_aplica / totalItems) * 100) : 0;
+              
+              $('#cumpleTotal').text((data.count_cumple || 0) + ' (' + cumplePct + '%)');
+              $('#noCumple').text((data.count_no_cumple || 0) + ' (' + noCumplePct + '%)');
+              $('#noAplica').text((data.count_no_aplica || 0) + ' (' + noAplicaPct + '%)');
+            } else {
+              $('#indicatorsRow').hide();
+            }
+          },
+          error: function () {
+            $('#indicatorsRow').hide();
+          }
+        });
+      }
+
       $("#loadData").click(function () {
         var clientId = $("#clientSelect").val();
         if (clientId) {
           localStorage.setItem('selectedClient', clientId);
+          loadClientIndicators(clientId);
           table.ajax.reload();
         } else {
           alert('Por favor, seleccione un cliente.');
@@ -566,7 +661,10 @@ columns: [{
         var clientId = $(this).val();
         if (clientId) {
           localStorage.setItem('selectedClient', clientId);
+          loadClientIndicators(clientId);
           table.ajax.reload();
+        } else {
+          $('#indicatorsRow').hide();
         }
       });
 
@@ -580,6 +678,7 @@ columns: [{
         });
         table.columns().search('').draw();
         $("#clientSelect").val(null).trigger("change");
+        $('#indicatorsRow').hide(); // Ocultar las tarjetas de indicadores
       });
 
       function initializeTooltips() {
