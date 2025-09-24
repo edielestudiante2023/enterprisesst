@@ -82,7 +82,7 @@ class PendientesController extends Controller
 
         if ($estado === 'ABIERTA') {
             $updateData['conteo_dias'] = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
-        } elseif ($estado === 'CERRADA' && !empty($fechaCierre)) {
+        } elseif (($estado === 'CERRADA' || $estado === 'SIN RESPUESTA DEL CLIENTE') && !empty($fechaCierre)) {
             $updateData['conteo_dias'] = (int) floor((strtotime($fechaCierre) - $fechaAsignacion) / (60 * 60 * 24));
         } else {
             $updateData['conteo_dias'] = 0;
@@ -116,7 +116,7 @@ class PendientesController extends Controller
             $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
             if ($pendiente['estado'] === 'ABIERTA') {
                 $pendiente['conteo_dias'] = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
-            } elseif ($pendiente['estado'] === 'CERRADA' && !empty($pendiente['fecha_cierre'])) {
+            } elseif (($pendiente['estado'] === 'CERRADA' || $pendiente['estado'] === 'SIN RESPUESTA DEL CLIENTE') && !empty($pendiente['fecha_cierre'])) {
                 $fechaCierre = strtotime($pendiente['fecha_cierre']);
                 $pendiente['conteo_dias'] = (int) floor(($fechaCierre - $fechaAsignacion) / (60 * 60 * 24));
             } else {
@@ -177,7 +177,7 @@ class PendientesController extends Controller
                 // Calcular 'conteo_dias' basado en el estado
                 if ($pendiente['estado'] === 'ABIERTA') {
                     $conteo_dias = (int) floor((time() - strtotime($pendiente['fecha_asignacion'])) / (60 * 60 * 24));
-                } elseif ($pendiente['estado'] === 'CERRADA' && !empty($pendiente['fecha_cierre'])) {
+                } elseif (($pendiente['estado'] === 'CERRADA' || $pendiente['estado'] === 'SIN RESPUESTA DEL CLIENTE') && !empty($pendiente['fecha_cierre'])) {
                     $conteo_dias = (int) floor((strtotime($pendiente['fecha_cierre']) - strtotime($pendiente['fecha_asignacion'])) / (60 * 60 * 24));
                 } else {
                     $conteo_dias = 0;
@@ -248,7 +248,7 @@ class PendientesController extends Controller
         $fechaAsignacion = strtotime($pendienteActual['fecha_asignacion']);
 
         // Validar que la fecha de cierre no sea menor que la fecha de asignación
-        /* if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < $fechaAsignacion) {
+       /*  if ($data['fecha_cierre'] && strtotime($data['fecha_cierre']) < $fechaAsignacion) {
             return redirect()->back()->with('msg', 'Error: La fecha de cierre no puede ser anterior a la fecha de asignación.')->withInput();
         } */
 
@@ -260,7 +260,7 @@ class PendientesController extends Controller
         // Calcular 'conteo_dias' basado en el estado
         if ($data['estado'] === 'ABIERTA') {
             $conteo_dias = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
-        } elseif ($data['estado'] === 'CERRADA' && !empty($data['fecha_cierre'])) {
+        } elseif (($data['estado'] === 'CERRADA' || $data['estado'] === 'SIN RESPUESTA DEL CLIENTE') && !empty($data['fecha_cierre'])) {
             $conteo_dias = (int) floor((strtotime($data['fecha_cierre']) - $fechaAsignacion) / (60 * 60 * 24));
         } else {
             $conteo_dias = 0;
@@ -318,7 +318,7 @@ class PendientesController extends Controller
 
             if ($estado === 'ABIERTA') {
                 $conteo_dias = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
-            } elseif ($estado === 'CERRADA' && $fechaCierre) {
+            } elseif (($estado === 'CERRADA' || $estado === 'SIN RESPUESTA DEL CLIENTE') && $fechaCierre) {
                 $conteo_dias = (int) floor(($fechaCierre - $fechaAsignacion) / (60 * 60 * 24));
             } else {
                 $conteo_dias = 0;

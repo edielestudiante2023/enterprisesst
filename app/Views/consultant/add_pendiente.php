@@ -138,6 +138,7 @@
                     <select name="estado" id="estado" class="form-select" required>
                         <option value="ABIERTA" <?= set_select('estado', 'ABIERTA'); ?>>ABIERTA</option>
                         <option value="CERRADA" <?= set_select('estado', 'CERRADA'); ?>>CERRADA</option>
+                        <option value="SIN RESPUESTA DEL CLIENTE" <?= set_select('estado', 'SIN RESPUESTA DEL CLIENTE'); ?>>SIN RESPUESTA DEL CLIENTE</option>
                     </select>
                     <?php if (isset($validation) && $validation->hasError('estado')): ?>
                         <div class="error-message"><?= $validation->getError('estado') ?></div>
@@ -207,7 +208,7 @@
                         if (estado === 'ABIERTA') {
                             var timeDiff = currentDate - asignacionDate;
                             conteoDias = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-                        } else if (estado === 'CERRADA' && fechaCierre) {
+                        } else if ((estado === 'CERRADA' || estado === 'SIN RESPUESTA DEL CLIENTE') && fechaCierre) {
                             var cierreDate = new Date(fechaCierre);
                             var timeDiff = cierreDate - asignacionDate;
                             conteoDias = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
