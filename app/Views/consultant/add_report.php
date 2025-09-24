@@ -73,9 +73,9 @@
           <div class="form-group">
             <label for="estado">Estado:</label>
             <select class="form-control select2" id="estado" name="estado" required>
+              <option value="CERRADO">CERRADO</option>
               <option value="ABIERTO">ABIERTO</option>
               <option value="GESTIONANDO">GESTIONANDO</option>
-              <option value="CERRADO">CERRADO</option>
             </select>
           </div>
 
