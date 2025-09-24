@@ -177,6 +177,7 @@
                 <option value="">Todos</option>
                 <option value="ABIERTA">ABIERTA</option>
                 <option value="CERRADA">CERRADA</option>
+                <option value="SIN RESPUESTA DEL CLIENTE">SIN RESPUESTA DEL CLIENTE</option>
               </select>
             </th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Conteo"></th>
@@ -438,7 +439,7 @@
         } else if (cell.hasClass('editable-select')) {
           var options = [];
           if (field === 'estado') {
-            options = ['ABIERTA', 'CERRADA'];
+            options = ['ABIERTA', 'CERRADA', 'SIN RESPUESTA DEL CLIENTE'];
           }
           // Agregar otras opciones si es necesario
           var select = $('<select>', {
