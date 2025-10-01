@@ -183,12 +183,17 @@
             <th>
               <select class="form-select form-select-sm filter-search">
                 <option value="">Todos</option>
-                <option value="CONTRATISTAS">CONTRATISTAS</option>
-                <option value="RESIDENTES">RESIDENTES</option>
                 <option value="TODOS">TODOS</option>
-                <option value="ASAMBLEA">ASAMBLEA</option>
-                <option value="CONSEJO DE ADMINISTRACIÓN">CONSEJO DE ADMINISTRACIÓN</option>
-                <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                <option value="DIRECTIVOS_ALTA_GERENCIA">DIRECTIVOS_ALTA_GERENCIA</option>
+                <option value="JEFES_Y_SUPERVISORES">JEFES_Y_SUPERVISORES</option>
+                <option value="VIGIA_SST">VIGIA_SST</option>
+                <option value="BRIGADA_EMERGENCIAS">BRIGADA_EMERGENCIAS</option>
+                <option value="COMITE_SEGURIDAD_VIAL">COMITE_SEGURIDAD_VIAL</option>
+                <option value="MIEMBROS_COPASST">MIEMBROS_COPASST</option>
+                <option value="MIEMBROS_COMITE_CONVIVENCIA">MIEMBROS_COMITE_CONVIVENCIA</option>
+                <option value="TRABAJADORES_RIESGOS_CRITICOS">TRABAJADORES_RIESGOS_CRITICOS</option>
+                <option value="PERSONAL_ASEO_MANTENIMIENTO">PERSONAL_ASEO_MANTENIMIENTO</option>
+                <option value="BRIGADA">BRIGADA</option>
               </select>
             </th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Capacitador"></th>
@@ -543,7 +548,7 @@
           if (field === 'estado') {
             options = ['PROGRAMADA', 'EJECUTADA', 'CANCELADA POR EL CLIENTE', 'REPROGRAMADA'];
           } else if (field === 'perfil_de_asistentes') {
-            options = ['CONTRATISTAS', 'RESIDENTES', 'TODOS', 'ASAMBLEA', 'CONSEJO DE ADMINISTRACIÓN', 'ADMINISTRADOR'];
+            options = ['TODOS', 'DIRECTIVOS_ALTA_GERENCIA', 'JEFES_Y_SUPERVISORES', 'VIGIA_SST', 'BRIGADA_EMERGENCIAS', 'COMITE_SEGURIDAD_VIAL', 'MIEMBROS_COPASST', 'MIEMBROS_COMITE_CONVIVENCIA', 'TRABAJADORES_RIESGOS_CRITICOS', 'PERSONAL_ASEO_MANTENIMIENTO', 'BRIGADA'];
           } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
             options = ['SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ'];
           }
