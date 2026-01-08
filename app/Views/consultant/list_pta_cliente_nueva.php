@@ -621,28 +621,33 @@
             function generateYearCards() {
                 if (!table) return;
 
-                var years = new Set();
-                table.rows().every(function() {
+                var yearCounts = {};
+
+                // Contar actividades por año
+                table.rows({search: 'applied'}).every(function() {
                     var data = this.data();
                     var fechaPropuesta = data[8]; // Columna "Fecha Propuesta"
                     if (fechaPropuesta) {
                         var parts = fechaPropuesta.split("-");
                         if (parts.length >= 1) {
-                            years.add(parts[0]);
+                            var year = parts[0];
+                            yearCounts[year] = (yearCounts[year] || 0) + 1;
                         }
                     }
                 });
 
-                var yearArray = Array.from(years).sort().reverse();
+                var yearArray = Object.keys(yearCounts).sort().reverse();
                 var yearCardsHtml = '';
 
                 yearArray.forEach(function(year) {
+                    var count = yearCounts[year];
                     yearCardsHtml += `
                         <div class="col-6 col-md-2">
                             <div class="card text-white card-year card-clickable" data-year="${year}">
                                 <div class="card-body text-center p-3">
-                                    <h4 class="card-title mb-0">${year}</h4>
-                                    <small>Click para filtrar</small>
+                                    <h4 class="card-title mb-1">${year}</h4>
+                                    <p class="mb-0" style="font-size: 1.5rem; font-weight: bold;">${count}</p>
+                                    <small style="font-size: 0.75rem;">actividades</small>
                                 </div>
                             </div>
                         </div>
@@ -699,6 +704,9 @@
                 );
 
                 table.draw();
+
+                // Actualizar tarjetas de año después de aplicar filtros
+                generateYearCards();
             }
 
             // Click en tarjetas de año
@@ -772,6 +780,7 @@
 
                 if (table) {
                     table.draw();
+                    generateYearCards(); // Regenerar tarjetas de año
                 }
 
                 showAlert('Filtros de tarjetas limpiados. Mostrando todos los registros.', 'info');
@@ -1051,6 +1060,12 @@
                                 id: id
                             };
                             dataToSend[fieldName] = newValue;
+
+                            // Si se está editando la fecha de cierre (columna 9) y tiene un valor, también enviar estado_actividad = CERRADA
+                            if (colIndex === 9 && newValue && newValue.trim() !== '') {
+                                dataToSend['estado_actividad'] = 'CERRADA';
+                            }
+
                             dataToSend["<?= csrf_token() ?>"] = "<?= csrf_hash() ?>";
 
                             $.ajax({
@@ -1061,13 +1076,25 @@
                                 success: function(response) {
                                     if (response.status === 'success') {
                                         cell.data(newValue).draw();
-                                        
+
+                                        // Si se cambió la fecha de cierre y se actualizó el estado, actualizar la celda de estado
+                                        if (colIndex === 9 && newValue && newValue.trim() !== '') {
+                                            var estadoCell = table.cell($td.closest('tr'), 10); // Columna 10 es estado_actividad
+                                            estadoCell.data('CERRADA').draw();
+                                        }
+
                                         // Si se cambió el estado y se retornó un porcentaje, actualizar la celda del porcentaje
                                         if (fieldName === 'estado_actividad' && response.porcentaje_avance !== undefined) {
                                             var porcentajeCell = table.cell($td.closest('tr'), 11); // Columna 11 es porcentaje_avance
                                             porcentajeCell.data(response.porcentaje_avance).draw();
                                         }
-                                        
+
+                                        // Si se cambió la fecha de cierre y hay porcentaje en la respuesta, actualizarlo
+                                        if (colIndex === 9 && response.porcentaje_avance !== undefined) {
+                                            var porcentajeCell = table.cell($td.closest('tr'), 11);
+                                            porcentajeCell.data(response.porcentaje_avance).draw();
+                                        }
+
                                         updateCardCounts();
                                         updateMonthlyCounts();
                                     } else {
