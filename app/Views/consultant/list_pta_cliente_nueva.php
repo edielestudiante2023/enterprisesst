@@ -174,9 +174,27 @@
         }
 
         .card-clickable.active {
-            border: 2px solid #fff;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-            transform: scale(1.05);
+            border: 3px solid #ffeb3b !important;
+            box-shadow: 0 0 25px rgba(255, 235, 59, 0.8), 0 0 10px rgba(255, 255, 255, 0.5) !important;
+            transform: scale(1.08) !important;
+            position: relative;
+        }
+
+        .card-clickable.active::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ffeb3b;
+            color: #000;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
         }
 
         .card-year {
@@ -208,6 +226,14 @@
     <div class="container-fluid">
         <!-- Enlace a Dashboard -->
         <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm mb-3">Ir a DashBoard</a>
+
+        <!-- Mensaje informativo -->
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle"></i>
+            <strong>Filtros Dinámicos:</strong> Las tarjetas de año, estado y mes son interactivas.
+            Haz clic sobre ellas para filtrar la tabla instantáneamente. Puedes combinar múltiples filtros.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
 
         <!-- Sección de Filtros por Año -->
         <div class="d-flex justify-content-between align-items-center">
@@ -379,13 +405,13 @@
         <!-- FORMULARIO DE FILTROS MEJORADO -->
         <div class="filter-card">
             <form id="filterForm" method="get" action="<?= site_url('/pta-cliente-nueva/list') ?>">
-                
-                <!-- Sección Principal -->
+
+                <!-- Filtros en una sola fila -->
                 <div class="filter-section">
-                    <h6><i class="fas fa-filter"></i> Filtros Principales</h6>
+                    <h6><i class="fas fa-filter"></i> Filtros de Búsqueda</h6>
                     <div class="row mb-3">
                         <!-- Cliente (Campo requerido) -->
-                        <div class="col-lg-6">
+                        <div class="col-lg-4">
                             <label for="cliente" class="form-label">
                                 <i class="fas fa-user-tie"></i> Cliente *
                             </label>
@@ -401,97 +427,25 @@
                                 <?php endif; ?>
                             </select>
                         </div>
-                        
-                        <!-- Estado de Actividad -->
-                        <div class="col-lg-3">
-                            <label for="estado" class="form-label">
-                                <i class="fas fa-tasks"></i> Estado de Actividad
-                            </label>
-                            <select name="estado" id="estado" class="form-select">
-                                <option value="">Todas</option>
-                                <option value="ABIERTA" <?= (service('request')->getGet('estado') == 'ABIERTA') ? 'selected' : '' ?>>ABIERTA</option>
-                                <option value="CERRADA" <?= (service('request')->getGet('estado') == 'CERRADA') ? 'selected' : '' ?>>CERRADA</option>
-                                <option value="GESTIONANDO" <?= (service('request')->getGet('estado') == 'GESTIONANDO') ? 'selected' : '' ?>>GESTIONANDO</option>
-                                <option value="CERRADA SIN EJECUCIÓN" <?= (service('request')->getGet('estado') == 'CERRADA SIN EJECUCIÓN') ? 'selected' : '' ?>>CERRADA SIN EJECUCIÓN</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Sección Fechas -->
-                <div class="filter-section">
-                    <h6><i class="fas fa-calendar-alt"></i> Filtros de Fecha</h6>
-                    <div class="row mb-3">
-                        <!-- Fechas Manuales -->
-                        <div class="col-lg-6">
-                            <div class="date-range-group">
-                                <small class="text-muted mb-2 d-block">
-                                    <i class="fas fa-info-circle"></i> Rango manual de fechas
-                                </small>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <label for="fecha_desde" class="form-label">
-                                            <i class="fas fa-calendar-plus"></i> Fecha Desde
-                                        </label>
-                                        <input type="date" name="fecha_desde" id="fecha_desde" 
-                                               class="form-control" 
-                                               value="<?= esc(service('request')->getGet('fecha_desde')) ?>">
-                                    </div>
-                                    <div class="col-6">
-                                        <label for="fecha_hasta" class="form-label">
-                                            <i class="fas fa-calendar-minus"></i> Fecha Hasta
-                                        </label>
-                                        <input type="date" name="fecha_hasta" id="fecha_hasta" 
-                                               class="form-control" 
-                                               value="<?= esc(service('request')->getGet('fecha_hasta')) ?>">
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Fecha Desde -->
+                        <div class="col-lg-4">
+                            <label for="fecha_desde" class="form-label">
+                                <i class="fas fa-calendar-plus"></i> Fecha Desde
+                            </label>
+                            <input type="date" name="fecha_desde" id="fecha_desde"
+                                   class="form-control"
+                                   value="<?= esc(service('request')->getGet('fecha_desde')) ?>">
                         </div>
-                        
-                        <!-- Filtros Rápidos -->
-                        <div class="col-lg-6">
-                            <div class="quick-filters">
-                                <small class="text-muted mb-2 d-block">
-                                    <i class="fas fa-magic"></i> Filtros rápidos
-                                </small>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <label for="anioSeleccionado" class="form-label">
-                                            <i class="fas fa-calendar"></i> Año
-                                        </label>
-                                        <select id="anioSeleccionado" class="form-select">
-                                            <option value="">Seleccione año</option>
-                                            <?php 
-                                            $currentYear = date('Y');
-                                            for($i = $currentYear + 1; $i >= 2020; $i--): ?>
-                                                <option value="<?= $i ?>"><?= $i ?></option>
-                                            <?php endfor; ?>
-                                        </select>
-                                    </div>
-                                    <div class="col-6">
-                                        <label for="mesSeleccionado" class="form-label">
-                                            <i class="fas fa-calendar-week"></i> Período
-                                        </label>
-                                        <select id="mesSeleccionado" class="form-select">
-                                            <option value="">Seleccione período</option>
-                                            <option value="all">Todo el Año</option>
-                                            <option value="1">Enero</option>
-                                            <option value="2">Febrero</option>
-                                            <option value="3">Marzo</option>
-                                            <option value="4">Abril</option>
-                                            <option value="5">Mayo</option>
-                                            <option value="6">Junio</option>
-                                            <option value="7">Julio</option>
-                                            <option value="8">Agosto</option>
-                                            <option value="9">Septiembre</option>
-                                            <option value="10">Octubre</option>
-                                            <option value="11">Noviembre</option>
-                                            <option value="12">Diciembre</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
+
+                        <!-- Fecha Hasta -->
+                        <div class="col-lg-4">
+                            <label for="fecha_hasta" class="form-label">
+                                <i class="fas fa-calendar-minus"></i> Fecha Hasta
+                            </label>
+                            <input type="date" name="fecha_hasta" id="fecha_hasta"
+                                   class="form-control"
+                                   value="<?= esc(service('request')->getGet('fecha_hasta')) ?>">
                         </div>
                     </div>
                 </div>
@@ -823,55 +777,6 @@
                 showAlert('Filtros de tarjetas limpiados. Mostrando todos los registros.', 'info');
             });
 
-            // Al cambiar el mes, se asignan las fechas correspondientes
-            $('#mesSeleccionado').on('change', function() {
-                var valor = $(this).val();
-                var valorAnio = $('#anioSeleccionado').val();
-                
-                // Si no hay mes seleccionado, no hacer nada
-                if (!valor) return;
-                
-                // Si hay año seleccionado, usar ese; si no, mostrar alerta y salir
-                if (!valorAnio) {
-                    alert('Primero debe seleccionar un año.');
-                    $(this).val('');
-                    return;
-                }
-                
-                var anio = parseInt(valorAnio);
-                var primerDia, ultimoDia;
-
-                if (valor === "all") {
-                    // Todo el año: desde el 1 de enero hasta el 31 de diciembre
-                    primerDia = new Date(anio, 0, 1);
-                    ultimoDia = new Date(anio, 11, 31);
-                } else {
-                    var mes = parseInt(valor);
-                    // Primer día del mes
-                    primerDia = new Date(anio, mes - 1, 1);
-                    // Último día del mes (crea una fecha del mes siguiente y resta un día)
-                    ultimoDia = new Date(anio, mes, 0);
-                }
-
-                // Función para formatear la fecha a YYYY-MM-DD
-                function formatearFecha(fecha) {
-                    var dia = ("0" + fecha.getDate()).slice(-2);
-                    var mesFormateado = ("0" + (fecha.getMonth() + 1)).slice(-2);
-                    return fecha.getFullYear() + '-' + mesFormateado + '-' + dia;
-                }
-
-                $('#fecha_desde').val(formatearFecha(primerDia));
-                $('#fecha_hasta').val(formatearFecha(ultimoDia));
-            });
-
-            // Al cambiar el año, si hay un mes seleccionado, actualizar las fechas
-            $('#anioSeleccionado').on('change', function() {
-                var valorMes = $('#mesSeleccionado').val();
-                if (valorMes) {
-                    $('#mesSeleccionado').trigger('change');
-                }
-            });
-
             // Botón para mostrar todos los registros (limpiar filtros de fecha)
             $('#btnMostrarTodos').on('click', function() {
                 var cliente = $('#cliente').val();
@@ -879,19 +784,16 @@
                     showAlert('Primero debe seleccionar un Cliente antes de usar "Ver Todos".', 'warning');
                     return;
                 }
-                
+
                 // Limpiar todos los filtros de fecha
                 $('#fecha_desde').val('');
                 $('#fecha_hasta').val('');
-                $('#anioSeleccionado').val('');
-                $('#mesSeleccionado').val('');
-                $('#estado').val(''); // También limpiar el estado para mostrar TODOS los registros
-                
+
                 showAlert('Mostrando todos los registros del cliente seleccionado...', 'success');
-                
+
                 // Marcar que viene del botón "Ver Todos" para evitar validación de fechas
                 $('#filterForm').data('via-todos', true);
-                
+
                 // Enviar automáticamente el formulario después de limpiar las fechas
                 setTimeout(function() {
                     $('#filterForm').submit();
@@ -902,37 +804,32 @@
                 var cliente = $('#cliente').val();
                 var fechaDesde = $('#fecha_desde').val();
                 var fechaHasta = $('#fecha_hasta').val();
-                var anioSeleccionado = $('#anioSeleccionado').val();
-                var mesSeleccionado = $('#mesSeleccionado').val();
-                
+
                 // Validar que se haya seleccionado un cliente
                 if (!cliente) {
                     showAlert('Debe seleccionar un Cliente.', 'error');
                     e.preventDefault();
                     return false;
                 }
-                
+
                 // Validar filtros de búsqueda
                 var esViaTodos = $(this).data('via-todos') === true;
                 var tieneFechas = fechaDesde && fechaHasta;
-                var tieneFiltroRapido = anioSeleccionado || mesSeleccionado;
-                var tieneEstado = $('#estado').val();
-                
+
                 // PERMITIR búsqueda si:
                 // 1. Viene del botón "Ver Todos"
-                // 2. Tiene fechas completas (manual o rápido)
-                // 3. Tiene solo cliente + estado (sin fechas)
-                var puedeEjecutar = esViaTodos || tieneFechas || tieneFiltroRapido || tieneEstado;
-                
+                // 2. Tiene fechas completas
+                var puedeEjecutar = esViaTodos || tieneFechas;
+
                 if (!puedeEjecutar) {
-                    showAlert('Debe especificar al menos uno de los siguientes filtros:\n• Rango manual de fechas (Fecha Desde y Fecha Hasta)\n• Filtros rápidos (Año y/o Período)\n• Estado de Actividad\n• O hacer clic en "Ver Todos" para mostrar todos los registros', 'warning');
+                    showAlert('Debe especificar:\n• Rango de fechas (Fecha Desde y Fecha Hasta)\n• O hacer clic en "Ver Todos" para mostrar todos los registros del cliente', 'warning');
                     e.preventDefault();
                     return false;
                 }
-                
+
                 // Limpiar el flag después de usarlo
                 $(this).removeData('via-todos');
-                
+
                 // Si tiene fechas manuales incompletas, avisar
                 if ((fechaDesde && !fechaHasta) || (!fechaDesde && fechaHasta)) {
                     showAlert('Para usar rango manual debe completar tanto "Fecha Desde" como "Fecha Hasta".', 'warning');
