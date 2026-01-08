@@ -21,18 +21,17 @@ class PtaClienteNuevaController extends Controller
         $estado      = $request->getGet('estado');
 
         $records = null;
-        $pager   = null;
 
         // Si se ha enviado al menos un cliente, realizar la consulta
         if (!empty($cliente)) {
             $ptaModel = new PtaClienteNuevaModel();
-            
+
             // Si tiene fechas específicas, usar rango de fechas
             if (!empty($fecha_desde) && !empty($fecha_hasta)) {
                 // Primero verificar si hay datos en un rango más amplio
                 $extendedStart = date('Y-m-d', strtotime($fecha_desde . ' -30 days'));
                 $extendedEnd = date('Y-m-d', strtotime($fecha_hasta . ' +30 days'));
-                
+
                 $checkExtended = $ptaModel->where('id_cliente', $cliente)
                                         ->where('fecha_propuesta >=', $extendedStart)
                                         ->where('fecha_propuesta <=', $extendedEnd)
@@ -47,15 +46,14 @@ class PtaClienteNuevaController extends Controller
                 $ptaModel->where('id_cliente', $cliente);
                 $checkExtended = 0; // No aplicable en este caso
             }
-            
+
             // Aplicar filtro de estado si se proporciona
             if (!empty($estado)) {
                 $ptaModel->where('estado_actividad', $estado);
             }
-            
-            $limit = 50;
-            $records = $ptaModel->paginate($limit, 'pta_cliente_nueva');
-            $pager = $ptaModel->pager;
+
+            // Obtener TODOS los registros sin paginación - DataTables manejará la paginación en el cliente
+            $records = $ptaModel->findAll();
 
             // Mensajes según el resultado
             if (!empty($fecha_desde) && !empty($fecha_hasta)) {
@@ -97,7 +95,6 @@ class PtaClienteNuevaController extends Controller
         $data = [
             'clients' => $clients,
             'records' => $records,
-            'pager'   => $pager,
             'filters' => $filters,
         ];
 
@@ -316,14 +313,23 @@ class PtaClienteNuevaController extends Controller
         $clients = $clientModel->findAll();
         $filters = $this->request->getGet();
         $ptaModel = new PtaClienteNuevaModel();
-        if (!empty($filters['cliente']) && !empty($filters['fecha_desde']) && !empty($filters['fecha_hasta'])) {
+
+        // Aplicar los mismos filtros que en listPtaClienteNuevaModel
+        if (!empty($filters['cliente'])) {
             $ptaModel->where('id_cliente', $filters['cliente']);
-            $ptaModel->where('fecha_propuesta >=', $filters['fecha_desde']);
-            $ptaModel->where('fecha_propuesta <=', $filters['fecha_hasta']);
+
+            // Si tiene fechas específicas, usar rango de fechas
+            if (!empty($filters['fecha_desde']) && !empty($filters['fecha_hasta'])) {
+                $ptaModel->where('fecha_propuesta >=', $filters['fecha_desde']);
+                $ptaModel->where('fecha_propuesta <=', $filters['fecha_hasta']);
+            }
+
+            // Aplicar filtro de estado si se proporciona
             if (!empty($filters['estado'])) {
                 $ptaModel->where('estado_actividad', $filters['estado']);
             }
         }
+
         $records = $ptaModel->findAll();
 
         // Mapear el nombre del cliente

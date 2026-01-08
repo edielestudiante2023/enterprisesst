@@ -535,7 +535,6 @@
                         </tr>
                     </tfoot>
                 </table>
-                <?= isset($pager) ? $pager->links() : '' ?>
             </div>
         <?php endif; ?>
 
