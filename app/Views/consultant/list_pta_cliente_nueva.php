@@ -160,6 +160,47 @@
             border-radius: 8px;
             border: 1px solid #ffe082;
         }
+
+        /* Estilos para tarjetas clickeables */
+        .card-clickable {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .card-clickable:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-clickable.active {
+            border: 2px solid #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .card-year {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            min-height: 80px;
+        }
+
+        .card-month {
+            min-height: 70px;
+        }
+
+        .card-status {
+            min-height: 90px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4e73df;
+            border-left: 4px solid #4e73df;
+            padding-left: 10px;
+            margin: 20px 0 15px 0;
+        }
     </style>
 </head>
 
@@ -168,56 +209,75 @@
         <!-- Enlace a Dashboard -->
         <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm mb-3">Ir a DashBoard</a>
 
-        <!-- Tarjetas de conteo superiores -->
+        <!-- Sección de Filtros por Año -->
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="section-title mb-0">
+                <i class="fas fa-calendar-alt"></i> Filtrar por Año
+            </div>
+            <button type="button" id="btnClearCardFilters" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-times"></i> Limpiar Filtros de Tarjetas
+            </button>
+        </div>
+        <div class="row mb-4 mt-2" id="yearCards">
+            <!-- Se generarán dinámicamente con JavaScript -->
+        </div>
+
+        <!-- Tarjetas de Estados (clickeables) -->
+        <div class="section-title">
+            <i class="fas fa-tasks"></i> Filtrar por Estado
+        </div>
         <div class="row mb-4">
             <div class="col-md-2">
-                <div class="card text-white bg-primary">
-                    <div class="card-body">
+                <div class="card text-white bg-primary card-clickable card-status" data-status="ABIERTA">
+                    <div class="card-body text-center">
                         <h5 class="card-title">Activas</h5>
-                        <p class="card-text" id="countActivas">0</p>
+                        <p class="card-text display-6" id="countActivas">0</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card text-white bg-danger">
-                    <div class="card-body">
+                <div class="card text-white bg-danger card-clickable card-status" data-status="CERRADA">
+                    <div class="card-body text-center">
                         <h5 class="card-title">Cerradas</h5>
-                        <p class="card-text" id="countCerradas">0</p>
+                        <p class="card-text display-6" id="countCerradas">0</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card text-white bg-warning">
-                    <div class="card-body">
+                <div class="card text-white bg-warning card-clickable card-status" data-status="GESTIONANDO">
+                    <div class="card-body text-center">
                         <h5 class="card-title">Gestionando</h5>
-                        <p class="card-text" id="countGestionando">0</p>
+                        <p class="card-text display-6" id="countGestionando">0</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card text-white bg-dark">
-                    <div class="card-body">
+                <div class="card text-white bg-dark card-clickable card-status" data-status="CERRADA SIN EJECUCIÓN">
+                    <div class="card-body text-center">
                         <h5 class="card-title">Cerradas Sin Ejecución</h5>
-                        <p class="card-text" id="countCerradasSinEjecucion">0</p>
+                        <p class="card-text display-6" id="countCerradasSinEjecucion">0</p>
                     </div>
                 </div>
             </div>
             <!-- Tarjeta para total de actividades -->
             <div class="col-md-3">
-                <div class="card text-white bg-secondary">
-                    <div class="card-body">
+                <div class="card text-white bg-secondary card-clickable card-status" data-status="ALL">
+                    <div class="card-body text-center">
                         <h5 class="card-title">Total</h5>
-                        <p class="card-text" id="countTotal">0</p>
+                        <p class="card-text display-6" id="countTotal">0</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Tarjetas mensuales -->
+        <!-- Tarjetas mensuales (clickeables) -->
+        <div class="section-title">
+            <i class="fas fa-calendar-week"></i> Filtrar por Mes
+        </div>
         <div class="row mb-4">
             <!-- Cada tarjeta ocupa 1 columna en md y 6 en xs -->
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="1">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Enero</h6>
                         <p class="card-text text-center" id="countEnero">0</p>
@@ -225,7 +285,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="2">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Febrero</h6>
                         <p class="card-text text-center" id="countFebrero">0</p>
@@ -233,7 +293,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="3">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Marzo</h6>
                         <p class="card-text text-center" id="countMarzo">0</p>
@@ -241,7 +301,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="4">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Abril</h6>
                         <p class="card-text text-center" id="countAbril">0</p>
@@ -249,7 +309,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="5">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Mayo</h6>
                         <p class="card-text text-center" id="countMayo">0</p>
@@ -257,7 +317,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="6">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Junio</h6>
                         <p class="card-text text-center" id="countJunio">0</p>
@@ -265,7 +325,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="7">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Julio</h6>
                         <p class="card-text text-center" id="countJulio">0</p>
@@ -273,7 +333,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="8">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Agosto</h6>
                         <p class="card-text text-center" id="countAgosto">0</p>
@@ -281,7 +341,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="9">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Sept.</h6>
                         <p class="card-text text-center" id="countSeptiembre">0</p>
@@ -289,7 +349,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="10">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Oct.</h6>
                         <p class="card-text text-center" id="countOctubre">0</p>
@@ -297,7 +357,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="11">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Nov.</h6>
                         <p class="card-text text-center" id="countNoviembre">0</p>
@@ -305,7 +365,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-1">
-                <div class="card text-white bg-info">
+                <div class="card text-white bg-info card-clickable card-month" data-month="12">
                     <div class="card-body p-2">
                         <h6 class="card-title text-center mb-0">Dic.</h6>
                         <p class="card-text text-center" id="countDiciembre">0</p>
@@ -581,6 +641,11 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Variables globales para filtros activos
+            var activeYear = null;
+            var activeMonth = null;
+            var activeStatus = null;
+
             // Initialize Select2 on client dropdown
             $('#cliente').select2({
                 theme: 'bootstrap-5',
@@ -596,6 +661,166 @@
                         return "Buscando...";
                     }
                 }
+            });
+
+            // Generar tarjetas de años dinámicamente
+            function generateYearCards() {
+                if (!table) return;
+
+                var years = new Set();
+                table.rows().every(function() {
+                    var data = this.data();
+                    var fechaPropuesta = data[8]; // Columna "Fecha Propuesta"
+                    if (fechaPropuesta) {
+                        var parts = fechaPropuesta.split("-");
+                        if (parts.length >= 1) {
+                            years.add(parts[0]);
+                        }
+                    }
+                });
+
+                var yearArray = Array.from(years).sort().reverse();
+                var yearCardsHtml = '';
+
+                yearArray.forEach(function(year) {
+                    yearCardsHtml += `
+                        <div class="col-6 col-md-2">
+                            <div class="card text-white card-year card-clickable" data-year="${year}">
+                                <div class="card-body text-center p-3">
+                                    <h4 class="card-title mb-0">${year}</h4>
+                                    <small>Click para filtrar</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                $('#yearCards').html(yearCardsHtml);
+            }
+
+            // Función para aplicar filtros combinados
+            function applyFilters() {
+                if (!table) return;
+
+                $.fn.dataTable.ext.search.pop(); // Limpiar filtros personalizados previos
+
+                $.fn.dataTable.ext.search.push(
+                    function(settings, data, dataIndex) {
+                        var fechaPropuesta = data[8] || ''; // Columna 8: Fecha Propuesta
+                        var estadoActividad = data[10] || ''; // Columna 10: Estado
+
+                        // Filtro por año
+                        if (activeYear) {
+                            if (!fechaPropuesta.startsWith(activeYear)) {
+                                return false;
+                            }
+                        }
+
+                        // Filtro por mes
+                        if (activeMonth) {
+                            if (fechaPropuesta) {
+                                var parts = fechaPropuesta.split("-");
+                                if (parts.length >= 2) {
+                                    var month = parseInt(parts[1], 10);
+                                    if (month !== parseInt(activeMonth)) {
+                                        return false;
+                                    }
+                                } else {
+                                    return false;
+                                }
+                            } else {
+                                return false;
+                            }
+                        }
+
+                        // Filtro por estado
+                        if (activeStatus && activeStatus !== 'ALL') {
+                            if (estadoActividad.trim() !== activeStatus) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }
+                );
+
+                table.draw();
+            }
+
+            // Click en tarjetas de año
+            $(document).on('click', '.card-year', function() {
+                var year = $(this).data('year');
+
+                if ($(this).hasClass('active')) {
+                    // Desactivar filtro
+                    $(this).removeClass('active');
+                    activeYear = null;
+                } else {
+                    // Activar filtro
+                    $('.card-year').removeClass('active');
+                    $(this).addClass('active');
+                    activeYear = year;
+                }
+
+                applyFilters();
+            });
+
+            // Click en tarjetas de mes
+            $(document).on('click', '.card-month', function() {
+                var month = $(this).data('month');
+
+                if ($(this).hasClass('active')) {
+                    // Desactivar filtro
+                    $(this).removeClass('active');
+                    activeMonth = null;
+                } else {
+                    // Activar filtro
+                    $('.card-month').removeClass('active');
+                    $(this).addClass('active');
+                    activeMonth = month;
+                }
+
+                applyFilters();
+            });
+
+            // Click en tarjetas de estado
+            $(document).on('click', '.card-status', function() {
+                var status = $(this).data('status');
+
+                if ($(this).hasClass('active')) {
+                    // Desactivar filtro
+                    $(this).removeClass('active');
+                    activeStatus = null;
+                } else {
+                    // Activar filtro
+                    $('.card-status').removeClass('active');
+                    $(this).addClass('active');
+                    activeStatus = status;
+                }
+
+                applyFilters();
+            });
+
+            // Botón para limpiar todos los filtros de tarjetas
+            $('#btnClearCardFilters').on('click', function() {
+                // Limpiar estados
+                activeYear = null;
+                activeMonth = null;
+                activeStatus = null;
+
+                // Remover clases activas
+                $('.card-year').removeClass('active');
+                $('.card-month').removeClass('active');
+                $('.card-status').removeClass('active');
+
+                // Limpiar filtros personalizados de DataTables
+                $.fn.dataTable.ext.search.pop();
+
+                if (table) {
+                    table.draw();
+                }
+
+                showAlert('Filtros de tarjetas limpiados. Mostrando todos los registros.', 'info');
             });
 
             // Al cambiar el mes, se asignan las fechas correspondientes
@@ -873,6 +1098,7 @@
                 });
                 updateCardCounts();
                 updateMonthlyCounts();
+                generateYearCards(); // Generar tarjetas de año al inicializar
 
                 $('#ptaTable tbody').on('dblclick', 'td.editable', function() {
                     var cell = table.cell(this);
