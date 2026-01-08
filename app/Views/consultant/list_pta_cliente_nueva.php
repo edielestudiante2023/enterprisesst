@@ -170,7 +170,7 @@
 
         <!-- Tarjetas de conteo superiores -->
         <div class="row mb-4">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="card text-white bg-primary">
                     <div class="card-body">
                         <h5 class="card-title">Activas</h5>
@@ -178,7 +178,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="card text-white bg-danger">
                     <div class="card-body">
                         <h5 class="card-title">Cerradas</h5>
@@ -186,11 +186,19 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="card text-white bg-warning">
                     <div class="card-body">
                         <h5 class="card-title">Gestionando</h5>
                         <p class="card-text" id="countGestionando">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">Cerradas Sin Ejecución</h5>
+                        <p class="card-text" id="countCerradasSinEjecucion">0</p>
                     </div>
                 </div>
             </div>
@@ -344,6 +352,7 @@
                                 <option value="ABIERTA" <?= (service('request')->getGet('estado') == 'ABIERTA') ? 'selected' : '' ?>>ABIERTA</option>
                                 <option value="CERRADA" <?= (service('request')->getGet('estado') == 'CERRADA') ? 'selected' : '' ?>>CERRADA</option>
                                 <option value="GESTIONANDO" <?= (service('request')->getGet('estado') == 'GESTIONANDO') ? 'selected' : '' ?>>GESTIONANDO</option>
+                                <option value="CERRADA SIN EJECUCIÓN" <?= (service('request')->getGet('estado') == 'CERRADA SIN EJECUCIÓN') ? 'selected' : '' ?>>CERRADA SIN EJECUCIÓN</option>
                             </select>
                         </div>
                     </div>
@@ -524,6 +533,7 @@
                                     <option value="ABIERTA">ABIERTA</option>
                                     <option value="CERRADA">CERRADA</option>
                                     <option value="GESTIONANDO">GESTIONANDO</option>
+                                    <option value="CERRADA SIN EJECUCIÓN">CERRADA SIN EJECUCIÓN</option>
                                 </select>
                             </th>
                             <th><input type="text" placeholder="Buscar Porcentaje Avance" class="form-control form-control-sm"></th>
@@ -818,9 +828,13 @@
                     var countGestionando = data.filter(function(x) {
                         return x.trim() === 'GESTIONANDO';
                     }).length;
+                    var countCerradasSinEjecucion = data.filter(function(x) {
+                        return x.trim() === 'CERRADA SIN EJECUCIÓN';
+                    }).length;
                     $('#countActivas').text(countActivas);
                     $('#countCerradas').text(countCerradas);
                     $('#countGestionando').text(countGestionando);
+                    $('#countCerradasSinEjecucion').text(countCerradasSinEjecucion);
                     // Total es la suma de todas las filas filtradas
                     $('#countTotal').text(table.rows({
                         search: 'applied'
@@ -888,7 +902,7 @@
                         inputElement = $('<input type="date" class="form-control form-control-sm" />').val(originalValue);
                     } else if (colIndex === 10) {
                         inputElement = $('<select class="form-select form-select-sm"></select>');
-                        var options = ["ABIERTA", "CERRADA", "GESTIONANDO"];
+                        var options = ["ABIERTA", "CERRADA", "GESTIONANDO", "CERRADA SIN EJECUCIÓN"];
                         $.each(options, function(i, option) {
                             var selected = (originalValue === option) ? "selected" : "";
                             inputElement.append('<option value="' + option + '" ' + selected + '>' + option + '</option>');
