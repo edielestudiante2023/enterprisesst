@@ -1,0 +1,882 @@
+
+Dijiste:
+El asunto es el siguiente un sistema de gestión en sst tiene diferentes tipos de documentos políticas, objetivos, programas, procedimiento, y esos documentos tienen su estructura, algunos con introducción, glosario metodología etc entonces cuales son las partes de cada tipo de documento y cuales son los tipos de documentos 
+ChatGPT dijo:
+Perfecto, Sol. Vamos a ordenarlo de forma técnica, clara y usable, como para estandarizar un SG-SST y que te sirva tanto para auditoría, plataforma o control documental.
+
+📁 Tipos de documentos en un Sistema de Gestión de SST (SG-SST)
+En el SG-SST no todos los documentos son iguales, ni deben tener la misma estructura.
+Cada tipo cumple una función distinta dentro del ciclo PHVA y por eso su estructura cambia.
+
+A continuación te muestro:
+
+Tipos de documentos del SG-SST
+
+Qué son
+
+Cuáles son sus partes (estructura recomendada)
+
+1️⃣ Políticas
+📌 ¿Qué son?
+Documentos estratégicos y declarativos, emitidos por la Alta Dirección.
+Definen el compromiso institucional.
+
+🧾 Ejemplos
+Política de Seguridad y Salud en el Trabajo
+
+Política de Prevención de Consumo de SPA
+
+Política de Acoso Laboral
+
+Política de Desconexión Laboral
+
+🧱 Estructura recomendada
+Encabezado institucional
+
+Declaración de la política
+
+Alcance
+
+Principios o compromisos
+
+Responsabilidades generales
+
+Marco normativo
+
+Vigencia
+
+Firma de la Alta Dirección
+
+🔹 Las políticas NO llevan introducción, glosario ni metodología.
+
+2️⃣ Objetivos y Metas
+📌 ¿Qué son?
+Definen qué se quiere lograr en SST y cómo se medirá.
+
+🧾 Ejemplos
+Objetivos del SG-SST
+
+Objetivos del Plan Anual de Trabajo
+
+🧱 Estructura recomendada
+Introducción breve
+
+Objetivo general
+
+Objetivos específicos
+
+Indicadores
+
+Metas
+
+Responsables
+
+Periodicidad de evaluación
+
+Marco normativo
+
+3️⃣ Programas
+📌 ¿Qué son?
+Documentos operativos y planificadores que desarrollan un tema específico del SG-SST.
+
+🧾 Ejemplos
+Programa de Capacitación
+
+Programa de Vigilancia Epidemiológica
+
+Programa de Medicina Preventiva
+
+Programa de Inspecciones
+
+🧱 Estructura recomendada
+Introducción
+
+Objetivos
+
+Alcance
+
+Marco normativo
+
+Definiciones (si aplica)
+
+Diagnóstico o línea base
+
+Actividades
+
+Cronograma
+
+Indicadores
+
+Responsables
+
+Recursos
+
+Seguimiento y evaluación
+
+Registros asociados
+
+4️⃣ Planes
+📌 ¿Qué son?
+Herramientas de ejecución concreta, con fechas, responsables y acciones.
+
+🧾 Ejemplos
+Plan Anual de Trabajo
+
+Plan de Emergencias
+
+Plan de Mejoramiento
+
+🧱 Estructura recomendada
+Introducción
+
+Objetivo
+
+Alcance
+
+Marco normativo
+
+Estructura del plan
+
+Tabla de actividades
+(Actividad – Responsable – Fecha – Recursos – Indicador)
+
+Seguimiento
+
+Control de cambios
+
+Registros asociados
+
+5️⃣ Procedimientos
+📌 ¿Qué son?
+Documentos que explican cómo se hace una actividad del SG-SST.
+
+🧾 Ejemplos
+Procedimiento de Investigación de Accidentes
+
+Procedimiento de Gestión del Cambio
+
+Procedimiento de Auditoría Interna
+
+Procedimiento de Exámenes Médicos
+
+🧱 Estructura recomendada
+Introducción
+
+Objetivo
+
+Alcance
+
+Marco normativo
+
+Definiciones
+
+Responsabilidades
+
+Descripción del procedimiento (paso a paso)
+
+Diagrama de flujo (opcional)
+
+Registros
+
+Anexos
+
+6️⃣ Protocolos
+📌 ¿Qué son?
+Documentos técnicos y específicos, generalmente asociados a riesgos o eventos críticos.
+
+🧾 Ejemplos
+Protocolo de Acoso Sexual
+
+Protocolo de Atención de Emergencias
+
+Protocolo Psicosocial
+
+🧱 Estructura recomendada
+Introducción
+
+Objetivo
+
+Alcance
+
+Marco normativo
+
+Definiciones
+
+Principios de actuación
+
+Fases de intervención
+
+Roles y responsabilidades
+
+Medidas de protección
+
+Seguimiento
+
+Confidencialidad
+
+Anexos
+
+7️⃣ Manuales
+📌 ¿Qué son?
+Documentos integradores, que explican el sistema completo o un macroproceso.
+
+🧾 Ejemplos
+Manual del SG-SST
+
+Manual del COPASST
+
+Manual del Comité de Convivencia
+
+🧱 Estructura recomendada
+Introducción
+
+Objetivo
+
+Alcance
+
+Marco normativo
+
+Estructura organizacional
+
+Descripción del sistema o comité
+
+Funciones y responsabilidades
+
+Metodología de trabajo
+
+Registros
+
+Control documental
+
+8️⃣ Registros y Formatos
+📌 ¿Qué son?
+Evidencias operativas del SG-SST.
+
+🧾 Ejemplos
+Formato de inspección
+
+Registro de capacitación
+
+Actas
+
+Listas de asistencia
+
+🧱 Estructura mínima
+Encabezado
+
+Campos de registro
+
+Fecha
+
+Responsable
+
+Firma
+
+🔹 No llevan introducción ni marco normativo.
+
+9️⃣ Informes
+📌 ¿Qué son?
+Documentos de análisis y resultados.
+
+🧾 Ejemplos
+Informe de Auditoría
+
+Informe de Accidentalidad
+
+Informe a la Alta Dirección
+
+Informe de Batería Psicosocial
+
+🧱 Estructura recomendada
+Introducción
+
+Objetivo
+
+Alcance
+
+Metodología
+
+Resultados
+
+Análisis
+
+Conclusiones
+
+Recomendaciones
+
+Anexos
+
+🔟 Documentos de apoyo
+Instructivos
+
+Guías
+
+Matrices (IPERC, Legal, Riesgos)
+
+Cronogramas
+
+🧠 Regla de oro para SG-SST
+No todos los documentos llevan introducción, glosario o metodología.
+La estructura depende del tipo de documento y su función en el sistema.
+
+Si quieres, en el siguiente paso puedo:
+
+Armar una tabla maestra tipo Excel con
+Tipo de documento | Nombre | Estructura | PHVA | Responsable
+
+O ayudarte a normalizar esto para tu aplicativo KPI / EnterpriseSST
+
+Tú me dices cómo seguimos.
+
+Dijiste:
+De acuerdo con la 1072 y 0312 has una tabla con cada numeral y los tipos de documentos correspondiente indicando si hacen parte de planear hacer verificar y actuar
+ChatGPT dijo:
+Perfecto, Sol. A continuación te dejo la tabla estructural que normalmente se usa en auditoría y control documental, alineada artículo por artículo del Decreto 1072 de 2015 y numeral por numeral de la Resolución 0312 de 2019, indicando:
+
+Numeral normativo
+
+Qué exige
+
+Tipo(s) de documento
+
+Ejemplos
+
+Fase PHVA
+
+⚠️ Nota técnica importante:
+La 0312 es un instrumento de verificación, no crea documentos nuevos; verifica que los exigidos por el 1072 existan, estén implementados y tengan evidencia.
+
+📊 TABLA MAESTRA – DOCUMENTOS SG-SST vs 1072 / 0312 / PHVA
+🔵 PLANEAR (P)
+Decreto 1072	Res. 0312	Exigencia	Tipo de documento	Ejemplos	PHVA
+Art. 2.2.4.6.5	2.1.1	Política SST	Política	Política de SST	P
+Art. 2.2.4.6.6	2.1.2	Objetivos SG-SST	Objetivos	Objetivos y metas SST	P
+Art. 2.2.4.6.7	2.1.3	Responsabilidades	Manual / Procedimiento	Manual SG-SST	P
+Art. 2.2.4.6.8	2.1.4	Recursos	Plan / Programa	Plan de recursos SG-SST	P
+Art. 2.2.4.6.12	2.3.1	Identificación de peligros	Matriz	IPERC / GTC 45	P
+Art. 2.2.4.6.13	2.3.2	Evaluación y control	Matriz / Programa	Programa de intervención	P
+Art. 2.2.4.6.15	2.4.1	Plan anual	Plan	Plan Anual de Trabajo	P
+Art. 2.2.4.6.16	2.4.2	Programa de capacitación	Programa	Programa anual de capacitación	P
+Art. 2.2.4.6.17	2.5.1	Documentación	Manual / Procedimiento	Procedimiento control documental	P
+🟢 HACER (H)
+Decreto 1072	Res. 0312	Exigencia	Tipo de documento	Ejemplos	PHVA
+Art. 2.2.4.6.19	3.1.1	Inducción y reinducción	Programa / Registros	Registro de capacitación	H
+Art. 2.2.4.6.20	3.1.2	Prevención y promoción	Programas	Medicina preventiva, PVE	H
+Art. 2.2.4.6.21	3.1.3	Comunicación	Procedimiento	Procedimiento comunicación SST	H
+Art. 2.2.4.6.22	3.1.4	Gestión del cambio	Procedimiento	Procedimiento gestión del cambio	H
+Art. 2.2.4.6.23	3.1.5	Adquisiciones	Procedimiento	Procedimiento compras seguras	H
+Art. 2.2.4.6.24	3.1.6	Contratistas	Procedimiento / Registros	Evaluación de contratistas	H
+Art. 2.2.4.6.25	3.2.1	Emergencias	Plan	Plan de Emergencias	H
+Art. 2.2.4.6.26	3.3.1	Vigilancia de la salud	Programa	PVE Psicosocial, Biomecánico	H
+🟡 VERIFICAR (V)
+Decreto 1072	Res. 0312	Exigencia	Tipo de documento	Ejemplos	PHVA
+Art. 2.2.4.6.28	4.1.1	Seguimiento	Registros / Indicadores	Indicadores SST	V
+Art. 2.2.4.6.29	4.1.2	Medición	Informes	Informe de indicadores	V
+Art. 2.2.4.6.30	4.2.1	Auditoría interna	Procedimiento / Informe	Auditoría SG-SST	V
+Art. 2.2.4.6.31	4.3.1	Revisión por la dirección	Informe	Informe Alta Dirección	V
+Art. 2.2.4.6.32	4.4.1	Investigación ATEL	Procedimiento / Informe	Investigación de accidentes	V
+🔴 ACTUAR (A)
+Decreto 1072	Res. 0312	Exigencia	Tipo de documento	Ejemplos	PHVA
+Art. 2.2.4.6.33	5.1.1	Acciones correctivas	Plan	Plan de mejoramiento	A
+Art. 2.2.4.6.34	5.1.2	Acciones preventivas	Plan	Plan preventivo	A
+Art. 2.2.4.6.35	5.1.3	Mejora continua	Informe / Plan	Mejora del SG-SST	A
+🧠 Lectura clave para auditoría
+Políticas y objetivos → siempre PLANEAR
+
+Programas y procedimientos → PLANEAR / HACER
+
+Registros → HACER
+
+Informes → VERIFICAR
+
+Planes de mejoramiento → ACTUAR
+
+💡 Esto te sirve directamente para:
+Normalizar control documental
+
+Mapear documentos en tu aplicativo KPI
+
+Construir dashboards PHVA
+
+Defender técnicamente una auditoría ARL o MinTrabajo
+
+Si quieres, en el siguiente paso puedo:
+
+Convertir esto en Excel descargable
+
+O ayudarte a definir estructura estándar por tipo de documento
+
+O mapearlo documento por documento de un cliente real
+
+Tú mandas.
+
+Dijiste:
+Muy incompleto y la asignación de responsable es del punto 1
+ChatGPT dijo:
+Perfecto, Sol. Tienes toda la razón 👍
+Vamos a corregir el enfoque y hacerlo técnicamente sólido, como corresponde a Decreto 1072 de 2015 + Resolución 0312 de 2019, sin atajos.
+
+Voy a hacer tres cosas claras:
+
+Aclarar el error conceptual (responsabilidades).
+
+Presentarte una tabla mucho más completa, organizada por numerales de la 0312, que es como se audita en la práctica.
+
+Asignar correctamente tipo de documento + PHVA, dejando claro qué es exigencia documental y qué es evidencia.
+
+1️⃣ Corrección clave (muy importante)
+👉 Tienes razón:
+La asignación de responsabilidades NO es transversal ni difusa.
+
+Normativamente:
+
+Decreto 1072 – Art. 2.2.4.6.8
+
+Resolución 0312 – Numeral 1 (Estándares Iniciales / PLANEAR)
+
+📌 Las responsabilidades pertenecen al PLANEAR, porque:
+
+Definen la estructura del sistema
+
+Son condición previa para ejecutar (H), verificar (V) o actuar (A)
+
+2️⃣ Tabla MAESTRA completa
+SG-SST – Resolución 0312 de 2019
+(con soporte en Decreto 1072 de 2015)
+
+Estructura pensada como checklist de auditoría real
+
+🟦 NUMERAL 1 – PLANEAR
+Recursos, responsabilidades y política
+0312	Exigencia	Soporte 1072	Tipo de documento	Documento típico	PHVA
+1.1.1	Responsable del SG-SST	Art. 2.2.4.6.8	Acto administrativo / Manual	Designación responsable SG-SST	P
+1.1.2	Asignación de responsabilidades	Art. 2.2.4.6.8	Manual / Procedimiento	Manual SG-SST	P
+1.1.3	Asignación de recursos	Art. 2.2.4.6.8	Plan	Plan de recursos	P
+1.2.1	Política SST	Art. 2.2.4.6.5	Política	Política SG-SST	P
+1.2.2	Comunicación de la política	Art. 2.2.4.6.5	Procedimiento / Registro	Socialización política	H
+1.3.1	Objetivos del SG-SST	Art. 2.2.4.6.6	Objetivos	Objetivos y metas SST	P
+🟦 NUMERAL 2 – PLANEAR
+Identificación de peligros y planificación
+0312	Exigencia	Soporte 1072	Tipo de documento	Documento típico	PHVA
+2.1.1	Identificación de peligros	Art. 2.2.4.6.12	Matriz	IPERC / GTC 45	P
+2.1.2	Evaluación y valoración	Art. 2.2.4.6.13	Matriz	Matriz de riesgos	P
+2.2.1	Plan anual de trabajo	Art. 2.2.4.6.15	Plan	Plan Anual SG-SST	P
+2.2.2	Programas de gestión	Art. 2.2.4.6.16	Programas	Programa capacitación, PVE	P
+2.3.1	Gestión documental	Art. 2.2.4.6.17	Procedimiento	Control documental	P
+🟩 NUMERAL 3 – HACER
+Gestión, prevención y control
+0312	Exigencia	Soporte 1072	Tipo de documento	Documento típico	PHVA
+3.1.1	Inducción y reinducción	Art. 2.2.4.6.19	Programa / Registro	Registros capacitación	H
+3.1.2	Capacitación	Art. 2.2.4.6.20	Programa	Programa anual	H
+3.1.3	Comunicación	Art. 2.2.4.6.21	Procedimiento	Comunicación SST	H
+3.1.4	Gestión del cambio	Art. 2.2.4.6.22	Procedimiento	Gestión del cambio	H
+3.1.5	Adquisiciones	Art. 2.2.4.6.23	Procedimiento	Compras seguras	H
+3.1.6	Contratistas	Art. 2.2.4.6.24	Procedimiento / Registros	Evaluación proveedores	H
+3.2.1	Emergencias	Art. 2.2.4.6.25	Plan	Plan de emergencias	H
+3.3.1	Vigilancia de la salud	Art. 2.2.4.6.26	Programa	PVE	H
+🟨 NUMERAL 4 – VERIFICAR
+Seguimiento, medición y evaluación
+0312	Exigencia	Soporte 1072	Tipo de documento	Documento típico	PHVA
+4.1.1	Indicadores	Art. 2.2.4.6.28	Indicadores / Registros	Fichas indicadores	V
+4.1.2	Medición y análisis	Art. 2.2.4.6.29	Informe	Informe indicadores	V
+4.2.1	Auditoría interna	Art. 2.2.4.6.30	Procedimiento / Informe	Auditoría SG-SST	V
+4.3.1	Revisión dirección	Art. 2.2.4.6.31	Informe	Informe Alta Dirección	V
+4.4.1	Investigación ATEL	Art. 2.2.4.6.32	Procedimiento / Informe	Investigación ATEL	V
+🟥 NUMERAL 5 – ACTUAR
+Mejora continua
+0312	Exigencia	Soporte 1072	Tipo de documento	Documento típico	PHVA
+5.1.1	Acciones correctivas	Art. 2.2.4.6.33	Plan	Plan de mejoramiento	A
+5.1.2	Acciones preventivas	Art. 2.2.4.6.34	Plan	Plan preventivo	A
+5.1.3	Mejora continua	Art. 2.2.4.6.35	Informe / Plan	Mejora SG-SST	A
+3️⃣ Conclusión técnica (clave para auditoría)
+Responsables y recursos → SOLO PLANEAR
+
+Programas nacen en P, se ejecutan en H
+
+Registros ≠ documentos normativos (son evidencia)
+
+0312 evalúa existencia, coherencia y ejecución, no “nombres bonitos”
+
+Si quieres, el siguiente paso puede ser:
+
+📊 Excel maestro descargable (lista para auditoría)
+
+🧩 Modelo de base de datos (tipo documento – numeral – PHVA)
+
+🧠 Mapa lógico para tu aplicativo KPI / EnterpriseSST
+
+📋 Checklist de auditoría ARL / MinTrabajo
+
+Dime cómo lo quieres y lo armamos al nivel Cycloid Talent.
+
+Dijiste:
+Hablemos ahora de lo que se exige de las versiones, modificaciones, aprobado es decir los recuadros que llevan los documentos que se elaboran bajo los principios y marco de las ISO y los sistemas de gestión de calidad 
+ChatGPT dijo:
+Perfecto, Sol. Entremos a control documental, que es donde muchísimos SG-SST fallan en auditoría, no por el contenido sino por la forma de controlar versiones, cambios y aprobaciones.
+
+Lo voy a explicar como lo hacen las ISO (9001, 45001), pero aterrizado a SG-SST colombiano, para que te sirva operativa y legalmente.
+
+📘 CONTROL DOCUMENTAL
+Versiones – Modificaciones – Aprobaciones
+(Enfoque ISO + Sistemas de Gestión)
+
+1️⃣ ¿POR QUÉ existen los recuadros de control documental?
+Porque los sistemas de gestión se basan en tres principios clave:
+
+Trazabilidad
+
+Control del cambio
+
+Autoridad y validez del documento
+
+👉 Un documento sin versión, sin aprobación o sin historial de cambios
+NO ES CONTROLABLE, aunque el contenido sea perfecto.
+
+2️⃣ ¿QUÉ exige ISO realmente? (sin mitos)
+Las normas ISO NO exigen formatos bonitos, exigen que se pueda demostrar que:
+
+El documento:
+
+está identificado
+
+está vigente
+
+fue aprobado
+
+tiene control de cambios
+
+No se use documentación obsoleta
+
+Esto está en:
+
+ISO 9001 – cl. 7.5
+
+ISO 45001 – cl. 7.5
+
+3️⃣ Recuadros OBLIGATORIOS en un documento controlado
+Un documento formal debe tener mínimo estos 5 bloques:
+
+🟦 1. Identificación del documento (encabezado)
+Campo	Para qué sirve
+Nombre del documento	Identificación clara
+Código	Evita duplicidad
+Sistema	SG-SST / SIG
+Proceso	SST / Talento Humano
+Fecha de emisión	Inicio de vigencia
+Versión	Control de cambios
+Estado	Vigente / Obsoleto
+📌 Sin código y versión → no hay control
+
+🟦 2. Bloque de elaboración, revisión y aprobación
+Este es crítico en auditoría.
+
+Rol	Significado
+Elaboró	Autor técnico
+Revisó	Validador técnico
+Aprobó	Autoridad del sistema
+🔑 Regla de oro
+El que aprueba NO es el mismo que elabora, salvo microempresas justificadas.
+
+📌 En SG-SST:
+
+Aprueba siempre la Alta Dirección o su delegado formal.
+
+🟦 3. Control de versiones
+Campo	Uso
+Versión	Numérica (1.0, 1.1, 2.0)
+Fecha	Fecha del cambio
+Motivo	Por qué se modificó
+Vigente	Sí / No
+Ejemplo correcto
+Versión	Fecha	Descripción del cambio
+1.0	01/01/2025	Creación inicial
+1.1	15/06/2025	Ajuste normativo
+2.0	01/01/2026	Revisión integral
+🟦 4. Historial de cambios (tabla de control)
+Este bloque NO es decorativo, es trazabilidad.
+
+Debe responder:
+
+¿Qué cambió?
+
+¿Por qué?
+
+¿Quién lo autorizó?
+
+📌 Muy útil cuando:
+
+Cambia normativa
+
+Cambia proceso
+
+Cambia responsable
+
+Cambia riesgo
+
+🟦 5. Pie de página de control
+Incluye:
+
+Código
+
+Versión
+
+Página X de Y
+
+Estado del documento
+
+📌 Evita impresiones parciales o manipuladas.
+
+4️⃣ ¿TODOS los documentos llevan TODO?
+❌ NO
+
+Matriz rápida:
+Tipo de documento	Control completo	Versión	Aprobación
+Política	✅	✅	✅
+Manual	✅	✅	✅
+Procedimiento	✅	✅	✅
+Programa	✅	✅	✅
+Plan	✅	✅	✅
+Informe	⚠️ Parcial	✅	⚠️
+Formato / Registro	❌	❌	❌
+📌 Los registros NO se versionan, se fechan.
+
+5️⃣ ¿CUÁNDO se cambia la versión?
+🔹 Cambio MENOR → subversión
+Ortografía
+
+Ajuste de redacción
+
+Cambio de responsable sin cambio de proceso
+➡️ 1.1 – 1.2 – 1.3
+
+🔹 Cambio MAYOR → versión nueva
+Cambio normativo
+
+Cambio de metodología
+
+Cambio de alcance
+
+Cambio de proceso
+➡️ 2.0 – 3.0
+
+6️⃣ ¿QUIÉN aprueba QUÉ en SG-SST?
+Documento	Aprueba
+Política	Representante legal
+Objetivos	Alta Dirección
+Manual SG-SST	Alta Dirección
+Procedimientos	Dirección / Responsable SG-SST
+Programas	Dirección / Responsable SG-SST
+Plan Anual	Dirección
+Informes	Responsable SG-SST
+Registros	No aplica
+📌 Esto NO es opcional, es coherencia del sistema.
+
+7️⃣ Error común en SG-SST (alerta auditoría 🚨)
+❌ Usar la misma plantilla de control para:
+
+Políticas
+
+Formatos
+
+Registros
+
+❌ Versionar actas o listas de asistencia
+
+❌ Documentos “vigentes” sin aprobación
+
+❌ Cambios sin historial
+
+8️⃣ Cómo se defiende esto en auditoría (frase clave)
+“La organización controla su información documentada garantizando identificación, trazabilidad, vigencia y autorización conforme a los principios de los sistemas de gestión.”
+
+9️⃣ Si quieres llevar esto a otro nivel
+Puedo ayudarte a:
+
+📄 Diseñar plantillas oficiales por tipo de documento
+
+🧠 Crear la lógica de versionado para tu aplicativo KPI
+
+📊 Armar una tabla maestra de control documental (tipo ISO)
+
+🧩 Definir qué documentos requieren aprobación legal y cuáles no
+
+Dime cuál de esos seguimos y lo hacemos sin improvisar, como debe ser.
+
+
+
+Dijiste:
+Conoces docuseal?
+ChatGPT dijo:
+Sí 👍, conozco DocuSeal.
+
+ es una plataforma de firma electrónica y gestión de documentos, muy usada como alternativa moderna a DocuSign o Adobe Sign, especialmente atractiva por su modelo open-source y autoalojable.
+
+
+https://www.docuseal.com/packs/static/images/resources/upload-signature-modal-19fd01cf7177ee533b87.jpg
+
+https://www.docuseal.com/packs/static/images/preview-d83dbbb0bcc083b72de2.png
+
+https://www.docuseal.com/packs/static/images/resources/signing-certificate-upload-242e1ba7d6343615775c.webp
+4
+¿Qué es DocuSeal?
+Es una herramienta que permite:
+
+Firmar documentos PDF en línea
+
+Enviar documentos a uno o varios firmantes
+
+Gestionar flujos de firma (orden, roles, estados)
+
+Almacenar evidencias de firma (audit trail)
+
+Características clave
+✍️ Firma electrónica simple y avanzada
+
+📄 Soporte nativo para PDF
+
+🔄 Flujos de firma secuenciales o paralelos
+
+📬 Invitación por correo electrónico
+
+🧾 Registro de auditoría (quién, cuándo, IP, estado)
+
+🖥️ Interfaz web limpia y moderna
+
+Lo que la hace muy atractiva
+🔓 Open source (puedes auditar el código)
+
+🏠 Auto-hosteable (ideal para servidores propios)
+
+💸 Mucho más económica que soluciones comerciales
+
+🔌 API disponible, perfecta para integrarla con sistemas propios
+
+Casos de uso muy comunes
+Contratos laborales
+
+Consentimientos informados
+
+Aprobaciones internas
+
+Acuerdos con proveedores
+
+Formularios firmados por clientes
+
+Si quieres, puedo ayudarte a:
+
+Compararla con DocuSign / Adobe Sign (tabla clara)
+
+Evaluar si sirve para SG-SST y soportes legales en Colombia
+
+Explicarte cómo instalarla en tu propio servidor
+
+Diseñar un flujo típico (ej. contrato → firma trabajador → firma empresa)
+
+Dime por dónde seguimos 👌
+
+Dijiste:
+Codeigniter 4 puede ser como un docuseal es decir puedo generar documentos y enviarlos para que un cliente los firme?
+ChatGPT dijo:
+Sí, CodeIgniter 4 puede quedar “tipo DocuSeal” en el sentido de: generar documentos + enviarlos + capturar firma + dejar evidencia.
+Pero ojo: CodeIgniter 4 no trae eso “listo”. CI4 es un framework, entonces tú construyes el módulo (o integras una herramienta ya hecha).
+
+Te dejo las rutas reales que tienes:
+
+Opción A: Construir tu propio “mini DocuSeal” en CI4
+Se puede, y para muchos casos de negocio funciona perfecto.
+
+1) Generar el documento
+Generas un PDF desde una plantilla (HTML → PDF).
+
+Guardas el PDF en tu servidor (y registras en BD: cliente, versión, hash, etc.).
+
+2) Enviar a firma
+Creas un link único (token) tipo:
+/firma/{token}
+
+Se lo mandas por correo al cliente (SendGrid, SMTP, etc.).
+
+En BD guardas: token, vencimiento, estado (pendiente/firmado/anulado), IP/UA, etc.
+
+3) Capturar la firma
+Hay 2 caminos:
+
+Firma dibujada (canvas): el cliente firma con el dedo o mouse.
+
+Firma “click-to-sign” (acepto + nombre + cédula + OTP): más simple y a veces más defendible si lo complementas con evidencia.
+
+Luego guardas:
+
+Imagen de la firma (PNG)
+
+Datos del firmante (nombre, documento, correo)
+
+Evidencias: fecha/hora, IP, user-agent, token, código OTP si usas.
+
+4) “Sellar” el PDF final
+Tienes 2 niveles:
+
+Nivel básico (muy común):
+
+Insertas la firma como imagen en el PDF y agregas un bloque de “Evidencias de firma” al final (audit trail).
+
+Generas un nuevo PDF “final” y lo bloqueas como solo lectura.
+
+Nivel pro (tipo DocuSeal/DocuSign):
+
+Usas firma digital/certificado (PAdES) para que Adobe Reader muestre “Firmado y válido”.
+
+Esto ya es otro mundo: requiere certificados, manejo criptográfico y normalmente integración con proveedor.
+
+✅ Con esto, CI4 sí puede funcionar como un DocuSeal “hecho a tu medida”.
+❗ Pero no es inmediato: hay que diseñar flujo, seguridad, auditoría y legal.
+
+Opción B: Integrar DocuSeal (o similar) con tu sistema CI4 (lo más recomendado)
+Aquí CI4 sería tu ERP/portal, pero la firma la hace DocuSeal.
+
+Flujo típico:
+
+En CI4 generas el PDF y lo subes a DocuSeal vía API.
+
+DocuSeal envía invitación y gestiona la firma.
+
+DocuSeal te devuelve el PDF firmado + auditoría.
+
+CI4 lo guarda en tu repositorio por cliente.
+
+✅ Ventajas:
+
+Lo tienes “tipo DocuSign” sin reinventar la rueda.
+
+Auditoría y flujo de firma ya vienen maduros.
+
+Menos riesgo técnico/legal.
+
+Opción C: Híbrida (lo que más usan empresas pequeñas/medianas)
+CI4 genera documento + link
+
+Capturas “aceptación” + OTP + checkboxes + evidencia
+
+Adjuntas la firma dibujada o un nombre tipeado
+
+Generas PDF final con “constancia de aceptación”
+
+✅ Rápida y útil para muchos contratos, consentimientos, autorizaciones, actas, etc.
+
+Puntos críticos (para que no se te vuelva un dolor de cabeza)
+Seguridad del link: token largo, expira, un solo uso, rate limit.
+
+Trazabilidad: fecha/hora, IP, agente, hash del documento original y final.
+
+Integridad: ideal guardar un hash (SHA-256) del PDF antes y después.
+
+Identidad del firmante: mínimo OTP al correo o SMS.
+
+Versionamiento: si cambias el documento, es una “nueva versión” y nueva firma.
+
+Recomendación práctica (para tu caso)
+Si esto va a ser comercial y recurrente (muchos clientes firmando documentos):
+➡️ Integrar DocuSeal (Opción B).
+
+Si es uso interno (pocos documentos, controlado, y quieres full control):
+➡️ Construir módulo propio (Opción A o C).

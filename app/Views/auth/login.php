@@ -521,10 +521,18 @@
     <div class="login-panel">
         <div class="login-header">
             <h2 class="login-title">Aplicativo Enterprisesst</h2>
-            <h4 class="login-subtitle">Inicio de Sesión Empresas</h4>
+            <h4 class="login-subtitle">Inicio de Sesión Propiedad Horizontal</h4>
         </div>
 
-        <!-- Mensaje de error original -->
+        <!-- Mensaje de éxito -->
+        <?php if (session()->getFlashdata('msg_success')): ?>
+            <div class="alert alert-dismissible fade show" role="alert" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.9), rgba(32, 134, 55, 0.9)); border: none; border-radius: 12px; color: white;">
+                <?= session()->getFlashdata('msg_success') ?>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
+        <!-- Mensaje de error -->
         <?php if (session()->getFlashdata('msg')): ?>
             <div class="alert alert-enhanced alert-dismissible fade show" role="alert">
                 <?= session()->getFlashdata('msg') ?>
@@ -544,17 +552,15 @@
                 <input type="password" name="password" id="password" class="form-control" placeholder="Ingrese su contraseña" required>
             </div>
 
-            <div class="form-group">
-                <label for="role" class="form-label">Rol</label>
-                <select name="role" id="role" class="form-select" required>
-                    <option value="client">Cliente</option>
-                    <option value="consultant">Consultor</option>
-                </select>
-            </div>
-
             <button type="submit" class="btn btn-dynamic w-100">
                 <span>Iniciar Sesión</span>
             </button>
+
+            <div class="text-center mt-3">
+                <a href="<?= base_url('/forgot-password') ?>" style="color: #bd9751; text-decoration: none; font-weight: 500; transition: color 0.3s;">
+                    ¿Olvidaste tu contraseña?
+                </a>
+            </div>
         </form>
 
         <div class="login-footer">

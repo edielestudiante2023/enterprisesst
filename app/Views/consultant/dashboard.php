@@ -491,6 +491,72 @@
             </div>
         </div>
 
+        <!-- Botones de Acceso Rápido -->
+        <div class="text-center mb-4">
+            <a href="<?= base_url('/quick-access') ?>" target="_blank" rel="noopener noreferrer">
+                <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary)); border: none;">
+                    <i class="fas fa-bolt me-2"></i>Acceso Rápido
+                </button>
+            </a>
+            <a href="<?= base_url('/admin/usage') ?>" rel="noopener noreferrer">
+                <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;">
+                    <i class="fas fa-chart-line me-2"></i>Consumo de Plataforma
+                </button>
+            </a>
+        </div>
+
+        <!-- Dashboards Analíticos -->
+        <div class="mb-5">
+            <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
+                <i class="fas fa-chart-bar me-2"></i>Dashboards Analíticos
+            </h4>
+            <div class="row justify-content-center">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="<?= base_url('consultant/dashboard-estandares') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                        <i class="fas fa-chart-pie fa-lg mb-2 d-block"></i>
+                        Estándares Mínimos
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="<?= base_url('consultant/dashboard-capacitaciones') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);">
+                        <i class="fas fa-graduation-cap fa-lg mb-2 d-block"></i>
+                        Capacitaciones
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="<?= base_url('consultant/dashboard-plan-trabajo') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);">
+                        <i class="fas fa-tasks fa-lg mb-2 d-block"></i>
+                        Plan de Trabajo
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="<?= base_url('consultant/dashboard-pendientes') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);">
+                        <i class="fas fa-clipboard-list fa-lg mb-2 d-block"></i>
+                        Pendientes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Herramientas de Gestión del Ciclo PHVA -->
+        <div class="mb-5">
+            <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
+                <i class="fas fa-sync-alt me-2"></i>Gestión del Ciclo PHVA
+            </h4>
+            <div class="row justify-content-center">
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <button type="button" class="btn w-100 py-3" data-bs-toggle="modal" data-bs-target="#resetPHVAModal" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);">
+                        <i class="fas fa-redo-alt fa-lg mb-2 d-block"></i>
+                        Resetear Ciclo PHVA - Evaluaciones
+                    </button>
+                </div>
+            </div>
+            <p class="text-center text-muted small mt-2">
+                <i class="fas fa-info-circle me-1"></i>
+                Resetea las evaluaciones de estándares mínimos que se renuevan anualmente según el Decreto 1072
+            </p>
+        </div>
+
         <!-- Tabla a pantalla completa -->
         <div class="table-container-custom">
             <div class="table-responsive">
@@ -625,6 +691,197 @@
                     });
                 }
 
+            });
+        });
+    </script>
+
+    <!-- Modal de Reseteo del Ciclo PHVA -->
+    <div class="modal fade" id="resetPHVAModal" tabindex="-1" aria-labelledby="resetPHVAModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="resetPHVAModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Resetear Ciclo PHVA
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Advertencia:</strong> Esta acción reseteará las evaluaciones de estándares mínimos que se renuevan cada año en el ciclo PHVA.
+                    </div>
+
+                    <p class="mb-3">Se pondrá en <strong>vacío</strong> la columna "Evaluación Inicial" y el puntaje cuantitativo en <strong>0</strong> para los siguientes items:</p>
+
+                    <div class="border rounded p-2 mb-3" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;">
+                        <ul class="mb-0 ps-3">
+                            <li>1.1.2 Responsabilidades en el SG-SST</li>
+                            <li>1.1.3 Asignación de recursos</li>
+                            <li>1.1.4 Afiliación al Sistema de Riesgos Laborales</li>
+                            <li>1.1.5 Identificación trabajadores alto riesgo</li>
+                            <li>1.1.6 Conformación COPASST</li>
+                            <li>1.1.7 Capacitación COPASST</li>
+                            <li>1.1.8 Conformación Comité de Convivencia</li>
+                            <li>1.2.1 Programa Capacitación PYP</li>
+                            <li>1.2.2 Inducción y Reinducción</li>
+                            <li>1.2.3 Responsables con curso 50 horas</li>
+                            <li>2.1.1 Política del SG-SST</li>
+                            <li>2.2.1 Objetivos del SG-SST</li>
+                            <li>2.4.1 Plan de trabajo anual</li>
+                            <li>2.5.1 Archivo documental</li>
+                            <li>2.9.1 Adquisición de productos</li>
+                            <li>2.10.1 Evaluación de proveedores</li>
+                            <li>3.1.1 Diagnóstico de Condiciones de Salud</li>
+                            <li>3.1.2 Actividades de Promoción y Prevención</li>
+                            <li>3.1.4 Evaluaciones médicas ocupacionales</li>
+                            <li>3.1.5 Custodia de Historias Clínicas</li>
+                            <li>3.1.6 Restricciones médico laborales</li>
+                            <li>3.1.7 Estilos de vida saludables</li>
+                            <li>3.1.8 Agua potable y servicios sanitarios</li>
+                            <li>3.1.9 Eliminación de residuos</li>
+                            <li>3.2.1 Reporte de AT y EL</li>
+                            <li>3.2.2 Investigación de Incidentes</li>
+                            <li>3.2.3 Registro estadístico</li>
+                            <li>3.3.6 Medición del ausentismo</li>
+                            <li>4.1.2 Identificación de peligros</li>
+                            <li>4.2.1 Medidas de prevención y control</li>
+                            <li>4.2.4 Inspecciones</li>
+                            <li>4.2.5 Mantenimiento periódico</li>
+                            <li>4.2.6 Entrega de EPP</li>
+                            <li>5.1.1 Plan de emergencias</li>
+                            <li>5.1.2 Brigada de prevención</li>
+                            <li>6.1.3 Revisión anual de la alta dirección</li>
+                            <li>7.1.1 Acciones preventivas y correctivas</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="clienteResetSelect" class="form-label"><strong>Seleccione el Cliente:</strong></label>
+                        <select class="form-select" id="clienteResetSelect" required>
+                            <option value="">Cargando clientes...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarReset">
+                        <i class="fas fa-redo-alt me-1"></i>Continuar con el Reseteo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación Final -->
+    <div class="modal fade" id="confirmResetModal" tabindex="-1" aria-labelledby="confirmResetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="confirmResetModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Reseteo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fas fa-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-danger">¿Está completamente seguro?</h4>
+                    <p class="mb-0">Esta acción <strong>NO SE PUEDE DESHACER</strong>.</p>
+                    <p class="mb-3">Se resetearán las evaluaciones del cliente:</p>
+                    <h5 id="clienteNombreConfirm" class="text-primary"></h5>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>No, Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger btn-lg" id="btnEjecutarReset">
+                        <i class="fas fa-check me-1"></i>Sí, Resetear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cargar clientes cuando se abre el modal
+        document.getElementById('resetPHVAModal').addEventListener('show.bs.modal', function() {
+            var select = document.getElementById('clienteResetSelect');
+            select.innerHTML = '<option value="">Cargando clientes...</option>';
+
+            fetch('<?= base_url('/api/getClientesParaReseteo') ?>')
+                .then(response => response.json())
+                .then(data => {
+                    select.innerHTML = '<option value="">Seleccione un cliente...</option>';
+                    data.forEach(function(cliente) {
+                        var option = document.createElement('option');
+                        option.value = cliente.id;
+                        option.textContent = cliente.nombre;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar clientes:', error);
+                    select.innerHTML = '<option value="">Error al cargar clientes</option>';
+                });
+        });
+
+        // Primera confirmación
+        document.getElementById('btnConfirmarReset').addEventListener('click', function() {
+            var select = document.getElementById('clienteResetSelect');
+            var clienteId = select.value;
+            var clienteNombre = select.options[select.selectedIndex].text;
+
+            if (!clienteId) {
+                alert('Por favor, seleccione un cliente.');
+                return;
+            }
+
+            // Cerrar primer modal y abrir segundo
+            var resetModal = bootstrap.Modal.getInstance(document.getElementById('resetPHVAModal'));
+            resetModal.hide();
+
+            document.getElementById('clienteNombreConfirm').textContent = clienteNombre;
+            document.getElementById('btnEjecutarReset').dataset.clienteId = clienteId;
+
+            var confirmModal = new bootstrap.Modal(document.getElementById('confirmResetModal'));
+            confirmModal.show();
+        });
+
+        // Ejecutar el reseteo
+        document.getElementById('btnEjecutarReset').addEventListener('click', function() {
+            var btn = this;
+            var clienteId = btn.dataset.clienteId;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Procesando...';
+
+            fetch('<?= base_url('/api/resetCicloPHVA') ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: 'id_cliente=' + encodeURIComponent(clienteId) + '&<?= csrf_token() ?>=<?= csrf_hash() ?>'
+            })
+            .then(response => response.json())
+            .then(data => {
+                var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmResetModal'));
+                confirmModal.hide();
+
+                if (data.success) {
+                    alert('Reseteo completado exitosamente.\n\n' + data.message);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud. Por favor, intente nuevamente.');
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check me-1"></i>Sí, Resetear';
             });
         });
     </script>

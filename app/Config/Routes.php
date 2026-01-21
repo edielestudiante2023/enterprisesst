@@ -525,3 +525,33 @@ $routes->post('api/getCronogramasAjax', 'CronogramaCapacitacionController::getCr
 
 $routes->post('api/recalcularConteoDias', 'PendientesController::recalcularConteoDias');
 $routes->get('api/getClientIndicators', 'EvaluationController::getClientIndicators');
+
+/* Rutas de Gestión de Usuarios: */
+
+
+$routes->get('/admin/users', 'UserController::index');
+$routes->get('/admin/users/add', 'UserController::addUser');
+$routes->post('/admin/users/add', 'UserController::addUserPost');
+$routes->get('/admin/users/edit/(:num)', 'UserController::editUser/$1');
+$routes->post('/admin/users/edit/(:num)', 'UserController::editUserPost/$1');
+$routes->get('/admin/users/delete/(:num)', 'UserController::deleteUser/$1');
+$routes->get('/admin/users/toggle/(:num)', 'UserController::toggleStatus/$1');
+$routes->get('/admin/users/reset-password/(:num)', 'UserController::resetPassword/$1');
+/* Ruta de cuenta bloqueada: */
+
+
+$routes->get('/auth/blocked', 'AuthController::blocked');
+/* Rutas de Consumo de Plataforma:
+ */
+
+$routes->get('/admin/usage', 'UsageController::index');
+$routes->get('/admin/usage/user/(:num)', 'UsageController::userDetail/$1');
+$routes->get('/admin/usage/export-csv', 'UsageController::exportCsv');
+$routes->get('/admin/usage/chart-data', 'UsageController::chartData');
+/* Rutas de Recuperación de Contraseña: */
+
+
+$routes->get('/forgot-password', 'AuthController::forgotPassword');
+$routes->post('/forgot-password', 'AuthController::forgotPasswordPost');
+$routes->get('/reset-password/(:any)', 'AuthController::resetPassword/$1');
+$routes->post('/reset-password/(:any)', 'AuthController::resetPasswordPost/$1');

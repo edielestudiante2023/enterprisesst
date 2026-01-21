@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Administración</title>
+    <title>Dashboard Administración PH</title>
     <!-- Favicon -->
     <link rel="icon" href="<?= base_url('favicon.ico') ?>" type="image/x-icon">
     <!-- Bootstrap CSS -->
@@ -611,8 +611,60 @@
             <!-- Banner de Bienvenida -->
             <div class="welcome-banner-custom">
                 <i class="fas fa-shield-alt fa-3x mb-3" style="color: var(--gold-secondary);"></i>
-                <h3><i class="fas fa-users-cog me-2"></i>Dashboard de Administración Empresarial</h3>
+                <h3><i class="fas fa-users-cog me-2"></i>Dashboard de Administración Propiedad Horizontal </h3>
                 <p><i class="fas fa-tools me-2"></i>Centro de Control - Gestión Avanzada de Procesos SST</p>
+            </div>
+
+            <!-- Botones de Acceso Rápido -->
+            <div class="text-center mb-4">
+                <a href="<?= base_url('/quick-access') ?>" target="_blank" rel="noopener noreferrer">
+                    <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary)); border: none;" aria-label="Acceso Rápido">
+                        <i class="fas fa-bolt me-2"></i>Acceso Rápido
+                    </button>
+                </a>
+                <a href="<?= base_url('/admin/users') ?>" rel="noopener noreferrer">
+                    <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none;" aria-label="Gestión de Usuarios">
+                        <i class="fas fa-users-cog me-2"></i>Gestión de Usuarios
+                    </button>
+                </a>
+                <a href="<?= base_url('/admin/usage') ?>" rel="noopener noreferrer">
+                    <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;" aria-label="Consumo de Plataforma">
+                        <i class="fas fa-chart-line me-2"></i>Consumo de Plataforma
+                    </button>
+                </a>
+            </div>
+
+            <!-- Dashboards Analíticos -->
+            <div class="mb-5">
+                <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
+                    <i class="fas fa-chart-bar me-2"></i>Dashboards Analíticos
+                </h4>
+                <div class="row justify-content-center">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="<?= base_url('consultant/dashboard-estandares') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); border-radius: 12px; transition: all 0.3s ease;">
+                            <i class="fas fa-chart-pie fa-lg mb-2 d-block"></i>
+                            Estándares Mínimos
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="<?= base_url('consultant/dashboard-capacitaciones') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3); border-radius: 12px; transition: all 0.3s ease;">
+                            <i class="fas fa-graduation-cap fa-lg mb-2 d-block"></i>
+                            Capacitaciones
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="<?= base_url('consultant/dashboard-plan-trabajo') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3); border-radius: 12px; transition: all 0.3s ease;">
+                            <i class="fas fa-tasks fa-lg mb-2 d-block"></i>
+                            Plan de Trabajo
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="<?= base_url('consultant/dashboard-pendientes') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3); border-radius: 12px; transition: all 0.3s ease;">
+                            <i class="fas fa-clipboard-list fa-lg mb-2 d-block"></i>
+                            Pendientes
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <!-- Card contenedor de tabla -->
