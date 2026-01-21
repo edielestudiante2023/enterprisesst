@@ -109,7 +109,7 @@ class SessionModel extends Model
             MAX(s.inicio_sesion) as ultima_sesion,
             COALESCE(AVG(s.duracion_segundos), 0) as promedio_duracion_segundos
         ');
-        $builder->join('tbl_sesiones_usuario s', 'u.id_usuario = s.id_usuario AND s.estado != "activa"', 'left');
+        $builder->join('tbl_sesiones_usuario s', "u.id_usuario = s.id_usuario AND s.estado != 'activa'", 'left');
 
         if ($fechaInicio) {
             $builder->where('s.inicio_sesion >=', $fechaInicio . ' 00:00:00');
