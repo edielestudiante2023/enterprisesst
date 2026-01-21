@@ -16,100 +16,130 @@
         }
 
         body {
-            background: linear-gradient(135deg, #bd9751 0%, #d4af37 25%, #f5f7fa 50%, #c3cfe2 75%, #bd9751 100%);
+            background: linear-gradient(to top, #0f0c29 0%, #302b63 30%, #24243e 50%, #4a3f6b 70%, #ff6b6b 85%, #ffc371 95%, #ffe259 100%);
             height: 100vh;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            animation: backgroundShift 15s ease-in-out infinite;
+            animation: backgroundShift 20s ease-in-out infinite;
         }
 
         @keyframes backgroundShift {
-            0%, 100% { 
-                background: linear-gradient(135deg, #bd9751 0%, #d4af37 25%, #f5f7fa 50%, #c3cfe2 75%, #bd9751 100%);
+            0%, 100% {
+                background: linear-gradient(to top, #0f0c29 0%, #302b63 30%, #24243e 50%, #4a3f6b 70%, #ff6b6b 85%, #ffc371 95%, #ffe259 100%);
             }
-            50% { 
-                background: linear-gradient(135deg, #d4af37 0%, #bd9751 25%, #c3cfe2 50%, #f5f7fa 75%, #d4af37 100%);
+            50% {
+                background: linear-gradient(to top, #1a1a2e 0%, #16213e 30%, #1f3a5f 50%, #5d4e7a 70%, #ff8e6b 85%, #ffd371 95%, #fff259 100%);
             }
         }
 
-        /* Partículas de fondo animadas */
+        /* Estrellas en el firmamento */
         .particles {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
+            height: 70%;
             pointer-events: none;
             z-index: 1;
         }
 
         .particle {
             position: absolute;
-            width: 6px;
-            height: 6px;
-            background: radial-gradient(circle, #d4af37, #bd9751);
+            width: 3px;
+            height: 3px;
+            background: #ffffff;
             border-radius: 50%;
-            animation: float 15s linear infinite;
-            box-shadow: 0 0 10px rgba(189, 151, 81, 0.5);
+            animation: twinkle 3s ease-in-out infinite;
+            box-shadow: 0 0 6px #ffffff, 0 0 12px rgba(255, 255, 255, 0.5);
         }
 
-        @keyframes float {
-            0% {
-                transform: translateY(100vh) rotate(0deg);
-                opacity: 0;
+        .particle.large {
+            width: 4px;
+            height: 4px;
+            box-shadow: 0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.7);
+        }
+
+        .particle.bright {
+            width: 5px;
+            height: 5px;
+            background: #fffacd;
+            box-shadow: 0 0 10px #fffacd, 0 0 20px rgba(255, 250, 205, 0.8), 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
             }
-            10% {
+            50% {
                 opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-100vh) rotate(360deg);
-                opacity: 0;
+                transform: scale(1.2);
             }
         }
 
-        /* Ondas de fondo animadas */
+        /* Horizonte del amanecer */
         .waves {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".4" fill="%23bd9751"/><path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".6" fill="%23d4af37"/><path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="%23bd9751"/></svg>') repeat-x;
-            background-size: 1200px 120px;
-            animation: wave 10s ease-in-out infinite alternate;
-            opacity: 0.35;
+            height: 35%;
+            background: linear-gradient(to top,
+                rgba(255, 140, 0, 0.4) 0%,
+                rgba(255, 99, 71, 0.3) 30%,
+                rgba(255, 165, 0, 0.2) 60%,
+                transparent 100%
+            );
             z-index: 1;
         }
 
-        @keyframes wave {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-200px); }
+        .waves::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at 50% 100%,
+                rgba(255, 200, 100, 0.5) 0%,
+                rgba(255, 140, 0, 0.3) 30%,
+                transparent 70%
+            );
+            animation: sunGlow 8s ease-in-out infinite;
+        }
+
+        @keyframes sunGlow {
+            0%, 100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
         }
 
         /* Container principal con glassmorphism */
         .main-container {
             position: relative;
             z-index: 10;
-            background: linear-gradient(145deg, 
-                rgba(255, 255, 255, 0.9) 0%, 
-                rgba(189, 151, 81, 0.1) 25%,
-                rgba(255, 255, 255, 0.95) 50%,
-                rgba(212, 175, 55, 0.1) 75%,
-                rgba(255, 255, 255, 0.9) 100%
+            background: linear-gradient(145deg,
+                rgba(255, 255, 255, 0.85) 0%,
+                rgba(255, 200, 150, 0.15) 25%,
+                rgba(255, 255, 255, 0.9) 50%,
+                rgba(255, 180, 100, 0.1) 75%,
+                rgba(255, 255, 255, 0.85) 100%
             );
             backdrop-filter: blur(25px);
             border-radius: 25px;
-            border: 2px solid rgba(189, 151, 81, 0.3);
-            box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(189, 151, 81, 0.2),
-                0 0 30px rgba(189, 151, 81, 0.15);
+            border: 2px solid rgba(255, 180, 100, 0.4);
+            box-shadow:
+                0 25px 50px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 200, 150, 0.3),
+                0 0 40px rgba(255, 140, 0, 0.2);
             overflow: hidden;
             max-width: 1000px;
             width: 90%;
@@ -131,10 +161,11 @@
 
         /* Panel de logos con efectos */
         .logos-panel {
-            background: linear-gradient(45deg, 
-                rgba(189, 151, 81, 0.95) 0%, 
-                rgba(212, 175, 55, 0.9) 50%,
-                rgba(28, 36, 55, 0.85) 100%
+            background: linear-gradient(45deg,
+                rgba(15, 12, 41, 0.95) 0%,
+                rgba(48, 43, 99, 0.9) 40%,
+                rgba(74, 63, 107, 0.85) 70%,
+                rgba(255, 140, 0, 0.6) 100%
             );
             width: 45%;
             display: flex;
@@ -153,11 +184,11 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, 
-                transparent, 
-                rgba(212, 175, 55, 0.3), 
+            background: linear-gradient(45deg,
                 transparent,
-                rgba(189, 151, 81, 0.2),
+                rgba(255, 200, 100, 0.2),
+                transparent,
+                rgba(255, 140, 0, 0.15),
                 transparent
             );
             animation: shimmer 4s infinite;
@@ -183,9 +214,9 @@
             padding: 15px;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 180, 100, 0.3);
             max-width: 200px;
-            border: 1px solid rgba(189, 151, 81, 0.3);
+            border: 1px solid rgba(255, 180, 100, 0.4);
         }
 
         .logo-image-wrapper:nth-child(2) {
@@ -226,12 +257,12 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.98) 0%,
-                rgba(189, 151, 81, 0.05) 25%,
-                rgba(255, 255, 255, 0.95) 50%,
-                rgba(212, 175, 55, 0.08) 75%,
-                rgba(255, 255, 255, 0.98) 100%
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.95) 0%,
+                rgba(255, 220, 180, 0.1) 25%,
+                rgba(255, 255, 255, 0.92) 50%,
+                rgba(255, 180, 100, 0.08) 75%,
+                rgba(255, 255, 255, 0.95) 100%
             );
             backdrop-filter: blur(15px);
             position: relative;
@@ -246,7 +277,7 @@
             bottom: 0;
             background: linear-gradient(45deg,
                 transparent 30%,
-                rgba(189, 151, 81, 0.03) 50%,
+                rgba(255, 180, 100, 0.05) 50%,
                 transparent 70%
             );
             pointer-events: none;
@@ -266,7 +297,7 @@
         .login-title {
             font-size: 2.2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #1c2437, #2c3e50);
+            background: linear-gradient(135deg, #302b63, #4a3f6b, #ff8c00);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
@@ -325,8 +356,8 @@
 
         .form-control:focus, .form-select:focus {
             background: #ffffff;
-            border-color: #bd9751;
-            box-shadow: 0 0 0 4px rgba(189, 151, 81, 0.3), 0 10px 25px rgba(189, 151, 81, 0.2);
+            border-color: #ff8c00;
+            box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.25), 0 10px 25px rgba(255, 140, 0, 0.15);
             transform: translateY(-2px);
         }
 
@@ -339,7 +370,7 @@
 
         /* Botón dinámico */
         .btn-dynamic {
-            background: linear-gradient(135deg, #1c2437, #2c3e50);
+            background: linear-gradient(135deg, #302b63, #4a3f6b, #ff8c00);
             border: none;
             border-radius: 12px;
             color: white;
@@ -381,8 +412,8 @@
 
         .btn-dynamic:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(28, 36, 55, 0.4);
-            background: linear-gradient(135deg, #2c3e50, #bd9751);
+            box-shadow: 0 15px 35px rgba(48, 43, 99, 0.5), 0 0 20px rgba(255, 140, 0, 0.3);
+            background: linear-gradient(135deg, #4a3f6b, #ff8c00, #ffc371);
         }
 
         .btn-dynamic:active {
@@ -412,11 +443,11 @@
         .alert-enhanced {
             border: none;
             border-radius: 12px;
-            background: linear-gradient(135deg, rgba(189, 151, 81, 0.9), rgba(212, 175, 55, 0.9));
+            background: linear-gradient(135deg, rgba(255, 140, 0, 0.9), rgba(255, 195, 113, 0.9));
             backdrop-filter: blur(10px);
-            border-left: 4px solid #bd9751;
+            border-left: 4px solid #ff8c00;
             animation: alertSlideIn 0.5s ease-out;
-            color: #1c2437;
+            color: #302b63;
         }
 
         @keyframes alertSlideIn {
@@ -457,7 +488,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            background: linear-gradient(to top, #0f0c29, #302b63, #24243e);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -468,8 +499,8 @@
         .loader {
             width: 60px;
             height: 60px;
-            border: 3px solid rgba(28, 36, 55, 0.3);
-            border-top: 3px solid #bd9751;
+            border: 3px solid rgba(255, 200, 150, 0.3);
+            border-top: 3px solid #ff8c00;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -521,7 +552,7 @@
     <div class="login-panel">
         <div class="login-header">
             <h2 class="login-title">Aplicativo Enterprisesst</h2>
-            <h4 class="login-subtitle">Inicio de Sesión Propiedad Horizontal</h4>
+            <h4 class="login-subtitle">Inicio de Sesión Empresas</h4>
         </div>
 
         <!-- Mensaje de éxito -->
@@ -549,7 +580,15 @@
 
             <div class="form-group">
                 <label for="password" class="form-label">Contraseña</label>
-                <input type="password" name="password" id="password" class="form-control" placeholder="Ingrese su contraseña" required>
+                <div class="position-relative">
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Ingrese su contraseña" required style="padding-right: 50px;">
+                    <button type="button" id="togglePassword" class="btn position-absolute" style="right: 5px; top: 50%; transform: translateY(-50%); border: none; background: transparent; color: #6c757d; padding: 5px 10px;">
+                        <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                            <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-dynamic w-100">
@@ -557,7 +596,7 @@
             </button>
 
             <div class="text-center mt-3">
-                <a href="<?= base_url('/forgot-password') ?>" style="color: #bd9751; text-decoration: none; font-weight: 500; transition: color 0.3s;">
+                <a href="<?= base_url('/forgot-password') ?>" style="color: #ff8c00; text-decoration: none; font-weight: 500; transition: color 0.3s;">
                     ¿Olvidaste tu contraseña?
                 </a>
             </div>
@@ -573,18 +612,30 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // Crear partículas animadas
+    // Crear estrellas en el firmamento
     function createParticles() {
         const particlesContainer = document.querySelector('.particles');
-        const numberOfParticles = 50;
+        const numberOfStars = 80;
 
-        for (let i = 0; i < numberOfParticles; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 15 + 's';
-            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-            particlesContainer.appendChild(particle);
+        for (let i = 0; i < numberOfStars; i++) {
+            const star = document.createElement('div');
+            const size = Math.random();
+
+            // Clasificar estrellas por tamaño
+            if (size > 0.9) {
+                star.className = 'particle bright';
+            } else if (size > 0.7) {
+                star.className = 'particle large';
+            } else {
+                star.className = 'particle';
+            }
+
+            // Posicionar en la parte superior (cielo nocturno)
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 60 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            particlesContainer.appendChild(star);
         }
     }
 
@@ -639,8 +690,8 @@
         inputs.forEach(input => {
             input.addEventListener('input', function() {
                 if (this.checkValidity()) {
-                    this.style.borderColor = '#bd9751';
-                    this.style.boxShadow = '0 0 0 2px rgba(189, 151, 81, 0.2)';
+                    this.style.borderColor = '#ff8c00';
+                    this.style.boxShadow = '0 0 0 2px rgba(255, 140, 0, 0.2)';
                 } else {
                     this.style.borderColor = '#e63939';
                     this.style.boxShadow = '0 0 0 2px rgba(230, 57, 57, 0.2)';
@@ -662,6 +713,22 @@
             const originalText = title.textContent;
             typeWriter(title, originalText, 150);
         }, 2500);
+    });
+
+    // Toggle mostrar/ocultar contraseña
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            // Icono de ojo tachado (ocultar)
+            eyeIcon.innerHTML = '<path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>';
+        } else {
+            passwordInput.type = 'password';
+            // Icono de ojo normal (mostrar)
+            eyeIcon.innerHTML = '<path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>';
+        }
     });
 
     // Efecto de envío del formulario
