@@ -555,3 +555,19 @@ $routes->get('/forgot-password', 'AuthController::forgotPassword');
 $routes->post('/forgot-password', 'AuthController::forgotPasswordPost');
 $routes->get('/reset-password/(:any)', 'AuthController::resetPassword/$1');
 $routes->post('/reset-password/(:any)', 'AuthController::resetPasswordPost/$1');
+
+// Cliente
+$routes->get('client/dashboard-estandares/(:num)', 'ClientDashboardEstandaresController::index/$1');
+
+// Consultor
+$routes->get('consultant/dashboard-estandares', 'ConsultantDashboardEstandaresController::index');
+
+// Cliente
+$routes->get('client/dashboard-pendientes/(:num)', 'ClientDashboardPendientesController::index/$1');
+$routes->get('client/dashboard-plan-trabajo/(:num)', 'ClientDashboardPlanTrabajoController::index/$1');
+$routes->get('client/dashboard-capacitaciones/(:num)', 'ClientDashboardCapacitacionesController::index/$1');
+
+// Consultor
+$routes->get('consultant/dashboard-pendientes', 'ConsultantDashboardPendientesController::index');
+$routes->get('consultant/dashboard-plan-trabajo', 'ConsultantDashboardPlanTrabajoController::index');
+$routes->get('consultant/dashboard-capacitaciones', 'ConsultantDashboardCapacitacionesController::index');
