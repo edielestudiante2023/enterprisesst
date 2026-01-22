@@ -23,6 +23,9 @@ class SessionTimeoutFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
+        // Asegurar zona horaria de Colombia
+        date_default_timezone_set('America/Bogota');
+
         $session = session();
 
         // Si no hay sesión activa, no hacer nada

@@ -27,6 +27,13 @@ class SessionModel extends Model
         'admin'      => 900,   // 15 minutos
     ];
 
+    public function __construct()
+    {
+        parent::__construct();
+        // Asegurar zona horaria de Colombia
+        date_default_timezone_set('America/Bogota');
+    }
+
     /**
      * Iniciar una nueva sesión para el usuario
      */

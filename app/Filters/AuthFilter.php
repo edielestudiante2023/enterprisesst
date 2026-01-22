@@ -19,6 +19,9 @@ class AuthFilter implements FilterInterface
 
     public function before(RequestInterface $request, $arguments = null)
     {
+        // Asegurar zona horaria de Colombia
+        date_default_timezone_set('America/Bogota');
+
         $session = session();
 
         if (!$session->get('isLoggedIn')) {
