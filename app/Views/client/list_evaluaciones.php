@@ -289,6 +289,7 @@
         .mini-indicator.success { border-top: 3px solid #28a745; }
         .mini-indicator.danger { border-top: 3px solid #dc3545; }
         .mini-indicator.warning { border-top: 3px solid #ffc107; }
+        .mini-indicator.secondary { border-top: 3px solid #6c757d; }
 
         .mini-indicator h6 {
             font-size: 0.75rem;
@@ -444,6 +445,10 @@
             <div class="mini-indicator warning">
                 <h6>No Aplica</h6>
                 <div class="value text-warning"><?= esc($count_no_aplica) ?></div>
+            </div>
+            <div class="mini-indicator secondary">
+                <h6>Sin Evaluar</h6>
+                <div class="value text-secondary"><?= esc($count_sin_evaluar ?? 0) ?></div>
             </div>
         </div>
 
