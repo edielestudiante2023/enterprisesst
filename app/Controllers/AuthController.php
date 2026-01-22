@@ -55,31 +55,34 @@ class AuthController extends Controller
             // Configurar sesión según tipo de usuario (detección automática)
             if ($tipoUsuario === 'client') {
                 $session->set([
-                    'user_id'    => $user['id_entidad'], // id_cliente para compatibilidad
-                    'id_usuario' => $user['id_usuario'],
-                    'id_sesion'  => $idSesion, // ID de la sesión para tracking
-                    'role'       => 'client',
-                    'isLoggedIn' => true
+                    'user_id'       => $user['id_entidad'], // id_cliente para compatibilidad
+                    'id_usuario'    => $user['id_usuario'],
+                    'id_sesion'     => $idSesion, // ID de la sesión para tracking
+                    'role'          => 'client',
+                    'isLoggedIn'    => true,
+                    'last_activity' => time() // Para control de inactividad
                 ]);
                 return redirect()->to('/dashboard');
 
             } elseif ($tipoUsuario === 'admin') {
                 $session->set([
-                    'user_id'    => $user['id_entidad'], // id_consultor para compatibilidad
-                    'id_usuario' => $user['id_usuario'],
-                    'id_sesion'  => $idSesion, // ID de la sesión para tracking
-                    'role'       => 'admin',
-                    'isLoggedIn' => true
+                    'user_id'       => $user['id_entidad'], // id_consultor para compatibilidad
+                    'id_usuario'    => $user['id_usuario'],
+                    'id_sesion'     => $idSesion, // ID de la sesión para tracking
+                    'role'          => 'admin',
+                    'isLoggedIn'    => true,
+                    'last_activity' => time() // Para control de inactividad
                 ]);
                 return redirect()->to('/admin/dashboard');
 
             } elseif ($tipoUsuario === 'consultant') {
                 $session->set([
-                    'user_id'    => $user['id_entidad'], // id_consultor para compatibilidad
-                    'id_usuario' => $user['id_usuario'],
-                    'id_sesion'  => $idSesion, // ID de la sesión para tracking
-                    'role'       => 'consultant',
-                    'isLoggedIn' => true
+                    'user_id'       => $user['id_entidad'], // id_consultor para compatibilidad
+                    'id_usuario'    => $user['id_usuario'],
+                    'id_sesion'     => $idSesion, // ID de la sesión para tracking
+                    'role'          => 'consultant',
+                    'isLoggedIn'    => true,
+                    'last_activity' => time() // Para control de inactividad
                 ]);
                 return redirect()->to('/consultor/dashboard');
             }

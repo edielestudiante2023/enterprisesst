@@ -187,6 +187,29 @@ class SessionModel extends Model
     }
 
     /**
+     * Cerrar sesión por timeout de inactividad
+     * Calcula la duración basándose en la última actividad registrada
+     */
+    public function cerrarSesionPorTimeout(int $idSesion, int $lastActivity): bool
+    {
+        $sesion = $this->find($idSesion);
+
+        if (!$sesion || $sesion['estado'] !== 'activa') {
+            return false;
+        }
+
+        // La duración es desde el inicio hasta la última actividad
+        $inicio = strtotime($sesion['inicio_sesion']);
+        $duracion = $lastActivity - $inicio;
+
+        return $this->update($idSesion, [
+            'fin_sesion' => date('Y-m-d H:i:s', $lastActivity),
+            'duracion_segundos' => max(0, $duracion),
+            'estado' => 'timeout'
+        ]);
+    }
+
+    /**
      * Marcar sesiones expiradas (para ejecutar periódicamente)
      * Sesiones activas por más de 8 horas se consideran expiradas
      */
