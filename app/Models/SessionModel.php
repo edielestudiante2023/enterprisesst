@@ -19,6 +19,15 @@ class SessionModel extends Model
     ];
 
     /**
+     * Timeouts por tipo de usuario (en segundos)
+     */
+    private const TIMEOUT_BY_ROLE = [
+        'client'     => 300,   // 5 minutos
+        'consultant' => 600,   // 10 minutos
+        'admin'      => 900,   // 15 minutos
+    ];
+
+    /**
      * Iniciar una nueva sesión para el usuario
      */
     public function iniciarSesion(int $idUsuario, ?string $ip = null, ?string $userAgent = null): int
@@ -210,26 +219,32 @@ class SessionModel extends Model
     }
 
     /**
-     * Marcar sesiones expiradas (para ejecutar periódicamente)
-     * Sesiones activas por más de 8 horas se consideran expiradas
+     * Marcar sesiones expiradas según el tipo de usuario
+     * Usa los timeouts configurados por rol
      */
     public function marcarSesionesExpiradas(): int
     {
-        $limite = date('Y-m-d H:i:s', strtotime('-8 hours'));
+        $builder = $this->db->table('tbl_sesiones_usuario s');
+        $builder->select('s.*, u.tipo_usuario');
+        $builder->join('tbl_usuarios u', 'u.id_usuario = s.id_usuario');
+        $builder->where('s.estado', 'activa');
 
-        $sesionesExpiradas = $this->where('estado', 'activa')
-                                  ->where('inicio_sesion <', $limite)
-                                  ->findAll();
-
+        $sesionesActivas = $builder->get()->getResultArray();
         $count = 0;
-        foreach ($sesionesExpiradas as $sesion) {
-            // Asumimos duración máxima de 8 horas para sesiones expiradas
-            $this->update($sesion['id_sesion'], [
-                'fin_sesion' => date('Y-m-d H:i:s', strtotime($sesion['inicio_sesion'] . ' +8 hours')),
-                'duracion_segundos' => 8 * 60 * 60, // 8 horas en segundos
-                'estado' => 'expirada'
-            ]);
-            $count++;
+        $ahora = time();
+
+        foreach ($sesionesActivas as $sesion) {
+            $timeout = self::TIMEOUT_BY_ROLE[$sesion['tipo_usuario']] ?? 600;
+            $inicioTimestamp = strtotime($sesion['inicio_sesion']);
+
+            if (($ahora - $inicioTimestamp) > $timeout) {
+                $this->update($sesion['id_sesion'], [
+                    'fin_sesion' => date('Y-m-d H:i:s', $inicioTimestamp + $timeout),
+                    'duracion_segundos' => $timeout,
+                    'estado' => 'expirada'
+                ]);
+                $count++;
+            }
         }
 
         return $count;
