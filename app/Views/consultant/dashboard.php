@@ -582,7 +582,7 @@
                         </tr>
                     </tfoot>
                     <tbody>
-                        <?php foreach ($items as $item): ?>
+                        <?php foreach ($items ?? [] as $item): ?>
                             <tr>
                                 <td><?= esc($item['id']) ?></td>
                                 <td><i class="fas fa-tag me-2 text-primary"></i><?= esc($item['tipo_proceso']) ?></td>
