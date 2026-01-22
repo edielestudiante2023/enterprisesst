@@ -7,321 +7,516 @@
     <title>Evaluación del Cliente</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <!-- DataTables Buttons CSS -->
-    <link href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* Configuración para ajustar ancho de columnas a 50 caracteres */
-        .styled-table thead th,
-        .styled-table tbody td,
-        .styled-table tfoot th {
-            max-width: 50ch;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Estilos personalizados adicionales */
         body {
-            background-color: #f9f9f9;
-            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        h2 {
-            color: #3A3F51;
+        /* Navbar */
+        .navbar-custom {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
         }
 
-        .card-title {
+        .navbar-custom img {
+            max-height: 50px;
+            width: auto;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-custom img {
+                max-height: 35px;
+            }
+            .navbar-custom .btn {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+            }
+        }
+
+        /* Header */
+        .header-section {
+            background: linear-gradient(135deg, #1c2437 0%, #2c3e50 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Indicadores */
+        .indicator-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            height: 100%;
+        }
+
+        .indicator-card.pink { border-left: 4px solid #e91e63; }
+        .indicator-card.cyan { border-left: 4px solid #00bcd4; }
+        .indicator-card.green { border-left: 4px solid #4caf50; }
+
+        .indicator-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1c2437;
+        }
+
+        .indicator-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        /* Estado Alert */
+        .estado-alert {
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        /* Botones de acción */
+        .btn-action {
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-volver {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            border: none;
+            color: white;
+        }
+
+        /* Acordeón PHVA - Nivel 1 */
+        .accordion-phva .accordion-item {
+            border: none;
+            margin-bottom: 0.5rem;
+            border-radius: 10px !important;
+            overflow: hidden;
+        }
+
+        .accordion-phva .accordion-button {
+            font-weight: 700;
             font-size: 1.1rem;
+            padding: 1rem 1.25rem;
+            border-radius: 10px !important;
+        }
+
+        .accordion-phva .accordion-button:not(.collapsed) {
+            color: white;
+            box-shadow: none;
+        }
+
+        .accordion-phva .accordion-button::after {
+            filter: brightness(0) invert(1);
+        }
+
+        .accordion-phva .accordion-button.collapsed::after {
+            filter: none;
+        }
+
+        .accordion-phva .accordion-body {
+            padding: 0.75rem;
+            background-color: #f8f9fa;
+        }
+
+        /* Colores PHVA */
+        .phva-planear .accordion-button { background-color: #e3f2fd; color: #1565c0; }
+        .phva-planear .accordion-button:not(.collapsed) { background-color: #1565c0; }
+
+        .phva-hacer .accordion-button { background-color: #e8f5e9; color: #2e7d32; }
+        .phva-hacer .accordion-button:not(.collapsed) { background-color: #2e7d32; }
+
+        .phva-verificar .accordion-button { background-color: #fff3e0; color: #ef6c00; }
+        .phva-verificar .accordion-button:not(.collapsed) { background-color: #ef6c00; }
+
+        .phva-actuar .accordion-button { background-color: #fce4ec; color: #c2185b; }
+        .phva-actuar .accordion-button:not(.collapsed) { background-color: #c2185b; }
+
+        /* Acordeón Estándar - Nivel 2 */
+        .accordion-estandar .accordion-item {
+            border: 1px solid #dee2e6;
+            margin-bottom: 0.25rem;
+        }
+
+        .accordion-estandar .accordion-button {
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.75rem 1rem;
+            background-color: white;
+        }
+
+        .accordion-estandar .accordion-button:not(.collapsed) {
+            background-color: #e9ecef;
+            color: #1c2437;
+        }
+
+        .accordion-estandar .accordion-body {
+            padding: 0;
+        }
+
+        /* Tabla dentro del acordeón */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-accordion {
+            margin-bottom: 0;
+            font-size: 0.85rem;
+        }
+
+        .table-accordion th {
+            background-color: #343a40;
+            color: white;
+            font-weight: 600;
+            white-space: nowrap;
+            padding: 0.5rem;
+            position: sticky;
+            top: 0;
+        }
+
+        .table-accordion td {
+            padding: 0.5rem;
+            vertical-align: middle;
+            max-width: 300px;
+        }
+
+        .table-accordion tr:hover {
+            background-color: #f1f3f4;
+        }
+
+        /* Badges */
+        .badge-cumple { background-color: #28a745; }
+        .badge-no-cumple { background-color: #dc3545; }
+        .badge-parcial { background-color: #ffc107; color: #212529; }
+        .badge-no-aplica { background-color: #17a2b8; }
+        .badge-sin-evaluar { background-color: #6c757d; }
+
+        /* Resumen en acordeón */
+        .accordion-summary {
+            font-size: 0.85rem;
+            font-weight: normal;
+            margin-left: auto;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .accordion-summary span {
+            background: rgba(255,255,255,0.3);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .estandar-summary {
+            font-size: 0.8rem;
+            font-weight: normal;
+            color: #6c757d;
+            margin-left: 0.5rem;
+        }
+
+        /* Filtros */
+        .filter-section {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        /* Indicadores pequeños */
+        .mini-indicators {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .mini-indicator {
+            background: white;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .mini-indicator.success { border-top: 3px solid #28a745; }
+        .mini-indicator.danger { border-top: 3px solid #dc3545; }
+        .mini-indicator.warning { border-top: 3px solid #ffc107; }
+
+        .mini-indicator h6 {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+
+        .mini-indicator .value {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        footer {
+            background: white;
+            border-top: 1px solid #dee2e6;
+            padding: 2rem 0;
+            margin-top: 2rem;
         }
 
         footer a {
-            color: #007BFF;
+            color: #007bff;
             text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
         }
 
         .social-icons img {
             height: 24px;
             width: 24px;
+            transition: transform 0.2s;
         }
 
-        /* Estilos para el navbar */
-        nav {
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        .social-icons img:hover {
+            transform: scale(1.2);
+        }
+
+        /* Sin resultados */
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Celda expandible */
+        .cell-expandable {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .cell-expandable:hover {
+            white-space: normal;
+            overflow: visible;
+            background: #fff;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
     </style>
 </head>
 
-<body class="bg-light">
+<body>
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Aplicando filtros...</p>
+        </div>
+    </div>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
-        <div class="container-fluid">
-            <!-- Logos -->
-            <div class="d-flex align-items-center">
-                <a href="https://dashboard.cycloidtalent.com/login" class="me-3">
-                    <img src="<?= base_url('uploads/logoenterprisesstblancoslogan.png') ?>" alt="Enterprisesst Logo" height="60">
+    <nav class="navbar-custom">
+        <div class="container-fluid d-flex justify-content-between align-items-center px-3">
+            <div class="d-flex align-items-center gap-2">
+                <a href="https://dashboard.cycloidtalent.com/login">
+                    <img src="<?= base_url('uploads/logoenterprisesstblancoslogan.png') ?>" alt="Enterprisesst">
                 </a>
-                <a href="https://cycloidtalent.com/index.php/consultoria-sst" class="me-3">
-                    <img src="<?= base_url('uploads/logosst.png') ?>" alt="SST Logo" height="60">
+                <a href="https://cycloidtalent.com/index.php/consultoria-sst">
+                    <img src="<?= base_url('uploads/logosst.png') ?>" alt="SST">
                 </a>
                 <a href="https://cycloidtalent.com/">
-                    <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Cycloids Logo" height="60">
+                    <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Cycloids">
                 </a>
             </div>
-
-            <!-- Botones Dashboard y Añadir Registro -->
-            <div class="ms-auto d-flex">
-                <div class="text-center me-3">
-                    <h6 class="mb-1" style="font-size: 16px;">Ir a Dashboard</h6>
-                    <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm">Ir a DashBoard</a>
-                </div>
-                <div class="text-center">
-                    <h6 class="mb-1" style="font-size: 16px;">Añadir Registro</h6>
-                    <a href="<?= base_url('/addEvaluacion') ?>" class="btn btn-success btn-sm" target="_blank">Añadir Registro</a>
-                </div>
+            <div class="d-flex gap-2">
+                <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="<?= base_url('/addEvaluacion') ?>" class="btn btn-success btn-sm" target="_blank">
+                    <i class="fas fa-plus"></i> Añadir
+                </a>
             </div>
         </div>
     </nav>
 
-    <!-- Espaciado para el navbar fijo -->
-    <div style="height: 150px;"></div>
+    <div style="height: 80px;"></div>
 
-    <div class="container my-5">
-        <h2 class="mb-4 text-dark">Evaluaciones del Cliente: <?= esc($client['nombre_cliente']) ?></h2>
-
-        <div class="text-end text-secondary mb-3">
-            <strong><?= date('d/m/Y') ?></strong>
-        </div>
-
-        <!-- Tarjetas de indicadores -->
-        <div class="row text-center mb-4">
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light h-100">
-                    <div class="card-body d-flex flex-column justify-content-center align-items-center" style="background-color: #FFE5EC;">
-                        <h5 class="card-title text-secondary">Suma de Puntuación Actual</h5>
-                        <p class="display-4 font-weight-bold"><?= esc($sum_puntaje_cuantitativo) ?></p>
-                    </div>
+    <div class="container-fluid px-3">
+        <!-- Header -->
+        <div class="header-section">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="mb-1"><i class="fas fa-clipboard-check"></i> Evaluación Estándares Mínimos</h4>
+                    <p class="mb-0">Cliente: <strong><?= esc($client['nombre_cliente']) ?></strong></p>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light h-100">
-                    <div class="card-body d-flex flex-column justify-content-center align-items-center" style="background-color: #E3FDFD;">
-                        <h5 class="card-title text-secondary">Puntuación Máxima del Sistema</h5>
-                        <p class="display-4 font-weight-bold"><?= esc($sum_valor) ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light h-100">
-                    <div class="card-body d-flex flex-column justify-content-center align-items-center" style="background-color: #E5FBB8;">
-                        <h5 class="card-title text-secondary">Indicador de Cumplimiento Decreto 1072 de 2015</h5>
-                        <p class="display-4 font-weight-bold"><?= number_format($indicador_general * 100, 0) ?>%</p>
-                    </div>
+                <div class="col-md-4 text-end">
+                    <div class="indicator-value text-warning"><?= number_format($indicador_general * 100, 0) ?>%</div>
+                    <small>Cumplimiento Decreto 1072</small>
                 </div>
             </div>
         </div>
 
+        <!-- Indicadores principales -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <div class="indicator-card pink">
+                    <div class="indicator-value"><?= esc($sum_valor) ?></div>
+                    <div class="indicator-label">Puntuación Actual</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="indicator-card cyan">
+                    <div class="indicator-value"><?= esc($sum_puntaje_cuantitativo) ?></div>
+                    <div class="indicator-label">Puntuación Máxima</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="indicator-card green">
+                    <div class="indicator-value"><?= number_format($indicador_general * 100, 0) ?>%</div>
+                    <div class="indicator-label">Indicador General</div>
+                </div>
+            </div>
+        </div>
 
-        <!-- Indicadores por categoría -->
-        <div class="row text-center mb-4">
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light bg-light-green">
-                    <div class="card-body bg-white">
-                        <h5 class="card-title text-success">Cumple Totalmente</h5>
-                        <p>Conteo: <?= esc($count_cumple) ?></p>
-                        <p>Puntaje: <?= esc($sum_puntaje_cumple) ?></p>
-                        <p>Valor: <?= esc($sum_valor_cumple) ?></p>
-                        <p>Indicador: <?= number_format($indicador_cumple, 2) ?></p>
-                    </div>
-                </div>
+        <!-- Mini indicadores por categoría -->
+        <div class="mini-indicators mb-3">
+            <div class="mini-indicator success">
+                <h6>Cumple</h6>
+                <div class="value text-success"><?= esc($count_cumple) ?></div>
             </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light bg-light-red">
-                    <div class="card-body bg-white">
-                        <h5 class="card-title text-danger">No Cumple</h5>
-                        <p>Conteo: <?= esc($count_no_cumple) ?></p>
-                        <p>Puntaje: <?= esc($sum_puntaje_no_cumple) ?></p>
-                        <p>Valor: <?= esc($sum_valor_no_cumple) ?></p>
-                        <p>Indicador: <?= number_format($indicador_no_cumple, 2) ?></p>
-                    </div>
-                </div>
+            <div class="mini-indicator danger">
+                <h6>No Cumple</h6>
+                <div class="value text-danger"><?= esc($count_no_cumple) ?></div>
             </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light bg-light-yellow">
-                    <div class="card-body bg-white">
-                        <h5 class="card-title text-warning">No Aplica</h5>
-                        <p>Conteo: <?= esc($count_no_aplica) ?></p>
-                        <p>Puntaje: <?= esc($sum_puntaje_no_aplica) ?></p>
-                        <p>Valor: <?= esc($sum_valor_no_aplica) ?></p>
-                        <p>Indicador: <?= number_format($indicador_no_aplica, 2) ?></p>
-                    </div>
-                </div>
+            <div class="mini-indicator warning">
+                <h6>No Aplica</h6>
+                <div class="value text-warning"><?= esc($count_no_aplica) ?></div>
             </div>
         </div>
 
         <!-- Estado del cliente -->
-        <div class="alert <?php if ($indicador_general < 0.6): ?>alert-danger<?php elseif ($indicador_general <= 0.85): ?>alert-warning<?php else: ?>alert-success<?php endif; ?> text-center" role="alert">
-            <h5 class="alert-heading">
-                Estado: <?php if ($indicador_general < 0.6): ?>CRÍTICO<?php elseif ($indicador_general <= 0.85): ?>MODERADAMENTE ACEPTABLE<?php else: ?>ACEPTABLE<?php endif; ?>
-            </h5>
-            <p><?php if ($indicador_general < 0.6): ?>
-                    Si el puntaje obtenido es menor al 60%, debe realizar un plan de mejoramiento inmediato.
-                <?php elseif ($indicador_general <= 0.85): ?>
-                    Si el puntaje obtenido está entre el 60% y 85%, debe realizar un plan de mejoramiento.
-                <?php else: ?>
-                    Si el puntaje obtenido es mayor a 85%, debe mantener la calificación y continuar mejorando.
-                <?php endif; ?>
-            </p>
-            <ol class="text-left mx-auto" style="max-width: 600px;">
-                <?php if ($indicador_general < 0.6): ?>
-                    <li>Realizar y tener a disposición del Ministerio del Trabajo un Plan de Mejoramiento de inmediato.</li>
-                    <li>Enviar a la ARL un reporte de avances dentro de tres (3) meses después de realizada la autoevaluación.</li>
-                    <li>Seguimiento anual y plan de visita a la empresa con valoración crítica, por parte del Ministerio del Trabajo.</li>
-                <?php elseif ($indicador_general <= 0.85): ?>
-                    <li>Realizar y tener a disposición del Ministerio del Trabajo un Plan de Mejoramiento.</li>
-                    <li>Enviar a la ARL un reporte de avances dentro de seis (6) meses después de realizada la autoevaluación.</li>
-                    <li>Plan de visita por parte del Ministerio del Trabajo.</li>
-                <?php else: ?>
-                    <li>Mantener la calificación y evidencias a disposición del Ministerio del Trabajo.</li>
-                    <li>Incluir en el Plan Anual de Trabajo las mejoras que se establezcan de acuerdo con la evaluación.</li>
-                <?php endif; ?>
-            </ol>
-        </div>
-
-        <!-- Botón para Exportar a Excel y Tabla de Evaluaciones -->
-        <div>
-            <!-- Botones de DataTables se insertarán aquí -->
-            <div class="d-flex justify-content-between mb-3">
-                <button id="clearState" class="btn btn-danger btn-sm">Restablecer Filtros</button>
-                <div id="buttonsContainer"></div>
-            </div>
-
-            <table id="evaluacionesTable" class="styled-table table table-striped table-bordered nowrap" style="width:100%">
-                <thead class="table-light">
-                    <tr>
-
-
-                        <th>Ciclo</th>
-                        <th>Estándar</th>
-                        <th>Detalle Estándar</th>
-                        <th>Item del Estándar</th>
-                        <th>Evaluación Inicial</th>
-                        <th>Valor</th>
-                        <th>Puntaje Cuantitativo</th>
-                        <th>Item</th>
-                        <th>Criterio</th>
-                        <th>Modo de Verificación</th>
-                        <th>Observaciones</th>
-                    </tr>
-                </thead>
-                <tfoot class="table-light">
-                    <tr class="filters">
-
-
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Ciclo">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Estándar">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Detalle Estándar">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Item del Estándar">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Evaluación Inicial">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Valor">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Puntaje Cuantitativo">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Item">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Criterio">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Modo de Verificación">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                        <th>
-                            <select class="form-select form-select-sm filter-select" aria-label="Filtro Observaciones">
-                                <option value="">Todos</option>
-                            </select>
-                        </th>
-                    </tr>
-                </tfoot>
-
-                <tbody>
-                    <?php if (!empty($evaluaciones) && is_array($evaluaciones)): ?>
-                        <?php foreach ($evaluaciones as $evaluacion): ?>
-                            <tr>
-
-
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['ciclo']); ?>"><?= esc($evaluacion['ciclo']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['estandar']); ?>"><?= esc($evaluacion['estandar']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['detalle_estandar']); ?>"><?= esc($evaluacion['detalle_estandar']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['item_del_estandar']); ?>"><?= esc($evaluacion['item_del_estandar']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['evaluacion_inicial']); ?>"><?= esc($evaluacion['evaluacion_inicial']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['valor']); ?>"><?= esc($evaluacion['valor']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['puntaje_cuantitativo']); ?>"><?= esc($evaluacion['puntaje_cuantitativo']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['item']); ?>"><?= esc($evaluacion['item']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['criterio']); ?>"><?= esc($evaluacion['criterio']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['modo_de_verificacion']); ?>"><?= esc($evaluacion['modo_de_verificacion']); ?></td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($evaluacion['observaciones']); ?>"><?= esc($evaluacion['observaciones']); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
+        <div class="alert estado-alert <?php if ($indicador_general < 0.6): ?>alert-danger<?php elseif ($indicador_general <= 0.85): ?>alert-warning<?php else: ?>alert-success<?php endif; ?> mb-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap">
+                <div>
+                    <strong>Estado: </strong>
+                    <?php if ($indicador_general < 0.6): ?>
+                        <span class="badge bg-danger">CRÍTICO</span> - Plan de mejoramiento inmediato requerido
+                    <?php elseif ($indicador_general <= 0.85): ?>
+                        <span class="badge bg-warning text-dark">MODERADO</span> - Plan de mejoramiento requerido
                     <?php else: ?>
-                        <tr>
-                            <td colspan="13" class="text-center">No hay evaluaciones para este cliente.</td>
-                        </tr>
+                        <span class="badge bg-success">ACEPTABLE</span> - Mantener y continuar mejorando
                     <?php endif; ?>
-                </tbody>
-            </table>
+                </div>
+            </div>
         </div>
 
+        <!-- Botones de acción y Filtros -->
+        <div class="row mb-3">
+            <div class="col-lg-8">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-action btn-volver">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                    <button class="btn btn-action btn-export" id="btnExportExcel">
+                        <i class="fas fa-file-excel"></i> Exportar Excel
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" id="btnExpandAll">
+                        <i class="fas fa-expand-alt"></i> Expandir
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" id="btnCollapseAll">
+                        <i class="fas fa-compress-alt"></i> Colapsar
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" id="filterPHVA">
+                        <option value="">Todos los ciclos</option>
+                    </select>
+                    <select class="form-select form-select-sm" id="filterCalificacion">
+                        <option value="">Todas las calificaciones</option>
+                    </select>
+                    <button class="btn btn-outline-danger btn-sm" id="btnClearFilters" title="Limpiar filtros">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acordeón principal por PHVA -->
+        <div class="accordion accordion-phva" id="accordionPHVA">
+            <!-- Se genera dinámicamente con JavaScript -->
+        </div>
+
+        <!-- Sin resultados -->
+        <div class="no-results" id="noResults" style="display: none;">
+            <i class="fas fa-search"></i>
+            <h5>No se encontraron resultados</h5>
+            <p>Intenta ajustar los filtros de búsqueda</p>
+        </div>
     </div>
 
     <!-- Footer -->
-    <footer class="bg-white py-4 border-top">
+    <footer>
         <div class="container text-center">
             <p class="fw-bold mb-1">Cycloid Talent SAS</p>
-            <p class="mb-1">Todos los derechos reservados © 2024</p>
-            <p class="mb-1">NIT: 901.653.912</p>
-            <p class="mb-3">
-                Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank">https://cycloidtalent.com/</a>
+            <p class="mb-1 small">Todos los derechos reservados © 2024 | NIT: 901.653.912</p>
+            <p class="mb-2 small">
+                <a href="https://cycloidtalent.com/" target="_blank">cycloidtalent.com</a>
             </p>
-            <p><strong>Nuestras Redes Sociales:</strong></p>
             <div class="social-icons d-flex justify-content-center gap-3">
                 <a href="https://www.facebook.com/CycloidTalent" target="_blank">
                     <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook">
@@ -329,130 +524,281 @@
                 <a href="https://co.linkedin.com/company/cycloid-talent" target="_blank">
                     <img src="https://cdn-icons-png.flaticon.com/512/733/733561.png" alt="LinkedIn">
                 </a>
-                <a href="https://www.instagram.com/cycloid_talent?igsh=Nmo4d2QwZDg5dHh0" target="_blank">
+                <a href="https://www.instagram.com/cycloid_talent" target="_blank">
                     <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram">
                 </a>
-                <a href="https://www.tiktok.com/@cycloid_talent?_t=8qBSOu0o1ZN&_r=1" target="_blank">
+                <a href="https://www.tiktok.com/@cycloid_talent" target="_blank">
                     <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok">
                 </a>
             </div>
         </div>
     </footer>
 
-
-    <!-- Scripts al final del body para mejor rendimiento -->
-    <!-- jQuery -->
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap Bundle (Incluye Popper.js) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <!-- DataTables Buttons JS -->
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
+        // Datos del servidor
+        const evaluaciones = <?= json_encode($evaluaciones) ?>;
+        const clientName = '<?= esc($client['nombre_cliente']) ?>';
+
+        // Orden PHVA
+        const phvaOrder = ['I. PLANEAR', 'II. HACER', 'III. VERIFICAR', 'IV. ACTUAR', 'PLANEAR', 'HACER', 'VERIFICAR', 'ACTUAR'];
+
+        // Colores PHVA
+        const phvaClasses = {
+            'I. PLANEAR': 'phva-planear',
+            'II. HACER': 'phva-hacer',
+            'III. VERIFICAR': 'phva-verificar',
+            'IV. ACTUAR': 'phva-actuar',
+            'PLANEAR': 'phva-planear',
+            'HACER': 'phva-hacer',
+            'VERIFICAR': 'phva-verificar',
+            'ACTUAR': 'phva-actuar'
+        };
+
         $(document).ready(function() {
-            // Inicializar DataTables con Buttons y Configuración de Filtros en <tfoot>
-            var table = $('#evaluacionesTable').DataTable({
-                stateSave: true, // Habilitar la persistencia del estado de la tabla
-                language: {
-                    url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
-                },
-                pagingType: "full_numbers",
-                responsive: true,
-                autoWidth: false,
-                dom: 'Bfltip', // Integrar Buttons en el DOM
-                buttons: [{
-                        extend: 'excelHtml5',
-                        text: 'Exportar a Excel',
-                        className: 'btn btn-success btn-sm'
-                    },
-                    {
-                        extend: 'colvis',
-                        text: 'Seleccionar Columnas',
-                        className: 'btn btn-secondary btn-sm'
-                    }
-                ],
-                initComplete: function() {
-                    var api = this.api();
+            populateFilters();
+            renderAccordion(evaluaciones);
 
-                    // Para cada columna, crear un filtro en el <tfoot>
-                    api.columns().every(function() {
-                        var column = this;
-                        var headerIndex = column.index();
-                        var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-select');
+            // Filtros
+            $('#filterPHVA, #filterCalificacion').on('change', applyFilters);
 
-                        if (filterElement.length && !filterElement.prop('disabled')) { // Solo si existe un filtro select y no está deshabilitado
-                            // Obtener los valores únicos de la columna
-                            column.data().unique().sort().each(function(d, j) {
-                                if (d) { // Evitar valores vacíos
-                                    // Verificar si la opción ya existe para evitar duplicados
-                                    if (filterElement.find('option[value="' + d + '"]').length === 0) {
-                                        filterElement.append('<option value="' + d + '">' + d + '</option>');
-                                    }
-                                }
-                            });
-
-                            // Restaurar el valor del filtro si existe en el estado guardado
-                            var search = column.search();
-                            if (search) {
-                                filterElement.val(search);
-                            }
-                        }
-                    });
-                }
+            // Limpiar filtros
+            $('#btnClearFilters').on('click', function() {
+                $('#filterPHVA, #filterCalificacion').val('');
+                applyFilters();
             });
 
-            // Colocar los botones de DataTables en el contenedor específico
-            table.buttons().container().appendTo('#buttonsContainer');
-
-            // Evento al cambiar cualquier filtro (select)
-            $('tfoot .filter-select').on('change', function() {
-                var columnIndex = $(this).closest('th').index();
-                var value = $(this).val();
-                table.column(columnIndex).search(value ? '^' + value + '$' : '', true, false).draw();
-            });
-
-            // Inicializar tooltips de Bootstrap 5
-            function initializeTooltips() {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.map(function(tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
+            // Expandir todo
+            $('#btnExpandAll').on('click', function() {
+                $('.accordion-button.collapsed').each(function() {
+                    $(this).click();
                 });
-            }
-
-            initializeTooltips(); // Inicializar al cargar la página
-
-            // Re-inicializar tooltips después de cada redibujado de la tabla
-            table.on('draw.dt', function() {
-                initializeTooltips();
             });
 
-            // Botón para borrar el estado y restablecer filtros
-            $('#clearState').on('click', function() {
-                // Construir la clave de localStorage utilizada por DataTables
-                var storageKey = 'DataTables_' + table.table().node().id + '_' + window.location.pathname;
-
-                // Borrar estado guardado en localStorage
-                localStorage.removeItem(storageKey);
-
-                // Limpiar estado en DataTables
-                table.state.clear();
-
-                // Restablecer todos los filtros a sus valores predeterminados
-                $('tfoot .filter-select').each(function() {
-                    $(this).val('');
+            // Colapsar todo
+            $('#btnCollapseAll').on('click', function() {
+                $('.accordion-button:not(.collapsed)').each(function() {
+                    $(this).click();
                 });
-
-                // Restablecer las búsquedas de las columnas y redibujar la tabla
-                table.columns().search('').draw();
             });
+
+            // Exportar Excel
+            $('#btnExportExcel').on('click', exportToExcel);
         });
+
+        function populateFilters() {
+            // Ciclos únicos
+            const ciclos = [...new Set(evaluaciones.map(e => e.ciclo).filter(Boolean))].sort((a, b) => {
+                return phvaOrder.indexOf(a) - phvaOrder.indexOf(b);
+            });
+            ciclos.forEach(c => {
+                $('#filterPHVA').append(`<option value="${c}">${c}</option>`);
+            });
+
+            // Calificaciones únicas
+            const califs = [...new Set(evaluaciones.map(e => e.evaluacion_inicial || 'SIN EVALUAR'))].sort();
+            califs.forEach(c => {
+                $('#filterCalificacion').append(`<option value="${c}">${c}</option>`);
+            });
+        }
+
+        function getCalificacionBadge(calificacion) {
+            const calif = calificacion || 'SIN EVALUAR';
+            let badgeClass = 'badge-sin-evaluar';
+
+            if (calif.includes('CUMPLE TOTALMENTE') || calif === 'CUMPLE') badgeClass = 'badge-cumple';
+            else if (calif.includes('NO CUMPLE')) badgeClass = 'badge-no-cumple';
+            else if (calif.includes('PARCIAL')) badgeClass = 'badge-parcial';
+            else if (calif.includes('NO APLICA')) badgeClass = 'badge-no-aplica';
+
+            return `<span class="badge ${badgeClass}">${calif}</span>`;
+        }
+
+        function renderAccordion(data) {
+            // Agrupar por Ciclo y luego por Estándar
+            const grouped = {};
+
+            data.forEach(item => {
+                const ciclo = item.ciclo || 'SIN CICLO';
+                const estandar = item.estandar || 'SIN ESTÁNDAR';
+
+                if (!grouped[ciclo]) grouped[ciclo] = {};
+                if (!grouped[ciclo][estandar]) grouped[ciclo][estandar] = [];
+
+                grouped[ciclo][estandar].push(item);
+            });
+
+            let html = '';
+            let phvaIndex = 0;
+
+            // Ordenar por PHVA
+            const sortedCiclos = Object.keys(grouped).sort((a, b) => {
+                const idxA = phvaOrder.findIndex(p => a.includes(p) || p.includes(a));
+                const idxB = phvaOrder.findIndex(p => b.includes(p) || p.includes(b));
+                return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+            });
+
+            sortedCiclos.forEach(ciclo => {
+                const estandares = grouped[ciclo];
+                const cicloClass = phvaClasses[ciclo] || 'phva-planear';
+
+                // Totales del ciclo
+                let cicloValor = 0, cicloPuntaje = 0, cicloItems = 0;
+                Object.values(estandares).forEach(items => {
+                    items.forEach(item => {
+                        cicloValor += parseFloat(item.valor || 0);
+                        cicloPuntaje += parseFloat(item.puntaje_cuantitativo || 0);
+                        cicloItems++;
+                    });
+                });
+
+                html += `
+                <div class="accordion-item ${cicloClass}">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#phva-${phvaIndex}">
+                            <i class="fas fa-layer-group me-2"></i> ${ciclo}
+                            <div class="accordion-summary">
+                                <span><i class="fas fa-list"></i> ${cicloItems}</span>
+                                <span><i class="fas fa-star"></i> ${cicloValor.toFixed(1)}/${cicloPuntaje.toFixed(1)}</span>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="phva-${phvaIndex}" class="accordion-collapse collapse" data-bs-parent="#accordionPHVA">
+                        <div class="accordion-body">
+                            <div class="accordion accordion-estandar" id="accordionEst-${phvaIndex}">
+                `;
+
+                let estIndex = 0;
+                Object.keys(estandares).sort().forEach(estandar => {
+                    const items = estandares[estandar];
+                    let estValor = 0, estPuntaje = 0;
+                    items.forEach(item => {
+                        estValor += parseFloat(item.valor || 0);
+                        estPuntaje += parseFloat(item.puntaje_cuantitativo || 0);
+                    });
+
+                    html += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#est-${phvaIndex}-${estIndex}">
+                                ${estandar}
+                                <span class="estandar-summary">(${items.length} | ${estValor.toFixed(1)}/${estPuntaje.toFixed(1)})</span>
+                            </button>
+                        </h2>
+                        <div id="est-${phvaIndex}-${estIndex}" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="table-wrapper">
+                                    <table class="table table-accordion table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Ítem</th>
+                                                <th>Detalle</th>
+                                                <th>Evaluación</th>
+                                                <th>Valor</th>
+                                                <th>Máx</th>
+                                                <th>Criterio</th>
+                                                <th>Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                    `;
+
+                    items.forEach(item => {
+                        html += `
+                            <tr>
+                                <td class="cell-expandable" title="${item.item_del_estandar || ''}">${item.item_del_estandar || '-'}</td>
+                                <td class="cell-expandable" title="${item.detalle_estandar || ''}">${item.detalle_estandar || '-'}</td>
+                                <td>${getCalificacionBadge(item.evaluacion_inicial)}</td>
+                                <td class="text-end">${parseFloat(item.valor || 0).toFixed(1)}</td>
+                                <td class="text-end">${parseFloat(item.puntaje_cuantitativo || 0).toFixed(1)}</td>
+                                <td class="cell-expandable" title="${item.criterio || ''}">${item.criterio || '-'}</td>
+                                <td class="cell-expandable" title="${item.observaciones || ''}">${item.observaciones || '-'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                    estIndex++;
+                });
+
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                phvaIndex++;
+            });
+
+            $('#accordionPHVA').html(html);
+
+            if (data.length === 0) {
+                $('#noResults').show();
+                $('#accordionPHVA').hide();
+            } else {
+                $('#noResults').hide();
+                $('#accordionPHVA').show();
+            }
+        }
+
+        function applyFilters() {
+            $('#loadingOverlay').addClass('show');
+
+            setTimeout(() => {
+                const filterPHVA = $('#filterPHVA').val();
+                const filterCalif = $('#filterCalificacion').val();
+
+                const filtered = evaluaciones.filter(item => {
+                    if (filterPHVA && item.ciclo !== filterPHVA) return false;
+                    const itemCalif = item.evaluacion_inicial || 'SIN EVALUAR';
+                    if (filterCalif && itemCalif !== filterCalif) return false;
+                    return true;
+                });
+
+                renderAccordion(filtered);
+                $('#loadingOverlay').removeClass('show');
+            }, 100);
+        }
+
+        function exportToExcel() {
+            const exportData = evaluaciones.map(item => ({
+                'Ciclo': item.ciclo || '',
+                'Estándar': item.estandar || '',
+                'Detalle Estándar': item.detalle_estandar || '',
+                'Ítem del Estándar': item.item_del_estandar || '',
+                'Evaluación Inicial': item.evaluacion_inicial || 'SIN EVALUAR',
+                'Valor': parseFloat(item.valor || 0),
+                'Puntaje Máximo': parseFloat(item.puntaje_cuantitativo || 0),
+                'Ítem': item.item || '',
+                'Criterio': item.criterio || '',
+                'Modo Verificación': item.modo_de_verificacion || '',
+                'Observaciones': item.observaciones || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Evaluaciones');
+
+            ws['!cols'] = [
+                { wch: 15 }, { wch: 35 }, { wch: 40 }, { wch: 45 },
+                { wch: 20 }, { wch: 10 }, { wch: 12 }, { wch: 10 },
+                { wch: 40 }, { wch: 30 }, { wch: 40 }
+            ];
+
+            const fileName = `Evaluacion_${clientName.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
     </script>
 </body>
 
