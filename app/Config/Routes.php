@@ -571,3 +571,47 @@ $routes->get('client/dashboard-capacitaciones/(:num)', 'ClientDashboardCapacitac
 $routes->get('consultant/dashboard-pendientes', 'ConsultantDashboardPendientesController::index');
 $routes->get('consultant/dashboard-plan-trabajo', 'ConsultantDashboardPlanTrabajoController::index');
 $routes->get('consultant/dashboard-capacitaciones', 'ConsultantDashboardCapacitacionesController::index');
+
+// Lista y alertas
+$routes->get('/contracts', 'ContractController::index');
+$routes->get('/contracts/alerts', 'ContractController::alerts');
+
+// Ver contrato
+$routes->get('/contracts/view/(:num)', 'ContractController::view/$1');
+
+// Crear contrato
+$routes->get('/contracts/create', 'ContractController::create');
+$routes->get('/contracts/create/(:num)', 'ContractController::create/$1');
+$routes->post('/contracts/store', 'ContractController::store');
+
+// Renovar contrato
+$routes->get('/contracts/renew/(:num)', 'ContractController::renew/$1');
+$routes->post('/contracts/process-renewal', 'ContractController::processRenewal');
+
+// Cancelar contrato
+$routes->get('/contracts/cancel/(:num)', 'ContractController::cancel/$1');
+$routes->post('/contracts/cancel/(:num)', 'ContractController::cancel/$1');
+
+// Historial de cliente
+$routes->get('/contracts/client-history/(:num)', 'ContractController::clientHistory/$1');
+
+// Mantenimiento
+$routes->get('/contracts/maintenance', 'ContractController::maintenance');
+
+// API
+$routes->get('/api/contracts/active/(:num)', 'ContractController::getActiveContract/$1');
+$routes->get('/api/contracts/stats', 'ContractController::getStats');
+
+// Editar datos y generar PDF
+$routes->get('/contracts/edit-contract-data/(:num)', 'ContractController::editContractData/$1');
+$routes->post('/contracts/save-and-generate/(:num)', 'ContractController::saveAndGeneratePDF/$1');
+$routes->get('/contracts/download-pdf/(:num)', 'ContractController::downloadPDF/$1');
+
+// Documentación por contrato
+$routes->get('/contracts/documentacion/(:num)', 'DocumentacionContratoController::previsualizarDocumentacion/$1');
+$routes->get('/contracts/descargar-documentacion/(:num)', 'DocumentacionContratoController::descargarDocumentacion/$1');
+$routes->get('/contracts/seleccionar-documentacion/(:num)', 'DocumentacionContratoController::seleccionarDocumentacion/$1');
+$routes->get('/contracts/filtrar-documentacion/(:num)', 'DocumentacionContratoController::filtrarDocumentacion/$1');
+$routes->get('/contracts/descargar-filtrado/(:num)', 'DocumentacionContratoController::descargarFiltrado/$1');
+$routes->get('/contracts/documentacion-cliente/(:num)', 'DocumentacionContratoController::seleccionarDocumentacion/$1');
+$routes->get('/contracts/descargar-documentacion-cliente/(:num)', 'DocumentacionContratoController::descargarPorCliente/$1');

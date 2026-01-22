@@ -212,6 +212,14 @@
                 <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm mt-2">Ir a Dashboard</a>
             </div>
 
+            <!-- Botón Centro - Gestión de Contratos -->
+            <div style="text-align: center;">
+                <h2 style="margin: 0; font-size: 16px;">Gestión de Contratos</h2>
+                <a href="<?= base_url('/contracts') ?>" class="btn btn-warning btn-sm mt-2" title="Ver historial y gestionar contratos">
+                    <i class="fas fa-file-contract"></i> Contratos
+                </a>
+            </div>
+
             <!-- Botón Derecho -->
             <div style="text-align: center;">
                 <h2 style="margin: 0; font-size: 16px;">Añadir Registro</h2>
@@ -319,6 +327,9 @@
                                     <div class="action-buttons">
                                         <a href="<?= base_url('/editClient/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar Cliente">
                                             <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="<?= base_url('/contracts/client-history/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Ver Historial de Contratos">
+                                            <i class="fas fa-file-contract"></i>
                                         </a>
                                         <a href="<?= base_url('/deleteClient/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este cliente?')" data-bs-toggle="tooltip" title="Eliminar Cliente">
                                             <i class="fas fa-trash"></i>

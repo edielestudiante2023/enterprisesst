@@ -5,6 +5,12 @@ namespace App\Controllers;
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
 use App\Models\ReporteModel;
+use App\Models\PlanModel;
+use App\Models\CronogcapacitacionModel;
+use App\Models\SimpleEvaluationModel;
+use App\Libraries\WorkPlanLibrary;
+use App\Libraries\TrainingLibrary;
+use App\Libraries\StandardsLibrary;
 use CodeIgniter\Controller;
 
 class ConsultantController extends Controller
@@ -86,6 +92,9 @@ class ConsultantController extends Controller
         ];
 
         if ($clientModel->save($data)) {
+            // Obtener el ID del cliente recién creado
+            $clientId = $clientModel->getInsertID();
+
             // Recuperar el NIT del cliente recién guardado
             $nitCliente = $this->request->getVar('nit_cliente');
 
@@ -96,7 +105,88 @@ class ConsultantController extends Controller
                 mkdir($uploadPath, 0777, true); // Crear la carpeta con permisos 0777
             }
 
-            session()->setFlashdata('msg', 'Cliente agregado exitosamente y carpeta creada.');
+            // Los documentos SST se consumen directamente desde DocumentLibrary (app/Libraries/DocumentLibrary.php)
+            // No se insertan registros en BD, todos los clientes leen de la misma librería estática
+
+            // Generar automáticamente el Plan de Trabajo Año 1
+            try {
+                $tipoServicio = strtolower($this->request->getVar('estandares'));
+                $workPlanLibrary = new WorkPlanLibrary();
+
+                // Obtener las actividades del Año 1 según el tipo de servicio
+                $activities = $workPlanLibrary->getActivities($clientId, 1, $tipoServicio);
+
+                // Insertar las actividades
+                if (!empty($activities)) {
+                    $planModel = new PlanModel();
+                    $insertedCount = 0;
+
+                    foreach ($activities as $activity) {
+                        if ($planModel->insert($activity)) {
+                            $insertedCount++;
+                        }
+                    }
+
+                    log_message('info', "Plan de Trabajo generado automáticamente para cliente ID {$clientId}: {$insertedCount} actividades insertadas");
+                }
+            } catch (\Exception $e) {
+                // Log del error pero no interrumpir el flujo
+                log_message('error', 'Error al generar Plan de Trabajo automático: ' . $e->getMessage());
+            }
+
+            // Generar automáticamente el Cronograma de Capacitaciones
+            try {
+                $tipoServicio = strtolower($this->request->getVar('estandares'));
+                $trainingLibrary = new TrainingLibrary();
+
+                // Obtener las capacitaciones según el tipo de servicio
+                $trainings = $trainingLibrary->getTrainings($clientId, $tipoServicio);
+
+                // Insertar las capacitaciones
+                if (!empty($trainings)) {
+                    $cronogModel = new CronogcapacitacionModel();
+                    $insertedCount = 0;
+
+                    foreach ($trainings as $training) {
+                        if ($cronogModel->insert($training)) {
+                            $insertedCount++;
+                        }
+                    }
+
+                    log_message('info', "Cronograma de Capacitaciones generado automáticamente para cliente ID {$clientId}: {$insertedCount} capacitaciones insertadas");
+                }
+            } catch (\Exception $e) {
+                // Log del error pero no interrumpir el flujo
+                log_message('error', 'Error al generar Cronograma de Capacitaciones automático: ' . $e->getMessage());
+            }
+
+            // Generar automáticamente los Estándares Mínimos
+            try {
+                $standardsLibrary = new StandardsLibrary();
+
+                // Obtener los estándares mínimos desde el CSV maestro
+                $standards = $standardsLibrary->getStandards($clientId);
+
+                // Insertar los estándares
+                if (!empty($standards)) {
+                    $evaluationModel = new SimpleEvaluationModel();
+                    $insertedCount = 0;
+
+                    foreach ($standards as $standard) {
+                        if ($evaluationModel->insert($standard)) {
+                            $insertedCount++;
+                        }
+                    }
+
+                    log_message('info', "Estándares Mínimos generados automáticamente para cliente ID {$clientId}: {$insertedCount} estándares insertados");
+                }
+            } catch (\Exception $e) {
+                // Log del error pero no interrumpir el flujo
+                log_message('error', 'Error al generar Estándares Mínimos automáticos: ' . $e->getMessage());
+            }
+
+            session()->setFlashdata('msg', 'Cliente agregado exitosamente.');
+
             return redirect()->to('/addClient');
         } else {
             session()->setFlashdata('msg', 'Error al agregar cliente');
