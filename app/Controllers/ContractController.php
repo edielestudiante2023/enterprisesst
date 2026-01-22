@@ -410,7 +410,7 @@ class ContractController extends Controller
         }
 
         // Obtener lista de consultores para el select
-        $consultorModel = new \App\Models\ConsultorModel();
+        $consultorModel = new \App\Models\ConsultantModel();
         $consultores = $consultorModel->findAll();
 
         $data = [
