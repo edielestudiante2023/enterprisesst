@@ -7,6 +7,7 @@ use App\Models\ClienteContextoSstModel;
 use App\Models\ClienteTransicionesModel;
 use App\Models\EstandarMinimoModel;
 use App\Models\ClientModel;
+use App\Services\EstandaresSetupService;
 use CodeIgniter\Controller;
 
 class EstandaresClienteController extends Controller
@@ -16,6 +17,7 @@ class EstandaresClienteController extends Controller
     protected $transicionesModel;
     protected $estandarModel;
     protected $clienteModel;
+    protected $setupService;
 
     public function __construct()
     {
@@ -24,10 +26,12 @@ class EstandaresClienteController extends Controller
         $this->transicionesModel = new ClienteTransicionesModel();
         $this->estandarModel = new EstandarMinimoModel();
         $this->clienteModel = new ClientModel();
+        $this->setupService = new EstandaresSetupService();
     }
 
     /**
      * Dashboard de cumplimiento de estándares
+     * Auto-configura tablas y datos si es necesario
      */
     public function index($idCliente)
     {
@@ -35,11 +39,25 @@ class EstandaresClienteController extends Controller
             return redirect()->to('/login');
         }
 
+        // Auto-configurar base de datos si es necesario
+        $setupResult = $this->setupService->verificarYConfigurar();
+
         $cliente = $this->clienteModel->find($idCliente);
+
+        if (!$cliente) {
+            return redirect()->to('/estandares')->with('error', 'Cliente no encontrado');
+        }
+
+        // Obtener contexto SST del cliente
         $contexto = $this->contextoModel->getByCliente($idCliente);
+
+        // Determinar nivel de estándares (por defecto 60)
+        $nivelEstandares = $contexto['estandares_aplicables'] ?? 60;
+
+        // Obtener estándares del cliente (si ya fueron inicializados)
         $estandares = $this->clienteEstandaresModel->getByClienteGroupedPHVA($idCliente);
         $resumen = $this->clienteEstandaresModel->getResumenCumplimiento($idCliente);
-        $cumplimientoPonderado = $this->clienteEstandaresModel->getCumplimientoPonderado($idCliente);
+        $cumplimientoPonderado = $this->getCumplimientoPonderadoSimple($idCliente);
         $transicionesPendientes = $this->transicionesModel->getPendientes($idCliente);
 
         return view('estandares/dashboard', [
@@ -48,8 +66,35 @@ class EstandaresClienteController extends Controller
             'estandares' => $estandares,
             'resumen' => $resumen,
             'cumplimientoPonderado' => $cumplimientoPonderado,
-            'transicionesPendientes' => $transicionesPendientes
+            'transicionesPendientes' => $transicionesPendientes,
+            'setupResult' => $setupResult
         ]);
+    }
+
+    /**
+     * Calcula cumplimiento ponderado sin depender de stored procedure
+     */
+    protected function getCumplimientoPonderadoSimple(int $idCliente): float
+    {
+        $db = \Config\Database::connect();
+
+        // Calcular usando query directo en lugar de SP
+        $query = $db->query("
+            SELECT
+                SUM(CASE WHEN ce.estado = 'cumple' THEN em.peso_porcentual ELSE 0 END) as peso_cumplido,
+                SUM(CASE WHEN ce.estado != 'no_aplica' THEN em.peso_porcentual ELSE 0 END) as peso_total
+            FROM tbl_cliente_estandares ce
+            JOIN tbl_estandares_minimos em ON em.id_estandar = ce.id_estandar
+            WHERE ce.id_cliente = ?
+        ", [$idCliente]);
+
+        $result = $query->getRowArray();
+
+        if ($result && $result['peso_total'] > 0) {
+            return round(($result['peso_cumplido'] / $result['peso_total']) * 100, 2);
+        }
+
+        return 0.0;
     }
 
     /**
@@ -87,37 +132,64 @@ class EstandaresClienteController extends Controller
     }
 
     /**
-     * Actualizar estado de cumplimiento (AJAX)
+     * Actualizar estado de cumplimiento (AJAX o POST)
      */
     public function actualizarEstado()
     {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(403);
-        }
-
-        $idCliente = $this->request->getPost('id_cliente');
-        $idEstandar = $this->request->getPost('id_estandar');
+        $idCliente = (int) $this->request->getPost('id_cliente');
+        $idEstandar = (int) $this->request->getPost('id_estandar');
         $estado = $this->request->getPost('estado');
         $observaciones = $this->request->getPost('observaciones');
+        $calificacionPost = $this->request->getPost('calificacion');
+        $fechaCumplimiento = $this->request->getPost('fecha_cumplimiento');
 
-        $resultado = $this->clienteEstandaresModel->actualizarEstado(
+        // Validar datos requeridos
+        if (!$idCliente || !$idEstandar || !$estado) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Datos incompletos: cliente=' . $idCliente . ', estandar=' . $idEstandar . ', estado=' . $estado
+                ]);
+            }
+            return redirect()->back()->with('error', 'Datos incompletos');
+        }
+
+        // Si no se envía calificación, calcularla automáticamente según Res. 0312/2019
+        if ($calificacionPost === null || $calificacionPost === '') {
+            $estandar = $this->estandarModel->find($idEstandar);
+            $pesoEstandar = (float) ($estandar['peso_porcentual'] ?? 0);
+            // Cumple o No Aplica = 100% del peso, otros = 0
+            $calificacion = ($estado === 'cumple' || $estado === 'no_aplica') ? $pesoEstandar : 0;
+        } else {
+            $calificacion = (float) $calificacionPost;
+        }
+
+        $resultado = $this->clienteEstandaresModel->actualizarEvaluacion(
             $idCliente,
             $idEstandar,
             $estado,
-            $observaciones
+            $observaciones,
+            $calificacion,
+            $fechaCumplimiento
         );
 
         if ($resultado) {
-            $resumen = $this->clienteEstandaresModel->getResumenCumplimiento($idCliente);
-
-            return $this->response->setJSON([
-                'success' => true,
-                'resumen' => $resumen,
-                'message' => 'Estado actualizado'
-            ]);
+            if ($this->request->isAJAX()) {
+                $resumen = $this->clienteEstandaresModel->getResumenCumplimiento($idCliente);
+                return $this->response->setJSON([
+                    'success' => true,
+                    'resumen' => $resumen,
+                    'calificacion' => $calificacion,
+                    'message' => 'Estado actualizado correctamente'
+                ]);
+            }
+            return redirect()->back()->with('success', 'Evaluación guardada correctamente');
         }
 
-        return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar']);
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al guardar la evaluación']);
+        }
+        return redirect()->back()->with('error', 'Error al guardar la evaluación');
     }
 
     /**
@@ -129,14 +201,19 @@ class EstandaresClienteController extends Controller
             return redirect()->to('/login');
         }
 
-        $resultado = $this->clienteEstandaresModel->inicializarParaCliente($idCliente);
+        // Obtener contexto para determinar nivel
+        $contexto = $this->contextoModel->getByCliente($idCliente);
+        $nivelEstandares = $contexto['estandares_aplicables'] ?? 60;
 
-        if (!empty($resultado)) {
+        // Usar el servicio de setup
+        $resultado = $this->setupService->inicializarEstandaresCliente($idCliente, $nivelEstandares);
+
+        if ($resultado['success']) {
             return redirect()->to("/estandares/{$idCliente}")
-                            ->with('success', "Estándares inicializados: {$resultado['total_registros']} registros");
+                            ->with('success', $resultado['mensaje']);
         }
 
-        return redirect()->back()->with('error', 'Error al inicializar estándares');
+        return redirect()->back()->with('error', $resultado['mensaje'] ?? 'Error al inicializar estándares');
     }
 
     /**
@@ -234,6 +311,7 @@ class EstandaresClienteController extends Controller
 
     /**
      * Catálogo de 60 estándares (vista de referencia)
+     * Auto-configura tablas y datos si es necesario
      */
     public function catalogo()
     {
@@ -241,10 +319,14 @@ class EstandaresClienteController extends Controller
             return redirect()->to('/login');
         }
 
+        // Auto-configurar base de datos si es necesario
+        $setupResult = $this->setupService->verificarYConfigurar();
+
         $estandaresAgrupados = $this->estandarModel->getGroupedByCategoria();
 
         return view('estandares/catalogo', [
-            'estandaresAgrupados' => $estandaresAgrupados
+            'estandaresAgrupados' => $estandaresAgrupados,
+            'setupResult' => $setupResult
         ]);
     }
 

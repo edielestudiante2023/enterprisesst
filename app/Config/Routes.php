@@ -619,6 +619,7 @@ $routes->get('/contracts/descargar-documentacion-cliente/(:num)', 'Documentacion
 /* *********************MÓDULO DOCUMENTACIÓN SST ****************************************/
 
 // Dashboard de documentación
+$routes->get('/documentacion/instructivo', 'DocumentacionController::instructivo');
 $routes->get('/documentacion', 'DocumentacionController::index');
 $routes->get('/documentacion/(:num)', 'DocumentacionController::index/$1');
 $routes->get('/documentacion/seleccionar-cliente', 'DocumentacionController::seleccionarCliente');

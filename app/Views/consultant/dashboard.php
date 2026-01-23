@@ -557,21 +557,15 @@
             </h4>
             <div class="row justify-content-center">
                 <div class="col-lg-2 col-md-4 mb-3">
+                    <a href="<?= base_url('documentacion/instructivo') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);">
+                        <i class="fas fa-book-reader fa-lg mb-2 d-block"></i>
+                        Instructivo SST
+                    </a>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-3">
                     <a href="<?= base_url('contexto') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
                         <i class="fas fa-cog fa-lg mb-2 d-block"></i>
                         Contexto Cliente
-                    </a>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-3">
-                    <a href="<?= base_url('estandares/catalogo') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);">
-                        <i class="fas fa-book fa-lg mb-2 d-block"></i>
-                        Catálogo 60 Estándares
-                    </a>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-3">
-                    <a href="<?= base_url('documentacion') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);">
-                        <i class="fas fa-file-alt fa-lg mb-2 d-block"></i>
-                        Documentación
                     </a>
                 </div>
                 <div class="col-lg-2 col-md-4 mb-3">
@@ -581,26 +575,24 @@
                     </a>
                 </div>
                 <div class="col-lg-2 col-md-4 mb-3">
+                    <a href="<?= base_url('documentacion') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);">
+                        <i class="fas fa-file-alt fa-lg mb-2 d-block"></i>
+                        Documentación
+                    </a>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-3">
                     <a href="<?= base_url('documentacion/plantillas') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #834d9b 0%, #d04ed6 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(131, 77, 155, 0.3);">
                         <i class="fas fa-magic fa-lg mb-2 d-block"></i>
                         Plantillas Documentos
                     </a>
                 </div>
-            </div>
-            <!-- Segunda fila de botones SST -->
-            <div class="row justify-content-center mt-2">
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <a href="<?= base_url('documentacion/seleccionar-cliente') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%); color: #1c2437; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 201, 255, 0.3);">
-                        <i class="fas fa-robot fa-lg mb-2 d-block"></i>
-                        <strong>Generador IA</strong>
-                        <small class="d-block" style="font-size: 0.7rem;">Crear documentos con IA</small>
+                <div class="col-lg-2 col-md-4 mb-3">
+                    <a href="<?= base_url('estandares/catalogo') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);">
+                        <i class="fas fa-book fa-lg mb-2 d-block"></i>
+                        Catálogo 60 Estándares
                     </a>
                 </div>
             </div>
-            <p class="text-center text-muted small mt-2">
-                <i class="fas fa-info-circle me-1"></i>
-                Generación automática de documentos SST con IA (GPT-4o-mini) siguiendo estructura PHVA según Resolución 0312 de 2019
-            </p>
         </div>
 
         <!-- Tabla a pantalla completa -->

@@ -18,7 +18,7 @@ class ClienteEstandaresModel extends Model
     protected $updatedField = 'updated_at';
 
     /**
-     * Obtiene estándares de un cliente con información completa
+     * Obtiene estándares de un cliente con información completa (solo aplicables)
      */
     public function getByClienteCompleto(int $idCliente): array
     {
@@ -38,11 +38,32 @@ class ClienteEstandaresModel extends Model
     }
 
     /**
-     * Obtiene estándares agrupados por ciclo PHVA
+     * Obtiene TODOS los estándares de un cliente (incluyendo no_aplica)
+     * Necesario para mostrar los 60 estándares y permitir filtro visual
+     */
+    public function getByClienteTodos(int $idCliente): array
+    {
+        return $this->select('tbl_cliente_estandares.*,
+                             tbl_estandares_minimos.ciclo_phva,
+                             tbl_estandares_minimos.categoria,
+                             tbl_estandares_minimos.categoria_nombre,
+                             tbl_estandares_minimos.item,
+                             tbl_estandares_minimos.nombre,
+                             tbl_estandares_minimos.peso_porcentual,
+                             tbl_estandares_minimos.documentos_sugeridos')
+                    ->join('tbl_estandares_minimos', 'tbl_estandares_minimos.id_estandar = tbl_cliente_estandares.id_estandar')
+                    ->where('tbl_cliente_estandares.id_cliente', $idCliente)
+                    ->orderBy('tbl_estandares_minimos.item', 'ASC')
+                    ->findAll();
+    }
+
+    /**
+     * Obtiene estándares agrupados por ciclo PHVA (TODOS, incluyendo no_aplica)
      */
     public function getByClienteGroupedPHVA(int $idCliente): array
     {
-        $estandares = $this->getByClienteCompleto($idCliente);
+        // Usar getByClienteTodos para incluir los no_aplica (filtro visual en frontend)
+        $estandares = $this->getByClienteTodos($idCliente);
 
         $grouped = [
             'PLANEAR' => [],
@@ -60,12 +81,12 @@ class ClienteEstandaresModel extends Model
 
     /**
      * Obtiene resumen de cumplimiento de un cliente
+     * Incluye conteo de no_aplica para referencia
      */
     public function getResumenCumplimiento(int $idCliente): array
     {
         $result = $this->select('estado, COUNT(*) as cantidad')
                        ->where('id_cliente', $idCliente)
-                       ->where('estado !=', 'no_aplica')
                        ->groupBy('estado')
                        ->findAll();
 
@@ -74,15 +95,22 @@ class ClienteEstandaresModel extends Model
             'en_proceso' => 0,
             'cumple' => 0,
             'no_cumple' => 0,
-            'total' => 0
+            'no_aplica' => 0,
+            'total' => 0,           // Total de aplicables (excluye no_aplica)
+            'total_general' => 0    // Total incluyendo no_aplica (60)
         ];
 
         foreach ($result as $row) {
             $resumen[$row['estado']] = (int) $row['cantidad'];
-            $resumen['total'] += (int) $row['cantidad'];
+            $resumen['total_general'] += (int) $row['cantidad'];
+
+            // Total solo cuenta los que aplican
+            if ($row['estado'] !== 'no_aplica') {
+                $resumen['total'] += (int) $row['cantidad'];
+            }
         }
 
-        // Calcular porcentaje
+        // Calcular porcentaje (solo sobre los que aplican)
         $resumen['porcentaje_cumplimiento'] = $resumen['total'] > 0
             ? round(($resumen['cumple'] / $resumen['total']) * 100, 2)
             : 0;
@@ -135,6 +163,39 @@ class ClienteEstandaresModel extends Model
 
         if ($observaciones !== null) {
             $data['observaciones'] = $observaciones;
+        }
+
+        return $this->where('id_cliente', $idCliente)
+                    ->where('id_estandar', $idEstandar)
+                    ->set($data)
+                    ->update();
+    }
+
+    /**
+     * Actualiza evaluación completa de un estándar (estado, calificación, observaciones)
+     */
+    public function actualizarEvaluacion(
+        int $idCliente,
+        int $idEstandar,
+        string $estado,
+        ?string $observaciones = null,
+        ?float $calificacion = null,
+        ?string $fechaCumplimiento = null
+    ): bool {
+        $data = ['estado' => $estado];
+
+        if ($observaciones !== null) {
+            $data['observaciones'] = $observaciones;
+        }
+
+        if ($calificacion !== null) {
+            $data['calificacion'] = $calificacion;
+        }
+
+        if ($fechaCumplimiento !== null) {
+            $data['fecha_cumplimiento'] = $fechaCumplimiento;
+        } elseif ($estado === 'cumple') {
+            $data['fecha_cumplimiento'] = date('Y-m-d');
         }
 
         return $this->where('id_cliente', $idCliente)

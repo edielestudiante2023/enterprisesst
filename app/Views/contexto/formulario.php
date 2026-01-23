@@ -418,12 +418,72 @@
                         </div>
                     </div>
 
-                    <!-- Seccion 6: Firmantes de Documentos -->
+                    <!-- Seccion 6: Contexto y Observaciones -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-journal-text text-primary me-2"></i>
+                                6. Contexto y Observaciones
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">
+                                Documente aqui informacion cualitativa importante que no aparece en los documentos formales pero es clave para entender la realidad de la empresa y generar documentos SST relevantes.
+                            </p>
+
+                            <div class="alert alert-light border mb-3">
+                                <h6 class="mb-2"><i class="bi bi-lightbulb me-2 text-warning"></i>Ejemplos de informacion util:</h6>
+                                <ul class="mb-0 small">
+                                    <li><strong>Operaciones reales:</strong> Actividades que se realizan pero no estan en la actividad economica formal</li>
+                                    <li><strong>Cultura de seguridad:</strong> Nivel de compromiso de la direccion y los trabajadores con el SST</li>
+                                    <li><strong>Exposicion a riesgos:</strong> Riesgos especificos observados en campo que no estan documentados</li>
+                                    <li><strong>Estructura informal:</strong> Como funciona realmente la organizacion vs el organigrama</li>
+                                    <li><strong>Contexto del sector:</strong> Particularidades del sector o region que afectan la seguridad</li>
+                                    <li><strong>Historial de incidentes:</strong> Accidentes o casi-accidentes relevantes no reportados</li>
+                                    <li><strong>Recursos disponibles:</strong> Limitaciones reales de presupuesto, tiempo o personal para SST</li>
+                                </ul>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Observaciones y Contexto de la Empresa</label>
+                                <textarea name="observaciones_contexto" class="form-control" rows="8"
+                                          placeholder="Describa aqui el contexto real de la empresa, observaciones de campo, cultura organizacional, riesgos no documentados, limitaciones, y cualquier informacion relevante para generar documentos SST personalizados..."
+                                ><?= esc($contexto['observaciones_contexto'] ?? '') ?></textarea>
+                                <small class="text-muted">
+                                    Esta informacion sera utilizada por la IA para generar documentos mas relevantes y especificos para la empresa.
+                                    <span class="text-info">Maximo 5000 caracteres.</span>
+                                </small>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light border-0">
+                                        <div class="card-body py-2">
+                                            <small class="text-muted d-block">Caracteres usados:</small>
+                                            <span id="contadorCaracteres" class="fw-bold">0</span> / 5000
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light border-0">
+                                        <div class="card-body py-2">
+                                            <small class="text-muted d-block">Ultima actualizacion:</small>
+                                            <span class="fw-bold">
+                                                <?= !empty($contexto['updated_at']) ? date('d/m/Y H:i', strtotime($contexto['updated_at'])) : 'Sin guardar' ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seccion 7: Firmantes de Documentos -->
                     <div class="card section-card mb-4 shadow-sm">
                         <div class="card-header bg-white">
                             <h5 class="mb-0">
                                 <i class="bi bi-pen text-primary me-2"></i>
-                                6. Firmantes de Documentos
+                                7. Firmantes de Documentos
                             </h5>
                         </div>
                         <div class="card-body">
@@ -618,7 +678,10 @@
                                     5. Peligros Identificados
                                 </a>
                                 <a href="#" class="list-group-item list-group-item-action py-2">
-                                    6. Firmantes de Documentos
+                                    6. Contexto y Observaciones
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action py-2">
+                                    7. Firmantes de Documentos
                                 </a>
                             </div>
                         </div>
@@ -758,6 +821,30 @@
                 container.innerHTML = '<span class="text-muted">Seleccione un consultor</span>';
             }
         });
+
+        // Contador de caracteres para observaciones
+        const textareaObservaciones = document.querySelector('textarea[name="observaciones_contexto"]');
+        const contadorCaracteres = document.getElementById('contadorCaracteres');
+
+        function actualizarContadorCaracteres() {
+            const length = textareaObservaciones.value.length;
+            contadorCaracteres.textContent = length;
+
+            if (length > 4500) {
+                contadorCaracteres.classList.add('text-danger');
+            } else if (length > 3500) {
+                contadorCaracteres.classList.remove('text-danger');
+                contadorCaracteres.classList.add('text-warning');
+            } else {
+                contadorCaracteres.classList.remove('text-danger', 'text-warning');
+            }
+        }
+
+        textareaObservaciones.addEventListener('input', actualizarContadorCaracteres);
+        textareaObservaciones.setAttribute('maxlength', '5000');
+
+        // Inicializar contador
+        actualizarContadorCaracteres();
     </script>
 </body>
 </html>

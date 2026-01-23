@@ -80,6 +80,18 @@ class DocumentacionController extends Controller
     }
 
     /**
+     * Instructivo del módulo de documentación SST
+     */
+    public function instructivo()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        return view('documentacion/instructivo');
+    }
+
+    /**
      * Catálogo de plantillas de documentos
      */
     public function plantillas()

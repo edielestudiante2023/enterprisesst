@@ -35,8 +35,17 @@ class ContextoClienteController extends Controller
             ->orderBy('nombre_cliente', 'ASC')
             ->findAll();
 
+        // Obtener el contexto SST de cada cliente
+        $clientesConContexto = [];
+        foreach ($clientes as $cliente) {
+            $contexto = $this->contextoModel->getByCliente($cliente['id_cliente']);
+            $cliente['contexto'] = $contexto;
+            $cliente['tiene_contexto'] = !empty($contexto);
+            $clientesConContexto[] = $cliente;
+        }
+
         return view('contexto/seleccionar_cliente', [
-            'clientes' => $clientes
+            'clientes' => $clientesConContexto
         ]);
     }
 
@@ -135,6 +144,8 @@ class ContextoClienteController extends Controller
             'tiene_comite_convivencia' => $this->request->getPost('tiene_comite_convivencia') ? 1 : 0,
             'tiene_brigada_emergencias' => $this->request->getPost('tiene_brigada_emergencias') ? 1 : 0,
             'peligros_identificados' => json_encode($this->request->getPost('peligros') ?? []),
+            // Contexto y observaciones (información cualitativa para IA)
+            'observaciones_contexto' => $this->request->getPost('observaciones_contexto'),
             // Firmantes de documentos
             'requiere_delegado_sst' => $this->request->getPost('requiere_delegado_sst') ? 1 : 0,
             'delegado_sst_nombre' => $this->request->getPost('delegado_sst_nombre'),
@@ -222,6 +233,7 @@ class ContextoClienteController extends Controller
                 'tiene_brigada' => (bool) ($contexto['tiene_brigada_emergencias'] ?? false)
             ],
             'peligros' => json_decode($contexto['peligros_identificados'] ?? '[]', true),
+            'observaciones_contexto' => $contexto['observaciones_contexto'] ?? '',
             'sedes' => array_map(function($sede) {
                 return [
                     'nombre' => $sede['nombre_sede'],
@@ -263,8 +275,7 @@ class ContextoClienteController extends Controller
             'valor_anterior' => $cambio['nivel_anterior'],
             'valor_nuevo' => $cambio['nivel_nuevo'],
             'impacto' => "Cambio de {$cambio['nivel_anterior']} a {$cambio['nivel_nuevo']} estándares aplicables",
-            'usuario_id' => session()->get('id_usuario'),
-            'fecha_cambio' => date('Y-m-d H:i:s')
+            'usuario_id' => session()->get('id_usuario')
         ]);
     }
 

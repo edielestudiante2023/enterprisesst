@@ -87,6 +87,9 @@ class IADocumentacionService
             }
         }
 
+        // Observaciones y contexto cualitativo
+        $observacionesContexto = $contexto['observaciones_contexto'] ?? '';
+
         // Construir prompt del sistema
         $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) en Colombia.
 Generas documentación técnica siguiendo las normas colombianas:
@@ -118,6 +121,13 @@ Reglas de redacción:
         if ($licenciaSst) $userPrompt .= " (Licencia: {$licenciaSst})";
         $userPrompt .= "\n";
         if ($peligros) $userPrompt .= "- Peligros identificados: {$peligros}\n";
+
+        // Agregar observaciones del contexto si existen
+        if (!empty($observacionesContexto)) {
+            $userPrompt .= "\nOBSERVACIONES Y CONTEXTO REAL DE LA EMPRESA:\n";
+            $userPrompt .= $observacionesContexto . "\n";
+            $userPrompt .= "(Usa esta información para hacer el documento más relevante y específico)\n";
+        }
 
         $userPrompt .= "\nDOCUMENTO A GENERAR:\n";
         $userPrompt .= "- Tipo: " . ($documento['tipo_nombre'] ?? 'Documento') . "\n";

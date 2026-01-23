@@ -15,7 +15,7 @@ class ClienteContextoSstModel extends Model
         'contratistas_permanentes', 'numero_sedes', 'turnos_trabajo',
         'id_consultor_responsable',
         'tiene_copasst', 'tiene_vigia_sst', 'tiene_comite_convivencia', 'tiene_brigada_emergencias',
-        'peligros_identificados', 'estandares_aplicables',
+        'peligros_identificados', 'observaciones_contexto', 'estandares_aplicables',
         // Campos de firmantes
         'requiere_delegado_sst',
         'delegado_sst_nombre', 'delegado_sst_cargo', 'delegado_sst_email', 'delegado_sst_cedula',

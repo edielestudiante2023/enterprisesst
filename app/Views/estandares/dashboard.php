@@ -52,10 +52,20 @@
         <!-- Alertas -->
         <?php if (session()->getFlashdata('success')): ?>
             <div class="alert alert-success alert-dismissible fade show">
+                <i class="bi bi-check-circle me-2"></i>
                 <?= session()->getFlashdata('success') ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
+
+        <?php if (session()->getFlashdata('error')): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <?= session()->getFlashdata('error') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
 
         <!-- Resumen General -->
         <div class="row mb-4">
@@ -65,49 +75,58 @@
                         <h6 class="text-muted mb-3">Cumplimiento General</h6>
                         <svg class="progress-ring" viewBox="0 0 150 150">
                             <circle cx="75" cy="75" r="70" fill="none" stroke="#E5E7EB" stroke-width="10"/>
-                            <circle class="progress-ring__circle" cx="75" cy="75" r="70" fill="none"
+                            <circle id="progressCircle" class="progress-ring__circle" cx="75" cy="75" r="70" fill="none"
                                     stroke="#10B981" stroke-width="10"
                                     style="stroke-dashoffset: <?= 440 - (440 * ($cumplimientoPonderado ?? 0) / 100) ?>"/>
                         </svg>
-                        <h2 class="mt-3 mb-0"><?= number_format($cumplimientoPonderado ?? 0, 1) ?>%</h2>
+                        <h2 id="porcentajeCumplimiento" class="mt-3 mb-0"><?= number_format($cumplimientoPonderado ?? 0, 1) ?>%</h2>
                         <small class="text-muted">Ponderado según pesos</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-8">
                 <div class="row h-100">
-                    <div class="col-md-3">
+                    <div class="col">
                         <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body text-center">
-                                <i class="bi bi-check-circle text-success fs-1"></i>
-                                <h3 class="mt-2 mb-0"><?= $resumen['cumple'] ?? 0 ?></h3>
+                            <div class="card-body text-center py-3">
+                                <i class="bi bi-check-circle text-success fs-2"></i>
+                                <h4 id="contadorCumple" class="mt-1 mb-0"><?= $resumen['cumple'] ?? 0 ?></h4>
                                 <small class="text-muted">Cumple</small>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col">
                         <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body text-center">
-                                <i class="bi bi-hourglass-split text-warning fs-1"></i>
-                                <h3 class="mt-2 mb-0"><?= $resumen['en_proceso'] ?? 0 ?></h3>
+                            <div class="card-body text-center py-3">
+                                <i class="bi bi-hourglass-split text-warning fs-2"></i>
+                                <h4 id="contadorEnProceso" class="mt-1 mb-0"><?= $resumen['en_proceso'] ?? 0 ?></h4>
                                 <small class="text-muted">En Proceso</small>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col">
                         <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body text-center">
-                                <i class="bi bi-x-circle text-danger fs-1"></i>
-                                <h3 class="mt-2 mb-0"><?= $resumen['no_cumple'] ?? 0 ?></h3>
+                            <div class="card-body text-center py-3">
+                                <i class="bi bi-x-circle text-danger fs-2"></i>
+                                <h4 id="contadorNoCumple" class="mt-1 mb-0"><?= $resumen['no_cumple'] ?? 0 ?></h4>
                                 <small class="text-muted">No Cumple</small>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col">
                         <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body text-center">
-                                <i class="bi bi-dash-circle text-secondary fs-1"></i>
-                                <h3 class="mt-2 mb-0"><?= $resumen['no_aplica'] ?? 0 ?></h3>
+                            <div class="card-body text-center py-3">
+                                <i class="bi bi-clock text-info fs-2"></i>
+                                <h4 id="contadorPendiente" class="mt-1 mb-0"><?= $resumen['pendiente'] ?? 0 ?></h4>
+                                <small class="text-muted">Pendiente</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card border-0 shadow-sm h-100 bg-light">
+                            <div class="card-body text-center py-3">
+                                <i class="bi bi-dash-circle text-secondary fs-2"></i>
+                                <h4 id="contadorNoAplica" class="mt-1 mb-0 text-secondary"><?= $resumen['no_aplica'] ?? 0 ?></h4>
                                 <small class="text-muted">No Aplica</small>
                             </div>
                         </div>
@@ -117,30 +136,40 @@
         </div>
 
         <!-- Contexto del Cliente -->
-        <?php if (!empty($contexto)): ?>
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Contexto SST del Cliente</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <strong>Trabajadores:</strong> <?= $contexto['numero_trabajadores'] ?? 'N/D' ?>
-                        </div>
-                        <div class="col-md-3">
-                            <strong>Nivel de Riesgo:</strong> <?= $contexto['nivel_riesgo'] ?? 'N/D' ?>
-                        </div>
-                        <div class="col-md-3">
-                            <strong>Nivel Estándares:</strong>
-                            <span class="badge bg-primary"><?= $contexto['nivel_estandares'] ?? 60 ?></span>
-                        </div>
-                        <div class="col-md-3">
-                            <strong>Actividad:</strong> <?= esc($contexto['actividad_economica'] ?? 'N/D') ?>
-                        </div>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Contexto SST del Cliente</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Trabajadores:</strong> <?= $contexto['total_trabajadores'] ?? 'N/D' ?>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Niveles de Riesgo:</strong>
+                        <?php
+                        $nivelesRiesgo = [];
+                        if (!empty($contexto['niveles_riesgo_arl'])) {
+                            $nivelesRiesgo = json_decode($contexto['niveles_riesgo_arl'], true) ?? [];
+                        }
+                        if (!empty($nivelesRiesgo)): ?>
+                            <?php foreach ($nivelesRiesgo as $nivel): ?>
+                                <span class="badge bg-warning text-dark"><?= esc($nivel) ?></span>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            N/D
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Nivel Estándares:</strong>
+                        <span class="badge bg-primary"><?= $contexto['estandares_aplicables'] ?? 60 ?></span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Actividad:</strong> <?= esc($contexto['sector_economico'] ?? 'N/D') ?>
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
+        </div>
 
         <!-- Transiciones Pendientes -->
         <?php if (!empty($transicionesPendientes)): ?>
@@ -152,15 +181,53 @@
             </div>
         <?php endif; ?>
 
+        <!-- Filtro de visualización -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-2">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="text-muted small">Mostrar:</span>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary active" id="btnMostrarAplicables" onclick="filtrarEstandares('aplicables')">
+                                <i class="bi bi-funnel me-1"></i>Solo aplicables
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="btnMostrarTodos" onclick="filtrarEstandares('todos')">
+                                <i class="bi bi-list me-1"></i>Ver todos (60)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-muted small">
+                        <span id="contadorVisible"><?= $resumen['total'] ?? 0 ?></span> estándares visibles
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Estándares por Ciclo PHVA -->
-        <?php if (empty($estandares)): ?>
+        <?php
+        $tieneEstandares = false;
+        foreach ($estandares as $items) {
+            if (!empty($items)) {
+                $tieneEstandares = true;
+                break;
+            }
+        }
+        ?>
+        <?php
+        $nivelEstCliente = $contexto['estandares_aplicables'] ?? 60;
+        ?>
+        <?php if (!$tieneEstandares): ?>
             <div class="card border-0 shadow-sm">
                 <div class="card-body text-center py-5">
                     <i class="bi bi-clipboard-x text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-3">No hay estándares inicializados para este cliente</p>
-                    <a href="/estandares/inicializar/<?= $cliente['id_cliente'] ?>" class="btn btn-primary">
-                        <i class="bi bi-plus-lg me-1"></i>Inicializar Estándares
-                    </a>
+                    <h5 class="text-muted mt-3">No hay estándares inicializados para este cliente</h5>
+                    <p class="text-muted small mb-4">
+                        Esta acción creará los estándares de la Resolución 0312/2019 según el nivel configurado.<br>
+                        <strong class="text-warning">Solo debe realizarse una vez al año o cuando ingresa un cliente nuevo.</strong>
+                    </p>
+                    <button type="button" class="btn btn-primary btn-lg" onclick="confirmarInicializacion()">
+                        <i class="bi bi-plus-lg me-1"></i>Inicializar Estándares del Cliente
+                    </button>
                 </div>
             </div>
         <?php else: ?>
@@ -193,8 +260,8 @@
                                 </thead>
                                 <tbody>
                                     <?php foreach ($items as $item): ?>
-                                        <tr>
-                                            <td><span class="badge bg-secondary"><?= $item['numero_estandar'] ?></span></td>
+                                        <tr class="estandar-row" data-estado="<?= $item['estado'] ?? 'pendiente' ?>">
+                                            <td><span class="badge bg-secondary"><?= $item['item'] ?? $item['numero_estandar'] ?? '' ?></span></td>
                                             <td>
                                                 <strong><?= esc($item['nombre']) ?></strong>
                                                 <?php if (!empty($item['observaciones'])): ?>
@@ -213,10 +280,10 @@
                                                 </select>
                                             </td>
                                             <td class="text-center">
-                                                <span class="badge bg-light text-dark"><?= $item['peso'] ?>%</span>
+                                                <span class="badge bg-light text-dark"><?= $item['peso_porcentual'] ?? $item['peso'] ?? 0 ?>%</span>
                                             </td>
                                             <td>
-                                                <a href="/estandares/<?= $cliente['id_cliente'] ?>/<?= $item['id_estandar'] ?>"
+                                                <a href="<?= base_url('estandares/detalle/' . $cliente['id_cliente'] . '/' . $item['id_estandar']) ?>"
                                                    class="btn btn-outline-primary btn-sm">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
@@ -234,14 +301,125 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Doble confirmación para inicializar estándares
+        function confirmarInicializacion() {
+            const nivelEstandares = <?= $contexto['estandares_aplicables'] ?? 60 ?>;
+            const primerConfirm = confirm(
+                '¿Está seguro de inicializar los estándares de la Resolución 0312/2019 para este cliente?\n\n' +
+                'Nivel configurado: ' + nivelEstandares + ' estándares aplicables\n\n' +
+                'Esta acción solo debe realizarse:\n' +
+                '• Una vez al año para la autoevaluación del SG-SST\n' +
+                '• Cuando ingresa un cliente nuevo al sistema'
+            );
+
+            if (primerConfirm) {
+                const segundoConfirm = confirm(
+                    'CONFIRMACIÓN FINAL\n\n' +
+                    '¿Confirma que desea crear los registros de estándares mínimos?\n\n' +
+                    'Se crearán ' + nivelEstandares + ' estándares aplicables según el contexto del cliente.'
+                );
+
+                if (segundoConfirm) {
+                    window.location.href = '<?= base_url("estandares/inicializar/" . $cliente['id_cliente']) ?>';
+                }
+            }
+        }
+
+        // Filtro de estándares (mostrar solo aplicables o todos)
+        let filtroActual = 'aplicables';
+
+        function filtrarEstandares(tipo) {
+            filtroActual = tipo;
+            const filas = document.querySelectorAll('.estandar-row');
+            const btnAplicables = document.getElementById('btnMostrarAplicables');
+            const btnTodos = document.getElementById('btnMostrarTodos');
+            const contador = document.getElementById('contadorVisible');
+
+            let visibles = 0;
+
+            filas.forEach(fila => {
+                const estado = fila.dataset.estado;
+                if (tipo === 'todos') {
+                    fila.style.display = '';
+                    visibles++;
+                } else {
+                    // Solo mostrar los que NO son 'no_aplica'
+                    if (estado === 'no_aplica') {
+                        fila.style.display = 'none';
+                    } else {
+                        fila.style.display = '';
+                        visibles++;
+                    }
+                }
+            });
+
+            // Actualizar botones
+            if (tipo === 'aplicables') {
+                btnAplicables.classList.add('active');
+                btnAplicables.classList.remove('btn-outline-primary');
+                btnAplicables.classList.add('btn-primary');
+                btnTodos.classList.remove('active', 'btn-secondary');
+                btnTodos.classList.add('btn-outline-secondary');
+            } else {
+                btnTodos.classList.add('active');
+                btnTodos.classList.remove('btn-outline-secondary');
+                btnTodos.classList.add('btn-secondary');
+                btnAplicables.classList.remove('active', 'btn-primary');
+                btnAplicables.classList.add('btn-outline-primary');
+            }
+
+            // Actualizar contador
+            contador.textContent = visibles;
+        }
+
+        // Aplicar filtro inicial (solo aplicables por defecto)
+        document.addEventListener('DOMContentLoaded', function() {
+            filtrarEstandares('aplicables');
+        });
+
+        // Función para actualizar los cards de resumen
+        function actualizarResumen(resumen) {
+            if (!resumen) return;
+
+            // Actualizar contadores
+            document.getElementById('contadorCumple').textContent = resumen.cumple || 0;
+            document.getElementById('contadorEnProceso').textContent = resumen.en_proceso || 0;
+            document.getElementById('contadorNoCumple').textContent = resumen.no_cumple || 0;
+            document.getElementById('contadorPendiente').textContent = resumen.pendiente || 0;
+            document.getElementById('contadorNoAplica').textContent = resumen.no_aplica || 0;
+
+            // Actualizar porcentaje de cumplimiento
+            const porcentaje = resumen.porcentaje_cumplimiento || 0;
+            document.getElementById('porcentajeCumplimiento').textContent = porcentaje.toFixed(1) + '%';
+
+            // Actualizar el círculo de progreso (stroke-dashoffset)
+            const circle = document.getElementById('progressCircle');
+            if (circle) {
+                const offset = 440 - (440 * porcentaje / 100);
+                circle.style.strokeDashoffset = offset;
+            }
+
+            // Actualizar contador de visibles
+            const contadorVisible = document.getElementById('contadorVisible');
+            if (contadorVisible) {
+                contadorVisible.textContent = resumen.total || 0;
+            }
+        }
+
         // Actualizar estado vía AJAX
         document.querySelectorAll('.estado-select').forEach(select => {
             select.addEventListener('change', function() {
                 const idEstandar = this.dataset.idEstandar;
                 const idCliente = this.dataset.idCliente;
                 const estado = this.value;
+                const fila = this.closest('.estandar-row');
+                const selectElement = this;
 
-                fetch('/estandares/actualizar-estado', {
+                // Mostrar indicador de carga
+                selectElement.classList.add('opacity-50');
+                selectElement.disabled = true;
+
+                fetch('<?= base_url("estandares/actualizar-estado") ?>', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -251,16 +429,37 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    selectElement.classList.remove('opacity-50');
+                    selectElement.disabled = false;
+
                     if (data.success) {
+                        // Actualizar el data-estado de la fila
+                        fila.dataset.estado = estado;
+
                         // Actualizar visualmente
-                        this.classList.add('is-valid');
-                        setTimeout(() => this.classList.remove('is-valid'), 2000);
+                        selectElement.classList.add('is-valid');
+                        setTimeout(() => selectElement.classList.remove('is-valid'), 2000);
+
+                        // Actualizar los cards de resumen con los datos del servidor
+                        if (data.resumen) {
+                            actualizarResumen(data.resumen);
+                        }
+
+                        // Re-aplicar filtro si está en modo "aplicables" y cambió a "no_aplica"
+                        if (filtroActual === 'aplicables' && estado === 'no_aplica') {
+                            filtrarEstandares('aplicables');
+                        }
                     } else {
                         alert(data.message || 'Error al actualizar');
+                        // Revertir el select al valor anterior
+                        location.reload();
                     }
                 })
                 .catch(error => {
+                    selectElement.classList.remove('opacity-50');
+                    selectElement.disabled = false;
                     console.error('Error:', error);
+                    alert('Error de conexión al guardar');
                 });
             });
         });

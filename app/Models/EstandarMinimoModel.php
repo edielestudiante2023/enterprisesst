@@ -9,7 +9,7 @@ class EstandarMinimoModel extends Model
     protected $primaryKey = 'id_estandar';
     protected $allowedFields = [
         'ciclo_phva', 'categoria', 'categoria_nombre', 'item', 'nombre',
-        'peso_porcentual', 'aplica_7', 'aplica_21', 'aplica_60',
+        'criterio', 'peso_porcentual', 'aplica_7', 'aplica_21', 'aplica_60',
         'documentos_sugeridos', 'activo'
     ];
 
