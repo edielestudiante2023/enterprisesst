@@ -615,6 +615,19 @@
                 <p><i class="fas fa-tools me-2"></i>Centro de Control - Gestión Avanzada de Procesos SST</p>
             </div>
 
+            <!-- Usuario en sesión -->
+            <?php if (isset($usuario) && $usuario): ?>
+            <div class="text-center mb-4">
+                <div class="d-inline-block px-4 py-2 rounded-pill" style="background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark)); box-shadow: 0 4px 15px rgba(28, 36, 55, 0.3);">
+                    <span class="text-white">
+                        <i class="fas fa-user-circle me-2"></i>
+                        <strong>Usuario:</strong> <?= esc($usuario['nombre_completo'] ?? $usuario['email']) ?>
+                        <span class="badge bg-warning text-dark ms-2"><?= ucfirst(esc($usuario['tipo_usuario'] ?? 'N/A')) ?></span>
+                    </span>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Botones de Acceso Rápido -->
             <div class="text-center mb-4">
                 <a href="<?= base_url('/quick-access') ?>" target="_blank" rel="noopener noreferrer">

@@ -529,7 +529,7 @@ $routes->get('api/getClientIndicators', 'EvaluationController::getClientIndicato
 /* Rutas de Gestión de Usuarios: */
 
 
-$routes->get('/admin/users', 'UserController::index');
+$routes->get('/admin/users', 'UserController::listUsers');
 $routes->get('/admin/users/add', 'UserController::addUser');
 $routes->post('/admin/users/add', 'UserController::addUserPost');
 $routes->get('/admin/users/edit/(:num)', 'UserController::editUser/$1');
@@ -615,3 +615,97 @@ $routes->get('/contracts/filtrar-documentacion/(:num)', 'DocumentacionContratoCo
 $routes->get('/contracts/descargar-filtrado/(:num)', 'DocumentacionContratoController::descargarFiltrado/$1');
 $routes->get('/contracts/documentacion-cliente/(:num)', 'DocumentacionContratoController::seleccionarDocumentacion/$1');
 $routes->get('/contracts/descargar-documentacion-cliente/(:num)', 'DocumentacionContratoController::descargarPorCliente/$1');
+
+/* *********************MÓDULO DOCUMENTACIÓN SST ****************************************/
+
+// Dashboard de documentación
+$routes->get('/documentacion', 'DocumentacionController::index');
+$routes->get('/documentacion/(:num)', 'DocumentacionController::index/$1');
+$routes->get('/documentacion/seleccionar-cliente', 'DocumentacionController::seleccionarCliente');
+$routes->get('/documentacion/carpeta/(:num)', 'DocumentacionController::carpeta/$1');
+$routes->get('/documentacion/documentos/(:num)', 'DocumentacionController::documentos/$1');
+$routes->get('/documentacion/ver/(:num)', 'DocumentacionController::verDocumento/$1');
+$routes->get('/documentacion/buscar/(:num)', 'DocumentacionController::buscar/$1');
+$routes->get('/documentacion/proximos-revision/(:num)', 'DocumentacionController::proximosRevision/$1');
+$routes->post('/documentacion/generar-estructura', 'DocumentacionController::generarEstructura');
+$routes->get('/documentacion/arbol-carpetas/(:num)', 'DocumentacionController::getArbolCarpetas/$1');
+
+// Generador de documentos
+$routes->get('/documentacion/nuevo/(:num)', 'GeneradorDocumentoController::nuevo/$1');
+$routes->post('/documentacion/configurar/(:num)', 'GeneradorDocumentoController::configurar/$1');
+$routes->get('/documentacion/configurar/(:num)', 'GeneradorDocumentoController::configurar/$1');
+$routes->post('/documentacion/crear/(:num)', 'GeneradorDocumentoController::crear/$1');
+$routes->get('/documentacion/editar/(:num)', 'GeneradorDocumentoController::editar/$1');
+$routes->get('/documentacion/editar-seccion/(:num)/(:num)', 'GeneradorDocumentoController::editarSeccion/$1/$2');
+$routes->post('/documentacion/guardar-seccion', 'GeneradorDocumentoController::guardarSeccion');
+$routes->post('/documentacion/aprobar-seccion', 'GeneradorDocumentoController::aprobarSeccion');
+$routes->post('/documentacion/generar-ia', 'GeneradorDocumentoController::generarConIA');
+$routes->get('/documentacion/vista-previa/(:num)', 'GeneradorDocumentoController::vistaPrevia/$1');
+$routes->post('/documentacion/finalizar/(:num)', 'GeneradorDocumentoController::finalizar/$1');
+$routes->get('/documentacion/plantillas', 'DocumentacionController::plantillas');
+
+// Estándares del cliente
+$routes->get('/estandares', 'EstandaresClienteController::seleccionarCliente');
+$routes->get('/estandares/seleccionar-cliente', 'EstandaresClienteController::seleccionarCliente');
+$routes->get('/estandares/(:num)', 'EstandaresClienteController::index/$1');
+$routes->get('/estandares/detalle/(:num)/(:num)', 'EstandaresClienteController::detalle/$1/$2');
+$routes->post('/estandares/actualizar-estado', 'EstandaresClienteController::actualizarEstado');
+$routes->get('/estandares/inicializar/(:num)', 'EstandaresClienteController::inicializar/$1');
+$routes->get('/estandares/transiciones/(:num)', 'EstandaresClienteController::transiciones/$1');
+$routes->post('/estandares/aplicar-transicion/(:num)', 'EstandaresClienteController::aplicarTransicion/$1');
+$routes->post('/estandares/detectar-cambio', 'EstandaresClienteController::detectarCambio');
+$routes->get('/estandares/pendientes/(:num)', 'EstandaresClienteController::pendientes/$1');
+$routes->get('/estandares/catalogo', 'EstandaresClienteController::catalogo');
+$routes->get('/estandares/exportar/(:num)', 'EstandaresClienteController::exportarReporte/$1');
+
+// Contexto SST del Cliente
+$routes->get('/contexto', 'ContextoClienteController::index');
+$routes->get('/contexto/(:num)', 'ContextoClienteController::ver/$1');
+$routes->post('/contexto/guardar', 'ContextoClienteController::guardar');
+$routes->get('/contexto/json/(:num)', 'ContextoClienteController::getContextoJson/$1');
+
+// Firma electrónica
+$routes->get('/firma/solicitar/(:num)', 'FirmaElectronicaController::solicitar/$1');
+$routes->post('/firma/crear-solicitud', 'FirmaElectronicaController::crearSolicitud');
+$routes->get('/firma/firmar/(:any)', 'FirmaElectronicaController::firmar/$1');
+$routes->post('/firma/procesar', 'FirmaElectronicaController::procesarFirma');
+$routes->get('/firma/confirmacion/(:any)', 'FirmaElectronicaController::confirmacion/$1');
+$routes->get('/firma/estado/(:num)', 'FirmaElectronicaController::estado/$1');
+$routes->post('/firma/reenviar/(:num)', 'FirmaElectronicaController::reenviar/$1');
+$routes->post('/firma/cancelar/(:num)', 'FirmaElectronicaController::cancelar/$1');
+$routes->get('/firma/audit-log/(:num)', 'FirmaElectronicaController::auditLog/$1');
+$routes->get('/firma/verificar/(:any)', 'FirmaElectronicaController::verificar/$1');
+$routes->post('/firma/firmar-interno/(:num)', 'FirmaElectronicaController::firmarInterno/$1');
+
+// Control Documental ISO - Versionamiento
+$routes->get('/control-documental/historial/(:num)', 'ControlDocumentalController::historial/$1');
+$routes->get('/control-documental/ver-version/(:num)', 'ControlDocumentalController::verVersion/$1');
+$routes->get('/control-documental/comparar/(:num)', 'ControlDocumentalController::comparar/$1');
+$routes->get('/control-documental/nueva-version/(:num)', 'ControlDocumentalController::nuevaVersion/$1');
+$routes->post('/control-documental/crear-version/(:num)', 'ControlDocumentalController::crearVersion/$1');
+$routes->get('/control-documental/restaurar/(:num)', 'ControlDocumentalController::restaurar/$1');
+$routes->post('/control-documental/marcar-obsoleto/(:num)', 'ControlDocumentalController::marcarObsoleto/$1');
+$routes->post('/control-documental/aprobar/(:num)', 'ControlDocumentalController::aprobar/$1');
+$routes->get('/control-documental/tabla-cambios/(:num)', 'ControlDocumentalController::tablaControlCambios/$1');
+$routes->get('/control-documental/encabezado/(:num)', 'ControlDocumentalController::generarEncabezado/$1');
+
+// Exportación de documentos
+$routes->get('/exportar/pdf/(:num)', 'ExportacionDocumentoController::pdf/$1');
+$routes->get('/exportar/pdf-borrador/(:num)', 'ExportacionDocumentoController::pdfBorrador/$1');
+$routes->get('/exportar/word/(:num)', 'ExportacionDocumentoController::word/$1');
+$routes->get('/exportar/zip/(:num)', 'ExportacionDocumentoController::zip/$1');
+$routes->get('/exportar/descargar/(:num)', 'ExportacionDocumentoController::descargar/$1');
+$routes->get('/exportar/vista-impresion/(:num)', 'ExportacionDocumentoController::vistaImpresion/$1');
+$routes->get('/exportar/historial/(:num)', 'ExportacionDocumentoController::historial/$1');
+
+
+
+
+$routes->get('/admin/users', 'UserController::listUsers');
+$routes->get('/admin/users/add', 'UserController::addUser');
+$routes->post('/admin/users/add', 'UserController::addUserPost');
+$routes->get('/admin/users/edit/(:num)', 'UserController::editUser/$1');
+$routes->post('/admin/users/edit/(:num)', 'UserController::editUserPost/$1');
+$routes->get('/admin/users/delete/(:num)', 'UserController::deleteUser/$1');
+$routes->get('/admin/users/toggle/(:num)', 'UserController::toggleStatus/$1');
+$routes->get('/admin/users/reset-password/(:num)', 'UserController::resetPassword/$1');

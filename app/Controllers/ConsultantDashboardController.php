@@ -11,7 +11,21 @@ class ConsultantDashboardController extends Controller
 {
     public function index()
     {
-        return view('consultant/dashboard');
+        $session = session();
+
+        // Obtener datos del usuario en sesión
+        $userModel = new \App\Models\UserModel();
+        $userData = null;
+
+        if ($session->get('id_usuario')) {
+            $userData = $userModel->find($session->get('id_usuario'));
+        }
+
+        $data = [
+            'usuario' => $userData
+        ];
+
+        return view('consultant/dashboard', $data);
     }
 
     public function addClient()

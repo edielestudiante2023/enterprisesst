@@ -5,7 +5,13 @@
       "Bash(git commit:*)",
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(del /f \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\SQL\\\\sp_01_calcular_nivel_estandares.sql\" \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\SQL\\\\sp_02_generar_carpetas_cliente.sql\")",
+      "Bash(del \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\SQL\\\\stored_procedures_documentacion.sql\")",
+      "Bash(php spark:*)",
+      "Bash(C:/xampp/mysql/bin/mysql.exe:*)",
+      "Bash(c:/xampp/mysql/bin/mysql -u root -e \"UPDATE empresas_sst.dashboard_items SET orden = 1;\")",
+      "Bash(/c/xampp/mysql/bin/mysql:*)"
     ]
   }
 }
