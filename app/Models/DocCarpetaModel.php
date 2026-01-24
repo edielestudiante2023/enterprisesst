@@ -19,16 +19,39 @@ class DocCarpetaModel extends Model
 
     /**
      * Genera estructura de carpetas para un cliente usando SP
+     * Usa estructura estilo Drive: SG-SST [Año] / PHVA / Categoría / [Documentos]
+     * Las carpetas se crean según el nivel de estándares del cliente (7, 21 o 60)
      */
-    public function generarEstructura(int $idCliente, int $anio): int
+    public function generarEstructura(int $idCliente, int $anio, int $nivelEstandares = 60): int
     {
         $db = \Config\Database::connect();
 
-        $query = $db->query("CALL sp_generar_carpetas_cliente(?, ?)", [$idCliente, $anio]);
+        // Usar el SP que respeta el nivel de estándares
+        $query = $db->query("CALL sp_generar_carpetas_por_nivel(?, ?, ?)", [$idCliente, $anio, $nivelEstandares]);
         $result = $query->getRowArray();
-        $query->close();
+
+        // Liberar resultados del SP para evitar errores de "commands out of sync"
+        if (method_exists($query, 'freeResult')) {
+            $query->freeResult();
+        }
+        while ($db->connID->next_result()) {
+            $db->connID->store_result();
+        }
 
         return $result['id_carpeta_raiz'] ?? 0;
+    }
+
+    /**
+     * Obtiene la carpeta destino para un documento según su plantilla
+     */
+    public function getCarpetaParaDocumento(int $idCliente, string $codigoPlantilla): ?int
+    {
+        $db = \Config\Database::connect();
+
+        $query = $db->query("SELECT fn_get_carpeta_documento(?, ?) as id_carpeta", [$idCliente, $codigoPlantilla]);
+        $result = $query->getRowArray();
+
+        return $result['id_carpeta'] ?? null;
     }
 
     /**

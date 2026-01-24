@@ -9,7 +9,8 @@ class DocPlantillaModel extends Model
     protected $primaryKey = 'id_plantilla';
     protected $allowedFields = [
         'id_tipo', 'nombre', 'descripcion', 'codigo_sugerido',
-        'estructura_json', 'prompts_json', 'variables_contexto', 'activo', 'orden'
+        'estructura_json', 'prompts_json', 'variables_contexto', 'activo', 'orden',
+        'aplica_7', 'aplica_21', 'aplica_60'
     ];
 
     protected $returnType = 'array';

@@ -194,10 +194,14 @@ class EstandaresClienteController extends Controller
 
     /**
      * Inicializar estándares para un cliente
+     * Soporta tanto AJAX como petición normal
      */
     public function inicializar($idCliente)
     {
         if (!session()->get('isLoggedIn')) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'message' => 'No autorizado']);
+            }
             return redirect()->to('/login');
         }
 
@@ -208,6 +212,16 @@ class EstandaresClienteController extends Controller
         // Usar el servicio de setup
         $resultado = $this->setupService->inicializarEstandaresCliente($idCliente, $nivelEstandares);
 
+        // Si es AJAX, retornar JSON
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => $resultado['success'],
+                'message' => $resultado['mensaje'] ?? ($resultado['success'] ? 'Estándares inicializados' : 'Error'),
+                'nivel' => $nivelEstandares
+            ]);
+        }
+
+        // Si es petición normal, hacer redirect
         if ($resultado['success']) {
             return redirect()->to("/estandares/{$idCliente}")
                             ->with('success', $resultado['mensaje']);

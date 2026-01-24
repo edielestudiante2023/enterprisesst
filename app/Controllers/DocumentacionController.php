@@ -5,7 +5,9 @@ namespace App\Controllers;
 use App\Models\DocDocumentoModel;
 use App\Models\DocCarpetaModel;
 use App\Models\DocTipoModel;
+use App\Models\DocPlantillaModel;
 use App\Models\ClienteEstandaresModel;
+use App\Models\ClienteContextoSstModel;
 use App\Models\ClientModel;
 use CodeIgniter\Controller;
 
@@ -14,7 +16,9 @@ class DocumentacionController extends Controller
     protected $documentoModel;
     protected $carpetaModel;
     protected $tipoModel;
+    protected $plantillaModel;
     protected $estandaresModel;
+    protected $contextoModel;
     protected $clienteModel;
 
     public function __construct()
@@ -22,7 +26,9 @@ class DocumentacionController extends Controller
         $this->documentoModel = new DocDocumentoModel();
         $this->carpetaModel = new DocCarpetaModel();
         $this->tipoModel = new DocTipoModel();
+        $this->plantillaModel = new DocPlantillaModel();
         $this->estandaresModel = new ClienteEstandaresModel();
+        $this->contextoModel = new ClienteContextoSstModel();
         $this->clienteModel = new ClientModel();
     }
 
@@ -50,13 +56,135 @@ class DocumentacionController extends Controller
         $estadisticas = $this->documentoModel->getEstadisticas($idCliente);
         $cumplimiento = $this->estandaresModel->getResumenCumplimiento($idCliente);
 
+        // Obtener documentos organizados por estado para las cards
+        $documentosPorEstado = $this->getDocumentosPorEstado($idCliente);
+
         return view('documentacion/dashboard', [
             'cliente' => $cliente,
             'carpetas' => $carpetas,
             'documentos' => $documentos,
             'estadisticas' => $estadisticas,
-            'cumplimiento' => $cumplimiento
+            'cumplimiento' => $cumplimiento,
+            'documentosPorEstado' => $documentosPorEstado
         ]);
+    }
+
+    /**
+     * Obtiene plantillas disponibles vs documentos creados por el cliente
+     * Organizado por estado: sin_generar, borrador, en_revision, pendiente_firma, aprobado
+     * FILTRA según el nivel de estándares del cliente (7, 21 o 60)
+     */
+    private function getDocumentosPorEstado($idCliente): array
+    {
+        // Obtener contexto del cliente para saber su nivel
+        $contexto = $this->contextoModel->getByCliente($idCliente);
+        $nivelCliente = (int)($contexto['estandares_aplicables'] ?? 60);
+
+        // Determinar el campo de filtro según el nivel
+        $campoAplica = match($nivelCliente) {
+            7 => 'aplica_7',
+            21 => 'aplica_21',
+            default => 'aplica_60'
+        };
+
+        // Obtener plantillas activas FILTRADAS por nivel del cliente
+        $plantillasQuery = $this->plantillaModel
+            ->select('tbl_doc_plantillas.*, tbl_doc_tipos.nombre as tipo_nombre, tbl_doc_tipos.codigo as tipo_codigo')
+            ->join('tbl_doc_tipos', 'tbl_doc_tipos.id_tipo = tbl_doc_plantillas.id_tipo')
+            ->where('tbl_doc_plantillas.activo', 1);
+
+        // Solo filtrar si la columna existe (compatibilidad con BD sin migrar)
+        $db = \Config\Database::connect();
+        if ($db->fieldExists($campoAplica, 'tbl_doc_plantillas')) {
+            $plantillasQuery->where("tbl_doc_plantillas.{$campoAplica}", 1);
+        }
+
+        $plantillas = $plantillasQuery
+            ->orderBy('tbl_doc_tipos.nombre', 'ASC')
+            ->orderBy('tbl_doc_plantillas.orden', 'ASC')
+            ->findAll();
+
+        // Obtener mapeo de plantillas a carpetas
+        $mapeoCarpetas = [];
+        $mapeoQuery = $db->query("SELECT codigo_plantilla, codigo_carpeta FROM tbl_doc_plantilla_carpeta");
+        if ($mapeoQuery) {
+            foreach ($mapeoQuery->getResultArray() as $row) {
+                $mapeoCarpetas[$row['codigo_plantilla']] = $row['codigo_carpeta'];
+            }
+        }
+
+        // Obtener documentos existentes del cliente
+        $documentosExistentes = $this->documentoModel
+            ->where('id_cliente', $idCliente)
+            ->findAll();
+
+        // Indexar documentos por codigo_sugerido de plantilla
+        $docsIndexados = [];
+        foreach ($documentosExistentes as $doc) {
+            // Usar el código del documento para identificar a qué plantilla corresponde
+            $codigoBase = $this->extraerCodigoBase($doc['codigo']);
+            $docsIndexados[$codigoBase] = $doc;
+        }
+
+        // Organizar por estado
+        $resultado = [
+            'sin_generar' => [],
+            'borrador' => [],
+            'en_revision' => [],
+            'pendiente_firma' => [],
+            'aprobado' => [],
+            'nivel_cliente' => $nivelCliente
+        ];
+
+        foreach ($plantillas as $plantilla) {
+            $codigoSugerido = $plantilla['codigo_sugerido'];
+
+            if (isset($docsIndexados[$codigoSugerido])) {
+                // El documento existe, clasificar por estado
+                $doc = $docsIndexados[$codigoSugerido];
+                $doc['plantilla'] = $plantilla;
+
+                $estado = $doc['estado'] ?? 'borrador';
+                if (isset($resultado[$estado])) {
+                    $resultado[$estado][] = $doc;
+                } else {
+                    $resultado['borrador'][] = $doc;
+                }
+            } else {
+                // No existe, va a sin_generar
+                $resultado['sin_generar'][] = [
+                    'plantilla' => $plantilla,
+                    'codigo_sugerido' => $codigoSugerido,
+                    'nombre' => $plantilla['nombre'],
+                    'tipo_nombre' => $plantilla['tipo_nombre'],
+                    'tipo_codigo' => $plantilla['tipo_codigo'],
+                    'descripcion' => $plantilla['descripcion'],
+                    'codigo_carpeta' => $mapeoCarpetas[$codigoSugerido] ?? null
+                ];
+            }
+        }
+
+        // Contar totales
+        $resultado['contadores'] = [
+            'sin_generar' => count($resultado['sin_generar']),
+            'borrador' => count($resultado['borrador']),
+            'en_revision' => count($resultado['en_revision']),
+            'pendiente_firma' => count($resultado['pendiente_firma']),
+            'aprobado' => count($resultado['aprobado']),
+            'total_plantillas' => count($plantillas),
+            'nivel_cliente' => $nivelCliente
+        ];
+
+        return $resultado;
+    }
+
+    /**
+     * Extrae el código base de un documento (ej: PRG-CAP-001 -> PRG-CAP)
+     */
+    private function extraerCodigoBase($codigo): string
+    {
+        // Remover el consecutivo final (ej: -001, -002)
+        return preg_replace('/-\d{3}$/', '', $codigo);
     }
 
     /**
@@ -238,6 +366,7 @@ class DocumentacionController extends Controller
 
     /**
      * Genera estructura de carpetas para un cliente (AJAX)
+     * Las carpetas se crean según el nivel de estándares del cliente
      */
     public function generarEstructura()
     {
@@ -252,13 +381,18 @@ class DocumentacionController extends Controller
             return $this->response->setJSON(['success' => false, 'message' => 'Cliente requerido']);
         }
 
-        $idCarpetaRaiz = $this->carpetaModel->generarEstructura($idCliente, $anio);
+        // Obtener nivel de estándares del cliente desde su contexto
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+        $nivelEstandares = $contexto['estandares_aplicables'] ?? 60;
+
+        $idCarpetaRaiz = $this->carpetaModel->generarEstructura($idCliente, $anio, $nivelEstandares);
 
         if ($idCarpetaRaiz) {
             return $this->response->setJSON([
                 'success' => true,
                 'id_carpeta_raiz' => $idCarpetaRaiz,
-                'message' => "Estructura creada para el año {$anio}"
+                'message' => "Estructura creada para el año {$anio} ({$nivelEstandares} estándares)"
             ]);
         }
 

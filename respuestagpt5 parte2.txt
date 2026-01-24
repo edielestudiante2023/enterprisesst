@@ -1,0 +1,315 @@
+Te dejo (1) el mapeo completo de los 60 estándares en standard_evidence_map (1.1.1 → 7.1.4) y (2) un catálogo ampliado (enfocado en VERIFICAR y ACTUAR, pero también agrego formatos/actas típicas que sirven como evidencia).
+Los códigos y numeración de estándares corresponden al Anexo Técnico – Tabla de “Estándares mínimos del SG-SST” de la Resolución 0312 de 2019.
+Para VERIFICAR/ACTUAR, además se soporta con Decreto 1072 (Auditoría, Revisión por la Dirección, Acciones Correctivas/Preventivas y Mejora Continua).
+
+1) standard_evidence_map (completo 60/60) — JSON
+
+Nota de diseño para tu software: cada estándar lista documentos “núcleo” (obligatorios o típicamente aceptados como evidencia). Si quieres, luego lo refinamos para que cada estándar tenga “required_min” vs “optional_plus”.
+
+{
+  "standard_evidence_map": {
+    "1.1.1": ["ACT-DES-SGSST", "CAR-ASIG-SGSST", "LIC-SST", "CONTR-PROF-SST"],
+    "1.1.2": ["PRES-SST", "ACT-ASIG-REC", "PLAN-TRABAJO-ANUAL"],
+    "1.1.3": ["AFIL-ARL", "CERT-AFILIACION-ARL"],
+    "1.1.4": ["IDENT-PELI-RIESGOS", "MAT-IPEVR-GTC45", "PLAN-TRABAJO-ANUAL"],
+    "1.1.5": ["POL-SST", "ACT-DIV-POL-SST", "REG-DIVULGACION"],
+    "1.1.6": ["PLAN-TRABAJO-ANUAL", "CRONOGRAMA-SST", "ACT-APROB-PLAN"],
+    "1.1.7": ["EVAL-INICIAL-SGSST", "LISTA-CHEQUEO-0312", "INF-EVAL-INICIAL"],
+    "1.1.8": ["OBJ-SST", "IND-SGSST", "PLAN-TRABAJO-ANUAL"],
+
+    "1.2.1": ["MEC-REPORTE-AT-EL", "PROC-REPORTE-AT", "FORM-REPORTE-AT", "FORM-REPORTE-EL"],
+    "1.2.2": ["MEC-REPORTE-CT", "PROC-REPORTE-CT", "REG-REPORTE-CT"],
+    "1.2.3": ["MEC-PARTICIPACION", "ACT-COPASST", "ACT-CCL", "ACT-VIGIA"],
+
+    "2.1.1": ["MATRIZ-LEGAL-SST", "REG-ACT-MATRIZ-LEGAL"],
+    "2.2.1": ["PROC-ID-PELIGROS", "MAT-IPEVR-GTC45", "ACT-ACTUALIZ-IPEVR"],
+    "2.3.1": ["EVAL-MED-AMBIENTE", "FORM-INSPECCION-LOC", "REG-MANTENIMIENTOS"],
+    "2.4.1": ["PLAN-CAP-ANUAL", "CRONOGRAMA-CAP", "REG-ASISTENCIA-CAP", "EVAL-EFIC-CAP"],
+    "2.5.1": ["INDUCCION-SST", "REINDUCCION-SST", "REG-INDUCCION", "REG-REINDUCCION"],
+    "2.6.1": ["PROC-COMPRAS-SST", "LISTA-VERIF-PROVEEDORES", "EVAL-PROVEEDORES-SST"],
+    "2.7.1": ["PROC-GESTION-CONTRATISTAS", "EVAL-SST-CONTRATISTAS", "CLAUSULAS-SST-CONTRATO"],
+    "2.8.1": ["PROC-GESTION-CAMBIO", "ACT-EVAL-CAMBIO", "REG-CAMBIO"],
+    "2.9.1": ["MAT-RIESGO-PSICOSOCIAL", "PLAN-INTERV-PSICOSOCIAL", "EVID-SENSIBILIZACION-PSICOSOCIAL"],
+    "2.10.1": ["PLAN-PREV-ACOSO", "ACT-CCL", "PROC-QUEJAS-ACOSO", "REG-CASOS-ACOSO"],
+    "2.11.1": ["PROC-COMUNICACIONES-SST", "MAT-COMUNICACIONES", "REG-COMUNICADOS-SST"],
+
+    "3.1.1": ["PROC-EPP", "MATRIZ-EPP", "ACTA-ENTREGA-EPP", "REG-INSPECCION-EPP"],
+    "3.1.2": ["PLAN-EMERGENCIAS", "ANALISIS-VULNERABILIDAD", "MAPA-RUTAS-EVAC", "PROC-EVACUACION"],
+    "3.1.3": ["PLAN-BRIGADA", "ACT-CONFORMACION-BRIGADA", "REG-CAP-BRIGADA", "REG-SIMULACRO"],
+    "3.1.4": ["PLAN-PRIMEROS-AUX", "DOTACION-BOTIQUIN", "REG-REVISION-BOTIQUIN"],
+    "3.1.5": ["PROC-MANTENIMIENTO", "CRONOGRAMA-MANTENIMIENTO", "REG-MANTENIMIENTOS"],
+    "3.1.6": ["PROC-INSPECCIONES", "FORM-INSPECCION-LOC", "REG-INSPECCIONES", "PLAN-CIERRE-HALLAZGOS"],
+    "3.1.7": ["PROC-INVEST-AT-IT", "FORM-INVEST-AT-IT", "INF-INVEST-AT-IT", "PLAN-ACCIONES-AT-IT"],
+    "3.1.8": ["PVE", "PROFESIOGRAMA", "EXAMENES-MED-OCUP", "CONCEPTOS-APTITUD"],
+    "3.1.9": ["PROC-RESIDUOS", "PLAN-GIRS", "REG-DISP-RESIDUOS"],
+
+    "3.2.1": ["PROC-REPORTAR-INCIDENTES", "REG-INCIDENTES", "ACCIONES-CORRECTIVAS"],
+    "3.2.2": ["PROC-GESTION-EL", "REG-EL", "CALIFICACIONES-ORIGEN"],
+    "3.2.3": ["PROC-ATENCION-ARL", "REG-ASESORIA-ARL", "PLAN-TRABAJO-ANUAL"],
+
+    "3.3.1": ["PLAN-CAP-ANUAL", "REG-CAP", "EVAL-EFIC-CAP"],
+    "3.3.2": ["PROC-ENTRENAMIENTO", "REG-ENTRENAMIENTOS", "EVAL-ENTRENAMIENTO"],
+    "3.3.3": ["PROC-CONTROL-RIESGOS", "PLAN-INTERVENCION-RIESGOS", "REG-SEGUIMIENTO-CONTROLES"],
+    "3.3.4": ["PROC-SENALIZACION", "PLAN-SENALIZACION", "REG-INSPECCION-SENALIZACION"],
+    "3.3.5": ["PROC-CONTROL-EMERGENCIAS", "REG-SIMULACRO", "INF-SIMULACRO"],
+    "3.3.6": ["PROC-EVALUACION-PVE", "IND-PVE", "INF-SEGUIMIENTO-PVE"],
+
+    "4.1.1": ["IND-SGSST", "FICHA-INDICADORES", "TABLERO-KPI-SST"],
+    "4.1.2": ["INSPECCIONES-PERIODO", "REG-INSPECCIONES", "INF-INSPECCIONES"],
+    "4.1.3": ["AUD-INTERNA-PROGRAMA", "AUD-INTERNA-PLAN", "INF-AUD-INTERNA"],
+    "4.1.4": ["EVAL-CUMPLIMIENTO-LEGAL", "MATRIZ-LEGAL-SST", "INF-EVAL-LEGAL"],
+
+    "4.2.1": ["PROC-INVEST-AT-IT", "INF-INVEST-AT-IT", "ACCIONES-CORRECTIVAS"],
+    "4.2.2": ["REG-ACCIONES-CORRECTIVAS", "PLAN-MEJORA", "SEGUIMIENTO-PLAN-MEJORA"],
+    "4.2.3": ["ACT-COPASST", "INFORME-COPASST", "ACT-VIGIA"],
+    "4.2.4": ["ACT-CCL", "INFORME-CCL", "REG-CASOS-ACOSO"],
+    "4.2.5": ["REVISION-DIRECCION-ACTA", "INF-REVISION-DIRECCION", "PLAN-MEJORA"],
+    "4.2.6": ["EVAL-DESEMPENO-SST", "INF-DESEMPENO-SST", "PLAN-TRABAJO-ANUAL"],
+
+    "5.1.1": ["PLAN-MEJORA", "REG-ACCIONES-CORRECTIVAS", "SEGUIMIENTO-PLAN-MEJORA"],
+    "5.1.2": ["ACCIONES-PREVENTIVAS", "GESTION-CAMBIO", "SEGUIMIENTO-CONTROLES"],
+
+    "6.1.1": ["INF-INVEST-AT-IT", "LECCIONES-APRENDIDAS", "ACTA-SOCIALIZACION-LECCIONES"],
+    "6.1.2": ["INF-AUD-INTERNA", "NO-CONFORMIDADES", "PLAN-ACCION-AUDITORIA"],
+    "6.1.3": ["INF-INSPECCIONES", "PLAN-CIERRE-HALLAZGOS", "SEGUIMIENTO-HALLAZGOS"],
+    "6.1.4": ["EVAL-CUMPLIMIENTO-LEGAL", "PLAN-ACCION-LEGAL", "SEGUIMIENTO-PLAN-LEGAL"],
+
+    "7.1.1": ["PLAN-MEJORA", "MEJORA-CONTINUA-REG", "CAMBIOS-SGSST-REG"],
+    "7.1.2": ["PLAN-TRABAJO-ANUAL", "ACTUALIZACION-PLAN", "ACTA-APROB-PLAN"],
+    "7.1.3": ["REVISION-DIRECCION-ACTA", "INF-REVISION-DIRECCION", "DECISIONES-GERENCIA-REG"],
+    "7.1.4": ["INF-ALTA-DIRECCION", "BALANCE-SGSST", "PLAN-MEJORA", "ACTA-SOCIALIZACION-INF"]
+  }
+}
+
+
+Fuente de numeración y títulos de los 60 estándares: Resolución 0312/2019 (Anexo Técnico – tabla de estándares).
+Soporte fuerte para VERIFICAR/ACTUAR (auditoría, revisión, acciones y mejora): Decreto 1072/2015 Art. 2.2.4.6.29 a 2.2.4.6.34.
+
+2) Catálogo ampliado — VERIFICAR y ACTUAR (con reglas “Depende” explícitas) — JSON
+
+Te incluyo exactamente los que pediste (indicadores, auditoría, plan de mejora, revisión dirección, inspecciones, profesiograma, exámenes) y agrego actas/formatos típicos que te van a pedir como evidencia en auditorías.
+
+{
+  "document_catalog_additions": [
+    {
+      "code": "IND-SGSST",
+      "name": "Indicadores del SG-SST (estructura, proceso y resultado)",
+      "category": "Informes",
+      "phva": "VERIFICAR",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Decreto 1072/2015", "article": "2.2.4.6.20 (Indicadores SG-SST)"},
+        {"norm": "Resolución 0312/2019", "article": "Estándar 4.1.1"}
+      ],
+      "update_frequency": "Mensual (seguimiento) y anual (cierre/resultado)"
+    },
+    {
+      "code": "FICHA-INDICADORES",
+      "name": "Fichas técnicas de indicadores (definición, fórmula, fuente, periodicidad, meta)",
+      "category": "Formatos",
+      "phva": "VERIFICAR",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Decreto 1072/2015", "article": "2.2.4.6.20"},
+        {"norm": "Resolución 0312/2019", "article": "Estándar 4.1.1"}
+      ],
+      "update_frequency": "Cuando cambie el indicador o la meta; mínimo anual"
+    },
+    {
+      "code": "AUD-INTERNA-PLAN",
+      "name": "Plan de auditoría interna del SG-SST",
+      "category": "Planes",
+      "phva": "VERIFICAR",
+      "mandatory": true,
+      "applies_level_7": {"rule": "aplica si nivel_empresa != 7 ? true : false", "explain": "En 7 estándares normalmente no se exige auditoría interna formal; se evidencia con autoevaluación y verificación simple"},
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Decreto 1072/2015", "article": "2.2.4.6.29 (Auditoría interna)"},
+        {"norm": "Resolución 0312/2019", "article": "Estándar 4.1.3"}
+      ],
+      "update_frequency": "Anual"
+    },
+    {
+      "code": "INF-AUD-INTERNA",
+      "name": "Informe de auditoría interna del SG-SST",
+      "category": "Informes",
+      "phva": "VERIFICAR",
+      "mandatory": true,
+      "applies_level_7": {"rule": "aplica si nivel_empresa != 7", "explain": "Para 7 estándares se recomienda como verificación simple, pero no suele ser requisito mínimo formal"},
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Decreto 1072/2015", "article": "2.2.4.6.29"},
+        {"norm": "Resolución 0312/2019", "article": "Estándar 4.1.3"}
+      ],
+      "update_frequency": "Anual (o cuando se ejecute auditoría extraordinaria)"
+    },
+    {
+      "code": "PLAN-MEJORA",
+      "name": "Plan de mejora del SG-SST (acciones correctivas, preventivas y de mejora)",
+      "category": "Planes",
+      "phva": "ACTUAR",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Decreto 1072/2015", "article": "2.2.4.6.33 (Acciones correctivas y preventivas)"},
+        {"norm": "Decreto 1072/2015", "article": "2.2.4.6.34 (Mejoramiento continuo)"},
+        {"norm": "Resolución 0312/2019", "article": "Estándares 4.2.2, 5.1.1, 7.1.1"}
+      ],
+      "update_frequency": "Permanente (actualización por hallazgos) y cierre anual"
+    },
+    {
+      "code": "REG-ACCIONES-CORRECTIVAS",
+      "name": "Registro y seguimiento de acciones correctivas/preventivas (responsable, fecha, estado, eficacia)",
+      "category": "Formatos",
+      "phva": "ACTUAR",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Decreto 1072/2015", "article": "2.2.4.6.33"},
+        {"norm": "Resolución 0312/2019", "article": "Estándares 4.2.2, 5.1.1"}
+      ],
+      "update_frequency": "Permanente"
+    },
+    {
+      "code": "REVISION-DIRECCION-ACTA",
+      "name": "Acta de revisión por la dirección (Revisión Gerencial del SG-SST)",
+      "category": "Actas",
+      "phva": "ACTUAR",
+      "mandatory": true,
+      "applies_level_7": {"rule": "aplica si nivel_empresa != 7 ? true : 'simplificado'", "explain": "En microempresas puede ser un acta simple de revisión/seguimiento gerencial"},
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Decreto 1072/2015", "article": "2.2.4.6.31 (Revisión por la alta dirección)"},
+        {"norm": "Resolución 0312/2019", "article": "Estándar 4.2.5 y 7.1.3"}
+      ],
+      "update_frequency": "Anual (mínimo) o cuando haya cambios mayores"
+    },
+    {
+      "code": "INF-REVISION-DIRECCION",
+      "name": "Informe de revisión por la dirección (insumos, decisiones y salidas)",
+      "category": "Informes",
+      "phva": "ACTUAR",
+      "mandatory": true,
+      "applies_level_7": {"rule": "aplica si nivel_empresa != 7 ? true : false", "explain": "En 7 estándares suele bastar el acta simplificada"},
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Decreto 1072/2015", "article": "2.2.4.6.31"},
+        {"norm": "Resolución 0312/2019", "article": "Estándar 4.2.5"}
+      ],
+      "update_frequency": "Anual"
+    },
+    {
+      "code": "PROC-INSPECCIONES",
+      "name": "Procedimiento de inspecciones de seguridad (locativas, equipos, áreas, tareas)",
+      "category": "Procedimientos",
+      "phva": "HACER",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Resolución 0312/2019", "article": "Estándares 3.1.6 y 4.1.2"}
+      ],
+      "update_frequency": "Cuando cambie el proceso; mínimo anual"
+    },
+    {
+      "code": "FORM-INSPECCION-LOC",
+      "name": "Formato de inspección locativa / inspección planeada",
+      "category": "Formatos",
+      "phva": "VERIFICAR",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {"norm": "Resolución 0312/2019", "article": "Estándares 3.1.6 y 4.1.2"}
+      ],
+      "update_frequency": "Según periodicidad definida (mensual/trimestral)"
+    },
+    {
+      "code": "PROFESIOGRAMA",
+      "name": "Profesiograma (requerimientos por cargo y relación con exámenes ocupacionales)",
+      "category": "Manuales",
+      "phva": "HACER",
+      "mandatory": {
+        "rule": "aplica si tiene_exposiciones_significativas = true",
+        "explain": "Se usa como evidencia fuerte cuando hay PVE y vigilancia médica por cargo/riesgo"
+      },
+      "applies_level_7": {"rule": "aplica si tiene_exposiciones_significativas = true", "explain": "En micro puede ser versión simplificada por cargo/tarea crítica"},
+      "applies_level_21": {"rule": "aplica si tiene_exposiciones_significativas = true"},
+      "applies_level_60": {"rule": "aplica si tiene_exposiciones_significativas = true"},
+      "legal_basis": [
+        {"norm": "Resolución 0312/2019", "article": "Estándar 3.1.8 (PVE / vigilancia de la salud)"},
+        {"norm": "Decreto 1072/2015", "article": "Gestión de peligros y vigilancia (SG-SST) – soporte general"}
+      ],
+      "update_frequency": "Cuando cambien cargos/risgos; mínimo anual"
+    },
+    {
+      "code": "EXAMENES-MED-OCUP",
+      "name": "Soportes de exámenes médicos ocupacionales (ingreso, periódicos, egreso) – evidencias (sin violar confidencialidad clínica)",
+      "category": "Registros",
+      "phva": "HACER",
+      "mandatory": {
+        "rule": "aplica si tiene_PVE = true",
+        "explain": "Como evidencia se usan certificados/conceptos de aptitud y cumplimiento del programa, no historias clínicas"
+      },
+      "applies_level_7": {"rule": "aplica si tiene_PVE = true"},
+      "applies_level_21": {"rule": "aplica si tiene_PVE = true"},
+      "applies_level_60": {"rule": "aplica si tiene_PVE = true"},
+      "legal_basis": [
+        {"norm": "Resolución 0312/2019", "article": "Estándar 3.1.8"}
+      ],
+      "update_frequency": "Según periodicidad médica definida"
+    }
+  ]
+}
+
+
+Soporte clave (VERIFICAR/ACTUAR) para tu “evidence engine”:
+
+Auditoría interna SG-SST: Art. 2.2.4.6.29
+
+Revisión por la alta dirección: Art. 2.2.4.6.31
+
+Acciones correctivas/preventivas: Art. 2.2.4.6.33
+
+Mejoramiento continuo: Art. 2.2.4.6.34
+
+3) Reglas lógicas típicas para “Depende” (listas para tu motor)
+
+Aquí van reglas que sí te van a pedir en consultoría y te sirven para automatizar applies_level_7:
+
+{
+  "dependency_rules": [
+    {"key": "requires_copasst", "rule": "num_trabajadores >= 10", "else": "requires_vigia_sst"},
+    {"key": "requires_vigia_sst", "rule": "num_trabajadores < 10"},
+    {"key": "requires_ccl", "rule": "num_trabajadores >= 10", "else": "designated_convivencia_representative"},
+    {"key": "requires_plan_emergencias_formal", "rule": "nivel_riesgo in ['IV','V'] OR tiene_sustancias_peligrosas = true OR atencion_publico_masiva = true"},
+    {"key": "requires_pve_sst", "rule": "tiene_exposiciones_significativas = true"},
+    {"key": "requires_psychosocial_program", "rule": "peligro_psicosocial = true OR bateria_aplicada = true OR hay_casos_acoso = true"},
+    {"key": "requires_vehicle_road_safety", "rule": "tiene_vehiculos = true OR hay_motos_mensajeria = true"},
+    {"key": "requires_heights_program", "rule": "trabajo_en_alturas = true"},
+    {"key": "requires_electrical_risk_controls", "rule": "riesgo_electrico_significativo = true"}
+  ]
+}
+
+
+Importante (honesto y para que tu sistema sea “jurídicamente limpio”)
+
+La Resolución 0312 define estándares y evidencias esperadas, pero no siempre nombra “un único documento oficial” como “obligatorio” (ej.: un estándar puede cumplirse con varios soportes equivalentes). Por eso mi standard_evidence_map usa el criterio práctico: documentos típicamente aceptados por ARL/auditor como evidencia directa del estándar (sin inventar “obligaciones” que no existan).
+
+Para micro (nivel 7), muchas evidencias se aceptan en versión simplificada (ej.: “Acta de revisión gerencial simple” en lugar de informe robusto). Eso está alineado con el enfoque de mínimos y con el Decreto 1072 en cuanto a mejora continua y revisión.

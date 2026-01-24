@@ -22,7 +22,15 @@
       "Bash(\"c:/xampp/mysql/bin/mysql.exe\":*)",
       "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root -e \"DESCRIBE empresas_sst.tbl_cliente_estandares;\")",
       "Bash(php -r:*)",
-      "Bash(c:xamppmysqlbinmysql -u root enterprisesst -e \"SHOW COLUMNS FROM tbl_estandares_minimos;\")"
+      "Bash(c:xamppmysqlbinmysql -u root enterprisesst -e \"SHOW COLUMNS FROM tbl_estandares_minimos;\")",
+      "Bash(more:*)",
+      "Bash(C:/xampp/mysql/bin/mysql -u root empresas_sst -e \"DELETE FROM tbl_doc_carpetas WHERE id_cliente = 11; SELECT COUNT\\(*\\) as carpetas_restantes FROM tbl_doc_carpetas WHERE id_cliente = 11;\")",
+      "Bash(del c:xampphtdocsenterprisesstpublicfix_encoding.php)",
+      "Bash(php:*)",
+      "Bash(move \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\docs\\\\proyecto_documentacion_sst_parte7.md\" \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\proyecto_documentacion_sst_parte7.md\")",
+      "Bash(move \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\docs\\\\SYNC_LOCAL_PRODUCCION.md\" \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\SYNC_LOCAL_PRODUCCION.md\")",
+      "Bash(dir:*)",
+      "Bash(ls:*)"
     ]
   }
 }

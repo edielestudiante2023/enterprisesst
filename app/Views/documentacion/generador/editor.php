@@ -211,7 +211,7 @@
                 const idSeccion = this.dataset.idSeccion;
                 const contenido = this.querySelector('textarea[name="contenido"]').value;
 
-                fetch('/documentacion/guardar-seccion', {
+                fetch('<?= base_url('documentacion/guardar-seccion') ?>', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -252,7 +252,7 @@
             // Deshabilitar otros botones de la sección
             card.querySelectorAll('button').forEach(b => b.disabled = true);
 
-            fetch('/documentacion/generar-ia', {
+            fetch('<?= base_url('documentacion/generar-ia') ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -339,7 +339,7 @@
         function aprobarSeccion() {
             const idSeccion = this.dataset.idSeccion;
 
-            fetch('/documentacion/aprobar-seccion', {
+            fetch('<?= base_url('documentacion/aprobar-seccion') ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

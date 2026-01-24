@@ -1,0 +1,435 @@
+aquí va el resultado (ya con soporte normativo y en formato JSON estructurado para base de datos). Antes, una aclaración importante:
+
+La Resolución 0312 de 2019 NO trae un “listado oficial de nombres de documentos” como tal; trae estándares mínimos y exige evidencias documentales (políticas, planes, matrices, registros, actas, informes, etc.). Por eso, para tu software lo correcto es:
+(a) catálogo de “documentos-evidencia” + (b) relación documento↔estándar + (c) reglas por nivel (7/21/60), usando únicamente lo que exige la norma (y el Decreto 1072 para el “cómo” del SG-SST).
+La estructura de estándares (numerales) está publicada en múltiples transcripciones y guías; como referencia base para numerales y estructura PHVA se puede apoyar en el contenido público (listado) de la Resolución 0312.
+
+1) Catálogo de documentos (JSON) + aplicabilidad por nivel (7/21/60)
+
+Regla práctica para niveles (para tu motor):
+
+Nivel 60: debe cubrir todos los estándares.
+
+Nivel 21: cubre un subconjunto intermedio (más exigente que 7).
+
+Nivel 7: versión simplificada para microempresas de bajo riesgo (evidencias mínimas).
+
+Ojo: La norma define niveles por tamaño/riesgo; tu clasificación (7/21/60) es correcta como modelo operativo, pero la “lista exacta” se deriva del subconjunto de estándares aplicables, no de un “checklist de documentos” independiente.
+
+{
+  "document_catalog": [
+    {
+      "code": "POL-SST",
+      "name": "Política de Seguridad y Salud en el Trabajo (SST)",
+      "category": "Políticas",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        {
+          "norm": "Resolución 0312 de 2019",
+          "ref": "Estándar 2.1.1 (Política SG-SST firmada, fechada y comunicada)"
+        }
+      ],
+      "update_frequency": "Cuando cambie la organización o mínimo en revisión anual (recomendado)"
+    },
+    {
+      "code": "OBJ-SST",
+      "name": "Objetivos del SG-SST (claros, medibles, con metas, documentados)",
+      "category": "Objetivos",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 2.2.1 (Objetivos del SG-SST)" }
+      ],
+      "update_frequency": "Anual o cuando cambie la evaluación/condiciones"
+    },
+    {
+      "code": "EVAL-INICIAL",
+      "name": "Evaluación inicial del SG-SST e identificación de prioridades",
+      "category": "Informes",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 2.3.1 (Evaluación inicial e identificación de prioridades)" }
+      ],
+      "update_frequency": "Al inicio y cuando haya cambios relevantes; recomendado anual"
+    },
+    {
+      "code": "PTA",
+      "name": "Plan Anual de Trabajo del SG-SST (objetivos, metas, responsables, recursos, cronograma, firma)",
+      "category": "Planes",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 2.4.1 (Plan Anual de Trabajo)" }
+      ],
+      "update_frequency": "Anual"
+    },
+    {
+      "code": "RET-DOC",
+      "name": "Procedimiento/Tabla de retención o conservación documental del SG-SST (archivo y control)",
+      "category": "Procedimientos",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 2.5.1 (Conservación de la documentación)" }
+      ],
+      "update_frequency": "Cuando cambie la estructura documental; recomendado anual"
+    },
+    {
+      "code": "REND-CUENTAS",
+      "name": "Informe/acta de rendición de cuentas del SG-SST (desempeño)",
+      "category": "Informes",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 2.6.1 (Rendición de cuentas)" }
+      ],
+      "update_frequency": "Mínimo anual"
+    },
+    {
+      "code": "MAT-LEGAL",
+      "name": "Matriz legal SST (normatividad nacional vigente aplicable)",
+      "category": "Matrices",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 2.7.1 (Matriz legal)" }
+      ],
+      "update_frequency": "Cuando cambie la norma; recomendado trimestral/semestral"
+    },
+    {
+      "code": "COM-SST",
+      "name": "Mecanismos de comunicación/autorreportes en SG-SST",
+      "category": "Guías/Instructivos",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 2.8.1 (Comunicación)" }
+      ],
+      "update_frequency": "Cuando cambie el canal o proceso"
+    },
+    {
+      "code": "PROC-COMPRA-SST",
+      "name": "Procedimiento/criterios SST para adquisiciones (identificar/evaluar requisitos SST en compras)",
+      "category": "Procedimientos",
+      "mandatory": true,
+      "applies_level_7": false,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 2.9.1 (Adquisiciones)" }
+      ],
+      "update_frequency": "Cuando cambie el proceso de compras"
+    },
+    {
+      "code": "PROC-CONTRATISTAS",
+      "name": "Procedimiento/criterios SST para evaluación/selección de contratistas y proveedores",
+      "category": "Procedimientos",
+      "mandatory": true,
+      "applies_level_7": false,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 2.10.1 (Contratación)" }
+      ],
+      "update_frequency": "Cuando cambie el esquema de contratación"
+    },
+    {
+      "code": "DESIG-RESP-SST",
+      "name": "Acta/Carta de designación del responsable del SG-SST y definición de roles/responsabilidades",
+      "category": "Actas",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándares 1.1.1 y 1.1.2 (Responsable y responsabilidades SG-SST)" }
+      ],
+      "update_frequency": "Cuando cambie el responsable o estructura"
+    },
+    {
+      "code": "ASIG-RECURSOS",
+      "name": "Presupuesto/acta de asignación de recursos SST (financieros, técnicos y humanos)",
+      "category": "Informes",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 1.1.3 (Asignación de recursos)" }
+      ],
+      "update_frequency": "Anual y cuando cambie el PTA"
+    },
+    {
+      "code": "INDU-REINDU",
+      "name": "Programa/registro de inducción y reinducción SG-SST (PyP)",
+      "category": "Programas",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar 1.2.2 (Inducción/Reinducción)" }
+      ],
+      "update_frequency": "En cada ingreso y anual (reinducción)"
+    },
+    {
+      "code": "CAP-ANUAL",
+      "name": "Programa de Capacitación Anual en SST (plan, temario, cronograma, evidencias)",
+      "category": "Programas",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándar (Gestión del conocimiento / capacitación según numerales del componente Hacer)" }
+      ],
+      "update_frequency": "Anual"
+    },
+    {
+      "code": "MAT-IPEVR",
+      "name": "Matriz de Identificación de Peligros, Evaluación y Valoración de Riesgos (IPEVR) / metodología (p.ej. GTC 45)",
+      "category": "Matrices",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándares de identificación de peligros y valoración de riesgos (Hacer)" },
+        { "norm": "GTC 45", "ref": "Guía metodológica para identificación de peligros y valoración de riesgos (referencia técnica)" }
+      ],
+      "update_frequency": "Cuando cambie proceso/instalación y mínimo anual"
+    },
+    {
+      "code": "PLAN-EMER",
+      "name": "Plan de Emergencias y Contingencias (con evidencias de socialización/simulacros si aplican)",
+      "category": "Planes",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 0312 de 2019", "ref": "Estándares de preparación y respuesta ante emergencias (Hacer)" }
+      ],
+      "update_frequency": "Anual o cuando cambie el riesgo/infraestructura"
+    },
+    {
+      "code": "PROC-INV-AT",
+      "name": "Procedimiento y formato de investigación de incidentes/accidentes de trabajo + informes de investigación",
+      "category": "Procedimientos",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 1401 de 2007", "ref": "Objeto y obligaciones mínimas de investigación" }
+      ],
+      "update_frequency": "Cada evento; procedimiento se revisa cuando cambie el proceso"
+    },
+    {
+      "code": "PVE-PSICO",
+      "name": "Programa de Vigilancia Epidemiológica de Riesgo Psicosocial (si hay exposición/condiciones que lo ameriten) + evidencias",
+      "category": "Programas",
+      "mandatory": true,
+      "applies_level_7": "Depende (si aplica por riesgo/exposición)",
+      "applies_level_21": "Depende (si aplica por riesgo/exposición)",
+      "applies_level_60": "Depende (si aplica por riesgo/exposición)",
+      "legal_basis": [
+        { "norm": "Resolución 2646 de 2008", "ref": "Gestión del riesgo psicosocial (evaluación, intervención, seguimiento) según aplique" }
+      ],
+      "update_frequency": "Según plan de intervención; típico anual/semestral"
+    },
+    {
+      "code": "ACTA-COPASST",
+      "name": "Actas y soportes de conformación y funcionamiento COPASST (o Vigía, si aplica) + plan de trabajo del comité",
+      "category": "Actas",
+      "mandatory": true,
+      "applies_level_7": "Según tamaño (Vigía o COPASST)",
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Resolución 2013 de 1986", "ref": "Conformación y funcionamiento del COPASST" }
+      ],
+      "update_frequency": "Actas por reunión; renovación por periodos legales"
+    },
+    {
+      "code": "ACTA-CCL",
+      "name": "Actas y soportes de conformación y funcionamiento del Comité de Convivencia Laboral + reglamento interno del comité",
+      "category": "Actas",
+      "mandatory": true,
+      "applies_level_7": true,
+      "applies_level_21": true,
+      "applies_level_60": true,
+      "legal_basis": [
+        { "norm": "Ley 1010 de 2006", "ref": "Medidas contra acoso laboral (marco general)" },
+        { "norm": "Resolución 652 de 2012", "ref": "Reuniones y funcionamiento (p.ej., periodicidad)" }
+      ],
+      "update_frequency": "Actas por reunión; revisión anual del reglamento"
+    }
+  ],
+  "notes": [
+    "Donde el campo aplica_level_* diga 'Depende', tu software debe activar el documento por reglas de exposición (peligro identificado), sector, y obligaciones complementarias (p.ej. PESV si aplica)."
+  ]
+}
+
+
+Soportes clave usados arriba:
+
+Estructura de estándares y numerales (incluye 1.1.1, 2.1.1, 2.4.1, etc.) en la Resolución 0312 está reflejada públicamente en listados de la resolución.
+
+Investigación AT/IT: Resolución 1401 de 2007 (objeto y obligaciones).
+
+Comité de Convivencia (reuniones/funcionamiento): Resolución 652 de 2012.
+
+3) Estructura de carpetas recomendada por PHVA (lista “usable”)
+
+La propia Resolución 0312 organiza los estándares bajo el ciclo PHVA (Planear, Hacer, Verificar, Actuar).
+
+{
+  "folder_structure_phva": {
+    "PLANEAR": [
+      "POL-SST",
+      "OBJ-SST",
+      "DESIG-RESP-SST",
+      "ASIG-RECURSOS",
+      "EVAL-INICIAL",
+      "MAT-LEGAL",
+      "MAT-IPEVR",
+      "PTA",
+      "RET-DOC",
+      "COM-SST",
+      "PROC-COMPRA-SST",
+      "PROC-CONTRATISTAS"
+    ],
+    "HACER": [
+      "INDU-REINDU",
+      "CAP-ANUAL",
+      "PLAN-EMER",
+      "PROC-INV-AT",
+      "PVE-PSICO",
+      "ACTA-COPASST",
+      "ACTA-CCL"
+    ],
+    "VERIFICAR": [
+      "REND-CUENTAS",
+      "Informes de seguimiento a indicadores del SG-SST",
+      "Informes de inspecciones planeadas y resultados",
+      "Auditoría interna SG-SST (si aplica por estándar/nivel)"
+    ],
+    "ACTUAR": [
+      "Planes de mejora (acciones correctivas/preventivas)",
+      "Actas de revisión por la dirección / alta dirección",
+      "Evidencias de cierre de hallazgos (seguimiento y eficacia)"
+    ]
+  }
+}
+4) Relación Documento–Estándar (ejemplo en el formato exacto que pediste)
+
+Aquí te dejo la estructura JSON para que tu sistema tenga el “mapping”.
+Importante: Como la lista completa 1.1.1… (hasta 60) es extensa, te dejo un bloque inicial (PLANEAR) ya mapeado y el esqueleto para completar automáticamente; si quieres, en el siguiente mensaje te lo entrego completo 1.1.1→…→(60) en el mismo formato (sin inventar evidencias, solo las típicas y aceptadas por auditoría).
+
+{
+  "standard_evidence_map": [
+    {
+      "standard": "1.1.1",
+      "standard_name": "Responsable del SG-SST",
+      "evidence_docs": ["DESIG-RESP-SST", "Licencia SST (si aplica)", "Soporte curso 50 horas (si aplica)"]
+    },
+    {
+      "standard": "1.1.2",
+      "standard_name": "Responsabilidades en el SG-SST",
+      "evidence_docs": ["DESIG-RESP-SST", "Matriz/RACI de roles y responsabilidades SST"]
+    },
+    {
+      "standard": "1.1.3",
+      "standard_name": "Asignación de recursos para el SG-SST",
+      "evidence_docs": ["ASIG-RECURSOS", "PTA"]
+    },
+    {
+      "standard": "2.1.1",
+      "standard_name": "Política del SG-SST firmada, fechada y comunicada",
+      "evidence_docs": ["POL-SST", "Soporte de divulgación (acta/correo/cartelera)"]
+    },
+    {
+      "standard": "2.2.1",
+      "standard_name": "Objetivos del SG-SST",
+      "evidence_docs": ["OBJ-SST", "PTA"]
+    },
+    {
+      "standard": "2.3.1",
+      "standard_name": "Evaluación inicial e identificación de prioridades",
+      "evidence_docs": ["EVAL-INICIAL", "PTA"]
+    },
+    {
+      "standard": "2.4.1",
+      "standard_name": "Plan Anual de Trabajo del SG-SST",
+      "evidence_docs": ["PTA"]
+    },
+    {
+      "standard": "2.5.1",
+      "standard_name": "Conservación de la documentación del SG-SST",
+      "evidence_docs": ["RET-DOC", "Listado maestro documental SG-SST"]
+    },
+    {
+      "standard": "2.6.1",
+      "standard_name": "Rendición de cuentas sobre desempeño",
+      "evidence_docs": ["REND-CUENTAS", "Acta de socialización de resultados"]
+    },
+    {
+      "standard": "2.7.1",
+      "standard_name": "Matriz legal SST",
+      "evidence_docs": ["MAT-LEGAL"]
+    },
+    {
+      "standard": "2.8.1",
+      "standard_name": "Comunicación en el SG-SST",
+      "evidence_docs": ["COM-SST", "Registros de autorreporte y comunicaciones"]
+    },
+    {
+      "standard": "2.9.1",
+      "standard_name": "Adquisiciones con criterios SST",
+      "evidence_docs": ["PROC-COMPRA-SST", "Formatos de evaluación SST en compras (si aplica)"]
+    },
+    {
+      "standard": "2.10.1",
+      "standard_name": "Contratación: evaluación y selección de proveedores/contratistas",
+      "evidence_docs": ["PROC-CONTRATISTAS", "Formatos de evaluación SST a contratistas (si aplica)"]
+    }
+  ],
+  "standard_source_note": "La estructura/numeración de estándares está alineada con el listado público de la Resolución 0312 (componentes PHVA y numerales)."
+}
+5) Consideraciones especiales (para reglas de tu software)
+a) ¿Qué se puede simplificar en microempresas?
+
+Nivel 7: normalmente se acepta evidencia “ligera” (p.ej., un solo documento que integre política+objetivos+plan en una plantilla corta) siempre que cumpla con el requisito del estándar (firmas, fecha, comunicación, etc.). La lógica de “evidencia mínima” viene de la implementación por niveles en la 0312.
+
+b) ¿Qué documentos se pueden unificar?
+
+PTA + cronograma de capacitación (capítulos dentro del PTA).
+
+RET-DOC + Listado maestro documental (un mismo “control documental”).
+
+Matriz legal + plan de actualización normativa (misma carpeta, dos secciones).
+Esto no “inventa” nada: solo empaqueta evidencias para cumplir el mismo estándar.
+
+c) ¿Qué cambia por sector económico?
+
+La 0312 obliga estándares, pero documentos adicionales se activan por obligaciones sectoriales o por peligros identificados (regla basada en IPEVR):
+ejemplo típico: PESV cuando aplique (no lo listo aquí como “obligatorio universal” porque depende de obligación específica). En el listado de la Resolución aparecen referencias condicionales a PESV cuando el empleador esté obligado.

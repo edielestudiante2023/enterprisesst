@@ -202,14 +202,14 @@
 
             const formData = new FormData(this);
 
-            fetch('/firma/procesar', {
+            fetch('<?= base_url('firma/procesar') ?>', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    window.location.href = '/firma/confirmacion/<?= esc($token) ?>';
+                    window.location.href = '<?= base_url('firma/confirmacion/' . esc($token)) ?>';
                 } else {
                     alert(data.error || 'Error al procesar la firma');
                     btn.disabled = false;

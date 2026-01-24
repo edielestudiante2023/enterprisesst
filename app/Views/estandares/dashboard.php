@@ -6,6 +6,7 @@
     <title>Cumplimiento Estándares - <?= esc($cliente['nombre_cliente']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         .progress-ring {
             width: 150px;
@@ -33,7 +34,7 @@
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/documentacion/<?= $cliente['id_cliente'] ?>">
+            <a class="navbar-brand" href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>">
                 <i class="bi bi-check2-square me-2"></i>Cumplimiento Estándares
             </a>
             <div class="navbar-nav ms-auto">
@@ -41,7 +42,7 @@
                     <i class="bi bi-building me-1"></i>
                     <?= esc($cliente['nombre_cliente']) ?>
                 </span>
-                <a class="nav-link" href="/documentacion/<?= $cliente['id_cliente'] ?>">
+                <a class="nav-link" href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>">
                     <i class="bi bi-arrow-left me-1"></i>Volver
                 </a>
             </div>
@@ -177,7 +178,7 @@
                 <i class="bi bi-exclamation-triangle me-2"></i>
                 <strong>Transición de Nivel Pendiente:</strong>
                 Hay cambios en el número de trabajadores o nivel de riesgo que requieren actualizar los estándares aplicables.
-                <a href="/estandares/transiciones/<?= $cliente['id_cliente'] ?>" class="alert-link">Ver detalles</a>
+                <a href="<?= base_url('estandares/transiciones/' . $cliente['id_cliente']) ?>" class="alert-link">Ver detalles</a>
             </div>
         <?php endif; ?>
 
@@ -300,29 +301,117 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Doble confirmación para inicializar estándares
+        const idCliente = <?= $cliente['id_cliente'] ?>;
+        const nombreCliente = '<?= esc($cliente['nombre_cliente']) ?>';
+
+        // Doble confirmación para inicializar estándares con SweetAlert
         function confirmarInicializacion() {
             const nivelEstandares = <?= $contexto['estandares_aplicables'] ?? 60 ?>;
-            const primerConfirm = confirm(
-                '¿Está seguro de inicializar los estándares de la Resolución 0312/2019 para este cliente?\n\n' +
-                'Nivel configurado: ' + nivelEstandares + ' estándares aplicables\n\n' +
-                'Esta acción solo debe realizarse:\n' +
-                '• Una vez al año para la autoevaluación del SG-SST\n' +
-                '• Cuando ingresa un cliente nuevo al sistema'
-            );
 
-            if (primerConfirm) {
-                const segundoConfirm = confirm(
-                    'CONFIRMACIÓN FINAL\n\n' +
-                    '¿Confirma que desea crear los registros de estándares mínimos?\n\n' +
-                    'Se crearán ' + nivelEstandares + ' estándares aplicables según el contexto del cliente.'
-                );
+            Swal.fire({
+                title: 'Inicializar Estándares',
+                html: `
+                    <p>¿Está seguro de inicializar los estándares de la <strong>Resolución 0312/2019</strong> para este cliente?</p>
+                    <div class="alert alert-info text-start">
+                        <strong>Nivel configurado:</strong> ${nivelEstandares} estándares aplicables
+                    </div>
+                    <p class="text-muted small mb-0">Esta acción solo debe realizarse:</p>
+                    <ul class="text-muted small text-start">
+                        <li>Una vez al año para la autoevaluación del SG-SST</li>
+                        <li>Cuando ingresa un cliente nuevo al sistema</li>
+                    </ul>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, inicializar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Segunda confirmación
+                    Swal.fire({
+                        title: 'Confirmación Final',
+                        html: `
+                            <p>Se crearán <strong>${nivelEstandares} estándares</strong> aplicables según el contexto del cliente.</p>
+                            <p class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Esta acción no se puede deshacer.</p>
+                        `,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#198754',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="bi bi-check-lg me-1"></i>Confirmar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result2) => {
+                        if (result2.isConfirmed) {
+                            // Mostrar loading
+                            Swal.fire({
+                                title: 'Inicializando...',
+                                html: 'Creando estándares para el cliente',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
 
-                if (segundoConfirm) {
-                    window.location.href = '<?= base_url("estandares/inicializar/" . $cliente['id_cliente']) ?>';
+                            // Hacer la petición AJAX para inicializar
+                            fetch('<?= base_url("estandares/inicializar/") ?>' + idCliente, {
+                                method: 'GET',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                            .then(response => {
+                                // Independientemente de la respuesta, mostrar el SweetAlert de documentación
+                                mostrarAlertaDocumentacion();
+                            })
+                            .catch(error => {
+                                // Si hay error, igual redirigir (puede que sea redirect)
+                                mostrarAlertaDocumentacion();
+                            });
+                        }
+                    });
                 }
-            }
+            });
+        }
+
+        // SweetAlert para ir a crear documentación
+        function mostrarAlertaDocumentacion() {
+            Swal.fire({
+                title: '¡Estándares Inicializados!',
+                html: `
+                    <div class="text-center">
+                        <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                        <p class="mt-3">Los estándares han sido creados correctamente.</p>
+                        <hr>
+                        <p class="fw-bold text-primary">
+                            <i class="bi bi-magic me-2"></i>¿Estás listo para crear toda la documentación de tu cliente con IA?
+                        </p>
+                        <p class="text-muted small">
+                            El sistema usará el contexto del cliente para generar los documentos.<br>
+                            Luego podrás volver a calificar los estándares ya culminados.
+                        </p>
+                    </div>
+                `,
+                icon: null,
+                showCancelButton: true,
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-file-earmark-plus me-1"></i>Ir a Crear Documentación',
+                cancelButtonText: 'Quedarse aquí',
+                allowOutsideClick: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Ir al módulo de documentación
+                    window.location.href = '<?= base_url("documentacion") ?>/' + idCliente;
+                } else {
+                    // Quedarse y recargar para ver los estándares
+                    window.location.reload();
+                }
+            });
         }
 
         // Filtro de estándares (mostrar solo aplicables o todos)

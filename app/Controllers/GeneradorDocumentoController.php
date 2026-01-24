@@ -34,11 +34,18 @@ class GeneradorDocumentoController extends Controller
 
     /**
      * Paso 1: Seleccionar tipo de documento
+     * Si viene ?plantilla=X, salta directo al paso 2
      */
     public function nuevo($idCliente)
     {
         if (!session()->get('isLoggedIn')) {
             return redirect()->to('/login');
+        }
+
+        // Si viene plantilla en la query string, ir directo a configurar
+        $idPlantilla = $this->request->getGet('plantilla');
+        if ($idPlantilla) {
+            return $this->configurar($idCliente);
         }
 
         $cliente = $this->clienteModel->find($idCliente);

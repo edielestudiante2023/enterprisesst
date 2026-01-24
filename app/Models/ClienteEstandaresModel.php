@@ -58,12 +58,19 @@ class ClienteEstandaresModel extends Model
     }
 
     /**
-     * Obtiene estándares agrupados por ciclo PHVA (TODOS, incluyendo no_aplica)
+     * Obtiene estándares agrupados por ciclo PHVA
+     * Por defecto solo muestra los aplicables (excluye no_aplica)
+     *
+     * @param int $idCliente
+     * @param bool $incluirNoAplica Si es true, incluye los que no aplican
+     * @return array
      */
-    public function getByClienteGroupedPHVA(int $idCliente): array
+    public function getByClienteGroupedPHVA(int $idCliente, bool $incluirNoAplica = false): array
     {
-        // Usar getByClienteTodos para incluir los no_aplica (filtro visual en frontend)
-        $estandares = $this->getByClienteTodos($idCliente);
+        // Por defecto solo obtener los aplicables
+        $estandares = $incluirNoAplica
+            ? $this->getByClienteTodos($idCliente)
+            : $this->getByClienteCompleto($idCliente);
 
         $grouped = [
             'PLANEAR' => [],
