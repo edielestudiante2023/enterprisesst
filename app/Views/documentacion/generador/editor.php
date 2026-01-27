@@ -27,6 +27,20 @@
     </style>
 </head>
 <body class="bg-light">
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="toastNotificacion" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="bi me-2" id="toastIcono"></i>
+                <strong class="me-auto" id="toastTitulo">Notificación</strong>
+                <small id="toastTiempo">Ahora</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastMensaje">
+                Mensaje aquí
+            </div>
+        </div>
+    </div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">
@@ -36,10 +50,10 @@
                 <span class="navbar-text text-white me-3">
                     <code><?= esc($documento['codigo']) ?></code> - <?= esc($documento['nombre']) ?>
                 </span>
-                <a class="nav-link" href="/documentacion/ver/<?= $documento['id_documento'] ?>">
+                <a class="nav-link" href="<?= base_url('documentacion/ver/' . $documento['id_documento']) ?>">
                     <i class="bi bi-eye me-1"></i>Vista Previa
                 </a>
-                <a class="nav-link" href="/documentacion/<?= $cliente['id_cliente'] ?>">
+                <a class="nav-link" href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>">
                     <i class="bi bi-x-lg"></i>
                 </a>
             </div>
@@ -51,6 +65,31 @@
             <!-- Panel lateral -->
             <div class="col-md-3">
                 <div class="sidebar-sticky">
+                    <!-- Acciones Masivas (al inicio) -->
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0"><i class="bi bi-lightning me-1"></i>Acciones Masivas</h6>
+                        </div>
+                        <div class="card-body">
+                            <button type="button" class="btn btn-primary w-100 mb-2" id="btnGenerarTodoIA">
+                                <i class="bi bi-robot me-1"></i>Generar Todo con IA
+                            </button>
+                            <button type="button" class="btn btn-outline-success w-100 mb-2" id="btnGuardarTodos">
+                                <i class="bi bi-save-fill me-1"></i>Guardar Todos
+                            </button>
+                            <button type="button" class="btn btn-success w-100 mb-2" id="btnAprobarTodos">
+                                <i class="bi bi-check-all me-1"></i>Aprobar Todos
+                            </button>
+                            <div id="progresoMasivo" class="d-none">
+                                <div class="progress mb-2" style="height: 20px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                         id="barraProgresoMasivo" style="width: 0%">0%</div>
+                                </div>
+                                <small class="text-muted" id="textoProgresoMasivo">Procesando...</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Progreso -->
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-body">
@@ -90,15 +129,15 @@
                         </div>
                     </div>
 
-                    <!-- Acciones -->
+                    <!-- Acciones de navegación -->
                     <div class="card border-0 shadow-sm mt-3">
                         <div class="card-body">
-                            <a href="/documentacion/vista-previa/<?= $documento['id_documento'] ?>"
+                            <a href="<?= base_url('documentacion/vista-previa/' . $documento['id_documento']) ?>"
                                class="btn btn-outline-primary w-100 mb-2">
                                 <i class="bi bi-eye me-1"></i>Vista Previa
                             </a>
                             <?php if (($progreso['pendientes'] ?? 1) === 0): ?>
-                                <a href="/documentacion/finalizar/<?= $documento['id_documento'] ?>"
+                                <a href="<?= base_url('documentacion/finalizar/' . $documento['id_documento']) ?>"
                                    class="btn btn-success w-100">
                                     <i class="bi bi-check-lg me-1"></i>Finalizar Documento
                                 </a>
@@ -204,6 +243,50 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // ==========================================
+        // SISTEMA DE TOAST NOTIFICATIONS
+        // ==========================================
+        function mostrarToast(tipo, titulo, mensaje) {
+            const toastEl = document.getElementById('toastNotificacion');
+            const toastTitulo = document.getElementById('toastTitulo');
+            const toastMensaje = document.getElementById('toastMensaje');
+            const toastIcono = document.getElementById('toastIcono');
+            const toastHeader = toastEl.querySelector('.toast-header');
+
+            // Limpiar clases anteriores
+            toastHeader.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-info', 'text-white');
+            toastIcono.classList.remove('bi-check-circle-fill', 'bi-x-circle-fill', 'bi-exclamation-triangle-fill', 'bi-info-circle-fill', 'text-success', 'text-danger', 'text-warning', 'text-info');
+
+            // Configurar según tipo
+            switch(tipo) {
+                case 'success':
+                    toastHeader.classList.add('bg-success', 'text-white');
+                    toastIcono.classList.add('bi-check-circle-fill', 'text-white');
+                    break;
+                case 'error':
+                    toastHeader.classList.add('bg-danger', 'text-white');
+                    toastIcono.classList.add('bi-x-circle-fill', 'text-white');
+                    break;
+                case 'warning':
+                    toastHeader.classList.add('bg-warning');
+                    toastIcono.classList.add('bi-exclamation-triangle-fill', 'text-dark');
+                    break;
+                case 'info':
+                    toastHeader.classList.add('bg-info', 'text-white');
+                    toastIcono.classList.add('bi-info-circle-fill', 'text-white');
+                    break;
+            }
+
+            toastTitulo.textContent = titulo;
+            toastMensaje.textContent = mensaje;
+
+            const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+            toast.show();
+        }
+
+        // ==========================================
+        // GUARDAR SECCIÓN INDIVIDUAL
+        // ==========================================
         // Guardar sección
         document.querySelectorAll('.form-seccion').forEach(form => {
             form.addEventListener('submit', function(e) {
@@ -226,9 +309,17 @@
                         const card = this.closest('.seccion-card');
                         card.classList.add('border-success');
                         setTimeout(() => card.classList.remove('border-success'), 2000);
+
+                        // Toast de éxito
+                        const nombreSeccion = card.querySelector('.card-header h5').textContent.trim();
+                        mostrarToast('success', 'Guardado exitoso', `La sección "${nombreSeccion}" se guardó en la base de datos.`);
                     } else {
-                        alert(data.message || 'Error al guardar');
+                        mostrarToast('error', 'Error al guardar', data.message || 'No se pudo guardar la sección en la base de datos.');
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarToast('error', 'Error de conexión', 'No se pudo conectar con el servidor para guardar.');
                 });
             });
         });
@@ -274,6 +365,10 @@
                     // Limpiar contexto adicional
                     if (contextoInput) contextoInput.value = '';
 
+                    // Toast de éxito
+                    const nombreSeccion = card.querySelector('.card-header h5').textContent.trim();
+                    mostrarToast('success', 'IA generó contenido', `Contenido generado para "${nombreSeccion}". Recuerda guardar los cambios.`);
+
                     // Mostrar tokens usados
                     if (data.tokens_usados) {
                         console.log('Tokens usados:', data.tokens_usados);
@@ -305,12 +400,12 @@
                         btnGenContainer.appendChild(btnRegen);
                     }
                 } else {
-                    alert(data.message || 'Error al generar contenido con IA');
+                    mostrarToast('error', 'Error de IA', data.message || 'No se pudo generar contenido con IA.');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error de conexión al generar contenido');
+                mostrarToast('error', 'Error de conexión', 'No se pudo conectar con el servidor para generar contenido.');
             })
             .finally(() => {
                 // Rehabilitar botones
@@ -337,7 +432,15 @@
 
         // Función para aprobar sección
         function aprobarSeccion() {
+            const btn = this;
             const idSeccion = this.dataset.idSeccion;
+            const card = btn.closest('.seccion-card');
+            const nombreSeccion = card.querySelector('.card-header h5').textContent.trim();
+
+            // Deshabilitar botón mientras procesa
+            btn.disabled = true;
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Aprobando...';
 
             fetch('<?= base_url('documentacion/aprobar-seccion') ?>', {
                 method: 'POST',
@@ -350,12 +453,347 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    mostrarToast('success', 'Aprobación exitosa', `La sección "${nombreSeccion}" fue aprobada y guardada en la base de datos.`);
+                    // Recargar después de mostrar el toast
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert(data.message || 'Error al aprobar');
+                    btn.disabled = false;
+                    btn.innerHTML = textoOriginal;
+                    mostrarToast('error', 'Error al aprobar', data.message || 'No se pudo aprobar la sección en la base de datos.');
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
+                mostrarToast('error', 'Error de conexión', 'No se pudo conectar con el servidor para aprobar.');
             });
         }
+
+        // ==========================================
+        // GENERAR TODO CON IA
+        // ==========================================
+        document.getElementById('btnGenerarTodoIA').addEventListener('click', async function() {
+            const secciones = document.querySelectorAll('.seccion-card');
+            const totalSecciones = secciones.length;
+
+            if (totalSecciones === 0) {
+                alert('No hay secciones para generar');
+                return;
+            }
+
+            // Confirmar acción
+            if (!confirm(`¿Generar contenido con IA para las ${totalSecciones} secciones?\n\nEsto puede tardar varios minutos. Las secciones que ya tienen contenido serán regeneradas.`)) {
+                return;
+            }
+
+            // Mostrar progreso
+            const progresoDiv = document.getElementById('progresoMasivo');
+            const barra = document.getElementById('barraProgresoMasivo');
+            const texto = document.getElementById('textoProgresoMasivo');
+            progresoDiv.classList.remove('d-none');
+
+            // Deshabilitar botones
+            this.disabled = true;
+            document.getElementById('btnGuardarTodos').disabled = true;
+
+            let completadas = 0;
+            let errores = 0;
+
+            // Procesar secciones secuencialmente (para no sobrecargar la API)
+            for (const card of secciones) {
+                const idSeccion = card.id.replace('seccion-', '');
+                const nombreSeccion = card.querySelector('.card-header h5').textContent.trim();
+                const textarea = card.querySelector('textarea');
+                const contextoInput = card.querySelector('.contexto-adicional');
+                const contextoAdicional = contextoInput ? contextoInput.value : '';
+
+                texto.textContent = `Generando: ${nombreSeccion}...`;
+
+                try {
+                    const response = await fetch('<?= base_url('documentacion/generar-ia') ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: `id_seccion=${idSeccion}&contexto_adicional=${encodeURIComponent(contextoAdicional)}`
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        textarea.value = data.contenido;
+                        card.classList.add('border-success');
+                        card.classList.remove('pending');
+                        setTimeout(() => card.classList.remove('border-success'), 1000);
+
+                        // Limpiar contexto
+                        if (contextoInput) contextoInput.value = '';
+                    } else {
+                        errores++;
+                        card.classList.add('border-danger');
+                        console.error(`Error en sección ${nombreSeccion}:`, data.message);
+                    }
+                } catch (error) {
+                    errores++;
+                    card.classList.add('border-danger');
+                    console.error(`Error de conexión en sección ${nombreSeccion}:`, error);
+                }
+
+                completadas++;
+                const porcentaje = Math.round((completadas / totalSecciones) * 100);
+                barra.style.width = `${porcentaje}%`;
+                barra.textContent = `${porcentaje}%`;
+            }
+
+            // Finalizar
+            texto.textContent = errores > 0
+                ? `Completado con ${errores} errores. ${completadas - errores} de ${totalSecciones} secciones generadas.`
+                : `¡Completado! ${completadas} secciones generadas exitosamente.`;
+
+            barra.classList.remove('progress-bar-animated');
+            barra.classList.add(errores > 0 ? 'bg-warning' : 'bg-success');
+
+            // Toast de resultado
+            if (errores > 0) {
+                mostrarToast('warning', 'Generación parcial', `Se generaron ${completadas - errores} de ${totalSecciones} secciones. ${errores} errores.`);
+            } else {
+                mostrarToast('success', 'Generación completa', `Las ${completadas} secciones fueron generadas con IA. Recuerda guardar los cambios.`);
+            }
+
+            // Rehabilitar botones
+            this.disabled = false;
+            document.getElementById('btnGuardarTodos').disabled = false;
+
+            // Recargar después de 2 segundos para actualizar el estado
+            setTimeout(() => {
+                if (confirm('¿Desea recargar la página para ver los cambios actualizados?')) {
+                    location.reload();
+                }
+            }, 2000);
+        });
+
+        // ==========================================
+        // GUARDAR TODOS
+        // ==========================================
+        document.getElementById('btnGuardarTodos').addEventListener('click', async function() {
+            const forms = document.querySelectorAll('.form-seccion');
+            const totalForms = forms.length;
+
+            if (totalForms === 0) {
+                alert('No hay secciones para guardar');
+                return;
+            }
+
+            // Mostrar progreso
+            const progresoDiv = document.getElementById('progresoMasivo');
+            const barra = document.getElementById('barraProgresoMasivo');
+            const texto = document.getElementById('textoProgresoMasivo');
+            progresoDiv.classList.remove('d-none');
+            barra.classList.remove('bg-success', 'bg-warning');
+            barra.classList.add('progress-bar-animated');
+
+            // Deshabilitar botones
+            this.disabled = true;
+            document.getElementById('btnGenerarTodoIA').disabled = true;
+
+            let guardadas = 0;
+            let errores = 0;
+
+            texto.textContent = 'Guardando todas las secciones...';
+
+            // Guardar todas en paralelo
+            const promesas = Array.from(forms).map(async (form) => {
+                const idSeccion = form.dataset.idSeccion;
+                const contenido = form.querySelector('textarea[name="contenido"]').value;
+                const card = form.closest('.seccion-card');
+
+                try {
+                    const response = await fetch('<?= base_url('documentacion/guardar-seccion') ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: `id_seccion=${idSeccion}&contenido=${encodeURIComponent(contenido)}`
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        guardadas++;
+                        card.classList.add('border-success');
+                        setTimeout(() => card.classList.remove('border-success'), 2000);
+                    } else {
+                        errores++;
+                        card.classList.add('border-danger');
+                    }
+                } catch (error) {
+                    errores++;
+                    card.classList.add('border-danger');
+                }
+
+                // Actualizar progreso
+                const completadas = guardadas + errores;
+                const porcentaje = Math.round((completadas / totalForms) * 100);
+                barra.style.width = `${porcentaje}%`;
+                barra.textContent = `${porcentaje}%`;
+            });
+
+            await Promise.all(promesas);
+
+            // Finalizar
+            texto.textContent = errores > 0
+                ? `Guardado con ${errores} errores. ${guardadas} de ${totalForms} secciones guardadas.`
+                : `¡Completado! ${guardadas} secciones guardadas exitosamente.`;
+
+            barra.classList.remove('progress-bar-animated');
+            barra.classList.add(errores > 0 ? 'bg-warning' : 'bg-success');
+
+            // Toast de resultado
+            if (errores > 0) {
+                mostrarToast('warning', 'Guardado parcial', `Se guardaron ${guardadas} de ${totalForms} secciones. ${errores} errores encontrados.`);
+            } else {
+                mostrarToast('success', 'Todo guardado', `Las ${guardadas} secciones fueron guardadas exitosamente en la base de datos.`);
+            }
+
+            // Rehabilitar botones
+            this.disabled = false;
+            document.getElementById('btnGenerarTodoIA').disabled = false;
+
+            // Ocultar progreso después de 3 segundos
+            setTimeout(() => {
+                progresoDiv.classList.add('d-none');
+                barra.style.width = '0%';
+                barra.textContent = '0%';
+            }, 3000);
+        });
+
+        // ==========================================
+        // APROBAR TODOS
+        // ==========================================
+        document.getElementById('btnAprobarTodos').addEventListener('click', async function() {
+            const secciones = document.querySelectorAll('.seccion-card');
+            const totalSecciones = secciones.length;
+
+            if (totalSecciones === 0) {
+                alert('No hay secciones para aprobar');
+                return;
+            }
+
+            // Verificar que todas tengan contenido
+            let seccionesSinContenido = 0;
+            secciones.forEach(card => {
+                const textarea = card.querySelector('textarea');
+                if (!textarea.value.trim()) {
+                    seccionesSinContenido++;
+                }
+            });
+
+            if (seccionesSinContenido > 0) {
+                if (!confirm(`Hay ${seccionesSinContenido} secciones sin contenido. ¿Desea aprobar solo las que tienen contenido?`)) {
+                    return;
+                }
+            }
+
+            // Confirmar acción
+            if (!confirm(`¿Aprobar todas las secciones con contenido?`)) {
+                return;
+            }
+
+            // Mostrar progreso
+            const progresoDiv = document.getElementById('progresoMasivo');
+            const barra = document.getElementById('barraProgresoMasivo');
+            const texto = document.getElementById('textoProgresoMasivo');
+            progresoDiv.classList.remove('d-none');
+            barra.classList.remove('bg-success', 'bg-warning');
+            barra.classList.add('progress-bar-animated');
+
+            // Deshabilitar botones
+            this.disabled = true;
+            document.getElementById('btnGenerarTodoIA').disabled = true;
+            document.getElementById('btnGuardarTodos').disabled = true;
+
+            let aprobadas = 0;
+            let errores = 0;
+            let omitidas = 0;
+
+            texto.textContent = 'Aprobando secciones...';
+
+            // Aprobar todas en paralelo
+            const promesas = Array.from(secciones).map(async (card) => {
+                const idSeccion = card.id.replace('seccion-', '');
+                const textarea = card.querySelector('textarea');
+
+                // Omitir secciones sin contenido
+                if (!textarea.value.trim()) {
+                    omitidas++;
+                    return;
+                }
+
+                try {
+                    const response = await fetch('<?= base_url('documentacion/aprobar-seccion') ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: `id_seccion=${idSeccion}`
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        aprobadas++;
+                        card.classList.add('border-success', 'completed');
+                        card.classList.remove('pending');
+                    } else {
+                        errores++;
+                        card.classList.add('border-danger');
+                    }
+                } catch (error) {
+                    errores++;
+                    card.classList.add('border-danger');
+                }
+
+                // Actualizar progreso
+                const procesadas = aprobadas + errores + omitidas;
+                const porcentaje = Math.round((procesadas / totalSecciones) * 100);
+                barra.style.width = `${porcentaje}%`;
+                barra.textContent = `${porcentaje}%`;
+            });
+
+            await Promise.all(promesas);
+
+            // Finalizar
+            let mensaje = `¡Completado! ${aprobadas} secciones aprobadas.`;
+            if (omitidas > 0) mensaje += ` ${omitidas} omitidas (sin contenido).`;
+            if (errores > 0) mensaje += ` ${errores} errores.`;
+            texto.textContent = mensaje;
+
+            barra.classList.remove('progress-bar-animated');
+            barra.classList.add(errores > 0 ? 'bg-warning' : 'bg-success');
+
+            // Toast de resultado
+            if (errores > 0) {
+                mostrarToast('warning', 'Aprobación parcial', `Se aprobaron ${aprobadas} secciones. ${errores} errores. ${omitidas} omitidas.`);
+            } else if (omitidas > 0) {
+                mostrarToast('info', 'Aprobación completada', `${aprobadas} secciones aprobadas. ${omitidas} omitidas (sin contenido).`);
+            } else {
+                mostrarToast('success', 'Todo aprobado', `Las ${aprobadas} secciones fueron aprobadas y guardadas en la base de datos.`);
+            }
+
+            // Rehabilitar botones
+            this.disabled = false;
+            document.getElementById('btnGenerarTodoIA').disabled = false;
+            document.getElementById('btnGuardarTodos').disabled = false;
+
+            // Recargar después de 2 segundos
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        });
     </script>
 </body>
 </html>

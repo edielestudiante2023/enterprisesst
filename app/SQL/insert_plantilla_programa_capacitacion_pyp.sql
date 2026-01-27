@@ -1,0 +1,101 @@
+-- ============================================================================
+-- INSERT: Plantilla Programa de Capacitacion en Promocion y Prevencion (PYP)
+-- Estandar 1.2.1 de la Resolucion 0312/2019
+-- Tabla: tbl_doc_plantillas
+-- Fecha: Enero 2026
+-- ============================================================================
+
+-- Verificar si ya existe la plantilla
+SELECT @existe := COUNT(*) FROM tbl_doc_plantillas WHERE codigo_sugerido = 'PRG-CAP';
+
+-- Solo insertar si no existe
+-- Si ya existe, usar UPDATE en lugar de INSERT
+
+-- ============================================================================
+-- OPCION 1: INSERT (si no existe)
+-- ============================================================================
+
+INSERT INTO `tbl_doc_plantillas` (
+    `id_tipo`,
+    `nombre`,
+    `descripcion`,
+    `codigo_sugerido`,
+    `estructura_json`,
+    `prompts_json`,
+    `variables_contexto`,
+    `activo`,
+    `orden`,
+    `aplica_7`,
+    `aplica_21`,
+    `aplica_60`
+) VALUES (
+    3, -- id_tipo: Programa
+    'Programa de Capacitacion en Promocion y Prevencion',
+    'Programa de capacitacion PYP segun estandar 1.2.1 de la Res. 0312/2019. Define las actividades de formacion en SST para trabajadores.',
+    'PRG-CAP',
+    -- estructura_json: Array de titulos de secciones
+    '["INTRODUCCION","OBJETIVOS","ALCANCE","MARCO LEGAL","DEFINICIONES","DIAGNOSTICO DE NECESIDADES DE CAPACITACION","TEMAS DE CAPACITACION","CRONOGRAMA DE CAPACITACION","METODOLOGIA","INDICADORES DE GESTION","RESPONSABLES","RECURSOS","REGISTROS Y FORMATOS"]',
+    -- prompts_json: Objeto con prompts por numero de seccion
+    '{
+        "1": "Genera la introduccion del Programa de Capacitacion en Promocion y Prevencion (PYP) para la empresa.\\n\\nINSTRUCCIONES:\\n1. Inicia explicando la importancia de la capacitacion en SST para la prevencion de accidentes y enfermedades laborales\\n2. Menciona que este programa da cumplimiento al estandar 1.2.1 de la Resolucion 0312/2019\\n3. Relaciona con el Decreto 1072/2015, Articulo 2.2.4.6.11 (Capacitacion en SST)\\n4. Contextualiza segun la actividad economica y nivel de riesgo de la empresa\\n5. Menciona el compromiso de la alta direccion con la formacion de los trabajadores\\n\\nFORMATO:\\n- 3-4 parrafos\\n- Lenguaje tecnico pero comprensible\\n- Usa el nombre real de la empresa (no la empresa)\\n- 200-300 palabras",
+
+        "2": "Genera los objetivos del Programa de Capacitacion PYP.\\n\\nESTRUCTURA REQUERIDA:\\n\\n**OBJETIVO GENERAL:**\\nUn objetivo que abarque el proposito principal del programa de capacitacion, orientado a desarrollar competencias en SST y prevenir accidentes/enfermedades.\\n\\n**OBJETIVOS ESPECIFICOS:**\\nGenerar 5-6 objetivos especificos que sean:\\n- Medibles y verificables\\n- Alineados con los peligros identificados de la empresa\\n- Orientados a promocion de la salud y prevencion\\n- Relacionados con el cumplimiento normativo\\n\\nEJEMPLOS DE OBJETIVOS ESPECIFICOS:\\n- Capacitar al 100% de trabajadores en induccion SST\\n- Desarrollar competencias para identificar peligros\\n- Formar brigadas de emergencia\\n- Reducir accidentalidad mediante formacion en riesgos especificos\\n\\nNOTA: Los objetivos deben ser SMART (Especificos, Medibles, Alcanzables, Relevantes, con Tiempo definido)",
+
+        "3": "Define el alcance del Programa de Capacitacion PYP.\\n\\nDEBE ESPECIFICAR:\\n\\n1. **Poblacion cubierta:**\\n   - Trabajadores directos (planta)\\n   - Trabajadores en mision/temporales\\n   - Contratistas y subcontratistas\\n   - Personal en practicas/aprendices\\n   - Visitantes (si aplica)\\n\\n2. **Cobertura geografica:**\\n   - Todas las sedes de la empresa\\n   - Mencionar si hay trabajo en campo o instalaciones del cliente\\n\\n3. **Momentos de aplicacion:**\\n   - Induccion (ingreso)\\n   - Reinduccion (periodica)\\n   - Capacitacion especifica por cargo/riesgo\\n   - Actualizacion normativa\\n\\n4. **Exclusiones** (si las hay)\\n\\nFORMATO: Lista con vinetas, maximo 15 items",
+
+        "4": "Lista el marco normativo aplicable al Programa de Capacitacion en SST para Colombia.\\n\\nGENERAR UNA TABLA con las siguientes columnas:\\n| Norma | Descripcion | Articulos Aplicables |\\n\\nINCLUIR OBLIGATORIAMENTE:\\n\\n1. **Decreto 1072 de 2015** - Decreto Unico Reglamentario del Sector Trabajo\\n   - Art. 2.2.4.6.11: Capacitacion en SST\\n   - Art. 2.2.4.6.12: Documentacion\\n   - Art. 2.2.4.6.35: Capacitacion obligatoria\\n\\n2. **Resolucion 0312 de 2019** - Estandares Minimos SG-SST\\n   - Estandar 1.2.1: Programa de capacitacion PYP\\n\\n3. **Resolucion 2400 de 1979** - Estatuto de Seguridad Industrial\\n\\n4. **Ley 1562 de 2012** - Sistema General de Riesgos Laborales\\n\\n5. **Normas especificas segun actividad economica:**\\n   - Resolucion 1409/2012 si hay trabajo en alturas\\n   - Resolucion 0312/2019 para brigadas de emergencia\\n   - Resolucion 2646/2008 para riesgo psicosocial\\n   - Otras segun peligros identificados\\n\\nNOTA: Incluir maximo 10-12 normas las mas relevantes",
+
+        "5": "Genera un glosario de terminos tecnicos para el Programa de Capacitacion PYP.\\n\\nINCLUIR LOS SIGUIENTES TERMINOS (minimo 12, maximo 18):\\n\\n- Capacitacion\\n- Competencia laboral\\n- Induccion\\n- Reinduccion\\n- Entrenamiento\\n- Promocion de la salud\\n- Prevencion\\n- Peligro\\n- Riesgo\\n- Accidente de trabajo\\n- Enfermedad laboral\\n- SG-SST (Sistema de Gestion de Seguridad y Salud en el Trabajo)\\n- Matriz de peligros\\n- EPP (Elementos de Proteccion Personal)\\n- Condiciones de salud\\n- Acto inseguro\\n- Condicion insegura\\n\\nFORMATO:\\n**Termino:** Definicion clara y concisa basada en normativa colombiana.\\n\\nNOTA: Ordenar alfabeticamente",
+
+        "6": "Genera la metodologia de diagnostico de necesidades de capacitacion para la empresa.\\n\\nESTRUCTURA:\\n\\n1. **FUENTES DE INFORMACION PARA EL DIAGNOSTICO:**\\n   - Matriz de identificacion de peligros (IPEVR)\\n   - Accidentalidad historica\\n   - Resultados de inspecciones de seguridad\\n   - Examenes medicos ocupacionales\\n   - Sugerencias del COPASST\\n   - Requisitos legales aplicables\\n   - Descripcion de cargos y tareas criticas\\n\\n2. **METODOLOGIA DE IDENTIFICACION:**\\n   Explicar como se identifican las necesidades de capacitacion basadas en:\\n   - Peligros prioritarios de la empresa\\n   - Requisitos normativos\\n   - Brechas de competencias detectadas\\n\\n3. **RESULTADOS DEL DIAGNOSTICO:**\\n   Basado en los peligros identificados de la empresa, indicar las areas prioritarias de capacitacion.\\n   Usar marcador [COMPLETAR] donde se requiera informacion especifica del diagnostico real.\\n\\nFORMATO: Mezcla de parrafos y listas",
+
+        "7": "Genera la matriz de temas de capacitacion para el Programa PYP.\\n\\nESTRUCTURA - TABLA con columnas:\\n| No. | Tema de Capacitacion | Dirigido a | Intensidad (horas) | Frecuencia | Tipo (Induccion/Periodica/Especifica) |\\n\\nINCLUIR TEMAS EN TRES CATEGORIAS:\\n\\n**A. CAPACITACIONES DE INDUCCION (obligatorias para todos):**\\n1. Politica y objetivos del SG-SST\\n2. Reglamento de Higiene y Seguridad Industrial\\n3. Identificacion de peligros y reporte de condiciones\\n4. Uso correcto de EPP\\n5. Procedimiento de emergencias y evacuacion\\n6. Derechos y deberes en el SGRL\\n\\n**B. CAPACITACIONES PERIODICAS (reinduccion):**\\n7. Actualizacion del SG-SST (anual)\\n8. Estilos de vida saludable\\n9. Prevencion de riesgo psicosocial\\n\\n**C. CAPACITACIONES ESPECIFICAS (segun peligros identificados):**\\nAgregar temas segun los peligros de la empresa:\\n- Si hay riesgo biomecanico: Higiene postural, pausas activas\\n- Si hay trabajo en alturas: Curso certificado trabajo seguro en alturas\\n- Si hay riesgo quimico: Manejo seguro de sustancias quimicas\\n- Si hay riesgo electrico: Seguridad electrica\\n- Si hay riesgo mecanico: Operacion segura de maquinaria\\n- Si hay conductores: Seguridad vial\\n- Otros segun actividad economica\\n\\nTOTAL: Minimo 12, maximo 20 temas",
+
+        "8": "Genera el cronograma anual de capacitaciones para el Programa PYP.\\n\\nFORMATO - TABLA tipo Gantt simplificado:\\n| No. | Tema | Ene | Feb | Mar | Abr | May | Jun | Jul | Ago | Sep | Oct | Nov | Dic |\\n\\nCRITERIOS DE DISTRIBUCION:\\n\\n1. **Primer trimestre (Ene-Mar):**\\n   - Induccion al SG-SST\\n   - Plan de emergencias\\n   - Politica y objetivos\\n\\n2. **Segundo trimestre (Abr-Jun):**\\n   - Identificacion de peligros\\n   - Uso de EPP\\n   - Riesgos especificos del cargo\\n\\n3. **Tercer trimestre (Jul-Sep):**\\n   - Estilos de vida saludable\\n   - Prevencion de riesgo psicosocial\\n   - Manejo de emergencias (simulacro)\\n\\n4. **Cuarto trimestre (Oct-Dic):**\\n   - Reinduccion anual\\n   - Evaluacion del programa\\n   - Actualizacion normativa\\n\\nMARCAR CON X los meses donde se ejecutara cada capacitacion.\\n\\nNOTA: Distribuir las capacitaciones de forma equilibrada en el ano, evitando concentrar todo en un solo periodo.",
+
+        "9": "Describe la metodologia para ejecutar las capacitaciones del Programa PYP.\\n\\nINCLUIR:\\n\\n1. **MODALIDADES DE CAPACITACION:**\\n   - Presencial\\n   - Virtual sincronica\\n   - Virtual asincronica (plataforma e-learning)\\n   - Mixta (blended)\\n\\n2. **TECNICAS PEDAGOGICAS:**\\n   - Exposicion teorica\\n   - Talleres practicos\\n   - Estudios de caso\\n   - Simulaciones y simulacros\\n   - Demostraciones\\n   - Videos y material audiovisual\\n\\n3. **DURACION DE LAS SESIONES:**\\n   - Induccion: 2-4 horas\\n   - Capacitaciones periodicas: 1-2 horas\\n   - Capacitaciones especificas: segun tema\\n\\n4. **EVALUACION DEL APRENDIZAJE:**\\n   - Evaluacion escrita (pre y post test)\\n   - Evaluacion practica (si aplica)\\n   - Criterio de aprobacion: minimo 80%\\n   - Retroalimentacion y refuerzo\\n\\n5. **CAPACITADORES:**\\n   - Personal interno competente\\n   - Responsable del SG-SST\\n   - ARL\\n   - Proveedores externos especializados\\n\\nFORMATO: Lista estructurada con vinetas",
+
+        "10": "Define los indicadores de gestion para el Programa de Capacitacion PYP.\\n\\nGENERAR TABLA con columnas:\\n| Indicador | Formula | Meta | Frecuencia | Responsable |\\n\\nINCLUIR MINIMO 5 INDICADORES:\\n\\n1. **INDICADORES DE COBERTURA:**\\n   - Cobertura de induccion = (Trabajadores con induccion / Total trabajadores nuevos) x 100\\n   - Meta: 100%\\n\\n   - Cobertura de capacitacion = (Trabajadores capacitados / Total trabajadores) x 100\\n   - Meta: >= 90%\\n\\n2. **INDICADORES DE CUMPLIMIENTO:**\\n   - Cumplimiento del cronograma = (Capacitaciones ejecutadas / Capacitaciones programadas) x 100\\n   - Meta: >= 90%\\n\\n3. **INDICADORES DE EFECTIVIDAD:**\\n   - Evaluacion promedio = Suma de calificaciones / Total evaluados\\n   - Meta: >= 80%\\n\\n   - Tasa de aprobacion = (Trabajadores aprobados / Total evaluados) x 100\\n   - Meta: >= 95%\\n\\n4. **INDICADORES DE IMPACTO:**\\n   - Reduccion de accidentes post-capacitacion (comparativo semestral)\\n   - Reduccion de actos inseguros detectados\\n\\nNOTA: Indicar formula exacta y unidad de medida",
+
+        "11": "Define los roles y responsabilidades para el Programa de Capacitacion PYP.\\n\\nGENERAR TABLA con columnas:\\n| Rol | Responsabilidades |\\n\\nROLES A INCLUIR:\\n\\n1. **ALTA DIRECCION / GERENCIA:**\\n   - Aprobar el programa y asignar recursos\\n   - Participar en capacitaciones de liderazgo en SST\\n   - Asegurar tiempo para capacitacion de trabajadores\\n\\n2. **RESPONSABLE DEL SG-SST:**\\n   - Disenar y actualizar el programa de capacitacion\\n   - Coordinar la ejecucion del cronograma\\n   - Gestionar capacitadores internos y externos\\n   - Evaluar la efectividad del programa\\n   - Mantener registros de capacitacion\\n\\n3. **COPASST / VIGIA SST:**\\n   - Participar en la identificacion de necesidades\\n   - Proponer temas de capacitacion\\n   - Verificar la ejecucion del programa\\n\\n4. **JEFES / SUPERVISORES:**\\n   - Facilitar la asistencia de su equipo\\n   - Identificar necesidades especificas\\n   - Reforzar lo aprendido en el trabajo\\n\\n5. **TRABAJADORES:**\\n   - Asistir puntualmente a las capacitaciones\\n   - Participar activamente\\n   - Aplicar lo aprendido\\n   - Aprobar las evaluaciones\\n\\n6. **ARL:**\\n   - Brindar asesoria tecnica\\n   - Apoyar con capacitaciones especializadas\\n   - Proporcionar material educativo",
+
+        "12": "Identifica los recursos necesarios para ejecutar el Programa de Capacitacion PYP.\\n\\nCATEGORIAS:\\n\\n1. **RECURSOS HUMANOS:**\\n   - Responsable del SG-SST (coordinacion)\\n   - Capacitadores internos\\n   - Capacitadores externos (ARL, proveedores)\\n   - Personal administrativo de apoyo\\n\\n2. **RECURSOS FISICOS:**\\n   - Sala de capacitacion o auditorio\\n   - Mobiliario (sillas, mesas)\\n   - Equipos audiovisuales (proyector, pantalla, sonido)\\n   - Tablero o papelografo\\n\\n3. **RECURSOS TECNOLOGICOS:**\\n   - Computador portatil\\n   - Plataforma virtual (si aplica)\\n   - Internet\\n   - Software de presentaciones\\n\\n4. **MATERIALES:**\\n   - Material didactico impreso\\n   - Formatos de asistencia\\n   - Evaluaciones\\n   - Certificados\\n   - EPP para demostraciones (si aplica)\\n\\n5. **RECURSOS FINANCIEROS:**\\n   - Presupuesto estimado anual: [COMPLETAR]\\n   - Incluir: honorarios capacitadores externos, materiales, refrigerios, certificados\\n\\nNOTA: El presupuesto debe estar incluido en el plan anual de SST",
+
+        "13": "Lista los registros y formatos asociados al Programa de Capacitacion PYP.\\n\\nGENERAR TABLA con columnas:\\n| Codigo | Nombre del Formato | Responsable | Frecuencia | Retencion |\\n\\nFORMATOS REQUERIDOS:\\n\\n1. **FOR-CAP-001** - Formato de Asistencia a Capacitacion\\n   - Responsable: Responsable SST\\n   - Frecuencia: Por cada capacitacion\\n   - Retencion: 20 anos\\n\\n2. **FOR-CAP-002** - Evaluacion de Capacitacion (Pre y Post Test)\\n   - Responsable: Capacitador\\n   - Frecuencia: Por cada capacitacion\\n   - Retencion: 20 anos\\n\\n3. **FOR-CAP-003** - Certificado de Capacitacion\\n   - Responsable: Responsable SST\\n   - Frecuencia: Por trabajador capacitado\\n   - Retencion: 20 anos\\n\\n4. **FOR-CAP-004** - Matriz de Capacitacion por Trabajador\\n   - Responsable: Responsable SST\\n   - Frecuencia: Actualizacion continua\\n   - Retencion: Vigencia del trabajador + 5 anos\\n\\n5. **FOR-CAP-005** - Evaluacion de Efectividad de Capacitacion\\n   - Responsable: Responsable SST\\n   - Frecuencia: Trimestral\\n   - Retencion: 5 anos\\n\\n6. **FOR-CAP-006** - Informe de Indicadores de Capacitacion\\n   - Responsable: Responsable SST\\n   - Frecuencia: Trimestral\\n   - Retencion: 5 anos\\n\\nNOTA: Los tiempos de retencion se basan en el Art. 2.2.4.6.13 del Decreto 1072/2015"
+    }',
+    'empresa,nit,actividad_economica,nivel_riesgo,total_trabajadores,peligros_identificados,responsable_sst,sedes',
+    1, -- activo
+    1, -- orden
+    1, -- aplica_7
+    1, -- aplica_21
+    1  -- aplica_60
+)
+ON DUPLICATE KEY UPDATE
+    nombre = VALUES(nombre),
+    descripcion = VALUES(descripcion),
+    estructura_json = VALUES(estructura_json),
+    prompts_json = VALUES(prompts_json),
+    variables_contexto = VALUES(variables_contexto),
+    updated_at = CURRENT_TIMESTAMP;
+
+-- ============================================================================
+-- VERIFICACION
+-- ============================================================================
+
+-- Verificar que se inserto correctamente
+SELECT
+    id_plantilla,
+    nombre,
+    codigo_sugerido,
+    JSON_LENGTH(estructura_json) AS num_secciones,
+    aplica_7,
+    aplica_21,
+    aplica_60,
+    activo
+FROM tbl_doc_plantillas
+WHERE codigo_sugerido = 'PRG-CAP';
+
+-- ============================================================================
+-- NOTA: Ejecutar en ambos entornos (local y produccion)
+-- Ver: proyecto_documentacion_sst_parte1.md para instrucciones de sincronizacion
+-- ============================================================================

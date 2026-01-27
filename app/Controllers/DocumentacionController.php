@@ -59,9 +59,13 @@ class DocumentacionController extends Controller
         // Obtener documentos organizados por estado para las cards
         $documentosPorEstado = $this->getDocumentosPorEstado($idCliente);
 
+        // Obtener árbol de carpetas con documentos y estados IA
+        $carpetasConDocs = $this->carpetaModel->getArbolConDocumentosYEstados($idCliente);
+
         return view('documentacion/dashboard', [
             'cliente' => $cliente,
             'carpetas' => $carpetas,
+            'carpetasConDocs' => $carpetasConDocs,
             'documentos' => $documentos,
             'estadisticas' => $estadisticas,
             'cumplimiento' => $cumplimiento,
@@ -253,18 +257,123 @@ class DocumentacionController extends Controller
             return redirect()->back()->with('error', 'Carpeta no encontrada');
         }
 
-        $ruta = $this->carpetaModel->getRuta($idCarpeta);
+        // Carpetas tipo raíz o phva redirigen al dashboard del cliente
+        if (in_array($carpeta['tipo'], ['raiz', 'phva'])) {
+            return redirect()->to('documentacion/' . $carpeta['id_cliente']);
+        }
+
+        $ruta = $this->carpetaModel->getRutaCompleta($idCarpeta);
         $subcarpetas = $this->carpetaModel->getHijos($idCarpeta);
-        $documentos = $this->documentoModel->getByCarpeta($idCarpeta);
+        $documentos = $this->documentoModel->getByCarpetaConEstadoIA($idCarpeta);
         $cliente = $this->clienteModel->find($carpeta['id_cliente']);
+
+        // Obtener estadísticas de estado IA de las subcarpetas
+        foreach ($subcarpetas as &$sub) {
+            $sub['stats'] = $this->documentoModel->getEstadisticasIAPorCarpeta($sub['id_carpeta']);
+        }
+
+        // Determinar si esta carpeta tiene fases de dependencia
+        $fasesInfo = null;
+        $tipoCarpetaFases = $this->determinarTipoCarpetaFases($carpeta);
+        $documentoExistente = null;
+
+        if ($tipoCarpetaFases) {
+            $fasesService = new \App\Services\FasesDocumentoService();
+            $fasesInfo = $fasesService->getResumenFases($cliente['id_cliente'], $tipoCarpetaFases);
+
+            // Verificar si ya existe un documento generado para esta carpeta
+            if ($tipoCarpetaFases === 'capacitacion_sst') {
+                $db = \Config\Database::connect();
+                $documentoExistente = $db->table('tbl_documentos_sst')
+                    ->where('id_cliente', $cliente['id_cliente'])
+                    ->where('tipo_documento', 'programa_capacitacion')
+                    ->where('anio', date('Y'))
+                    ->get()
+                    ->getRowArray();
+            }
+        }
+
+        // Obtener documentos SST aprobados para mostrar en tabla
+        $documentosSSTAprobados = [];
+        if ($tipoCarpetaFases === 'capacitacion_sst') {
+            $db = \Config\Database::connect();
+            $documentosSSTAprobados = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->whereIn('estado', ['borrador', 'generado', 'aprobado', 'firmado', 'pendiente_firma'])
+                ->orderBy('anio', 'DESC')
+                ->orderBy('updated_at', 'DESC')
+                ->get()
+                ->getResultArray();
+
+            // Agregar conteo de firmas, versión texto y lista de versiones para cada documento
+            foreach ($documentosSSTAprobados as &$docSST) {
+                $firmaStats = $db->table('tbl_doc_firma_solicitudes')
+                    ->select("COUNT(*) as total, SUM(CASE WHEN estado = 'firmado' THEN 1 ELSE 0 END) as firmadas")
+                    ->where('id_documento', $docSST['id_documento'])
+                    ->get()
+                    ->getRowArray();
+                $docSST['firmas_total'] = (int)($firmaStats['total'] ?? 0);
+                $docSST['firmas_firmadas'] = (int)($firmaStats['firmadas'] ?? 0);
+
+                // Obtener todas las versiones del documento
+                $versiones = $db->table('tbl_doc_versiones_sst')
+                    ->select('id_version, version_texto, tipo_cambio, descripcion_cambio, estado, autorizado_por, fecha_autorizacion, archivo_pdf')
+                    ->where('id_documento', $docSST['id_documento'])
+                    ->orderBy('id_version', 'DESC')
+                    ->get()
+                    ->getResultArray();
+                $docSST['versiones'] = $versiones;
+                $docSST['version_texto'] = !empty($versiones) ? $versiones[0]['version_texto'] : ($docSST['version'] . '.0');
+
+                // Obtener enlace PDF de la versión vigente
+                $versionVigente = array_filter($versiones, fn($v) => $v['estado'] === 'vigente');
+                $versionVigente = reset($versionVigente);
+                $docSST['archivo_pdf'] = $versionVigente['archivo_pdf'] ?? null;
+            }
+            unset($docSST);
+        }
 
         return view('documentacion/carpeta', [
             'carpeta' => $carpeta,
             'ruta' => $ruta,
             'subcarpetas' => $subcarpetas,
             'documentos' => $documentos,
-            'cliente' => $cliente
+            'cliente' => $cliente,
+            'fasesInfo' => $fasesInfo,
+            'tipoCarpetaFases' => $tipoCarpetaFases,
+            'documentoExistente' => $documentoExistente,
+            'documentosSSTAprobados' => $documentosSSTAprobados
         ]);
+    }
+
+    /**
+     * Determina el tipo de carpeta para verificación de fases
+     * Basado en el nombre o código de la carpeta
+     */
+    protected function determinarTipoCarpetaFases(array $carpeta): ?string
+    {
+        $nombre = strtolower($carpeta['nombre'] ?? '');
+        $codigo = strtolower($carpeta['codigo'] ?? '');
+
+        // 1.2.1. Programa Capacitacion PYP (Ciclo Planear)
+        if (strpos($nombre, 'capacitaci') !== false ||
+            $codigo === '1.2.1') {
+            return 'capacitacion_sst';
+        }
+
+        // 2.4.1. Plan Anual de Trabajo (Ciclo Planear)
+        if ((strpos($nombre, 'plan') !== false && strpos($nombre, 'objetivos') !== false) ||
+            $codigo === '2.4.1') {
+            return 'plan_trabajo';
+        }
+
+        // 1.1.1. Responsable del SG-SST (Ciclo Planear)
+        if (strpos($nombre, 'responsable') !== false ||
+            $codigo === '1.1.1') {
+            return 'responsables_sst';
+        }
+
+        return null;
     }
 
     /**
@@ -304,6 +413,30 @@ class DocumentacionController extends Controller
             return redirect()->back()->with('error', 'Documento no encontrado');
         }
 
+        // Obtener cliente para la vista
+        $cliente = $this->clienteModel->find($documento['id_cliente']);
+
+        // Verificar si el documento está en una carpeta con fases de dependencia
+        $idCarpeta = $documento['id_carpeta'] ?? null;
+        $fasesInfo = null;
+
+        if ($idCarpeta) {
+            $carpeta = $this->carpetaModel->find($idCarpeta);
+            if ($carpeta) {
+                $tipoCarpetaFases = $this->determinarTipoCarpetaFases($carpeta);
+                if ($tipoCarpetaFases) {
+                    $fasesService = new \App\Services\FasesDocumentoService();
+                    $fasesInfo = $fasesService->getResumenFases($cliente['id_cliente'], $tipoCarpetaFases);
+
+                    // Si las fases no están completas, redirigir a la carpeta
+                    if (!$fasesInfo['puede_generar_documento']) {
+                        return redirect()->to("/documentacion/carpeta/{$idCarpeta}")
+                            ->with('error', 'Debe completar las fases previas antes de acceder a este documento. Complete: Cronograma → Plan de Trabajo → Indicadores');
+                    }
+                }
+            }
+        }
+
         $seccionModel = new \App\Models\DocSeccionModel();
         $versionModel = new \App\Models\DocVersionModel();
 
@@ -311,11 +444,13 @@ class DocumentacionController extends Controller
         $versiones = $versionModel->getByDocumento($idDocumento);
         $progreso = $seccionModel->getProgreso($idDocumento);
 
-        return view('documentacion/ver_documento', [
+        return view('documentacion/ver', [
             'documento' => $documento,
             'secciones' => $secciones,
             'versiones' => $versiones,
-            'progreso' => $progreso
+            'progreso' => $progreso,
+            'cliente' => $cliente,
+            'fasesInfo' => $fasesInfo
         ]);
     }
 

@@ -205,7 +205,7 @@
                                 <i class="bi bi-gear me-2"></i>Acciones
                             </h6>
 
-                            <a href="/documentacion/editar/<?= $documento['id_documento'] ?>"
+                            <a href="<?= base_url('documentacion/editar/' . $documento['id_documento']) ?>"
                                class="btn btn-outline-primary w-100 mb-2">
                                 <i class="bi bi-pencil me-1"></i>Seguir Editando
                             </a>
@@ -297,6 +297,25 @@
                                 Este documento no tiene secciones definidas.
                             </div>
                         <?php else: ?>
+                            <?php
+                            // Función para convertir Markdown básico a HTML
+                            function markdownToHtml($text) {
+                                $text = esc($text);
+                                // Negritas: **texto** -> <strong>texto</strong>
+                                $text = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $text);
+                                // Cursivas: *texto* -> <em>texto</em>
+                                $text = preg_replace('/\*(.+?)\*/s', '<em>$1</em>', $text);
+                                // Listas con guión al inicio de línea
+                                $text = preg_replace('/^- (.+)$/m', '<li>$1</li>', $text);
+                                // Envolver listas consecutivas en <ul>
+                                $text = preg_replace('/(<li>.*<\/li>\n?)+/s', '<ul>$0</ul>', $text);
+                                // Limpiar ul anidados
+                                $text = str_replace("</ul>\n<ul>", "\n", $text);
+                                // Saltos de línea
+                                $text = nl2br($text);
+                                return $text;
+                            }
+                            ?>
                             <?php foreach ($secciones as $seccion): ?>
                                 <h5 class="seccion-titulo">
                                     <?= $seccion['numero_seccion'] ?>. <?= esc($seccion['nombre_seccion']) ?>
@@ -305,7 +324,7 @@
                                     <?php if (empty($seccion['contenido'])): ?>
                                         <p class="text-muted fst-italic">[Sección pendiente de contenido]</p>
                                     <?php else: ?>
-                                        <?= nl2br(esc($seccion['contenido'])) ?>
+                                        <?= markdownToHtml($seccion['contenido']) ?>
                                     <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>

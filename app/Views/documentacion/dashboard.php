@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentación SST - <?= esc($cliente['nombre_cliente']) ?></title>
+    <title>Documentacion SST - <?= esc($cliente['nombre_cliente']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
@@ -14,115 +14,191 @@
         .card-stat:hover {
             transform: translateY(-3px);
         }
+
+        /* Estados IA */
+        .estado-ia-pendiente { background-color: #6c757d !important; color: white !important; }
+        .estado-ia-creado { background-color: #ffc107 !important; color: #212529 !important; }
+        .estado-ia-aprobado { background-color: #198754 !important; color: white !important; }
+
+        /* Estructura de carpetas tipo arbol */
         .folder-tree {
             list-style: none;
-            padding-left: 20px;
+            padding-left: 0;
+            margin: 0;
+        }
+        .folder-tree .folder-tree {
+            padding-left: 24px;
+            margin-left: 12px;
+            border-left: 1px dashed #dee2e6;
         }
         .folder-tree > li {
-            margin: 5px 0;
+            margin: 2px 0;
         }
+
+        /* Carpeta colapsable */
+        .folder-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+        .folder-header:hover {
+            background-color: #f8f9fa;
+        }
+        .folder-header.phva-planear { border-left: 4px solid #0d6efd; }
+        .folder-header.phva-hacer { border-left: 4px solid #198754; }
+        .folder-header.phva-verificar { border-left: 4px solid #ffc107; }
+        .folder-header.phva-actuar { border-left: 4px solid #dc3545; }
+
+        .folder-chevron {
+            transition: transform 0.2s;
+            font-size: 0.75rem;
+            width: 16px;
+            color: #6c757d;
+        }
+        .folder-chevron.rotated {
+            transform: rotate(90deg);
+        }
+
         .folder-icon {
+            font-size: 1.1rem;
             margin-right: 8px;
         }
 
-        /* Cards de documentos */
-        .doc-card {
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: 2px solid transparent;
+        .folder-name {
+            flex-grow: 1;
+            font-weight: 500;
+            color: #333;
+            text-decoration: none;
         }
-        .doc-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .doc-card.sin-generar {
-            border-left: 4px solid #dc3545;
-        }
-        .doc-card.borrador {
-            border-left: 4px solid #0dcaf0;
-        }
-        .doc-card.en-revision {
-            border-left: 4px solid #ffc107;
-        }
-        .doc-card.pendiente-firma {
-            border-left: 4px solid #6f42c1;
-        }
-        .doc-card.aprobado {
-            border-left: 4px solid #198754;
+        .folder-name:hover {
+            color: #0d6efd;
         }
 
-        .doc-card .card-body {
-            padding: 0.75rem;
+        .folder-stats {
+            display: flex;
+            gap: 4px;
+            margin-left: 8px;
         }
-        .doc-card .doc-codigo {
-            font-family: monospace;
+        .folder-stats .badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            min-width: 20px;
+        }
+
+        .folder-content {
+            display: none;
+        }
+        .folder-content.show {
+            display: block;
+        }
+
+        /* Documentos dentro de carpetas */
+        .docs-container {
+            margin-left: 40px;
+            padding: 8px 0;
+        }
+
+        .doc-card {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            margin: 4px 0;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.15s;
+        }
+        .doc-card:hover {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            transform: translateX(4px);
+            color: #333;
+        }
+
+        .doc-estado-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .doc-estado-indicator.pendiente { background-color: #6c757d; }
+        .doc-estado-indicator.creado { background-color: #ffc107; }
+        .doc-estado-indicator.aprobado { background-color: #198754; }
+
+        .doc-info {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .doc-nombre {
+            font-weight: 500;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .doc-meta {
             font-size: 0.75rem;
             color: #6c757d;
         }
-        .doc-card .doc-nombre {
-            font-size: 0.85rem;
-            font-weight: 500;
-            line-height: 1.2;
-            margin-bottom: 0.25rem;
-        }
-        .doc-card .doc-tipo {
-            font-size: 0.7rem;
-            color: #6c757d;
+
+        .doc-estado-badge {
+            margin-left: 12px;
         }
 
-        /* Secciones de estado */
-        .estado-section {
-            margin-bottom: 1.5rem;
+        .doc-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: 12px;
+            opacity: 0;
+            transition: opacity 0.15s;
         }
-        .estado-header {
+        .doc-card:hover .doc-actions {
+            opacity: 1;
+        }
+
+        /* Panel principal */
+        .main-panel {
+            max-height: calc(100vh - 220px);
+            overflow-y: auto;
+        }
+        .main-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        .main-panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .main-panel::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        /* Botones de accion */
+        .btn-expand-all {
+            font-size: 0.8rem;
+            padding: 4px 12px;
+        }
+
+        /* Leyenda */
+        .leyenda-estados {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        .leyenda-item {
             display: flex;
             align-items: center;
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e9ecef;
-        }
-        .estado-badge {
-            font-size: 0.9rem;
-            padding: 0.35rem 0.75rem;
-        }
-        .estado-count {
-            font-size: 0.8rem;
-            color: #6c757d;
-            margin-left: 0.5rem;
-        }
-
-        /* Grid de cards */
-        .docs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 0.75rem;
-        }
-
-        /* Panel izquierdo - Carpetas */
-        .carpetas-panel {
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
-        }
-
-        /* Panel derecho - Documentos */
-        .documentos-panel {
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
-        }
-
-        /* Scrollbar personalizado */
-        .carpetas-panel::-webkit-scrollbar,
-        .documentos-panel::-webkit-scrollbar {
-            width: 6px;
-        }
-        .carpetas-panel::-webkit-scrollbar-track,
-        .documentos-panel::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        .carpetas-panel::-webkit-scrollbar-thumb,
-        .documentos-panel::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
+            gap: 6px;
         }
     </style>
 </head>
@@ -130,7 +206,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="/documentacion/seleccionar-cliente">
-                <i class="bi bi-folder-fill me-2"></i>Documentación SST
+                <i class="bi bi-folder-fill me-2"></i>Documentacion SST
             </a>
             <div class="navbar-nav ms-auto">
                 <span class="navbar-text text-white">
@@ -157,14 +233,14 @@
             </div>
         <?php endif; ?>
 
-        <!-- Tarjetas de estadísticas -->
+        <!-- Tarjetas de estadisticas -->
         <div class="row mb-3">
             <div class="col-md-3">
                 <div class="card card-stat border-0 shadow-sm">
                     <div class="card-body py-2">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="text-muted mb-0 small">Estándares</h6>
+                                <h6 class="text-muted mb-0 small">Estandares</h6>
                                 <h4 class="mb-0"><?= $cumplimiento['cumple'] ?? 0 ?>/<?= $cumplimiento['total'] ?? 0 ?></h4>
                                 <small class="text-success"><?= $cumplimiento['porcentaje_cumplimiento'] ?? 0 ?>% cumplimiento</small>
                             </div>
@@ -196,9 +272,9 @@
                     <div class="card-body py-2">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="text-muted mb-0 small">En Revisión</h6>
+                                <h6 class="text-muted mb-0 small">En Revision</h6>
                                 <h4 class="mb-0"><?= $estadisticas['en_revision'] ?? 0 ?></h4>
-                                <small class="text-warning">Pendientes de aprobación</small>
+                                <small class="text-warning">Pendientes de aprobacion</small>
                             </div>
                             <div class="bg-warning bg-opacity-10 rounded-circle p-2">
                                 <i class="bi bi-hourglass-split text-warning fs-5"></i>
@@ -214,7 +290,7 @@
                             <div>
                                 <h6 class="text-muted mb-0 small">Borradores</h6>
                                 <h4 class="mb-0"><?= $estadisticas['borrador'] ?? 0 ?></h4>
-                                <small class="text-info">En elaboración</small>
+                                <small class="text-info">En elaboracion</small>
                             </div>
                             <div class="bg-info bg-opacity-10 rounded-circle p-2">
                                 <i class="bi bi-pencil text-info fs-5"></i>
@@ -225,235 +301,101 @@
             </div>
         </div>
 
+        <!-- Panel principal con estructura de carpetas -->
         <div class="row">
-            <!-- Panel Izquierdo: Estructura PHVA -->
-            <div class="col-md-4">
+            <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                        <h6 class="mb-0"><i class="bi bi-folder-fill me-2 text-warning"></i>Estructura PHVA</h6>
-                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalGenerarEstructura">
-                            <i class="bi bi-plus-lg"></i>
-                        </button>
-                    </div>
-                    <div class="card-body carpetas-panel">
-                        <?php if (empty($carpetas)): ?>
-                            <div class="text-center py-4">
-                                <i class="bi bi-folder-x text-muted" style="font-size: 2.5rem;"></i>
-                                <p class="text-muted mt-2 mb-2">No hay estructura de carpetas</p>
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-folder-fill text-warning me-2"></i>
+                                    Estructura de Documentos SG-SST
+                                </h5>
+                                <span class="badge bg-primary"><?= $documentosPorEstado['contadores']['nivel_cliente'] ?? 60 ?> estandares</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary btn-sm btn-expand-all" onclick="expandAll()">
+                                    <i class="bi bi-arrows-expand me-1"></i>Expandir todo
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm btn-expand-all" onclick="collapseAll()">
+                                    <i class="bi bi-arrows-collapse me-1"></i>Colapsar todo
+                                </button>
                                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalGenerarEstructura">
-                                    <i class="bi bi-plus-lg me-1"></i>Generar Estructura <?= date('Y') ?>
+                                    <i class="bi bi-folder-plus me-1"></i>Generar Estructura
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Leyenda de estados -->
+                        <div class="leyenda-estados mt-3">
+                            <span class="text-muted"><strong>Estados IA:</strong></span>
+                            <div class="leyenda-item">
+                                <span class="doc-estado-indicator pendiente"></span>
+                                <span>Pendiente (sin contenido)</span>
+                            </div>
+                            <div class="leyenda-item">
+                                <span class="doc-estado-indicator creado"></span>
+                                <span>Creado (contenido generado)</span>
+                            </div>
+                            <div class="leyenda-item">
+                                <span class="doc-estado-indicator aprobado"></span>
+                                <span>Aprobado (todas las secciones)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body main-panel">
+                        <?php if (empty($carpetasConDocs)): ?>
+                            <div class="text-center py-5">
+                                <i class="bi bi-folder-x text-muted" style="font-size: 4rem;"></i>
+                                <h5 class="text-muted mt-3">No hay estructura de carpetas</h5>
+                                <p class="text-muted">Genera la estructura de carpetas PHVA segun la Resolucion 0312/2019</p>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalGenerarEstructura">
+                                    <i class="bi bi-folder-plus me-1"></i>Generar Estructura <?= date('Y') ?>
                                 </button>
                             </div>
                         <?php else: ?>
-                            <?php echo renderCarpetas($carpetas); ?>
+                            <ul class="folder-tree">
+                                <?php echo renderCarpetasJerarquicas($carpetasConDocs, $cliente['id_cliente'], 0); ?>
+                            </ul>
                         <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Accesos rápidos -->
-                <div class="row mt-3 g-2">
-                    <div class="col-6">
-                        <a href="/estandares/<?= $cliente['id_cliente'] ?>" class="card border-0 shadow-sm text-decoration-none h-100">
-                            <div class="card-body text-center py-3">
-                                <i class="bi bi-list-check text-primary fs-4"></i>
-                                <h6 class="mt-1 mb-0 small text-dark">Ver Estándares</h6>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="/estandares/catalogo" class="card border-0 shadow-sm text-decoration-none h-100">
-                            <div class="card-body text-center py-3">
-                                <i class="bi bi-book text-success fs-4"></i>
-                                <h6 class="mt-1 mb-0 small text-dark">Catálogo 60</h6>
-                            </div>
-                        </a>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Panel Derecho: Documentos por Estado -->
-            <div class="col-md-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                        <h6 class="mb-0">
-                            <i class="bi bi-file-earmark-text me-2"></i>Documentos del Cliente
-                            <span class="badge bg-primary ms-2"><?= $documentosPorEstado['contadores']['nivel_cliente'] ?? 60 ?> estándares</span>
-                        </h6>
-                        <span class="badge bg-secondary">
-                            <?= $documentosPorEstado['contadores']['total_plantillas'] ?? 0 ?> documentos aplicables
-                        </span>
+        <!-- Accesos rapidos -->
+        <div class="row mt-3">
+            <div class="col-md-3">
+                <a href="/estandares/<?= $cliente['id_cliente'] ?>" class="card border-0 shadow-sm text-decoration-none">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-list-check text-primary fs-4"></i>
+                        <h6 class="mt-2 mb-0 text-dark">Ver Estandares</h6>
                     </div>
-                    <div class="card-body documentos-panel">
-
-                        <!-- SIN GENERAR -->
-                        <?php if (!empty($documentosPorEstado['sin_generar'])): ?>
-                        <div class="estado-section">
-                            <div class="estado-header">
-                                <span class="badge bg-danger estado-badge">
-                                    <i class="bi bi-exclamation-circle me-1"></i>Sin Generar
-                                </span>
-                                <span class="estado-count">(<?= count($documentosPorEstado['sin_generar']) ?> documentos pendientes)</span>
-                            </div>
-                            <div class="docs-grid">
-                                <?php foreach ($documentosPorEstado['sin_generar'] as $item): ?>
-                                <div class="card doc-card sin-generar"
-                                     onclick="crearDocumento(<?= $item['plantilla']['id_plantilla'] ?>, '<?= esc($item['nombre']) ?>')"
-                                     title="Clic para crear con IA">
-                                    <div class="card-body">
-                                        <div class="doc-codigo"><?= esc($item['codigo_sugerido']) ?></div>
-                                        <div class="doc-nombre"><?= esc($item['nombre']) ?></div>
-                                        <div class="doc-tipo"><?= esc($item['tipo_nombre']) ?></div>
-                                        <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-1">
-                                            <?php if (!empty($item['codigo_carpeta'])): ?>
-                                            <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size: 0.65rem;" title="Carpeta destino">
-                                                <i class="bi bi-folder me-1"></i><?= esc($item['codigo_carpeta']) ?>
-                                            </span>
-                                            <?php endif; ?>
-                                            <span class="badge bg-danger bg-opacity-10 text-danger" style="font-size: 0.65rem;">
-                                                <i class="bi bi-magic me-1"></i>Crear con IA
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- BORRADORES -->
-                        <?php if (!empty($documentosPorEstado['borrador'])): ?>
-                        <div class="estado-section">
-                            <div class="estado-header">
-                                <span class="badge bg-info estado-badge">
-                                    <i class="bi bi-pencil me-1"></i>Borradores
-                                </span>
-                                <span class="estado-count">(<?= count($documentosPorEstado['borrador']) ?> en elaboración)</span>
-                            </div>
-                            <div class="docs-grid">
-                                <?php foreach ($documentosPorEstado['borrador'] as $doc): ?>
-                                <div class="card doc-card borrador"
-                                     onclick="window.location.href='/documentacion/editar/<?= $doc['id_documento'] ?>'"
-                                     title="Clic para editar">
-                                    <div class="card-body">
-                                        <div class="doc-codigo"><?= esc($doc['codigo']) ?></div>
-                                        <div class="doc-nombre"><?= esc($doc['nombre']) ?></div>
-                                        <div class="doc-tipo">v<?= esc($doc['version_actual']) ?></div>
-                                        <div class="mt-2">
-                                            <span class="badge bg-info bg-opacity-10 text-info" style="font-size: 0.65rem;">
-                                                <i class="bi bi-pencil me-1"></i>Editar
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- EN REVISIÓN -->
-                        <?php if (!empty($documentosPorEstado['en_revision'])): ?>
-                        <div class="estado-section">
-                            <div class="estado-header">
-                                <span class="badge bg-warning text-dark estado-badge">
-                                    <i class="bi bi-hourglass-split me-1"></i>En Revisión
-                                </span>
-                                <span class="estado-count">(<?= count($documentosPorEstado['en_revision']) ?> pendientes)</span>
-                            </div>
-                            <div class="docs-grid">
-                                <?php foreach ($documentosPorEstado['en_revision'] as $doc): ?>
-                                <div class="card doc-card en-revision"
-                                     onclick="window.location.href='/documentacion/ver/<?= $doc['id_documento'] ?>'"
-                                     title="Clic para ver">
-                                    <div class="card-body">
-                                        <div class="doc-codigo"><?= esc($doc['codigo']) ?></div>
-                                        <div class="doc-nombre"><?= esc($doc['nombre']) ?></div>
-                                        <div class="doc-tipo">v<?= esc($doc['version_actual']) ?></div>
-                                        <div class="mt-2">
-                                            <span class="badge bg-warning bg-opacity-25 text-dark" style="font-size: 0.65rem;">
-                                                <i class="bi bi-eye me-1"></i>Revisar
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- PENDIENTE FIRMA -->
-                        <?php if (!empty($documentosPorEstado['pendiente_firma'])): ?>
-                        <div class="estado-section">
-                            <div class="estado-header">
-                                <span class="badge bg-purple estado-badge" style="background-color: #6f42c1;">
-                                    <i class="bi bi-pen me-1"></i>Pendiente Firma
-                                </span>
-                                <span class="estado-count">(<?= count($documentosPorEstado['pendiente_firma']) ?> esperando firma)</span>
-                            </div>
-                            <div class="docs-grid">
-                                <?php foreach ($documentosPorEstado['pendiente_firma'] as $doc): ?>
-                                <div class="card doc-card pendiente-firma"
-                                     onclick="window.location.href='/firma/estado/<?= $doc['id_documento'] ?>'"
-                                     title="Clic para ver estado de firma">
-                                    <div class="card-body">
-                                        <div class="doc-codigo"><?= esc($doc['codigo']) ?></div>
-                                        <div class="doc-nombre"><?= esc($doc['nombre']) ?></div>
-                                        <div class="doc-tipo">v<?= esc($doc['version_actual']) ?></div>
-                                        <div class="mt-2">
-                                            <span class="badge text-white" style="font-size: 0.65rem; background-color: #6f42c1;">
-                                                <i class="bi bi-pen me-1"></i>Ver firma
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- APROBADOS -->
-                        <?php if (!empty($documentosPorEstado['aprobado'])): ?>
-                        <div class="estado-section">
-                            <div class="estado-header">
-                                <span class="badge bg-success estado-badge">
-                                    <i class="bi bi-check-circle me-1"></i>Aprobados
-                                </span>
-                                <span class="estado-count">(<?= count($documentosPorEstado['aprobado']) ?> documentos)</span>
-                            </div>
-                            <div class="docs-grid">
-                                <?php foreach ($documentosPorEstado['aprobado'] as $doc): ?>
-                                <div class="card doc-card aprobado"
-                                     onclick="window.location.href='/documentacion/ver/<?= $doc['id_documento'] ?>'"
-                                     title="Clic para ver y descargar">
-                                    <div class="card-body">
-                                        <div class="doc-codigo"><?= esc($doc['codigo']) ?></div>
-                                        <div class="doc-nombre"><?= esc($doc['nombre']) ?></div>
-                                        <div class="doc-tipo">v<?= esc($doc['version_actual']) ?></div>
-                                        <div class="mt-2">
-                                            <span class="badge bg-success bg-opacity-10 text-success" style="font-size: 0.65rem;">
-                                                <i class="bi bi-download me-1"></i>Descargar
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- Si no hay ningún documento -->
-                        <?php if (empty($documentosPorEstado['sin_generar']) &&
-                                  empty($documentosPorEstado['borrador']) &&
-                                  empty($documentosPorEstado['en_revision']) &&
-                                  empty($documentosPorEstado['pendiente_firma']) &&
-                                  empty($documentosPorEstado['aprobado'])): ?>
-                        <div class="text-center py-5">
-                            <i class="bi bi-file-earmark-x text-muted" style="font-size: 3rem;"></i>
-                            <p class="text-muted mt-3">No hay plantillas de documentos configuradas</p>
-                        </div>
-                        <?php endif; ?>
-
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/estandares/catalogo" class="card border-0 shadow-sm text-decoration-none">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-book text-success fs-4"></i>
+                        <h6 class="mt-2 mb-0 text-dark">Catalogo 60 Estandares</h6>
                     </div>
-                </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/documentacion/plantillas" class="card border-0 shadow-sm text-decoration-none">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-file-earmark-ruled text-info fs-4"></i>
+                        <h6 class="mt-2 mb-0 text-dark">Plantillas</h6>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/documentacion/instructivo" class="card border-0 shadow-sm text-decoration-none">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-question-circle text-warning fs-4"></i>
+                        <h6 class="mt-2 mb-0 text-dark">Instructivo</h6>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
@@ -468,14 +410,14 @@
                 </div>
                 <form id="formGenerarEstructura">
                     <div class="modal-body">
-                        <p>Se creará la estructura de carpetas PHVA según la Resolución 0312/2019.</p>
+                        <p>Se creara la estructura de carpetas PHVA segun la Resolucion 0312/2019.</p>
                         <div class="alert alert-info py-2">
                             <i class="bi bi-info-circle me-1"></i>
-                            Este cliente aplica <strong><?= $documentosPorEstado['contadores']['nivel_cliente'] ?? 60 ?> estándares</strong>
-                            (<?= ($documentosPorEstado['contadores']['nivel_cliente'] ?? 60) == 7 ? 'Microempresa' : (($documentosPorEstado['contadores']['nivel_cliente'] ?? 60) == 21 ? 'Pequeña empresa' : 'Empresa >50 trabajadores') ?>)
+                            Este cliente aplica <strong><?= $documentosPorEstado['contadores']['nivel_cliente'] ?? 60 ?> estandares</strong>
+                            (<?= ($documentosPorEstado['contadores']['nivel_cliente'] ?? 60) == 7 ? 'Microempresa' : (($documentosPorEstado['contadores']['nivel_cliente'] ?? 60) == 21 ? 'Pequena empresa' : 'Empresa >50 trabajadores') ?>)
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Año</label>
+                            <label class="form-label">Ano</label>
                             <select name="anio" class="form-select">
                                 <option value="<?= date('Y') ?>"><?= date('Y') ?></option>
                                 <option value="<?= date('Y') + 1 ?>"><?= date('Y') + 1 ?></option>
@@ -499,28 +441,40 @@
     <script>
         const idCliente = <?= $cliente['id_cliente'] ?>;
 
-        // Crear documento con IA
-        function crearDocumento(idPlantilla, nombreDoc) {
-            Swal.fire({
-                title: '¿Crear documento con IA?',
-                html: `
-                    <p>Se creará el documento:</p>
-                    <p class="fw-bold">${nombreDoc}</p>
-                    <p class="text-muted small">El sistema usará el contexto del cliente para generar el contenido con Inteligencia Artificial.</p>
-                `,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#0d6efd',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '<i class="bi bi-magic me-1"></i>Crear con IA',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Redirigir al generador con la plantilla seleccionada
-                    window.location.href = `<?= base_url('documentacion/nuevo') ?>/${idCliente}?plantilla=${idPlantilla}`;
-                }
-            });
+        // Toggle de carpetas
+        function toggleFolder(folderId) {
+            const content = document.getElementById('content-' + folderId);
+            const chevron = document.getElementById('chevron-' + folderId);
+
+            if (content) {
+                content.classList.toggle('show');
+            }
+            if (chevron) {
+                chevron.classList.toggle('rotated');
+            }
         }
+
+        // Expandir todas las carpetas
+        function expandAll() {
+            document.querySelectorAll('.folder-content').forEach(el => el.classList.add('show'));
+            document.querySelectorAll('.folder-chevron').forEach(el => el.classList.add('rotated'));
+        }
+
+        // Colapsar todas las carpetas
+        function collapseAll() {
+            document.querySelectorAll('.folder-content').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.folder-chevron').forEach(el => el.classList.remove('rotated'));
+        }
+
+        // Expandir primer nivel al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.folder-tree > li > .folder-content').forEach(el => {
+                el.classList.add('show');
+                const folderId = el.id.replace('content-', '');
+                const chevron = document.getElementById('chevron-' + folderId);
+                if (chevron) chevron.classList.add('rotated');
+            });
+        });
 
         // Generar estructura de carpetas
         document.getElementById('formGenerarEstructura').addEventListener('submit', function(e) {
@@ -569,45 +523,128 @@
 </html>
 
 <?php
-// Función helper para renderizar carpetas recursivamente
-function renderCarpetas($carpetas, $nivel = 0) {
-    $html = '<ul class="folder-tree' . ($nivel === 0 ? ' ps-0' : '') . '">';
+/**
+ * Renderiza la estructura jerarquica de carpetas con documentos
+ */
+function renderCarpetasJerarquicas($carpetas, $idCliente, $nivel = 0) {
+    $html = '';
 
     foreach ($carpetas as $carpeta) {
-        $iconColor = match($carpeta['tipo']) {
-            'phva' => match($carpeta['codigo'] ?? '') {
-                '1' => 'text-primary',
-                '2' => 'text-success',
-                '3' => 'text-warning',
-                '4' => 'text-danger',
-                default => 'text-warning'
-            },
-            'categoria' => 'text-info',
-            'estandar' => 'text-secondary',
-            default => 'text-warning'
-        };
+        $stats = $carpeta['stats'] ?? ['total' => 0, 'pendiente' => 0, 'creado' => 0, 'aprobado' => 0];
+        $tieneContenido = !empty($carpeta['hijos']) || !empty($carpeta['documentos']);
+        $folderId = $carpeta['id_carpeta'];
 
-        $icon = match($carpeta['tipo']) {
-            'phva' => 'bi-folder-fill',
-            'categoria' => 'bi-folder',
-            'estandar' => 'bi-file-earmark',
-            default => 'bi-folder'
+        // Determinar clase de color segun tipo PHVA
+        $phvaClass = '';
+        if (($carpeta['tipo'] ?? '') === 'phva') {
+            $codigo = $carpeta['codigo'] ?? '';
+            $phvaClass = match($codigo) {
+                '1' => 'phva-planear',
+                '2' => 'phva-hacer',
+                '3' => 'phva-verificar',
+                '4' => 'phva-actuar',
+                default => ''
+            };
+        }
+
+        // Icono segun tipo
+        $iconClass = match($carpeta['tipo'] ?? 'custom') {
+            'phva' => 'bi-folder-fill text-warning',
+            'categoria' => 'bi-folder text-info',
+            'estandar' => 'bi-folder text-secondary',
+            default => 'bi-folder text-warning'
         };
 
         $html .= '<li>';
-        $html .= '<a href="/documentacion/carpeta/' . $carpeta['id_carpeta'] . '" class="text-decoration-none text-dark">';
-        $html .= '<i class="bi ' . $icon . ' folder-icon ' . $iconColor . '"></i>';
+
+        // Header de carpeta
+        $html .= '<div class="folder-header ' . $phvaClass . '" onclick="toggleFolder(' . $folderId . ')">';
+
+        // Chevron
+        if ($tieneContenido) {
+            $html .= '<i class="bi bi-chevron-right folder-chevron" id="chevron-' . $folderId . '"></i>';
+        } else {
+            $html .= '<span class="folder-chevron"></span>';
+        }
+
+        // Icono de carpeta
+        $html .= '<i class="bi ' . $iconClass . ' folder-icon"></i>';
+
+        // Nombre (clickeable para ir a la carpeta)
+        $html .= '<a href="' . base_url('documentacion/carpeta/' . $folderId) . '" class="folder-name" onclick="event.stopPropagation();">';
         $html .= esc($carpeta['nombre']);
         $html .= '</a>';
 
-        if (!empty($carpeta['hijos'])) {
-            $html .= renderCarpetas($carpeta['hijos'], $nivel + 1);
+        // Stats badges
+        if ($stats['total'] > 0) {
+            $html .= '<div class="folder-stats">';
+            if ($stats['aprobado'] > 0) {
+                $html .= '<span class="badge estado-ia-aprobado" title="Aprobados">' . $stats['aprobado'] . '</span>';
+            }
+            if ($stats['creado'] > 0) {
+                $html .= '<span class="badge estado-ia-creado" title="Creados">' . $stats['creado'] . '</span>';
+            }
+            if ($stats['pendiente'] > 0) {
+                $html .= '<span class="badge estado-ia-pendiente" title="Pendientes">' . $stats['pendiente'] . '</span>';
+            }
+            $html .= '</div>';
+        }
+
+        $html .= '</div>';
+
+        // Contenido (documentos y subcarpetas)
+        if ($tieneContenido) {
+            $html .= '<div class="folder-content" id="content-' . $folderId . '">';
+
+            // Documentos de esta carpeta
+            if (!empty($carpeta['documentos'])) {
+                $html .= '<div class="docs-container">';
+                foreach ($carpeta['documentos'] as $doc) {
+                    $estadoIA = $doc['estado_ia'] ?? 'pendiente';
+                    $estadoIAText = match($estadoIA) {
+                        'aprobado' => 'Aprobado',
+                        'creado' => 'Creado',
+                        default => 'Pendiente'
+                    };
+                    $estadoIAClass = match($estadoIA) {
+                        'aprobado' => 'estado-ia-aprobado',
+                        'creado' => 'estado-ia-creado',
+                        default => 'estado-ia-pendiente'
+                    };
+
+                    $html .= '<a href="' . base_url('documentacion/ver/' . $doc['id_documento']) . '" class="doc-card">';
+                    $html .= '<span class="doc-estado-indicator ' . $estadoIA . '" title="' . $estadoIAText . '"></span>';
+                    $html .= '<div class="doc-info">';
+                    $html .= '<div class="doc-nombre">' . esc($doc['nombre']) . '</div>';
+                    $html .= '<div class="doc-meta">';
+                    $html .= '<code>' . esc($doc['codigo']) . '</code>';
+                    $html .= ' &bull; v' . esc($doc['version_actual']);
+                    $html .= ' &bull; ' . date('d/m/Y', strtotime($doc['updated_at']));
+                    $html .= '</div>';
+                    $html .= '</div>';
+                    $html .= '<span class="badge ' . $estadoIAClass . ' doc-estado-badge">' . $estadoIAText . '</span>';
+                    $html .= '<div class="doc-actions">';
+                    $html .= '<a href="' . base_url('documentacion/editar/' . $doc['id_documento']) . '" class="btn btn-sm btn-outline-secondary" title="Editar" onclick="event.stopPropagation();"><i class="bi bi-pencil"></i></a>';
+                    $html .= '<a href="' . base_url('exportar/pdf/' . $doc['id_documento']) . '" class="btn btn-sm btn-outline-danger" title="PDF" onclick="event.stopPropagation();"><i class="bi bi-file-pdf"></i></a>';
+                    $html .= '</div>';
+                    $html .= '</a>';
+                }
+                $html .= '</div>';
+            }
+
+            // Subcarpetas recursivas
+            if (!empty($carpeta['hijos'])) {
+                $html .= '<ul class="folder-tree">';
+                $html .= renderCarpetasJerarquicas($carpeta['hijos'], $idCliente, $nivel + 1);
+                $html .= '</ul>';
+            }
+
+            $html .= '</div>';
         }
 
         $html .= '</li>';
     }
 
-    $html .= '</ul>';
     return $html;
 }
 ?>

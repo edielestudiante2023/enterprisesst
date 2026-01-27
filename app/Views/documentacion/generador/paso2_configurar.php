@@ -29,7 +29,7 @@
             </a>
             <div class="navbar-nav ms-auto">
                 <span class="navbar-text text-white me-3"><?= esc($cliente['nombre_cliente']) ?></span>
-                <a class="nav-link" href="/documentacion/<?= $cliente['id_cliente'] ?>"><i class="bi bi-x-lg"></i></a>
+                <a class="nav-link" href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>"><i class="bi bi-x-lg"></i></a>
             </div>
         </div>
     </nav>
@@ -60,30 +60,56 @@
                         <h5 class="mb-0">Datos del Documento</h5>
                     </div>
                     <div class="card-body">
-                        <form action="/documentacion/crear/<?= $cliente['id_cliente'] ?>" method="post">
+                        <form action="<?= base_url('documentacion/crear/' . $cliente['id_cliente']) ?>" method="post">
                             <input type="hidden" name="id_tipo" value="<?= $tipo['id_tipo'] ?? '' ?>">
                             <input type="hidden" name="id_plantilla" value="<?= $plantilla['id_plantilla'] ?? '' ?>">
 
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Nombre del Documento *</label>
-                                    <input type="text" name="nombre" class="form-control" required
-                                           value="<?= esc($plantilla['nombre'] ?? $tipo['nombre'] ?? '') ?>"
-                                           placeholder="Ej: Política de Seguridad y Salud en el Trabajo">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Carpeta de Destino *</label>
-                                    <select name="id_carpeta" class="form-select" required>
-                                        <option value="">Seleccione carpeta...</option>
-                                        <?php if (!empty($carpetas)): ?>
-                                            <?php foreach ($carpetas as $carpeta): ?>
-                                                <option value="<?= $carpeta['id_carpeta'] ?>">
-                                                    <?= str_repeat('— ', $carpeta['nivel'] ?? 0) ?><?= esc($carpeta['nombre']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </select>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nombre del Documento *</label>
+                                <input type="text" name="nombre" class="form-control" required
+                                       value="<?= esc($plantilla['nombre'] ?? $tipo['nombre'] ?? '') ?>"
+                                       placeholder="Ej: Programa de Capacitacion en Promocion y Prevencion">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-folder me-1"></i>Carpeta de Destino *
+                                </label>
+                                <select name="id_carpeta" class="form-select" required id="selectCarpeta" style="font-family: monospace;">
+                                    <option value="">-- Seleccione carpeta PHVA --</option>
+                                    <?php if (!empty($carpetas)): ?>
+                                        <?php foreach ($carpetas as $carpeta):
+                                            $nivel = $carpeta['nivel'] ?? 0;
+                                            // Crear indentacion visual tipo arbol
+                                            $indent = '';
+                                            if ($nivel > 0) {
+                                                $indent = str_repeat('   ', $nivel - 1) . '└─ ';
+                                            }
+                                            // Iconos segun nivel
+                                            $icono = ($nivel == 0) ? '📁' : (($nivel == 1) ? '📂' : '📄');
+                                            // Verificar si es la carpeta sugerida
+                                            $esSeleccionada = isset($carpetaSugerida) && $carpeta['id_carpeta'] == $carpetaSugerida;
+                                            // Mostrar codigo si existe
+                                            $codigo = !empty($carpeta['codigo']) ? "[{$carpeta['codigo']}] " : '';
+                                        ?>
+                                            <option value="<?= $carpeta['id_carpeta'] ?>"
+                                                    data-nivel="<?= $nivel ?>"
+                                                    data-codigo="<?= esc($carpeta['codigo'] ?? '') ?>"
+                                                    <?= $esSeleccionada ? 'selected' : '' ?>>
+                                                <?= $indent ?><?= $icono ?> <?= $codigo ?><?= esc($carpeta['nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <?php if (isset($carpetaSugerida) && $carpetaSugerida): ?>
+                                    <div class="form-text text-success">
+                                        <i class="bi bi-check-circle me-1"></i>Carpeta sugerida para este tipo de documento
+                                    </div>
+                                <?php else: ?>
+                                    <div class="form-text">
+                                        Seleccione la subcarpeta PHVA donde se guardara el documento
+                                    </div>
+                                <?php endif; ?>
                             </div>
 
                             <div class="mb-3">
@@ -115,7 +141,7 @@
                             <hr>
 
                             <div class="d-flex justify-content-between">
-                                <a href="/documentacion/nuevo/<?= $cliente['id_cliente'] ?>" class="btn btn-outline-secondary">
+                                <a href="<?= base_url('documentacion/nuevo/' . $cliente['id_cliente']) ?>" class="btn btn-outline-secondary">
                                     <i class="bi bi-arrow-left me-1"></i>Volver
                                 </a>
                                 <button type="submit" class="btn btn-primary">
@@ -146,19 +172,20 @@
                     </div>
                 </div>
 
-                <!-- Estructura -->
+                <!-- Estructura del documento -->
                 <?php if (!empty($estructura)): ?>
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white">
-                            <h6 class="mb-0"><i class="bi bi-list-ol me-2"></i>Estructura del Documento</h6>
+                            <h6 class="mb-0"><i class="bi bi-list-ol me-2"></i>Estructura (<?= count($estructura) ?> secciones)</h6>
                         </div>
                         <div class="card-body estructura-preview">
-                            <ol class="mb-0">
-                                <?php foreach ($estructura as $seccion): ?>
-                                    <li class="mb-2">
-                                        <strong><?= esc($seccion['nombre'] ?? $seccion['nombre_seccion'] ?? 'Sección') ?></strong>
-                                        <?php if (!empty($seccion['descripcion'])): ?>
-                                            <br><small class="text-muted"><?= esc($seccion['descripcion']) ?></small>
+                            <ol class="mb-0 small">
+                                <?php foreach ($estructura as $idx => $seccion): ?>
+                                    <li class="mb-1">
+                                        <?php if (is_array($seccion)): ?>
+                                            <?= esc($seccion['nombre'] ?? $seccion['nombre_seccion'] ?? 'Seccion ' . ($idx + 1)) ?>
+                                        <?php else: ?>
+                                            <?= esc($seccion) ?>
                                         <?php endif; ?>
                                     </li>
                                 <?php endforeach; ?>
@@ -175,9 +202,9 @@
                         </div>
                         <div class="card-body">
                             <small>
-                                <p class="mb-1"><strong>Trabajadores:</strong> <?= $contexto['numero_trabajadores'] ?? 'N/D' ?></p>
-                                <p class="mb-1"><strong>Riesgo:</strong> <?= $contexto['nivel_riesgo'] ?? 'N/D' ?></p>
-                                <p class="mb-0"><strong>Actividad:</strong> <?= esc($contexto['actividad_economica'] ?? 'N/D') ?></p>
+                                <p class="mb-1"><strong>Trabajadores:</strong> <?= $contexto['total_trabajadores'] ?? 'N/D' ?></p>
+                                <p class="mb-1"><strong>Riesgo:</strong> <?= $contexto['niveles_riesgo_arl'] ?? 'N/D' ?></p>
+                                <p class="mb-0"><strong>Actividad:</strong> <?= esc($contexto['sector_economico'] ?? 'N/D') ?></p>
                             </small>
                         </div>
                     </div>

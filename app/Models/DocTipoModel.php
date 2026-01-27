@@ -13,9 +13,7 @@ class DocTipoModel extends Model
     ];
 
     protected $returnType = 'array';
-    protected $useTimestamps = true;
-    protected $createdField = 'created_at';
-    protected $updatedField = 'updated_at';
+    protected $useTimestamps = false;
 
     /**
      * Obtiene tipos activos

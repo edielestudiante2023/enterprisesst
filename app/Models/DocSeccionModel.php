@@ -24,7 +24,7 @@ class DocSeccionModel extends Model
     public function getByDocumento(int $idDocumento): array
     {
         return $this->where('id_documento', $idDocumento)
-                    ->orderBy('orden', 'ASC')
+                    ->orderBy('numero_seccion', 'ASC')
                     ->findAll();
     }
 

@@ -105,6 +105,45 @@ class DocCarpetaModel extends Model
     }
 
     /**
+     * Obtiene lista plana de carpetas con nivel de indentacion
+     * Util para selectores dropdown
+     */
+    public function getListaPlanaConNivel(int $idCliente): array
+    {
+        $carpetas = $this->where('id_cliente', $idCliente)
+                         ->orderBy('orden', 'ASC')
+                         ->findAll();
+
+        $resultado = [];
+        $this->aplanarArbol($carpetas, null, 0, $resultado);
+        return $resultado;
+    }
+
+    /**
+     * Aplana el arbol de carpetas agregando nivel de indentacion
+     */
+    private function aplanarArbol(array $carpetas, ?int $padreId, int $nivel, array &$resultado): void
+    {
+        foreach ($carpetas as $carpeta) {
+            if ($carpeta['id_carpeta_padre'] == $padreId) {
+                $carpeta['nivel'] = $nivel;
+                $resultado[] = $carpeta;
+                $this->aplanarArbol($carpetas, $carpeta['id_carpeta'], $nivel + 1, $resultado);
+            }
+        }
+    }
+
+    /**
+     * Busca carpeta por codigo dentro de las carpetas de un cliente
+     */
+    public function getByCodigo(int $idCliente, string $codigo): ?array
+    {
+        return $this->where('id_cliente', $idCliente)
+                    ->where('codigo', $codigo)
+                    ->first();
+    }
+
+    /**
      * Obtiene ruta completa de una carpeta (breadcrumb)
      */
     public function getRuta(int $idCarpeta): array
@@ -174,5 +213,103 @@ class DocCarpetaModel extends Model
         $result = $query->getRowArray();
 
         return $result['json_carpetas'] ?? null;
+    }
+
+    /**
+     * Obtiene árbol completo de carpetas con documentos y estados IA
+     * Incluye conteo de documentos por estado en cada carpeta
+     */
+    public function getArbolConDocumentosYEstados(int $idCliente): array
+    {
+        $carpetas = $this->where('id_cliente', $idCliente)
+                         ->orderBy('orden', 'ASC')
+                         ->findAll();
+
+        $documentoModel = new DocDocumentoModel();
+
+        // Obtener todos los documentos del cliente con sus estados IA
+        $todosDocumentos = $documentoModel->getByClienteConEstadoIA($idCliente);
+
+        // Indexar documentos por carpeta
+        $docsPorCarpeta = [];
+        foreach ($todosDocumentos as $doc) {
+            $idCarpeta = $doc['id_carpeta'] ?? 0;
+            if (!isset($docsPorCarpeta[$idCarpeta])) {
+                $docsPorCarpeta[$idCarpeta] = [];
+            }
+            $docsPorCarpeta[$idCarpeta][] = $doc;
+        }
+
+        return $this->construirArbolConDocs($carpetas, $docsPorCarpeta);
+    }
+
+    /**
+     * Construye árbol jerárquico con documentos y estadísticas
+     */
+    private function construirArbolConDocs(array $carpetas, array $docsPorCarpeta, ?int $padreId = null): array
+    {
+        $arbol = [];
+
+        foreach ($carpetas as $carpeta) {
+            if ($carpeta['id_carpeta_padre'] == $padreId) {
+                $idCarpeta = $carpeta['id_carpeta'];
+
+                // Agregar documentos de esta carpeta
+                $carpeta['documentos'] = $docsPorCarpeta[$idCarpeta] ?? [];
+
+                // Calcular estadísticas de esta carpeta
+                $carpeta['stats'] = [
+                    'total' => count($carpeta['documentos']),
+                    'pendiente' => 0,
+                    'creado' => 0,
+                    'aprobado' => 0
+                ];
+
+                foreach ($carpeta['documentos'] as $doc) {
+                    $estado = $doc['estado_ia'] ?? 'pendiente';
+                    if (isset($carpeta['stats'][$estado])) {
+                        $carpeta['stats'][$estado]++;
+                    }
+                }
+
+                // Procesar hijos recursivamente
+                $carpeta['hijos'] = $this->construirArbolConDocs($carpetas, $docsPorCarpeta, $idCarpeta);
+
+                // Agregar estadísticas de subcarpetas al total
+                foreach ($carpeta['hijos'] as $hijo) {
+                    $carpeta['stats']['total'] += $hijo['stats']['total'];
+                    $carpeta['stats']['pendiente'] += $hijo['stats']['pendiente'];
+                    $carpeta['stats']['creado'] += $hijo['stats']['creado'];
+                    $carpeta['stats']['aprobado'] += $hijo['stats']['aprobado'];
+                }
+
+                $arbol[] = $carpeta;
+            }
+        }
+
+        return $arbol;
+    }
+
+    /**
+     * Obtiene ruta completa de una carpeta con información extendida (breadcrumb)
+     */
+    public function getRutaCompleta(int $idCarpeta): array
+    {
+        $ruta = [];
+        $carpeta = $this->find($idCarpeta);
+
+        while ($carpeta) {
+            array_unshift($ruta, [
+                'id_carpeta' => $carpeta['id_carpeta'],
+                'nombre' => $carpeta['nombre'],
+                'codigo' => $carpeta['codigo'] ?? '',
+                'tipo' => $carpeta['tipo'] ?? 'custom'
+            ]);
+            $carpeta = $carpeta['id_carpeta_padre']
+                ? $this->find($carpeta['id_carpeta_padre'])
+                : null;
+        }
+
+        return $ruta;
     }
 }

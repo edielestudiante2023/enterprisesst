@@ -781,7 +781,7 @@
 
         table.rows({search: 'applied'}).every(function() {
           var data = this.data();
-          var estado = data.estado; // Acceder por nombre de propiedad
+          var estado = (data.estado || '').toUpperCase(); // Normalizar a mayúsculas
           if (estado === 'PROGRAMADA') {
             countProgramada++;
           } else if (estado === 'EJECUTADA') {
@@ -873,9 +873,9 @@
               }
             }
 
-            // Filtro por estado
+            // Filtro por estado (comparación insensible a mayúsculas)
             if (activeStatus) {
-              if (estado.trim() !== activeStatus) {
+              if (estado.trim().toUpperCase() !== activeStatus.toUpperCase()) {
                 return false;
               }
             }

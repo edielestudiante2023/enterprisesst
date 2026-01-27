@@ -665,6 +665,16 @@ $routes->get('/contexto/(:num)', 'ContextoClienteController::ver/$1');
 $routes->post('/contexto/guardar', 'ContextoClienteController::guardar');
 $routes->get('/contexto/json/(:num)', 'ContextoClienteController::getContextoJson/$1');
 
+// Responsables del SG-SST
+$routes->get('/responsables-sst/(:num)', 'ResponsablesSSTController::index/$1');
+$routes->get('/responsables-sst/(:num)/crear', 'ResponsablesSSTController::crear/$1');
+$routes->get('/responsables-sst/(:num)/editar/(:num)', 'ResponsablesSSTController::editar/$1/$2');
+$routes->post('/responsables-sst/(:num)/guardar', 'ResponsablesSSTController::guardar/$1');
+$routes->post('/responsables-sst/(:num)/eliminar/(:num)', 'ResponsablesSSTController::eliminar/$1/$2');
+$routes->get('/responsables-sst/(:num)/api', 'ResponsablesSSTController::apiObtener/$1');
+$routes->get('/responsables-sst/(:num)/verificar', 'ResponsablesSSTController::apiVerificar/$1');
+$routes->post('/responsables-sst/(:num)/migrar', 'ResponsablesSSTController::migrar/$1');
+
 // Firma electrónica
 $routes->get('/firma/solicitar/(:num)', 'FirmaElectronicaController::solicitar/$1');
 $routes->post('/firma/crear-solicitud', 'FirmaElectronicaController::crearSolicitud');
@@ -677,6 +687,7 @@ $routes->post('/firma/cancelar/(:num)', 'FirmaElectronicaController::cancelar/$1
 $routes->get('/firma/audit-log/(:num)', 'FirmaElectronicaController::auditLog/$1');
 $routes->get('/firma/verificar/(:any)', 'FirmaElectronicaController::verificar/$1');
 $routes->post('/firma/firmar-interno/(:num)', 'FirmaElectronicaController::firmarInterno/$1');
+$routes->get('/firma/certificado-pdf/(:num)', 'FirmaElectronicaController::certificadoPDF/$1');
 
 // Control Documental ISO - Versionamiento
 $routes->get('/control-documental/historial/(:num)', 'ControlDocumentalController::historial/$1');
@@ -699,14 +710,47 @@ $routes->get('/exportar/descargar/(:num)', 'ExportacionDocumentoController::desc
 $routes->get('/exportar/vista-impresion/(:num)', 'ExportacionDocumentoController::vistaImpresion/$1');
 $routes->get('/exportar/historial/(:num)', 'ExportacionDocumentoController::historial/$1');
 
+// Indicadores del SG-SST
+$routes->get('/indicadores-sst/(:num)', 'IndicadoresSSTController::index/$1');
+$routes->get('/indicadores-sst/(:num)/crear', 'IndicadoresSSTController::crear/$1');
+$routes->get('/indicadores-sst/(:num)/editar/(:num)', 'IndicadoresSSTController::editar/$1/$2');
+$routes->post('/indicadores-sst/(:num)/guardar', 'IndicadoresSSTController::guardar/$1');
+$routes->post('/indicadores-sst/(:num)/medir/(:num)', 'IndicadoresSSTController::registrarMedicion/$1/$2');
+$routes->post('/indicadores-sst/(:num)/eliminar/(:num)', 'IndicadoresSSTController::eliminar/$1/$2');
+$routes->post('/indicadores-sst/(:num)/generar-sugeridos', 'IndicadoresSSTController::generarSugeridos/$1');
+$routes->get('/indicadores-sst/(:num)/api', 'IndicadoresSSTController::apiObtener/$1');
+$routes->get('/indicadores-sst/(:num)/verificar', 'IndicadoresSSTController::apiVerificar/$1');
+$routes->get('/indicadores-sst/historico/(:num)', 'IndicadoresSSTController::apiHistorico/$1');
 
+// Generador IA - Cronograma, PTA, Indicadores
+$routes->get('/generador-ia/(:num)', 'GeneradorIAController::index/$1');
+$routes->get('/generador-ia/(:num)/preview-cronograma', 'GeneradorIAController::previewCronograma/$1');
+$routes->post('/generador-ia/(:num)/generar-cronograma', 'GeneradorIAController::generarCronograma/$1');
+$routes->get('/generador-ia/(:num)/preview-pta', 'GeneradorIAController::previewPTA/$1');
+$routes->post('/generador-ia/(:num)/generar-pta-cronograma', 'GeneradorIAController::generarPTADesdeCronograma/$1');
+$routes->post('/generador-ia/(:num)/generar-pta-completo', 'GeneradorIAController::generarPTACompleto/$1');
+$routes->get('/generador-ia/(:num)/preview-indicadores', 'GeneradorIAController::previewIndicadores/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores', 'GeneradorIAController::generarIndicadores/$1');
+$routes->post('/generador-ia/(:num)/generar-flujo-completo', 'GeneradorIAController::generarFlujoCompleto/$1');
+$routes->post('/generador-ia/(:num)/generar-programa-capacitacion', 'GeneradorIAController::generarProgramaCapacitacion/$1');
+$routes->get('/generador-ia/(:num)/resumen', 'GeneradorIAController::resumen/$1');
 
+// Documentos SST generados
+$routes->get('/documentos-sst/(:num)/programa-capacitacion/(:num)', 'DocumentosSSTController::programaCapacitacion/$1/$2');
 
-$routes->get('/admin/users', 'UserController::listUsers');
-$routes->get('/admin/users/add', 'UserController::addUser');
-$routes->post('/admin/users/add', 'UserController::addUserPost');
-$routes->get('/admin/users/edit/(:num)', 'UserController::editUser/$1');
-$routes->post('/admin/users/edit/(:num)', 'UserController::editUserPost/$1');
-$routes->get('/admin/users/delete/(:num)', 'UserController::deleteUser/$1');
-$routes->get('/admin/users/toggle/(:num)', 'UserController::toggleStatus/$1');
-$routes->get('/admin/users/reset-password/(:num)', 'UserController::resetPassword/$1');
+// Generador de documentos por secciones con IA
+$routes->get('/documentos/generar/(:segment)/(:num)', 'DocumentosSSTController::generarConIA/$1/$2');
+$routes->post('/documentos/generar-seccion', 'DocumentosSSTController::generarSeccionIA');
+$routes->post('/documentos/guardar-seccion', 'DocumentosSSTController::guardarSeccion');
+$routes->post('/documentos/aprobar-seccion', 'DocumentosSSTController::aprobarSeccion');
+$routes->get('/documentos/pdf/(:num)', 'DocumentosSSTController::generarPDF/$1');
+$routes->get('/documentos-sst/exportar-pdf/(:num)', 'DocumentosSSTController::exportarPDF/$1');
+$routes->get('/documentos-sst/exportar-word/(:num)', 'DocumentosSSTController::exportarWord/$1');
+$routes->get('/documentos-sst/publicar-pdf/(:num)', 'DocumentosSSTController::publicarPDF/$1');
+
+// Aprobacion y versionamiento de documentos SST
+$routes->post('/documentos-sst/aprobar-documento', 'DocumentosSSTController::aprobarDocumento');
+$routes->post('/documentos-sst/iniciar-nueva-version', 'DocumentosSSTController::iniciarNuevaVersion');
+$routes->get('/documentos-sst/historial-versiones/(:num)', 'DocumentosSSTController::historialVersiones/$1');
+$routes->post('/documentos-sst/restaurar-version', 'DocumentosSSTController::restaurarVersion');
+$routes->get('/documentos-sst/descargar-version-pdf/(:num)', 'DocumentosSSTController::descargarVersionPDF/$1');

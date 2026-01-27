@@ -44,11 +44,15 @@ class DocFirmaModel extends Model
     public function getByToken(string $token): ?array
     {
         return $this->select('tbl_doc_firma_solicitudes.*,
-                             tbl_doc_documentos.codigo,
-                             tbl_doc_documentos.nombre as documento_nombre,
-                             tbl_clientes.nombre_cliente')
-                    ->join('tbl_doc_documentos', 'tbl_doc_documentos.id_documento = tbl_doc_firma_solicitudes.id_documento')
-                    ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_doc_documentos.id_cliente')
+                             tbl_documentos_sst.codigo,
+                             tbl_documentos_sst.titulo as documento_nombre,
+                             tbl_documentos_sst.tipo_documento,
+                             tbl_documentos_sst.version,
+                             tbl_documentos_sst.estado as documento_estado,
+                             tbl_clientes.nombre_cliente,
+                             tbl_clientes.id_cliente')
+                    ->join('tbl_documentos_sst', 'tbl_documentos_sst.id_documento = tbl_doc_firma_solicitudes.id_documento')
+                    ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_documentos_sst.id_cliente')
                     ->where('tbl_doc_firma_solicitudes.token', $token)
                     ->first();
     }
@@ -245,10 +249,46 @@ class DocFirmaModel extends Model
         $fecha = date('Y-m-d', strtotime("+{$diasAntes} days"));
 
         return $this->select('tbl_doc_firma_solicitudes.*,
-                             tbl_doc_documentos.nombre as documento_nombre')
-                    ->join('tbl_doc_documentos', 'tbl_doc_documentos.id_documento = tbl_doc_firma_solicitudes.id_documento')
+                             tbl_documentos_sst.titulo as documento_nombre,
+                             tbl_documentos_sst.codigo')
+                    ->join('tbl_documentos_sst', 'tbl_documentos_sst.id_documento = tbl_doc_firma_solicitudes.id_documento')
                     ->where('tbl_doc_firma_solicitudes.estado', 'pendiente')
                     ->where('DATE(tbl_doc_firma_solicitudes.fecha_expiracion)', $fecha)
                     ->findAll();
+    }
+
+    /**
+     * Obtiene todas las evidencias de firma para un documento
+     */
+    public function getEvidenciasPorDocumento(int $idDocumento): array
+    {
+        return $this->db->table('tbl_doc_firma_evidencias e')
+                       ->select('e.*, s.firmante_nombre, s.firmante_tipo, s.firmante_cargo, s.firmante_documento, s.firmante_email, s.fecha_firma')
+                       ->join('tbl_doc_firma_solicitudes s', 's.id_solicitud = e.id_solicitud')
+                       ->where('s.id_documento', $idDocumento)
+                       ->where('s.estado', 'firmado')
+                       ->orderBy('s.orden_firma', 'ASC')
+                       ->get()
+                       ->getResultArray();
+    }
+
+    /**
+     * Genera código de verificación único para un documento firmado
+     */
+    public function generarCodigoVerificacion(int $idDocumento): string
+    {
+        $solicitudes = $this->where('id_documento', $idDocumento)
+                           ->where('estado', 'firmado')
+                           ->findAll();
+
+        if (empty($solicitudes)) {
+            return '';
+        }
+
+        // Combinar tokens de todas las firmas para crear un código único
+        $tokens = array_column($solicitudes, 'token');
+        $hash = hash('sha256', implode('|', $tokens) . '|' . $idDocumento);
+
+        return strtoupper(substr($hash, 0, 12));
     }
 }

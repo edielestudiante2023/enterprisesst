@@ -10,8 +10,9 @@ class DocDocumentoModel extends Model
     protected $allowedFields = [
         'id_cliente', 'id_carpeta', 'id_tipo', 'id_plantilla',
         'codigo', 'nombre', 'descripcion', 'version_actual',
-        'estado', 'creado_por', 'fecha_aprobacion', 'aprobado_por',
-        'fecha_vigencia', 'fecha_revision', 'tags'
+        'estado', 'fecha_emision', 'fecha_aprobacion', 'fecha_proxima_revision',
+        'elaboro_usuario_id', 'reviso_usuario_id', 'aprobo_contacto_id',
+        'estandares_relacionados', 'tags', 'activo'
     ];
 
     protected $returnType = 'array';
@@ -84,13 +85,41 @@ class DocDocumentoModel extends Model
     public function crearDocumento(array $datos): int
     {
         // Generar código si no viene
-        if (empty($datos['codigo']) && !empty($datos['codigo_tipo']) && !empty($datos['codigo_tema'])) {
-            $datos['codigo'] = $this->generarCodigo(
-                $datos['id_cliente'],
-                $datos['codigo_tipo'],
-                $datos['codigo_tema']
-            );
+        if (empty($datos['codigo'])) {
+            if (!empty($datos['codigo_tipo']) && !empty($datos['codigo_tema'])) {
+                $datos['codigo'] = $this->generarCodigo(
+                    $datos['id_cliente'],
+                    $datos['codigo_tipo'],
+                    $datos['codigo_tema']
+                );
+            } else {
+                // Generar código automático basado en tipo e ID
+                $tipoCode = 'DOC';
+                if (!empty($datos['id_tipo'])) {
+                    $tipo = (new DocTipoModel())->find($datos['id_tipo']);
+                    $tipoCode = $tipo['codigo'] ?? 'DOC';
+                }
+                $datos['codigo'] = $this->generarCodigo(
+                    $datos['id_cliente'],
+                    $tipoCode,
+                    'GEN'
+                );
+            }
             unset($datos['codigo_tipo'], $datos['codigo_tema']);
+        }
+
+        // Verificar que no exista ya con el mismo código para este cliente
+        $existente = $this->where('id_cliente', $datos['id_cliente'])
+                         ->where('codigo', $datos['codigo'])
+                         ->first();
+
+        if ($existente) {
+            // Si ya existe, retornar el ID existente (reutilizar documento en borrador)
+            if ($existente['estado'] === 'borrador') {
+                return (int)$existente['id_documento'];
+            }
+            // Si no es borrador, agregar sufijo para hacerlo único
+            $datos['codigo'] .= '-' . date('His');
         }
 
         // Valores por defecto
@@ -167,10 +196,10 @@ class DocDocumentoModel extends Model
         $fecha = date('Y-m-d', strtotime("+{$dias} days"));
 
         return $this->where('id_cliente', $idCliente)
-                    ->where('fecha_revision <=', $fecha)
-                    ->where('fecha_revision >=', date('Y-m-d'))
+                    ->where('fecha_proxima_revision <=', $fecha)
+                    ->where('fecha_proxima_revision >=', date('Y-m-d'))
                     ->where('estado', 'aprobado')
-                    ->orderBy('fecha_revision', 'ASC')
+                    ->orderBy('fecha_proxima_revision', 'ASC')
                     ->findAll();
     }
 
@@ -198,5 +227,101 @@ class DocDocumentoModel extends Model
         }
 
         return $builder->countAllResults() > 0;
+    }
+
+    /**
+     * Calcula el estado IA de un documento basado en sus secciones
+     * - pendiente: ninguna sección tiene contenido
+     * - creado: alguna sección tiene contenido pero no todas aprobadas
+     * - aprobado: todas las secciones están aprobadas
+     */
+    public function getEstadoIA(int $idDocumento): string
+    {
+        $db = \Config\Database::connect();
+
+        $result = $db->table('tbl_doc_secciones')
+            ->select('
+                COUNT(*) as total,
+                SUM(CASE WHEN contenido IS NOT NULL AND contenido != "" THEN 1 ELSE 0 END) as con_contenido,
+                SUM(CASE WHEN aprobado = 1 THEN 1 ELSE 0 END) as aprobadas
+            ')
+            ->where('id_documento', $idDocumento)
+            ->get()
+            ->getRowArray();
+
+        $total = (int)($result['total'] ?? 0);
+        $conContenido = (int)($result['con_contenido'] ?? 0);
+        $aprobadas = (int)($result['aprobadas'] ?? 0);
+
+        // Si no hay secciones, está pendiente
+        if ($total === 0) {
+            return 'pendiente';
+        }
+
+        // Si todas las secciones están aprobadas
+        if ($aprobadas === $total) {
+            return 'aprobado';
+        }
+
+        // Si alguna sección tiene contenido
+        if ($conContenido > 0) {
+            return 'creado';
+        }
+
+        return 'pendiente';
+    }
+
+    /**
+     * Obtiene documentos de una carpeta con su estado IA calculado
+     */
+    public function getByCarpetaConEstadoIA(int $idCarpeta): array
+    {
+        $documentos = $this->where('id_carpeta', $idCarpeta)
+                          ->orderBy('codigo', 'ASC')
+                          ->findAll();
+
+        foreach ($documentos as &$doc) {
+            $doc['estado_ia'] = $this->getEstadoIA($doc['id_documento']);
+        }
+
+        return $documentos;
+    }
+
+    /**
+     * Obtiene documentos de un cliente con su estado IA calculado
+     */
+    public function getByClienteConEstadoIA(int $idCliente): array
+    {
+        $documentos = $this->where('id_cliente', $idCliente)
+                          ->orderBy('updated_at', 'DESC')
+                          ->findAll();
+
+        foreach ($documentos as &$doc) {
+            $doc['estado_ia'] = $this->getEstadoIA($doc['id_documento']);
+        }
+
+        return $documentos;
+    }
+
+    /**
+     * Obtiene estadísticas de estado IA por carpeta
+     */
+    public function getEstadisticasIAPorCarpeta(int $idCarpeta): array
+    {
+        $documentos = $this->where('id_carpeta', $idCarpeta)->findAll();
+
+        $stats = [
+            'total' => count($documentos),
+            'pendiente' => 0,
+            'creado' => 0,
+            'aprobado' => 0
+        ];
+
+        foreach ($documentos as $doc) {
+            $estadoIA = $this->getEstadoIA($doc['id_documento']);
+            $stats[$estadoIA]++;
+        }
+
+        return $stats;
     }
 }

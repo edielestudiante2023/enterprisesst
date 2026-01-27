@@ -45,6 +45,12 @@
                 <strong><?= esc($cliente['nombre_cliente']) ?></strong>
             </span>
             <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="<?= base_url('responsables-sst/' . $cliente['id_cliente']) ?>">
+                    <i class="bi bi-people-fill me-1"></i>Responsables SST
+                </a>
+                <a class="nav-link" href="<?= base_url('indicadores-sst/' . $cliente['id_cliente']) ?>">
+                    <i class="bi bi-graph-up me-1"></i>Indicadores SST
+                </a>
                 <a class="nav-link" href="<?= base_url('contexto') ?>">
                     <i class="bi bi-arrow-left me-1"></i>Volver
                 </a>
@@ -704,6 +710,29 @@
                                         <small class="d-block text-muted mt-1">Firma unica</small>
                                     </div>
                                 <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Modulos Relacionados -->
+                        <div class="card border-0 shadow-sm mt-3">
+                            <div class="card-header bg-white">
+                                <h6 class="mb-0"><i class="bi bi-grid me-2"></i>Modulos SST</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a href="<?= base_url('responsables-sst/' . $cliente['id_cliente']) ?>" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-people-fill me-2"></i>Responsables SST
+                                    </a>
+                                    <a href="<?= base_url('indicadores-sst/' . $cliente['id_cliente']) ?>" class="btn btn-outline-info btn-sm">
+                                        <i class="bi bi-graph-up me-2"></i>Indicadores SST
+                                    </a>
+                                    <a href="<?= base_url('estandares/' . $cliente['id_cliente']) ?>" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-check2-square me-2"></i>Estandares
+                                    </a>
+                                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-folder me-2"></i>Documentacion
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

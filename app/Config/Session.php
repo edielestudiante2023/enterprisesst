@@ -9,6 +9,17 @@ use CodeIgniter\Session\Handlers\FileHandler;
 class Session extends BaseConfig
 {
     /**
+     * Constructor - Configura parámetros de sesión de PHP
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Configurar gc_maxlifetime de PHP para que no elimine sesiones antes de tiempo
+        // 7200 segundos = 2 horas (debe ser >= $expiration)
+        ini_set('session.gc_maxlifetime', 7200);
+    }
+    /**
      * --------------------------------------------------------------------------
      * Session Driver
      * --------------------------------------------------------------------------
@@ -39,8 +50,10 @@ class Session extends BaseConfig
      *
      * The number of SECONDS you want the session to last.
      * Setting to 0 (zero) means expire when the browser is closed.
+     * Configurado en 7200 (2 horas) para permitir el manejo de timeout
+     * por rol en los filtros AuthFilter y SessionTimeoutFilter.
      */
-    public int $expiration = 0;
+    public int $expiration = 7200;
 
       /**
      * --------------------------------------------------------------------------
@@ -90,8 +103,10 @@ class Session extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * How many seconds between CI regenerating the session ID.
+     * Aumentado a 1800 (30 minutos) para evitar pérdida de sesión
+     * por regeneración frecuente.
      */
-    public int $timeToUpdate = 300;
+    public int $timeToUpdate = 1800;
 
     /**
      * --------------------------------------------------------------------------

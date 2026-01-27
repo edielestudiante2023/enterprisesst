@@ -77,16 +77,25 @@ class GeneradorDocumentoController extends Controller
 
         $cliente = $this->clienteModel->find($idCliente);
         $contexto = $this->contextoModel->getByCliente($idCliente);
-        $carpetas = $this->carpetaModel->getArbolCompleto($idCliente);
+
+        // Obtener carpetas como lista plana con niveles para el selector
+        $carpetas = $this->carpetaModel->getListaPlanaConNivel($idCliente);
 
         $plantilla = null;
         $tipo = null;
         $estructura = [];
+        $carpetaSugerida = null;
 
         if ($idPlantilla) {
             $plantilla = $this->plantillaModel->getConTipo($idPlantilla);
             $estructura = $this->plantillaModel->getEstructura($idPlantilla);
             $tipo = $this->tipoModel->find($plantilla['id_tipo']);
+
+            // Buscar carpeta sugerida basada en el estandar de la plantilla
+            // El estandar 1.2.1 debe ir en carpeta 1.2, el 2.4.1 en carpeta 2.4, etc.
+            if (!empty($plantilla['codigo_sugerido'])) {
+                $carpetaSugerida = $this->buscarCarpetaPorEstandar($idCliente, $plantilla);
+            }
         } elseif ($idTipo) {
             $tipo = $this->tipoModel->find($idTipo);
             $estructura = $this->tipoModel->getEstructura($idTipo);
@@ -98,8 +107,48 @@ class GeneradorDocumentoController extends Controller
             'carpetas' => $carpetas,
             'plantilla' => $plantilla,
             'tipo' => $tipo,
-            'estructura' => $estructura
+            'estructura' => $estructura,
+            'carpetaSugerida' => $carpetaSugerida
         ]);
+    }
+
+    /**
+     * Busca la carpeta apropiada para una plantilla basandose en el estandar relacionado
+     */
+    private function buscarCarpetaPorEstandar(int $idCliente, array $plantilla): ?int
+    {
+        // Mapeo de codigos de plantilla a codigos de carpeta PHVA
+        $mapeoPlantillaCarpeta = [
+            // Estandar 1.2.1 - Programa Capacitacion PYP
+            'PRG-CAP' => ['1.2.1'],
+            // Estandar 3.1.4 - Examenes Medicos Ocupacionales
+            'PRG-EMO' => ['3.1.4', '3.1.1'],
+            // Estandar 5.1.1 - Plan de Emergencias
+            'PLA-EME' => ['5.1.1'],
+            // Estandar 2.1.1 - Politica SST
+            'POL-SST' => ['2.1.1'],
+            // Estandar 4.1.1 - Metodologia IPEVR / 4.1.2 - Identificacion de peligros
+            'MTZ-IPE' => ['4.1.1', '4.1.2'],
+        ];
+
+        $codigoPlantilla = $plantilla['codigo_sugerido'] ?? '';
+
+        // Buscar en el mapeo
+        $carpetasCodigo = $mapeoPlantillaCarpeta[$codigoPlantilla] ?? [];
+
+        foreach ($carpetasCodigo as $codigoCarpeta) {
+            $carpeta = $this->carpetaModel->getByCodigo($idCliente, $codigoCarpeta);
+            if ($carpeta) {
+                return $carpeta['id_carpeta'];
+            }
+        }
+
+        // Si no hay mapeo especifico, buscar por patron del codigo
+        // PRG-* deberia ir a carpeta de Programas
+        // POL-* deberia ir a carpeta de Politicas
+        // PLA-* deberia ir a carpeta de Planes
+
+        return null;
     }
 
     /**
@@ -120,7 +169,7 @@ class GeneradorDocumentoController extends Controller
             'descripcion' => $this->request->getPost('descripcion'),
             'codigo_tipo' => $this->request->getPost('codigo_tipo'),
             'codigo_tema' => $this->request->getPost('codigo_tema'),
-            'creado_por' => session()->get('id_usuario')
+            'elaboro_usuario_id' => session()->get('id_usuario')
         ];
 
         $idDocumento = $this->documentoModel->crearDocumento($datos);

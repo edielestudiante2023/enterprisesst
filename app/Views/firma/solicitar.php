@@ -56,7 +56,7 @@
                 <i class="bi bi-pen me-2"></i>Solicitar Firmas
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/documentacion/ver/<?= $documento['id_documento'] ?>">
+                <a class="nav-link" href="<?= base_url('documentos-sst/' . ($documento['id_cliente'] ?? '') . '/' . str_replace('_', '-', $documento['tipo_documento'] ?? 'programa-capacitacion') . '/' . ($documento['anio'] ?? date('Y'))) ?>">
                     <i class="bi bi-arrow-left me-1"></i>Volver al documento
                 </a>
             </div>
@@ -80,8 +80,8 @@
                     </div>
                     <div class="card-body">
                         <p class="mb-2"><strong>Codigo:</strong> <code><?= esc($documento['codigo']) ?></code></p>
-                        <p class="mb-2"><strong>Nombre:</strong> <?= esc($documento['nombre']) ?></p>
-                        <p class="mb-2"><strong>Version:</strong> <?= $documento['version_actual'] ?></p>
+                        <p class="mb-2"><strong>Nombre:</strong> <?= esc($documento['titulo'] ?? $documento['nombre'] ?? '') ?></p>
+                        <p class="mb-2"><strong>Version:</strong> <?= $documento['version'] ?? $documento['version_actual'] ?? '1' ?></p>
                         <p class="mb-0"><strong>Estado:</strong>
                             <?php
                             $estadoColor = match($documento['estado']) {
@@ -175,7 +175,7 @@
                                 <i class="bi bi-exclamation-triangle me-2"></i>
                                 <strong>Datos de firmantes incompletos</strong>
                                 <p class="mb-2">Debe configurar los datos de los firmantes en el contexto del cliente antes de solicitar firmas.</p>
-                                <a href="/contexto/<?= $documento['id_cliente'] ?>" class="btn btn-warning btn-sm">
+                                <a href="<?= base_url('contexto/' . $documento['id_cliente']) ?>" class="btn btn-warning btn-sm">
                                     <i class="bi bi-gear me-1"></i>Configurar Firmantes
                                 </a>
                             </div>
@@ -273,11 +273,11 @@
                         </div>
 
                         <!-- Formulario de envio -->
-                        <form action="/firma/crear-solicitud" method="post">
+                        <form action="<?= base_url('firma/crear-solicitud') ?>" method="post">
                             <input type="hidden" name="id_documento" value="<?= $documento['id_documento'] ?>">
 
                             <div class="d-flex justify-content-between align-items-center">
-                                <a href="/documentacion/ver/<?= $documento['id_documento'] ?>" class="btn btn-outline-secondary">
+                                <a href="<?= base_url('documentos-sst/' . ($documento['id_cliente'] ?? '') . '/' . str_replace('_', '-', $documento['tipo_documento'] ?? 'programa-capacitacion') . '/' . ($documento['anio'] ?? date('Y'))) ?>" class="btn btn-outline-secondary">
                                     <i class="bi bi-x-lg me-1"></i>Cancelar
                                 </a>
                                 <button type="submit" class="btn btn-primary btn-lg">
@@ -298,7 +298,7 @@
                             Si necesita modificar los datos de los firmantes o el flujo de firmas (activar/desactivar Delegado SST),
                             puede hacerlo desde el contexto del cliente.
                         </p>
-                        <a href="/contexto/<?= $documento['id_cliente'] ?>" class="btn btn-outline-primary btn-sm">
+                        <a href="<?= base_url('contexto/' . $documento['id_cliente']) ?>" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-pencil me-1"></i>Editar Contexto del Cliente
                         </a>
                     </div>
