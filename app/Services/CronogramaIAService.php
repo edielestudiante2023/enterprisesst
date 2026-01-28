@@ -330,7 +330,7 @@ class CronogramaIAService
         $db = \Config\Database::connect();
         $nombreEscapado = $db->escapeLikeString($nombre);
         $existente = $db->table($this->capacitacionModel->table)
-            ->where("capacitacion COLLATE utf8mb4_general_ci LIKE '%{$nombreEscapado}%' COLLATE utf8mb4_general_ci")
+            ->where("capacitacion COLLATE utf8mb4_general_ci LIKE '%{$nombreEscapado}%'", null, false)
             ->get()
             ->getRowArray();
 

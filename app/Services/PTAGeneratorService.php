@@ -285,7 +285,7 @@ class PTAGeneratorService
         $actividadEscapada = $db->escapeLikeString($actividad);
         $existente = $db->table('tbl_pta_cliente')
             ->where('id_cliente', $idCliente)
-            ->where("actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%{$actividadEscapada}%' COLLATE utf8mb4_general_ci")
+            ->where("actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%{$actividadEscapada}%'", null, false)
             ->where('YEAR(fecha_propuesta)', $anio)
             ->get()
             ->getRowArray();

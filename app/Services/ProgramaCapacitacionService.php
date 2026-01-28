@@ -69,10 +69,10 @@ class ProgramaCapacitacionService
             ->where('id_cliente', $idCliente)
             ->where('YEAR(fecha_propuesta)', $anio)
             ->where("(
-                actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%capacitacion%' COLLATE utf8mb4_general_ci
-                OR actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%Induccion%' COLLATE utf8mb4_general_ci
-                OR actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%formacion%' COLLATE utf8mb4_general_ci
-            )")
+                actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%capacitacion%'
+                OR actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%Induccion%'
+                OR actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%formacion%'
+            )", null, false)
             ->get()
             ->getResultArray();
 
