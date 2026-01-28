@@ -754,3 +754,242 @@ $estadoVerTexto = match($estadoVer) {
 ```
 
 **Regla:** NUNCA confiar en que un campo tendra valor. Siempre usar fallbacks tanto en controlador como en vista
+
+---
+
+### 15. Case Sensitivity en Linux (Produccion) vs Windows (Local)
+
+**Problema:** Error `Class not found` solo en produccion pero funciona en local.
+
+**Causa:** Windows es case-insensitive, Linux es case-sensitive. El archivo `ClienteContextoSstModel.php` funcionaba con import `ClienteContextoSSTModel` en Windows pero fallaba en Linux.
+
+**Solucion:** El nombre del `use` debe coincidir EXACTAMENTE con el nombre del archivo:
+
+```php
+// Archivo: ClienteContextoSstModel.php
+
+// CORRECTO
+use App\Models\ClienteContextoSstModel;
+
+// INCORRECTO - Falla en Linux
+use App\Models\ClienteContextoSSTModel;  // SST vs Sst
+```
+
+**Regla:** SIEMPRE verificar que el case del import coincida con el nombre del archivo. Buscar con:
+```bash
+# Buscar archivos con nombre similar
+ls -la app/Models/ | grep -i contexto
+```
+
+**Archivos afectados tipicamente:**
+- Controladores que importan modelos
+- Servicios que importan modelos
+- Cualquier clase con acronimos (SST, SG, PDF, etc.)
+
+---
+
+### 16. Error de Doble COLLATE en Queries
+
+**Problema:** Error SQL `syntax error near 'COLLATE ... COLLATE'`.
+
+**Causa:** Poner COLLATE dos veces en la misma expresion:
+
+```php
+// INCORRECTO - Doble COLLATE
+->where("campo COLLATE utf8mb4_general_ci LIKE 'valor%' COLLATE utf8mb4_general_ci")
+
+// CORRECTO - Solo un COLLATE
+->where("campo LIKE 'valor%' COLLATE utf8mb4_general_ci", null, false)
+```
+
+**Regla:** COLLATE solo va UNA vez en la expresion, idealmente despues del valor de comparacion.
+
+---
+
+### 17. Flujo Correcto de Documentos: Generar → Firmar → Aprobar
+
+**Problema:** El flujo anterior era Generar → Aprobar → Firmar, lo cual no tenia sentido porque si el cliente no aprobaba al firmar, la version ya estaba creada.
+
+**Solucion - Flujo correcto:**
+
+```
+1. Generar documento (secciones con IA o automatico)
+2. Aprobar secciones (marcar cada seccion como lista)
+3. Enviar a Firmas (el cliente revisa y firma)
+4. Aprobacion automatica (al completarse todas las firmas, se crea la version)
+```
+
+**Implementacion:**
+
+En `generar_con_ia.php`, cambiar el boton segun estado:
+```php
+<?php if ($estadoDoc === 'firmado'): ?>
+    <!-- Documento firmado y aprobado -->
+    <a href="firma/estado/<?= $idDocumento ?>">Ver Firmas</a>
+<?php elseif ($estadoDoc === 'pendiente_firma'): ?>
+    <!-- Esperando firmas -->
+    <a href="firma/estado/<?= $idDocumento ?>">Estado Firmas</a>
+<?php elseif ($todasSeccionesListas && $idDocumento): ?>
+    <!-- Listo para firmas -->
+    <a href="firma/solicitar/<?= $idDocumento ?>">Enviar a Firmas</a>
+<?php endif; ?>
+```
+
+En `FirmaElectronicaController.php`, al completar todas las firmas:
+```php
+if ($this->firmaModel->firmasCompletas($idDocumento)) {
+    // Cambiar estado a firmado
+    $this->db->table('tbl_documentos_sst')
+        ->where('id_documento', $idDocumento)
+        ->update(['estado' => 'firmado']);
+
+    // Crear version automaticamente
+    $this->aprobarDocumentoAutomatico($idDocumento);
+}
+```
+
+**Regla:** El cliente SIEMPRE debe revisar y firmar ANTES de que el documento quede oficialmente aprobado.
+
+---
+
+### 18. Tamano de Imagenes de Firma en PDF
+
+**Problema:** Las firmas se ven muy pequenas en el PDF.
+
+**Solucion:** Aumentar el tamano maximo de las imagenes de firma:
+
+```php
+// ANTES (muy pequeno)
+style="max-height: 40px; max-width: 120px;"
+
+// DESPUES (+40%)
+style="max-height: 56px; max-width: 168px;"
+```
+
+**Archivos a modificar:**
+- `app/Views/documentos_sst/pdf_template.php`
+- `app/Views/documentos_sst/programa_capacitacion.php`
+- `app/Views/documentos_sst/asignacion_responsable.php`
+
+**Tamaños recomendados:**
+| Firmantes | Altura | Ancho |
+|-----------|--------|-------|
+| 2 firmantes | 56px | 168px |
+| 3 firmantes | 49px | 140px |
+
+---
+
+### 19. Calidad de Firmas Electronicas (Canvas)
+
+**Problema:** La firma dibujada por el cliente se ve pixelada o de baja calidad en el PDF.
+
+**Causas:**
+1. El canvas no usa `devicePixelRatio` para pantallas de alta densidad (retina)
+2. La firma se exporta con todo el espacio vacio alrededor
+3. El trazo es muy delgado
+
+**Solucion en `firmar.php`:**
+
+```javascript
+// 1. Usar alta resolucion
+let dpr = window.devicePixelRatio || 1;
+canvas.width = rect.width * dpr;
+canvas.height = 200 * dpr;
+ctx.scale(dpr, dpr);
+
+// 2. Trazo mas grueso
+ctx.lineWidth = 3;  // Era 2
+
+// 3. Al exportar, recortar y optimizar
+function exportarFirmaOptimizada() {
+    // Encontrar bounding box del dibujo
+    // Recortar solo el area con contenido
+    // Escalar a tamaño fijo (150px altura)
+    return tempCanvas.toDataURL('image/png');
+}
+
+// 4. Para imagenes subidas, redimensionar
+function optimizarImagenFirma(dataUrl, callback) {
+    // Redimensionar a max 150px altura, 400px ancho
+    // Mantener proporcion
+}
+```
+
+**Regla:** Las firmas nuevas deben procesarse con alta resolucion. Las firmas existentes de baja calidad requieren que el cliente vuelva a firmar.
+
+---
+
+### 20. Navegacion - Boton Volver
+
+**Problema:** El boton "Volver" lleva a una pagina incorrecta o genera error.
+
+**Solucion:** Definir claramente la jerarquia de navegacion:
+
+```php
+// Desde responsables-sst/{id} -> volver a contexto/{id}
+<a href="<?= base_url('contexto/' . $cliente['id_cliente']) ?>">Volver</a>
+
+// Desde documento -> volver a documentacion/{id}
+<a href="<?= base_url('documentacion/' . $documento['id_cliente']) ?>">Volver</a>
+```
+
+**Jerarquia recomendada:**
+```
+contexto/{id} (ficha del cliente)
+├── responsables-sst/{id}
+├── documentacion/{id}
+│   ├── documentos/generar/programa_capacitacion/{id}
+│   └── documentos-sst/{id}/programa-capacitacion/{anio}
+```
+
+**Regla:** El boton "Volver" debe llevar al nivel inmediatamente superior en la jerarquia, NO a una pagina aleatoria.
+
+---
+
+### 21. Botones de Acciones en Vista del Documento
+
+**Problema:** Confusion sobre cuando mostrar cada boton (Editar, Firmar, Aprobar, Ver PDF).
+
+**Matriz de botones segun estado:**
+
+| Estado | Editar | Enviar a Firmas | Estado Firmas | Ver PDF |
+|--------|--------|-----------------|---------------|---------|
+| borrador | Si | No | No | Si (preview) |
+| en_revision | Si | No | No | Si |
+| secciones_listas | No | **Si** | No | Si |
+| pendiente_firma | No | No | **Si** | Si |
+| firmado | No | No | Ver Firmas | Si (oficial) |
+| aprobado | No | No | - | Si (oficial) |
+
+**Codigo en vista:**
+```php
+<?php
+$estado = $documento['estado'] ?? 'borrador';
+$seccionesListas = $todasSeccionesListas ?? false;
+?>
+
+<?php if ($estado === 'firmado'): ?>
+    <span class="badge bg-success">Firmado y Aprobado</span>
+    <a href="firma/estado/<?= $id ?>">Ver Firmas</a>
+<?php elseif ($estado === 'pendiente_firma'): ?>
+    <span class="badge bg-warning">Pendiente Firma</span>
+    <a href="firma/estado/<?= $id ?>">Estado Firmas</a>
+<?php elseif ($seccionesListas): ?>
+    <a href="firma/solicitar/<?= $id ?>" class="btn btn-success">Enviar a Firmas</a>
+<?php else: ?>
+    <span class="badge bg-secondary">En edicion</span>
+<?php endif; ?>
+```
+
+---
+
+## RESUMEN RAPIDO DE ERRORES COMUNES
+
+| Error | Causa | Solucion Rapida |
+|-------|-------|-----------------|
+| Class not found en produccion | Case sensitivity | Verificar nombre exacto del archivo |
+| Syntax error COLLATE | Doble COLLATE | Usar solo un COLLATE |
+| Firma muy pequeña | max-height bajo | Aumentar a 56px/168px |
+| Firma pixelada | Sin devicePixelRatio | Agregar dpr al canvas |
+| Boton volver error | URL incorrecta | Usar base_url + id_cliente |
+| Aprobado sin firmas | Flujo incorrecto | Firmar ANTES de aprobar |
