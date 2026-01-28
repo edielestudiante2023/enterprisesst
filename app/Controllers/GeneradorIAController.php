@@ -6,7 +6,7 @@ use App\Services\CronogramaIAService;
 use App\Services\PTAGeneratorService;
 use App\Services\ProgramaCapacitacionService;
 use App\Models\ClientModel;
-use App\Models\ClienteContextoSSTModel;
+use App\Models\ClienteContextoSstModel;
 use App\Models\IndicadorSSTModel;
 
 /**
@@ -32,7 +32,7 @@ class GeneradorIAController extends BaseController
             return redirect()->back()->with('error', 'Cliente no encontrado');
         }
 
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -170,7 +170,7 @@ class GeneradorIAController extends BaseController
      */
     public function previewIndicadores(int $idCliente)
     {
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -188,7 +188,7 @@ class GeneradorIAController extends BaseController
      */
     public function generarIndicadores(int $idCliente)
     {
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -242,7 +242,7 @@ class GeneradorIAController extends BaseController
 
         // 3. Generar indicadores
         try {
-            $contextoModel = new ClienteContextoSSTModel();
+            $contextoModel = new ClienteContextoSstModel();
             $contexto = $contextoModel->getByCliente($idCliente);
             $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -336,7 +336,7 @@ class GeneradorIAController extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
         }
 
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 

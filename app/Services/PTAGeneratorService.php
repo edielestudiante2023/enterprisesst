@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\CronogcapacitacionModel;
 use App\Models\PtaclienteModel;
-use App\Models\ClienteContextoSSTModel;
+use App\Models\ClienteContextoSstModel;
 
 /**
  * Servicio para generar Plan de Trabajo Anual (PTA)
@@ -178,7 +178,7 @@ class PTAGeneratorService
         $anio = $anio ?? (int)date('Y');
 
         // Obtener estándares del cliente
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -280,11 +280,15 @@ class PTAGeneratorService
     {
         $anio = date('Y', strtotime($fecha));
 
-        $existente = $this->ptaModel
+        // Usar query directa con COLLATE para evitar errores de collation
+        $db = \Config\Database::connect();
+        $actividadEscapada = $db->escapeLikeString($actividad);
+        $existente = $db->table('tbl_pta_cliente')
             ->where('id_cliente', $idCliente)
-            ->like('actividad_plandetrabajo', $actividad, 'both')
+            ->where("actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%{$actividadEscapada}%' COLLATE utf8mb4_general_ci")
             ->where('YEAR(fecha_propuesta)', $anio)
-            ->first();
+            ->get()
+            ->getRowArray();
 
         return $existente !== null;
     }
@@ -296,7 +300,7 @@ class PTAGeneratorService
     {
         $anio = $anio ?? (int)date('Y');
 
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
         $nivel = $estandares <= 7 ? 7 : ($estandares <= 21 ? 21 : 60);

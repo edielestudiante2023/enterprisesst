@@ -52,8 +52,8 @@
                 <i class="bi bi-pen me-2"></i>Estado de Firmas
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="<?= base_url('documentos-sst/' . ($documento['id_cliente'] ?? '') . '/' . str_replace('_', '-', $documento['tipo_documento'] ?? 'programa-capacitacion') . '/' . ($documento['anio'] ?? date('Y'))) ?>">
-                    <i class="bi bi-arrow-left me-1"></i>Volver al documento
+                <a class="nav-link" href="<?= base_url('documentacion/' . ($documento['id_cliente'] ?? '')) ?>">
+                    <i class="bi bi-arrow-left me-1"></i>Volver a Documentacion
                 </a>
             </div>
         </div>

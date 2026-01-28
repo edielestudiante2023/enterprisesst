@@ -282,11 +282,16 @@ class DocumentacionController extends Controller
             $fasesInfo = $fasesService->getResumenFases($cliente['id_cliente'], $tipoCarpetaFases);
 
             // Verificar si ya existe un documento generado para esta carpeta
-            if ($tipoCarpetaFases === 'capacitacion_sst') {
+            $mapaTipoDocumento = [
+                'capacitacion_sst' => 'programa_capacitacion',
+                'responsables_sst' => 'asignacion_responsable_sgsst',
+            ];
+            $tipoDocBuscar = $mapaTipoDocumento[$tipoCarpetaFases] ?? null;
+            if ($tipoDocBuscar) {
                 $db = \Config\Database::connect();
                 $documentoExistente = $db->table('tbl_documentos_sst')
                     ->where('id_cliente', $cliente['id_cliente'])
-                    ->where('tipo_documento', 'programa_capacitacion')
+                    ->where('tipo_documento', $tipoDocBuscar)
                     ->where('anio', date('Y'))
                     ->get()
                     ->getRowArray();
@@ -295,11 +300,18 @@ class DocumentacionController extends Controller
 
         // Obtener documentos SST aprobados para mostrar en tabla
         $documentosSSTAprobados = [];
-        if ($tipoCarpetaFases === 'capacitacion_sst') {
+        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst'])) {
             $db = \Config\Database::connect();
-            $documentosSSTAprobados = $db->table('tbl_documentos_sst')
+            $queryDocs = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
-                ->whereIn('estado', ['borrador', 'generado', 'aprobado', 'firmado', 'pendiente_firma'])
+                ->whereIn('estado', ['borrador', 'generado', 'aprobado', 'firmado', 'pendiente_firma']);
+
+            // Filtrar por tipo de documento segun la carpeta
+            if (isset($tipoDocBuscar)) {
+                $queryDocs->where('tipo_documento', $tipoDocBuscar);
+            }
+
+            $documentosSSTAprobados = $queryDocs
                 ->orderBy('anio', 'DESC')
                 ->orderBy('updated_at', 'DESC')
                 ->get()
@@ -322,6 +334,16 @@ class DocumentacionController extends Controller
                     ->orderBy('id_version', 'DESC')
                     ->get()
                     ->getResultArray();
+
+                // Asignar estado por defecto a versiones que no lo tengan
+                foreach ($versiones as $idx => &$ver) {
+                    if (empty($ver['estado'])) {
+                        // La versión más reciente (primera en el array) es vigente, las demás históricas
+                        $ver['estado'] = ($idx === 0) ? 'vigente' : 'historico';
+                    }
+                }
+                unset($ver);
+
                 $docSST['versiones'] = $versiones;
                 $docSST['version_texto'] = !empty($versiones) ? $versiones[0]['version_texto'] : ($docSST['version'] . '.0');
 

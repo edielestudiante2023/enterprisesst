@@ -134,9 +134,11 @@ class EstandarMinimoModel extends Model
      */
     public function buscar(string $termino): array
     {
-        return $this->like('nombre', $termino)
-                    ->orLike('item', $termino)
-                    ->orLike('categoria_nombre', $termino)
+        return $this->groupStart()
+                        ->like('nombre', $termino)
+                        ->orLike('item', $termino)
+                        ->orLike('categoria_nombre', $termino)
+                    ->groupEnd()
                     ->orderBy('item', 'ASC')
                     ->findAll();
     }

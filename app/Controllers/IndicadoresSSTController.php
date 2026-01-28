@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Models\IndicadorSSTModel;
 use App\Models\ClientModel;
-use App\Models\ClienteContextoSSTModel;
+use App\Models\ClienteContextoSstModel;
 
 /**
  * Controlador para gestionar indicadores del SG-SST
@@ -31,7 +31,7 @@ class IndicadoresSSTController extends BaseController
         }
 
         // Obtener contexto SST para saber estándares aplicables
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -78,7 +78,7 @@ class IndicadoresSSTController extends BaseController
             return redirect()->back()->with('error', 'Cliente no encontrado');
         }
 
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -115,7 +115,7 @@ class IndicadoresSSTController extends BaseController
             return redirect()->back()->with('error', 'Indicador no encontrado');
         }
 
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -272,7 +272,7 @@ class IndicadoresSSTController extends BaseController
      */
     public function generarSugeridos(int $idCliente)
     {
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 

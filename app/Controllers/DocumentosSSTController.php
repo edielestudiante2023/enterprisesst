@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\ClientModel;
-use App\Models\ClienteContextoSSTModel;
+use App\Models\ClienteContextoSstModel;
 use App\Models\CronogcapacitacionModel;
 use App\Models\IndicadorSSTModel;
 use App\Models\ResponsableSSTModel;
@@ -25,6 +25,7 @@ class DocumentosSSTController extends BaseController
         'programa_capacitacion' => [
             'nombre' => 'Programa de Capacitacion',
             'descripcion' => 'Documento formal del programa de capacitacion en SST',
+            'flujo' => 'secciones_ia', // Usa editor de secciones con IA
             'secciones' => [
                 ['numero' => 1, 'nombre' => 'Introduccion', 'key' => 'introduccion'],
                 ['numero' => 2, 'nombre' => 'Objetivo General', 'key' => 'objetivo_general'],
@@ -113,7 +114,7 @@ class DocumentosSSTController extends BaseController
         $anio = (int)date('Y');
 
         // Obtener contexto del cliente
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -233,7 +234,7 @@ class DocumentosSSTController extends BaseController
         }
 
         // Obtener contexto
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -968,7 +969,7 @@ Incluye criterios de evaluación y responsables."
         $responsables = $responsableModel->getByCliente($idCliente);
 
         // Obtener contexto SST para datos adicionales
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
 
         // Obtener datos del consultor asignado
@@ -1059,7 +1060,7 @@ Incluye criterios de evaluación y responsables."
         $responsables = $responsableModel->getByCliente($documento['id_cliente']);
 
         // Obtener contexto SST
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($documento['id_cliente']);
 
         // Obtener datos del consultor asignado
@@ -1175,7 +1176,7 @@ Incluye criterios de evaluación y responsables."
         $responsables = $responsableModel->getByCliente($documento['id_cliente']);
 
         // Contexto
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($documento['id_cliente']);
 
         // Consultor y firma
@@ -1349,7 +1350,7 @@ Incluye criterios de evaluación y responsables."
             ->getResultArray();
 
         // Obtener contexto SST
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($documento['id_cliente']);
 
         // Obtener datos del consultor asignado
@@ -1720,7 +1721,7 @@ Incluye criterios de evaluación y responsables."
         $responsables = $responsableModel->getByCliente($version['id_cliente']);
 
         // Obtener contexto SST
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($version['id_cliente']);
 
         // Obtener datos del consultor asignado

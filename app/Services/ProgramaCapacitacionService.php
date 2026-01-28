@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\ClientModel;
-use App\Models\ClienteContextoSSTModel;
+use App\Models\ClienteContextoSstModel;
 use App\Models\IndicadorSSTModel;
 use App\Models\CronogcapacitacionModel;
 use App\Models\ResponsableSSTModel;
@@ -17,7 +17,7 @@ class ProgramaCapacitacionService
 {
     protected $db;
     protected ClientModel $clienteModel;
-    protected ClienteContextoSSTModel $contextoModel;
+    protected ClienteContextoSstModel $contextoModel;
     protected IndicadorSSTModel $indicadorModel;
     protected CronogcapacitacionModel $cronogramaModel;
 
@@ -25,7 +25,7 @@ class ProgramaCapacitacionService
     {
         $this->db = Database::connect();
         $this->clienteModel = new ClientModel();
-        $this->contextoModel = new ClienteContextoSSTModel();
+        $this->contextoModel = new ClienteContextoSstModel();
         $this->indicadorModel = new IndicadorSSTModel();
         $this->cronogramaModel = new CronogcapacitacionModel();
     }
@@ -64,14 +64,15 @@ class ProgramaCapacitacionService
         }
 
         // Obtener actividades del PTA relacionadas con capacitacion
+        // Usar SQL raw con COLLATE para evitar errores de collation
         $actividadesPTA = $this->db->table('tbl_pta_cliente')
             ->where('id_cliente', $idCliente)
             ->where('YEAR(fecha_propuesta)', $anio)
-            ->groupStart()
-                ->like('actividad_plandetrabajo', 'capacitacion', 'both')
-                ->orLike('actividad_plandetrabajo', 'Induccion', 'both')
-                ->orLike('actividad_plandetrabajo', 'formacion', 'both')
-            ->groupEnd()
+            ->where("(
+                actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%capacitacion%' COLLATE utf8mb4_general_ci
+                OR actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%Induccion%' COLLATE utf8mb4_general_ci
+                OR actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE '%formacion%' COLLATE utf8mb4_general_ci
+            )")
             ->get()
             ->getResultArray();
 

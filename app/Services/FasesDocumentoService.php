@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\CronogcapacitacionModel;
 use App\Models\PtaclienteModel;
 use App\Models\IndicadorSSTModel;
-use App\Models\ClienteContextoSSTModel;
+use App\Models\ClienteContextoSstModel;
 
 /**
  * Servicio para verificar el estado de las fases previas
@@ -219,7 +219,7 @@ class FasesDocumentoService
         }
 
         // Verificar si tiene el mínimo según estándares
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -259,10 +259,12 @@ class FasesDocumentoService
         }
 
         // Verificar si tiene actividades de capacitación (derivadas del cronograma)
-        $capacitaciones = $this->ptaModel
+        // Usar COLLATE para evitar errores de collation entre diferentes tablas
+        $db = \Config\Database::connect();
+        $capacitaciones = $db->table('tbl_pta_cliente')
             ->where('id_cliente', $idCliente)
             ->where('YEAR(fecha_propuesta)', $anio)
-            ->like('actividad_plandetrabajo', 'Capacitación', 'after')
+            ->where("actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE 'Capacitaci%' COLLATE utf8mb4_general_ci")
             ->countAllResults();
 
         if ($capacitaciones === 0) {
@@ -299,7 +301,7 @@ class FasesDocumentoService
         }
 
         // Verificar mínimo según estándares
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -340,7 +342,7 @@ class FasesDocumentoService
         }
 
         // Verificar roles obligatorios
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 

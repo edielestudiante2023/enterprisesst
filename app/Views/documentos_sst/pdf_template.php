@@ -41,18 +41,26 @@ if (!function_exists('convertirMarkdownAHtmlPdf')) {
 
                 // Procesar línea de texto normal
                 if (!empty($lineaTrim)) {
-                    // PRIMERO: Convertir markdown a placeholders antes de escapar
+                    // PRIMERO: Preservar tags HTML existentes (<strong>, <em>) con placeholders
+                    $lineaProcesada = preg_replace('/<strong>([^<]*)<\/strong>/', '{{HTML_BOLD_START}}$1{{HTML_BOLD_END}}', $lineaTrim);
+                    $lineaProcesada = preg_replace('/<em>([^<]*)<\/em>/', '{{HTML_ITALIC_START}}$1{{HTML_ITALIC_END}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<b>([^<]*)<\/b>/', '{{HTML_BOLD_START}}$1{{HTML_BOLD_END}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<i>([^<]*)<\/i>/', '{{HTML_ITALIC_START}}$1{{HTML_ITALIC_END}}', $lineaProcesada);
+
+                    // SEGUNDO: Convertir markdown a placeholders
                     // Negrita: **texto** -> marcador temporal
-                    $lineaProcesada = preg_replace('/\*\*([^*]+)\*\*/', '{{BOLD_START}}$1{{BOLD_END}}', $lineaTrim);
+                    $lineaProcesada = preg_replace('/\*\*([^*]+)\*\*/', '{{BOLD_START}}$1{{BOLD_END}}', $lineaProcesada);
                     // Cursiva: *texto* -> marcador temporal (pero no dentro de negrita)
                     $lineaProcesada = preg_replace('/(?<!\{)\*([^*]+)\*(?!\})/', '{{ITALIC_START}}$1{{ITALIC_END}}', $lineaProcesada);
 
-                    // SEGUNDO: Escapar HTML
+                    // TERCERO: Escapar HTML restante
                     $lineaProcesada = htmlspecialchars($lineaProcesada, ENT_QUOTES, 'UTF-8');
 
-                    // TERCERO: Convertir placeholders a HTML
+                    // CUARTO: Convertir todos los placeholders a HTML
                     $lineaProcesada = str_replace(['{{BOLD_START}}', '{{BOLD_END}}'], ['<strong>', '</strong>'], $lineaProcesada);
                     $lineaProcesada = str_replace(['{{ITALIC_START}}', '{{ITALIC_END}}'], ['<em>', '</em>'], $lineaProcesada);
+                    $lineaProcesada = str_replace(['{{HTML_BOLD_START}}', '{{HTML_BOLD_END}}'], ['<strong>', '</strong>'], $lineaProcesada);
+                    $lineaProcesada = str_replace(['{{HTML_ITALIC_START}}', '{{HTML_ITALIC_END}}'], ['<em>', '</em>'], $lineaProcesada);
 
                     // Detectar lista
                     if (preg_match('/^[-•]\s+(.+)$/', $lineaTrim, $m)) {
@@ -305,7 +313,7 @@ if (!function_exists('renderizarTablaPdf')) {
         <tr>
             <!-- Nombre del documento -->
             <td class="encabezado-titulo-central" valign="middle">
-                <div class="nombre-doc"><?= esc(strtoupper($contenido['titulo'] ?? 'PROGRAMA DE CAPACITACION EN SST')) ?></div>
+                <div class="nombre-doc"><?= esc(strtoupper($contenido['titulo'] ?? $documento['titulo'] ?? 'DOCUMENTO SST')) ?></div>
             </td>
         </tr>
     </table>

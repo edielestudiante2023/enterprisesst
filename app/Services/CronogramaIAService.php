@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\CronogcapacitacionModel;
 use App\Models\CapacitacionModel;
-use App\Models\ClienteContextoSSTModel;
+use App\Models\ClienteContextoSstModel;
 
 /**
  * Servicio de IA para generar cronogramas de capacitación
@@ -251,7 +251,7 @@ class CronogramaIAService
         $anio = $anio ?? (int)date('Y');
 
         // Obtener estándares del cliente
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
@@ -326,10 +326,13 @@ class CronogramaIAService
      */
     protected function buscarOCrearCapacitacion(string $nombre, string $objetivo): array
     {
-        // Buscar por nombre similar
-        $existente = $this->capacitacionModel
-            ->like('capacitacion', $nombre, 'both')
-            ->first();
+        // Buscar por nombre similar - Usar SQL raw con COLLATE para evitar errores de collation
+        $db = \Config\Database::connect();
+        $nombreEscapado = $db->escapeLikeString($nombre);
+        $existente = $db->table($this->capacitacionModel->table)
+            ->where("capacitacion COLLATE utf8mb4_general_ci LIKE '%{$nombreEscapado}%' COLLATE utf8mb4_general_ci")
+            ->get()
+            ->getRowArray();
 
         if ($existente) {
             return $existente;
@@ -390,7 +393,7 @@ class CronogramaIAService
     {
         $anio = $anio ?? (int)date('Y');
 
-        $contextoModel = new ClienteContextoSSTModel();
+        $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 

@@ -1,89 +1,168 @@
+# Prompt para Crear Nuevo Documento SST
 
+## INSTRUCCIONES PARA CLAUDE
 
 ```
 Necesito crear un nuevo tipo de documento SST para el aplicativo EnterpriseSST.
 
 ANTES DE ESCRIBIR CUALQUIER CODIGO, haz lo siguiente:
 
-### FASE 1: Leer documentacion del proyecto
+### FASE 1: Determinar el tipo de documento
 
-Lee estos archivos en orden para entender la arquitectura completa:
+Preguntame primero:
+- ¿El documento requiere generacion con IA y edicion de secciones? (como Programa de Capacitacion)
+- ¿O es un documento simple que se genera automaticamente desde el contexto del cliente? (como Asignacion de Responsable)
 
-1. C:\xampp\htdocs\enterprisesst\proyecto_documentacion_sst_parte8.md (arquitectura del generador de documentos, constantes TIPOS_DOCUMENTO, flujo Phase-Locking, secciones, IA, almacenamiento, rutas, exportacion PDF/Word, versionado)
-2. C:\xampp\htdocs\enterprisesst\proyecto_documentacion_sst_parte9.md (seccion 16: guia paso a paso para crear nuevo documento, diagnostico de componentes genericos vs hardcodeados, checklist de verificacion)
+Segun la respuesta, usaremos uno de estos DOS patrones:
 
-Despues de leerlos, confirma que entendiste:
-- La constante TIPOS_DOCUMENTO y CODIGOS_DOCUMENTO
-- El flujo generarConIA() -> generarSeccionIA() -> generarConIAReal() / generarContenidoSeccion()
-- Los prompts en getPromptBaseParaSeccion()
-- La vista previa programaCapacitacion() y su vista programa_capacitacion.php
-- La tabla de carpeta.php con sus 6 botones de accion
-- El mapeo plantilla-carpeta en tbl_doc_plantilla_carpeta
+**PATRON A - Documento complejo con IA (editor de secciones):**
+- Referencia: DocumentosSSTController.php + programa_capacitacion.php
+- Flujo: generarConIA() -> editor de secciones -> aprobar -> vista previa -> firmas
+- Ejemplo: Programa de Capacitacion, Plan de Emergencias, Programa de Vigilancia Epidemiologica
 
-### FASE 2: Preguntarme sobre el nuevo documento
+**PATRON B - Documento simple auto-generado (sin IA):**
+- Referencia: PzasignacionresponsableSstController.php (duplicar y renombrar)
+- Flujo: boton "Generar" -> crea documento desde contexto -> vista previa -> firmas
+- Ejemplo: Asignacion de Responsable, Politica SST, Actas
 
-Hazme estas preguntas UNA POR UNA (no todas juntas), esperando mi respuesta antes de continuar:
+### FASE 2: Leer archivos de referencia
+
+**Si es PATRON A (complejo con IA), leer:**
+1. app/Controllers/DocumentosSSTController.php - especialmente:
+   - Constantes TIPOS_DOCUMENTO y CODIGOS_DOCUMENTO
+   - Metodo generarConIA() y generarSeccionIA()
+   - Metodo programaCapacitacion() (vista previa)
+   - Metodo getPromptBaseParaSeccion() (prompts IA)
+2. app/Views/documentos_sst/programa_capacitacion.php (vista de referencia)
+3. app/Views/documentos_sst/generar_con_ia.php (editor de secciones)
+
+**Si es PATRON B (simple sin IA), leer:**
+1. app/Controllers/PzasignacionresponsableSstController.php (controlador de referencia)
+2. app/Views/documentos_sst/asignacion_responsable.php (vista de referencia)
+3. Las rutas existentes en Routes.php para ese controlador
+
+### FASE 3: Preguntarme sobre el nuevo documento
+
+Hazme estas preguntas UNA POR UNA:
 
 **Pregunta 1 - Identidad del documento:**
-- ¿Como se llama el documento? (ej: "Programa de Mantenimiento Preventivo")
-- ¿Cual es el tipo_documento en snake_case? (ej: "programa_mantenimiento")
-- ¿Que codigo le asignamos? Tipo y Tema (ej: PRG-MNT). Muestrame los codigos existentes en CODIGOS_DOCUMENTO para que yo elija.
+- ¿Como se llama el documento? (ej: "Programa de Vigilancia Epidemiologica")
+- ¿Cual es el codigo? Muestrame los existentes en CODIGOS_DOCUMENTO para elegir formato (ej: PRG-VEP)
 
 **Pregunta 2 - Secciones del documento:**
-- Propon una lista de secciones basandote en documentos SST similares de la Resolucion 0312/2019 y normativa colombiana. Cada seccion necesita: numero, nombre, key.
-- Preguntame si quiero agregar, quitar o modificar alguna seccion.
-- Preguntame cuales secciones se alimentan de tablas existentes (como cronograma, PTA, indicadores) vs generadas por IA/plantilla.
+- Propon una lista de secciones basandote en la Resolucion 0312/2019 y normativa colombiana
+- Cada seccion necesita: numero, nombre, key
+- Preguntame cuales se alimentan de tablas existentes vs generadas por IA/plantilla
 
 **Pregunta 3 - Ubicacion en carpetas:**
-- Lee la estructura actual de carpetas del cliente ejecutando un query a tbl_doc_carpetas para ver los estandares disponibles.
-- Preguntame en cual estandar de la Resolucion 0312 se ubica este documento.
-- Muestra las opciones de carpetas tipo 'estandar' disponibles.
+- Preguntame en cual estandar de la Resolucion 0312 se ubica este documento
+- Consultar tbl_doc_carpetas para ver opciones disponibles
 
 **Pregunta 4 - Dependencias:**
-- ¿Este documento requiere que se complete alguna fase previa? (cronograma, PTA, indicadores, u otro documento)
-- ¿O es independiente y se puede generar directamente?
+- ¿Requiere fases previas? (cronograma, PTA, indicadores, responsables)
+- ¿O es independiente?
 
 **Pregunta 5 - Vista previa:**
-- ¿La estructura visual del documento es similar al Programa de Capacitacion (encabezado formal + secciones numeradas + firmas + control de cambios)?
-- ¿O necesita una estructura diferente? Si es asi, describir.
+- ¿Similar a Programa de Capacitacion? (encabezado + secciones + firmas + control cambios)
+- ¿O estructura diferente?
 
-### FASE 3: Implementar los 12 pasos
+### FASE 4: Implementar EN BLOQUE
 
-Una vez que tenga todas las respuestas, ejecutar los pasos en este orden EXACTO. Despues de cada paso, confirmar que se completo sin errores antes de continuar:
+IMPORTANTE: Implementar TODO de una vez, en este orden:
 
-**Paso 1:** Agregar entrada en TIPOS_DOCUMENTO con las secciones definidas
-**Paso 2:** Agregar entrada en CODIGOS_DOCUMENTO (si no existe)
-**Paso 3:** Refactorizar generarConIAReal() para que reciba $tipo en vez de tener hardcodeado 'programa_capacitacion' (SOLO LA PRIMERA VEZ, luego ya esta generico)
-**Paso 4:** Agregar prompts IA para cada seccion del nuevo tipo en getPromptBaseParaSeccion()
-**Paso 5:** Agregar plantillas estaticas (fallback sin IA) en generarContenidoSeccion()
-**Paso 6:** Crear metodo de vista previa (o generalizar programaCapacitacion())
-**Paso 7:** Crear vista de renderizado en app/Views/documentos_sst/
-**Paso 8:** Agregar ruta de vista previa en Routes.php
-**Paso 9:** Hacer dinamicos los links en carpeta.php (botones Ver/Editar por tipo_documento)
-**Paso 10:** Insertar mapeo en tbl_doc_plantilla_carpeta (LOCAL y PRODUCCION)
-**Paso 11:** Verificar que tipoCarpetaFases detecte el nuevo tipo en DocumentacionController.php
-**Paso 12:** Ejecutar el CHECKLIST DE VERIFICACION (seccion 16 de parte 9)
+---
 
-### FASE 4: Verificacion
+#### BLOQUE 1: ENTORNO CONSULTOR (crear/editar/aprobar/firmar)
 
-Despues de implementar, verificar manualmente:
-1. Ir a la carpeta del estandar correspondiente y ver que aparezca el boton para generar
-2. Generar al menos 2 secciones con IA
-3. Guardar y aprobar secciones
-4. Ver vista previa
-5. Exportar PDF
+**Si es PATRON A (complejo con IA):**
+
+| Paso | Archivo | Accion |
+|------|---------|--------|
+| 1 | DocumentosSSTController.php | Agregar en TIPOS_DOCUMENTO |
+| 2 | DocumentosSSTController.php | Agregar en CODIGOS_DOCUMENTO |
+| 3 | DocumentosSSTController.php | Agregar prompts en getPromptBaseParaSeccion() |
+| 4 | DocumentosSSTController.php | Agregar plantillas en generarContenidoSeccion() |
+| 5 | DocumentosSSTController.php | Crear metodo vista previa (ej: programaVigilancia()) |
+| 6 | app/Views/documentos_sst/[nuevo].php | Crear vista previa |
+| 7 | Routes.php | Agregar rutas del documento |
+| 8 | DocumentacionController.php | Actualizar tipoCarpetaFases si aplica |
+| 9 | app/Views/documentacion/carpeta.php | Agregar boton si es necesario |
+| 10 | FasesDocumentoService.php | Agregar fase si tiene dependencias |
+
+**Si es PATRON B (simple sin IA):**
+
+| Paso | Archivo | Accion |
+|------|---------|--------|
+| 1 | PzasignacionresponsableSstController.php | DUPLICAR archivo |
+| 2 | Pz[nuevo]Controller.php | RENOMBRAR clase y constantes |
+| 3 | Pz[nuevo]Controller.php | Adaptar TIPO_DOCUMENTO, CODIGO_TIPO, CODIGO_TEMA |
+| 4 | Pz[nuevo]Controller.php | Adaptar construirContenido() con campos del documento |
+| 5 | asignacion_responsable.php | DUPLICAR vista |
+| 6 | app/Views/documentos_sst/[nuevo].php | RENOMBRAR y adaptar vista |
+| 7 | Routes.php | Agregar rutas del documento |
+| 8 | app/Views/documentacion/carpeta.php | Agregar boton si es necesario |
+
+---
+
+#### BLOQUE 2: ENTORNO CLIENTE (solo lectura - ver/descargar PDF)
+
+| Paso | Archivo | Accion |
+|------|---------|--------|
+| 1 | ClienteDocumentosSstController.php | Agregar mapeo en mapearPlantillaATipoDocumento() |
+
+```php
+// En ClienteDocumentosSstController::mapearPlantillaATipoDocumento()
+$mapa = [
+    'PRG-CAP' => 'programa_capacitacion',
+    'ASG-RES' => 'asignacion_responsable_sgsst',
+    'NUEVO-COD' => 'nuevo_tipo_documento',  // <-- Agregar aqui
+];
+```
+
+**NOTA:** El cliente accede via `/client/mis-documentos-sst` y solo ve documentos con estado `aprobado` o `firmado`.
+
+---
+
+#### BLOQUE 3: BASE DE DATOS (LOCAL + PRODUCCION)
+
+| Paso | Tabla | Accion |
+|------|-------|--------|
+| 1 | tbl_doc_plantilla_carpeta | INSERT mapeo codigo_plantilla -> codigo_carpeta |
+| 2 | tbl_doc_plantillas | INSERT plantilla si no existe |
+| 3 | tbl_doc_tipos | INSERT tipo si no existe |
+
+Crear script en `app/SQL/ejecutar_[nombre_documento].php` y ejecutar:
+```bash
+php app/SQL/ejecutar_[nombre_documento].php
+```
+
+---
+
+### FASE 5: Verificacion
+
+**Verificar entorno CONSULTOR:**
+1. Ir a la carpeta del estandar y ver que aparezca el boton para generar
+2. Generar el documento (con IA o automatico segun patron)
+3. Ver vista previa
+4. Exportar PDF
+5. Solicitar firmas
 6. Publicar en reportList
-7. Verificar que el documento aparece en la tabla de carpeta.php con todos los botones funcionales
+
+**Verificar entorno CLIENTE:**
+1. Acceder a /client/mis-documentos-sst
+2. Navegar a la carpeta del estandar
+3. Ver el documento en la tabla (solo si esta aprobado/firmado)
+4. Descargar PDF
 
 ### REGLAS IMPORTANTES:
 
-- NO crear controladores nuevos. Todo va en DocumentosSSTController.php
-- NO crear modelos nuevos a menos que se necesite una tabla nueva
-- Reutilizar las vistas PDF/Word si la estructura es similar
+- PATRON A: Todo en DocumentosSSTController.php (comparte infraestructura IA)
+- PATRON B: DUPLICAR Y RENOMBRAR controlador existente (Pz*, Hz*)
+- Reutilizar vistas PDF/Word si la estructura es similar
 - Los prompts de IA deben ser especificos para normativa colombiana SST
 - Siempre ejecutar cambios de BD en LOCAL y PRODUCCION
-- Para BD PRODUCCION usar el patron de app/SQL/ejecutar_migracion.php con las credenciales que el usuario proporcionara
-- Cada seccion de prompt debe ajustarse por estandares (7, 21, 60) siguiendo el mismo patron del programa de capacitacion
+- Cada prompt debe ajustarse por estandares (7, 21, 60)
+- SIEMPRE agregar mapeo en ClienteDocumentosSstController para vista cliente
 
 ### DOCUMENTO QUE QUIERO CREAR:
 
@@ -92,33 +171,586 @@ Despues de implementar, verificar manualmente:
 
 ---
 
-## EJEMPLO DE USO
-
-Para crear un "Programa de Mantenimiento Preventivo", el usuario pegaria el prompt anterior y al final escribiria:
+## EJEMPLO 1: Documento complejo con IA
 
 ```
-DOCUMENTO QUE QUIERO CREAR: Programa de Mantenimiento Preventivo y Correctivo
+DOCUMENTO QUE QUIERO CREAR: Programa de Vigilancia Epidemiologica
+
+Tipo: PATRON A (complejo con IA, multiples secciones editables)
 ```
 
-Claude leeria las partes 8 y 9, haria las 5 preguntas, y ejecutaria los 12 pasos.
+Claude usara DocumentosSSTController como base, agregara las constantes, prompts, y metodos necesarios.
+
+---
+
+## EJEMPLO 2: Documento simple sin IA
+
+```
+DOCUMENTO QUE QUIERO CREAR: Politica de Seguridad y Salud en el Trabajo
+
+Tipo: PATRON B (simple, se genera desde contexto del cliente)
+```
+
+Claude duplicara PzasignacionresponsableSstController y lo adaptara.
+
+---
+
+## ARCHIVOS DE REFERENCIA
+
+### Para PATRON A (complejo con IA):
+
+| Archivo | Funcion |
+|---------|---------|
+| `app/Controllers/DocumentosSSTController.php` | Controlador principal, constantes, prompts, metodos |
+| `app/Views/documentos_sst/programa_capacitacion.php` | Vista previa de referencia |
+| `app/Views/documentos_sst/generar_con_ia.php` | Editor de secciones |
+| `app/Views/documentos_sst/pdf_template.php` | Template PDF |
+| `app/Services/FasesDocumentoService.php` | Definicion de fases y dependencias |
+| `app/Controllers/DocumentacionController.php` | Logica de carpeta.php |
+
+### Para PATRON B (simple sin IA):
+
+| Archivo | Funcion |
+|---------|---------|
+| `app/Controllers/PzasignacionresponsableSstController.php` | Controlador de referencia para duplicar |
+| `app/Views/documentos_sst/asignacion_responsable.php` | Vista de referencia para duplicar |
+| `app/Config/Routes.php` | Rutas existentes como referencia |
+
+### Vista del Cliente (solo lectura):
+
+| Archivo | Funcion |
+|---------|---------|
+| `app/Controllers/ClienteDocumentosSstController.php` | Controlador para vista del cliente |
+| `app/Views/client/documentos_sst/index.php` | Arbol de carpetas PHVA |
+| `app/Views/client/documentos_sst/carpeta.php` | Tabla de documentos con boton PDF |
 
 ---
 
 ## NOTAS TECNICAS
 
-- Este prompt asume que la refactorizacion de generarConIAReal() (Paso 3) se hace UNA SOLA VEZ. La segunda vez que se cree un documento, ese paso ya estara hecho.
-- Lo mismo aplica para el Paso 9 (links dinamicos en carpeta.php). Una vez hechos dinamicos, aplica para todos los tipos futuros.
-- Los pasos que se repiten por cada nuevo documento son: 1, 2, 4, 5, 6, 7, 8, 10, 11.
+- El PATRON A comparte infraestructura: versionamiento, firmas, exportacion PDF/Word
+- El PATRON B es independiente: cada controlador tiene su propia logica
+- Para 100+ documentos, el PATRON B escala mejor (duplicar y renombrar)
+- El PATRON A es mejor cuando se necesita IA y edicion colaborativa de secciones
+- El cliente accede via `/client/mis-documentos-sst` - solo ve documentos aprobados/firmados
+- Las carpetas del cliente estan filtradas por `id_cliente` en `tbl_doc_carpetas`
 
-## ARCHIVOS CLAVE QUE CLAUDE DEBE LEER
+---
 
-| Archivo | Para que |
-|---------|----------|
-| `proyecto_documentacion_sst_parte8.md` | Arquitectura completa del generador |
-| `proyecto_documentacion_sst_parte9.md` | Guia de creacion (seccion 16) |
-| `app/Controllers/DocumentosSSTController.php` | Constantes, metodos de generacion, prompts |
-| `app/Controllers/DocumentacionController.php` | Metodo carpeta(), tipoCarpetaFases |
-| `app/Config/Routes.php` | Rutas existentes |
-| `app/Views/documentacion/carpeta.php` | Tabla con botones de accion |
-| `app/Views/documentos_sst/programa_capacitacion.php` | Vista de referencia para el nuevo tipo |
-| `app/Views/documentos_sst/pdf_template.php` | Template PDF de referencia |
+## CREDENCIALES Y PATRON PARA CAMBIOS EN BASE DE DATOS
+
+### Instruccion para Claude
+
+Cuando necesites ejecutar cambios de base de datos (INSERT, UPDATE, ALTER, CREATE), **SIEMPRE** debes ejecutarlos en **ambos entornos**: LOCAL y PRODUCCION.
+
+### Credenciales
+
+```php
+// LOCAL (XAMPP)
+$localConfig = [
+    'host' => 'localhost',
+    'port' => 3306,
+    'database' => 'empresas_sst',
+    'username' => 'root',
+    'password' => ''
+];
+
+// PRODUCCION (DigitalOcean)
+$prodConfig = [
+    'host' => 'db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com',
+    'port' => 25060,
+    'database' => 'empresas_sst',
+    'username' => 'cycloid_userdb',
+    'password' => 'AVNS_iDypWizlpMRwHIORJGG',
+    'ssl' => true  // IMPORTANTE: Requiere SSL
+];
+```
+
+### Patron de Codigo PHP para Migraciones
+
+Crear archivo en `app/SQL/ejecutar_{nombre}.php`:
+
+```php
+<?php
+/**
+ * Script de migracion: {descripcion}
+ * Ejecutar con: php app/SQL/ejecutar_{nombre}.php
+ */
+
+// Configuracion de entornos
+$environments = [
+    'LOCAL' => [
+        'host' => 'localhost',
+        'port' => 3306,
+        'dbname' => 'empresas_sst',
+        'user' => 'root',
+        'pass' => '',
+        'ssl' => false
+    ],
+    'PRODUCTION' => [
+        'host' => 'db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com',
+        'port' => 25060,
+        'dbname' => 'empresas_sst',
+        'user' => 'cycloid_userdb',
+        'pass' => 'AVNS_iDypWizlpMRwHIORJGG',
+        'ssl' => true
+    ]
+];
+
+// SQL a ejecutar
+$sqlStatements = [
+    "INSERT INTO tbl_doc_plantilla_carpeta (codigo_plantilla, codigo_carpeta)
+     SELECT 'NUEVO-COD', '1.1.1'
+     FROM DUAL
+     WHERE NOT EXISTS (
+         SELECT 1 FROM tbl_doc_plantilla_carpeta
+         WHERE codigo_plantilla = 'NUEVO-COD' AND codigo_carpeta = '1.1.1'
+     )",
+
+    // Agregar mas statements si es necesario
+];
+
+foreach ($environments as $envName => $config) {
+    echo "\n========== {$envName} ==========\n";
+
+    try {
+        $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['dbname']};charset=utf8mb4";
+        $options = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION];
+
+        if ($config['ssl']) {
+            $options[PDO::MYSQL_ATTR_SSL_CA] = true;
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
+
+        $pdo = new PDO($dsn, $config['user'], $config['pass'], $options);
+        echo "Conectado a {$envName}\n";
+
+        foreach ($sqlStatements as $sql) {
+            try {
+                $pdo->exec($sql);
+                echo "OK: " . substr($sql, 0, 60) . "...\n";
+            } catch (PDOException $e) {
+                // Ignorar errores de duplicado (ya existe)
+                if (strpos($e->getMessage(), 'Duplicate') !== false) {
+                    echo "SKIP (ya existe): " . substr($sql, 0, 40) . "...\n";
+                } else {
+                    echo "ERROR: " . $e->getMessage() . "\n";
+                }
+            }
+        }
+
+    } catch (PDOException $e) {
+        echo "ERROR conexion {$envName}: " . $e->getMessage() . "\n";
+    }
+}
+
+echo "\n========== COMPLETADO ==========\n";
+```
+
+### Ejecucion
+
+```bash
+# Desde la raiz del proyecto
+php app/SQL/ejecutar_{nombre}.php
+```
+
+### Reglas para Migraciones
+
+1. **NUNCA** ejecutar solo en LOCAL o solo en PRODUCCION
+2. **SIEMPRE** usar el patron de doble conexion
+3. **SIEMPRE** manejar errores de duplicado (ya existe)
+4. **SIEMPRE** mostrar resultado por consola
+5. Para PRODUCCION, SSL es **OBLIGATORIO**
+6. El archivo debe quedar en `app/SQL/` para referencia futura
+7. Nombrar archivos descriptivamente: `ejecutar_agregar_plantilla_[documento].php`
+
+---
+
+## CHECKLIST RAPIDO PARA NUEVO DOCUMENTO
+
+```
+[ ] BLOQUE CONSULTOR
+    [ ] Controlador creado/actualizado
+    [ ] Vista previa creada
+    [ ] Rutas agregadas
+    [ ] Boton en carpeta.php (si aplica)
+
+[ ] BLOQUE CLIENTE
+    [ ] Mapeo en mapearPlantillaATipoDocumento()
+
+[ ] BLOQUE BASE DE DATOS
+    [ ] Script de migracion creado
+    [ ] Ejecutado en LOCAL
+    [ ] Ejecutado en PRODUCCION
+
+[ ] VERIFICACION
+    [ ] Consultor puede crear documento
+    [ ] Consultor puede ver vista previa
+    [ ] Consultor puede exportar PDF
+    [ ] Consultor puede exportar Word
+    [ ] Consultor puede solicitar firmas
+    [ ] Cliente ve documento aprobado/firmado
+    [ ] Cliente puede descargar PDF
+    [ ] Negritas y formato se renderizan correctamente en PDF/Word
+```
+
+---
+
+## LECCIONES APRENDIDAS (ERRORES COMUNES)
+
+### 1. Collation de Base de Datos
+
+**Problema:** Error `Illegal mix of collations` al usar LIKE o comparar strings entre tablas.
+
+**Solucion:** La base de datos debe tener collation unificado `utf8mb4_general_ci`. Si hay errores de collation:
+
+```bash
+# Ejecutar script de unificacion
+php app/SQL/ejecutar_unificar_collation.php
+```
+
+**Regla:** NUNCA agregar `COLLATE` manualmente en queries de CodeIgniter. Unificar la BD es la solucion permanente.
+
+---
+
+### 2. HTML en Exportacion PDF/Word (Negritas no se renderizan)
+
+**Problema:** Los tags `<strong>` aparecen como texto literal en PDF/Word: `<strong>Nombre</strong>` en vez de **Nombre**.
+
+**Causa:** Las funciones `convertirMarkdownAHtml()` y `convertirMarkdownAHtmlPdf()` en los templates escapan TODO el HTML con `htmlspecialchars()`.
+
+**Solucion:** Los templates ya estan corregidos para preservar tags HTML existentes. Si creas contenido con HTML:
+
+```php
+// CORRECTO - El contenido puede tener HTML
+$texto = "<strong>{$nombre}</strong> con cedula <strong>{$cedula}</strong>";
+
+// Los templates PDF/Word preservaran los tags <strong>, <b>, <em>, <i>
+```
+
+**Archivos corregidos:**
+- `app/Views/documentos_sst/pdf_template.php` - funcion `convertirMarkdownAHtmlPdf()`
+- `app/Views/documentos_sst/word_template.php` - funcion `convertirMarkdownAHtml()`
+
+---
+
+### 3. Nombres de Campos en Tablas
+
+**Tabla `tbl_cliente_contexto_sst` (contexto):**
+```php
+$contexto['representante_legal_nombre']  // Nombre del rep. legal
+$contexto['representante_legal_cedula']  // Cedula del rep. legal
+$contexto['id_consultor_responsable']    // ID del consultor asignado
+$contexto['estandares_aplicables']       // 7, 21 o 60
+$contexto['delegado_sst_nombre']         // Si aplica
+$contexto['delegado_sst_cargo']          // Si aplica
+```
+
+**Tabla `tbl_consultor` (consultor):**
+```php
+$consultor['nombre_consultor']   // Nombre completo
+$consultor['cedula_consultor']   // Documento de identidad
+$consultor['numero_licencia']    // Licencia SST (incluye fecha, ej: "4241 de 19/08/2022")
+$consultor['firma_consultor']    // Ruta imagen de firma
+```
+
+**ERROR COMUN:** Usar `licencia_sst` en vez de `numero_licencia`.
+
+---
+
+### 4. Manejo de Stored Procedures en CodeIgniter 4
+
+**Problema:** Error `Call to undefined method Result::close()` al llamar SP.
+
+**Solucion:** CodeIgniter 4 no tiene metodo `close()`. Usar este patron:
+
+```php
+protected function generarCodigo(int $idCliente): string
+{
+    $query = $this->db->query(
+        "CALL sp_generar_codigo_documento(?, ?, ?, @codigo)",
+        [$idCliente, self::CODIGO_TIPO, self::CODIGO_TEMA]
+    );
+    $query->getResult();
+
+    // Liberar resultados del SP para evitar "commands out of sync"
+    if (method_exists($query, 'freeResult')) {
+        $query->freeResult();
+    }
+    while ($this->db->connID->next_result()) {
+        $this->db->connID->store_result();
+    }
+
+    $result = $this->db->query("SELECT @codigo as codigo")->getRow();
+    return $result->codigo ?? (self::CODIGO_TIPO . '-' . self::CODIGO_TEMA . '-001');
+}
+```
+
+---
+
+### 5. Titulo del Documento en Templates PDF/Word
+
+**Problema:** El PDF/Word muestra "DOCUMENTO SST" en vez del titulo real.
+
+**Causa:** El template usa `$contenido['titulo']` pero no todos los documentos lo incluyen en el JSON.
+
+**Solucion:** Siempre usar fallback chain:
+
+```php
+// En pdf_template.php y word_template.php
+<?= esc(strtoupper($contenido['titulo'] ?? $documento['titulo'] ?? 'DOCUMENTO SST')) ?>
+```
+
+**Regla:** Si el documento PATRON B no incluye 'titulo' en el JSON de contenido, el template usara `$documento['titulo']` de la tabla.
+
+---
+
+### 6. Busqueda de Consultor (Fallback Chain)
+
+**Problema:** El documento no muestra datos del consultor.
+
+**Solucion:** Buscar en multiples fuentes con fallback:
+
+```php
+// Obtener datos del consultor asignado (responsable SST)
+$consultor = null;
+$consultorModel = new ConsultantModel();
+
+// 1. Primero: id_consultor_responsable del contexto
+$idConsultor = $contexto['id_consultor_responsable'] ?? null;
+if ($idConsultor) {
+    $consultor = $consultorModel->find($idConsultor);
+}
+
+// 2. Fallback: buscar consultor asignado al cliente en tbl_consultor
+if (!$consultor) {
+    $consultor = $consultorModel->where('id_cliente', $idCliente)->first();
+}
+
+// 3. Fallback: id_consultor del cliente
+if (!$consultor && !empty($cliente['id_consultor'])) {
+    $consultor = $consultorModel->find($cliente['id_consultor']);
+}
+```
+
+---
+
+### 7. URLs de Navegacion (Boton Volver)
+
+**Problema:** El boton "Volver" lleva a error 404.
+
+**Solucion:** Usar URLs simples y probadas:
+
+```php
+// CORRECTO - URL simple
+<a href="<?= base_url('documentacion/' . $documento['id_cliente']) ?>">
+    Volver a Documentacion
+</a>
+
+// INCORRECTO - URL compleja que puede fallar
+<a href="<?= base_url('documentacion/carpeta/' . $documento['id_carpeta']) ?>">
+```
+
+---
+
+### 8. Vista Web vs Exportacion (Escapado de HTML)
+
+**En la vista web (.php):** NO escapar contenido que ya tiene HTML:
+```php
+<!-- CORRECTO - Renderiza HTML -->
+<?= $seccion['contenido'] ?>
+
+<!-- INCORRECTO - Escapa los tags -->
+<?= esc($seccion['contenido']) ?>
+```
+
+**En PDF/Word:** Los templates ya manejan esto automaticamente.
+
+---
+
+### 9. Testing de Exportaciones
+
+**SIEMPRE probar AMBOS formatos despues de crear un documento:**
+
+1. **PDF:** Verificar que negritas, tablas y formato se renderizan
+2. **Word:** Verificar lo mismo (Word usa template diferente)
+3. **Titulo:** Verificar que aparece el nombre correcto en el encabezado
+4. **Firmas:** Verificar que la seccion de firmas tiene los datos correctos
+
+---
+
+### 10. Importacion de Modelos (Case Sensitivity)
+
+**Problema:** Error `Class not found` por nombre incorrecto del modelo.
+
+**Regla:** El nombre del `use` debe coincidir EXACTAMENTE con el archivo:
+
+```php
+// Si el archivo es ClienteContextoSstModel.php
+use App\Models\ClienteContextoSstModel;  // CORRECTO
+
+// NO usar:
+use App\Models\ClienteContextoSSTModel;  // INCORRECTO (SST vs Sst)
+```
+
+---
+
+### 11. Regeneracion de Documentos con Edicion Directa
+
+**Problema:** El usuario edita datos en un formulario pero el documento regenerado sigue mostrando los datos antiguos.
+
+**Causa:** El modal de regeneracion solo MOSTRABA los datos pero NO los editaba. El usuario creia que estaba cambiando datos, pero la fuente de datos (tbl_cliente_contexto_sst) no se actualizaba.
+
+**Solucion:** Implementar edicion directa en el modal de regeneracion:
+
+```php
+// En el controlador regenerar(), ANTES de reconstruir contenido:
+
+// 1. Recibir datos editados del formulario
+$nuevoRepLegalNombre = $this->request->getPost('representante_legal_nombre');
+$nuevoRepLegalCedula = $this->request->getPost('representante_legal_cedula');
+$nuevoIdConsultor = $this->request->getPost('id_consultor_responsable');
+
+// 2. Actualizar tbl_cliente_contexto_sst si hay cambios
+$datosActualizar = [];
+if ($nuevoRepLegalNombre && $nuevoRepLegalNombre !== ($contexto['representante_legal_nombre'] ?? '')) {
+    $datosActualizar['representante_legal_nombre'] = $nuevoRepLegalNombre;
+}
+if (!empty($datosActualizar)) {
+    $this->db->table('tbl_cliente_contexto_sst')
+        ->where('id_cliente', $idCliente)
+        ->update($datosActualizar);
+
+    // 3. Recargar contexto actualizado
+    $contexto = $contextoModel->getByCliente($idCliente);
+}
+
+// 4. AHORA construir contenido con datos frescos
+$nuevoContenido = $this->construirContenido($cliente, $contexto, $consultor, $anio);
+```
+
+**Regla:** Siempre que el usuario pueda "actualizar" un documento, asegurar que:
+1. El formulario tenga campos EDITABLES (no solo informativos)
+2. El controlador ACTUALICE la fuente de datos antes de regenerar
+3. Se RECARGUE el contexto despues de actualizar
+
+---
+
+### 12. Campos ENUM en MySQL - Fallo Silencioso
+
+**Problema:** Al intentar actualizar un campo ENUM con un valor que no existe en la definicion, MySQL falla SILENCIOSAMENTE (retorna 0 filas afectadas) sin lanzar error.
+
+**Ejemplo del error:**
+```php
+// El campo 'estado' tiene ENUM('vigente', 'obsoleto')
+$pdo->exec("UPDATE tbl_doc_versiones_sst SET estado = 'historico' WHERE id_version = 9");
+// Resultado: 0 filas afectadas, pero NO hay error
+// El campo queda VACIO en vez de actualizarse
+```
+
+**Solucion:** SIEMPRE verificar que los valores ENUM incluyan todos los estados necesarios ANTES de usarlos:
+
+```sql
+-- Verificar estructura actual
+SHOW COLUMNS FROM tbl_doc_versiones_sst WHERE Field = 'estado';
+
+-- Si falta un valor, alterar la tabla
+ALTER TABLE tbl_doc_versiones_sst
+MODIFY COLUMN estado ENUM('vigente', 'obsoleto', 'historico', 'pendiente_firma')
+NOT NULL DEFAULT 'vigente';
+```
+
+**Regla:** Cuando agregues nuevos estados a un flujo de trabajo:
+1. Verificar que el ENUM de la columna los incluya
+2. Si no existen, ejecutar ALTER TABLE antes de usar los nuevos valores
+3. MySQL NO lanza error al intentar insertar valor invalido en ENUM - falla silenciosamente
+
+---
+
+### 13. Estados de Versiones de Documentos
+
+**Flujo correcto de estados en `tbl_doc_versiones_sst`:**
+
+| Estado | Descripcion | Cuando se usa |
+|--------|-------------|---------------|
+| `pendiente_firma` | Version recien creada/regenerada | Al crear nueva version, antes de firmar |
+| `vigente` | Version activa actual | Despues de firmar o aprobar |
+| `historico` | Version anterior reemplazada | Al crear nueva version, la anterior pasa a historico |
+| `obsoleto` | Version descartada/invalida | Cuando se invalida manualmente |
+
+**Codigo para regenerar documento con estados correctos:**
+
+```php
+// 1. Marcar version anterior como historico
+$this->db->table('tbl_doc_versiones_sst')
+    ->where('id_documento', $documento['id_documento'])
+    ->where('estado', 'vigente')
+    ->update(['estado' => 'historico']);
+
+// 2. Crear nueva version en pendiente_firma
+$this->db->table('tbl_doc_versiones_sst')->insert([
+    'id_documento' => $documento['id_documento'],
+    'version_texto' => $nuevaVersion,
+    'estado' => 'pendiente_firma',  // NO 'vigente' directamente
+    // ... otros campos
+]);
+
+// 3. Actualizar documento principal
+$this->db->table('tbl_documentos_sst')
+    ->where('id_documento', $documento['id_documento'])
+    ->update([
+        'estado' => 'pendiente_firma',
+        'version' => $nuevaVersion
+    ]);
+```
+
+**Regla:** Un documento regenerado NUNCA debe quedar en estado 'vigente' inmediatamente. Debe pasar por 'pendiente_firma' hasta que se firme.
+
+---
+
+### 14. Manejo de Estados Vacios en Vistas
+
+**Problema:** La columna Estado en tablas de historial muestra valores vacios cuando el campo no tiene valor o tiene NULL.
+
+**Solucion en el controlador:** Asignar valores por defecto al cargar versiones:
+
+```php
+// Al obtener versiones del documento
+$versiones = $db->table('tbl_doc_versiones_sst')
+    ->select('id_version, version_texto, estado, ...')
+    ->where('id_documento', $idDocumento)
+    ->orderBy('id_version', 'DESC')
+    ->get()->getResultArray();
+
+// Asignar estado por defecto a versiones que no lo tengan
+foreach ($versiones as $idx => &$ver) {
+    if (empty($ver['estado'])) {
+        // La version mas reciente (primera en array) es vigente, las demas historicas
+        $ver['estado'] = ($idx === 0) ? 'vigente' : 'historico';
+    }
+}
+unset($ver);
+```
+
+**Solucion en la vista:** Usar operador null coalescing y match para mostrar valores legibles:
+
+```php
+<?php
+$estadoVer = $ver['estado'] ?? 'historico';
+$estadoVerBadge = match($estadoVer) {
+    'vigente' => 'bg-success',
+    'pendiente_firma' => 'bg-info',
+    'historico' => 'bg-secondary',
+    default => 'bg-secondary'
+};
+$estadoVerTexto = match($estadoVer) {
+    'vigente' => 'Vigente',
+    'pendiente_firma' => 'Pendiente firma',
+    'historico' => 'Historico',
+    default => ucfirst(str_replace('_', ' ', $estadoVer))
+};
+?>
+<span class="badge <?= $estadoVerBadge ?>"><?= $estadoVerTexto ?></span>
+```
+
+**Regla:** NUNCA confiar en que un campo tendra valor. Siempre usar fallbacks tanto en controlador como en vista

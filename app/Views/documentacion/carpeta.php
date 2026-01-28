@@ -277,9 +277,9 @@
                             <button type="button" class="btn btn-secondary" disabled title="Complete las fases previas">
                                 <i class="bi bi-lock me-1"></i>Crear con IA
                             </button>
-                        <?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'capacitacion_sst'): ?>
+                        <?php elseif (isset($tipoCarpetaFases) && in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst'])): ?>
                             <?php
-                            // Solo mostrar "Crear con IA" si NO hay documento aprobado para el año actual
+                            // Solo mostrar boton si NO hay documento para el año actual
                             $hayAprobadoAnioActual = false;
                             if (!empty($documentosSSTAprobados)) {
                                 foreach ($documentosSSTAprobados as $d) {
@@ -291,10 +291,18 @@
                             }
                             ?>
                             <?php if (!$hayAprobadoAnioActual): ?>
-                                <a href="<?= base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente']) ?>"
-                                   class="btn btn-success">
-                                    <i class="bi bi-magic me-1"></i>Crear con IA <?= date('Y') ?>
-                                </a>
+                                <?php if ($tipoCarpetaFases === 'responsables_sst'): ?>
+                                    <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-asignacion-responsable-sst') ?>" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-file-earmark-plus me-1"></i>Generar Asignacion <?= date('Y') ?>
+                                        </button>
+                                    </form>
+                                <?php else: ?>
+                                    <a href="<?= base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente']) ?>"
+                                       class="btn btn-success">
+                                        <i class="bi bi-magic me-1"></i>Crear con IA <?= date('Y') ?>
+                                    </a>
+                                <?php endif; ?>
                             <?php endif; ?>
                         <?php else: ?>
                             <a href="<?= base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta']) ?>"
@@ -361,16 +369,17 @@
                     </div>
                 <?php endforeach; ?>
 
-                <!-- Fase Final: Documento IA -->
+                <!-- Fase Final: Documento -->
                 <?php
                 $tieneDocumento = isset($documentoExistente) && $documentoExistente;
                 $estadoFaseDoc = $tieneDocumento ? 'completo' : ($fasesInfo['todas_completas'] ? 'en_proceso' : 'bloqueado');
+                $nombreFaseDoc = (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsables_sst') ? 'Documento' : 'Documento IA';
                 ?>
                 <div class="fase-item <?= $estadoFaseDoc ?>">
                     <div class="fase-circulo <?= $estadoFaseDoc ?>">
                         <i class="bi <?= $tieneDocumento ? 'bi-check-lg' : ($fasesInfo['todas_completas'] ? 'bi-file-earmark-text-fill' : 'bi-lock-fill') ?>"></i>
                     </div>
-                    <div class="fase-nombre">Documento IA</div>
+                    <div class="fase-nombre"><?= $nombreFaseDoc ?></div>
                     <div class="fase-mensaje">
                         <?php if ($tieneDocumento): ?>
                             Documento creado
@@ -383,21 +392,39 @@
                     </div>
                     <div class="fase-acciones">
                         <?php if ($tieneDocumento): ?>
-                            <a href="<?= base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente']) ?>"
-                               class="btn btn-sm btn-primary">
-                                <i class="bi bi-pencil-square me-1"></i>Ver/Editar
-                            </a>
+                            <?php if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsables_sst'): ?>
+                                <a href="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/asignacion-responsable-sst/' . date('Y')) ?>"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye me-1"></i>Ver Documento
+                                </a>
+                            <?php else: ?>
+                                <a href="<?= base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente']) ?>"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil-square me-1"></i>Ver/Editar
+                                </a>
+                            <?php endif; ?>
                         <?php elseif ($fasesInfo['todas_completas']): ?>
                             <?php
-                            $urlCrearIA = base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta'] . '&ia=1');
-                            if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'capacitacion_sst') {
+                            if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsables_sst') {
+                                // Documento auto-generado, no usa IA
+                            } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'capacitacion_sst') {
                                 $urlCrearIA = base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente']);
+                            } else {
+                                $urlCrearIA = base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta'] . '&ia=1');
                             }
                             ?>
+                            <?php if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsables_sst'): ?>
+                            <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-asignacion-responsable-sst') ?>" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="bi bi-file-earmark-plus me-1"></i>Generar Documento
+                                </button>
+                            </form>
+                            <?php else: ?>
                             <a href="<?= $urlCrearIA ?>"
                                class="btn btn-sm btn-success">
                                 <i class="bi bi-magic me-1"></i>Crear con IA
                             </a>
+                            <?php endif; ?>
                         <?php else: ?>
                             <button class="btn btn-sm btn-outline-secondary" disabled>
                                 <i class="bi bi-lock me-1"></i>Bloqueado
@@ -424,7 +451,7 @@
         </div>
         <?php endif; ?>
 
-        <?php if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'capacitacion_sst'): ?>
+        <?php if (isset($tipoCarpetaFases) && in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst'])): ?>
         <!-- Tabla de Documentos SST -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-success text-white">
@@ -527,14 +554,27 @@
                                                     <i class="bi bi-patch-check-fill"></i>
                                                 </a>
                                                 <?php endif; ?>
-                                                <a href="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/programa-capacitacion/' . $docSST['anio']) ?>"
+                                                <?php
+                                                // Determinar URLs de ver/editar segun tipo de documento
+                                                $tipoDoc = $docSST['tipo_documento'] ?? 'programa_capacitacion';
+                                                if ($tipoDoc === 'asignacion_responsable_sgsst') {
+                                                    $urlVer = base_url('documentos-sst/' . $cliente['id_cliente'] . '/asignacion-responsable-sst/' . $docSST['anio']);
+                                                    $urlEditar = null; // No tiene editor, se regenera
+                                                } else {
+                                                    $urlVer = base_url('documentos-sst/' . $cliente['id_cliente'] . '/programa-capacitacion/' . $docSST['anio']);
+                                                    $urlEditar = base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+                                                }
+                                                ?>
+                                                <a href="<?= $urlVer ?>"
                                                    class="btn btn-outline-primary" title="Ver documento" target="_blank">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="<?= base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']) ?>"
+                                                <?php if ($urlEditar): ?>
+                                                <a href="<?= $urlEditar ?>"
                                                    class="btn btn-outline-warning" title="Editar documento" target="_blank">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
+                                                <?php endif; ?>
                                                 <a href="<?= base_url('firma/estado/' . $docSST['id_documento']) ?>"
                                                    class="btn btn-outline-success" title="Firmas y Audit Log" target="_blank">
                                                     <i class="bi bi-pen"></i>
@@ -565,6 +605,21 @@
                                                     </thead>
                                                     <tbody>
                                                         <?php foreach ($docSST['versiones'] as $ver): ?>
+                                                        <?php
+                                                        $estadoVer = $ver['estado'] ?? 'historico';
+                                                        $estadoVerBadge = match($estadoVer) {
+                                                            'vigente' => 'bg-success',
+                                                            'pendiente_firma' => 'bg-info',
+                                                            'historico' => 'bg-secondary',
+                                                            default => 'bg-secondary'
+                                                        };
+                                                        $estadoVerTexto = match($estadoVer) {
+                                                            'vigente' => 'Vigente',
+                                                            'pendiente_firma' => 'Pendiente firma',
+                                                            'historico' => 'Histórico',
+                                                            default => ucfirst(str_replace('_', ' ', $estadoVer))
+                                                        };
+                                                        ?>
                                                         <tr>
                                                             <td><span class="badge bg-primary">v<?= esc($ver['version_texto']) ?></span></td>
                                                             <td>
@@ -574,8 +629,8 @@
                                                             </td>
                                                             <td><?= esc($ver['descripcion_cambio']) ?></td>
                                                             <td>
-                                                                <span class="badge <?= $ver['estado'] === 'vigente' ? 'bg-success' : 'bg-secondary' ?>">
-                                                                    <?= ucfirst($ver['estado']) ?>
+                                                                <span class="badge <?= $estadoVerBadge ?>">
+                                                                    <?= $estadoVerTexto ?>
                                                                 </span>
                                                             </td>
                                                             <td><?= esc($ver['autorizado_por'] ?? '-') ?></td>

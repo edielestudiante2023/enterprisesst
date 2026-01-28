@@ -387,6 +387,9 @@ $routes->get('/client/lista-matrices', 'ClientMatrices::index');
 
 $routes->get('client/panel', 'ClientPanelController::showPanel');
 
+// Vista de documentos SST para cliente (solo lectura)
+$routes->get('client/mis-documentos-sst', 'ClienteDocumentosSstController::index');
+$routes->get('client/mis-documentos-sst/carpeta/(:num)', 'ClienteDocumentosSstController::carpeta/$1');
 
 $routes->get('/detailreportlist', 'DetailReportController::detailReportList');
 $routes->get('/detailreportadd', 'DetailReportController::detailReportAdd');
@@ -737,6 +740,11 @@ $routes->get('/generador-ia/(:num)/resumen', 'GeneradorIAController::resumen/$1'
 
 // Documentos SST generados
 $routes->get('/documentos-sst/(:num)/programa-capacitacion/(:num)', 'DocumentosSSTController::programaCapacitacion/$1/$2');
+
+// Asignacion de Responsable SG-SST (Patron B - controlador independiente)
+$routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'PzasignacionresponsableSstController::crear/$1');
+$routes->get('/documentos-sst/(:num)/asignacion-responsable-sst/(:num)', 'PzasignacionresponsableSstController::ver/$1/$2');
+$routes->post('/documentos-sst/(:num)/regenerar-asignacion-responsable-sst/(:num)', 'PzasignacionresponsableSstController::regenerar/$1/$2');
 
 // Generador de documentos por secciones con IA
 $routes->get('/documentos/generar/(:segment)/(:num)', 'DocumentosSSTController::generarConIA/$1/$2');
