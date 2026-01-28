@@ -10,7 +10,7 @@
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>">
+            <a class="navbar-brand" href="<?= base_url('contexto/' . $cliente['id_cliente']) ?>">
                 <i class="bi bi-people-fill me-2"></i>Responsables SST
             </a>
             <div class="navbar-nav ms-auto">
@@ -18,7 +18,7 @@
                     <i class="bi bi-building me-1"></i>
                     <?= esc($cliente['nombre_cliente']) ?>
                 </span>
-                <a href="<?= base_url('generador-ia/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
+                <a href="<?= base_url('contexto/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>Volver
                 </a>
             </div>
