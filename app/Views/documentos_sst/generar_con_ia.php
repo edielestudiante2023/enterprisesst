@@ -230,17 +230,42 @@
                                     <?php endif; ?>
                                 </a>
                                 <hr class="my-3">
-                                <button type="button"
-                                        class="btn btn-success btn-sm <?= $todasSeccionesListas ? '' : 'disabled' ?>"
-                                        id="btnAprobarDocumento"
-                                        <?= $todasSeccionesListas ? 'data-bs-toggle="modal" data-bs-target="#modalAprobarDocumento"' : 'disabled' ?>>
-                                    <i class="bi bi-check-circle me-1"></i>Aprobar Documento
-                                    <?php if (!$todasSeccionesListas): ?>
-                                    <small class="d-block" style="font-size: 0.6rem;">Primero aprueba secciones</small>
-                                    <?php else: ?>
-                                    <small class="d-block" style="font-size: 0.6rem;">Crear version oficial</small>
-                                    <?php endif; ?>
-                                </button>
+                                <?php
+                                $estadoDoc = $documento['estado'] ?? 'borrador';
+                                $idDocumento = $documento['id_documento'] ?? null;
+                                ?>
+
+                                <?php if ($estadoDoc === 'firmado'): ?>
+                                    <!-- Documento ya firmado y aprobado automaticamente -->
+                                    <div class="alert alert-success mb-2 py-2 px-3">
+                                        <i class="bi bi-patch-check-fill me-1"></i>
+                                        <small>Documento firmado y aprobado</small>
+                                    </div>
+                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-outline-success btn-sm w-100">
+                                        <i class="bi bi-eye me-1"></i>Ver Firmas
+                                    </a>
+                                <?php elseif ($estadoDoc === 'pendiente_firma'): ?>
+                                    <!-- Esperando firmas -->
+                                    <div class="alert alert-warning mb-2 py-2 px-3">
+                                        <i class="bi bi-clock-history me-1"></i>
+                                        <small>Pendiente de firmas</small>
+                                    </div>
+                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-warning btn-sm w-100">
+                                        <i class="bi bi-pen me-1"></i>Estado Firmas
+                                    </a>
+                                <?php elseif ($todasSeccionesListas && $idDocumento): ?>
+                                    <!-- Listo para enviar a firmas -->
+                                    <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-success btn-sm w-100">
+                                        <i class="bi bi-pen me-1"></i>Enviar a Firmas
+                                        <small class="d-block" style="font-size: 0.6rem;">El cliente revisara y firmara</small>
+                                    </a>
+                                <?php else: ?>
+                                    <!-- Secciones no listas -->
+                                    <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
+                                        <i class="bi bi-pen me-1"></i>Enviar a Firmas
+                                        <small class="d-block" style="font-size: 0.6rem;">Primero aprueba todas las secciones</small>
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

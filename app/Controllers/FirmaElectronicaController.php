@@ -507,6 +507,99 @@ class FirmaElectronicaController extends Controller
     }
 
     /**
+     * Crea automaticamente la version del documento cuando todas las firmas estan completas
+     * Flujo: Generar → Firmar → Aprobar automatico
+     */
+    private function aprobarDocumentoAutomatico(int $idDocumento): void
+    {
+        try {
+            $documento = $this->db->table('tbl_documentos_sst')
+                ->where('id_documento', $idDocumento)
+                ->get()
+                ->getRowArray();
+
+            if (!$documento) return;
+
+            // Verificar si ya tiene version vigente (evitar duplicados)
+            $versionExistente = $this->db->table('tbl_doc_versiones_sst')
+                ->where('id_documento', $idDocumento)
+                ->where('estado', 'vigente')
+                ->countAllResults();
+
+            if ($versionExistente > 0) {
+                log_message('info', "Documento {$idDocumento} ya tiene version vigente, omitiendo aprobacion automatica");
+                return;
+            }
+
+            // Calcular version (primera aprobacion = 1.0)
+            $versionesPrevias = $this->db->table('tbl_doc_versiones_sst')
+                ->where('id_documento', $idDocumento)
+                ->countAllResults();
+
+            if ($versionesPrevias === 0) {
+                $nuevaVersion = 1;
+                $versionTexto = '1.0';
+            } else {
+                // Obtener ultima version
+                $ultimaVersion = $this->db->table('tbl_doc_versiones_sst')
+                    ->selectMax('version')
+                    ->where('id_documento', $idDocumento)
+                    ->get()
+                    ->getRow();
+                $nuevaVersion = ($ultimaVersion && $ultimaVersion->version) ? (int)$ultimaVersion->version + 1 : 2;
+                $versionTexto = $nuevaVersion . '.0';
+            }
+
+            $this->db->transStart();
+
+            // Marcar versiones anteriores como obsoletas
+            $this->db->table('tbl_doc_versiones_sst')
+                ->where('id_documento', $idDocumento)
+                ->update(['estado' => 'obsoleto']);
+
+            // Crear nueva version
+            $this->db->table('tbl_doc_versiones_sst')->insert([
+                'id_documento' => $idDocumento,
+                'id_cliente' => $documento['id_cliente'],
+                'codigo' => $documento['codigo'] ?? null,
+                'titulo' => $documento['titulo'],
+                'anio' => $documento['anio'],
+                'version' => $nuevaVersion,
+                'version_texto' => $versionTexto,
+                'tipo_cambio' => 'menor',
+                'descripcion_cambio' => 'Documento aprobado automaticamente tras firma electronica',
+                'contenido_snapshot' => $documento['contenido'],
+                'estado' => 'vigente',
+                'autorizado_por' => 'Sistema (Firma Electronica)',
+                'autorizado_por_id' => null,
+                'fecha_autorizacion' => date('Y-m-d H:i:s'),
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            // Actualizar documento principal con estado 'firmado' (ya viene asi) y version
+            $this->db->table('tbl_documentos_sst')
+                ->where('id_documento', $idDocumento)
+                ->update([
+                    'version' => $nuevaVersion,
+                    'fecha_aprobacion' => date('Y-m-d H:i:s'),
+                    'motivo_version' => 'Aprobado tras firma electronica completa',
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+
+            $this->db->transComplete();
+
+            if ($this->db->transStatus() === false) {
+                throw new \Exception('Error en transaccion de aprobacion automatica');
+            }
+
+            log_message('info', "Documento {$idDocumento} aprobado automaticamente - Version {$versionTexto}");
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error en aprobacion automatica: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Vista pública para firmar (acceso por token)
      */
     public function firmar($token)
@@ -618,6 +711,9 @@ class FirmaElectronicaController extends Controller
 
                 // Generar PDF y publicar en reportList automáticamente
                 $this->publicarDocumentoFirmado($solicitud['id_documento']);
+
+                // Crear version del documento automaticamente (aprobacion automatica)
+                $this->aprobarDocumentoAutomatico($solicitud['id_documento']);
             }
 
             return $this->response->setJSON([
