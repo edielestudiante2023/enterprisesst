@@ -36,6 +36,16 @@ Events::on('pre_system', static function (): void {
         ob_start(static fn ($buffer) => $buffer);
     }
 
+    // Forzar collation utf8mb4_general_ci en la conexion de base de datos
+    // Esto evita errores de "Illegal mix of collations" en MySQL 8
+    try {
+        $db = \Config\Database::connect();
+        $db->query("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_general_ci'");
+        $db->query("SET collation_connection = 'utf8mb4_general_ci'");
+    } catch (\Throwable $e) {
+        // Ignorar errores de conexion en este punto
+    }
+
     /*
      * --------------------------------------------------------------------
      * Debug Toolbar Listeners.
