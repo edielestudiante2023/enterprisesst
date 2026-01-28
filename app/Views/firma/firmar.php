@@ -196,19 +196,24 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // =============================================
-        // CANVAS DE FIRMA
+        // CANVAS DE FIRMA (Alta resolucion)
         // =============================================
         const canvas = document.getElementById('firmaCanvas');
         const ctx = canvas.getContext('2d');
         let dibujando = false;
         let hayDibujo = false;
+        let dpr = window.devicePixelRatio || 1; // Para pantallas retina
 
         function ajustarCanvas() {
             const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = 200;
+            // Usar alta resolucion para mejor calidad
+            canvas.width = rect.width * dpr;
+            canvas.height = 200 * dpr;
+            // Escalar el contexto para que el dibujo se vea normal
+            ctx.scale(dpr, dpr);
+            // Estilo del trazo - mas grueso para mejor visibilidad
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
         }
@@ -251,12 +256,69 @@
             if (!dibujando) return;
             dibujando = false;
             canvas.classList.remove('drawing');
-            document.getElementById('firmaImagen').value = canvas.toDataURL('image/png');
+            // Exportar firma optimizada (recortada y escalada)
+            document.getElementById('firmaImagen').value = exportarFirmaOptimizada();
             verificarFormulario();
         }
 
+        // Exportar firma recortada y optimizada para mejor calidad en PDF
+        function exportarFirmaOptimizada() {
+            // Obtener los pixeles del canvas
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Encontrar los limites del dibujo (bounding box)
+            let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const alpha = data[(y * canvas.width + x) * 4 + 3];
+                    if (alpha > 0) {
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            // Si no hay dibujo, retornar vacio
+            if (maxX <= minX || maxY <= minY) {
+                return canvas.toDataURL('image/png');
+            }
+
+            // Agregar padding
+            const padding = 20;
+            minX = Math.max(0, minX - padding);
+            minY = Math.max(0, minY - padding);
+            maxX = Math.min(canvas.width, maxX + padding);
+            maxY = Math.min(canvas.height, maxY + padding);
+
+            // Crear canvas temporal con el recorte
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            const cropWidth = maxX - minX;
+            const cropHeight = maxY - minY;
+
+            // Tamaño final optimizado (alto fijo, ancho proporcional)
+            const finalHeight = 150;
+            const aspectRatio = cropWidth / cropHeight;
+            const finalWidth = Math.round(finalHeight * aspectRatio);
+
+            tempCanvas.width = finalWidth;
+            tempCanvas.height = finalHeight;
+            tempCtx.fillStyle = 'transparent';
+
+            // Dibujar la firma recortada y escalada
+            tempCtx.drawImage(canvas, minX, minY, cropWidth, cropHeight, 0, 0, finalWidth, finalHeight);
+
+            return tempCanvas.toDataURL('image/png');
+        }
+
         function limpiarFirma() {
+            // Resetear escala antes de limpiar
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ajustarCanvas(); // Re-aplicar escala
             document.getElementById('firmaImagen').value = '';
             hayDibujo = false;
             verificarFormulario();
@@ -305,13 +367,52 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById('firmaImagen').value = e.target.result;
-                document.getElementById('firmaPreview').src = e.target.result;
-                document.getElementById('firmaPreviewContainer').classList.remove('d-none');
-                document.getElementById('uploadZone').classList.add('d-none');
-                verificarFormulario();
+                // Redimensionar imagen para mejor calidad en PDF
+                optimizarImagenFirma(e.target.result, function(optimizada) {
+                    document.getElementById('firmaImagen').value = optimizada;
+                    document.getElementById('firmaPreview').src = optimizada;
+                    document.getElementById('firmaPreviewContainer').classList.remove('d-none');
+                    document.getElementById('uploadZone').classList.add('d-none');
+                    verificarFormulario();
+                });
             };
             reader.readAsDataURL(file);
+        }
+
+        // Optimizar imagen subida para firma (redimensionar a tamaño apropiado)
+        function optimizarImagenFirma(dataUrl, callback) {
+            const img = new Image();
+            img.onload = function() {
+                // Tamaño objetivo: alto maximo 150px, mantener proporcion
+                const maxHeight = 150;
+                const maxWidth = 400;
+
+                let width = img.width;
+                let height = img.height;
+
+                // Calcular nuevo tamaño manteniendo proporcion
+                if (height > maxHeight) {
+                    width = Math.round(width * (maxHeight / height));
+                    height = maxHeight;
+                }
+                if (width > maxWidth) {
+                    height = Math.round(height * (maxWidth / width));
+                    width = maxWidth;
+                }
+
+                // Crear canvas y dibujar imagen redimensionada
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+
+                // Fondo transparente
+                ctx.clearRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+
+                callback(canvas.toDataURL('image/png'));
+            };
+            img.src = dataUrl;
         }
 
         function eliminarImagenFirma() {
