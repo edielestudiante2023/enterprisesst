@@ -746,6 +746,27 @@ $routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'Pzasig
 $routes->get('/documentos-sst/(:num)/asignacion-responsable-sst/(:num)', 'PzasignacionresponsableSstController::ver/$1/$2');
 $routes->post('/documentos-sst/(:num)/regenerar-asignacion-responsable-sst/(:num)', 'PzasignacionresponsableSstController::regenerar/$1/$2');
 
+// 1.1.2 Responsabilidades en el SG-SST (4 documentos separados)
+// Responsabilidades del Representante Legal (firma digital)
+$routes->post('/documentos-sst/(:num)/crear-responsabilidades-rep-legal', 'PzresponsabilidadesRepLegalController::crear/$1');
+$routes->get('/documentos-sst/(:num)/responsabilidades-rep-legal/(:num)', 'PzresponsabilidadesRepLegalController::ver/$1/$2');
+$routes->post('/documentos-sst/(:num)/regenerar-responsabilidades-rep-legal/(:num)', 'PzresponsabilidadesRepLegalController::regenerar/$1/$2');
+
+// Responsabilidades del Responsable SG-SST (firma consultor)
+$routes->post('/documentos-sst/(:num)/crear-responsabilidades-responsable-sst', 'PzresponsabilidadesResponsableSstController::crear/$1');
+$routes->get('/documentos-sst/(:num)/responsabilidades-responsable-sst/(:num)', 'PzresponsabilidadesResponsableSstController::ver/$1/$2');
+$routes->post('/documentos-sst/(:num)/regenerar-responsabilidades-responsable-sst/(:num)', 'PzresponsabilidadesResponsableSstController::regenerar/$1/$2');
+
+// Responsabilidades de Trabajadores y Contratistas (formato imprimible)
+$routes->post('/documentos-sst/(:num)/crear-responsabilidades-trabajadores', 'PzresponsabilidadesTrabajadoresController::crear/$1');
+$routes->get('/documentos-sst/(:num)/responsabilidades-trabajadores/(:num)', 'PzresponsabilidadesTrabajadoresController::ver/$1/$2');
+$routes->post('/documentos-sst/(:num)/regenerar-responsabilidades-trabajadores/(:num)', 'PzresponsabilidadesTrabajadoresController::regenerar/$1/$2');
+
+// Responsabilidades del Vigia SST (firma digital, SOLO para 7 estandares)
+$routes->post('/documentos-sst/(:num)/crear-responsabilidades-vigia-sst', 'PzresponsabilidadesVigiaSstController::crear/$1');
+$routes->get('/documentos-sst/(:num)/responsabilidades-vigia-sst/(:num)', 'PzresponsabilidadesVigiaSstController::ver/$1/$2');
+$routes->post('/documentos-sst/(:num)/regenerar-responsabilidades-vigia-sst/(:num)', 'PzresponsabilidadesVigiaSstController::regenerar/$1/$2');
+
 // Generador de documentos por secciones con IA
 $routes->get('/documentos/generar/(:segment)/(:num)', 'DocumentosSSTController::generarConIA/$1/$2');
 $routes->post('/documentos/generar-seccion', 'DocumentosSSTController::generarSeccionIA');
@@ -762,3 +783,6 @@ $routes->post('/documentos-sst/iniciar-nueva-version', 'DocumentosSSTController:
 $routes->get('/documentos-sst/historial-versiones/(:num)', 'DocumentosSSTController::historialVersiones/$1');
 $routes->post('/documentos-sst/restaurar-version', 'DocumentosSSTController::restaurarVersion');
 $routes->get('/documentos-sst/descargar-version-pdf/(:num)', 'DocumentosSSTController::descargarVersionPDF/$1');
+
+// Temporal: Ejecutar migraciones SQL (ELIMINAR DESPUES DE USAR)
+$routes->get('/sql-runner/insertar-plantillas-responsabilidades', 'SqlRunnerController::insertarPlantillasResponsabilidades');
