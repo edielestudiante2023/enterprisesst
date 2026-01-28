@@ -452,7 +452,7 @@ if (!function_exists('renderizarTablaPdf')) {
                 <!-- Fila de firmas alineadas -->
                 <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
                     <?php if (!empty($firmaConsultorBase64)): ?>
-                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma" style="max-height: 40px; max-width: 120px;"><br>
+                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma" style="max-height: 56px; max-width: 168px;"><br>
                     <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666;">Firma</small>
@@ -463,7 +463,7 @@ if (!function_exists('renderizarTablaPdf')) {
                     $firmaRepLegalPdf2 = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
                     if ($firmaRepLegalPdf2 && !empty($firmaRepLegalPdf2['evidencia']['firma_imagen'])):
                     ?>
-                        <img src="<?= $firmaRepLegalPdf2['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 40px; max-width: 120px;"><br>
+                        <img src="<?= $firmaRepLegalPdf2['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 56px; max-width: 168px;"><br>
                     <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666;">Firma</small>
@@ -521,7 +521,7 @@ if (!function_exists('renderizarTablaPdf')) {
                 <!-- Fila de firmas alineadas -->
                 <td style="padding: 8px 10px; text-align: center; vertical-align: bottom;">
                     <?php if (!empty($firmaConsultorBase64)): ?>
-                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma" style="max-height: 35px; max-width: 100px;"><br>
+                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma" style="max-height: 49px; max-width: 140px;"><br>
                     <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 85%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666; font-size: 7pt;">Firma</small>
@@ -532,7 +532,7 @@ if (!function_exists('renderizarTablaPdf')) {
                     $firmaDelegadoPdf = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
                     if ($firmaDelegadoPdf && !empty($firmaDelegadoPdf['evidencia']['firma_imagen'])):
                     ?>
-                        <img src="<?= $firmaDelegadoPdf['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 35px; max-width: 100px;"><br>
+                        <img src="<?= $firmaDelegadoPdf['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 49px; max-width: 140px;"><br>
                     <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 85%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666; font-size: 7pt;">Firma</small>
@@ -543,7 +543,7 @@ if (!function_exists('renderizarTablaPdf')) {
                     $firmaRepLegalPdf3 = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
                     if ($firmaRepLegalPdf3 && !empty($firmaRepLegalPdf3['evidencia']['firma_imagen'])):
                     ?>
-                        <img src="<?= $firmaRepLegalPdf3['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 35px; max-width: 100px;"><br>
+                        <img src="<?= $firmaRepLegalPdf3['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 49px; max-width: 140px;"><br>
                     <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 85%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666; font-size: 7pt;">Firma</small>

@@ -445,7 +445,7 @@
                                 </div>
                                 <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
                                     <?php if (!empty($firmaConsultor)): ?>
-                                        <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" alt="Firma Consultor" style="max-height: 40px; max-width: 120px; margin-bottom: 3px;">
+                                        <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                         <small style="color: #666; font-size: 0.7rem;">Firma</small>
@@ -476,7 +476,7 @@
                                     $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
                                     if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])):
                                     ?>
-                                        <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 40px; max-width: 120px; margin-bottom: 3px;">
+                                        <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                         <small style="color: #666; font-size: 0.7rem;">Firma</small>
@@ -499,7 +499,7 @@
                                     $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
                                     if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])):
                                     ?>
-                                        <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 40px; max-width: 120px; margin-bottom: 3px;">
+                                        <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                         <small style="color: #666; font-size: 0.7rem;">Firma</small>

@@ -264,7 +264,7 @@ class FasesDocumentoService
         $capacitaciones = $db->table('tbl_pta_cliente')
             ->where('id_cliente', $idCliente)
             ->where('YEAR(fecha_propuesta)', $anio)
-            ->where("actividad_plandetrabajo COLLATE utf8mb4_general_ci LIKE 'Capacitaci%' COLLATE utf8mb4_general_ci")
+            ->where("actividad_plandetrabajo LIKE 'Capacitaci%' COLLATE utf8mb4_general_ci", null, false)
             ->countAllResults();
 
         if ($capacitaciones === 0) {
