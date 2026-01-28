@@ -134,11 +134,10 @@ class EstandarMinimoModel extends Model
      */
     public function buscar(string $termino): array
     {
-        return $this->groupStart()
-                        ->like('nombre', $termino)
-                        ->orLike('item', $termino)
-                        ->orLike('categoria_nombre', $termino)
-                    ->groupEnd()
+        $terminoEscapado = $this->db->escapeLikeString($termino);
+        $collate = 'COLLATE utf8mb4_general_ci';
+
+        return $this->where("(nombre {$collate} LIKE '%{$terminoEscapado}%' OR item {$collate} LIKE '%{$terminoEscapado}%' OR categoria_nombre {$collate} LIKE '%{$terminoEscapado}%')", null, false)
                     ->orderBy('item', 'ASC')
                     ->findAll();
     }

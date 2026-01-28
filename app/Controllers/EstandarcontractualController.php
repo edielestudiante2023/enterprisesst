@@ -21,9 +21,11 @@ class EstandarcontractualController extends Controller
         $filters = $this->request->getGet(); // Obtener filtros del query string
         $query = $this->estandarModel;
 
-        // Aplicar filtros si existen
+        // Aplicar filtros si existen (con COLLATE para evitar errores en MySQL 8)
         if (!empty($filters['nombre'])) {
-            $query->like('nombre', $filters['nombre']);
+            $db = \Config\Database::connect();
+            $nombreEsc = $db->escapeLikeString($filters['nombre']);
+            $query->where("nombre COLLATE utf8mb4_general_ci LIKE '%{$nombreEsc}%'", null, false);
         }
 
         $data['estandares'] = $query->findAll();

@@ -21,12 +21,16 @@ class AccesossegunclienteController extends Controller
         $filters = $this->request->getGet(); // Obtener filtros del query string
         $query = $this->accesoModel;
 
-        // Aplicar filtros si existen
+        // Aplicar filtros si existen (con COLLATE para evitar errores en MySQL 8)
+        $db = \Config\Database::connect();
+        $collate = 'COLLATE utf8mb4_general_ci';
         if (!empty($filters['nombre'])) {
-            $query->like('nombre', $filters['nombre']);
+            $nombreEsc = $db->escapeLikeString($filters['nombre']);
+            $query->where("nombre {$collate} LIKE '%{$nombreEsc}%'", null, false);
         }
         if (!empty($filters['url'])) {
-            $query->like('url', $filters['url']);
+            $urlEsc = $db->escapeLikeString($filters['url']);
+            $query->where("url {$collate} LIKE '%{$urlEsc}%'", null, false);
         }
 
         $data['accesos'] = $query->findAll();

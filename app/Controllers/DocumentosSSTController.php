@@ -1261,7 +1261,7 @@ Incluye criterios de evaluación y responsables."
         // Verificar si ya existe un reporte para este documento (evitar duplicados)
         $codigoBusqueda = $documento['codigo'] ?? $documento['titulo'];
         $existente = $this->db->table('tbl_reporte')
-            ->like('titulo_reporte', $codigoBusqueda)
+            ->where("titulo_reporte COLLATE utf8mb4_general_ci LIKE '%" . $this->db->escapeLikeString($codigoBusqueda) . "%'", null, false)
             ->where('id_cliente', $documento['id_cliente'])
             ->where('id_detailreport', $idDetailReport)
             ->get()

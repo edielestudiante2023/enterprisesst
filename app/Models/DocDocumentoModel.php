@@ -150,13 +150,11 @@ class DocDocumentoModel extends Model
      */
     public function buscar(int $idCliente, string $termino): array
     {
+        $terminoEscapado = $this->db->escapeLikeString($termino);
+        $collate = 'COLLATE utf8mb4_general_ci';
+
         return $this->where('id_cliente', $idCliente)
-                    ->groupStart()
-                        ->like('codigo', $termino)
-                        ->orLike('nombre', $termino)
-                        ->orLike('descripcion', $termino)
-                        ->orLike('tags', $termino)
-                    ->groupEnd()
+                    ->where("(codigo {$collate} LIKE '%{$terminoEscapado}%' OR nombre {$collate} LIKE '%{$terminoEscapado}%' OR descripcion {$collate} LIKE '%{$terminoEscapado}%' OR tags {$collate} LIKE '%{$terminoEscapado}%')", null, false)
                     ->orderBy('updated_at', 'DESC')
                     ->findAll();
     }
