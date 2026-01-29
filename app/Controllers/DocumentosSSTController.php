@@ -1309,6 +1309,131 @@ Incluye criterios de evaluación y responsables."
     }
 
     /**
+     * Adjunta un documento escaneado firmado físicamente y lo publica en reportList
+     * Usado para documentos como "Responsabilidades de Trabajadores" donde los trabajadores
+     * firman en papel y luego se escanea el documento.
+     */
+    public function adjuntarFirmado()
+    {
+        $idDocumento = $this->request->getPost('id_documento');
+        $observaciones = $this->request->getPost('observaciones') ?? '';
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_documento', $idDocumento)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->back()->with('error', 'Documento no encontrado');
+        }
+
+        $cliente = $this->clienteModel->find($documento['id_cliente']);
+
+        // Validar y subir archivo
+        $archivo = $this->request->getFile('archivo_firmado');
+
+        if (!$archivo || !$archivo->isValid()) {
+            return redirect()->back()->with('error', 'Error al subir el archivo. Intente nuevamente.');
+        }
+
+        // Validar tipo de archivo
+        $tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+        if (!in_array($archivo->getMimeType(), $tiposPermitidos)) {
+            return redirect()->back()->with('error', 'Tipo de archivo no permitido. Use PDF, JPG o PNG.');
+        }
+
+        // Validar tamaño (10MB máximo)
+        if ($archivo->getSize() > 10 * 1024 * 1024) {
+            return redirect()->back()->with('error', 'El archivo excede el tamaño máximo de 10MB.');
+        }
+
+        // Crear directorio si no existe
+        $carpetaNit = $cliente['nit_cliente'];
+        $uploadPath = FCPATH . 'uploads/' . $carpetaNit;
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0755, true);
+        }
+
+        // Generar nombre único para el archivo
+        $extension = $archivo->getExtension();
+        $nombreArchivo = 'firmado_' . $documento['tipo_documento'] . '_' . date('Ymd_His') . '.' . $extension;
+
+        // Mover archivo
+        if (!$archivo->move($uploadPath, $nombreArchivo)) {
+            return redirect()->back()->with('error', 'Error al guardar el archivo en el servidor.');
+        }
+
+        // Enlace público
+        $enlace = base_url('uploads/' . $carpetaNit . '/' . $nombreArchivo);
+
+        // Buscar o crear detail_report para documentos SST
+        $detailReport = $this->db->table('detail_report')
+            ->where("detail_report COLLATE utf8mb4_general_ci LIKE '%Documento SG-SST%'", null, false)
+            ->get()
+            ->getRowArray();
+        $idDetailReport = $detailReport['id_detailreport'] ?? 2;
+
+        // Verificar si ya existe un reporte para este documento
+        $codigoBusqueda = $documento['codigo'] ?? $documento['titulo'];
+        $existente = $this->db->table('tbl_reporte')
+            ->where("titulo_reporte COLLATE utf8mb4_general_ci LIKE '%" . $this->db->escapeLikeString($codigoBusqueda) . "%'", null, false)
+            ->where('id_cliente', $documento['id_cliente'])
+            ->where('id_detailreport', $idDetailReport)
+            ->get()
+            ->getRowArray();
+
+        $idReportType = 12; // Reportes SST
+        $tituloReporte = ($documento['codigo'] ?? '') . ' - ' . $documento['titulo'] . ' (FIRMADO v' . ($documento['version'] ?? '1') . ')';
+        $obsReporte = 'Documento escaneado con firmas físicas. ' . ($observaciones ? $observaciones . '. ' : '') . 'Año: ' . $documento['anio'];
+
+        if ($existente) {
+            // Actualizar reporte existente
+            $this->db->table('tbl_reporte')
+                ->where('id_reporte', $existente['id_reporte'])
+                ->update([
+                    'titulo_reporte' => $tituloReporte,
+                    'enlace' => $enlace,
+                    'estado' => 'CERRADO',
+                    'observaciones' => $obsReporte,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+        } else {
+            // Insertar nuevo reporte
+            $this->db->table('tbl_reporte')->insert([
+                'titulo_reporte' => $tituloReporte,
+                'id_detailreport' => $idDetailReport,
+                'id_report_type' => $idReportType,
+                'id_cliente' => $documento['id_cliente'],
+                'enlace' => $enlace,
+                'estado' => 'CERRADO',
+                'observaciones' => $obsReporte,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+
+        // Actualizar estado del documento a firmado
+        $this->db->table('tbl_documentos_sst')
+            ->where('id_documento', $idDocumento)
+            ->update([
+                'estado' => 'firmado',
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+        // Guardar enlace del archivo en la versión vigente
+        $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $idDocumento)
+            ->where('estado', 'vigente')
+            ->update([
+                'archivo_pdf' => $enlace,
+                'estado' => 'vigente'
+            ]);
+
+        return redirect()->to('documentacion/carpeta/' . $documento['id_cliente'])
+            ->with('success', 'Documento firmado adjuntado y publicado en Reportes exitosamente.');
+    }
+
+    /**
      * Exporta el documento a Word (.doc) usando HTML compatible
      */
     public function exportarWord(int $idDocumento)

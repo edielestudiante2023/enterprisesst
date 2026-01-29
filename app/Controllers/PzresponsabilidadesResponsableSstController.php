@@ -265,7 +265,9 @@ class PzresponsabilidadesResponsableSstController extends Controller
                 'licencia' => $licenciaConsultor
             ],
             'responsabilidades_lista' => $responsabilidades,
-            'fecha_generacion' => date('Y-m-d H:i:s')
+            'fecha_generacion' => date('Y-m-d H:i:s'),
+            // Indicador para templates: este documento solo lleva firma del consultor
+            'solo_firma_consultor' => true
         ];
     }
 

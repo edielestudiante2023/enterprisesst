@@ -7,6 +7,12 @@ if (!function_exists('convertirMarkdownAHtml')) {
     function convertirMarkdownAHtml($texto, $esWord = true) {
         if (empty($texto)) return '';
 
+        // Si el contenido ya tiene tags HTML de estructura, devolverlo directamente
+        // El contenido ya viene formateado con estilos desde el controlador
+        if (preg_match('/<(p|ol|ul|li|div|table|br)\b[^>]*>/i', $texto)) {
+            return $texto;
+        }
+
         $lineas = explode("\n", $texto);
         $resultado = [];
         $tablaActual = [];
@@ -41,11 +47,22 @@ if (!function_exists('convertirMarkdownAHtml')) {
 
                 // Procesar línea de texto normal
                 if (!empty($lineaTrim)) {
-                    // PRIMERO: Preservar tags HTML existentes (<strong>, <em>, <b>, <i>) con placeholders
+                    // PRIMERO: Preservar tags HTML existentes con placeholders
+                    // Tags de formato
                     $lineaProcesada = preg_replace('/<strong>([^<]*)<\/strong>/', '{{HTML_BOLD_START}}$1{{HTML_BOLD_END}}', $lineaTrim);
                     $lineaProcesada = preg_replace('/<em>([^<]*)<\/em>/', '{{HTML_ITALIC_START}}$1{{HTML_ITALIC_END}}', $lineaProcesada);
                     $lineaProcesada = preg_replace('/<b>([^<]*)<\/b>/', '{{HTML_BOLD_START}}$1{{HTML_BOLD_END}}', $lineaProcesada);
                     $lineaProcesada = preg_replace('/<i>([^<]*)<\/i>/', '{{HTML_ITALIC_START}}$1{{HTML_ITALIC_END}}', $lineaProcesada);
+                    // Tags de estructura (p, ol, ul, li)
+                    $lineaProcesada = preg_replace('/<p>/', '{{HTML_P_START}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<\/p>/', '{{HTML_P_END}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<ol>/', '{{HTML_OL_START}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<\/ol>/', '{{HTML_OL_END}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<ul>/', '{{HTML_UL_START}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<\/ul>/', '{{HTML_UL_END}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<li>/', '{{HTML_LI_START}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<\/li>/', '{{HTML_LI_END}}', $lineaProcesada);
+                    $lineaProcesada = preg_replace('/<br\s*\/?>/', '{{HTML_BR}}', $lineaProcesada);
 
                     // SEGUNDO: Convertir markdown a placeholders
                     // Negrita: **texto** -> marcador temporal
@@ -61,6 +78,12 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     $lineaProcesada = str_replace(['{{ITALIC_START}}', '{{ITALIC_END}}'], ['<i>', '</i>'], $lineaProcesada);
                     $lineaProcesada = str_replace(['{{HTML_BOLD_START}}', '{{HTML_BOLD_END}}'], ['<b>', '</b>'], $lineaProcesada);
                     $lineaProcesada = str_replace(['{{HTML_ITALIC_START}}', '{{HTML_ITALIC_END}}'], ['<i>', '</i>'], $lineaProcesada);
+                    // Restaurar tags de estructura
+                    $lineaProcesada = str_replace(['{{HTML_P_START}}', '{{HTML_P_END}}'], ['<p style="margin: 2px 0;">', '</p>'], $lineaProcesada);
+                    $lineaProcesada = str_replace(['{{HTML_OL_START}}', '{{HTML_OL_END}}'], ['<ol style="margin: 2px 0 2px 15px; padding-left: 15px;">', '</ol>'], $lineaProcesada);
+                    $lineaProcesada = str_replace(['{{HTML_UL_START}}', '{{HTML_UL_END}}'], ['<ul style="margin: 2px 0 2px 15px; padding-left: 0;">', '</ul>'], $lineaProcesada);
+                    $lineaProcesada = str_replace(['{{HTML_LI_START}}', '{{HTML_LI_END}}'], ['<li>', '</li>'], $lineaProcesada);
+                    $lineaProcesada = str_replace('{{HTML_BR}}', '<br>', $lineaProcesada);
 
                     // Detectar lista
                     if (preg_match('/^[-•]\s+(.+)$/', $lineaTrim, $m)) {
@@ -181,9 +204,9 @@ if (!function_exists('renderizarTablaHtml')) {
     <!-- Encabezado del documento -->
     <table width="100%" border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; border:1px solid #333; margin-bottom:15px;">
         <tr>
-            <td width="80" rowspan="2" align="center" valign="middle" style="border:1px solid #333; padding:5px;">
+            <td width="80" rowspan="2" align="center" valign="middle" style="border:1px solid #333; padding:5px; background-color: #ffffff;">
                 <?php if (!empty($logoBase64)): ?>
-                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo">
+                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo" style="background-color: #ffffff;">
                 <?php else: ?>
                 <b style="font-size:8pt;"><?= esc($cliente['nombre_cliente']) ?></b>
                 <?php endif; ?>
@@ -290,13 +313,26 @@ if (!function_exists('renderizarTablaHtml')) {
     $estandares = $contexto['estandares_aplicables'] ?? 60;
     $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
 
+    // Detectar tipo de documento para determinar formato de firmas
+    $tipoDoc = $documento['tipo_documento'] ?? '';
+
+    // Documento con firma física (tabla para múltiples trabajadores)
+    $esFirmaFisica = !empty($contenido['tipo_firma']) && $contenido['tipo_firma'] === 'fisica'
+        || $tipoDoc === 'responsabilidades_trabajadores_sgsst';
+
+    // Detectar si es documento con solo firma del consultor (ej: Responsabilidades Responsable SG-SST)
+    // Puede venir del contenido o detectarse por tipo de documento
+    $soloFirmaConsultor = !empty($contenido['solo_firma_consultor'])
+        || $tipoDoc === 'responsabilidades_responsable_sgsst';
+
     // Determinar si son solo 2 firmantes (7 estándares SIN delegado)
     $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
 
     // Datos del Consultor desde tbl_consultor
     $consultorNombre = $consultor['nombre_consultor'] ?? '';
-    $consultorCargo = 'Consultor SST';
+    $consultorCargo = $soloFirmaConsultor ? 'Consultor SST / Responsable del SG-SST' : 'Consultor SST';
     $consultorLicencia = $consultor['numero_licencia'] ?? '';
+    $consultorCedula = $consultor['cedula_consultor'] ?? '';
 
     // Datos del Delegado SST (si aplica)
     $delegadoNombre = $contexto['delegado_sst_nombre'] ?? '';
@@ -307,12 +343,103 @@ if (!function_exists('renderizarTablaHtml')) {
     $repLegalCargo = 'Representante Legal';
     ?>
 
+    <?php if ($esFirmaFisica): ?>
+    <!-- ========== DOCUMENTO DE FIRMA FÍSICA (Trabajadores) ========== -->
+    <!-- Página separada para registro de firmas -->
+    <br clear="all" style="page-break-before:always">
+
+    <!-- Repetir encabezado para página de firmas -->
+    <table width="100%" border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; border:1px solid #333; margin-bottom:15px;">
+        <tr>
+            <td width="80" rowspan="2" align="center" valign="middle" style="border:1px solid #333; padding:5px; background-color: #ffffff;">
+                <?php if (!empty($logoBase64)): ?>
+                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo" style="background-color: #ffffff;">
+                <?php else: ?>
+                <b style="font-size:8pt;"><?= esc($cliente['nombre_cliente']) ?></b>
+                <?php endif; ?>
+            </td>
+            <td align="center" valign="middle" style="border:1px solid #333; padding:5px; font-size:9pt; font-weight:bold;">
+                SISTEMA DE GESTION DE SEGURIDAD Y SALUD EN EL TRABAJO
+            </td>
+            <td width="120" rowspan="2" valign="middle" style="border:1px solid #333; padding:0; font-size:8pt;">
+                <table width="100%" cellpadding="2" cellspacing="0" style="border-collapse:collapse;">
+                    <tr><td style="border-bottom:1px solid #333;"><b>Codigo:</b></td><td style="border-bottom:1px solid #333;"><?= esc($documento['codigo'] ?? 'RES-TRA-001') ?></td></tr>
+                    <tr><td style="border-bottom:1px solid #333;"><b>Version:</b></td><td style="border-bottom:1px solid #333;"><?= str_pad($documento['version'] ?? 1, 3, '0', STR_PAD_LEFT) ?></td></tr>
+                    <tr><td><b>Pagina:</b></td><td>Hoja de Firmas</td></tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" valign="middle" style="border:1px solid #333; padding:5px; font-size:9pt; font-weight:bold;">
+                REGISTRO DE FIRMAS - RESPONSABILIDADES DE TRABAJADORES
+            </td>
+        </tr>
+    </table>
+
+    <!-- Instrucciones -->
+    <div style="background: #e7f3ff; padding: 8px 10px; margin-bottom: 12px; border-left: 3px solid #0d6efd; font-size: 9pt;">
+        <b>Instrucciones:</b> Con mi firma certifico haber leido, entendido y aceptado las responsabilidades establecidas en este documento.
+        Este registro se diligencia durante el proceso de induccion en Seguridad y Salud en el Trabajo.
+    </div>
+
+    <!-- Tabla de firmas para trabajadores -->
+    <table class="tabla-contenido" style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+        <tr>
+            <th style="width: 30px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">No.</th>
+            <th style="width: 70px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Fecha</th>
+            <th style="background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Nombre Completo</th>
+            <th style="width: 80px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Cedula</th>
+            <th style="width: 100px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Cargo / Area</th>
+            <th style="width: 90px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Firma</th>
+        </tr>
+        <?php
+        $filasFirma = $contenido['filas_firma'] ?? 15;
+        for ($i = 1; $i <= $filasFirma; $i++):
+        ?>
+        <tr>
+            <td style="border: 1px solid #333; padding: 6px 5px; text-align: center; height: 22px;"><?= $i ?></td>
+            <td style="border: 1px solid #333; padding: 6px 5px;"></td>
+            <td style="border: 1px solid #333; padding: 6px 5px;"></td>
+            <td style="border: 1px solid #333; padding: 6px 5px;"></td>
+            <td style="border: 1px solid #333; padding: 6px 5px;"></td>
+            <td style="border: 1px solid #333; padding: 6px 5px;"></td>
+        </tr>
+        <?php endfor; ?>
+    </table>
+
+    <?php else: ?>
+    <!-- ========== FIRMAS ESTÁNDAR ========== -->
     <div style="margin-top: 20px;">
         <div class="seccion-titulo" style="background-color: #198754; color: white; padding: 5px 8px; border: none;">
-            FIRMAS DE APROBACION
+            <?= $soloFirmaConsultor ? 'FIRMA DE ACEPTACION' : 'FIRMAS DE APROBACION' ?>
         </div>
 
-        <?php if ($esSoloDosFirmantes): ?>
+        <?php if ($soloFirmaConsultor): ?>
+        <!-- DOCUMENTO CON SOLO FIRMA DEL CONSULTOR -->
+        <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
+            <tr>
+                <td width="100%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 9pt;">RESPONSABLE DEL SG-SST</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 10px; border: 1px solid #999; font-size: 8pt; text-align: center;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($consultorNombre) ? esc($consultorNombre) : '_________________' ?></p>
+                    <p style="margin: 2px 0;"><b>Documento:</b> <?= !empty($consultorCedula) ? esc($consultorCedula) : '_________________' ?></p>
+                    <?php if (!empty($consultorLicencia)): ?>
+                    <p style="margin: 2px 0;"><b>Licencia SST:</b> <?= esc($consultorLicencia) ?></p>
+                    <?php endif; ?>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($consultorCargo) ?></p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; text-align: center; border: 1px solid #999; height: 60px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 40%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 7pt;">Firma</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <?php elseif ($esSoloDosFirmantes): ?>
         <!-- 2 firmantes -->
         <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
             <tr>
@@ -406,6 +533,7 @@ if (!function_exists('renderizarTablaHtml')) {
         </table>
         <?php endif; ?>
     </div>
+    <?php endif; ?>
 
     <div style="margin-top:20px; padding-top:10px; border-top:1px solid #ccc; text-align:center; font-size:8pt; color:#666;">
         <p><?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?></p>

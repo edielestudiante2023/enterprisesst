@@ -126,7 +126,7 @@
                     <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
                         <i class="bi bi-arrow-left me-1"></i>Volver
                     </a>
-                    <span class="ms-3"><?= esc($cliente['nombre_cliente']) ?> - Responsabilidades Rep. Legal <?= $anio ?></span>
+                    <span class="ms-3"><?= esc($cliente['nombre_cliente']) ?> - <?= esc($nombreDocumento ?? 'Responsabilidades') ?> <?= $anio ?></span>
                 </div>
                 <div>
                     <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalHistorialVersiones">
@@ -188,6 +188,10 @@
             </div>
 
             <!-- Info del documento -->
+            <?php
+            $esDelegado = $contenido['es_delegado'] ?? (($contenido['estandares_aplicables'] ?? 7) >= 21 || !empty($contenido['requiere_delegado']));
+            $rolSegundoFirmante = $contenido['rol_segundo_firmante'] ?? ($esDelegado ? 'Delegado SST' : 'Vigia SST');
+            ?>
             <div class="info-documento no-print">
                 <div class="row">
                     <div class="col-md-4">
@@ -200,7 +204,7 @@
                     </div>
                     <div class="col-md-4">
                         <small class="text-muted">Requiere firma de:</small>
-                        <span class="fw-bold text-primary">Representante Legal</span>
+                        <span class="fw-bold text-primary">Representante Legal + <?= esc($rolSegundoFirmante) ?></span>
                     </div>
                 </div>
             </div>
@@ -239,7 +243,7 @@
                 </tr>
                 <tr>
                     <td class="encabezado-titulo-central">
-                        <div class="nombre-doc">RESPONSABILIDADES DEL REPRESENTANTE LEGAL EN EL SG-SST</div>
+                        <div class="nombre-doc"><?= strtoupper(esc($nombreDocumento ?? 'RESPONSABILIDADES DEL REPRESENTANTE LEGAL EN EL SG-SST')) ?></div>
                     </td>
                 </tr>
             </table>
@@ -300,29 +304,37 @@
             $repLegalNombre = $contenido['representante_legal']['nombre'] ?? '';
             $repLegalCedula = $contenido['representante_legal']['cedula'] ?? '';
             $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+
+            // Segundo firmante (Vigia o Delegado)
+            $segundoFirmante = $contenido['segundo_firmante'] ?? [];
+            $segundoNombre = $segundoFirmante['nombre'] ?? '';
+            $segundoCedula = $segundoFirmante['cedula'] ?? '';
+            $segundoRol = $segundoFirmante['rol'] ?? $rolSegundoFirmante;
+            $firmaSegundo = ($firmasElectronicas ?? [])['vigia_sst'] ?? ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
             ?>
 
             <div class="firma-section" style="margin-top: 40px; page-break-inside: avoid;">
                 <div class="seccion-titulo" style="background: linear-gradient(90deg, #198754, #20c997); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
-                    <i class="bi bi-pen me-2"></i>FIRMA DE ACEPTACION
+                    <i class="bi bi-pen me-2"></i>FIRMAS DE ACEPTACION
                 </div>
 
                 <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
                     <tbody>
                         <tr>
-                            <td style="vertical-align: top; padding: 25px; height: 200px; position: relative;">
+                            <!-- Firma Representante Legal -->
+                            <td style="vertical-align: top; padding: 25px; height: 200px; position: relative; width: 50%;">
                                 <div class="text-center mb-3">
                                     <strong style="color: #495057; font-size: 1rem;">REPRESENTANTE LEGAL</strong>
                                 </div>
                                 <div style="margin-bottom: 10px;">
                                     <strong style="color: #495057;">Nombre:</strong>
-                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 300px; padding-bottom: 2px;">
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px; padding-bottom: 2px;">
                                         <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '' ?>
                                     </span>
                                 </div>
                                 <div style="margin-bottom: 10px;">
                                     <strong style="color: #495057;">Documento:</strong>
-                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px; padding-bottom: 2px;">
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 150px; padding-bottom: 2px;">
                                         <?= !empty($repLegalCedula) ? esc($repLegalCedula) : '' ?>
                                     </span>
                                 </div>
@@ -332,9 +344,39 @@
                                 </div>
                                 <div style="text-align: center; margin-top: 30px;">
                                     <?php if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])): ?>
-                                        <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 70px; max-width: 200px; margin-bottom: 5px;">
+                                        <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 70px; max-width: 180px; margin-bottom: 5px;">
                                     <?php endif; ?>
-                                    <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
+                                    <div style="border-top: 1px solid #333; width: 80%; margin: 0 auto; padding-top: 5px;">
+                                        <small style="color: #666;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- Firma Vigia/Delegado SST -->
+                            <td style="vertical-align: top; padding: 25px; height: 200px; position: relative; width: 50%;">
+                                <div class="text-center mb-3">
+                                    <strong style="color: #495057; font-size: 1rem;"><?= strtoupper(esc($segundoRol)) ?></strong>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px; padding-bottom: 2px;">
+                                        <?= !empty($segundoNombre) ? esc($segundoNombre) : '' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Documento:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 150px; padding-bottom: 2px;">
+                                        <?= !empty($segundoCedula) ? esc($segundoCedula) : '' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Cargo:</strong>
+                                    <span><?= esc($segundoRol) ?></span>
+                                </div>
+                                <div style="text-align: center; margin-top: 30px;">
+                                    <?php if ($firmaSegundo && !empty($firmaSegundo['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaSegundo['evidencia']['firma_imagen'] ?>" alt="Firma <?= esc($segundoRol) ?>" style="max-height: 70px; max-width: 180px; margin-bottom: 5px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 80%; margin: 0 auto; padding-top: 5px;">
                                         <small style="color: #666;">Firma</small>
                                     </div>
                                 </div>
@@ -377,7 +419,7 @@
 
     <!-- Modal Regenerar Documento -->
     <div class="modal fade" id="modalRegenerarDocumento" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title"><i class="bi bi-arrow-repeat me-2"></i>Actualizar Datos</h5>
@@ -389,20 +431,40 @@
                         Edite los datos y se creara una nueva version del documento.
                     </div>
 
-                    <div class="mb-3">
-                        <label for="regenerarRepLegalNombre" class="form-label">Nombre del Representante Legal</label>
-                        <input type="text" class="form-control" id="regenerarRepLegalNombre"
-                               value="<?= esc($contenido['representante_legal']['nombre'] ?? '') ?>">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3"><i class="bi bi-person-badge me-1"></i>Representante Legal</h6>
+                            <div class="mb-3">
+                                <label for="regenerarRepLegalNombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="regenerarRepLegalNombre"
+                                       value="<?= esc($contenido['representante_legal']['nombre'] ?? '') ?>">
+                            </div>
+                            <div class="mb-3">
+                                <label for="regenerarRepLegalCedula" class="form-label">Cedula</label>
+                                <input type="text" class="form-control" id="regenerarRepLegalCedula"
+                                       value="<?= esc($contenido['representante_legal']['cedula'] ?? '') ?>">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success mb-3"><i class="bi bi-person-check me-1"></i><?= esc($rolSegundoFirmante) ?></h6>
+                            <div class="mb-3">
+                                <label for="regenerarSegundoNombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="regenerarSegundoNombre"
+                                       value="<?= esc($contenido['segundo_firmante']['nombre'] ?? '') ?>">
+                            </div>
+                            <div class="mb-3">
+                                <label for="regenerarSegundoCedula" class="form-label">Cedula</label>
+                                <input type="text" class="form-control" id="regenerarSegundoCedula"
+                                       value="<?= esc($contenido['segundo_firmante']['cedula'] ?? '') ?>">
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="regenerarRepLegalCedula" class="form-label">Cedula</label>
-                        <input type="text" class="form-control" id="regenerarRepLegalCedula"
-                               value="<?= esc($contenido['representante_legal']['cedula'] ?? '') ?>">
-                    </div>
+
+                    <hr>
                     <div class="mb-3">
                         <label for="descripcionCambio" class="form-label">Descripcion del cambio</label>
                         <textarea class="form-control" id="descripcionCambio" rows="2"
-                                  placeholder="Ej: Cambio de representante legal"></textarea>
+                                  placeholder="Ej: Cambio de representante legal o vigia/delegado"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -447,6 +509,8 @@
             const descripcion = document.getElementById('descripcionCambio').value.trim() || 'Actualizacion de datos';
             const repLegalNombre = document.getElementById('regenerarRepLegalNombre').value.trim();
             const repLegalCedula = document.getElementById('regenerarRepLegalCedula').value.trim();
+            const segundoNombre = document.getElementById('regenerarSegundoNombre').value.trim();
+            const segundoCedula = document.getElementById('regenerarSegundoCedula').value.trim();
 
             if (!repLegalNombre) {
                 alert('El nombre del representante legal es obligatorio');
@@ -460,6 +524,8 @@
             formData.append('descripcion_cambio', descripcion);
             formData.append('representante_legal_nombre', repLegalNombre);
             formData.append('representante_legal_cedula', repLegalCedula);
+            formData.append('segundo_firmante_nombre', segundoNombre);
+            formData.append('segundo_firmante_cedula', segundoCedula);
 
             fetch('<?= base_url("documentos-sst/{$cliente['id_cliente']}/regenerar-responsabilidades-rep-legal/{$anio}") ?>', {
                 method: 'POST',

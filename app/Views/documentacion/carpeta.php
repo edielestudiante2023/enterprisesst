@@ -278,9 +278,13 @@
                                 <i class="bi bi-lock me-1"></i>Crear con IA
                             </button>
                         <?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsabilidades_sgsst'): ?>
-                            <!-- 1.1.2: Dropdown con los 4 documentos de responsabilidades -->
+                            <!-- 1.1.2: Dropdown con los 3 documentos de responsabilidades -->
                             <?php
                             $nivelEstandares = $contextoCliente['estandares_aplicables'] ?? 60;
+                            $esVigia = $nivelEstandares <= 7;
+                            $nombreDocRepLegal = $esVigia
+                                ? 'Resp. Rep. Legal + Vigia SST'
+                                : 'Resp. Rep. Legal + Delegado SST';
                             $docsExistentesTipos = [];
                             if (!empty($documentosSSTAprobados)) {
                                 foreach ($documentosSSTAprobados as $d) {
@@ -289,6 +293,8 @@
                                     }
                                 }
                             }
+                            // Total de documentos esperados: 3 (Rep. Legal combinado, Responsable SST, Trabajadores)
+                            $totalEsperado = 3;
                             ?>
                             <div class="dropdown">
                                 <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -299,7 +305,7 @@
                                     <li>
                                         <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-responsabilidades-rep-legal') ?>" method="post">
                                             <button type="submit" class="dropdown-item">
-                                                <i class="bi bi-person-badge me-2 text-primary"></i>Resp. Representante Legal
+                                                <i class="bi bi-person-badge me-2 text-primary"></i><?= esc($nombreDocRepLegal) ?>
                                             </button>
                                         </form>
                                     </li>
@@ -322,16 +328,7 @@
                                         </form>
                                     </li>
                                     <?php endif; ?>
-                                    <?php if ($nivelEstandares <= 7 && !isset($docsExistentesTipos['responsabilidades_vigia_sgsst'])): ?>
-                                    <li>
-                                        <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-responsabilidades-vigia-sst') ?>" method="post">
-                                            <button type="submit" class="dropdown-item">
-                                                <i class="bi bi-eye me-2 text-info"></i>Resp. Vigia SST (Solo 7 est.)
-                                            </button>
-                                        </form>
-                                    </li>
-                                    <?php endif; ?>
-                                    <?php if (count($docsExistentesTipos) >= ($nivelEstandares <= 7 ? 4 : 3)): ?>
+                                    <?php if (count($docsExistentesTipos) >= $totalEsperado): ?>
                                     <li><span class="dropdown-item text-muted"><i class="bi bi-check-circle me-2"></i>Todos creados <?= date('Y') ?></span></li>
                                     <?php endif; ?>
                                 </ul>
@@ -619,12 +616,13 @@
                                                 $urlEditar = null; // Por defecto no hay editor
 
                                                 // Mapa de tipos de documento a rutas
+                                                // Nota: responsabilidades_vigia_sgsst fue eliminado - ahora está combinado en rep_legal_sgsst
+                                                // Las rutas usan anio (no id_documento) excepto trabajadores que usa id_documento
                                                 $mapaRutas = [
                                                     'asignacion_responsable_sgsst' => 'asignacion-responsable-sst/' . $docSST['anio'],
-                                                    'responsabilidades_rep_legal_sgsst' => 'responsabilidades-rep-legal/' . $docSST['id_documento'],
-                                                    'responsabilidades_responsable_sgsst' => 'responsabilidades-responsable-sst/' . $docSST['id_documento'],
-                                                    'responsabilidades_trabajadores_sgsst' => 'responsabilidades-trabajadores/' . $docSST['id_documento'],
-                                                    'responsabilidades_vigia_sgsst' => 'responsabilidades-vigia-sst/' . $docSST['id_documento'],
+                                                    'responsabilidades_rep_legal_sgsst' => 'responsabilidades-rep-legal/' . $docSST['anio'],
+                                                    'responsabilidades_responsable_sgsst' => 'responsabilidades-responsable-sst/' . $docSST['anio'],
+                                                    'responsabilidades_trabajadores_sgsst' => 'responsabilidades-trabajadores/' . $docSST['anio'],
                                                     'programa_capacitacion' => 'programa-capacitacion/' . $docSST['anio'],
                                                 ];
 
@@ -649,6 +647,36 @@
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
                                                 <?php endif; ?>
+                                                <?php if ($tipoDoc === 'responsabilidades_trabajadores_sgsst'): ?>
+                                                <!-- Documento de firma física -->
+                                                <?php
+                                                // Buscar si tiene archivo escaneado en la versión vigente
+                                                $archivoEscaneado = null;
+                                                if (!empty($docSST['versiones'])) {
+                                                    foreach ($docSST['versiones'] as $ver) {
+                                                        if (($ver['estado'] ?? '') === 'vigente' && !empty($ver['archivo_pdf'])) {
+                                                            $archivoEscaneado = $ver['archivo_pdf'];
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                ?>
+                                                <?php if ($archivoEscaneado): ?>
+                                                <!-- Ver documento escaneado -->
+                                                <a href="<?= esc($archivoEscaneado) ?>"
+                                                   class="btn btn-outline-success" title="Ver documento firmado (escaneado)" target="_blank">
+                                                    <i class="bi bi-file-earmark-check"></i>
+                                                </a>
+                                                <?php endif; ?>
+                                                <!-- Adjuntar/reemplazar escaneado -->
+                                                <button type="button" class="btn btn-outline-info" title="<?= $archivoEscaneado ? 'Reemplazar documento escaneado' : 'Adjuntar documento firmado (escaneado)' ?>"
+                                                   data-bs-toggle="modal" data-bs-target="#modalAdjuntarFirmado"
+                                                   data-id-documento="<?= $docSST['id_documento'] ?>"
+                                                   data-titulo="<?= esc($docSST['titulo']) ?>">
+                                                    <i class="bi bi-paperclip"></i>
+                                                </button>
+                                                <?php else: ?>
+                                                <!-- Documentos con firma electrónica -->
                                                 <a href="<?= base_url('firma/estado/' . $docSST['id_documento']) ?>"
                                                    class="btn btn-outline-success" title="Firmas y Audit Log" target="_blank">
                                                     <i class="bi bi-pen"></i>
@@ -658,6 +686,7 @@
                                                    onclick="return confirm('¿Publicar este documento en Reportes? Será consultable desde reportList.')">
                                                     <i class="bi bi-cloud-upload"></i>
                                                 </a>
+                                                <?php endif; ?>
                                             </div>
                                         </td>
                                     </tr>
@@ -912,6 +941,74 @@
         </div>
     </div>
 
+    <!-- Modal para adjuntar documento firmado escaneado -->
+    <div class="modal fade" id="modalAdjuntarFirmado" tabindex="-1" aria-labelledby="modalAdjuntarFirmadoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalAdjuntarFirmadoLabel">
+                        <i class="bi bi-paperclip me-2"></i>Adjuntar Documento Firmado
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formAdjuntarFirmado" action="<?= base_url('documentos-sst/adjuntar-firmado') ?>" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <input type="hidden" name="id_documento" id="adjuntar_id_documento">
+
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Documento:</strong> <span id="adjuntar_titulo_documento"></span>
+                        </div>
+
+                        <p class="text-muted mb-3">
+                            Suba el documento escaneado con las firmas físicas de los trabajadores.
+                            Este archivo quedará publicado en reportList y será consultable.
+                        </p>
+
+                        <div class="mb-3">
+                            <label for="archivo_firmado" class="form-label">
+                                <i class="bi bi-file-earmark-pdf me-1"></i>Archivo escaneado (PDF o imagen)
+                            </label>
+                            <input type="file" class="form-control" id="archivo_firmado" name="archivo_firmado"
+                                   accept=".pdf,.jpg,.jpeg,.png" required>
+                            <div class="form-text">Formatos aceptados: PDF, JPG, PNG. Tamaño máximo: 10MB</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observaciones_firmado" class="form-label">Observaciones (opcional)</label>
+                            <textarea class="form-control" id="observaciones_firmado" name="observaciones" rows="2"
+                                      placeholder="Ej: Firmado en inducción del 29/01/2026"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-info" id="btnAdjuntarFirmado">
+                            <i class="bi bi-cloud-upload me-1"></i>Subir y Publicar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Manejar apertura del modal de adjuntar firmado
+    document.getElementById('modalAdjuntarFirmado')?.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const idDocumento = button.getAttribute('data-id-documento');
+        const titulo = button.getAttribute('data-titulo');
+
+        document.getElementById('adjuntar_id_documento').value = idDocumento;
+        document.getElementById('adjuntar_titulo_documento').textContent = titulo;
+    });
+
+    // Manejar envío del formulario
+    document.getElementById('formAdjuntarFirmado')?.addEventListener('submit', function(e) {
+        const btn = document.getElementById('btnAdjuntarFirmado');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Subiendo...';
+    });
+    </script>
 </body>
 </html>

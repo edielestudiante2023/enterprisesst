@@ -1166,6 +1166,301 @@ if (isset($mapaRutas[$tipoDoc])) {
 
 ---
 
+### 25. Publicar Documento en ReportList (PDF)
+
+**Funcionalidad:** El botón "Publicar en Reportes" (icono nube con flecha) genera un PDF del documento y lo publica en `tbl_reporte` para que sea consultable desde `/reportList`.
+
+**Cómo funciona:**
+
+1. El botón en `carpeta.php` llama a: `documentos-sst/publicar-pdf/{id_documento}`
+2. El controlador `DocumentosSSTController::publicarPDF()`:
+   - Genera PDF usando la vista `documentos_sst/pdf_template`
+   - Guarda el archivo en `uploads/{nit}/`
+   - Crea/actualiza registro en `tbl_reporte`
+   - Asocia al `detail_report` "Documento SG-SST"
+
+**Código del botón en carpeta.php:**
+
+```php
+<a href="<?= base_url('documentos-sst/publicar-pdf/' . $docSST['id_documento']) ?>"
+   class="btn btn-outline-dark" title="Publicar en Reportes"
+   onclick="return confirm('¿Publicar este documento en Reportes?')">
+    <i class="bi bi-cloud-upload"></i>
+</a>
+```
+
+**Ruta requerida en Routes.php:**
+
+```php
+$routes->get('/documentos-sst/publicar-pdf/(:num)', 'DocumentosSSTController::publicarPDF/$1');
+```
+
+**Posibles errores:**
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| "Documento no encontrado" | ID incorrecto | Verificar que `$docSST['id_documento']` existe |
+| PDF vacío o mal formado | Vista faltante | Crear `documentos_sst/pdf_template.php` |
+| No aparece en reportList | Falta detail_report | Verificar que existe "Documento SG-SST" en `detail_report` |
+
+**IMPORTANTE sobre mapaRutas:**
+
+Cuando configures URLs en `carpeta.php`, usa el parámetro correcto según la ruta:
+
+```php
+// Si la ruta usa (:num) para ANIO:
+$routes->get('/documentos-sst/(:num)/mi-documento/(:num)', 'Controller::ver/$1/$2');
+//                         idCliente              anio
+
+// Entonces en mapaRutas usa $docSST['anio']:
+'mi_tipo_documento' => 'mi-documento/' . $docSST['anio'],
+
+// NO uses id_documento si la ruta espera anio - causará "Documento no encontrado"
+```
+
+---
+
+### 26. HTML Sin Renderizar en PDF/Word (Tags Visibles como Texto)
+
+**Problema:** Al exportar a PDF o Word, el contenido muestra tags HTML literales como `<p>`, `<ol>`, `<li>` en lugar de renderizar las listas y párrafos correctamente.
+
+**Causa:** Las funciones `convertirMarkdownAHtmlPdf()` y `convertirMarkdownAHtml()` en los templates usan `htmlspecialchars()` para escapar HTML, pero esto también escapa el HTML válido que viene del controlador.
+
+**Ejemplo del error:**
+```
+3. RESPONSABILIDADES DEL REPRESENTANTE LEGAL
+<p>El Representante Legal tiene las siguientes responsabilidades:</p>
+<ol style="line-height: 1.8;"><li style="margin-bottom: 8px;">Definir la política...</li></ol>
+```
+
+**Solución:** Agregar detección temprana de HTML existente en los templates.
+
+**En `pdf_template.php` y `word_template.php`:**
+
+```php
+function convertirMarkdownAHtmlPdf($texto) {
+    if (empty($texto)) return '';
+
+    // Si el contenido ya tiene tags HTML de estructura, devolverlo directamente
+    // El contenido ya viene formateado con estilos desde el controlador
+    if (preg_match('/<(p|ol|ul|li|div|table|br)\b[^>]*>/i', $texto)) {
+        return $texto;
+    }
+
+    // ... resto del código para procesar Markdown ...
+}
+```
+
+**¿Por qué ocurre?**
+
+El controlador genera HTML con `formatearResponsabilidades()`:
+```php
+protected function formatearResponsabilidades(array $responsabilidades, string $intro = ''): string
+{
+    $html = '<p>' . $intro . '</p>';
+    $html .= '<ol style="line-height: 1.8;">';
+    foreach ($responsabilidades as $resp) {
+        $html .= '<li style="margin-bottom: 8px;">' . $resp . '</li>';
+    }
+    $html .= '</ol>';
+    return $html;
+}
+```
+
+Este HTML válido luego pasa por `htmlspecialchars()` que lo escapa:
+- `<p>` → `&lt;p&gt;` (se muestra como texto literal)
+
+**Regla:** Si el contenido ya tiene tags HTML estructurados, NO procesarlo con `htmlspecialchars()`.
+
+---
+
+### 27. Logo con Fondo Negro en Word (Transparencia PNG)
+
+**Problema:** Al exportar a Word, el logo PNG con transparencia aparece con fondo negro.
+
+**Causa:** MS Word no maneja bien la transparencia PNG en imágenes base64.
+
+**Solución:** Agregar fondo blanco explícito al contenedor e imagen.
+
+**En `word_template.php`:**
+
+```php
+<!-- ANTES (fondo negro) -->
+<td width="80" rowspan="2" align="center" valign="middle" style="border:1px solid #333; padding:5px;">
+    <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo">
+
+<!-- DESPUÉS (fondo blanco) -->
+<td width="80" rowspan="2" align="center" valign="middle" style="border:1px solid #333; padding:5px; background-color: #ffffff;">
+    <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo" style="background-color: #ffffff;">
+```
+
+**Regla:** Siempre agregar `background-color: #ffffff` a contenedores de imágenes PNG en exports Word.
+
+---
+
+### 28. Formato de Firmas Incorrecto en PDF/Word (Electrónica vs Física)
+
+**Problema:** Algunos documentos SST exportan con el formato de firma incorrecto:
+- "Responsabilidades del Responsable del SG-SST" mostraba 3 firmantes (Consultor + Vigía + Rep Legal) cuando solo debe llevar 1 (Consultor)
+- "Responsabilidades de Trabajadores y Contratistas" mostraba firmas electrónicas (2-3 personas) cuando debe mostrar tabla de firmas físicas (múltiples trabajadores)
+
+**Causa:** Los templates PDF/Word usaban el mismo bloque de firmas para todos los documentos sin detectar el tipo específico.
+
+**Solución:** Detectar el tipo de documento y mostrar el bloque de firmas apropiado.
+
+**Tipos de firma:**
+
+| Tipo | Documentos que lo usan | Formato |
+|------|------------------------|---------|
+| `solo_firma_consultor` | Responsabilidades Responsable SG-SST | 1 firmante: Consultor/Responsable |
+| `tipo_firma = 'fisica'` | Responsabilidades Trabajadores | Tabla con múltiples filas para trabajadores |
+| (estándar) | Todos los demás | 2-3 firmantes según estándares |
+
+**En `pdf_template.php` y `word_template.php`:**
+
+```php
+<?php
+// Detectar tipo de documento
+$tipoDoc = $documento['tipo_documento'] ?? '';
+
+// Documento con firma física (tabla para múltiples trabajadores)
+$esFirmaFisica = !empty($contenido['tipo_firma']) && $contenido['tipo_firma'] === 'fisica'
+    || $tipoDoc === 'responsabilidades_trabajadores_sgsst';
+
+// Documento con solo firma del consultor
+$soloFirmaConsultor = !empty($contenido['solo_firma_consultor'])
+    || $tipoDoc === 'responsabilidades_responsable_sgsst';
+?>
+
+<?php if ($esFirmaFisica): ?>
+    <!-- Tabla de firmas físicas para trabajadores -->
+    <table>
+        <tr>
+            <th>No.</th><th>Fecha</th><th>Nombre Completo</th>
+            <th>Cédula</th><th>Cargo/Área</th><th>Firma</th>
+        </tr>
+        <?php for ($i = 1; $i <= ($contenido['filas_firma'] ?? 15); $i++): ?>
+        <tr>
+            <td><?= $i ?></td>
+            <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <?php endfor; ?>
+    </table>
+<?php elseif ($soloFirmaConsultor): ?>
+    <!-- Solo firma del consultor -->
+    <table>
+        <tr><th>RESPONSABLE DEL SG-SST</th></tr>
+        <tr><td>Nombre: <?= $consultorNombre ?></td></tr>
+        <tr><td>Documento: <?= $consultorCedula ?></td></tr>
+        <tr><td>Firma: _______________</td></tr>
+    </table>
+<?php else: ?>
+    <!-- Firmas estándar (2-3 firmantes) -->
+    ...
+<?php endif; ?>
+```
+
+**En el controlador (PzresponsabilidadesTrabajadoresController.php):**
+
+```php
+// Indicar tipo de firma física
+'tipo_firma' => 'fisica',
+'filas_firma' => 15  // Número de filas para trabajadores
+```
+
+**En el controlador (PzresponsabilidadesResponsableSstController.php):**
+
+```php
+// Indicar solo firma del consultor
+'solo_firma_consultor' => true
+```
+
+**Regla:**
+1. Siempre agregar `tipo_documento` al guardar en `tbl_documentos_sst` para detección por tipo
+2. Para documentos con firmantes especiales, usar flags en `$contenido`
+3. Los templates deben detectar ambos: flag explícito O tipo_documento (backwards compatibility)
+
+---
+
+### 29. Documento con Firma Única (Solo Consultor)
+
+**Cuándo aplica:** Documentos donde el consultor es el único responsable, no requiere aprobación de terceros.
+
+**Ejemplo:** "Responsabilidades del Responsable del SG-SST" - el consultor firma aceptando sus propias responsabilidades.
+
+**Implementación:**
+
+1. En el controlador agregar flag:
+```php
+$contenido = [
+    'titulo' => '...',
+    'solo_firma_consultor' => true,  // <-- Flag para firma única
+    'secciones' => [...]
+];
+```
+
+2. Los templates detectan y muestran:
+- Título: "FIRMA DE ACEPTACIÓN" (no "FIRMAS DE APROBACIÓN")
+- Una sola columna centrada con datos del consultor
+- Cargo mostrado como "Consultor SST / Responsable del SG-SST"
+
+---
+
+### 30. Adjuntar Documento Firmado Escaneado (Firmas Físicas)
+
+**Caso de uso:** Documentos como "Responsabilidades de Trabajadores y Contratistas" requieren que múltiples personas firmen físicamente en papel. Después de la inducción, el documento firmado se escanea y se debe publicar en reportList.
+
+**Flujo:**
+1. Generar documento con tabla de firmas vacías (PDF/Word)
+2. Imprimir y hacer firmar a los trabajadores durante la inducción
+3. Escanear el documento firmado (PDF o imagen)
+4. Subir el escaneado desde la carpeta del documento
+5. El archivo queda publicado en reportList y visible en la carpeta
+
+**Implementación en carpeta.php:**
+
+```php
+<?php if ($tipoDoc === 'responsabilidades_trabajadores_sgsst'): ?>
+<!-- Documento de firma física: botón para adjuntar escaneado -->
+<button type="button" class="btn btn-outline-info" title="Adjuntar documento firmado (escaneado)"
+   data-bs-toggle="modal" data-bs-target="#modalAdjuntarFirmado"
+   data-id-documento="<?= $docSST['id_documento'] ?>"
+   data-titulo="<?= esc($docSST['titulo']) ?>">
+    <i class="bi bi-paperclip"></i>
+</button>
+<?php else: ?>
+<!-- Documento estándar: publicar PDF generado -->
+<a href="<?= base_url('documentos-sst/publicar-pdf/' . $docSST['id_documento']) ?>" ...>
+    <i class="bi bi-cloud-upload"></i>
+</a>
+<?php endif; ?>
+```
+
+**Controlador (DocumentosSSTController::adjuntarFirmado):**
+
+```php
+public function adjuntarFirmado()
+{
+    $idDocumento = $this->request->getPost('id_documento');
+    $archivo = $this->request->getFile('archivo_firmado');
+
+    // Validar archivo (PDF, JPG, PNG - máx 10MB)
+    // Guardar en uploads/{nit}/firmado_{tipo}_{fecha}.{ext}
+    // Insertar/actualizar en tbl_reporte
+    // Actualizar tbl_documentos_sst con enlace al archivo
+}
+```
+
+**Ruta requerida:**
+
+```php
+$routes->post('/documentos-sst/adjuntar-firmado', 'DocumentosSSTController::adjuntarFirmado');
+```
+
+**Regla:** Usar el botón de paperclip (adjuntar) para documentos de firma física, y el botón de cloud-upload (publicar) para documentos de firma electrónica.
+
+---
+
 ## RESUMEN RAPIDO DE ERRORES COMUNES
 
 | Error | Causa | Solucion Rapida |
@@ -1179,3 +1474,7 @@ if (isset($mapaRutas[$tipoDoc])) {
 | **Botón no aparece en carpeta** | **Falta tipo en determinarTipoCarpetaFases** | **Agregar detección + in_array + condición en vista** |
 | **Dropdown vacío** | **Falta whereIn para múltiples tipos** | **Agregar todos los tipo_documento al whereIn** |
 | **Documento Vigía aparece siempre** | **Falta filtro por estándares** | **Pasar contextoCliente y verificar nivelEstandares <= 7** |
+| **HTML visible en PDF/Word** | **htmlspecialchars escapa HTML válido** | **Detectar HTML existente y retornar sin procesar** |
+| **Logo fondo negro en Word** | **PNG transparencia no soportada** | **Agregar background-color: #ffffff al contenedor** |
+| **PDF/Word con firmas incorrectas** | **Template no detecta tipo de documento** | **Agregar detección $esFirmaFisica y $soloFirmaConsultor** |
+| **Trabajadores con firma electrónica** | **Falta tipo_firma = 'fisica'** | **Agregar flag en controlador y bloque en templates** |

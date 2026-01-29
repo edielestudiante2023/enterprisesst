@@ -776,6 +776,7 @@ $routes->get('/documentos/pdf/(:num)', 'DocumentosSSTController::generarPDF/$1')
 $routes->get('/documentos-sst/exportar-pdf/(:num)', 'DocumentosSSTController::exportarPDF/$1');
 $routes->get('/documentos-sst/exportar-word/(:num)', 'DocumentosSSTController::exportarWord/$1');
 $routes->get('/documentos-sst/publicar-pdf/(:num)', 'DocumentosSSTController::publicarPDF/$1');
+$routes->post('/documentos-sst/adjuntar-firmado', 'DocumentosSSTController::adjuntarFirmado');
 
 // Aprobacion y versionamiento de documentos SST
 $routes->post('/documentos-sst/aprobar-documento', 'DocumentosSSTController::aprobarDocumento');
