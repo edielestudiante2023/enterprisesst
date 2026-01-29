@@ -172,11 +172,13 @@ if (!function_exists('renderizarTablaPdf')) {
             width: 120px;
             padding: 8px;
             text-align: center;
+            background-color: #ffffff;
         }
 
         .encabezado-logo img {
             max-width: 100px;
             max-height: 60px;
+            background-color: #ffffff;
         }
 
         .encabezado-titulo-central {
@@ -441,8 +443,13 @@ if (!function_exists('renderizarTablaPdf')) {
     // Documento con solo firma del Representante Legal (sin Vigia/Delegado)
     $soloFirmaRepLegal = !empty($contenido['solo_firma_rep_legal']);
 
-    // Determinar si son solo 2 firmantes (7 estándares SIN delegado)
-    $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
+    // Documento de Responsabilidades Rep. Legal con segundo firmante (Rep. Legal + Vigia/Delegado, SIN Consultor)
+    $esDocResponsabilidadesRepLegal = $tipoDoc === 'responsabilidades_rep_legal_sgsst';
+    $tieneSegundoFirmante = !empty($contenido['tiene_segundo_firmante']) || !empty($contenido['segundo_firmante']['nombre']);
+    $firmasRepLegalYSegundo = $esDocResponsabilidadesRepLegal && $tieneSegundoFirmante && !$soloFirmaRepLegal;
+
+    // Determinar si son solo 2 firmantes (7 estándares SIN delegado) - NO aplica para doc responsabilidades rep legal
+    $esSoloDosFirmantes = !$esDocResponsabilidadesRepLegal && ($estandares <= 10) && !$requiereDelegado;
 
     // Datos del Consultor desde tbl_consultor
     $consultorNombre = $consultor['nombre_consultor'] ?? '';
@@ -527,7 +534,7 @@ if (!function_exists('renderizarTablaPdf')) {
     <!-- ========== FIRMAS ESTÁNDAR ========== -->
     <div style="margin-top: 25px;">
         <div style="background-color: #198754; color: white; padding: 8px 12px; font-weight: bold; font-size: 10pt;">
-            <?= $soloFirmaConsultor ? 'FIRMA DE ACEPTACION' : 'FIRMAS DE APROBACIÓN' ?>
+            <?= ($soloFirmaConsultor || $soloFirmaRepLegal) ? 'FIRMA DE ACEPTACION' : ($firmasRepLegalYSegundo ? 'FIRMAS DE ACEPTACION' : 'FIRMAS DE APROBACIÓN') ?>
         </div>
 
         <?php if ($soloFirmaConsultor): ?>
@@ -588,6 +595,65 @@ if (!function_exists('renderizarTablaPdf')) {
                                 <small style="color: #666;">Firma</small>
                             </div>
                         </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <?php elseif ($firmasRepLegalYSegundo): ?>
+        <!-- ========== RESPONSABILIDADES REP. LEGAL: Rep. Legal + Vigia/Delegado (SIN Consultor) ========== -->
+        <?php
+        $segundoFirmante = $contenido['segundo_firmante'] ?? null;
+        $segundoNombre = $segundoFirmante['nombre'] ?? $delegadoNombre ?? '';
+        $segundoCedula = $segundoFirmante['cedula'] ?? '';
+        $segundoRol = $segundoFirmante['rol'] ?? ($requiereDelegado ? 'Delegado SST' : 'Vigía SST');
+        $repLegalCedulaPdf = $contenido['representante_legal']['cedula'] ?? '';
+        ?>
+        <table class="tabla-contenido" style="width: 100%; margin-top: 0;">
+            <tr>
+                <th style="width: 50%; background-color: #e9ecef; color: #333;">REPRESENTANTE LEGAL</th>
+                <th style="width: 50%; background-color: #e9ecef; color: #333;"><?= strtoupper(esc($segundoRol)) ?></th>
+            </tr>
+            <tr>
+                <!-- REPRESENTANTE LEGAL -->
+                <td style="vertical-align: top; padding: 12px; height: 100px;">
+                    <div style="margin-bottom: 5px;"><strong>Nombre:</strong> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '________________________' ?></div>
+                    <?php if (!empty($repLegalCedulaPdf)): ?>
+                    <div style="margin-bottom: 5px;"><strong>Documento:</strong> <?= esc($repLegalCedulaPdf) ?></div>
+                    <?php endif; ?>
+                    <div style="margin-bottom: 5px;"><strong>Cargo:</strong> <?= esc($repLegalCargo) ?></div>
+                </td>
+                <!-- VIGIA/DELEGADO SST -->
+                <td style="vertical-align: top; padding: 12px; height: 100px;">
+                    <div style="margin-bottom: 5px;"><strong>Nombre:</strong> <?= !empty($segundoNombre) ? esc($segundoNombre) : '________________________' ?></div>
+                    <?php if (!empty($segundoCedula)): ?>
+                    <div style="margin-bottom: 5px;"><strong>Documento:</strong> <?= esc($segundoCedula) ?></div>
+                    <?php endif; ?>
+                    <div style="margin-bottom: 5px;"><strong>Cargo:</strong> <?= esc($segundoRol) ?></div>
+                </td>
+            </tr>
+            <tr>
+                <!-- Fila de firmas alineadas -->
+                <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
+                    <?php
+                    $firmaRepLegalPdfDoc = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+                    if ($firmaRepLegalPdfDoc && !empty($firmaRepLegalPdfDoc['evidencia']['firma_imagen'])):
+                    ?>
+                        <img src="<?= $firmaRepLegalPdfDoc['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 56px; max-width: 168px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666;">Firma</small>
+                    </div>
+                </td>
+                <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
+                    <?php
+                    $firmaSegundoPdf = ($firmasElectronicas ?? [])['delegado_sst'] ?? ($firmasElectronicas ?? [])['vigia_sst'] ?? null;
+                    if ($firmaSegundoPdf && !empty($firmaSegundoPdf['evidencia']['firma_imagen'])):
+                    ?>
+                        <img src="<?= $firmaSegundoPdf['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 56px; max-width: 168px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666;">Firma</small>
                     </div>
                 </td>
             </tr>
@@ -720,6 +786,7 @@ if (!function_exists('renderizarTablaPdf')) {
         </table>
         <?php endif; ?>
     </div>
+    <?php endif; ?>
 
     <!-- Pie de documento -->
     <div class="pie-documento">

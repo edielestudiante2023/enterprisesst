@@ -156,10 +156,14 @@
                         </a>
                         <?php
                         $codigoVerif = '';
-                        if (!empty($solicitudes)) {
-                            $tokens = array_column(array_filter($solicitudes, fn($s) => $s['estado'] === 'firmado'), 'token');
+                        if (!empty($solicitudes) && !empty($documento['id_documento'])) {
+                            // Filtrar solo firmados y ordenar por id_solicitud para coincidir con DocFirmaModel
+                            $firmados = array_filter($solicitudes, fn($s) => $s['estado'] === 'firmado');
+                            usort($firmados, fn($a, $b) => $a['id_solicitud'] <=> $b['id_solicitud']);
+                            $tokens = array_column($firmados, 'token');
                             if (!empty($tokens)) {
-                                $codigoVerif = strtoupper(substr(hash('sha256', implode('|', $tokens)), 0, 12));
+                                // Incluir id_documento para coincidir con DocFirmaModel::generarCodigoVerificacion()
+                                $codigoVerif = strtoupper(substr(hash('sha256', implode('|', $tokens) . '|' . $documento['id_documento']), 0, 12));
                             }
                         }
                         ?>

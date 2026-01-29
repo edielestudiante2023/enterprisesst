@@ -1520,3 +1520,244 @@ if ($estandares >= 21) {
 **Archivo modificado:** `app/Controllers/PzresponsabilidadesRepLegalController.php` líneas 255-265
 
 **Regenerar documento:** Después de aplicar el fix, el usuario debe usar el botón "Actualizar Datos" en la vista del documento para regenerar el contenido con la lógica corregida.
+
+---
+
+### 32. QRCode Library - outputType Requiere Strings (No Constantes)
+
+**Problema:** Error `TypeError: Cannot assign int to property chillerlan\QRCode\QROptions::$outputType of type string` al generar códigos QR.
+
+**Causa:** La librería `chillerlan/php-qrcode` actualizó su API y ahora el parámetro `outputType` requiere un **string** en lugar de constantes enteras.
+
+**Código anterior (fallaba):**
+```php
+$options = new \chillerlan\QRCode\QROptions([
+    'outputType' => \chillerlan\QRCode\Output\QROutputInterface::GDIMAGE_PNG,  // ❌ Constante entera
+    'eccLevel' => \chillerlan\QRCode\Common\EccLevel::L,  // ❌ Constante entera
+]);
+```
+
+**Código corregido:**
+```php
+$options = new \chillerlan\QRCode\QROptions([
+    'outputType' => 'png',       // ✅ String
+    'eccLevel' => 'L',           // ✅ String
+    'scale' => 5,
+    'outputBase64' => true,
+]);
+$qrcode = new \chillerlan\QRCode\QRCode($options);
+return $qrcode->render($url);
+```
+
+**Archivo modificado:** `app/Controllers/FirmaElectronicaController.php` método `generarQR()`
+
+**Regla:** Al usar `chillerlan/php-qrcode`, siempre usar **strings** para `outputType` y `eccLevel`:
+- `'outputType' => 'png'` (no `QROutputInterface::GDIMAGE_PNG`)
+- `'eccLevel' => 'L'` (no `EccLevel::L`)
+
+---
+
+### 33. Código de Verificación - Consistencia en Ordenamiento de Tokens
+
+**Problema:** El código de verificación mostrado en el PDF era diferente al generado al momento de verificar, causando "Verificación No Válida".
+
+**Causa:** El código de verificación se genera combinando los tokens de todas las solicitudes firmadas y aplicando un hash SHA-256. Si el orden de las solicitudes cambia entre generación y verificación, el hash será diferente.
+
+**Ejemplo del problema:**
+```
+- Al firmar: tokens ordenados por orden_firma → hash = "42852F2EDDF5"
+- Al verificar: tokens ordenados por created_at → hash = "7FFB7D000471"
+```
+
+**Solución:** Ordenar SIEMPRE por `id_solicitud ASC` en todos los lugares donde se genera el código.
+
+**En `DocFirmaModel.php` (generarCodigoVerificacion):**
+```php
+public function generarCodigoVerificacion(int $idDocumento): string
+{
+    $solicitudes = $this->where('id_documento', $idDocumento)
+                       ->where('estado', 'firmado')
+                       ->orderBy('id_solicitud', 'ASC')  // ← CRÍTICO: ordenamiento consistente
+                       ->findAll();
+
+    if (empty($solicitudes)) {
+        return '';
+    }
+
+    $tokens = array_column($solicitudes, 'token');
+    $hash = hash('sha256', implode('|', $tokens) . '|' . $idDocumento);
+    return strtoupper(substr($hash, 0, 12));
+}
+```
+
+**En la vista `estado.php` (verificación):**
+```php
+// Ordenar firmados por id_solicitud para consistencia con el código de verificación
+$firmados = array_filter($solicitudes, fn($s) => $s['estado'] === 'firmado');
+usort($firmados, fn($a, $b) => $a['id_solicitud'] <=> $b['id_solicitud']);
+$tokens = array_column($firmados, 'token');
+$hash = hash('sha256', implode('|', $tokens) . '|' . $idDocumento);
+$codigoVerificacion = strtoupper(substr($hash, 0, 12));
+```
+
+**Archivos modificados:**
+- `app/Models/DocFirmaModel.php` línea 349
+- `app/Views/documentos_sst/firma/estado.php` líneas 158-165
+
+**Regla:** NUNCA usar `orden_firma` o `created_at` para ordenar tokens de verificación. Usar SIEMPRE `id_solicitud ASC` que es inmutable.
+
+---
+
+### 34. Bloque de Firmas para Responsabilidades Rep Legal (Sin Consultor)
+
+**Problema:** El documento "Responsabilidades del Representante Legal del SG-SST" mostraba la firma del consultor como "Elaboró" en PDF/Word, pero en la vista web no aparecía.
+
+**Causa:** Este documento específico solo requiere dos firmantes:
+1. **Representante Legal** - quien acepta sus responsabilidades
+2. **Vigía SST / Delegado SST** - quien valida
+
+El consultor NO debe aparecer como firmante en este documento.
+
+**Solución:** Agregar detección específica para este tipo de documento en los templates.
+
+**En `pdf_template.php` y `word_template.php`:**
+
+```php
+<?php
+// Detección de tipo de documento
+$tipoDoc = $documento['tipo_documento'] ?? '';
+
+// Documento de Responsabilidades Rep Legal: solo Rep. Legal + Vigía/Delegado (sin consultor)
+$esDocResponsabilidadesRepLegal = $tipoDoc === 'responsabilidades_rep_legal_sgsst';
+$tieneSegundoFirmante = !empty($contenido['tiene_segundo_firmante'])
+                        || !empty($contenido['segundo_firmante']['nombre']);
+
+// Condición para usar el bloque de 2 firmantes sin consultor
+$firmasRepLegalYSegundo = $esDocResponsabilidadesRepLegal
+                          && $tieneSegundoFirmante
+                          && !$soloFirmaRepLegal;
+?>
+
+<?php if ($firmasRepLegalYSegundo): ?>
+    <!-- Bloque especial: Rep. Legal + Vigía/Delegado (sin Consultor) -->
+    <table width="100%" cellspacing="0" cellpadding="8" style="margin-top:30px; border-collapse: collapse;">
+        <tr>
+            <th width="50%" style="border:1px solid #333; background:#f5f5f5;">REPRESENTANTE LEGAL</th>
+            <th width="50%" style="border:1px solid #333; background:#f5f5f5;">
+                <?= ($estandares >= 21) ? 'VIGÍA SST' : 'DELEGADO SST' ?>
+            </th>
+        </tr>
+        <tr>
+            <td style="border:1px solid #333; height:60px; text-align:center;">
+                <!-- Firma Rep. Legal -->
+                <?php if (!empty($firmasMap['representante_legal'])): ?>
+                    <img src="<?= $firmasMap['representante_legal']['firma_imagen'] ?>"
+                         style="max-height:50px; max-width:150px;">
+                <?php endif; ?>
+            </td>
+            <td style="border:1px solid #333; height:60px; text-align:center;">
+                <!-- Firma Vigía/Delegado -->
+                <?php if (!empty($firmasMap['delegado_sst'])): ?>
+                    <img src="<?= $firmasMap['delegado_sst']['firma_imagen'] ?>"
+                         style="max-height:50px; max-width:150px;">
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td style="border:1px solid #333; padding:8px;">
+                <strong><?= esc($repLegalNombre) ?></strong><br>
+                C.C. <?= esc($repLegalCedula) ?><br>
+                Representante Legal
+            </td>
+            <td style="border:1px solid #333; padding:8px;">
+                <strong><?= esc($segundoFirmante['nombre'] ?? '') ?></strong><br>
+                C.C. <?= esc($segundoFirmante['cedula'] ?? '') ?><br>
+                <?= esc($segundoFirmante['cargo'] ?? 'Vigía SST') ?>
+            </td>
+        </tr>
+    </table>
+<?php elseif ($esFirmaFisica): ?>
+    <!-- Firma física... -->
+<?php elseif ($soloFirmaConsultor): ?>
+    <!-- Solo consultor... -->
+<?php else: ?>
+    <!-- Firmas estándar (2-3 firmantes)... -->
+<?php endif; ?>
+```
+
+**En el controlador (PzresponsabilidadesRepLegalController.php):**
+
+```php
+// Agregar datos del segundo firmante (Vigía o Delegado) al contenido
+$contenido['tiene_segundo_firmante'] = true;
+$contenido['segundo_firmante'] = [
+    'nombre' => $segundoFirmante['nombre'] ?? '',
+    'cedula' => $segundoFirmante['cedula'] ?? '',
+    'cargo' => $esDelegado ? 'Delegado SST' : 'Vigía SST'
+];
+```
+
+**Archivos modificados:**
+- `app/Views/documentos_sst/pdf_template.php` líneas 441-450, 596-653
+- `app/Views/documentos_sst/word_template.php` líneas 397-442
+
+**Regla:** Cada tipo de documento puede tener su propia configuración de firmas. Usar flags en `$contenido` y detección por `tipo_documento` para determinar qué bloque de firmas mostrar.
+
+---
+
+### 35. Logo PNG Transparencia en Word - Atributo bgcolor (Ampliación)
+
+**Problema:** Al exportar a Word, los logos PNG con transparencia aparecen con fondo negro.
+
+**Causa:** Microsoft Word no interpreta correctamente la transparencia de imágenes PNG en base64. El canal alfa se pierde y el fondo se vuelve negro.
+
+**Solución completa:** Agregar fondo blanco explícito usando AMBOS métodos:
+
+1. **Atributo HTML `bgcolor`** (Word lo entiende mejor que CSS):
+```php
+<td bgcolor="#FFFFFF" style="background-color: #ffffff;">
+```
+
+2. **CSS en la imagen también**:
+```php
+<img src="<?= $logoBase64 ?>" style="background-color: #ffffff;">
+```
+
+**En `word_template.php` (encabezado):**
+```php
+<!-- CORRECTO: bgcolor + style -->
+<td width="80" rowspan="2" align="center" valign="middle"
+    bgcolor="#FFFFFF"
+    style="border:1px solid #333; padding:5px; background-color:#ffffff;">
+    <?php if (!empty($logoBase64)): ?>
+    <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo"
+         style="background-color:#ffffff;">
+    <?php endif; ?>
+</td>
+```
+
+**En `pdf_template.php` (CSS):**
+```php
+.encabezado-logo {
+    width: 120px;
+    padding: 8px;
+    text-align: center;
+    background-color: #ffffff;  /* Fondo blanco explícito */
+}
+.encabezado-logo img {
+    max-width: 100px;
+    max-height: 60px;
+    background-color: #ffffff;  /* Fondo blanco en la imagen */
+}
+```
+
+**¿Por qué usar ambos métodos?**
+- `bgcolor="#FFFFFF"` es un atributo HTML legacy que Word interpreta correctamente
+- `style="background-color:#ffffff"` es el método CSS moderno
+- Usar ambos garantiza compatibilidad con diferentes versiones de Word
+
+**Archivos modificados:**
+- `app/Views/documentos_sst/word_template.php` líneas 207-209
+- `app/Views/documentos_sst/pdf_template.php` líneas 171-182
+
+**Regla:** Para cualquier contenedor de imágenes PNG en exports Word, SIEMPRE agregar tanto `bgcolor="#FFFFFF"` como `style="background-color:#ffffff"`.

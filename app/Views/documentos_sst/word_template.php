@@ -204,9 +204,9 @@ if (!function_exists('renderizarTablaHtml')) {
     <!-- Encabezado del documento -->
     <table width="100%" border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; border:1px solid #333; margin-bottom:15px;">
         <tr>
-            <td width="80" rowspan="2" align="center" valign="middle" style="border:1px solid #333; padding:5px; background-color: #ffffff;">
+            <td width="80" rowspan="2" align="center" valign="middle" bgcolor="#FFFFFF" style="border:1px solid #333; padding:5px; background-color:#ffffff;">
                 <?php if (!empty($logoBase64)): ?>
-                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo" style="background-color: #ffffff;">
+                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo">
                 <?php else: ?>
                 <b style="font-size:8pt;"><?= esc($cliente['nombre_cliente']) ?></b>
                 <?php endif; ?>
@@ -328,8 +328,13 @@ if (!function_exists('renderizarTablaHtml')) {
     // Documento con solo firma del Representante Legal (sin Vigia/Delegado)
     $soloFirmaRepLegal = !empty($contenido['solo_firma_rep_legal']);
 
-    // Determinar si son solo 2 firmantes (7 estándares SIN delegado)
-    $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
+    // Documento de Responsabilidades Rep. Legal con segundo firmante (Rep. Legal + Vigia/Delegado, SIN Consultor)
+    $esDocResponsabilidadesRepLegal = $tipoDoc === 'responsabilidades_rep_legal_sgsst';
+    $tieneSegundoFirmante = !empty($contenido['tiene_segundo_firmante']) || !empty($contenido['segundo_firmante']['nombre']);
+    $firmasRepLegalYSegundo = $esDocResponsabilidadesRepLegal && $tieneSegundoFirmante && !$soloFirmaRepLegal;
+
+    // Determinar si son solo 2 firmantes (7 estándares SIN delegado) - NO aplica para doc responsabilidades rep legal
+    $esSoloDosFirmantes = !$esDocResponsabilidadesRepLegal && ($estandares <= 10) && !$requiereDelegado;
 
     // Datos del Consultor desde tbl_consultor
     $consultorNombre = $consultor['nombre_consultor'] ?? '';
@@ -354,9 +359,9 @@ if (!function_exists('renderizarTablaHtml')) {
     <!-- Repetir encabezado para página de firmas -->
     <table width="100%" border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; border:1px solid #333; margin-bottom:15px;">
         <tr>
-            <td width="80" rowspan="2" align="center" valign="middle" style="border:1px solid #333; padding:5px; background-color: #ffffff;">
+            <td width="80" rowspan="2" align="center" valign="middle" bgcolor="#FFFFFF" style="border:1px solid #333; padding:5px; background-color:#ffffff;">
                 <?php if (!empty($logoBase64)): ?>
-                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo" style="background-color: #ffffff;">
+                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo">
                 <?php else: ?>
                 <b style="font-size:8pt;"><?= esc($cliente['nombre_cliente']) ?></b>
                 <?php endif; ?>
@@ -414,7 +419,7 @@ if (!function_exists('renderizarTablaHtml')) {
     <!-- ========== FIRMAS ESTÁNDAR ========== -->
     <div style="margin-top: 20px;">
         <div class="seccion-titulo" style="background-color: #198754; color: white; padding: 5px 8px; border: none;">
-            <?= ($soloFirmaConsultor || $soloFirmaRepLegal) ? 'FIRMA DE ACEPTACION' : 'FIRMAS DE APROBACION' ?>
+            <?= ($soloFirmaConsultor || $soloFirmaRepLegal) ? 'FIRMA DE ACEPTACION' : ($firmasRepLegalYSegundo ? 'FIRMAS DE ACEPTACION' : 'FIRMAS DE APROBACION') ?>
         </div>
 
         <?php if ($soloFirmaConsultor): ?>
@@ -464,6 +469,53 @@ if (!function_exists('renderizarTablaHtml')) {
                 <td style="padding: 10px; text-align: center; border: 1px solid #999; height: 60px; vertical-align: bottom;">
                     <div style="border-top: 1px solid #333; width: 40%; margin: 3px auto 0;">
                         <span style="color: #666; font-size: 7pt;">Firma</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <?php elseif ($firmasRepLegalYSegundo): ?>
+        <!-- RESPONSABILIDADES REP. LEGAL: Rep. Legal + Vigia/Delegado (SIN Consultor) -->
+        <?php
+        $segundoFirmante = $contenido['segundo_firmante'] ?? null;
+        $segundoNombre = $segundoFirmante['nombre'] ?? $delegadoNombre ?? '';
+        $segundoCedula = $segundoFirmante['cedula'] ?? '';
+        $segundoRol = $segundoFirmante['rol'] ?? ($requiereDelegado ? 'Delegado SST' : 'Vigia SST');
+        $repLegalCedulaWord2 = $contenido['representante_legal']['cedula'] ?? '';
+        ?>
+        <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
+            <tr>
+                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">REPRESENTANTE LEGAL</td>
+                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;"><?= strtoupper(esc($segundoRol)) ?></td>
+            </tr>
+            <tr>
+                <!-- REPRESENTANTE LEGAL -->
+                <td style="vertical-align: top; padding: 10px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '_________________' ?></p>
+                    <?php if (!empty($repLegalCedulaWord2)): ?>
+                    <p style="margin: 2px 0;"><b>Documento:</b> <?= esc($repLegalCedulaWord2) ?></p>
+                    <?php endif; ?>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($repLegalCargo) ?></p>
+                </td>
+                <!-- VIGIA/DELEGADO SST -->
+                <td style="vertical-align: top; padding: 10px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($segundoNombre) ? esc($segundoNombre) : '_________________' ?></p>
+                    <?php if (!empty($segundoCedula)): ?>
+                    <p style="margin: 2px 0;"><b>Documento:</b> <?= esc($segundoCedula) ?></p>
+                    <?php endif; ?>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($segundoRol) ?></p>
+                </td>
+            </tr>
+            <tr>
+                <!-- Fila de firmas alineadas -->
+                <td style="padding: 10px; text-align: center; border: 1px solid #999; height: 60px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 6pt;">Firma</span>
+                    </div>
+                </td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #999; height: 60px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 6pt;">Firma</span>
                     </div>
                 </td>
             </tr>

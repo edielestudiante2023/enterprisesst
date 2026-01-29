@@ -86,36 +86,102 @@ class DocFirmaModel extends Model
     public function registrarFirma(int $idSolicitud, array $evidencia): bool
     {
         $db = \Config\Database::connect();
-        $db->transStart();
 
-        // Actualizar solicitud
-        $this->update($idSolicitud, [
-            'estado' => 'firmado',
-            'fecha_firma' => date('Y-m-d H:i:s')
-        ]);
+        try {
+            log_message('info', "registrarFirma: Iniciando para solicitud {$idSolicitud}");
 
-        // Registrar evidencia
-        $db->table('tbl_doc_firma_evidencias')->insert([
-            'id_solicitud' => $idSolicitud,
-            'ip_address' => $evidencia['ip_address'],
-            'user_agent' => $evidencia['user_agent'],
-            'fecha_hora_utc' => gmdate('Y-m-d H:i:s'),
-            'geolocalizacion' => $evidencia['geolocalizacion'] ?? null,
-            'tipo_firma' => $evidencia['tipo_firma'],
-            'firma_imagen' => $evidencia['firma_imagen'],
-            'hash_documento' => $evidencia['hash_documento'],
-            'aceptacion_terminos' => 1,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
+            // Verificar estado actual de la solicitud
+            $solicitudActual = $this->find($idSolicitud);
+            if (!$solicitudActual) {
+                log_message('error', "registrarFirma: Solicitud {$idSolicitud} no encontrada");
+                return false;
+            }
+            log_message('info', "registrarFirma: Estado actual de solicitud: {$solicitudActual['estado']}");
 
-        // Registrar en audit log
-        $this->registrarAudit($idSolicitud, 'firma_completada', [
-            'ip' => $evidencia['ip_address'],
-            'tipo' => $evidencia['tipo_firma']
-        ]);
+            // Verificar si ya existe evidencia para esta solicitud
+            $evidenciaExistente = $db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $idSolicitud)
+                ->countAllResults();
 
-        $db->transComplete();
-        return $db->transStatus();
+            if ($evidenciaExistente > 0) {
+                log_message('warning', "registrarFirma: Ya existe evidencia para solicitud {$idSolicitud}, actualizando estado");
+                // Solo actualizar el estado si ya hay evidencia
+                $this->update($idSolicitud, [
+                    'estado' => 'firmado',
+                    'fecha_firma' => date('Y-m-d H:i:s')
+                ]);
+                return true;
+            }
+
+            $db->transStart();
+
+            // Actualizar solicitud usando query builder directo para estar en la misma transacción
+            log_message('info', "registrarFirma: Actualizando estado solicitud {$idSolicitud}");
+            $updateResult = $db->table('tbl_doc_firma_solicitudes')
+                ->where('id_solicitud', $idSolicitud)
+                ->update([
+                    'estado' => 'firmado',
+                    'fecha_firma' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+
+            if (!$updateResult) {
+                $dbError = $db->error();
+                log_message('error', "registrarFirma: Error actualizando solicitud {$idSolicitud}: " . ($dbError['message'] ?? 'Unknown'));
+            } else {
+                log_message('info', "registrarFirma: Solicitud actualizada correctamente");
+            }
+
+            // Registrar evidencia
+            log_message('info', "registrarFirma: Insertando evidencia para solicitud {$idSolicitud}");
+            $insertResult = $db->table('tbl_doc_firma_evidencias')->insert([
+                'id_solicitud' => $idSolicitud,
+                'ip_address' => $evidencia['ip_address'],
+                'user_agent' => substr($evidencia['user_agent'] ?? '', 0, 500), // Limitar longitud
+                'fecha_hora_utc' => gmdate('Y-m-d H:i:s'),
+                'geolocalizacion' => $evidencia['geolocalizacion'] ?? null,
+                'tipo_firma' => $evidencia['tipo_firma'],
+                'firma_imagen' => $evidencia['firma_imagen'],
+                'hash_documento' => $evidencia['hash_documento'],
+                'aceptacion_terminos' => 1,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            if (!$insertResult) {
+                $dbError = $db->error();
+                log_message('error', 'Error inserting firma_evidencia: ' . ($dbError['message'] ?? 'Unknown error') . ' Code: ' . ($dbError['code'] ?? 'N/A'));
+            } else {
+                log_message('info', "registrarFirma: Evidencia insertada correctamente, ID: " . $db->insertID());
+            }
+
+            // Registrar en audit log
+            log_message('info', "registrarFirma: Registrando audit log");
+            $auditResult = $db->table('tbl_doc_firma_audit_log')->insert([
+                'id_solicitud' => $idSolicitud,
+                'evento' => 'firma_completada',
+                'fecha_hora' => date('Y-m-d H:i:s'),
+                'ip_address' => $evidencia['ip_address'],
+                'detalles' => json_encode([
+                    'ip' => $evidencia['ip_address'],
+                    'tipo' => $evidencia['tipo_firma']
+                ])
+            ]);
+
+            if (!$auditResult) {
+                $dbError = $db->error();
+                log_message('error', 'Error inserting audit_log: ' . ($dbError['message'] ?? 'Unknown error'));
+            }
+
+            $db->transComplete();
+
+            $transStatus = $db->transStatus();
+            log_message('info', "registrarFirma: Transacción completada con status: " . ($transStatus ? 'SUCCESS' : 'FAILED'));
+
+            return $transStatus;
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in registrarFirma: ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return false;
+        }
     }
 
     /**
@@ -274,11 +340,13 @@ class DocFirmaModel extends Model
 
     /**
      * Genera código de verificación único para un documento firmado
+     * IMPORTANTE: Ordenar siempre por id_solicitud para garantizar consistencia
      */
     public function generarCodigoVerificacion(int $idDocumento): string
     {
         $solicitudes = $this->where('id_documento', $idDocumento)
                            ->where('estado', 'firmado')
+                           ->orderBy('id_solicitud', 'ASC')
                            ->findAll();
 
         if (empty($solicitudes)) {
@@ -286,6 +354,7 @@ class DocFirmaModel extends Model
         }
 
         // Combinar tokens de todas las firmas para crear un código único
+        // Ordenados por id_solicitud para garantizar consistencia
         $tokens = array_column($solicitudes, 'token');
         $hash = hash('sha256', implode('|', $tokens) . '|' . $idDocumento);
 

@@ -58,7 +58,12 @@
       "Bash(findstr:*)",
       "Bash(cmd /c:*)",
       "Bash(c:\\\\xampp\\\\php\\\\php.exe:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(git restore:*)",
+      "Bash(c:xamppmysqlbinmysql.exe -h db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com -P 25060 -u cycloid_userdb -pAVNS_iDypWizlpMRwHIORJGG --ssl-mode=REQUIRED empresas_sst -e \"SHOW TABLES LIKE ''tbl_doc_plantillas%'';\")",
+      "Bash(./mysql.exe -h db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com -P 25060 -u cycloid_userdb -pAVNS_iDypWizlpMRwHIORJGG --ssl empresas_sst -e \"SHOW TABLES LIKE ''tbl_doc_plantillas%'';\")",
+      "Bash(git stash push:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

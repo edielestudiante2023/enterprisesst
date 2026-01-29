@@ -90,19 +90,24 @@ class FirmaElectronicaController extends Controller
         }
 
         $contexto = $this->contextoModel->getByCliente($documento['id_cliente']);
-        $requiereDelegado = (bool) ($contexto['requiere_delegado_sst'] ?? false);
+
+        // Verificar si hay delegado/vigia configurado con datos completos
+        $tieneSegundoFirmante = !empty(trim($contexto['delegado_sst_nombre'] ?? ''))
+                             && !empty(trim($contexto['delegado_sst_email'] ?? ''));
+
         $orden = 1;
         $solicitudesCreadas = [];
+        $solicitudDelegadoCreada = false;
 
-        // 1. Crear solicitud para Delegado SST (si aplica)
-        if ($requiereDelegado && !empty($contexto['delegado_sst_email'])) {
+        // 1. Crear solicitud para Delegado/Vigia SST (solo si tiene datos completos)
+        if ($tieneSegundoFirmante) {
             $datosDelegado = [
                 'id_documento' => $idDocumento,
                 'firmante_tipo' => 'delegado_sst',
                 'firmante_email' => $contexto['delegado_sst_email'],
                 'firmante_nombre' => $contexto['delegado_sst_nombre'],
-                'firmante_cargo' => $contexto['delegado_sst_cargo'],
-                'firmante_documento' => $contexto['delegado_sst_cedula'],
+                'firmante_cargo' => $contexto['delegado_sst_cargo'] ?? 'Delegado SST',
+                'firmante_documento' => $contexto['delegado_sst_cedula'] ?? '',
                 'orden_firma' => $orden++,
                 'estado' => 'pendiente'
             ];
@@ -110,6 +115,7 @@ class FirmaElectronicaController extends Controller
             $idDelegado = $this->firmaModel->crearSolicitud($datosDelegado);
             if ($idDelegado) {
                 $solicitudesCreadas[] = $this->firmaModel->find($idDelegado);
+                $solicitudDelegadoCreada = true;
                 $this->firmaModel->registrarAudit($idDelegado, 'solicitud_creada', [
                     'creado_por' => session()->get('id_usuario'),
                     'tipo' => 'delegado_sst'
@@ -118,6 +124,7 @@ class FirmaElectronicaController extends Controller
         }
 
         // 2. Crear solicitud para Representante Legal (siempre)
+        // Estado 'esperando' solo si realmente se creó solicitud del delegado
         $datosRepLegal = [
             'id_documento' => $idDocumento,
             'firmante_tipo' => 'representante_legal',
@@ -126,7 +133,7 @@ class FirmaElectronicaController extends Controller
             'firmante_cargo' => $contexto['representante_legal_cargo'] ?? 'Representante Legal',
             'firmante_documento' => $contexto['representante_legal_cedula'] ?? '',
             'orden_firma' => $orden,
-            'estado' => $requiereDelegado ? 'esperando' : 'pendiente'
+            'estado' => $solicitudDelegadoCreada ? 'esperando' : 'pendiente'
         ];
 
         $idRepLegal = $this->firmaModel->crearSolicitud($datosRepLegal);
@@ -674,6 +681,12 @@ class FirmaElectronicaController extends Controller
             'hash_documento' => $hashDocumento
         ];
 
+        // Validar que tengamos firma
+        if (empty($firmaImagen)) {
+            log_message('error', 'Firma vacía para solicitud: ' . $solicitud['id_solicitud']);
+            return $this->response->setJSON(['success' => false, 'error' => 'La imagen de firma está vacía']);
+        }
+
         $resultado = $this->firmaModel->registrarFirma($solicitud['id_solicitud'], $evidencia);
 
         if ($resultado) {
@@ -722,7 +735,17 @@ class FirmaElectronicaController extends Controller
             ]);
         }
 
-        return $this->response->setJSON(['success' => false, 'error' => 'Error al procesar firma']);
+        // Log para debugging
+        log_message('error', 'Firma no procesada para solicitud: ' . $solicitud['id_solicitud']);
+
+        // Intentar obtener el error de la base de datos
+        $db = \Config\Database::connect();
+        $dbError = $db->error();
+        if (!empty($dbError['message'])) {
+            log_message('error', 'DB Error: ' . $dbError['message']);
+        }
+
+        return $this->response->setJSON(['success' => false, 'error' => 'Error al procesar firma. Por favor intente de nuevo.']);
     }
 
     /**
@@ -868,24 +891,40 @@ class FirmaElectronicaController extends Controller
      */
     public function verificar($codigoVerificacion)
     {
+        log_message('info', "Verificar: Buscando código {$codigoVerificacion}");
+
         // Buscar documento por código de verificación
-        // El código es un hash corto generado a partir de los tokens de firma
-        $solicitudes = $this->firmaModel->where('estado', 'firmado')->findAll();
+        // Obtener IDs únicos de documentos que tienen solicitudes firmadas
+        $documentosConFirmas = $this->db->table('tbl_doc_firma_solicitudes')
+            ->select('DISTINCT(id_documento) as id_documento')
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        log_message('info', "Verificar: Encontrados " . count($documentosConFirmas) . " documentos con firmas");
 
         $documentoEncontrado = null;
         $solicitudEncontrada = null;
+        $codigoVerificacionUpper = strtoupper($codigoVerificacion);
 
-        foreach ($solicitudes as $sol) {
-            $codigoCheck = $this->firmaModel->generarCodigoVerificacion($sol['id_documento']);
-            if ($codigoCheck === strtoupper($codigoVerificacion)) {
-                $documentoEncontrado = $this->getDocumentoSST($sol['id_documento']);
-                $solicitudEncontrada = $sol;
+        foreach ($documentosConFirmas as $doc) {
+            $codigoCheck = $this->firmaModel->generarCodigoVerificacion($doc['id_documento']);
+            log_message('info', "Verificar: Doc {$doc['id_documento']} -> Código generado: {$codigoCheck}");
+
+            if ($codigoCheck === $codigoVerificacionUpper) {
+                $documentoEncontrado = $this->getDocumentoSST($doc['id_documento']);
+                $solicitudEncontrada = $this->firmaModel
+                    ->where('id_documento', $doc['id_documento'])
+                    ->where('estado', 'firmado')
+                    ->first();
+                log_message('info', "Verificar: ¡Encontrado! Doc ID: {$doc['id_documento']}");
                 break;
             }
         }
 
         // Fallback: buscar por token directo
         if (!$documentoEncontrado) {
+            log_message('info', "Verificar: No encontrado por código, buscando por token directo");
             $solicitudEncontrada = $this->firmaModel
                 ->where('token', $codigoVerificacion)
                 ->where('estado', 'firmado')
@@ -893,10 +932,12 @@ class FirmaElectronicaController extends Controller
 
             if ($solicitudEncontrada) {
                 $documentoEncontrado = $this->getDocumentoSST($solicitudEncontrada['id_documento']);
+                log_message('info', "Verificar: Encontrado por token, Doc ID: {$solicitudEncontrada['id_documento']}");
             }
         }
 
         if (!$documentoEncontrado) {
+            log_message('warning', "Verificar: Documento NO encontrado para código {$codigoVerificacion}");
             return view('firma/verificacion', ['valido' => false]);
         }
 
@@ -926,9 +967,10 @@ class FirmaElectronicaController extends Controller
     {
         try {
             $options = new \chillerlan\QRCode\QROptions([
-                'outputType' => \chillerlan\QRCode\Common\EccLevel::L,
+                'outputType' => 'png',
+                'eccLevel' => 'L',
                 'scale' => 5,
-                'imageBase64' => true,
+                'outputBase64' => true,
             ]);
 
             $qrcode = new \chillerlan\QRCode\QRCode($options);

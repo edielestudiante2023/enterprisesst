@@ -318,12 +318,12 @@ class DocumentacionController extends Controller
 
             // Filtrar por tipo de documento segun la carpeta
             if ($tipoCarpetaFases === 'responsabilidades_sgsst') {
-                // 1.1.2: Buscar los 4 tipos de documentos de responsabilidades
+                // 1.1.2: Buscar los 3 tipos de documentos de responsabilidades
+                // Nota: Vigia/Delegado ahora esta combinado en responsabilidades_rep_legal_sgsst
                 $queryDocs->whereIn('tipo_documento', [
                     'responsabilidades_rep_legal_sgsst',
                     'responsabilidades_responsable_sgsst',
-                    'responsabilidades_trabajadores_sgsst',
-                    'responsabilidades_vigia_sgsst'
+                    'responsabilidades_trabajadores_sgsst'
                 ]);
             } elseif (isset($tipoDocBuscar)) {
                 $queryDocs->where('tipo_documento', $tipoDocBuscar);
