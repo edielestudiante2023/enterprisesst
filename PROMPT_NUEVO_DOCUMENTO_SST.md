@@ -1478,3 +1478,45 @@ $routes->post('/documentos-sst/adjuntar-firmado', 'DocumentosSSTController::adju
 | **Logo fondo negro en Word** | **PNG transparencia no soportada** | **Agregar background-color: #ffffff al contenedor** |
 | **PDF/Word con firmas incorrectas** | **Template no detecta tipo de documento** | **Agregar detección $esFirmaFisica y $soloFirmaConsultor** |
 | **Trabajadores con firma electrónica** | **Falta tipo_firma = 'fisica'** | **Agregar flag en controlador y bloque en templates** |
+| **Rep Legal muestra Vigía en vez de Delegado** | **Condición solo verifica estándares, no requiere_delegado** | **Usar $esDelegado en lugar de solo $estandares >= 21** |
+
+---
+
+## 31. Responsabilidades Rep Legal: Vigía vs Delegado SST
+
+**Problema:** El documento "Responsabilidades del Representante Legal" mostraba "Vigía SST" en el texto y las firmas, incluso cuando el cliente tiene `requiere_delegado_sst = true` configurado.
+
+**Causa:** En `PzresponsabilidadesRepLegalController.php`, la condición para agregar responsabilidades solo verificaba `$estandares >= 21`, pero no consideraba `$requiereDelegado`:
+
+```php
+// ANTES (incorrecto):
+if ($estandares >= 21) {
+    $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del COPASST...';
+    $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Comite de Convivencia...';
+} else {
+    $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Vigia de SST.'; // ← Siempre Vigía para < 21
+}
+```
+
+**Solución:** Usar la variable `$esDelegado` que ya considera ambas condiciones:
+
+```php
+// DESPUÉS (correcto):
+if ($estandares >= 21) {
+    // 21 o 60 estándares: COPASST y Comité de Convivencia
+    $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del COPASST...';
+    $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Comite de Convivencia...';
+} elseif ($esDelegado) {
+    // Menos de 21 estándares pero con Delegado SST configurado
+    $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Delegado de SST.';
+} else {
+    // 7 estándares sin Delegado: Vigía SST
+    $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Vigia de SST.';
+}
+```
+
+**Variable clave:** `$esDelegado = $requiereDelegado || $estandares >= 21;` (línea 233)
+
+**Archivo modificado:** `app/Controllers/PzresponsabilidadesRepLegalController.php` líneas 255-265
+
+**Regenerar documento:** Después de aplicar el fix, el usuario debe usar el botón "Actualizar Datos" en la vista del documento para regenerar el contenido con la lógica corregida.
