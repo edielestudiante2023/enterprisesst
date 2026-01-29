@@ -32,16 +32,21 @@ class PzresponsabilidadesRepLegalController extends Controller
     protected const CODIGO_TIPO = 'RES';
     protected const CODIGO_TEMA = 'REP';
 
-    // Nombres dinamicos segun estandares
+    // Nombres dinamicos segun estandares y configuracion
+    protected const NOMBRE_DOC_SOLO_REP_LEGAL = 'Responsabilidades del Representante Legal en el SG-SST';
     protected const NOMBRE_DOC_7_EST = 'Responsabilidades del Representante Legal y Vigia SST';
     protected const NOMBRE_DOC_21_60_EST = 'Responsabilidades del Representante Legal y Delegado SST';
 
     /**
-     * Obtiene el nombre del documento segun nivel de estandares y configuracion de delegado
-     * Si requiere_delegado_sst = true, siempre usa "Delegado SST" incluso para 7 estandares
+     * Obtiene el nombre del documento segun nivel de estandares, configuracion de delegado
+     * y si tiene segundo firmante configurado
      */
-    protected function getNombreDocumento(int $estandares, bool $requiereDelegado = false): string
+    protected function getNombreDocumento(int $estandares, bool $requiereDelegado = false, bool $tieneSegundoFirmante = true): string
     {
+        // Si no tiene segundo firmante configurado, solo Rep. Legal
+        if (!$tieneSegundoFirmante) {
+            return self::NOMBRE_DOC_SOLO_REP_LEGAL;
+        }
         // Si tiene Delegado SST configurado, usar nombre con Delegado
         if ($requiereDelegado || $estandares >= 21) {
             return self::NOMBRE_DOC_21_60_EST;
@@ -89,7 +94,8 @@ class PzresponsabilidadesRepLegalController extends Controller
 
         $estandares = (int)($contexto['estandares_aplicables'] ?? 7);
         $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
-        $nombreDocumento = $this->getNombreDocumento($estandares, $requiereDelegado);
+        $tieneSegundoFirmante = !empty(trim($contexto['delegado_sst_nombre'] ?? ''));
+        $nombreDocumento = $this->getNombreDocumento($estandares, $requiereDelegado, $tieneSegundoFirmante);
 
         // Obtener datos del consultor asignado
         $consultor = null;
@@ -187,7 +193,8 @@ class PzresponsabilidadesRepLegalController extends Controller
 
         $estandares = (int)($contexto['estandares_aplicables'] ?? 7);
         $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
-        $nombreDocumento = $this->getNombreDocumento($estandares, $requiereDelegado);
+        $tieneSegundoFirmante = !empty(trim($contexto['delegado_sst_nombre'] ?? ''));
+        $nombreDocumento = $this->getNombreDocumento($estandares, $requiereDelegado, $tieneSegundoFirmante);
 
         // Obtener datos del consultor
         $consultor = null;
@@ -227,16 +234,20 @@ class PzresponsabilidadesRepLegalController extends Controller
         $estandares = (int)($contexto['estandares_aplicables'] ?? 7);
         $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
 
-        // Determinar rol del segundo firmante:
-        // - Si requiere_delegado_sst = true O estandares >= 21: Delegado SST
-        // - Si estandares <= 7 sin delegado: Vigia SST (en la practica es lo mismo)
-        $esDelegado = $requiereDelegado || $estandares >= 21;
-        $rolSegundoFirmante = $esDelegado ? 'Delegado SST' : 'Vigia SST';
-
         // Obtener datos del segundo firmante desde delegado_sst_* (siempre)
         // En la practica, Vigia y Delegado usan los mismos campos
-        $nombreSegundoFirmante = $contexto['delegado_sst_nombre'] ?? '';
-        $cedulaSegundoFirmante = $contexto['delegado_sst_cedula'] ?? '';
+        $nombreSegundoFirmante = trim($contexto['delegado_sst_nombre'] ?? '');
+        $cedulaSegundoFirmante = trim($contexto['delegado_sst_cedula'] ?? '');
+
+        // NUEVO: Detectar si hay segundo firmante configurado
+        // Si no hay nombre del segundo firmante, el documento solo lleva firma del Rep. Legal
+        $tieneSegundoFirmante = !empty($nombreSegundoFirmante);
+
+        // Determinar rol del segundo firmante (solo si existe):
+        // - Si requiere_delegado_sst = true O estandares >= 21: Delegado SST
+        // - Si estandares <= 7 sin delegado: Vigia SST
+        $esDelegado = $requiereDelegado || $estandares >= 21;
+        $rolSegundoFirmante = $tieneSegundoFirmante ? ($esDelegado ? 'Delegado SST' : 'Vigia SST') : null;
 
         // Responsabilidades del Representante Legal segun Decreto 1072/2015 Art. 2.2.4.6.8
         $responsabilidadesRepLegal = [
@@ -253,17 +264,21 @@ class PzresponsabilidadesRepLegalController extends Controller
         ];
 
         // Agregar responsabilidades adicionales segun estandares y configuracion de Delegado
-        if ($estandares >= 21) {
-            // 21 o 60 estandares: COPASST y Comite de Convivencia
-            $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Comite Paritario de Seguridad y Salud en el Trabajo (COPASST).';
-            $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Comite de Convivencia Laboral.';
-        } elseif ($esDelegado) {
-            // Menos de 21 estandares pero con Delegado SST configurado
-            $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Delegado de Seguridad y Salud en el Trabajo.';
-        } else {
-            // 7 estandares sin Delegado: Vigia SST
-            $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Vigia de Seguridad y Salud en el Trabajo.';
+        // Solo agregar responsabilidad de COPASST/Vigia/Delegado si hay segundo firmante configurado
+        if ($tieneSegundoFirmante) {
+            if ($estandares >= 21) {
+                // 21 o 60 estandares: COPASST y Comite de Convivencia
+                $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Comite Paritario de Seguridad y Salud en el Trabajo (COPASST).';
+                $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Comite de Convivencia Laboral.';
+            } elseif ($esDelegado) {
+                // Menos de 21 estandares pero con Delegado SST configurado
+                $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Delegado de Seguridad y Salud en el Trabajo.';
+            } else {
+                // 7 estandares con Vigia SST
+                $responsabilidadesRepLegal[] = 'Garantizar el funcionamiento del Vigia de Seguridad y Salud en el Trabajo.';
+            }
         }
+        // Si no tiene segundo firmante, no se agrega responsabilidad de Vigia/Delegado/COPASST
 
         $responsabilidadesRepLegal[] = 'Realizar la evaluacion anual del SG-SST.';
         $responsabilidadesRepLegal[] = 'Implementar acciones correctivas, preventivas y de mejora segun los resultados de la evaluacion.';
@@ -310,65 +325,92 @@ class PzresponsabilidadesRepLegalController extends Controller
             'Facilitar las auditorias e inspecciones de entidades de control.',
         ];
 
-        // Seleccionar responsabilidades segun rol (Delegado o Vigia)
-        $responsabilidadesSegundoRol = $esDelegado ? $responsabilidadesDelegado : $responsabilidadesVigia;
+        // Seleccionar responsabilidades segun rol (Delegado o Vigia) - solo si hay segundo firmante
+        $responsabilidadesSegundoRol = $tieneSegundoFirmante
+            ? ($esDelegado ? $responsabilidadesDelegado : $responsabilidadesVigia)
+            : [];
 
-        // Textos dinamicos segun el rol
-        $tituloObjeto = $esDelegado
-            ? "Establecer las responsabilidades del Representante Legal y del Delegado SST de <strong>{$nombreCliente}</strong> en el Sistema de Gestion de Seguridad y Salud en el Trabajo (SG-SST), de conformidad con el Decreto 1072 de 2015 y la Resolucion 0312 de 2019."
-            : "Establecer las responsabilidades del Representante Legal y del Vigia de Seguridad y Salud en el Trabajo de <strong>{$nombreCliente}</strong> en el Sistema de Gestion de Seguridad y Salud en el Trabajo (SG-SST), de conformidad con el Decreto 1072 de 2015 y la Resolucion 0312 de 2019.";
+        // Textos dinamicos segun si hay segundo firmante y su rol
+        if (!$tieneSegundoFirmante) {
+            // Solo Representante Legal
+            $tituloObjeto = "Establecer las responsabilidades del Representante Legal de <strong>{$nombreCliente}</strong> en el Sistema de Gestion de Seguridad y Salud en el Trabajo (SG-SST), de conformidad con el Decreto 1072 de 2015 y la Resolucion 0312 de 2019.";
+            $tituloAlcance = "Este documento aplica al Representante Legal de <strong>{$nombreCliente}</strong>, estableciendo sus responsabilidades especificas en materia de Seguridad y Salud en el Trabajo.";
+        } elseif ($esDelegado) {
+            // Representante Legal + Delegado SST
+            $tituloObjeto = "Establecer las responsabilidades del Representante Legal y del Delegado SST de <strong>{$nombreCliente}</strong> en el Sistema de Gestion de Seguridad y Salud en el Trabajo (SG-SST), de conformidad con el Decreto 1072 de 2015 y la Resolucion 0312 de 2019.";
+            $tituloAlcance = "Este documento aplica al Representante Legal y al Delegado SST de <strong>{$nombreCliente}</strong>, estableciendo sus responsabilidades especificas en materia de Seguridad y Salud en el Trabajo.";
+        } else {
+            // Representante Legal + Vigia SST
+            $tituloObjeto = "Establecer las responsabilidades del Representante Legal y del Vigia de Seguridad y Salud en el Trabajo de <strong>{$nombreCliente}</strong> en el Sistema de Gestion de Seguridad y Salud en el Trabajo (SG-SST), de conformidad con el Decreto 1072 de 2015 y la Resolucion 0312 de 2019.";
+            $tituloAlcance = "Este documento aplica al Representante Legal y al Vigia de Seguridad y Salud en el Trabajo de <strong>{$nombreCliente}</strong>, estableciendo sus responsabilidades especificas en materia de Seguridad y Salud en el Trabajo.";
+        }
 
-        $tituloAlcance = $esDelegado
-            ? "Este documento aplica al Representante Legal y al Delegado SST de <strong>{$nombreCliente}</strong>, estableciendo sus responsabilidades especificas en materia de Seguridad y Salud en el Trabajo."
-            : "Este documento aplica al Representante Legal y al Vigia de Seguridad y Salud en el Trabajo de <strong>{$nombreCliente}</strong>, estableciendo sus responsabilidades especificas en materia de Seguridad y Salud en el Trabajo.";
+        // Construir secciones base (siempre presentes)
+        $secciones = [
+            [
+                'key' => 'objeto',
+                'titulo' => '1. OBJETO',
+                'contenido' => $tituloObjeto,
+                'aprobado' => true
+            ],
+            [
+                'key' => 'alcance',
+                'titulo' => '2. ALCANCE',
+                'contenido' => $tituloAlcance,
+                'aprobado' => true
+            ],
+            [
+                'key' => 'responsabilidades_rep_legal',
+                'titulo' => '3. RESPONSABILIDADES DEL REPRESENTANTE LEGAL',
+                'contenido' => $this->formatearResponsabilidades($responsabilidadesRepLegal, 'El Representante Legal tiene las siguientes responsabilidades segun el Decreto 1072 de 2015, Articulo 2.2.4.6.8:'),
+                'aprobado' => true
+            ],
+        ];
 
-        $tituloResponsabilidadesSegundo = $esDelegado
-            ? '4. RESPONSABILIDADES DEL DELEGADO SST'
-            : '4. RESPONSABILIDADES DEL VIGIA SST';
+        // Agregar secciones del segundo firmante solo si existe
+        if ($tieneSegundoFirmante) {
+            $tituloResponsabilidadesSegundo = $esDelegado
+                ? '4. RESPONSABILIDADES DEL DELEGADO SST'
+                : '4. RESPONSABILIDADES DEL VIGIA SST';
 
-        $introResponsabilidadesSegundo = $esDelegado
-            ? 'El Delegado SST, como facilitador interno del Sistema de Gestion de Seguridad y Salud en el Trabajo, tiene las siguientes responsabilidades:'
-            : 'El Vigia de Seguridad y Salud en el Trabajo tiene las siguientes responsabilidades segun la Resolucion 2013 de 1986 y el Decreto 1072 de 2015:';
+            $introResponsabilidadesSegundo = $esDelegado
+                ? 'El Delegado SST, como facilitador interno del Sistema de Gestion de Seguridad y Salud en el Trabajo, tiene las siguientes responsabilidades:'
+                : 'El Vigia de Seguridad y Salud en el Trabajo tiene las siguientes responsabilidades segun la Resolucion 2013 de 1986 y el Decreto 1072 de 2015:';
+
+            $secciones[] = [
+                'key' => 'responsabilidades_segundo_rol',
+                'titulo' => $tituloResponsabilidadesSegundo,
+                'contenido' => $this->formatearResponsabilidades($responsabilidadesSegundoRol, $introResponsabilidadesSegundo),
+                'aprobado' => true
+            ];
+
+            // Compromiso Rep Legal (numeracion dinamica)
+            $secciones[] = [
+                'key' => 'compromiso_rep_legal',
+                'titulo' => '5. COMPROMISO DEL REPRESENTANTE LEGAL',
+                'contenido' => "Yo, <strong>{$nombreRepLegal}</strong>, identificado(a) con documento de identidad <strong>{$cedulaRepLegal}</strong>, en calidad de Representante Legal de <strong>{$nombreCliente}</strong>, declaro conocer y asumir las responsabilidades descritas en el presente documento, comprometiendome a su cumplimiento efectivo.",
+                'aprobado' => true
+            ];
+
+            // Compromiso segundo firmante
+            $secciones[] = [
+                'key' => 'compromiso_segundo_rol',
+                'titulo' => '6. COMPROMISO DEL ' . strtoupper($rolSegundoFirmante),
+                'contenido' => "Yo, <strong>{$nombreSegundoFirmante}</strong>, identificado(a) con documento de identidad <strong>{$cedulaSegundoFirmante}</strong>, en calidad de {$rolSegundoFirmante} de <strong>{$nombreCliente}</strong>, declaro conocer y asumir las responsabilidades descritas en el presente documento, comprometiendome a su cumplimiento efectivo.",
+                'aprobado' => true
+            ];
+        } else {
+            // Sin segundo firmante: solo compromiso del Rep Legal
+            $secciones[] = [
+                'key' => 'compromiso_rep_legal',
+                'titulo' => '4. COMPROMISO DEL REPRESENTANTE LEGAL',
+                'contenido' => "Yo, <strong>{$nombreRepLegal}</strong>, identificado(a) con documento de identidad <strong>{$cedulaRepLegal}</strong>, en calidad de Representante Legal de <strong>{$nombreCliente}</strong>, declaro conocer y asumir las responsabilidades descritas en el presente documento, comprometiendome a su cumplimiento efectivo.",
+                'aprobado' => true
+            ];
+        }
 
         return [
-            'secciones' => [
-                [
-                    'key' => 'objeto',
-                    'titulo' => '1. OBJETO',
-                    'contenido' => $tituloObjeto,
-                    'aprobado' => true
-                ],
-                [
-                    'key' => 'alcance',
-                    'titulo' => '2. ALCANCE',
-                    'contenido' => $tituloAlcance,
-                    'aprobado' => true
-                ],
-                [
-                    'key' => 'responsabilidades_rep_legal',
-                    'titulo' => '3. RESPONSABILIDADES DEL REPRESENTANTE LEGAL',
-                    'contenido' => $this->formatearResponsabilidades($responsabilidadesRepLegal, 'El Representante Legal tiene las siguientes responsabilidades segun el Decreto 1072 de 2015, Articulo 2.2.4.6.8:'),
-                    'aprobado' => true
-                ],
-                [
-                    'key' => 'responsabilidades_segundo_rol',
-                    'titulo' => $tituloResponsabilidadesSegundo,
-                    'contenido' => $this->formatearResponsabilidades($responsabilidadesSegundoRol, $introResponsabilidadesSegundo),
-                    'aprobado' => true
-                ],
-                [
-                    'key' => 'compromiso_rep_legal',
-                    'titulo' => '5. COMPROMISO DEL REPRESENTANTE LEGAL',
-                    'contenido' => "Yo, <strong>{$nombreRepLegal}</strong>, identificado(a) con documento de identidad <strong>{$cedulaRepLegal}</strong>, en calidad de Representante Legal de <strong>{$nombreCliente}</strong>, declaro conocer y asumir las responsabilidades descritas en el presente documento, comprometiendome a su cumplimiento efectivo.",
-                    'aprobado' => true
-                ],
-                [
-                    'key' => 'compromiso_segundo_rol',
-                    'titulo' => '6. COMPROMISO DEL ' . strtoupper($rolSegundoFirmante),
-                    'contenido' => "Yo, <strong>{$nombreSegundoFirmante}</strong>, identificado(a) con documento de identidad <strong>{$cedulaSegundoFirmante}</strong>, en calidad de {$rolSegundoFirmante} de <strong>{$nombreCliente}</strong>, declaro conocer y asumir las responsabilidades descritas en el presente documento, comprometiendome a su cumplimiento efectivo.",
-                    'aprobado' => true
-                ],
-            ],
+            'secciones' => $secciones,
             'empresa' => [
                 'nombre' => $nombreCliente,
                 'nit' => $cliente['nit_cliente'] ?? ''
@@ -377,19 +419,22 @@ class PzresponsabilidadesRepLegalController extends Controller
             'estandares_aplicables' => $estandares,
             'requiere_delegado' => $requiereDelegado,
             'es_delegado' => $esDelegado,
+            'tiene_segundo_firmante' => $tieneSegundoFirmante,
             'rol_segundo_firmante' => $rolSegundoFirmante,
             'representante_legal' => [
                 'nombre' => $nombreRepLegal,
                 'cedula' => $cedulaRepLegal
             ],
-            'segundo_firmante' => [
+            'segundo_firmante' => $tieneSegundoFirmante ? [
                 'nombre' => $nombreSegundoFirmante,
                 'cedula' => $cedulaSegundoFirmante,
                 'rol' => $rolSegundoFirmante
-            ],
+            ] : null,
             'responsabilidades_rep_legal' => $responsabilidadesRepLegal,
             'responsabilidades_segundo_rol' => $responsabilidadesSegundoRol,
-            'fecha_generacion' => date('Y-m-d H:i:s')
+            'fecha_generacion' => date('Y-m-d H:i:s'),
+            // Flag para templates: solo firma del Rep. Legal si no hay segundo firmante
+            'solo_firma_rep_legal' => !$tieneSegundoFirmante
         ];
     }
 
@@ -494,7 +539,8 @@ class PzresponsabilidadesRepLegalController extends Controller
         // Recalcular estandares despues de posible actualizacion
         $estandares = (int)($contexto['estandares_aplicables'] ?? 7);
         $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
-        $nombreDocumento = $this->getNombreDocumento($estandares, $requiereDelegado);
+        $tieneSegundoFirmante = !empty(trim($contexto['delegado_sst_nombre'] ?? ''));
+        $nombreDocumento = $this->getNombreDocumento($estandares, $requiereDelegado, $tieneSegundoFirmante);
 
         // Obtener consultor
         $consultor = null;

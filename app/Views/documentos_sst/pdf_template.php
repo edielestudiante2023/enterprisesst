@@ -438,6 +438,9 @@ if (!function_exists('renderizarTablaPdf')) {
     $soloFirmaConsultor = !empty($contenido['solo_firma_consultor'])
         || $tipoDoc === 'responsabilidades_responsable_sgsst';
 
+    // Documento con solo firma del Representante Legal (sin Vigia/Delegado)
+    $soloFirmaRepLegal = !empty($contenido['solo_firma_rep_legal']);
+
     // Determinar si son solo 2 firmantes (7 estándares SIN delegado)
     $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
 
@@ -550,6 +553,41 @@ if (!function_exists('renderizarTablaPdf')) {
                     <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 50%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666;">Firma</small>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <?php elseif ($soloFirmaRepLegal): ?>
+        <!-- ========== SOLO FIRMA DEL REPRESENTANTE LEGAL (sin Vigia/Delegado) ========== -->
+        <table class="tabla-contenido" style="width: 100%; margin-top: 0;">
+            <tr>
+                <th style="width: 100%; background-color: #e9ecef; color: #333;">Aprobó / Representante Legal</th>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 15px; height: 120px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="width: 60%;">
+                            <div style="margin-bottom: 8px;"><strong>Nombre:</strong> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '________________________' ?></div>
+                            <div style="margin-bottom: 8px;"><strong>Cargo:</strong> <?= esc($repLegalCargo) ?></div>
+                            <?php
+                            $repLegalCedula = $contenido['representante_legal']['cedula'] ?? '';
+                            if (!empty($repLegalCedula)):
+                            ?>
+                            <div style="margin-bottom: 8px;"><strong>Documento:</strong> <?= esc($repLegalCedula) ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div style="width: 35%; text-align: center; padding-top: 10px;">
+                            <?php
+                            $firmaRepLegalPdf = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+                            if ($firmaRepLegalPdf && !empty($firmaRepLegalPdf['evidencia']['firma_imagen'])):
+                            ?>
+                                <img src="<?= $firmaRepLegalPdf['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 60px; max-width: 150px;"><br>
+                            <?php endif; ?>
+                            <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
+                                <small style="color: #666;">Firma</small>
+                            </div>
+                        </div>
                     </div>
                 </td>
             </tr>

@@ -189,8 +189,10 @@
 
             <!-- Info del documento -->
             <?php
+            $tieneSegundoFirmante = $contenido['tiene_segundo_firmante'] ?? !empty($contenido['segundo_firmante']['nombre']);
             $esDelegado = $contenido['es_delegado'] ?? (($contenido['estandares_aplicables'] ?? 7) >= 21 || !empty($contenido['requiere_delegado']));
             $rolSegundoFirmante = $contenido['rol_segundo_firmante'] ?? ($esDelegado ? 'Delegado SST' : 'Vigia SST');
+            $soloFirmaRepLegal = $contenido['solo_firma_rep_legal'] ?? !$tieneSegundoFirmante;
             ?>
             <div class="info-documento no-print">
                 <div class="row">
@@ -204,7 +206,11 @@
                     </div>
                     <div class="col-md-4">
                         <small class="text-muted">Requiere firma de:</small>
-                        <span class="fw-bold text-primary">Representante Legal + <?= esc($rolSegundoFirmante) ?></span>
+                        <?php if ($soloFirmaRepLegal): ?>
+                            <span class="fw-bold text-primary">Representante Legal</span>
+                        <?php else: ?>
+                            <span class="fw-bold text-primary">Representante Legal + <?= esc($rolSegundoFirmante) ?></span>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -305,19 +311,64 @@
             $repLegalCedula = $contenido['representante_legal']['cedula'] ?? '';
             $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
 
-            // Segundo firmante (Vigia o Delegado)
-            $segundoFirmante = $contenido['segundo_firmante'] ?? [];
+            // Segundo firmante (Vigia o Delegado) - solo si existe
+            $segundoFirmante = $contenido['segundo_firmante'] ?? null;
             $segundoNombre = $segundoFirmante['nombre'] ?? '';
             $segundoCedula = $segundoFirmante['cedula'] ?? '';
-            $segundoRol = $segundoFirmante['rol'] ?? $rolSegundoFirmante;
+            $segundoRol = $segundoFirmante['rol'] ?? $rolSegundoFirmante ?? '';
             $firmaSegundo = ($firmasElectronicas ?? [])['vigia_sst'] ?? ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
             ?>
 
             <div class="firma-section" style="margin-top: 40px; page-break-inside: avoid;">
                 <div class="seccion-titulo" style="background: linear-gradient(90deg, #198754, #20c997); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
-                    <i class="bi bi-pen me-2"></i>FIRMAS DE ACEPTACION
+                    <i class="bi bi-pen me-2"></i><?= $soloFirmaRepLegal ? 'FIRMA DE ACEPTACION' : 'FIRMAS DE ACEPTACION' ?>
                 </div>
 
+                <?php if ($soloFirmaRepLegal): ?>
+                <!-- SOLO FIRMA DEL REPRESENTANTE LEGAL -->
+                <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <tbody>
+                        <tr>
+                            <td style="vertical-align: top; padding: 25px; height: 200px; position: relative; width: 100%;">
+                                <div class="text-center mb-3">
+                                    <strong style="color: #495057; font-size: 1rem;">REPRESENTANTE LEGAL</strong>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div style="margin-bottom: 10px;">
+                                            <strong style="color: #495057;">Nombre:</strong>
+                                            <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px; padding-bottom: 2px;">
+                                                <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '' ?>
+                                            </span>
+                                        </div>
+                                        <div style="margin-bottom: 10px;">
+                                            <strong style="color: #495057;">Documento:</strong>
+                                            <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 150px; padding-bottom: 2px;">
+                                                <?= !empty($repLegalCedula) ? esc($repLegalCedula) : '' ?>
+                                            </span>
+                                        </div>
+                                        <div style="margin-bottom: 10px;">
+                                            <strong style="color: #495057;">Cargo:</strong>
+                                            <span>Representante Legal</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div style="text-align: center; margin-top: 20px;">
+                                            <?php if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])): ?>
+                                                <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 70px; max-width: 180px; margin-bottom: 5px;">
+                                            <?php endif; ?>
+                                            <div style="border-top: 1px solid #333; width: 80%; margin: 0 auto; padding-top: 5px;">
+                                                <small style="color: #666;">Firma</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <?php else: ?>
+                <!-- DOS FIRMANTES: Rep. Legal + Vigia/Delegado -->
                 <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
                     <tbody>
                         <tr>
@@ -384,6 +435,7 @@
                         </tr>
                     </tbody>
                 </table>
+                <?php endif; ?>
             </div>
 
             <!-- Pie de documento -->
@@ -432,7 +484,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-<?= $soloFirmaRepLegal ? '12' : '6' ?>">
                             <h6 class="text-primary mb-3"><i class="bi bi-person-badge me-1"></i>Representante Legal</h6>
                             <div class="mb-3">
                                 <label for="regenerarRepLegalNombre" class="form-label">Nombre</label>
@@ -445,8 +497,9 @@
                                        value="<?= esc($contenido['representante_legal']['cedula'] ?? '') ?>">
                             </div>
                         </div>
+                        <?php if (!$soloFirmaRepLegal): ?>
                         <div class="col-md-6">
-                            <h6 class="text-success mb-3"><i class="bi bi-person-check me-1"></i><?= esc($rolSegundoFirmante) ?></h6>
+                            <h6 class="text-success mb-3"><i class="bi bi-person-check me-1"></i><?= esc($rolSegundoFirmante ?? 'Vigia/Delegado SST') ?></h6>
                             <div class="mb-3">
                                 <label for="regenerarSegundoNombre" class="form-label">Nombre</label>
                                 <input type="text" class="form-control" id="regenerarSegundoNombre"
@@ -458,13 +511,24 @@
                                        value="<?= esc($contenido['segundo_firmante']['cedula'] ?? '') ?>">
                             </div>
                         </div>
+                        <?php else: ?>
+                        <input type="hidden" id="regenerarSegundoNombre" value="">
+                        <input type="hidden" id="regenerarSegundoCedula" value="">
+                        <?php endif; ?>
                     </div>
+
+                    <?php if ($soloFirmaRepLegal): ?>
+                    <div class="alert alert-secondary">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <small>Este documento solo requiere firma del Representante Legal. Si desea agregar un Vigia o Delegado SST, configure los datos en el contexto del cliente.</small>
+                    </div>
+                    <?php endif; ?>
 
                     <hr>
                     <div class="mb-3">
                         <label for="descripcionCambio" class="form-label">Descripcion del cambio</label>
                         <textarea class="form-control" id="descripcionCambio" rows="2"
-                                  placeholder="Ej: Cambio de representante legal o vigia/delegado"></textarea>
+                                  placeholder="Ej: Cambio de representante legal"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
