@@ -264,7 +264,11 @@ class ClienteDocumentosSstController extends Controller
         $mapa = [
             'PRG-CAP' => 'programa_capacitacion',
             'ASG-RES' => 'asignacion_responsable_sgsst',
-            // Agregar mas mapeos segun se creen documentos
+            // 1.1.2 Responsabilidades en el SG-SST (4 documentos)
+            'RES-REP' => 'responsabilidades_rep_legal_sgsst',
+            'RES-SST' => 'responsabilidades_responsable_sgsst',
+            'RES-TRA' => 'responsabilidades_trabajadores_sgsst',
+            'RES-VIG' => 'responsabilidades_vigia_sgsst',
         ];
 
         return $mapa[$codigoPlantilla] ?? null;
