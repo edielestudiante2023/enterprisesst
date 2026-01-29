@@ -983,6 +983,189 @@ $seccionesListas = $todasSeccionesListas ?? false;
 
 ---
 
+### 22. Configurar Acceso en carpeta.php para Nuevos Documentos
+
+**Problema:** Creaste el controlador, la vista y las rutas, pero al entrar a la carpeta no aparece el botón para crear el documento.
+
+**Causa:** La vista `carpeta.php` usa `$tipoCarpetaFases` para decidir qué botones mostrar. Si no configuras el tipo de carpeta, no aparece nada.
+
+**Solucion - 3 pasos obligatorios:**
+
+**Paso 1: Agregar detección en DocumentacionController.php**
+
+```php
+// En determinarTipoCarpetaFases()
+protected function determinarTipoCarpetaFases(array $carpeta): ?string
+{
+    $nombre = strtolower($carpeta['nombre'] ?? '');
+    $codigo = strtolower($carpeta['codigo'] ?? '');
+
+    // ... otros tipos existentes ...
+
+    // AGREGAR: Detectar tu nueva carpeta por código o nombre
+    if ($codigo === '1.1.2' || strpos($nombre, 'responsabilidades') !== false) {
+        return 'responsabilidades_sgsst';  // <-- Tu nuevo tipo
+    }
+
+    return null;
+}
+```
+
+**Paso 2: Agregar tipo al array de documentos SST**
+
+```php
+// En carpeta() de DocumentacionController.php - buscar la línea con in_array
+if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst'])) {
+    // ^^^^ AGREGAR tu nuevo tipo aquí
+```
+
+**Paso 3: Agregar condición en carpeta.php para el botón**
+
+```php
+// En carpeta.php - sección de botones (~línea 280)
+<?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsabilidades_sgsst'): ?>
+    <!-- Tu botón o dropdown aquí -->
+    <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-tu-documento') ?>" method="post">
+        <button type="submit" class="btn btn-success">Generar Documento</button>
+    </form>
+<?php elseif ...
+```
+
+**Regla:** Sin estos 3 pasos, el documento NO aparecerá en la interfaz aunque el controlador y rutas existan.
+
+---
+
+### 23. Múltiples Documentos en Una Carpeta (Patrón Dropdown)
+
+**Problema:** Una carpeta contiene varios documentos relacionados (ej: 1.1.2 tiene 4 documentos de responsabilidades).
+
+**Solucion:** Usar dropdown en lugar de botón único.
+
+**Paso 1: En DocumentacionController - obtener todos los tipos**
+
+```php
+// En carpeta() - buscar documentos de múltiples tipos
+if ($tipoCarpetaFases === 'responsabilidades_sgsst') {
+    $queryDocs->whereIn('tipo_documento', [
+        'responsabilidades_rep_legal_sgsst',
+        'responsabilidades_responsable_sgsst',
+        'responsabilidades_trabajadores_sgsst',
+        'responsabilidades_vigia_sgsst'
+    ]);
+}
+```
+
+**Paso 2: Si necesitas filtrar por nivel de estándares, pasar contextoCliente**
+
+```php
+// En carpeta() - obtener contexto del cliente
+$contextoCliente = null;
+if ($tipoCarpetaFases === 'responsabilidades_sgsst') {
+    $db = \Config\Database::connect();
+    $contextoCliente = $db->table('tbl_cliente_contexto_sst')
+        ->where('id_cliente', $cliente['id_cliente'])
+        ->get()
+        ->getRowArray();
+}
+
+// Pasar a la vista
+return view('documentacion/carpeta', [
+    // ... otros datos ...
+    'contextoCliente' => $contextoCliente ?? null
+]);
+```
+
+**Paso 3: En carpeta.php - crear dropdown con filtro**
+
+```php
+<?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsabilidades_sgsst'): ?>
+    <?php
+    $nivelEstandares = $contextoCliente['estandares_aplicables'] ?? 60;
+    $docsExistentesTipos = [];
+    if (!empty($documentosSSTAprobados)) {
+        foreach ($documentosSSTAprobados as $d) {
+            if ($d['anio'] == date('Y')) {
+                $docsExistentesTipos[$d['tipo_documento']] = true;
+            }
+        }
+    }
+    ?>
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo Documento
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <?php if (!isset($docsExistentesTipos['tipo_doc_1'])): ?>
+            <li>
+                <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-doc-1') ?>" method="post">
+                    <button type="submit" class="dropdown-item">Documento 1</button>
+                </form>
+            </li>
+            <?php endif; ?>
+
+            <!-- Documento condicional (solo 7 estándares) -->
+            <?php if ($nivelEstandares <= 7 && !isset($docsExistentesTipos['tipo_doc_vigia'])): ?>
+            <li>
+                <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-vigia') ?>" method="post">
+                    <button type="submit" class="dropdown-item">Vigía SST (Solo 7 est.)</button>
+                </form>
+            </li>
+            <?php endif; ?>
+        </ul>
+    </div>
+<?php endif; ?>
+```
+
+**Paso 4: Configurar URLs de visualización para cada tipo**
+
+```php
+// En carpeta.php - sección de acciones de la tabla
+$mapaRutas = [
+    'responsabilidades_rep_legal_sgsst' => 'responsabilidades-rep-legal/' . $docSST['id_documento'],
+    'responsabilidades_responsable_sgsst' => 'responsabilidades-responsable-sst/' . $docSST['id_documento'],
+    // ... agregar todos los tipos
+];
+
+if (isset($mapaRutas[$tipoDoc])) {
+    $urlVer = base_url('documentos-sst/' . $cliente['id_cliente'] . '/' . $mapaRutas[$tipoDoc]);
+}
+```
+
+**Regla:** Cuando una carpeta tiene múltiples documentos:
+1. Usar `whereIn()` para obtener todos los tipos
+2. Pasar `$contextoCliente` si hay filtros por estándares
+3. Crear dropdown con verificación de documentos existentes
+4. Configurar mapa de URLs para cada tipo de documento
+
+---
+
+### 24. Checklist Ampliado para Documentos con Acceso en Carpeta
+
+```
+[ ] BLOQUE CONSULTOR
+    [ ] Controlador creado/actualizado
+    [ ] Vista previa creada
+    [ ] Rutas agregadas en Routes.php
+
+[ ] BLOQUE ACCESO EN CARPETA (NUEVO)
+    [ ] determinarTipoCarpetaFases() - agregar detección del tipo
+    [ ] in_array() en carpeta() - agregar tipo para obtener documentos
+    [ ] carpeta.php - agregar condición para botón/dropdown
+    [ ] Si múltiples docs: configurar dropdown con filtros
+    [ ] Si filtro por estándares: pasar contextoCliente
+    [ ] Configurar mapaRutas para URLs de visualización
+
+[ ] BLOQUE CLIENTE
+    [ ] Mapeo en mapearPlantillaATipoDocumento()
+
+[ ] BLOQUE BASE DE DATOS
+    [ ] Script de migracion creado
+    [ ] Ejecutado en LOCAL
+    [ ] Ejecutado en PRODUCCION
+```
+
+---
+
 ## RESUMEN RAPIDO DE ERRORES COMUNES
 
 | Error | Causa | Solucion Rapida |
@@ -993,3 +1176,6 @@ $seccionesListas = $todasSeccionesListas ?? false;
 | Firma pixelada | Sin devicePixelRatio | Agregar dpr al canvas |
 | Boton volver error | URL incorrecta | Usar base_url + id_cliente |
 | Aprobado sin firmas | Flujo incorrecto | Firmar ANTES de aprobar |
+| **Botón no aparece en carpeta** | **Falta tipo en determinarTipoCarpetaFases** | **Agregar detección + in_array + condición en vista** |
+| **Dropdown vacío** | **Falta whereIn para múltiples tipos** | **Agregar todos los tipo_documento al whereIn** |
+| **Documento Vigía aparece siempre** | **Falta filtro por estándares** | **Pasar contextoCliente y verificar nivelEstandares <= 7** |
