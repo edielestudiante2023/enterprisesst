@@ -298,16 +298,34 @@ class DocumentacionController extends Controller
             }
         }
 
+        // Obtener contexto del cliente para nivel de estándares (necesario para 1.1.2)
+        $contextoCliente = null;
+        if ($tipoCarpetaFases === 'responsabilidades_sgsst') {
+            $db = \Config\Database::connect();
+            $contextoCliente = $db->table('tbl_cliente_contexto_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->get()
+                ->getRowArray();
+        }
+
         // Obtener documentos SST aprobados para mostrar en tabla
         $documentosSSTAprobados = [];
-        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst'])) {
+        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst'])) {
             $db = \Config\Database::connect();
             $queryDocs = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
                 ->whereIn('estado', ['borrador', 'generado', 'aprobado', 'firmado', 'pendiente_firma']);
 
             // Filtrar por tipo de documento segun la carpeta
-            if (isset($tipoDocBuscar)) {
+            if ($tipoCarpetaFases === 'responsabilidades_sgsst') {
+                // 1.1.2: Buscar los 4 tipos de documentos de responsabilidades
+                $queryDocs->whereIn('tipo_documento', [
+                    'responsabilidades_rep_legal_sgsst',
+                    'responsabilidades_responsable_sgsst',
+                    'responsabilidades_trabajadores_sgsst',
+                    'responsabilidades_vigia_sgsst'
+                ]);
+            } elseif (isset($tipoDocBuscar)) {
                 $queryDocs->where('tipo_documento', $tipoDocBuscar);
             }
 
@@ -364,7 +382,8 @@ class DocumentacionController extends Controller
             'fasesInfo' => $fasesInfo,
             'tipoCarpetaFases' => $tipoCarpetaFases,
             'documentoExistente' => $documentoExistente,
-            'documentosSSTAprobados' => $documentosSSTAprobados
+            'documentosSSTAprobados' => $documentosSSTAprobados,
+            'contextoCliente' => $contextoCliente ?? null
         ]);
     }
 
@@ -390,9 +409,14 @@ class DocumentacionController extends Controller
         }
 
         // 1.1.1. Responsable del SG-SST (Ciclo Planear)
-        if (strpos($nombre, 'responsable') !== false ||
-            $codigo === '1.1.1') {
+        if ($codigo === '1.1.1' ||
+            (strpos($nombre, 'responsable') !== false && strpos($nombre, 'responsabilidades') === false)) {
             return 'responsables_sst';
+        }
+
+        // 1.1.2. Responsabilidades en el SG-SST (4 documentos separados)
+        if ($codigo === '1.1.2' || strpos($nombre, 'responsabilidades') !== false) {
+            return 'responsabilidades_sgsst';
         }
 
         return null;

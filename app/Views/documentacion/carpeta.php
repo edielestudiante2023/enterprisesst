@@ -277,6 +277,65 @@
                             <button type="button" class="btn btn-secondary" disabled title="Complete las fases previas">
                                 <i class="bi bi-lock me-1"></i>Crear con IA
                             </button>
+                        <?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsabilidades_sgsst'): ?>
+                            <!-- 1.1.2: Dropdown con los 4 documentos de responsabilidades -->
+                            <?php
+                            $nivelEstandares = $contextoCliente['estandares_aplicables'] ?? 60;
+                            $docsExistentesTipos = [];
+                            if (!empty($documentosSSTAprobados)) {
+                                foreach ($documentosSSTAprobados as $d) {
+                                    if ($d['anio'] == date('Y')) {
+                                        $docsExistentesTipos[$d['tipo_documento']] = true;
+                                    }
+                                }
+                            }
+                            ?>
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-plus-lg me-1"></i>Nuevo Documento
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <?php if (!isset($docsExistentesTipos['responsabilidades_rep_legal_sgsst'])): ?>
+                                    <li>
+                                        <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-responsabilidades-rep-legal') ?>" method="post">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-person-badge me-2 text-primary"></i>Resp. Representante Legal
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <?php endif; ?>
+                                    <?php if (!isset($docsExistentesTipos['responsabilidades_responsable_sgsst'])): ?>
+                                    <li>
+                                        <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-responsabilidades-responsable-sst') ?>" method="post">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-person-gear me-2 text-success"></i>Resp. Responsable SG-SST
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <?php endif; ?>
+                                    <?php if (!isset($docsExistentesTipos['responsabilidades_trabajadores_sgsst'])): ?>
+                                    <li>
+                                        <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-responsabilidades-trabajadores') ?>" method="post">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-people me-2 text-warning"></i>Resp. Trabajadores (Imprimible)
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <?php endif; ?>
+                                    <?php if ($nivelEstandares <= 7 && !isset($docsExistentesTipos['responsabilidades_vigia_sgsst'])): ?>
+                                    <li>
+                                        <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-responsabilidades-vigia-sst') ?>" method="post">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-eye me-2 text-info"></i>Resp. Vigia SST (Solo 7 est.)
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <?php endif; ?>
+                                    <?php if (count($docsExistentesTipos) >= ($nivelEstandares <= 7 ? 4 : 3)): ?>
+                                    <li><span class="dropdown-item text-muted"><i class="bi bi-check-circle me-2"></i>Todos creados <?= date('Y') ?></span></li>
+                                    <?php endif; ?>
+                                </ul>
+                            </div>
                         <?php elseif (isset($tipoCarpetaFases) && in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst'])): ?>
                             <?php
                             // Solo mostrar boton si NO hay documento para el año actual
@@ -451,7 +510,7 @@
         </div>
         <?php endif; ?>
 
-        <?php if (isset($tipoCarpetaFases) && in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst'])): ?>
+        <?php if (isset($tipoCarpetaFases) && in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst'])): ?>
         <!-- Tabla de Documentos SST -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-success text-white">
@@ -557,11 +616,26 @@
                                                 <?php
                                                 // Determinar URLs de ver/editar segun tipo de documento
                                                 $tipoDoc = $docSST['tipo_documento'] ?? 'programa_capacitacion';
-                                                if ($tipoDoc === 'asignacion_responsable_sgsst') {
-                                                    $urlVer = base_url('documentos-sst/' . $cliente['id_cliente'] . '/asignacion-responsable-sst/' . $docSST['anio']);
-                                                    $urlEditar = null; // No tiene editor, se regenera
+                                                $urlEditar = null; // Por defecto no hay editor
+
+                                                // Mapa de tipos de documento a rutas
+                                                $mapaRutas = [
+                                                    'asignacion_responsable_sgsst' => 'asignacion-responsable-sst/' . $docSST['anio'],
+                                                    'responsabilidades_rep_legal_sgsst' => 'responsabilidades-rep-legal/' . $docSST['id_documento'],
+                                                    'responsabilidades_responsable_sgsst' => 'responsabilidades-responsable-sst/' . $docSST['id_documento'],
+                                                    'responsabilidades_trabajadores_sgsst' => 'responsabilidades-trabajadores/' . $docSST['id_documento'],
+                                                    'responsabilidades_vigia_sgsst' => 'responsabilidades-vigia-sst/' . $docSST['id_documento'],
+                                                    'programa_capacitacion' => 'programa-capacitacion/' . $docSST['anio'],
+                                                ];
+
+                                                if (isset($mapaRutas[$tipoDoc])) {
+                                                    $urlVer = base_url('documentos-sst/' . $cliente['id_cliente'] . '/' . $mapaRutas[$tipoDoc]);
                                                 } else {
                                                     $urlVer = base_url('documentos-sst/' . $cliente['id_cliente'] . '/programa-capacitacion/' . $docSST['anio']);
+                                                }
+
+                                                // Solo programa_capacitacion tiene editor
+                                                if ($tipoDoc === 'programa_capacitacion') {
                                                     $urlEditar = base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
                                                 }
                                                 ?>
