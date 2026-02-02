@@ -172,6 +172,13 @@
                             <i class="bi bi-house me-1"></i> Dashboard
                         </a>
                     </li>
+                    <?php if (in_array($sessionRole, ['admin', 'consultant'])): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= base_url('/admin/users') ?>">
+                            <i class="bi bi-people me-1"></i> Usuarios
+                        </a>
+                    </li>
+                    <?php endif; ?>
                     <?php if (session()->get('isLoggedIn')): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="<?= base_url('logout') ?>">
