@@ -233,69 +233,54 @@
             </div>
         <?php endif; ?>
 
-        <!-- Tarjetas de estadisticas -->
-        <div class="row mb-3">
-            <div class="col-md-3">
-                <div class="card card-stat border-0 shadow-sm">
-                    <div class="card-body py-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-0 small">Estandares</h6>
-                                <h4 class="mb-0"><?= $cumplimiento['cumple'] ?? 0 ?>/<?= $cumplimiento['total'] ?? 0 ?></h4>
-                                <small class="text-success"><?= $cumplimiento['porcentaje_cumplimiento'] ?? 0 ?>% cumplimiento</small>
+        <!-- Panel de Roles Obligatorios del SG-SST -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-people-fill text-primary me-2 fs-5"></i>
+                            <h6 class="mb-0">Roles Obligatorios del SG-SST</h6>
+                            <span class="badge bg-<?= ($estandaresAplicables ?? 60) <= 7 ? 'info' : (($estandaresAplicables ?? 60) <= 21 ? 'warning' : 'danger') ?> ms-2">
+                                <?= $estandaresAplicables ?? 60 ?> Estándares
+                            </span>
+                            <?php if ($verificacionRoles['completo'] ?? false): ?>
+                                <span class="badge bg-success ms-2"><i class="bi bi-check-circle me-1"></i>Completo</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar bg-<?= ($verificacionRoles['completo'] ?? false) ? 'success' : 'warning' ?>"
+                                 style="width: <?= $verificacionRoles['porcentaje'] ?? 0 ?>%"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <?php if (!empty($verificacionRoles['completos'])): ?>
+                                    <small class="text-success d-block mb-1"><i class="bi bi-check-circle-fill me-1"></i>Roles asignados:</small>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <?php foreach ($verificacionRoles['completos'] as $rol): ?>
+                                            <span class="badge bg-success bg-opacity-75" style="font-size: 0.7rem;"><?= esc($rol['nombre']) ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Sin roles asignados aún</small>
+                                <?php endif; ?>
                             </div>
-                            <div class="bg-primary bg-opacity-10 rounded-circle p-2">
-                                <i class="bi bi-check-circle text-primary fs-5"></i>
+                            <div class="col-md-6">
+                                <?php if (!empty($verificacionRoles['faltantes'])): ?>
+                                    <small class="text-danger d-block mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Roles pendientes:</small>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <?php foreach ($verificacionRoles['faltantes'] as $rol): ?>
+                                            <span class="badge bg-danger bg-opacity-75" style="font-size: 0.7rem;"><?= esc($rol['nombre']) ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stat border-0 shadow-sm">
-                    <div class="card-body py-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-0 small">Documentos</h6>
-                                <h4 class="mb-0"><?= $estadisticas['total'] ?? 0 ?></h4>
-                                <small class="text-muted"><?= $estadisticas['aprobado'] ?? 0 ?> aprobados</small>
-                            </div>
-                            <div class="bg-success bg-opacity-10 rounded-circle p-2">
-                                <i class="bi bi-file-earmark-text text-success fs-5"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stat border-0 shadow-sm">
-                    <div class="card-body py-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-0 small">En Revision</h6>
-                                <h4 class="mb-0"><?= $estadisticas['en_revision'] ?? 0 ?></h4>
-                                <small class="text-warning">Pendientes de aprobacion</small>
-                            </div>
-                            <div class="bg-warning bg-opacity-10 rounded-circle p-2">
-                                <i class="bi bi-hourglass-split text-warning fs-5"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stat border-0 shadow-sm">
-                    <div class="card-body py-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-0 small">Borradores</h6>
-                                <h4 class="mb-0"><?= $estadisticas['borrador'] ?? 0 ?></h4>
-                                <small class="text-info">En elaboracion</small>
-                            </div>
-                            <div class="bg-info bg-opacity-10 rounded-circle p-2">
-                                <i class="bi bi-pencil text-info fs-5"></i>
-                            </div>
-                        </div>
+                    <div class="ms-3">
+                        <a href="<?= base_url('responsables-sst/' . $cliente['id_cliente']) ?>" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-gear me-1"></i>Gestionar Roles
+                        </a>
                     </div>
                 </div>
             </div>
@@ -326,22 +311,6 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- Leyenda de estados -->
-                        <div class="leyenda-estados mt-3">
-                            <span class="text-muted"><strong>Estados IA:</strong></span>
-                            <div class="leyenda-item">
-                                <span class="doc-estado-indicator pendiente"></span>
-                                <span>Pendiente (sin contenido)</span>
-                            </div>
-                            <div class="leyenda-item">
-                                <span class="doc-estado-indicator creado"></span>
-                                <span>Creado (contenido generado)</span>
-                            </div>
-                            <div class="leyenda-item">
-                                <span class="doc-estado-indicator aprobado"></span>
-                                <span>Aprobado (todas las secciones)</span>
-                            </div>
-                        </div>
                     </div>
                     <div class="card-body main-panel">
                         <?php if (empty($carpetasConDocs)): ?>
@@ -365,7 +334,7 @@
 
         <!-- Accesos rapidos -->
         <div class="row mt-3">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <a href="/estandares/<?= $cliente['id_cliente'] ?>" class="card border-0 shadow-sm text-decoration-none">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-list-check text-primary fs-4"></i>
@@ -373,7 +342,7 @@
                     </div>
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <a href="/estandares/catalogo" class="card border-0 shadow-sm text-decoration-none">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-book text-success fs-4"></i>
@@ -381,15 +350,7 @@
                     </div>
                 </a>
             </div>
-            <div class="col-md-3">
-                <a href="/documentacion/plantillas" class="card border-0 shadow-sm text-decoration-none">
-                    <div class="card-body text-center py-3">
-                        <i class="bi bi-file-earmark-ruled text-info fs-4"></i>
-                        <h6 class="mt-2 mb-0 text-dark">Plantillas</h6>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <a href="/documentacion/instructivo" class="card border-0 shadow-sm text-decoration-none">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-question-circle text-warning fs-4"></i>
@@ -571,7 +532,7 @@ function renderCarpetasJerarquicas($carpetas, $idCliente, $nivel = 0) {
         $html .= '<i class="bi ' . $iconClass . ' folder-icon"></i>';
 
         // Nombre (clickeable para ir a la carpeta)
-        $html .= '<a href="' . base_url('documentacion/carpeta/' . $folderId) . '" class="folder-name" onclick="event.stopPropagation();">';
+        $html .= '<a href="' . base_url('documentacion/carpeta/' . $folderId) . '" class="folder-name" onclick="event.stopPropagation();" target="_blank">';
         $html .= esc($carpeta['nombre']);
         $html .= '</a>';
 

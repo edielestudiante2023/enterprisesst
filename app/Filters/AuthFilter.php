@@ -9,13 +9,15 @@ use App\Models\SessionModel;
 
 class AuthFilter implements FilterInterface
 {
+    // TEMPORAL: 24 horas para pruebas de desarrollo
     private const TIMEOUT_BY_ROLE = [
-        'client'     => 300,   // 5 minutos
-        'consultant' => 1800,  // 30 minutos
-        'admin'      => 900,   // 15 minutos
+        'client'     => 86400,   // 24 horas (original: 300 = 5 minutos)
+        'consultant' => 86400,   // 24 horas (original: 1800 = 30 minutos)
+        'admin'      => 86400,   // 24 horas (original: 900 = 15 minutos)
+        'miembro'    => 86400,   // 24 horas para miembros de comité
     ];
 
-    private const DEFAULT_TIMEOUT = 600;
+    private const DEFAULT_TIMEOUT = 86400; // 24 horas (original: 600 = 10 minutos)
 
     public function before(RequestInterface $request, $arguments = null)
     {
@@ -29,6 +31,16 @@ class AuthFilter implements FilterInterface
         }
 
         $role = $session->get('role');
+
+        // Los usuarios tipo 'miembro' solo pueden acceder a /miembro/*
+        // Si intentan acceder a otras rutas protegidas, redirigir a su portal
+        if ($role === 'miembro') {
+            $uri = $request->getUri()->getPath();
+            if (strpos($uri, '/miembro') === false) {
+                return redirect()->to('/miembro/dashboard');
+            }
+        }
+
         $lastActivity = $session->get('last_activity');
         $currentTime = time();
         $timeout = self::TIMEOUT_BY_ROLE[$role] ?? self::DEFAULT_TIMEOUT;

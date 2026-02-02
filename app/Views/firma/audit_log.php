@@ -161,11 +161,11 @@
                                                 $iconConfig = match($log['evento'] ?? '') {
                                                     'solicitud_creada' => ['bg-primary', 'bi-plus-circle'],
                                                     'email_enviado', 'email_reenviado' => ['bg-info', 'bi-envelope'],
-                                                    'link_accedido' => ['bg-warning', 'bi-box-arrow-in-right'],
-                                                    'firma_registrada' => ['bg-success', 'bi-pen'],
+                                                    'link_accedido', 'link_abierto' => ['bg-warning', 'bi-box-arrow-in-right'],
+                                                    'firma_registrada', 'firma_completada' => ['bg-success', 'bi-pen'],
                                                     'documento_firmado_completo' => ['bg-success', 'bi-patch-check'],
                                                     'solicitud_cancelada' => ['bg-danger', 'bi-x-circle'],
-                                                    'token_renovado' => ['bg-secondary', 'bi-arrow-repeat'],
+                                                    'token_renovado', 'token_reenviado' => ['bg-secondary', 'bi-arrow-repeat'],
                                                     default => ['bg-secondary', 'bi-circle']
                                                 };
                                                 ?>

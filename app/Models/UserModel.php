@@ -36,7 +36,7 @@ class UserModel extends Model
     protected $validationRules = [
         'email'           => 'required|valid_email|is_unique[tbl_usuarios.email,id_usuario,{id_usuario}]',
         'nombre_completo' => 'required|min_length[3]|max_length[255]',
-        'tipo_usuario'    => 'required|in_list[admin,consultant,client]',
+        'tipo_usuario'    => 'required|in_list[admin,consultant,client,miembro]',
         'estado'          => 'required|in_list[activo,inactivo,pendiente,bloqueado]',
     ];
 
@@ -165,14 +165,31 @@ class UserModel extends Model
 
     /**
      * Crear usuario con password hasheado
+     * @return int|false ID del usuario creado o false si falla
      */
-    public function createUser(array $data): bool|int
+    public function createUser(array $data): int|false
     {
         if (isset($data['password'])) {
             $data['password'] = $this->hashPassword($data['password']);
         }
 
-        return $this->insert($data);
+        $result = $this->insert($data);
+
+        // Si falla, registrar el error para debugging
+        if ($result === false) {
+            log_message('error', 'Error al crear usuario: ' . json_encode($this->errors()));
+            log_message('error', 'Datos enviados: ' . json_encode(array_diff_key($data, ['password' => ''])));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Obtener errores de la última operación
+     */
+    public function getLastErrors(): array
+    {
+        return $this->errors();
     }
 
     /**

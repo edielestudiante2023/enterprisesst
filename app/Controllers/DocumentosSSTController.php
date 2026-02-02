@@ -10,6 +10,9 @@ use App\Models\ResponsableSSTModel;
 use App\Services\CronogramaIAService;
 use App\Services\PTAGeneratorService;
 use App\Services\IADocumentacionService;
+use App\Services\DocumentoConfigService;
+use App\Services\FirmanteService;
+use App\Libraries\DocumentosSSTTypes\DocumentoSSTFactory;
 use Config\Database;
 
 /**
@@ -19,8 +22,14 @@ class DocumentosSSTController extends BaseController
 {
     protected $db;
     protected ClientModel $clienteModel;
+    protected DocumentoConfigService $configService;
+    protected FirmanteService $firmanteService;
 
-    // Tipos de documentos disponibles
+    /**
+     * @deprecated Esta constante está OBSOLETA. Usar DocumentoConfigService en su lugar.
+     * Los tipos de documento ahora se obtienen de tbl_doc_tipo_configuracion.
+     * Se mantiene temporalmente por compatibilidad con código legacy.
+     */
     public const TIPOS_DOCUMENTO = [
         'programa_capacitacion' => [
             'nombre' => 'Programa de Capacitacion',
@@ -41,59 +50,94 @@ class DocumentosSSTController extends BaseController
                 ['numero' => 12, 'nombre' => 'Recursos', 'key' => 'recursos'],
                 ['numero' => 13, 'nombre' => 'Evaluacion y Seguimiento', 'key' => 'evaluacion'],
             ]
+        ],
+        'procedimiento_control_documental' => [
+            'nombre' => 'Procedimiento de Control Documental del SG-SST',
+            'descripcion' => 'Establece las directrices para la elaboracion, revision, aprobacion, distribucion y conservacion de documentos del SG-SST',
+            'flujo' => 'secciones_ia',
+            'estandar' => '2.5.1',
+            'firmantes' => ['representante_legal', 'responsable_sst'],
+            'secciones' => [
+                ['numero' => 1, 'nombre' => 'Objetivo', 'key' => 'objetivo'],
+                ['numero' => 2, 'nombre' => 'Alcance', 'key' => 'alcance'],
+                ['numero' => 3, 'nombre' => 'Definiciones', 'key' => 'definiciones'],
+                ['numero' => 4, 'nombre' => 'Marco Normativo', 'key' => 'marco_normativo'],
+                ['numero' => 5, 'nombre' => 'Responsabilidades', 'key' => 'responsabilidades'],
+                ['numero' => 6, 'nombre' => 'Tipos de Documentos del SG-SST', 'key' => 'tipos_documentos'],
+                ['numero' => 7, 'nombre' => 'Estructura y Codificacion', 'key' => 'codificacion'],
+                ['numero' => 8, 'nombre' => 'Elaboracion de Documentos', 'key' => 'elaboracion'],
+                ['numero' => 9, 'nombre' => 'Revision y Aprobacion', 'key' => 'revision_aprobacion'],
+                ['numero' => 10, 'nombre' => 'Distribucion y Acceso', 'key' => 'distribucion'],
+                ['numero' => 11, 'nombre' => 'Control de Cambios', 'key' => 'control_cambios'],
+                ['numero' => 12, 'nombre' => 'Conservacion y Retencion', 'key' => 'conservacion'],
+                ['numero' => 13, 'nombre' => 'Listado Maestro de Documentos', 'key' => 'listado_maestro'],
+                ['numero' => 14, 'nombre' => 'Disposicion Final', 'key' => 'disposicion_final'],
+            ]
         ]
     ];
 
-    // Mapeo de tipos de documento a codigos
+    /**
+     * @deprecated Esta constante está OBSOLETA. Los códigos ahora se obtienen de tbl_doc_plantillas.tipo_documento
+     * Se mantiene temporalmente por compatibilidad con código legacy que aún no ha sido migrado.
+     * NO AGREGAR NUEVOS CÓDIGOS AQUÍ. Usar tbl_doc_plantillas en su lugar.
+     */
     public const CODIGOS_DOCUMENTO = [
-        'programa_capacitacion' => ['tipo' => 'PRG', 'tema' => 'CAP'],
-        'politica_sst' => ['tipo' => 'POL', 'tema' => 'SST'],
-        'plan_emergencias' => ['tipo' => 'PLA', 'tema' => 'EME'],
-        'programa_emo' => ['tipo' => 'PRG', 'tema' => 'EMO'],
-        'matriz_peligros' => ['tipo' => 'MTZ', 'tema' => 'PEL'],
-        'procedimiento_investigacion' => ['tipo' => 'PRO', 'tema' => 'INV'],
-        'programa_inspecciones' => ['tipo' => 'PRG', 'tema' => 'INS'],
-        'programa_epp' => ['tipo' => 'PRG', 'tema' => 'EPP'],
+        // OBSOLETO - Solo para compatibilidad con código legacy
+        // Los nuevos documentos DEBEN usar tbl_doc_plantillas.tipo_documento
     ];
 
     public function __construct()
     {
         $this->db = Database::connect();
         $this->clienteModel = new ClientModel();
+        $this->configService = new DocumentoConfigService();
+        $this->firmanteService = new FirmanteService();
     }
 
     /**
-     * Genera codigo unico para documento usando SP
-     * Formato: TIPO-TEMA-XXX (ej: PRG-CAP-001)
+     * Obtiene el código de plantilla desde la base de datos
+     * Los códigos ya NO están hardcodeados - se obtienen de tbl_doc_plantillas.tipo_documento
+     *
+     * @param string $tipoDocumento Tipo de documento (ej: 'programa_capacitacion')
+     * @return string|null Código de plantilla (ej: 'PRG-CAP') o null si no existe
+     */
+    protected function obtenerCodigoPlantilla(string $tipoDocumento): ?string
+    {
+        $plantilla = $this->db->table('tbl_doc_plantillas')
+            ->select('codigo_sugerido')
+            ->where('tipo_documento', $tipoDocumento)
+            ->where('activo', 1)
+            ->get()
+            ->getRow();
+
+        return $plantilla?->codigo_sugerido;
+    }
+
+    /**
+     * Genera codigo unico para documento
+     * Formato: CODIGO_PLANTILLA-XXX (ej: PRG-CAP-001)
+     *
+     * Los códigos se obtienen de tbl_doc_plantillas.codigo_sugerido
+     * donde tipo_documento = $tipoDocumento
      */
     protected function generarCodigoDocumento(int $idCliente, string $tipoDocumento): string
     {
-        $codigos = self::CODIGOS_DOCUMENTO[$tipoDocumento] ?? ['tipo' => 'DOC', 'tema' => 'GEN'];
+        // Obtener código base desde BD (NO hardcodeado)
+        $codigoBase = $this->obtenerCodigoPlantilla($tipoDocumento);
 
-        try {
-            // Llamar al Stored Procedure
-            $this->db->query("CALL sp_generar_codigo_documento(?, ?, ?, @codigo)", [
-                $idCliente,
-                $codigos['tipo'],
-                $codigos['tema']
-            ]);
-
-            $result = $this->db->query("SELECT @codigo as codigo")->getRow();
-
-            if ($result && !empty($result->codigo)) {
-                return $result->codigo;
-            }
-        } catch (\Exception $e) {
-            log_message('warning', 'Error al generar codigo con SP: ' . $e->getMessage());
+        if (!$codigoBase) {
+            // Si no existe en BD, registrar error y usar fallback genérico
+            log_message('error', "Tipo de documento '$tipoDocumento' no tiene plantilla configurada en tbl_doc_plantillas");
+            $codigoBase = 'DOC-GEN';
         }
 
-        // Fallback: generar codigo manualmente si falla el SP
+        // Obtener consecutivo para este cliente y tipo
         $consecutivo = $this->db->table('tbl_documentos_sst')
             ->where('id_cliente', $idCliente)
             ->where('tipo_documento', $tipoDocumento)
             ->countAllResults() + 1;
 
-        return $codigos['tipo'] . '-' . $codigos['tema'] . '-' . str_pad($consecutivo, 3, '0', STR_PAD_LEFT);
+        return $codigoBase . '-' . str_pad($consecutivo, 3, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -106,11 +150,12 @@ class DocumentosSSTController extends BaseController
             return redirect()->back()->with('error', 'Cliente no encontrado');
         }
 
-        if (!isset(self::TIPOS_DOCUMENTO[$tipo])) {
-            return redirect()->back()->with('error', 'Tipo de documento no valido');
+        // Obtener configuración del tipo de documento desde BD (arquitectura escalable)
+        $tipoDoc = $this->configService->obtenerTipoDocumento($tipo);
+        if (!$tipoDoc) {
+            return redirect()->back()->with('error', 'Tipo de documento no válido');
         }
 
-        $tipoDoc = self::TIPOS_DOCUMENTO[$tipo];
         $anio = (int)date('Y');
 
         // Obtener contexto del cliente
@@ -194,6 +239,14 @@ class DocumentosSSTController extends BaseController
                                 ($seccionesAprobadas === $totalSecciones) &&
                                 ($totalSecciones > 0);
 
+        // Obtener el handler del documento desde el Factory (arquitectura escalable)
+        $documentoHandler = null;
+        try {
+            $documentoHandler = DocumentoSSTFactory::crear($tipo);
+        } catch (\Exception $e) {
+            log_message('warning', "Factory no encontró handler para '{$tipo}': " . $e->getMessage());
+        }
+
         $data = [
             'titulo' => 'Generar ' . $tipoDoc['nombre'] . ' con IA',
             'cliente' => $cliente,
@@ -211,7 +264,13 @@ class DocumentosSSTController extends BaseController
             'totalSecciones' => $totalSecciones,
             'seccionesGuardadas' => $seccionesGuardadas,
             'seccionesAprobadas' => $seccionesAprobadas,
-            'todasSeccionesListas' => $todasSeccionesListas
+            'todasSeccionesListas' => $todasSeccionesListas,
+            // NUEVO: Handler del documento para URLs y configuración
+            'documentoHandler' => $documentoHandler,
+            // URLs pre-calculadas (usa Factory si disponible, fallback a convención)
+            'urlVistaPrevia' => $documentoHandler
+                ? $documentoHandler->getUrlVistaPrevia($idCliente, $anio)
+                : base_url('documentos-sst/' . $idCliente . '/' . str_replace('_', '-', $tipo) . '/' . $anio),
         ];
 
         return view('documentos_sst/generar_con_ia', $data);
@@ -240,10 +299,10 @@ class DocumentosSSTController extends BaseController
 
         // Si hay contexto adicional, usar el servicio de IA real (OpenAI)
         if (!empty(trim($contextoAdicional))) {
-            $contenido = $this->generarConIAReal($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional);
+            $contenido = $this->generarConIAReal($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional, $tipo);
         } else {
             // Sin contexto adicional, usar plantillas estaticas
-            $contenido = $this->generarContenidoSeccion($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional);
+            $contenido = $this->generarContenidoSeccion($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional, $tipo);
         }
 
         return $this->response->setJSON([
@@ -254,58 +313,82 @@ class DocumentosSSTController extends BaseController
 
     /**
      * Genera contenido usando el servicio de IA real (OpenAI)
+     *
+     * @param string $seccion Clave de la sección a generar
+     * @param array $cliente Datos del cliente
+     * @param array|null $contexto Contexto SST del cliente
+     * @param int $estandares Nivel de estándares (7, 21, 60)
+     * @param int $anio Año del documento
+     * @param string $contextoAdicional Instrucciones adicionales del usuario
+     * @param string $tipoDocumento Tipo de documento (usa Factory para obtener la clase correcta)
      */
-    protected function generarConIAReal(string $seccion, array $cliente, ?array $contexto, int $estandares, int $anio, string $contextoAdicional): string
+    protected function generarConIAReal(string $seccion, array $cliente, ?array $contexto, int $estandares, int $anio, string $contextoAdicional, string $tipoDocumento = 'programa_capacitacion'): string
     {
-        // Obtener el nombre de la seccion
-        $tipoDoc = self::TIPOS_DOCUMENTO['programa_capacitacion'];
-        $nombreSeccion = $seccion;
-        $numeroSeccion = 1;
-        foreach ($tipoDoc['secciones'] as $sec) {
-            if ($sec['key'] === $seccion) {
-                $nombreSeccion = $sec['nombre'];
-                $numeroSeccion = $sec['numero'];
-                break;
+        try {
+            // NUEVO: Usar el Factory para obtener la clase del tipo de documento
+            $documentoHandler = DocumentoSSTFactory::crear($tipoDocumento);
+
+            // Obtener datos de la sección desde la clase específica del documento
+            $nombreSeccion = $documentoHandler->getNombreSeccion($seccion);
+            $numeroSeccion = $documentoHandler->getNumeroSeccion($seccion);
+
+            // Obtener el prompt específico para este tipo de documento y sección
+            $promptBase = $documentoHandler->getPromptParaSeccion($seccion, $estandares);
+
+            // Obtener contexto base del documento
+            $contextoBase = $documentoHandler->getContextoBase($cliente, $contexto);
+
+            // Preparar datos para el servicio de IA
+            $datosIA = [
+                'seccion' => [
+                    'numero_seccion' => $numeroSeccion,
+                    'nombre_seccion' => $nombreSeccion
+                ],
+                'documento' => [
+                    'tipo_nombre' => $documentoHandler->getNombre(),
+                    'nombre' => $documentoHandler->getNombre(),
+                    'tipo' => $tipoDocumento
+                ],
+                'cliente' => $cliente,
+                'contexto' => $contexto,
+                'prompt_base' => $promptBase,
+                'contexto_adicional' => $contextoAdicional,
+                'contexto_base' => $contextoBase
+            ];
+
+            // Llamar al servicio de IA
+            $iaService = new IADocumentacionService();
+            $resultado = $iaService->generarSeccion($datosIA);
+
+            if ($resultado['success']) {
+                return $resultado['contenido'];
             }
+
+            // Si falla la IA, caer en la plantilla estática del documento específico
+            log_message('warning', "IA falló para sección '{$seccion}' de '{$tipoDocumento}': " . ($resultado['error'] ?? 'Error desconocido'));
+            return $documentoHandler->getContenidoEstatico($seccion, $cliente, $contexto, $estandares, $anio);
+
+        } catch (\InvalidArgumentException $e) {
+            // Si el tipo de documento no existe en el Factory, usar método legacy
+            log_message('warning', "Tipo de documento '{$tipoDocumento}' no encontrado en Factory, usando método legacy: " . $e->getMessage());
+            return $this->generarContenidoSeccionLegacy($seccion, $cliente, $contexto, $estandares, $anio, $tipoDocumento);
         }
-
-        // Construir prompt base segun la seccion
-        $promptBase = $this->getPromptBaseParaSeccion($seccion, $estandares);
-
-        // Preparar datos para el servicio de IA
-        $datosIA = [
-            'seccion' => [
-                'numero_seccion' => $numeroSeccion,
-                'nombre_seccion' => $nombreSeccion
-            ],
-            'documento' => [
-                'tipo_nombre' => 'Programa',
-                'nombre' => 'Programa de Capacitacion en SST'
-            ],
-            'cliente' => $cliente,
-            'contexto' => $contexto,
-            'prompt_base' => $promptBase,
-            'contexto_adicional' => $contextoAdicional
-        ];
-
-        // Llamar al servicio de IA
-        $iaService = new IADocumentacionService();
-        $resultado = $iaService->generarSeccion($datosIA);
-
-        if ($resultado['success']) {
-            return $resultado['contenido'];
-        }
-
-        // Si falla la IA, caer en la plantilla estatica
-        log_message('warning', 'IA falló para sección ' . $seccion . ': ' . ($resultado['error'] ?? 'Error desconocido'));
-        return $this->generarContenidoSeccion($seccion, $cliente, $contexto, $estandares, $anio, '');
     }
 
     /**
      * Obtiene el prompt base para una seccion especifica
+     * @param string $seccion Clave de la seccion
+     * @param int $estandares Nivel de estándares (7, 21, 60)
+     * @param string $tipoDocumento Tipo de documento (programa_capacitacion, procedimiento_control_documental, etc.)
      */
-    protected function getPromptBaseParaSeccion(string $seccion, int $estandares): string
+    protected function getPromptBaseParaSeccion(string $seccion, int $estandares, string $tipoDocumento = 'programa_capacitacion'): string
     {
+        // Prompts para Procedimiento de Control Documental
+        if ($tipoDocumento === 'procedimiento_control_documental') {
+            return $this->getPromptsControlDocumental($seccion, $estandares);
+        }
+
+        // Prompts para Programa de Capacitación (default)
         $prompts = [
             'introduccion' => "Genera una introducción para el Programa de Capacitación en SST. Debe incluir:
 - Justificación de por qué la empresa necesita este programa
@@ -392,15 +475,262 @@ Incluye criterios de evaluación y responsables."
     }
 
     /**
+     * Prompts específicos para el Procedimiento de Control Documental
+     */
+    protected function getPromptsControlDocumental(string $seccion, int $estandares): string
+    {
+        $prompts = [
+            'objetivo' => "Genera el objetivo del Procedimiento de Control Documental del SG-SST. Debe establecer:
+- El propósito de controlar la documentación del Sistema de Gestión de SST
+- La importancia de la trazabilidad y conservación documental
+- Referencia al cumplimiento del estándar 2.5.1 de la Resolución 0312/2019
+Máximo 2 párrafos concisos.",
+
+            'alcance' => "Define el alcance del procedimiento. Debe especificar:
+- Que aplica a TODOS los documentos del SG-SST (políticas, programas, procedimientos, formatos, matrices, etc.)
+- A quién aplica (alta dirección, responsable SST, trabajadores)
+- Exclusiones si las hay
+IMPORTANTE: Ajustar extensión según nivel de estándares ({$estandares}).",
+
+            'definiciones' => "Genera las definiciones clave para el control documental. INCLUIR OBLIGATORIAMENTE:
+- Documento
+- Registro
+- Versión
+- Control documental
+- Listado maestro
+- Documento obsoleto
+- Retención documental
+- Documento controlado vs No controlado
+CANTIDAD: Máximo 10-12 definiciones, basadas en normativa colombiana y GTC-ISO 9001.",
+
+            'marco_normativo' => "Lista el marco normativo aplicable al control documental del SG-SST:
+- Decreto 1072 de 2015 (Art. 2.2.4.6.12 - Documentación)
+- Resolución 0312 de 2019 (Estándar 2.5.1)
+- Ley General de Archivos (Ley 594 de 2000)
+- GTC-ISO 9001 (como referencia de buenas prácticas)
+MÁXIMO 5-6 normas con breve descripción de su aplicación.",
+
+            'responsabilidades' => "Define las responsabilidades en el control documental:
+**Representante Legal:**
+- Aprobar documentos de alto nivel (políticas)
+- Asignar recursos para la gestión documental
+
+**Responsable del SG-SST:**
+- Elaborar y actualizar documentos
+- Mantener el listado maestro
+- Controlar versiones
+- Gestionar la distribución
+
+**Trabajadores:**
+- Usar documentos vigentes
+- Reportar necesidades de actualización
+
+ADVERTENCIA: Si son {$estandares} estándares, ajustar roles (Vigía vs COPASST)",
+
+            'tipos_documentos' => "Genera un párrafo introductorio sobre los tipos de documentos del SG-SST.
+
+Explica brevemente que los documentos del Sistema de Gestión se clasifican según su naturaleza y propósito, incluyendo:
+- Políticas (directrices de alto nivel aprobadas por la alta dirección)
+- Programas (conjunto de actividades planificadas con objetivos específicos)
+- Procedimientos (describen cómo realizar una actividad específica)
+- Planes (acciones programadas para alcanzar objetivos)
+- Formatos (plantillas para registro de datos e información)
+- Matrices (herramientas de análisis e identificación)
+- Manuales (guías completas sobre un tema)
+- Reglamentos (normas internas de obligatorio cumplimiento)
+
+IMPORTANTE: NO generes una tabla con prefijos o códigos específicos. Solo genera el texto introductorio. La tabla con los códigos reales del sistema se agregará automáticamente.",
+
+            'codificacion' => "Genera un párrafo explicando el sistema de codificación de documentos del SG-SST.
+
+Explica la estructura general del código:
+**Estructura del código:** PREFIJO-CONSECUTIVO
+
+Donde:
+- **PREFIJO:** Identifica el tipo de documento según la clasificación del sistema
+- **CONSECUTIVO:** Número secuencial de 3 dígitos (001, 002, etc.)
+
+**Versionamiento:**
+- Versión Mayor (1.0, 2.0, 3.0): Cambios significativos en estructura o contenido
+- Versión Menor (1.1, 1.2, 2.1): Ajustes menores, correcciones o actualizaciones
+
+IMPORTANTE: NO generes ejemplos de códigos específicos. Solo genera el texto explicativo. La tabla con los códigos reales configurados en el sistema se agregará automáticamente.",
+
+            'elaboracion' => "Describe el proceso para elaborar documentos del SG-SST:
+
+1. **Identificación de necesidad:** El responsable SST o área identifica la necesidad del documento
+2. **Elaboración del borrador:** Se redacta siguiendo la estructura estándar
+3. **Revisión técnica:** El responsable SST verifica el contenido
+4. **Aprobación:** El Representante Legal o persona delegada aprueba
+5. **Codificación:** Se asigna código según el sistema establecido
+6. **Registro:** Se incluye en el Listado Maestro de Documentos
+
+**Estructura estándar de documentos:**
+- Encabezado (logo, título, código, versión, fecha)
+- Objetivo
+- Alcance
+- Definiciones (si aplica)
+- Contenido
+- Responsabilidades
+- Registros asociados
+- Control de cambios
+- Firmas de aprobación",
+
+            'revision_aprobacion' => "Describe el flujo de revisión y aprobación de documentos:
+
+**Niveles de aprobación:**
+| Tipo de documento | Elabora | Revisa | Aprueba |
+|-------------------|---------|--------|---------|
+| Políticas | Responsable SST | Gerencia | Rep. Legal |
+| Programas | Responsable SST | Responsable SST | Rep. Legal |
+| Procedimientos | Responsable SST | Área involucrada | Responsable SST |
+| Formatos | Responsable SST | - | Responsable SST |
+
+**Firma electrónica:**
+- Los documentos pueden ser firmados electrónicamente
+- Cada firma incluye: Nombre, Cargo, Fecha, Firma digital
+- Se genera código de verificación único
+
+**Frecuencia de revisión:**
+- Documentos estratégicos: Anual
+- Documentos operativos: Según necesidad o cambios normativos",
+
+            'distribucion' => "Describe cómo se distribuyen y controlan los documentos:
+
+**Distribución:**
+- Los documentos aprobados se publican en el sistema de gestión documental
+- Se notifica a los responsables cuando hay nuevas versiones
+- El acceso es según perfil de usuario (Consultor, Cliente, Trabajador)
+
+**Control de copias:**
+- Solo se consideran válidas las versiones digitales del sistema
+- Las copias impresas NO son controladas
+- Cada documento muestra: 'Copia controlada - Válida solo en formato digital'
+
+**Documentos obsoletos:**
+- Se marcan como 'OBSOLETO' y se retiran de circulación
+- Se conservan en archivo histórico según tiempos de retención",
+
+            'control_cambios' => "Describe el procedimiento para controlar cambios en documentos:
+
+**Tipos de cambio:**
+- **Mayor (nueva versión X.0):** Cambios en estructura, alcance o contenido significativo
+- **Menor (versión X.Y):** Correcciones, actualizaciones de datos, ajustes de formato
+
+**Proceso de cambio:**
+1. Identificar necesidad de cambio
+2. Elaborar propuesta de modificación
+3. Revisar y aprobar cambio
+4. Actualizar versión
+5. Registrar en historial de cambios
+6. Comunicar a usuarios
+
+**Registro de cambios:**
+Cada documento incluye tabla de control:
+| Versión | Fecha | Descripción del cambio | Aprobó |
+|---------|-------|------------------------|--------|
+
+**IMPORTANTE:** Los documentos del SG-SST deben conservarse por mínimo 20 años.",
+
+            'conservacion' => "Establece los tiempos y condiciones de conservación documental:
+
+**Tiempos de retención según Resolución 0312/2019 y normativa laboral:**
+
+| Tipo de documento | Tiempo mínimo | Observación |
+|-------------------|---------------|-------------|
+| Historias clínicas ocupacionales | 20 años | Después de retiro del trabajador |
+| Exámenes médicos | 20 años | Ídem |
+| Accidentes de trabajo | 20 años | Desde fecha del evento |
+| Programas y procedimientos SST | 20 años | Desde última versión |
+| Actas COPASST/CCL | 20 años | Desde fecha del acta |
+| Capacitaciones | 20 años | Registros de asistencia |
+| Matrices de peligros | 20 años | Cada versión |
+
+**Condiciones de conservación:**
+- Formato digital con respaldos periódicos
+- Protección contra acceso no autorizado
+- Integridad verificable (hash de documento)
+
+**Archivo histórico:**
+- Documentos obsoletos pero dentro del periodo de retención",
+
+            'listado_maestro' => "Esta sección contendrá el LISTADO MAESTRO DE DOCUMENTOS actualizado automáticamente.
+
+**Información incluida por cada documento:**
+- Código del documento
+- Nombre/Título
+- Tipo de documento
+- Versión vigente
+- Fecha de aprobación
+- Estado (Vigente/Obsoleto)
+- Responsable
+- Ubicación
+
+**NOTA:** Esta sección se genera automáticamente desde el sistema, mostrando todos los documentos del SG-SST registrados para esta empresa.
+
+El listado se actualiza cada vez que se genera o modifica un documento.",
+
+            'disposicion_final' => "Establece qué hacer con los documentos al cumplir su tiempo de retención:
+
+**Criterios de disposición:**
+1. Verificar que se ha cumplido el tiempo de retención (20 años mínimo)
+2. Confirmar que no hay procesos legales en curso que requieran el documento
+3. Documentar la decisión de disposición
+
+**Métodos de disposición:**
+- **Eliminación segura:** Destrucción que impida recuperación de información
+- **Transferencia:** A archivo histórico permanente (si tiene valor histórico)
+- **Digitalización:** Convertir a formato digital si es papel (conservar digital)
+
+**Acta de eliminación:**
+Se debe generar acta que registre:
+- Documentos eliminados (código, nombre, fechas)
+- Fecha de eliminación
+- Método utilizado
+- Responsable de la eliminación
+- Firma de autorización
+
+**ADVERTENCIA:** Nunca eliminar documentos antes del tiempo de retención legal."
+        ];
+
+        return $prompts[$seccion] ?? "Genera el contenido para la sección '{$seccion}' del Procedimiento de Control Documental del SG-SST según la Resolución 0312/2019.";
+    }
+
+    /**
      * Genera contenido para una seccion especifica
+     *
+     * ARQUITECTURA: Usa el patrón Strategy a través del Factory para obtener
+     * el contenido específico de cada tipo de documento.
+     *
      * @param string $seccion Clave de la seccion
      * @param array $cliente Datos del cliente
      * @param array|null $contexto Contexto SST del cliente
      * @param int $estandares Nivel de estandares aplicables
      * @param int $anio Año del documento
      * @param string $contextoAdicional Instrucciones adicionales del usuario para la IA
+     * @param string $tipoDocumento Tipo de documento (usa Factory para obtener la clase correcta)
      */
-    protected function generarContenidoSeccion(string $seccion, array $cliente, ?array $contexto, int $estandares, int $anio, string $contextoAdicional = ''): string
+    protected function generarContenidoSeccion(string $seccion, array $cliente, ?array $contexto, int $estandares, int $anio, string $contextoAdicional = '', string $tipoDocumento = 'programa_capacitacion'): string
+    {
+        // NUEVO: Intentar usar el Factory primero (arquitectura escalable)
+        try {
+            if (DocumentoSSTFactory::existe($tipoDocumento)) {
+                $documentoHandler = DocumentoSSTFactory::crear($tipoDocumento);
+                return $documentoHandler->getContenidoEstatico($seccion, $cliente, $contexto, $estandares, $anio);
+            }
+        } catch (\Exception $e) {
+            log_message('debug', "Factory no disponible para '{$tipoDocumento}', usando método legacy: " . $e->getMessage());
+        }
+
+        // LEGACY: Fallback al switch para programa_capacitacion (compatibilidad hacia atrás)
+        return $this->generarContenidoSeccionLegacy($seccion, $cliente, $contexto, $estandares, $anio, $tipoDocumento);
+    }
+
+    /**
+     * Método legacy para generar contenido de secciones (mantiene compatibilidad)
+     * @deprecated Usar DocumentoSSTFactory en su lugar
+     */
+    protected function generarContenidoSeccionLegacy(string $seccion, array $cliente, ?array $contexto, int $estandares, int $anio, string $tipoDocumento = 'programa_capacitacion'): string
     {
         // Si hay contexto adicional del usuario, se puede usar para personalizar el contenido
         // Por ahora lo incluimos como nota al generar (en futuro puede enviarse a un servicio de IA real)
@@ -666,7 +996,8 @@ Incluye criterios de evaluación y responsables."
      */
     private function normalizarSecciones(array $secciones, string $tipo): array
     {
-        $tipoDoc = self::TIPOS_DOCUMENTO[$tipo] ?? null;
+        // Usar servicio para obtener configuración (arquitectura escalable)
+        $tipoDoc = $this->configService->obtenerTipoDocumento($tipo);
         if (!$tipoDoc) {
             return $secciones;
         }
@@ -738,8 +1069,8 @@ Incluye criterios de evaluación y responsables."
         $contenido = $this->request->getPost('contenido');
         $anio = $this->request->getPost('anio') ?? (int)date('Y');
 
-        // Obtener informacion de la seccion desde TIPOS_DOCUMENTO
-        $tipoDoc = self::TIPOS_DOCUMENTO[$tipo] ?? null;
+        // Obtener información de la sección desde servicio (arquitectura escalable)
+        $tipoDoc = $this->configService->obtenerTipoDocumento($tipo);
         $nombreSeccion = $seccionKey;
         $numeroSeccion = 0;
         if ($tipoDoc) {
@@ -808,11 +1139,13 @@ Incluye criterios de evaluación y responsables."
             // Generar codigo unico usando SP
             $codigoDocumento = $this->generarCodigoDocumento($idCliente, $tipo);
 
+            // Obtener nombre del documento desde servicio
+            $tipoDocConfig = $this->configService->obtenerTipoDocumento($tipo);
             $this->db->table('tbl_documentos_sst')->insert([
                 'id_cliente' => $idCliente,
                 'tipo_documento' => $tipo,
                 'codigo' => $codigoDocumento,
-                'titulo' => self::TIPOS_DOCUMENTO[$tipo]['nombre'] ?? 'Documento SST',
+                'titulo' => $tipoDocConfig['nombre'] ?? 'Documento SST',
                 'anio' => $anio,
                 'contenido' => json_encode($contenidoDoc, JSON_UNESCAPED_UNICODE),
                 'version' => 1,
@@ -848,8 +1181,8 @@ Incluye criterios de evaluación y responsables."
 
         $contenidoDoc = json_decode($documento['contenido'], true);
 
-        // Obtener informacion de la seccion desde TIPOS_DOCUMENTO
-        $tipoDoc = self::TIPOS_DOCUMENTO[$tipo] ?? null;
+        // Obtener información de la sección desde servicio (arquitectura escalable)
+        $tipoDoc = $this->configService->obtenerTipoDocumento($tipo);
         $nombreSeccion = $seccionKey;
         $numeroSeccion = 0;
         if ($tipoDoc) {
@@ -1101,6 +1434,39 @@ Incluye criterios de evaluación y responsables."
             ];
         }
 
+        // Datos dinámicos para secciones especiales (tipos_documentos, codificacion, listado_maestro)
+        $listadoMaestro = [];
+        $tiposDocumento = [];
+        $plantillas = [];
+
+        // Solo cargar si es documento de control documental
+        if ($documento['tipo_documento'] === 'procedimiento_control_documental') {
+            // Listado Maestro de Documentos del cliente
+            $listadoMaestro = $this->db->table('tbl_documentos_sst d')
+                ->select('d.id_documento, d.codigo, d.titulo, d.tipo_documento, d.version, d.estado, d.created_at, d.updated_at')
+                ->where('d.id_cliente', $documento['id_cliente'])
+                ->whereIn('d.estado', ['aprobado', 'firmado', 'generado'])
+                ->orderBy('d.codigo', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            // Tipos de documentos del sistema
+            $tiposDocumento = $this->db->table('tbl_doc_tipos')
+                ->where('activo', 1)
+                ->orderBy('id_tipo')
+                ->get()
+                ->getResultArray();
+
+            // Plantillas para la codificación
+            $plantillas = $this->db->table('tbl_doc_plantillas')
+                ->select('codigo_sugerido, nombre, tipo_documento')
+                ->where('activo', 1)
+                ->where('tipo_documento IS NOT NULL')
+                ->orderBy('codigo_sugerido')
+                ->get()
+                ->getResultArray();
+        }
+
         $data = [
             'titulo' => $documento['titulo'],
             'cliente' => $cliente,
@@ -1113,7 +1479,13 @@ Incluye criterios de evaluación y responsables."
             'contexto' => $contexto,
             'consultor' => $consultor,
             'firmaConsultorBase64' => $firmaConsultorBase64,
-            'firmasElectronicas' => $firmasElectronicas
+            'firmasElectronicas' => $firmasElectronicas,
+            // Datos dinámicos para secciones especiales
+            'listadoMaestro' => $listadoMaestro,
+            'tiposDocumento' => $tiposDocumento,
+            'plantillas' => $plantillas,
+            // Firmantes desde servicio (arquitectura escalable)
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento'])
         ];
 
         // Renderizar la vista del PDF
@@ -1215,6 +1587,36 @@ Incluye criterios de evaluación y responsables."
             ];
         }
 
+        // Datos dinámicos para secciones especiales (tipos_documentos, codificacion, listado_maestro)
+        $listadoMaestro = [];
+        $tiposDocumento = [];
+        $plantillas = [];
+
+        // Solo cargar si es documento de control documental
+        if ($documento['tipo_documento'] === 'procedimiento_control_documental') {
+            $listadoMaestro = $this->db->table('tbl_documentos_sst d')
+                ->select('d.id_documento, d.codigo, d.titulo, d.tipo_documento, d.version, d.estado, d.created_at, d.updated_at')
+                ->where('d.id_cliente', $documento['id_cliente'])
+                ->whereIn('d.estado', ['aprobado', 'firmado', 'generado'])
+                ->orderBy('d.codigo', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            $tiposDocumento = $this->db->table('tbl_doc_tipos')
+                ->where('activo', 1)
+                ->orderBy('id_tipo')
+                ->get()
+                ->getResultArray();
+
+            $plantillas = $this->db->table('tbl_doc_plantillas')
+                ->select('codigo_sugerido, nombre, tipo_documento')
+                ->where('activo', 1)
+                ->where('tipo_documento IS NOT NULL')
+                ->orderBy('codigo_sugerido')
+                ->get()
+                ->getResultArray();
+        }
+
         $data = [
             'titulo' => $documento['titulo'],
             'cliente' => $cliente,
@@ -1227,7 +1629,13 @@ Incluye criterios de evaluación y responsables."
             'contexto' => $contexto,
             'consultor' => $consultor,
             'firmaConsultorBase64' => $firmaConsultorBase64,
-            'firmasElectronicas' => $firmasElectronicas
+            'firmasElectronicas' => $firmasElectronicas,
+            // Datos dinámicos para secciones especiales
+            'listadoMaestro' => $listadoMaestro,
+            'tiposDocumento' => $tiposDocumento,
+            'plantillas' => $plantillas,
+            // Firmantes desde servicio (arquitectura escalable)
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento'])
         ];
 
         // Renderizar HTML y generar PDF
@@ -1431,6 +1839,165 @@ Incluye criterios de evaluación y responsables."
 
         return redirect()->to('documentacion/carpeta/' . $documento['id_cliente'])
             ->with('success', 'Documento firmado adjuntado y publicado en Reportes exitosamente.');
+    }
+
+    /**
+     * Adjunta una planilla de afiliación al Sistema General de Riesgos Laborales (1.1.4)
+     * Soporta archivos (PDF, Excel, imágenes) o enlaces externos (Google Drive, OneDrive)
+     * Publica automáticamente en reportList para consulta
+     */
+    public function adjuntarPlanillaSRL()
+    {
+        $idCliente = $this->request->getPost('id_cliente');
+        $idCarpeta = $this->request->getPost('id_carpeta');
+        $tipoCarga = $this->request->getPost('tipo_carga'); // 'archivo' o 'enlace'
+        $descripcion = $this->request->getPost('descripcion');
+        $observaciones = $this->request->getPost('observaciones') ?? '';
+
+        if (!$idCliente || !$descripcion) {
+            return redirect()->back()->with('error', 'Cliente y descripción son requeridos.');
+        }
+
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado.');
+        }
+
+        $enlaceFinal = null;
+        $esEnlaceExterno = false;
+
+        if ($tipoCarga === 'enlace') {
+            // Enlace externo (Google Drive, OneDrive, etc.)
+            $urlExterna = $this->request->getPost('url_externa');
+            if (empty($urlExterna) || !filter_var($urlExterna, FILTER_VALIDATE_URL)) {
+                return redirect()->back()->with('error', 'El enlace proporcionado no es válido.');
+            }
+            $enlaceFinal = $urlExterna;
+            $esEnlaceExterno = true;
+        } else {
+            // Archivo subido
+            $archivo = $this->request->getFile('archivo_planilla');
+
+            if (!$archivo || !$archivo->isValid()) {
+                return redirect()->back()->with('error', 'Error al subir el archivo. Intente nuevamente.');
+            }
+
+            // Validar tipo de archivo
+            $tiposPermitidos = [
+                'application/pdf',
+                'image/jpeg', 'image/png', 'image/jpg',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            ];
+            if (!in_array($archivo->getMimeType(), $tiposPermitidos)) {
+                return redirect()->back()->with('error', 'Tipo de archivo no permitido. Use PDF, JPG, PNG o Excel.');
+            }
+
+            // Validar tamaño (10MB máximo)
+            if ($archivo->getSize() > 10 * 1024 * 1024) {
+                return redirect()->back()->with('error', 'El archivo excede el tamaño máximo de 10MB.');
+            }
+
+            // Crear directorio si no existe
+            $carpetaNit = $cliente['nit_cliente'];
+            $uploadPath = FCPATH . 'uploads/' . $carpetaNit;
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            // Generar nombre único
+            $extension = $archivo->getExtension();
+            $nombreArchivo = 'planilla_srl_' . date('Ymd_His') . '.' . $extension;
+
+            // Mover archivo
+            if (!$archivo->move($uploadPath, $nombreArchivo)) {
+                return redirect()->back()->with('error', 'Error al guardar el archivo en el servidor.');
+            }
+
+            $enlaceFinal = base_url('uploads/' . $carpetaNit . '/' . $nombreArchivo);
+        }
+
+        // Generar código secuencial para planillas
+        $ultimoDoc = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'planilla_afiliacion_srl')
+            ->orderBy('id_documento', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        $secuencia = 1;
+        if ($ultimoDoc && preg_match('/PLA-SRL-(\d{3})/', $ultimoDoc['codigo'], $matches)) {
+            $secuencia = intval($matches[1]) + 1;
+        }
+        $codigo = 'PLA-SRL-' . str_pad($secuencia, 3, '0', STR_PAD_LEFT);
+
+        // Crear registro en tbl_documentos_sst
+        $datosDocumento = [
+            'id_cliente' => $idCliente,
+            'tipo_documento' => 'planilla_afiliacion_srl',
+            'codigo' => $codigo,
+            'titulo' => $descripcion,
+            'anio' => date('Y'),
+            'version' => 1,
+            'estado' => 'aprobado',
+            'contenido' => json_encode([
+                'descripcion' => $descripcion,
+                'observaciones' => $observaciones,
+                'es_enlace_externo' => $esEnlaceExterno,
+                'url' => $enlaceFinal
+            ]),
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'url_externa' => $esEnlaceExterno ? $enlaceFinal : null,
+            'observaciones' => $observaciones,
+            'fecha_aprobacion' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->table('tbl_documentos_sst')->insert($datosDocumento);
+        $idDocumento = $this->db->insertID();
+
+        // Crear versión inicial
+        $this->db->table('tbl_doc_versiones_sst')->insert([
+            'id_documento' => $idDocumento,
+            'codigo' => $codigo,
+            'version_texto' => '1.0',
+            'tipo_cambio' => 'mayor',
+            'descripcion_cambio' => 'Carga inicial de planilla',
+            'estado' => 'vigente',
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'autorizado_por' => session()->get('nombre') ?? 'Sistema',
+            'fecha_autorizacion' => date('Y-m-d H:i:s')
+        ]);
+
+        // Publicar en reportList
+        $detailReport = $this->db->table('detail_report')
+            ->where("detail_report COLLATE utf8mb4_general_ci LIKE '%Documento SG-SST%'", null, false)
+            ->get()
+            ->getRowArray();
+        $idDetailReport = $detailReport['id_detailreport'] ?? 2;
+
+        $tituloReporte = $codigo . ' - ' . $descripcion;
+        $obsReporte = 'Planilla de afiliación SRL. ' . ($observaciones ?: 'Sin observaciones.');
+        if ($esEnlaceExterno) {
+            $obsReporte .= ' (Enlace externo)';
+        }
+
+        $this->db->table('tbl_reporte')->insert([
+            'titulo_reporte' => $tituloReporte,
+            'id_detailreport' => $idDetailReport,
+            'id_report_type' => 12, // Reportes SST
+            'id_cliente' => $idCliente,
+            'enlace' => $enlaceFinal,
+            'estado' => 'CERRADO',
+            'observaciones' => $obsReporte,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // Redirigir a la carpeta
+        return redirect()->to('documentacion/carpeta/' . $idCarpeta)
+            ->with('success', 'Planilla adjuntada y publicada en Reportes exitosamente.');
     }
 
     /**
@@ -1899,5 +2466,206 @@ Incluye criterios de evaluación y responsables."
         $nombreArchivo = $version['codigo'] . '_v' . $version['version_texto'] . '_' . url_title($version['titulo'], '-', true) . '.pdf';
 
         $dompdf->stream($nombreArchivo, ['Attachment' => true]);
+    }
+
+    /**
+     * Muestra el Procedimiento de Control Documental generado
+     */
+    public function procedimientoControlDocumental(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_control_documental')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/procedimiento_control_documental/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Procedimiento de Control Documental.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        // Normalizar secciones para eliminar duplicados
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'procedimiento_control_documental');
+        }
+
+        // Obtener historial de versiones para la tabla de Control de Cambios
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener responsables del cliente para las firmas
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        // Obtener contexto SST para datos adicionales
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        // Obtener datos del consultor asignado
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        // Obtener firmas electrónicas del documento
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        // Obtener listado maestro de documentos para la sección 13
+        $listadoMaestro = $this->db->table('tbl_documentos_sst d')
+            ->select('d.id_documento, d.codigo, d.titulo, d.tipo_documento, d.version, d.estado, d.created_at, d.updated_at')
+            ->where('d.id_cliente', $idCliente)
+            ->whereIn('d.estado', ['aprobado', 'firmado', 'generado'])
+            ->orderBy('d.codigo', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener tipos de documentos del sistema para la sección 6
+        $tiposDocumento = $this->db->table('tbl_doc_tipos')
+            ->where('activo', 1)
+            ->orderBy('id_tipo')
+            ->get()
+            ->getResultArray();
+
+        // Obtener plantillas para la sección 7 (Codificación)
+        $plantillas = $this->db->table('tbl_doc_plantillas')
+            ->select('codigo_sugerido, nombre, tipo_documento')
+            ->where('activo', 1)
+            ->where('tipo_documento IS NOT NULL')
+            ->orderBy('codigo_sugerido')
+            ->get()
+            ->getResultArray();
+
+        $data = [
+            'titulo' => 'Procedimiento de Control Documental - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'listadoMaestro' => $listadoMaestro,
+            'tiposDocumento' => $tiposDocumento,
+            'plantillas' => $plantillas,
+            // Firmantes desde servicio (arquitectura escalable)
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('procedimiento_control_documental')
+        ];
+
+        return view('documentos_sst/procedimiento_control_documental', $data);
+    }
+
+    /**
+     * Crea el Procedimiento de Control Documental
+     */
+    public function crearControlDocumental(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int)date('Y');
+
+        // Verificar si ya existe
+        $existente = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_control_documental')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if ($existente) {
+            // Ya existe, redirigir al editor
+            return redirect()->to(base_url('documentos/generar/procedimiento_control_documental/' . $idCliente));
+        }
+
+        // Generar código del documento
+        $codigo = $this->generarCodigoDocumento($idCliente, 'procedimiento_control_documental');
+
+        // Crear documento con secciones vacías (desde servicio)
+        $tipoDoc = $this->configService->obtenerTipoDocumento('procedimiento_control_documental');
+        $secciones = [];
+        foreach ($tipoDoc['secciones'] as $sec) {
+            $secciones[] = [
+                'numero' => $sec['numero'],
+                'nombre' => $sec['nombre'],
+                'key' => $sec['key'],
+                'contenido' => '',
+                'estado' => 'pendiente'
+            ];
+        }
+
+        $contenido = [
+            'titulo' => $tipoDoc['nombre'],
+            'secciones' => $secciones
+        ];
+
+        // Insertar documento
+        $this->db->table('tbl_documentos_sst')->insert([
+            'id_cliente' => $idCliente,
+            'tipo_documento' => 'procedimiento_control_documental',
+            'titulo' => $tipoDoc['nombre'],
+            'codigo' => $codigo,
+            'anio' => $anio,
+            'contenido' => json_encode($contenido),
+            'version' => 1,
+            'estado' => 'borrador',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        $idDocumento = $this->db->insertID();
+
+        // Crear versión inicial
+        $this->db->table('tbl_doc_versiones_sst')->insert([
+            'id_documento' => $idDocumento,
+            'id_cliente' => $idCliente,
+            'codigo' => $codigo,
+            'titulo' => $tipoDoc['nombre'],
+            'anio' => $anio,
+            'version' => 1,
+            'version_texto' => '1.0',
+            'tipo_cambio' => 'mayor',
+            'descripcion_cambio' => 'Elaboración inicial del documento',
+            'contenido_snapshot' => json_encode($contenido),
+            'estado' => 'vigente',
+            'fecha_autorizacion' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // Redirigir al editor de secciones
+        return redirect()->to(base_url('documentos/generar/procedimiento_control_documental/' . $idCliente))
+            ->with('success', 'Procedimiento de Control Documental creado. Ahora puede editar las secciones.');
     }
 }

@@ -346,43 +346,140 @@ if (!function_exists('renderizarTablaPdf')) {
     <!-- Secciones del documento -->
     <?php if (!empty($contenido['secciones'])): ?>
         <?php foreach ($contenido['secciones'] as $seccion): ?>
+            <?php
+            $keySeccion = $seccion['key'] ?? '';
+            $contenidoSeccion = $seccion['contenido'] ?? '';
+            ?>
             <div class="seccion">
                 <div class="seccion-titulo"><?= esc($seccion['titulo']) ?></div>
                 <div class="seccion-contenido">
                     <?php
-                    $contenidoSeccion = $seccion['contenido'] ?? '';
+                    // =====================================================
+                    // SECCIÓN 6: TIPOS DE DOCUMENTOS
+                    // Muestra contenido de texto + tabla dinámica del sistema
+                    // =====================================================
+                    if ($keySeccion === 'tipos_documentos'):
+                        // Mostrar contenido de texto introductorio
+                        if (!empty($contenidoSeccion) && is_string($contenidoSeccion)):
+                            echo convertirMarkdownAHtmlPdf($contenidoSeccion);
+                        endif;
+                        // SIEMPRE mostrar tabla dinámica de tipos de documentos
+                        if (!empty($tiposDocumento ?? [])): ?>
+                            <p style="margin: 8px 0 3px 0;">A continuación se presenta la clasificación de tipos de documentos del SG-SST:</p>
+                            <table class="tabla-contenido" style="width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9pt;">
+                                <tr>
+                                    <th style="border: 1px solid #999; padding: 5px 8px; background-color: #0d6efd; color: white; font-weight: bold; text-align: center; width: 70px;">Prefijo</th>
+                                    <th style="border: 1px solid #999; padding: 5px 8px; background-color: #0d6efd; color: white; font-weight: bold; text-align: center;">Tipo de Documento</th>
+                                    <th style="border: 1px solid #999; padding: 5px 8px; background-color: #0d6efd; color: white; font-weight: bold; text-align: center;">Descripción</th>
+                                </tr>
+                                <?php foreach ($tiposDocumento as $tipo): ?>
+                                <tr>
+                                    <td style="border: 1px solid #999; padding: 5px 8px; text-align: center; font-weight: bold;"><?= esc($tipo['prefijo'] ?? '') ?></td>
+                                    <td style="border: 1px solid #999; padding: 5px 8px;"><?= esc($tipo['nombre'] ?? '') ?></td>
+                                    <td style="border: 1px solid #999; padding: 5px 8px; font-size: 8pt;"><?= esc($tipo['descripcion'] ?? '') ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </table>
+                        <?php endif;
 
-                    // Si es array estructurado (tabla con filas)
-                    if (is_array($contenidoSeccion)) {
-                        if (isset($contenidoSeccion['filas'])) {
-                            echo '<table class="tabla-contenido">';
-                            if (!empty($contenidoSeccion['encabezados'])) {
-                                echo '<tr>';
-                                foreach ($contenidoSeccion['encabezados'] as $enc) {
-                                    echo '<th style="border: 1px solid #999; padding: 5px 8px; background-color: #0d6efd; color: white; font-weight: bold; text-align: center;">' . esc($enc) . '</th>';
-                                }
-                                echo '</tr>';
-                            }
-                            foreach ($contenidoSeccion['filas'] as $fila) {
-                                echo '<tr>';
-                                if (is_array($fila)) {
-                                    foreach ($fila as $celda) {
-                                        echo '<td style="border: 1px solid #999; padding: 5px 8px;">' . esc(is_array($celda) ? json_encode($celda) : $celda) . '</td>';
+                    // =====================================================
+                    // SECCIÓN 7: CODIFICACIÓN
+                    // Muestra contenido de texto + tabla dinámica de plantillas
+                    // =====================================================
+                    elseif ($keySeccion === 'codificacion'):
+                        // Mostrar contenido de texto explicativo
+                        if (!empty($contenidoSeccion) && is_string($contenidoSeccion)):
+                            echo convertirMarkdownAHtmlPdf($contenidoSeccion);
+                        endif;
+                        // SIEMPRE mostrar tabla dinámica de códigos
+                        if (!empty($plantillas ?? [])): ?>
+                            <p style="margin: 8px 0 3px 0;">Los códigos de los documentos del SG-SST son los siguientes:</p>
+                            <table class="tabla-contenido" style="width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9pt;">
+                                <tr>
+                                    <th style="border: 1px solid #999; padding: 5px 8px; background-color: #0d6efd; color: white; font-weight: bold; text-align: center; width: 100px;">Código</th>
+                                    <th style="border: 1px solid #999; padding: 5px 8px; background-color: #0d6efd; color: white; font-weight: bold; text-align: center;">Nombre del Documento</th>
+                                </tr>
+                                <?php foreach ($plantillas as $plt): ?>
+                                <tr>
+                                    <td style="border: 1px solid #999; padding: 5px 8px; text-align: center; font-weight: bold;"><?= esc($plt['codigo_sugerido']) ?></td>
+                                    <td style="border: 1px solid #999; padding: 5px 8px;"><?= esc($plt['nombre']) ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </table>
+                        <?php endif;
+
+                    // =====================================================
+                    // SECCIÓN 13: LISTADO MAESTRO
+                    // Muestra contenido de texto + tabla dinámica de documentos del cliente
+                    // =====================================================
+                    elseif ($keySeccion === 'listado_maestro'):
+                        // Mostrar contenido de texto introductorio
+                        if (!empty($contenidoSeccion) && is_string($contenidoSeccion)):
+                            echo convertirMarkdownAHtmlPdf($contenidoSeccion);
+                        else: ?>
+                            <p style="margin: 3px 0;">El Listado Maestro de Documentos del SG-SST se mantiene actualizado de forma automática en el sistema de gestión documental.</p>
+                        <?php endif;
+                        // SIEMPRE mostrar tabla dinámica del listado maestro
+                        if (!empty($listadoMaestro ?? [])): ?>
+                            <table class="tabla-contenido" style="width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 8pt;">
+                                <tr>
+                                    <th style="border: 1px solid #999; padding: 4px 6px; background-color: #198754; color: white; font-weight: bold; text-align: center; width: 80px;">Código</th>
+                                    <th style="border: 1px solid #999; padding: 4px 6px; background-color: #198754; color: white; font-weight: bold; text-align: center;">Título</th>
+                                    <th style="border: 1px solid #999; padding: 4px 6px; background-color: #198754; color: white; font-weight: bold; text-align: center; width: 50px;">Versión</th>
+                                    <th style="border: 1px solid #999; padding: 4px 6px; background-color: #198754; color: white; font-weight: bold; text-align: center; width: 70px;">Estado</th>
+                                    <th style="border: 1px solid #999; padding: 4px 6px; background-color: #198754; color: white; font-weight: bold; text-align: center; width: 75px;">Fecha</th>
+                                </tr>
+                                <?php foreach ($listadoMaestro as $doc): ?>
+                                <tr>
+                                    <td style="border: 1px solid #999; padding: 4px 6px; text-align: center; font-weight: bold;"><?= esc($doc['codigo'] ?? 'N/A') ?></td>
+                                    <td style="border: 1px solid #999; padding: 4px 6px;"><?= esc($doc['titulo'] ?? $doc['tipo_documento']) ?></td>
+                                    <td style="border: 1px solid #999; padding: 4px 6px; text-align: center;"><?= str_pad($doc['version'] ?? 1, 3, '0', STR_PAD_LEFT) ?></td>
+                                    <td style="border: 1px solid #999; padding: 4px 6px; text-align: center;"><?= ucfirst($doc['estado']) ?></td>
+                                    <td style="border: 1px solid #999; padding: 4px 6px; text-align: center;"><?= date('d/m/Y', strtotime($doc['created_at'])) ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </table>
+                            <p style="margin: 5px 0; font-size: 8pt; color: #666;">
+                                <em>Este listado se actualiza automáticamente. Total documentos: <strong><?= count($listadoMaestro) ?></strong></em>
+                            </p>
+                        <?php endif;
+
+                    // =====================================================
+                    // OTRAS SECCIONES: Contenido normal
+                    // =====================================================
+                    else:
+                        // Si es array estructurado (tabla con filas)
+                        if (is_array($contenidoSeccion)) {
+                            if (isset($contenidoSeccion['filas'])) {
+                                echo '<table class="tabla-contenido">';
+                                if (!empty($contenidoSeccion['encabezados'])) {
+                                    echo '<tr>';
+                                    foreach ($contenidoSeccion['encabezados'] as $enc) {
+                                        echo '<th style="border: 1px solid #999; padding: 5px 8px; background-color: #0d6efd; color: white; font-weight: bold; text-align: center;">' . esc($enc) . '</th>';
                                     }
-                                } else {
-                                    echo '<td style="border: 1px solid #999; padding: 5px 8px;">' . esc($fila) . '</td>';
+                                    echo '</tr>';
                                 }
-                                echo '</tr>';
+                                foreach ($contenidoSeccion['filas'] as $fila) {
+                                    echo '<tr>';
+                                    if (is_array($fila)) {
+                                        foreach ($fila as $celda) {
+                                            echo '<td style="border: 1px solid #999; padding: 5px 8px;">' . esc(is_array($celda) ? json_encode($celda) : $celda) . '</td>';
+                                        }
+                                    } else {
+                                        echo '<td style="border: 1px solid #999; padding: 5px 8px;">' . esc($fila) . '</td>';
+                                    }
+                                    echo '</tr>';
+                                }
+                                echo '</table>';
                             }
-                            echo '</table>';
+                            $contenidoSeccion = '';
                         }
-                        $contenidoSeccion = '';
-                    }
 
-                    // Convertir contenido Markdown a HTML (incluye tablas mixtas con texto)
-                    if (!empty($contenidoSeccion)) {
-                        echo convertirMarkdownAHtmlPdf($contenidoSeccion);
-                    }
+                        // Convertir contenido Markdown a HTML (incluye tablas mixtas con texto)
+                        if (!empty($contenidoSeccion)) {
+                            echo convertirMarkdownAHtmlPdf($contenidoSeccion);
+                        }
+                    endif;
                     ?>
                 </div>
             </div>
@@ -450,6 +547,18 @@ if (!function_exists('renderizarTablaPdf')) {
 
     // Determinar si son solo 2 firmantes (7 estándares SIN delegado) - NO aplica para doc responsabilidades rep legal
     $esSoloDosFirmantes = !$esDocResponsabilidadesRepLegal && ($estandares <= 10) && !$requiereDelegado;
+
+    // Firmantes definidos en TIPOS_DOCUMENTO - tiene prioridad sobre lógica de estándares
+    $firmantesDefinidosArr = $firmantesDefinidos ?? null;
+    $usaFirmantesDefinidos = !empty($firmantesDefinidosArr) && is_array($firmantesDefinidosArr);
+
+    // Si tiene firmantes definidos ['representante_legal', 'responsable_sst'], son solo 2 firmantes
+    $esDosFirmantesPorDefinicion = $usaFirmantesDefinidos
+        && in_array('representante_legal', $firmantesDefinidosArr)
+        && in_array('responsable_sst', $firmantesDefinidosArr)
+        && !in_array('delegado_sst', $firmantesDefinidosArr)
+        && !in_array('vigia_sst', $firmantesDefinidosArr)
+        && !in_array('copasst', $firmantesDefinidosArr);
 
     // Datos del Consultor desde tbl_consultor
     $consultorNombre = $consultor['nombre_consultor'] ?? '';
@@ -651,6 +760,53 @@ if (!function_exists('renderizarTablaPdf')) {
                     if ($firmaSegundoPdf && !empty($firmaSegundoPdf['evidencia']['firma_imagen'])):
                     ?>
                         <img src="<?= $firmaSegundoPdf['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 56px; max-width: 168px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666;">Firma</small>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <?php elseif ($esDosFirmantesPorDefinicion): ?>
+        <!-- ========== 2 FIRMANTES POR DEFINICIÓN: Responsable SST + Rep Legal ========== -->
+        <!-- Usado para documentos como procedimiento_control_documental que definen firmantes específicos -->
+        <table class="tabla-contenido" style="width: 100%; margin-top: 0;">
+            <tr>
+                <th style="width: 50%; background-color: #e9ecef; color: #333;">Elaboró / Responsable del SG-SST</th>
+                <th style="width: 50%; background-color: #e9ecef; color: #333;">Aprobó / Representante Legal</th>
+            </tr>
+            <tr>
+                <!-- RESPONSABLE SST (Consultor) -->
+                <td style="vertical-align: top; padding: 12px; height: 140px;">
+                    <div style="margin-bottom: 5px;"><strong>Nombre:</strong> <?= !empty($consultorNombre) ? esc($consultorNombre) : '________________________' ?></div>
+                    <div style="margin-bottom: 5px;"><strong>Cargo:</strong> Responsable del SG-SST</div>
+                    <?php if (!empty($consultorLicencia)): ?>
+                    <div style="margin-bottom: 5px;"><strong>Licencia SST:</strong> <?= esc($consultorLicencia) ?></div>
+                    <?php endif; ?>
+                </td>
+                <!-- REPRESENTANTE LEGAL -->
+                <td style="vertical-align: top; padding: 12px; height: 140px;">
+                    <div style="margin-bottom: 5px;"><strong>Nombre:</strong> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '________________________' ?></div>
+                    <div style="margin-bottom: 5px;"><strong>Cargo:</strong> <?= esc($repLegalCargo) ?></div>
+                </td>
+            </tr>
+            <tr>
+                <!-- Fila de firmas alineadas -->
+                <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
+                    <?php if (!empty($firmaConsultorBase64)): ?>
+                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma" style="max-height: 56px; max-width: 168px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666;">Firma</small>
+                    </div>
+                </td>
+                <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
+                    <?php
+                    $firmaRepLegalPdfDef = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+                    if ($firmaRepLegalPdfDef && !empty($firmaRepLegalPdfDef['evidencia']['firma_imagen'])):
+                    ?>
+                        <img src="<?= $firmaRepLegalPdfDef['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 56px; max-width: 168px;"><br>
                     <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666;">Firma</small>

@@ -153,10 +153,13 @@
                         // Comité de Convivencia: aunque es obligatorio por Ley 1010/2006,
                         // para 7 estándares se simplifica y no se exige en el formulario
                         $mostrarSeccion = false;
+                    } elseif ($grupo === 'brigada' && $estandares <= 7) {
+                        // Brigada de Emergencias: para 7 estándares no se exige formalmente
+                        $mostrarSeccion = false;
                     }
 
                     // Mostrar solo secciones que aplican o que tienen items
-                    if ($mostrarSeccion && (!empty($data['items']) || in_array($grupo, ['direccion', 'vigia', 'copasst', 'convivencia']))):
+                    if ($mostrarSeccion && (!empty($data['items']) || in_array($grupo, ['direccion', 'vigia', 'copasst', 'convivencia', 'brigada']))):
                 ?>
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">

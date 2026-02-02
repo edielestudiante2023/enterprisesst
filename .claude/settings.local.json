@@ -63,7 +63,12 @@
       "Bash(c:xamppmysqlbinmysql.exe -h db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com -P 25060 -u cycloid_userdb -pAVNS_iDypWizlpMRwHIORJGG --ssl-mode=REQUIRED empresas_sst -e \"SHOW TABLES LIKE ''tbl_doc_plantillas%'';\")",
       "Bash(./mysql.exe -h db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com -P 25060 -u cycloid_userdb -pAVNS_iDypWizlpMRwHIORJGG --ssl empresas_sst -e \"SHOW TABLES LIKE ''tbl_doc_plantillas%'';\")",
       "Bash(git stash push:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(c:xamppapachebinhttpd.exe -k restart)",
+      "Bash(del \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\Views\\\\documentacion\\\\plantillas.php\")",
+      "Bash(grep:*)",
+      "Bash(C:xamppphpphp.exe C:xampphtdocsenterprisesstappSQLactualizar_emails_actas.php)",
+      "WebFetch(domain:localhost)"
     ]
   }
 }

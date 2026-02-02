@@ -153,7 +153,9 @@ class FasesDocumentoService
                 'cantidad' => $estadoFase['cantidad'],
                 'url_modulo' => $urlModulo,
                 'url_generar' => $urlGenerar,
-                'puede_generar' => $estadoFase['estado'] !== self::ESTADO_BLOQUEADO && $estadoFase['estado'] !== self::ESTADO_COMPLETO
+                'puede_generar' => $estadoFase['estado'] !== self::ESTADO_BLOQUEADO && $estadoFase['estado'] !== self::ESTADO_COMPLETO,
+                'roles_faltantes' => $estadoFase['roles_faltantes'] ?? [],
+                'detalle_faltantes' => $estadoFase['detalle_faltantes'] ?? ''
             ];
 
             if ($estadoFase['estado'] !== self::ESTADO_COMPLETO) {
@@ -324,6 +326,11 @@ class FasesDocumentoService
 
     /**
      * Verifica estado de los responsables SST
+     *
+     * IMPORTANTE: Para generar documentos solo se requiere el Representante Legal,
+     * ya que es el único con autoridad para delegar responsabilidades del SG-SST.
+     * Los demás roles (COPASST, COCOLAB, Brigada) son obligatorios para el SG-SST
+     * completo pero NO bloquean la generación de documentos.
      */
     protected function verificarResponsables(int $idCliente): array
     {
@@ -341,7 +348,25 @@ class FasesDocumentoService
             ];
         }
 
-        // Verificar roles obligatorios
+        // Verificar si existe el Representante Legal (único rol requerido para generar documentos)
+        $tieneRepLegal = $responsableModel
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_rol', 'representante_legal')
+            ->where('activo', 1)
+            ->countAllResults() > 0;
+
+        if (!$tieneRepLegal) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => 'Falta el Representante Legal',
+                'cantidad' => $cantidad,
+                'roles_faltantes' => [['rol' => 'representante_legal', 'nombre' => 'Representante Legal']],
+                'detalle_faltantes' => 'Representante Legal'
+            ];
+        }
+
+        // Representante Legal existe = fase COMPLETA para generar documentos
+        // Pero informamos sobre otros roles faltantes del SG-SST (sin bloquear)
         $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
@@ -349,16 +374,22 @@ class FasesDocumentoService
         $verificacion = $responsableModel->verificarRolesObligatorios($idCliente, $estandares);
 
         if (!$verificacion['completo']) {
+            // Hay roles faltantes del SG-SST, pero NO bloqueamos la generación
+            $nombresFaltantes = array_column($verificacion['faltantes'], 'nombre');
+            $listaFaltantes = implode(', ', $nombresFaltantes);
+
             return [
-                'estado' => self::ESTADO_EN_PROCESO,
-                'mensaje' => "Faltan " . count($verificacion['faltantes']) . " roles obligatorios",
-                'cantidad' => $cantidad
+                'estado' => self::ESTADO_COMPLETO, // COMPLETO porque tiene Rep Legal
+                'mensaje' => "{$cantidad} responsables (faltan " . count($verificacion['faltantes']) . " roles del SG-SST)",
+                'cantidad' => $cantidad,
+                'roles_faltantes_sgsst' => $verificacion['faltantes'], // Info adicional, no bloquea
+                'detalle_faltantes_sgsst' => $listaFaltantes
             ];
         }
 
         return [
             'estado' => self::ESTADO_COMPLETO,
-            'mensaje' => "{$cantidad} responsables con roles completos",
+            'mensaje' => "{$cantidad} responsables con todos los roles",
             'cantidad' => $cantidad
         ];
     }

@@ -248,12 +248,37 @@ class ClienteDocumentosSstController extends Controller
                     ->getResultArray();
 
                 foreach ($docs as $d) {
+                    // Obtener enlace del archivo firmado (escaneado) si existe
+                    $d['archivo_firmado'] = $this->obtenerArchivoFirmado($d['id_documento']);
                     $documentos[] = $d;
                 }
             }
         }
 
         return $documentos;
+    }
+
+    /**
+     * Obtiene el enlace del archivo firmado/escaneado si existe
+     * Prioriza: tbl_doc_versiones_sst.archivo_pdf > tbl_reporte.enlace
+     */
+    protected function obtenerArchivoFirmado(int $idDocumento): ?string
+    {
+        // Primero buscar en versiones SST (más específico)
+        $version = $this->db->table('tbl_doc_versiones_sst')
+            ->select('archivo_pdf')
+            ->where('id_documento', $idDocumento)
+            ->where('estado', 'vigente')
+            ->where('archivo_pdf IS NOT NULL')
+            ->where('archivo_pdf !=', '')
+            ->get()
+            ->getRowArray();
+
+        if ($version && !empty($version['archivo_pdf'])) {
+            return $version['archivo_pdf'];
+        }
+
+        return null;
     }
 
     /**
@@ -298,4 +323,6 @@ class ClienteDocumentosSstController extends Controller
 
         return $ruta;
     }
+
+    // NOTA: Metodos de aprobacion eliminados - Se usa PDF con firma electronica en su lugar
 }

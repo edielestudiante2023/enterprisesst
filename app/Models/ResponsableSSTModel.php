@@ -40,7 +40,10 @@ class ResponsableSSTModel extends Model
         'copasst_suplente_trabajadores' => 'COPASST - Suplente Trabajadores',
         'comite_convivencia_presidente' => 'Comité Convivencia - Presidente',
         'comite_convivencia_secretario' => 'Comité Convivencia - Secretario',
-        'comite_convivencia_miembro' => 'Comité Convivencia - Miembro',
+        'comite_convivencia_representante_empleador' => 'Comité Convivencia - Representante Empleador',
+        'comite_convivencia_representante_trabajadores' => 'Comité Convivencia - Representante Trabajadores',
+        'comite_convivencia_suplente_empleador' => 'Comité Convivencia - Suplente Empleador',
+        'comite_convivencia_suplente_trabajadores' => 'Comité Convivencia - Suplente Trabajadores',
         'brigada_coordinador' => 'Brigada - Coordinador',
         'brigada_lider_evacuacion' => 'Brigada - Líder Evacuación',
         'brigada_lider_primeros_auxilios' => 'Brigada - Líder Primeros Auxilios',
@@ -61,8 +64,8 @@ class ResponsableSSTModel extends Model
      */
     public const ROLES_OBLIGATORIOS = [
         7 => ['representante_legal', 'vigia_sst'],
-        21 => ['representante_legal', 'responsable_sgsst', 'copasst_presidente', 'copasst_secretario', 'comite_convivencia_presidente'],
-        60 => ['representante_legal', 'responsable_sgsst', 'copasst_presidente', 'copasst_secretario', 'comite_convivencia_presidente']
+        21 => ['representante_legal', 'responsable_sgsst', 'copasst_presidente', 'copasst_secretario', 'comite_convivencia_presidente', 'comite_convivencia_secretario', 'brigada_coordinador'],
+        60 => ['representante_legal', 'responsable_sgsst', 'copasst_presidente', 'copasst_secretario', 'comite_convivencia_presidente', 'comite_convivencia_secretario', 'brigada_coordinador']
     ];
 
     /**
@@ -104,7 +107,7 @@ class ResponsableSSTModel extends Model
             ],
             'convivencia' => [
                 'titulo' => 'Comité de Convivencia Laboral',
-                'roles' => ['comite_convivencia_presidente', 'comite_convivencia_secretario', 'comite_convivencia_miembro'],
+                'roles' => ['comite_convivencia_presidente', 'comite_convivencia_secretario', 'comite_convivencia_representante_empleador', 'comite_convivencia_representante_trabajadores', 'comite_convivencia_suplente_empleador', 'comite_convivencia_suplente_trabajadores'],
                 'items' => []
             ],
             'brigada' => [
@@ -288,6 +291,73 @@ class ResponsableSSTModel extends Model
         }
 
         return $contenido;
+    }
+
+    /**
+     * Obtiene responsables según el tipo de comité
+     * Mapea los códigos de comité a los roles de responsables correspondientes
+     */
+    public function getByTipoComite(int $idCliente, string $codigoComite): array
+    {
+        // Mapeo de tipo de comité a roles de responsables
+        $mapeoRoles = [
+            'COPASST' => [
+                'copasst_presidente', 'copasst_secretario',
+                'copasst_representante_empleador', 'copasst_representante_trabajadores',
+                'copasst_suplente_empleador', 'copasst_suplente_trabajadores'
+            ],
+            'COCOLAB' => [
+                'comite_convivencia_presidente', 'comite_convivencia_secretario',
+                'comite_convivencia_representante_empleador', 'comite_convivencia_representante_trabajadores',
+                'comite_convivencia_suplente_empleador', 'comite_convivencia_suplente_trabajadores'
+            ],
+            'BRIGADA' => [
+                'brigada_coordinador', 'brigada_lider_evacuacion',
+                'brigada_lider_primeros_auxilios', 'brigada_lider_control_incendios'
+            ],
+            'VIGIA' => [
+                'vigia_sst', 'vigia_sst_suplente'
+            ]
+        ];
+
+        // Normalizar el código del comité
+        $codigo = strtoupper($codigoComite);
+
+        // Si no hay mapeo específico, retornar todos los responsables activos
+        if (!isset($mapeoRoles[$codigo])) {
+            return $this->getByCliente($idCliente);
+        }
+
+        $roles = $mapeoRoles[$codigo];
+
+        $responsables = $this->where('id_cliente', $idCliente)
+                             ->whereIn('tipo_rol', $roles)
+                             ->where('activo', 1)
+                             ->orderBy('tipo_rol', 'ASC')
+                             ->findAll();
+
+        // Agregar el nombre legible del rol
+        foreach ($responsables as &$resp) {
+            $resp['nombre_rol'] = self::TIPOS_ROL[$resp['tipo_rol']] ?? $resp['tipo_rol'];
+        }
+
+        return $responsables;
+    }
+
+    /**
+     * Obtiene todos los responsables disponibles para asignar a un comité
+     * Incluye todos los responsables del cliente que podrían participar
+     */
+    public function getDisponiblesParaComite(int $idCliente): array
+    {
+        $responsables = $this->getByCliente($idCliente);
+
+        // Agregar el nombre legible del rol
+        foreach ($responsables as &$resp) {
+            $resp['nombre_rol'] = self::TIPOS_ROL[$resp['tipo_rol']] ?? $resp['tipo_rol'];
+        }
+
+        return $responsables;
     }
 
     /**

@@ -400,8 +400,13 @@
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <a href="<?= base_url('client/mis-documentos-sst') ?>" class="btn w-100" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <a href="<?= base_url('client/mis-documentos-sst') ?>" target="_blank" class="btn w-100" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                             <i class="fas fa-folder-open me-2"></i> Mis Documentos SST
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="<?= base_url('actas/' . $client['id_cliente']) ?>" target="_blank" class="btn w-100" style="background: linear-gradient(135deg, #20c997 0%, #17a689 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <i class="fas fa-clipboard-list me-2"></i> Actas de Comités
                         </a>
                     </div>
                 </div>
@@ -559,6 +564,7 @@
                     el.style.transform = 'translateY(0)';
                 }, index * 200);
             });
+
         });
     </script>
 </body>

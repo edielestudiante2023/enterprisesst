@@ -510,7 +510,12 @@
                     <i class="fas fa-bolt me-2"></i>Acceso Rápido
                 </button>
             </a>
-            <a href="<?= base_url('/admin/usage') ?>" rel="noopener noreferrer">
+            <a href="<?= base_url('/admin/users') ?>" target="_blank" rel="noopener noreferrer">
+                <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none;" aria-label="Gestión de Usuarios">
+                    <i class="fas fa-users-cog me-2"></i>Gestión de Usuarios
+                </button>
+            </a>
+            <a href="<?= base_url('/admin/usage') ?>" target="_blank" rel="noopener noreferrer">
                 <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;">
                     <i class="fas fa-chart-line me-2"></i>Consumo de Plataforma
                 </button>
@@ -578,12 +583,6 @@
                     <a href="<?= base_url('documentacion') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);">
                         <i class="fas fa-file-alt fa-lg mb-2 d-block"></i>
                         Documentación
-                    </a>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-3">
-                    <a href="<?= base_url('documentacion/plantillas') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #834d9b 0%, #d04ed6 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(131, 77, 155, 0.3);">
-                        <i class="fas fa-magic fa-lg mb-2 d-block"></i>
-                        Plantillas Documentos
                     </a>
                 </div>
                 <div class="col-lg-2 col-md-4 mb-3">

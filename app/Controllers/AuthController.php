@@ -85,6 +85,19 @@ class AuthController extends Controller
                     'last_activity' => time() // Para control de inactividad
                 ]);
                 return redirect()->to('/consultor/dashboard');
+
+            } elseif ($tipoUsuario === 'miembro') {
+                // Usuario miembro de comité - acceso restringido a actas
+                $session->set([
+                    'user_id'       => $user['id_entidad'], // id_cliente para obtener datos
+                    'id_usuario'    => $user['id_usuario'],
+                    'id_sesion'     => $idSesion,
+                    'role'          => 'miembro',
+                    'email_miembro' => $user['email'], // Para identificar al miembro
+                    'isLoggedIn'    => true,
+                    'last_activity' => time()
+                ]);
+                return redirect()->to('/miembro/dashboard');
             }
         }
 

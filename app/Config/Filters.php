@@ -14,6 +14,7 @@ use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
 use App\Filters\SessionTimeoutFilter;
 use App\Filters\AuthFilter;
+use App\Filters\MiembroFilter;
 
 class Filters extends BaseFilters
 {
@@ -38,6 +39,7 @@ class Filters extends BaseFilters
         'performance'    => PerformanceMetrics::class,
         'sessiontimeout' => SessionTimeoutFilter::class,
         'auth'           => AuthFilter::class,
+        'miembro'        => MiembroFilter::class,
     ];
 
     /**

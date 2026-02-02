@@ -137,11 +137,21 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="<?= base_url('documentos-sst/exportar-pdf/' . $doc['id_documento']) ?>"
-                                       class="btn btn-sm btn-pdf text-white"
-                                       title="Descargar PDF" target="_blank">
-                                        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-                                    </a>
+                                    <?php if (!empty($doc['archivo_firmado'])): ?>
+                                        <!-- Documento con firma fisica: mostrar el escaneado -->
+                                        <a href="<?= esc($doc['archivo_firmado']) ?>"
+                                           class="btn btn-sm btn-success text-white"
+                                           title="Descargar documento firmado" target="_blank">
+                                            <i class="bi bi-patch-check-fill me-1"></i>Firmado
+                                        </a>
+                                    <?php else: ?>
+                                        <!-- Documento sin archivo escaneado: mostrar PDF generado -->
+                                        <a href="<?= base_url('documentos-sst/exportar-pdf/' . $doc['id_documento']) ?>"
+                                           class="btn btn-sm btn-pdf text-white"
+                                           title="Descargar PDF" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                                        </a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

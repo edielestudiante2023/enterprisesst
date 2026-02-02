@@ -180,12 +180,34 @@
                             </div>
 
                             <!-- Estado -->
-                            <div class="form-check mb-4">
+                            <div class="form-check mb-3">
                                 <input type="checkbox" name="activo" value="1" class="form-check-input"
                                        <?= ($responsable['activo'] ?? 1) ? 'checked' : '' ?> id="checkActivo">
                                 <label class="form-check-label" for="checkActivo">
                                     Responsable activo
                                 </label>
+                            </div>
+
+                            <!-- Acceso al Sistema -->
+                            <div class="card bg-light border-0 mb-4">
+                                <div class="card-body py-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="crear_usuario" value="1" class="form-check-input"
+                                               id="checkCrearUsuario" <?= !empty($responsable['id_usuario']) ? 'checked disabled' : '' ?>>
+                                        <label class="form-check-label" for="checkCrearUsuario">
+                                            <strong><i class="bi bi-person-badge me-1"></i>Crear acceso al sistema</strong>
+                                        </label>
+                                    </div>
+                                    <div class="form-text ms-4">
+                                        <?php if (!empty($responsable['id_usuario'])): ?>
+                                            <span class="text-success"><i class="bi bi-check-circle me-1"></i>Este responsable ya tiene acceso al sistema</span>
+                                        <?php else: ?>
+                                            Si marca esta opcion, se creara un usuario con el email como nombre de usuario.
+                                            El responsable podra iniciar sesion y gestionar sus actas/compromisos.
+                                            <br><small class="text-muted">Requiere que el campo Email este diligenciado.</small>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Botones -->

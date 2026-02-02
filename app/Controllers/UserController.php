@@ -25,7 +25,7 @@ class UserController extends Controller
     public function listUsers()
     {
         $session = session();
-        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+        if (!$session->get('isLoggedIn') || !in_array($session->get('role'), ['admin', 'consultant'])) {
             return redirect()->to('/login');
         }
 
@@ -46,7 +46,7 @@ class UserController extends Controller
     public function addUser()
     {
         $session = session();
-        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+        if (!$session->get('isLoggedIn') || !in_array($session->get('role'), ['admin', 'consultant'])) {
             return redirect()->to('/login');
         }
 
@@ -68,7 +68,7 @@ class UserController extends Controller
     public function addUserPost()
     {
         $session = session();
-        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+        if (!$session->get('isLoggedIn') || !in_array($session->get('role'), ['admin', 'consultant'])) {
             return redirect()->to('/login');
         }
 
@@ -96,6 +96,9 @@ class UserController extends Controller
             return redirect()->back()->with('msg', 'El email ya está registrado.')->withInput();
         }
 
+        // Guardar la contraseña en texto plano antes de crear el usuario (para enviar por email)
+        $passwordPlano = $data['password'];
+
         // Crear usuario
         $userId = $this->userModel->createUser($data);
 
@@ -106,7 +109,18 @@ class UserController extends Controller
                 $this->roleModel->assignRoleToUser($userId, $role['id_rol']);
             }
 
-            return redirect()->to('/admin/users')->with('msg', 'Usuario creado exitosamente.');
+            // Enviar credenciales por email al nuevo usuario
+            $emailSent = $this->sendWelcomeEmail(
+                $data['email'],
+                $data['nombre_completo'],
+                $passwordPlano
+            );
+
+            if ($emailSent) {
+                return redirect()->to('/admin/users')->with('msg', 'Usuario creado exitosamente. Se han enviado las credenciales al correo: ' . $data['email']);
+            } else {
+                return redirect()->to('/admin/users')->with('msg', 'Usuario creado exitosamente, pero hubo un error al enviar las credenciales por email. Contraseña asignada: ' . $passwordPlano);
+            }
         }
 
         return redirect()->back()->with('msg', 'Error al crear el usuario.')->withInput();
@@ -118,7 +132,7 @@ class UserController extends Controller
     public function editUser($id)
     {
         $session = session();
-        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+        if (!$session->get('isLoggedIn') || !in_array($session->get('role'), ['admin', 'consultant'])) {
             return redirect()->to('/login');
         }
 
@@ -147,7 +161,7 @@ class UserController extends Controller
     public function editUserPost($id)
     {
         $session = session();
-        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+        if (!$session->get('isLoggedIn') || !in_array($session->get('role'), ['admin', 'consultant'])) {
             return redirect()->to('/login');
         }
 
@@ -200,7 +214,7 @@ class UserController extends Controller
     public function deleteUser($id)
     {
         $session = session();
-        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+        if (!$session->get('isLoggedIn') || !in_array($session->get('role'), ['admin', 'consultant'])) {
             return redirect()->to('/login');
         }
 
@@ -228,7 +242,7 @@ class UserController extends Controller
     public function toggleStatus($id)
     {
         $session = session();
-        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+        if (!$session->get('isLoggedIn') || !in_array($session->get('role'), ['admin', 'consultant'])) {
             return redirect()->to('/login');
         }
 
@@ -253,7 +267,7 @@ class UserController extends Controller
     public function resetPassword($id)
     {
         $session = session();
-        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+        if (!$session->get('isLoggedIn') || !in_array($session->get('role'), ['admin', 'consultant'])) {
             return redirect()->to('/login');
         }
 
@@ -361,6 +375,101 @@ class UserController extends Controller
                 </div>
 
                 <p style="color: #666; font-size: 14px;">Si no solicitaste este cambio, por favor contacta al administrador del sistema inmediatamente.</p>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef; border-top: none;">
+                <p style="margin: 0; color: #666; font-size: 12px;">© 2024 Cycloid Talent SAS - Todos los derechos reservados</p>
+                <p style="margin: 5px 0 0; color: #666; font-size: 12px;">NIT: 901.653.912</p>
+            </div>
+        </body>
+        </html>';
+    }
+
+    /**
+     * Enviar email de bienvenida con credenciales de acceso usando SendGrid
+     */
+    private function sendWelcomeEmail($email, $nombre, $password)
+    {
+        $sendgridApiKey = getenv('SENDGRID_API_KEY') ?: 'SG.xxxxxx';
+
+        $emailData = [
+            'personalizations' => [
+                [
+                    'to' => [
+                        ['email' => $email, 'name' => $nombre]
+                    ],
+                    'subject' => 'Bienvenido a Enterprise SST - Tus credenciales de acceso'
+                ]
+            ],
+            'from' => [
+                'email' => 'no-reply@cycloidtalent.com',
+                'name' => 'Enterprise SST'
+            ],
+            'content' => [
+                [
+                    'type' => 'text/html',
+                    'value' => $this->getWelcomeEmailTemplate($nombre, $email, $password)
+                ]
+            ]
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://api.sendgrid.com/v3/mail/send');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($emailData));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $sendgridApiKey,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return $httpCode >= 200 && $httpCode < 300;
+    }
+
+    /**
+     * Template HTML para email de bienvenida
+     */
+    private function getWelcomeEmailTemplate($nombre, $email, $password)
+    {
+        $loginUrl = base_url('/login');
+
+        return '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #1c2437, #2c3e50); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: #ffffff; margin: 0;">Enterprise SST</h1>
+            </div>
+
+            <div style="background: #ffffff; padding: 30px; border: 1px solid #e9ecef; border-top: none;">
+                <h2 style="color: #1c2437;">¡Bienvenido/a, ' . htmlspecialchars($nombre) . '!</h2>
+
+                <p>Se ha creado tu cuenta en la plataforma <strong>Enterprise SST</strong>.</p>
+
+                <p>A continuación encontrarás tus credenciales de acceso:</p>
+
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Usuario (correo):</strong></p>
+                    <p style="margin: 5px 0 15px; color: #1c2437; font-size: 16px;">' . htmlspecialchars($email) . '</p>
+
+                    <p style="margin: 5px 0;"><strong>Contraseña:</strong></p>
+                    <p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #bd9751; letter-spacing: 1px;">' . htmlspecialchars($password) . '</p>
+                </div>
+
+                <p><strong>Por seguridad, te recomendamos cambiar tu contraseña después de tu primer inicio de sesión.</strong></p>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="' . $loginUrl . '" style="background: linear-gradient(135deg, #1c2437, #2c3e50); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Iniciar Sesión</a>
+                </div>
+
+                <p style="color: #666; font-size: 14px;">Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar al administrador del sistema.</p>
             </div>
 
             <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef; border-top: none;">

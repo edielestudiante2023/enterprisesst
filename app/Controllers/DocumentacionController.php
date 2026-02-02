@@ -9,6 +9,7 @@ use App\Models\DocPlantillaModel;
 use App\Models\ClienteEstandaresModel;
 use App\Models\ClienteContextoSstModel;
 use App\Models\ClientModel;
+use App\Models\ResponsableSSTModel;
 use CodeIgniter\Controller;
 
 class DocumentacionController extends Controller
@@ -62,6 +63,12 @@ class DocumentacionController extends Controller
         // Obtener árbol de carpetas con documentos y estados IA
         $carpetasConDocs = $this->carpetaModel->getArbolConDocumentosYEstados($idCliente);
 
+        // Obtener verificación de roles obligatorios del SG-SST
+        $responsableModel = new ResponsableSSTModel();
+        $contexto = $this->contextoModel->getByCliente($idCliente);
+        $estandares = $contexto['estandares_aplicables'] ?? 7;
+        $verificacionRoles = $responsableModel->verificarRolesObligatorios($idCliente, $estandares);
+
         return view('documentacion/dashboard', [
             'cliente' => $cliente,
             'carpetas' => $carpetas,
@@ -69,7 +76,9 @@ class DocumentacionController extends Controller
             'documentos' => $documentos,
             'estadisticas' => $estadisticas,
             'cumplimiento' => $cumplimiento,
-            'documentosPorEstado' => $documentosPorEstado
+            'documentosPorEstado' => $documentosPorEstado,
+            'verificacionRoles' => $verificacionRoles,
+            'estandaresAplicables' => $estandares
         ]);
     }
 
@@ -224,25 +233,6 @@ class DocumentacionController extends Controller
     }
 
     /**
-     * Catálogo de plantillas de documentos
-     */
-    public function plantillas()
-    {
-        if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
-        }
-
-        $plantillaModel = new \App\Models\DocPlantillaModel();
-        $plantillasAgrupadas = $plantillaModel->getAgrupadasPorTipo();
-        $tipos = $this->tipoModel->getActivos();
-
-        return view('documentacion/plantillas', [
-            'plantillasAgrupadas' => $plantillasAgrupadas,
-            'tipos' => $tipos
-        ]);
-    }
-
-    /**
      * Vista de carpeta específica
      */
     public function carpeta($idCarpeta)
@@ -310,14 +300,17 @@ class DocumentacionController extends Controller
 
         // Obtener documentos SST aprobados para mostrar en tabla
         $documentosSSTAprobados = [];
-        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst'])) {
+        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl'])) {
             $db = \Config\Database::connect();
             $queryDocs = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
                 ->whereIn('estado', ['borrador', 'generado', 'aprobado', 'firmado', 'pendiente_firma']);
 
             // Filtrar por tipo de documento segun la carpeta
-            if ($tipoCarpetaFases === 'responsabilidades_sgsst') {
+            if ($tipoCarpetaFases === 'archivo_documental') {
+                // 2.5.1: Archivo documental - NO FILTRAR, mostrar TODOS los documentos
+                // No aplicamos filtro por tipo_documento
+            } elseif ($tipoCarpetaFases === 'responsabilidades_sgsst') {
                 // 1.1.2: Buscar los 3 tipos de documentos de responsabilidades
                 // Nota: Vigia/Delegado ahora esta combinado en responsabilidades_rep_legal_sgsst
                 $queryDocs->whereIn('tipo_documento', [
@@ -325,6 +318,12 @@ class DocumentacionController extends Controller
                     'responsabilidades_responsable_sgsst',
                     'responsabilidades_trabajadores_sgsst'
                 ]);
+            } elseif ($tipoCarpetaFases === 'presupuesto_sst') {
+                // 1.1.3: Presupuesto SST
+                $queryDocs->where('tipo_documento', 'presupuesto_sst');
+            } elseif ($tipoCarpetaFases === 'afiliacion_srl') {
+                // 1.1.4: Afiliación al Sistema General de Riesgos Laborales
+                $queryDocs->where('tipo_documento', 'planilla_afiliacion_srl');
             } elseif (isset($tipoDocBuscar)) {
                 $queryDocs->where('tipo_documento', $tipoDocBuscar);
             }
@@ -336,7 +335,19 @@ class DocumentacionController extends Controller
                 ->getResultArray();
 
             // Agregar conteo de firmas, versión texto y lista de versiones para cada documento
+            // También auto-corregir códigos incorrectos (FT-SST-004 -> FT-SST-001)
             foreach ($documentosSSTAprobados as &$docSST) {
+                // Auto-corrección de código para presupuesto_sst
+                if ($docSST['tipo_documento'] === 'presupuesto_sst' && $docSST['codigo'] !== 'FT-SST-001') {
+                    $db->table('tbl_documentos_sst')
+                        ->where('id_documento', $docSST['id_documento'])
+                        ->update(['codigo' => 'FT-SST-001', 'updated_at' => date('Y-m-d H:i:s')]);
+                    $db->table('tbl_doc_versiones_sst')
+                        ->where('id_documento', $docSST['id_documento'])
+                        ->update(['codigo' => 'FT-SST-001']);
+                    $docSST['codigo'] = 'FT-SST-001'; // Actualizar en memoria también
+                }
+
                 $firmaStats = $db->table('tbl_doc_firma_solicitudes')
                     ->select("COUNT(*) as total, SUM(CASE WHEN estado = 'firmado' THEN 1 ELSE 0 END) as firmadas")
                     ->where('id_documento', $docSST['id_documento'])
@@ -373,7 +384,17 @@ class DocumentacionController extends Controller
             unset($docSST);
         }
 
-        return view('documentacion/carpeta', [
+        // Determinar qué vista de tipo cargar
+        $vistaTipo = $tipoCarpetaFases ?? 'generica';
+        $vistaPath = "documentacion/_tipos/{$vistaTipo}";
+
+        // Verificar que la vista existe, si no usar genérica
+        if (!is_file(APPPATH . "Views/{$vistaPath}.php")) {
+            $vistaPath = 'documentacion/_tipos/generica';
+        }
+
+        // Datos comunes para todas las vistas
+        $data = [
             'carpeta' => $carpeta,
             'ruta' => $ruta,
             'subcarpetas' => $subcarpetas,
@@ -383,8 +404,11 @@ class DocumentacionController extends Controller
             'tipoCarpetaFases' => $tipoCarpetaFases,
             'documentoExistente' => $documentoExistente,
             'documentosSSTAprobados' => $documentosSSTAprobados,
-            'contextoCliente' => $contextoCliente ?? null
-        ]);
+            'contextoCliente' => $contextoCliente ?? null,
+            'vistaContenido' => $vistaPath
+        ];
+
+        return view('documentacion/carpeta', $data);
     }
 
     /**
@@ -417,6 +441,28 @@ class DocumentacionController extends Controller
         // 1.1.2. Responsabilidades en el SG-SST (4 documentos separados)
         if ($codigo === '1.1.2' || strpos($nombre, 'responsabilidades') !== false) {
             return 'responsabilidades_sgsst';
+        }
+
+        // 1.1.3. Asignación de recursos para el SG-SST (Presupuesto)
+        if ($codigo === '1.1.3' ||
+            strpos($nombre, 'recursos') !== false ||
+            strpos($nombre, 'presupuesto') !== false) {
+            return 'presupuesto_sst';
+        }
+
+        // 1.1.4. Afiliación al Sistema General de Riesgos Laborales
+        if ($codigo === '1.1.4' ||
+            strpos($nombre, 'afiliacion') !== false ||
+            strpos($nombre, 'riesgos laborales') !== false) {
+            return 'afiliacion_srl';
+        }
+
+        // 2.5.1. Archivo o retención documental del SG-SST
+        // Muestra tabla con TODOS los documentos generados del cliente
+        if ($codigo === '2.5.1' ||
+            strpos($nombre, 'archivo') !== false ||
+            strpos($nombre, 'retencion documental') !== false) {
+            return 'archivo_documental';
         }
 
         return null;

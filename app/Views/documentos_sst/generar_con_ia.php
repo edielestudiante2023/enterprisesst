@@ -219,7 +219,7 @@
                                 <button type="button" class="btn btn-outline-primary btn-sm" id="btnAprobarTodo">
                                     <i class="bi bi-check-all me-1"></i>Aprobar Todo
                                 </button>
-                                <a href="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/programa-capacitacion/' . $anio) ?>"
+                                <a href="<?= esc($urlVistaPrevia) ?>"
                                    class="btn btn-outline-dark btn-sm <?= $todasSeccionesListas ? '' : 'disabled' ?>"
                                    id="btnVistaPrevia"
                                    target="_blank"
@@ -892,7 +892,7 @@
                     // Preguntar si desea ir a Vista Previa
                     setTimeout(() => {
                         if (confirm('Documento aprobado exitosamente.\n\n¿Desea ver la Vista Previa del documento?')) {
-                            window.open('<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/programa-capacitacion/' . $anio) ?>', '_blank');
+                            window.open('<?= esc($urlVistaPrevia) ?>', '_blank');
                         }
                     }, 500);
                 } else {

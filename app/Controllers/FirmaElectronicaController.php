@@ -967,8 +967,8 @@ class FirmaElectronicaController extends Controller
     {
         try {
             $options = new \chillerlan\QRCode\QROptions([
-                'outputType' => 'png',
-                'eccLevel' => 'L',
+                'outputType' => \chillerlan\QRCode\Output\QROutputInterface::GDIMAGE_PNG,
+                'eccLevel' => \chillerlan\QRCode\Common\EccLevel::L,
                 'scale' => 5,
                 'outputBase64' => true,
             ]);

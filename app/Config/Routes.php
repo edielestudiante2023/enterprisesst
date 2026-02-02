@@ -391,6 +391,8 @@ $routes->get('client/panel', 'ClientPanelController::showPanel');
 $routes->get('client/mis-documentos-sst', 'ClienteDocumentosSstController::index');
 $routes->get('client/mis-documentos-sst/carpeta/(:num)', 'ClienteDocumentosSstController::carpeta/$1');
 
+// Aprobaciones pendientes - ELIMINADO: Se usa PDF con firma electrónica en su lugar
+
 $routes->get('/detailreportlist', 'DetailReportController::detailReportList');
 $routes->get('/detailreportadd', 'DetailReportController::detailReportAdd');
 $routes->post('/detailreportadd', 'DetailReportController::detailReportAddPost');
@@ -646,7 +648,6 @@ $routes->post('/documentacion/aprobar-seccion', 'GeneradorDocumentoController::a
 $routes->post('/documentacion/generar-ia', 'GeneradorDocumentoController::generarConIA');
 $routes->get('/documentacion/vista-previa/(:num)', 'GeneradorDocumentoController::vistaPrevia/$1');
 $routes->post('/documentacion/finalizar/(:num)', 'GeneradorDocumentoController::finalizar/$1');
-$routes->get('/documentacion/plantillas', 'DocumentacionController::plantillas');
 
 // Estándares del cliente
 $routes->get('/estandares', 'EstandaresClienteController::seleccionarCliente');
@@ -741,6 +742,10 @@ $routes->get('/generador-ia/(:num)/resumen', 'GeneradorIAController::resumen/$1'
 // Documentos SST generados
 $routes->get('/documentos-sst/(:num)/programa-capacitacion/(:num)', 'DocumentosSSTController::programaCapacitacion/$1/$2');
 
+// Procedimiento de Control Documental (2.5.1)
+$routes->get('/documentos-sst/(:num)/procedimiento-control-documental/(:num)', 'DocumentosSSTController::procedimientoControlDocumental/$1/$2');
+$routes->post('/documentos-sst/(:num)/crear-control-documental', 'DocumentosSSTController::crearControlDocumental/$1');
+
 // Asignacion de Responsable SG-SST (Patron B - controlador independiente)
 $routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'PzasignacionresponsableSstController::crear/$1');
 $routes->get('/documentos-sst/(:num)/asignacion-responsable-sst/(:num)', 'PzasignacionresponsableSstController::ver/$1/$2');
@@ -777,6 +782,7 @@ $routes->get('/documentos-sst/exportar-pdf/(:num)', 'DocumentosSSTController::ex
 $routes->get('/documentos-sst/exportar-word/(:num)', 'DocumentosSSTController::exportarWord/$1');
 $routes->get('/documentos-sst/publicar-pdf/(:num)', 'DocumentosSSTController::publicarPDF/$1');
 $routes->post('/documentos-sst/adjuntar-firmado', 'DocumentosSSTController::adjuntarFirmado');
+$routes->post('/documentos-sst/adjuntar-planilla-srl', 'DocumentosSSTController::adjuntarPlanillaSRL');
 
 // Aprobacion y versionamiento de documentos SST
 $routes->post('/documentos-sst/aprobar-documento', 'DocumentosSSTController::aprobarDocumento');
@@ -787,3 +793,148 @@ $routes->get('/documentos-sst/descargar-version-pdf/(:num)', 'DocumentosSSTContr
 
 // Temporal: Ejecutar migraciones SQL (ELIMINAR DESPUES DE USAR)
 $routes->get('/sql-runner/insertar-plantillas-responsabilidades', 'SqlRunnerController::insertarPlantillasResponsabilidades');
+$routes->get('/sql-runner/columnas-firma-presupuesto', 'SqlRunnerController::columnasFirmaPresupuesto');
+$routes->get('/sql-runner/diagnostico-audit/(:num)/(:num)', 'SqlRunnerController::diagnosticoAudit/$1/$2');
+$routes->get('/sql-runner/reparar-audit/(:num)', 'SqlRunnerController::repararAudit/$1');
+$routes->get('/sql-runner/diagnostico-firmas/(:num)', 'SqlRunnerController::diagnosticoFirmas/$1');
+$routes->get('/sql-runner/forzar-firmado/(:num)', 'SqlRunnerController::forzarFirmado/$1');
+$routes->get('/sql-runner/diagnostico-presupuesto/(:num)/(:num)', 'SqlRunnerController::diagnosticoPresupuesto/$1/$2');
+$routes->get('/sql-runner/corregir-usuario-miembro', 'SqlRunnerController::corregirUsuarioMiembro');
+$routes->get('/sql-runner/resetear-password-miembro', 'SqlRunnerController::resetearPasswordMiembro');
+$routes->get('/sql-runner/diagnostico-usuarios-miembro', 'SqlRunnerController::diagnosticoUsuariosMiembro');
+$routes->get('/sql-runner/buscar-usuario/(:segment)', 'SqlRunnerController::buscarUsuario/$1');
+$routes->get('/sql-runner/buscar-usuario', 'SqlRunnerController::buscarUsuario');
+$routes->get('/sql-runner/probar-login', 'SqlRunnerController::probarLogin');
+$routes->get('/sql-runner/ver-triggers', 'SqlRunnerController::verTriggers');
+$routes->get('/sql-runner/agregar-miembro-enum', 'SqlRunnerController::agregarMiembroEnum');
+
+/* *********************MÓDULO PRESUPUESTO SST (1.1.3) ****************************************/
+
+// Vista principal del presupuesto
+$routes->get('/documentos-sst/presupuesto/(:num)', 'PzpresupuestoSstController::index/$1');
+$routes->get('/documentos-sst/presupuesto/(:num)/(:num)', 'PzpresupuestoSstController::index/$1/$2');
+
+// Vista preview (formato vertical con botones de exportar)
+$routes->get('/documentos-sst/presupuesto/preview/(:num)/(:num)', 'PzpresupuestoSstController::preview/$1/$2');
+// Ruta alternativa: /documentos-sst/{idCliente}/presupuesto/preview/{anio}
+$routes->get('/documentos-sst/(:num)/presupuesto/preview/(:num)', 'PzpresupuestoSstController::preview/$1/$2');
+
+// Acciones AJAX
+$routes->post('/documentos-sst/presupuesto/agregar-item', 'PzpresupuestoSstController::agregarItem');
+$routes->post('/documentos-sst/presupuesto/actualizar-monto', 'PzpresupuestoSstController::actualizarMonto');
+$routes->post('/documentos-sst/presupuesto/actualizar-item', 'PzpresupuestoSstController::actualizarItem');
+$routes->post('/documentos-sst/presupuesto/eliminar-item', 'PzpresupuestoSstController::eliminarItem');
+$routes->get('/documentos-sst/presupuesto/totales/(:num)', 'PzpresupuestoSstController::getTotales/$1');
+
+// Cambiar estado
+$routes->get('/documentos-sst/presupuesto/estado/(:num)/(:segment)', 'PzpresupuestoSstController::cambiarEstado/$1/$2');
+
+// Exportación
+$routes->get('/documentos-sst/presupuesto/pdf/(:num)/(:num)', 'PzpresupuestoSstController::exportarPdf/$1/$2');
+$routes->get('/documentos-sst/presupuesto/word/(:num)/(:num)', 'PzpresupuestoSstController::exportarWord/$1/$2');
+$routes->get('/documentos-sst/presupuesto/excel/(:num)/(:num)', 'PzpresupuestoSstController::exportarExcel/$1/$2');
+
+// Copiar presupuesto de otro año
+$routes->get('/documentos-sst/presupuesto/copiar/(:num)/(:num)/(:num)', 'PzpresupuestoSstController::copiarDeAnio/$1/$2/$3');
+
+// Enviar a firmas (email con enlace)
+$routes->post('/documentos-sst/presupuesto/enviar-firmas', 'PzpresupuestoSstController::enviarAprobacion');
+
+// Pagina de firma publica
+$routes->get('/presupuesto/aprobar/(:segment)', 'PzpresupuestoSstController::paginaFirma/$1');
+$routes->post('/presupuesto/procesar-firma', 'PzpresupuestoSstController::procesarFirma');
+
+// Vista de consulta para clientes (solo lectura)
+$routes->get('/presupuesto/consulta/(:segment)', 'PzpresupuestoSstController::vistaCliente/$1');
+$routes->post('/documentos-sst/presupuesto/generar-token-consulta', 'PzpresupuestoSstController::generarTokenConsulta');
+
+// Crear nueva versión del presupuesto
+$routes->post('/documentos-sst/presupuesto/nueva-version/(:num)/(:num)', 'PzpresupuestoSstController::crearNuevaVersion/$1/$2');
+
+/* *****************************************************************************
+ * MÓDULO DE ACTAS - COPASST, COCOLAB, BRIGADA, GENERALES
+ * *****************************************************************************/
+
+// Dashboard de comités por cliente (consultor)
+$routes->get('/actas/(:num)', 'ActasController::index/$1');
+
+// Comités
+$routes->get('/actas/(:num)/nuevo-comite', 'ActasController::nuevoComite/$1');
+$routes->post('/actas/(:num)/guardar-comite', 'ActasController::guardarComite/$1');
+$routes->get('/actas/(:num)/comite/(:num)', 'ActasController::verComite/$2');
+
+// Miembros del comité
+$routes->get('/actas/comite/(:num)/nuevo-miembro', 'ActasController::nuevoMiembro/$1');
+$routes->post('/actas/comite/(:num)/guardar-miembro', 'ActasController::guardarMiembro/$1');
+$routes->get('/actas/comite/(:num)/editar-miembro/(:num)', 'ActasController::editarMiembro/$1/$2');
+$routes->post('/actas/comite/(:num)/actualizar-miembro/(:num)', 'ActasController::actualizarMiembro/$1/$2');
+$routes->post('/actas/miembro/(:num)/retirar', 'ActasController::retirarMiembro/$1');
+$routes->post('/actas/miembro/(:num)/reenviar-acceso', 'ActasController::reenviarAccesoMiembro/$1');
+
+// Actas - Consultor
+$routes->get('/actas/comite/(:num)/preparar-reunion', 'ActasController::prepararReunion/$1');
+$routes->get('/actas/comite/(:num)/nueva-acta', 'ActasController::nuevaActa/$1');
+$routes->post('/actas/comite/(:num)/guardar-acta', 'ActasController::guardarActa/$1');
+$routes->get('/actas/editar/(:num)', 'ActasController::editarActa/$1');
+$routes->post('/actas/editar/(:num)', 'ActasController::actualizarActa/$1');
+$routes->get('/actas/comite/(:num)/acta/(:num)', 'ActasController::verActa/$2');
+$routes->post('/actas/comite/(:num)/acta/(:num)/actualizar', 'ActasController::actualizarActa/$2');
+$routes->post('/actas/comite/(:num)/acta/(:num)/enviar-firmas', 'ActasController::enviarAFirmas/$2');
+$routes->post('/actas/comite/(:num)/acta/(:num)/cerrar', 'ActasController::cerrarActa/$2');
+$routes->get('/actas/comite/(:num)/acta/(:num)/firmas', 'ActasController::estadoFirmas/$2');
+$routes->post('/actas/comite/(:num)/acta/(:num)/reenviar-todos', 'ActasController::reenviarTodos/$2');
+$routes->post('/actas/comite/(:num)/acta/(:num)/reenviar/(:num)', 'ActasController::reenviarAsistente/$2/$3');
+$routes->get('/actas/ver/(:num)', 'ActasController::verActa/$1');
+$routes->post('/actas/cerrar/(:num)', 'ActasController::cerrarActa/$1');
+$routes->get('/actas/firmas/(:num)', 'ActasController::estadoFirmas/$1');
+$routes->post('/actas/reenviar-firma/(:num)', 'ActasController::reenviarNotificacionFirma/$1');
+$routes->get('/actas/pdf/(:num)', 'ActasController::exportarPDF/$1');
+$routes->get('/actas/comite/(:num)/acta/(:num)/pdf', 'ActasController::exportarPDF/$2');
+$routes->get('/actas/comite/(:num)/acta/(:num)/word', 'ActasController::exportarWord/$2');
+$routes->get('/actas/firma-imagen/(:num)', 'ActasController::firmaImagen/$1');
+
+// Compromisos - Consultor
+$routes->get('/actas/(:num)/compromisos', 'ActasController::compromisos/$1');
+$routes->get('/actas/(:num)/comite/(:num)/compromisos', 'ActasController::compromisosComite/$1/$2');
+$routes->post('/actas/compromiso/(:num)/actualizar', 'ActasController::actualizarCompromiso/$1');
+$routes->post('/actas/compromiso/(:num)/completar', 'ActasController::completarCompromiso/$1');
+
+// Firmas públicas (sin login, acceso por token)
+$routes->get('/acta/firmar/(:segment)', 'ActaFirmaPublicaController::firmar/$1');
+$routes->post('/acta/firmar/(:segment)', 'ActaFirmaPublicaController::procesarFirma/$1');
+$routes->get('/acta/firma-exitosa/(:segment)', 'ActaFirmaPublicaController::firmaExitosa/$1');
+
+// Ver acta por token (público)
+$routes->get('/acta/ver/(:segment)', 'ActaFirmaPublicaController::verActa/$1');
+
+// Actualizar tarea por token (público)
+$routes->get('/acta/tarea/(:segment)', 'ActaFirmaPublicaController::actualizarTarea/$1');
+$routes->post('/acta/tarea/(:segment)', 'ActaFirmaPublicaController::procesarActualizacionTarea/$1');
+
+// Verificar código de acta (público)
+$routes->get('/acta/verificar', 'ActaFirmaPublicaController::verificarActa');
+$routes->post('/acta/verificar', 'ActaFirmaPublicaController::verificarActa');
+
+// ============================================
+// ACCESO DE MIEMBROS AUTENTICADOS (con login)
+// ============================================
+$routes->group('miembro', ['filter' => 'miembro'], function($routes) {
+    $routes->get('dashboard', 'MiembroAuthController::dashboard');
+    $routes->get('comite/(:num)', 'MiembroAuthController::verComite/$1');
+    $routes->get('comite/(:num)/nueva-acta', 'MiembroAuthController::nuevaActa/$1');
+    $routes->post('comite/(:num)/guardar-acta', 'MiembroAuthController::guardarActa/$1');
+    $routes->get('acta/(:num)', 'MiembroAuthController::verActa/$1');
+    $routes->get('acta/(:num)/pdf', 'MiembroAuthController::descargarPDF/$1');
+    $routes->post('acta/(:num)/cerrar', 'MiembroAuthController::cerrarActa/$1');
+    $routes->get('compromisos', 'MiembroAuthController::misCompromisos');
+});
+
+// Acceso de miembros del comité (por token - legacy/alternativo)
+$routes->get('/miembro-token/(:segment)', 'MiembroComiteController::index/$1');
+$routes->get('/miembro-token/(:segment)/comite/(:num)', 'MiembroComiteController::verComite/$1/$2');
+$routes->get('/miembro-token/(:segment)/acta/(:num)', 'MiembroComiteController::verActa/$1/$2');
+$routes->get('/miembro-token/(:segment)/comite/(:num)/nueva-acta', 'MiembroComiteController::nuevaActa/$1/$2');
+$routes->post('/miembro-token/(:segment)/comite/(:num)/guardar-acta', 'MiembroComiteController::guardarActa/$1/$2');
+$routes->get('/miembro-token/(:segment)/acta/(:num)/editar', 'MiembroComiteController::editarActa/$1/$2');
+$routes->post('/miembro-token/(:segment)/acta/(:num)/cerrar', 'MiembroComiteController::cerrarActa/$1/$2');
+$routes->get('/miembro-token/(:segment)/compromisos', 'MiembroComiteController::misCompromisos/$1');

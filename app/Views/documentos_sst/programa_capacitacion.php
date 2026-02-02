@@ -369,9 +369,35 @@
 
             <!-- Secciones del documento -->
             <?php
-            // Funcion para convertir tablas Markdown a HTML (definida una sola vez)
-            if (!function_exists('convertirTablaMarkdownSST')) {
-                function convertirTablaMarkdownSST($texto) {
+            /**
+             * Funcion mejorada para convertir Markdown a HTML
+             * Soporta: tablas, negritas, cursivas, listas, encabezados
+             */
+            if (!function_exists('convertirMarkdownAHtml')) {
+                function convertirMarkdownAHtml($texto) {
+                    if (empty($texto)) return '';
+
+                    // 1. Primero convertir tablas Markdown
+                    $texto = convertirTablasMarkdown($texto);
+
+                    // 2. Dividir en partes HTML (tablas) y texto normal
+                    $partes = preg_split('/(<div class="table-responsive[^>]*>.*?<\/div>)/s', $texto, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+                    $resultado = '';
+                    foreach ($partes as $parte) {
+                        if (strpos($parte, '<div class="table-responsive') === 0) {
+                            // Es una tabla HTML, no modificar
+                            $resultado .= $parte;
+                        } else {
+                            // Es texto, convertir markdown
+                            $resultado .= convertirTextoMarkdown($parte);
+                        }
+                    }
+
+                    return $resultado;
+                }
+
+                function convertirTablasMarkdown($texto) {
                     $lineas = explode("\n", $texto);
                     $enTabla = false;
                     $resultado = [];
@@ -384,7 +410,7 @@
                         // Detectar linea de tabla (empieza con |)
                         if (preg_match('/^\|(.+)\|$/', $lineaTrim)) {
                             // Ignorar linea separadora (|---|---|)
-                            if (preg_match('/^\|[\s\-\|]+\|$/', $lineaTrim)) {
+                            if (preg_match('/^\|[\s\-\:\|]+\|$/', $lineaTrim)) {
                                 $esEncabezado = false;
                                 continue;
                             }
@@ -401,7 +427,11 @@
 
                             $tablaHtml .= '<tr>';
                             foreach ($celdas as $celda) {
-                                $tablaHtml .= "<{$tag}{$estilo}>" . htmlspecialchars($celda) . "</{$tag}>";
+                                // Convertir negritas dentro de celdas
+                                $celdaHtml = htmlspecialchars($celda);
+                                $celdaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $celdaHtml);
+                                $celdaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $celdaHtml);
+                                $tablaHtml .= "<{$tag}{$estilo}>" . $celdaHtml . "</{$tag}>";
                             }
                             $tablaHtml .= '</tr>';
                         } else {
@@ -424,6 +454,92 @@
                     }
 
                     return implode("\n", $resultado);
+                }
+
+                function convertirTextoMarkdown($texto) {
+                    // Escapar HTML primero (pero preservar saltos de linea)
+                    $lineas = explode("\n", $texto);
+                    $resultado = [];
+                    $enLista = false;
+                    $listaHtml = '';
+
+                    foreach ($lineas as $linea) {
+                        $lineaTrim = trim($linea);
+
+                        // Detectar items de lista (- item o * item o numero. item)
+                        if (preg_match('/^[\-\*]\s+(.+)$/', $lineaTrim, $matches) ||
+                            preg_match('/^\d+\.\s+(.+)$/', $lineaTrim, $matches)) {
+
+                            if (!$enLista) {
+                                $enLista = true;
+                                $listaHtml = '<ul class="mb-3">';
+                            }
+
+                            $itemTexto = htmlspecialchars($matches[1]);
+                            // Convertir negritas y cursivas en el item
+                            $itemTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $itemTexto);
+                            $itemTexto = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $itemTexto);
+                            $listaHtml .= '<li>' . $itemTexto . '</li>';
+
+                        } else {
+                            // Si estabamos en lista, cerrarla
+                            if ($enLista) {
+                                $listaHtml .= '</ul>';
+                                $resultado[] = $listaHtml;
+                                $listaHtml = '';
+                                $enLista = false;
+                            }
+
+                            // Linea normal
+                            if (!empty($lineaTrim)) {
+                                $lineaHtml = htmlspecialchars($linea);
+
+                                // Convertir encabezados markdown (## Titulo)
+                                if (preg_match('/^#{1,6}\s+(.+)$/', $lineaTrim, $matches)) {
+                                    $nivel = strlen(preg_replace('/[^#]/', '', $lineaTrim));
+                                    $tituloTexto = htmlspecialchars(trim($matches[1]));
+                                    $tituloTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $tituloTexto);
+                                    $resultado[] = "<h{$nivel} class='mt-3 mb-2'>{$tituloTexto}</h{$nivel}>";
+                                    continue;
+                                }
+
+                                // Convertir **negrita** y *cursiva*
+                                $lineaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $lineaHtml);
+                                $lineaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $lineaHtml);
+
+                                $resultado[] = $lineaHtml;
+                            } else {
+                                $resultado[] = '<br>';
+                            }
+                        }
+                    }
+
+                    // Cerrar lista si termino en una
+                    if ($enLista) {
+                        $listaHtml .= '</ul>';
+                        $resultado[] = $listaHtml;
+                    }
+
+                    // Unir con saltos de linea HTML
+                    $html = '';
+                    foreach ($resultado as $i => $item) {
+                        if (strpos($item, '<ul') === 0 || strpos($item, '<h') === 0 ||
+                            strpos($item, '<div') === 0 || strpos($item, '<br') === 0) {
+                            $html .= $item;
+                        } else {
+                            // Es texto normal, agregar <br> si no es el ultimo
+                            $html .= $item;
+                            if ($i < count($resultado) - 1 && !empty(trim($item))) {
+                                $nextItem = $resultado[$i + 1] ?? '';
+                                if (strpos($nextItem, '<ul') !== 0 && strpos($nextItem, '<h') !== 0 &&
+                                    strpos($nextItem, '<div') !== 0 && strpos($nextItem, '<br') !== 0) {
+                                    $html .= '<br>';
+                                }
+                            }
+                        }
+                    }
+
+                    return $html;
                 }
             }
             ?>
@@ -467,35 +583,7 @@
                                 <?php endif; ?>
                             <?php else: ?>
                                 <!-- Contenido de texto -->
-                                <?php
-                                $contenidoHtml = $seccion['contenido'];
-
-                                // Primero convertir tablas Markdown (antes de escapar)
-                                $contenidoHtml = convertirTablaMarkdownSST($contenidoHtml);
-
-                                // Escapar el resto del contenido (pero preservar las tablas HTML)
-                                $partes = preg_split('/(<div class="table-responsive[^>]*>.*?<\/div>)/s', $contenidoHtml, -1, PREG_SPLIT_DELIM_CAPTURE);
-                                $contenidoHtml = '';
-                                foreach ($partes as $parte) {
-                                    if (strpos($parte, '<div class="table-responsive') === 0) {
-                                        $contenidoHtml .= $parte; // No escapar tablas
-                                    } else {
-                                        $parteEscapada = esc($parte);
-                                        // **texto** -> <strong>texto</strong>
-                                        $parteEscapada = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $parteEscapada);
-                                        // *texto* -> <em>texto</em>
-                                        $parteEscapada = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $parteEscapada);
-                                        // - item -> lista
-                                        $parteEscapada = preg_replace('/^- (.+)$/m', '<li>$1</li>', $parteEscapada);
-                                        $parteEscapada = preg_replace('/(<li>.*<\/li>\s*)+/', '<ul>$0</ul>', $parteEscapada);
-                                        // Saltos de linea
-                                        $parteEscapada = nl2br($parteEscapada);
-                                        $contenidoHtml .= $parteEscapada;
-                                    }
-                                }
-
-                                echo $contenidoHtml;
-                                ?>
+                                <?= convertirMarkdownAHtml($seccion['contenido'] ?? '') ?>
                             <?php endif; ?>
                         </div>
                     </div>

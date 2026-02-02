@@ -11,11 +11,12 @@ class SessionTimeoutFilter implements FilterInterface
 {
     /**
      * Timeouts de inactividad por tipo de usuario (en segundos)
+     * TEMPORAL: 24 horas para pruebas de desarrollo
      */
     private const TIMEOUTS = [
-        'client'     => 300,  // 5 minutos
-        'consultant' => 1800, // 30 minutos
-        'admin'      => 900,  // 15 minutos
+        'client'     => 86400,  // 24 horas (original: 300 = 5 minutos)
+        'consultant' => 86400,  // 24 horas (original: 1800 = 30 minutos)
+        'admin'      => 86400,  // 24 horas (original: 900 = 15 minutos)
     ];
 
     /**

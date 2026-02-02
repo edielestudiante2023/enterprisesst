@@ -117,7 +117,6 @@
                         <a href="#catalogo" class="toc-link"><i class="bi bi-book me-2"></i>Catalogo 60 Estandares</a>
                         <a href="#documentacion" class="toc-link"><i class="bi bi-file-earmark-text me-2"></i>Documentacion</a>
                         <a href="#cumplimiento" class="toc-link"><i class="bi bi-graph-up me-2"></i>Cumplimiento PHVA</a>
-                        <a href="#plantillas" class="toc-link"><i class="bi bi-magic me-2"></i>Plantillas</a>
                         <a href="#flujo" class="toc-link"><i class="bi bi-diagram-3 me-2"></i>Flujo de Trabajo</a>
                         <a href="#faq" class="toc-link"><i class="bi bi-question-circle me-2"></i>Preguntas Frecuentes</a>
                     </div>
@@ -276,11 +275,6 @@
                                                 <td><i class="bi bi-arrow-repeat me-2"></i>Cumplimiento PHVA</td>
                                                 <td><span class="badge" style="background: linear-gradient(135deg, #f2994a, #f2c94c);">Naranja</span></td>
                                                 <td>Ver estado de cumplimiento por cliente</td>
-                                            </tr>
-                                            <tr>
-                                                <td><i class="bi bi-magic me-2"></i>Plantillas Documentos</td>
-                                                <td><span class="badge" style="background: linear-gradient(135deg, #834d9b, #d04ed6);">Purpura</span></td>
-                                                <td>Acceder a plantillas predefinidas</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -613,159 +607,14 @@
                         </div>
                     </div>
 
-                    <!-- 7. Plantillas de Documentos -->
-                    <div class="accordion-item border-0 shadow-sm mb-3" id="plantillas">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePlantillas">
-                                <span class="section-icon" style="background: linear-gradient(135deg, #834d9b, #d04ed6);">
-                                    <i class="bi bi-magic text-white"></i>
-                                </span>
-                                7. Plantillas de Documentos
-                            </button>
-                        </h2>
-                        <div id="collapsePlantillas" class="accordion-collapse collapse" data-bs-parent="#instructivoAccordion">
-                            <div class="accordion-body">
-                                <p>Plantillas predefinidas para generar documentos SST con estructura estandarizada.</p>
-
-                                <div class="code-box mb-4">
-                                    <span class="text-warning">/documentacion/plantillas</span>
-                                </div>
-
-                                <h6 class="mb-3">Plantillas disponibles:</h6>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <div class="card h-100">
-                                            <div class="card-header py-2" style="background-color: #3B82F6; color: white;"><strong>Politicas (POL)</strong></div>
-                                            <div class="card-body py-2">
-                                                <small>
-                                                    - Politica de SST<br>
-                                                    - Politica de No Alcohol, Drogas y Tabaco<br>
-                                                    - Politica de Prevencion de Acoso Laboral<br>
-                                                    - Politica de Seguridad Vial (PESV)<br>
-                                                    - Politica de Elementos de Proteccion Personal
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card h-100">
-                                            <div class="card-header py-2" style="background-color: #8B5CF6; color: white;"><strong>Reglamentos (REG)</strong></div>
-                                            <div class="card-body py-2">
-                                                <small>
-                                                    - Reglamento de Higiene y Seguridad Industrial<br>
-                                                    - Reglamento Interno de Trabajo (capitulo SST)<br>
-                                                    - Reglamento del COPASST<br>
-                                                    - Reglamento del Comite de Convivencia
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card h-100">
-                                            <div class="card-header py-2" style="background-color: #10B981; color: white;"><strong>Programas (PRG)</strong></div>
-                                            <div class="card-body py-2">
-                                                <small>
-                                                    - Programa de Capacitacion y Entrenamiento<br>
-                                                    - Programa de Vigilancia Epidemiologica<br>
-                                                    - Programa de Estilos de Vida Saludable<br>
-                                                    - Programa de Riesgo Psicosocial<br>
-                                                    - Programa de Orden y Aseo<br>
-                                                    - Programa de Mantenimiento Preventivo
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card h-100">
-                                            <div class="card-header py-2" style="background-color: #F59E0B; color: white;"><strong>Procedimientos (PRO)</strong></div>
-                                            <div class="card-body py-2">
-                                                <small>
-                                                    - Procedimiento IPVR<br>
-                                                    - Procedimiento Investigacion de Incidentes<br>
-                                                    - Procedimiento de Auditorias Internas<br>
-                                                    - Procedimiento de Acciones Correctivas<br>
-                                                    - Procedimiento de Comunicaciones<br>
-                                                    - Procedimiento de Control Documental
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card h-100">
-                                            <div class="card-header py-2" style="background-color: #EF4444; color: white;"><strong>Planes (PLA)</strong></div>
-                                            <div class="card-body py-2">
-                                                <small>
-                                                    - Plan de Trabajo Anual SST<br>
-                                                    - Plan de Emergencias y Contingencias<br>
-                                                    - Plan de Capacitacion Anual<br>
-                                                    - Plan de Mejoramiento
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card h-100">
-                                            <div class="card-header py-2" style="background-color: #6366F1; color: white;"><strong>Manuales (MAN)</strong></div>
-                                            <div class="card-body py-2">
-                                                <small>
-                                                    - Manual del SG-SST<br>
-                                                    - Manual de Funciones y Responsabilidades<br>
-                                                    - Manual de Contratistas<br>
-                                                    - Manual de Bioseguridad
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card h-100">
-                                            <div class="card-header py-2" style="background-color: #64748B; color: white;"><strong>Formatos (FOR)</strong></div>
-                                            <div class="card-body py-2">
-                                                <small>
-                                                    - Formato de Inspeccion de Seguridad<br>
-                                                    - Formato de Reporte de Incidentes<br>
-                                                    - Formato de Entrega de EPP<br>
-                                                    - Formato de Asistencia a Capacitacion<br>
-                                                    - Formato de Evaluacion de Capacitacion
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card h-100">
-                                            <div class="card-header py-2" style="background-color: #0EA5E9; color: white;"><strong>Otros Documentos</strong></div>
-                                            <div class="card-body py-2">
-                                                <small>
-                                                    - <strong>ACT:</strong> Actas de reunion, COPASST, Convivencia<br>
-                                                    - <strong>INF:</strong> Informes de gestion, auditorias<br>
-                                                    - <strong>MTZ:</strong> Matrices de peligros, requisitos legales<br>
-                                                    - <strong>GUA:</strong> Guias e instructivos de trabajo<br>
-                                                    - <strong>OBJ:</strong> Objetivos e indicadores SST
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <h6 class="mt-4 mb-3">Como usar una plantilla:</h6>
-                                <ol>
-                                    <li>Acceda a Plantillas de Documentos</li>
-                                    <li>Seleccione la plantilla deseada</li>
-                                    <li>Haga clic en "Usar Plantilla"</li>
-                                    <li>Seleccione el cliente</li>
-                                    <li>El sistema genera el documento con la estructura predefinida</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 8. Flujo de Trabajo -->
+                    <!-- 7. Flujo de Trabajo -->
                     <div class="accordion-item border-0 shadow-sm mb-3" id="flujo">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFlujo">
                                 <span class="section-icon bg-dark text-white">
                                     <i class="bi bi-diagram-3"></i>
                                 </span>
-                                8. Flujo de Trabajo Recomendado
+                                7. Flujo de Trabajo Recomendado
                             </button>
                         </h2>
                         <div id="collapseFlujo" class="accordion-collapse collapse" data-bs-parent="#instructivoAccordion">
@@ -791,7 +640,7 @@
 
 3. DOCUMENTACION
    ├── Identificar documentos faltantes segun diagnostico
-   ├── Usar plantillas + IA para crear documentos
+   ├── Generar documentos desde las carpetas PHVA
    ├── Subir documentos existentes
    └── Vincular documentos a estandares
 
@@ -828,14 +677,14 @@
                         </div>
                     </div>
 
-                    <!-- 9. Preguntas Frecuentes -->
+                    <!-- 8. Preguntas Frecuentes -->
                     <div class="accordion-item border-0 shadow-sm mb-3" id="faq">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFAQ">
                                 <span class="section-icon bg-danger text-white">
                                     <i class="bi bi-question-circle"></i>
                                 </span>
-                                9. Preguntas Frecuentes
+                                8. Preguntas Frecuentes
                             </button>
                         </h2>
                         <div id="collapseFAQ" class="accordion-collapse collapse" data-bs-parent="#instructivoAccordion">

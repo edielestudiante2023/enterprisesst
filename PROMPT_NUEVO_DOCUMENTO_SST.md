@@ -1,5 +1,148 @@
 # Prompt para Crear Nuevo Documento SST
 
+---
+
+## ⛔ PROHIBICIONES ABSOLUTAS - LEER PRIMERO ⛔
+
+### REGLA #1: NUNCA CREAR CONTROLADORES Pz* o Hz*
+
+```
+❌ PROHIBIDO: Crear app/Controllers/PznuevoDocumentoController.php
+❌ PROHIBIDO: Crear app/Controllers/HznuevoDocumentoController.php
+❌ PROHIBIDO: Crear cualquier archivo que empiece con Pz o Hz
+```
+
+**Si necesitas crear un nuevo documento, SIEMPRE usa DocumentosSSTController.php**
+
+### REGLA #2: NUNCA MODIFICAR CONTROLADORES Pz* o Hz* EXISTENTES
+
+```
+❌ PROHIBIDO: Editar app/Controllers/PzasignacionresponsableSstController.php
+❌ PROHIBIDO: Editar app/Controllers/PzresponsabilidadesRepLegalController.php
+❌ PROHIBIDO: Editar app/Controllers/HzauditoriaController.php
+❌ PROHIBIDO: Editar CUALQUIER archivo Pz*.php o Hz*.php existente
+```
+
+**Los controladores Pz*/Hz* son LEGACY. NO SE TOCAN. Siguen funcionando pero estan congelados.**
+
+### REGLA #3: SI NECESITAS FUNCIONALIDAD DE UN Pz*/Hz*, DUPLICALA
+
+```
+✅ CORRECTO: Leer el codigo de PzasignacionresponsableSstController.php
+✅ CORRECTO: Copiar la logica que necesitas
+✅ CORRECTO: Implementarla EN DocumentosSSTController.php
+✅ CORRECTO: Crear nuevas rutas que apunten a DocumentosSSTController
+
+❌ INCORRECTO: Modificar PzasignacionresponsableSstController.php
+❌ INCORRECTO: Agregar metodos a controladores Pz*/Hz*
+❌ INCORRECTO: Cambiar rutas existentes de Pz*/Hz*
+```
+
+### REGLA #4: COEXISTENCIA SIN CONFLICTO
+
+Los controladores Pz*/Hz* y DocumentosSSTController pueden coexistir:
+
+```
+/pz/asignacion-responsable/{id}     -> PzasignacionresponsableSstController (LEGACY, no tocar)
+/documentos-sst/asignacion/{id}     -> DocumentosSSTController (NUEVO, usar este)
+```
+
+**NUNCA sobrescribir rutas existentes. Crear rutas NUEVAS que apunten a DocumentosSSTController.**
+
+### RESUMEN EJECUTIVO
+
+| Accion | Permitido |
+|--------|-----------|
+| Crear controlador Pz* nuevo | ❌ **NUNCA** |
+| Crear controlador Hz* nuevo | ❌ **NUNCA** |
+| Editar controlador Pz* existente | ❌ **NUNCA** |
+| Editar controlador Hz* existente | ❌ **NUNCA** |
+| Leer codigo de Pz*/Hz* para entender logica | ✅ SI |
+| Copiar logica de Pz*/Hz* a DocumentosSSTController | ✅ SI |
+| Crear metodos nuevos en DocumentosSSTController | ✅ SI |
+| Crear rutas nuevas para DocumentosSSTController | ✅ SI |
+
+---
+
+## ARQUITECTURA DE PERMISOS: CONSULTOR vs CLIENTE
+
+### IMPORTANTE - Dos Entornos Completamente Separados
+
+El sistema tiene **DOS entornos con permisos diferentes**:
+
+| Aspecto | CONSULTOR | CLIENTE |
+|---------|-----------|---------|
+| **URL Base** | `/documentacion/carpeta/{id}` | `/client/mis-documentos-sst/carpeta/{id}` |
+| **Controlador** | `DocumentacionController` | `ClienteDocumentosSstController` |
+| **Crear documentos** | SI | NO |
+| **Editar documentos** | SI | NO |
+| **Eliminar documentos** | SI | NO |
+| **Aprobar/Firmar** | SI | NO |
+| **Ver documentos** | SI (todos los estados) | SI (solo aprobados/firmados) |
+| **Descargar PDF** | SI | SI |
+| **Gestionar presupuesto** | SI | NO |
+
+### Reglas de Implementacion
+
+1. **El cliente NUNCA puede modificar datos** - Solo visualiza y descarga PDFs de documentos ya aprobados/firmados.
+
+2. **Filtro de estados para cliente:**
+   ```php
+   // En ClienteDocumentosSstController - SOLO documentos finalizados
+   ->whereIn('estado', ['aprobado', 'firmado'])
+   ```
+
+3. **Sin botones de accion para cliente:**
+   - No hay botones de "Editar", "Eliminar", "Aprobar"
+   - Solo boton "Descargar PDF"
+
+4. **Mapeo de plantillas obligatorio:**
+   - Cada nuevo documento debe agregarse a `tbl_doc_plantilla_carpeta`
+   - Y al metodo `mapearPlantillaATipoDocumento()` en `ClienteDocumentosSstController`
+
+### Archivos del Entorno Cliente (Solo Lectura)
+
+| Archivo | Funcion |
+|---------|---------|
+| `app/Controllers/ClienteDocumentosSstController.php` | Lista documentos aprobados del cliente |
+| `app/Views/client/documentos_sst/index.php` | Vista arbol de carpetas |
+| `app/Views/client/documentos_sst/carpeta.php` | Vista de documentos en carpeta |
+
+**NUNCA agregar funcionalidad de edicion/eliminacion a estos archivos del cliente.**
+
+### Documentos con Firma Fisica vs Firma Electronica
+
+| Tipo de Firma | Ejemplo | Flujo Cliente |
+|---------------|---------|---------------|
+| **Firma Electronica** | Responsabilidades Rep. Legal | Cliente ve PDF generado con firmas digitales |
+| **Firma Fisica** | Responsabilidades Trabajadores | Cliente ve PDF escaneado (archivo adjuntado) |
+
+**Flujo de firma fisica:**
+1. Consultor genera PDF imprimible
+2. Trabajadores firman en papel durante induccion
+3. Consultor escanea y adjunta el documento firmado (boton "Adjuntar")
+4. Sistema guarda enlace en `tbl_doc_versiones_sst.archivo_pdf`
+5. Cliente ve boton verde "Firmado" que descarga el escaneado
+
+**Codigo en ClienteDocumentosSstController:**
+```php
+// Obtener enlace del archivo firmado si existe
+$doc['archivo_firmado'] = $this->obtenerArchivoFirmado($doc['id_documento']);
+
+// obtenerArchivoFirmado() busca en tbl_doc_versiones_sst.archivo_pdf
+```
+
+**Vista del cliente (carpeta.php):**
+```php
+<?php if (!empty($doc['archivo_firmado'])): ?>
+    <a href="<?= esc($doc['archivo_firmado']) ?>" class="btn btn-success">Firmado</a>
+<?php else: ?>
+    <a href="<?= base_url('documentos-sst/exportar-pdf/' . $doc['id_documento']) ?>" class="btn btn-pdf">PDF</a>
+<?php endif; ?>
+```
+
+---
+
 ## INSTRUCCIONES PARA CLAUDE
 
 ```
@@ -13,33 +156,29 @@ Preguntame primero:
 - ¿El documento requiere generacion con IA y edicion de secciones? (como Programa de Capacitacion)
 - ¿O es un documento simple que se genera automaticamente desde el contexto del cliente? (como Asignacion de Responsable)
 
-Segun la respuesta, usaremos uno de estos DOS patrones:
+**ARQUITECTURA UNIFICADA - Todo en DocumentosSSTController:**
 
-**PATRON A - Documento complejo con IA (editor de secciones):**
-- Referencia: DocumentosSSTController.php + programa_capacitacion.php
-- Flujo: generarConIA() -> editor de secciones -> aprobar -> vista previa -> firmas
-- Ejemplo: Programa de Capacitacion, Plan de Emergencias, Programa de Vigilancia Epidemiologica
+Todos los documentos se manejan desde `DocumentosSSTController.php`, diferenciados por su `flujo`:
 
-**PATRON B - Documento simple auto-generado (sin IA):**
-- Referencia: PzasignacionresponsableSstController.php (duplicar y renombrar)
-- Flujo: boton "Generar" -> crea documento desde contexto -> vista previa -> firmas
-- Ejemplo: Asignacion de Responsable, Politica SST, Actas
+| Flujo | Descripcion | Ejemplo |
+|-------|-------------|---------|
+| `secciones_ia` | Editor de secciones con IA | Programa Capacitacion, Plan Emergencias |
+| `auto_contexto` | Generacion automatica desde contexto | Asignacion Responsable, Responsabilidades |
+| `formulario` | Formulario interactivo | Presupuesto SST |
+
+**NO CREAR controladores Pz* o Hz* nuevos.** Los existentes son LEGACY y seran migrados.
 
 ### FASE 2: Leer archivos de referencia
 
-**Si es PATRON A (complejo con IA), leer:**
+**SIEMPRE leer estos archivos:**
 1. app/Controllers/DocumentosSSTController.php - especialmente:
    - Constantes TIPOS_DOCUMENTO y CODIGOS_DOCUMENTO
-   - Metodo generarConIA() y generarSeccionIA()
-   - Metodo programaCapacitacion() (vista previa)
-   - Metodo getPromptBaseParaSeccion() (prompts IA)
-2. app/Views/documentos_sst/programa_capacitacion.php (vista de referencia)
-3. app/Views/documentos_sst/generar_con_ia.php (editor de secciones)
-
-**Si es PATRON B (simple sin IA), leer:**
-1. app/Controllers/PzasignacionresponsableSstController.php (controlador de referencia)
-2. app/Views/documentos_sst/asignacion_responsable.php (vista de referencia)
-3. Las rutas existentes en Routes.php para ese controlador
+   - Metodo generarConIA() para documentos con IA
+   - Metodo generarAutoContexto() para documentos simples
+   - Metodos de vista previa (programaCapacitacion(), asignacionResponsable())
+2. app/Views/documentos_sst/generar_con_ia.php (editor de secciones)
+3. app/Views/documentos_sst/pdf_template.php (template PDF unificado)
+4. app/Views/documentos_sst/word_template.php (template Word unificado)
 
 ### FASE 3: Preguntarme sobre el nuevo documento
 
@@ -74,33 +213,42 @@ IMPORTANTE: Implementar TODO de una vez, en este orden:
 
 #### BLOQUE 1: ENTORNO CONSULTOR (crear/editar/aprobar/firmar)
 
-**Si es PATRON A (complejo con IA):**
+**ARQUITECTURA UNIFICADA - Todo en DocumentosSSTController + Vistas por Componentes:**
 
 | Paso | Archivo | Accion |
 |------|---------|--------|
-| 1 | DocumentosSSTController.php | Agregar en TIPOS_DOCUMENTO |
-| 2 | DocumentosSSTController.php | Agregar en CODIGOS_DOCUMENTO |
-| 3 | DocumentosSSTController.php | Agregar prompts en getPromptBaseParaSeccion() |
-| 4 | DocumentosSSTController.php | Agregar plantillas en generarContenidoSeccion() |
-| 5 | DocumentosSSTController.php | Crear metodo vista previa (ej: programaVigilancia()) |
-| 6 | app/Views/documentos_sst/[nuevo].php | Crear vista previa |
+| 1 | DocumentosSSTController.php | Agregar en TIPOS_DOCUMENTO con flujo correcto |
+| 2 | ⛔ CODIGOS_DOCUMENTO | **OBSOLETO** - Los códigos van en tbl_doc_plantillas |
+| 3 | DocumentosSSTController.php | Si flujo=secciones_ia: agregar prompts en getPromptBaseParaSeccion() |
+| 4 | DocumentosSSTController.php | Si flujo=auto_contexto: agregar logica en generarAutoContexto() |
+| 5 | DocumentosSSTController.php | Crear metodo vista previa (ej: nuevodocumento()) |
+| 6 | app/Views/documentos_sst/[nuevo].php | Crear vista previa del documento |
 | 7 | Routes.php | Agregar rutas del documento |
-| 8 | DocumentacionController.php | Actualizar tipoCarpetaFases si aplica |
-| 9 | app/Views/documentacion/carpeta.php | Agregar boton si es necesario |
+| 8 | DocumentacionController.php | Agregar código en determinarTipo() |
+| 9 | app/Views/documentacion/_tipos/[tipo].php | **CREAR vista de tipo** con botón/dropdown |
 | 10 | FasesDocumentoService.php | Agregar fase si tiene dependencias |
 
-**Si es PATRON B (simple sin IA):**
+**⚠️ NUEVA ARQUITECTURA:** Los botones/dropdowns van en `_tipos/mi_tipo.php`, NO en carpeta.php
 
-| Paso | Archivo | Accion |
-|------|---------|--------|
-| 1 | PzasignacionresponsableSstController.php | DUPLICAR archivo |
-| 2 | Pz[nuevo]Controller.php | RENOMBRAR clase y constantes |
-| 3 | Pz[nuevo]Controller.php | Adaptar TIPO_DOCUMENTO, CODIGO_TIPO, CODIGO_TEMA |
-| 4 | Pz[nuevo]Controller.php | Adaptar construirContenido() con campos del documento |
-| 5 | asignacion_responsable.php | DUPLICAR vista |
-| 6 | app/Views/documentos_sst/[nuevo].php | RENOMBRAR y adaptar vista |
-| 7 | Routes.php | Agregar rutas del documento |
-| 8 | app/Views/documentacion/carpeta.php | Agregar boton si es necesario |
+**Estructura de TIPOS_DOCUMENTO:**
+
+```php
+public const TIPOS_DOCUMENTO = [
+    'nuevo_documento' => [
+        'nombre' => 'Nombre del Documento',
+        'descripcion' => 'Descripcion breve',
+        'flujo' => 'auto_contexto',  // o 'secciones_ia' o 'formulario'
+        'estandar' => '1.1.1',       // Codigo del estandar 0312
+        'firmantes' => ['representante_legal', 'consultor'],  // Quienes firman
+        'secciones' => [             // Solo si flujo=secciones_ia
+            ['numero' => 1, 'nombre' => 'Introduccion', 'key' => 'introduccion'],
+            // ...
+        ]
+    ]
+];
+```
+
+**NO CREAR controladores Pz* o Hz* nuevos.**
 
 ---
 
@@ -156,13 +304,16 @@ php app/SQL/ejecutar_[nombre_documento].php
 
 ### REGLAS IMPORTANTES:
 
-- PATRON A: Todo en DocumentosSSTController.php (comparte infraestructura IA)
-- PATRON B: DUPLICAR Y RENOMBRAR controlador existente (Pz*, Hz*)
-- Reutilizar vistas PDF/Word si la estructura es similar
+- **TODO en DocumentosSSTController.php** - No crear controladores Pz* o Hz* nuevos
+- **Vistas de carpeta usan arquitectura _tipos/_components** - Ver `docs/ARQUITECTURA_VISTAS_COMPONENTES.md`
+- Usar el campo `flujo` para diferenciar tipos de documento
+- Reutilizar vistas PDF/Word unificadas (pdf_template.php, word_template.php)
 - Los prompts de IA deben ser especificos para normativa colombiana SST
 - Siempre ejecutar cambios de BD en LOCAL y PRODUCCION
-- Cada prompt debe ajustarse por estandares (7, 21, 60)
+- Cada documento debe ajustarse por estandares (7, 21, 60)
 - SIEMPRE agregar mapeo en ClienteDocumentosSstController para vista cliente
+- Los controladores Pz*/Hz* existentes son **LEGACY** y seran migrados gradualmente
+- **Botones/dropdowns van en `_tipos/mi_tipo.php`**, NO editar carpeta.php directamente
 
 ### DOCUMENTO QUE QUIERO CREAR:
 
@@ -171,50 +322,57 @@ php app/SQL/ejecutar_[nombre_documento].php
 
 ---
 
-## EJEMPLO 1: Documento complejo con IA
+## EJEMPLO 1: Documento con IA (flujo: secciones_ia)
 
 ```
 DOCUMENTO QUE QUIERO CREAR: Programa de Vigilancia Epidemiologica
 
-Tipo: PATRON A (complejo con IA, multiples secciones editables)
+Flujo: secciones_ia
+Estandar: 3.1.4
+Firmantes: representante_legal, consultor
 ```
 
-Claude usara DocumentosSSTController como base, agregara las constantes, prompts, y metodos necesarios.
+Claude agregara en TIPOS_DOCUMENTO con flujo='secciones_ia', creara prompts y metodo de vista previa.
 
 ---
 
-## EJEMPLO 2: Documento simple sin IA
+## EJEMPLO 2: Documento auto-generado (flujo: auto_contexto)
 
 ```
 DOCUMENTO QUE QUIERO CREAR: Politica de Seguridad y Salud en el Trabajo
 
-Tipo: PATRON B (simple, se genera desde contexto del cliente)
+Flujo: auto_contexto
+Estandar: 2.1.1
+Firmantes: representante_legal
 ```
 
-Claude duplicara PzasignacionresponsableSstController y lo adaptara.
+Claude agregara en TIPOS_DOCUMENTO con flujo='auto_contexto', creara logica en generarAutoContexto() y vista previa.
 
 ---
 
 ## ARCHIVOS DE REFERENCIA
 
-### Para PATRON A (complejo con IA):
+### Controlador Principal (TODOS los documentos):
 
 | Archivo | Funcion |
 |---------|---------|
-| `app/Controllers/DocumentosSSTController.php` | Controlador principal, constantes, prompts, metodos |
-| `app/Views/documentos_sst/programa_capacitacion.php` | Vista previa de referencia |
-| `app/Views/documentos_sst/generar_con_ia.php` | Editor de secciones |
-| `app/Views/documentos_sst/pdf_template.php` | Template PDF |
+| `app/Controllers/DocumentosSSTController.php` | Controlador UNICO para todos los documentos |
+| `app/Views/documentos_sst/generar_con_ia.php` | Editor de secciones (flujo: secciones_ia) |
+| `app/Views/documentos_sst/pdf_template.php` | Template PDF unificado |
+| `app/Views/documentos_sst/word_template.php` | Template Word unificado |
 | `app/Services/FasesDocumentoService.php` | Definicion de fases y dependencias |
 | `app/Controllers/DocumentacionController.php` | Logica de carpeta.php |
 
-### Para PATRON B (simple sin IA):
+### ⛔ Controladores LEGACY (PROHIBIDO CREAR O MODIFICAR):
 
-| Archivo | Funcion |
-|---------|---------|
-| `app/Controllers/PzasignacionresponsableSstController.php` | Controlador de referencia para duplicar |
-| `app/Views/documentos_sst/asignacion_responsable.php` | Vista de referencia para duplicar |
-| `app/Config/Routes.php` | Rutas existentes como referencia |
+| Archivo | Estado | Accion Permitida |
+|---------|--------|------------------|
+| `app/Controllers/Pz*.php` | **CONGELADO** | Solo LEER para entender logica |
+| `app/Controllers/Hz*.php` | **CONGELADO** | Solo LEER para entender logica |
+
+**⛔ NUNCA crear controladores Pz* o Hz* nuevos**
+**⛔ NUNCA modificar controladores Pz* o Hz* existentes**
+**✅ SI necesitas su funcionalidad, copiala a DocumentosSSTController**
 
 ### Vista del Cliente (solo lectura):
 
@@ -228,12 +386,212 @@ Claude duplicara PzasignacionresponsableSstController y lo adaptara.
 
 ## NOTAS TECNICAS
 
-- El PATRON A comparte infraestructura: versionamiento, firmas, exportacion PDF/Word
-- El PATRON B es independiente: cada controlador tiene su propia logica
-- Para 100+ documentos, el PATRON B escala mejor (duplicar y renombrar)
-- El PATRON A es mejor cuando se necesita IA y edicion colaborativa de secciones
+### Arquitectura Unificada
+- **UN SOLO controlador** (`DocumentosSSTController`) para todos los documentos
+- El campo `flujo` en TIPOS_DOCUMENTO define el comportamiento:
+  - `secciones_ia`: Editor de secciones con generacion IA
+  - `auto_contexto`: Generacion automatica desde contexto del cliente
+  - `formulario`: Formulario interactivo (ej: Presupuesto)
+- Infraestructura compartida: versionamiento, firmas, exportacion PDF/Word
 - El cliente accede via `/client/mis-documentos-sst` - solo ve documentos aprobados/firmados
-- Las carpetas del cliente estan filtradas por `id_cliente` en `tbl_doc_carpetas`
+
+### 🏗️ ARQUITECTURA DE VISTAS POR COMPONENTES Y TIPOS (NUCLEAR)
+
+**Esta es la arquitectura actual para vistas que manejan múltiples tipos de contenido desde una URL.**
+
+**Ver documentación completa en:** `docs/ARQUITECTURA_VISTAS_COMPONENTES.md`
+
+#### Estructura de Archivos
+
+```
+app/Views/{modulo}/
+├── {vista_principal}.php          # Layout base (~80 líneas)
+├── _components/                   # Componentes reutilizables
+│   ├── styles.php                 # CSS del módulo
+│   ├── header.php                 # Navbar + breadcrumb
+│   ├── alertas.php                # Mensajes flash
+│   ├── panel_fases.php            # Panel de fases del documento
+│   ├── tabla_documentos.php       # Tabla de documentos
+│   └── scripts.php                # JavaScript del módulo
+└── _tipos/                        # Vistas por tipo de carpeta
+    ├── generica.php               # Tipo por defecto
+    ├── responsables_sst.php       # Vista para código 1.1.1
+    ├── responsabilidades_sgsst.php # Vista para código 1.1.2
+    ├── presupuesto_sst.php        # Vista para código 1.1.3
+    └── capacitacion_sst.php       # Vista para código 1.2.1
+```
+
+#### Flujo de Datos
+
+```
+1. URL: /documentacion/carpeta/{id}
+                │
+                ▼
+2. CONTROLADOR: determinarTipo($carpeta) → retorna 'responsables_sst'
+                │
+                ▼
+3. LAYOUT BASE: view('documentacion/carpeta', ['vistaContenido' => 'documentacion/_tipos/responsables_sst'])
+                │
+                ▼
+4. LAYOUT carga: view($vistaContenido) → Renderiza _tipos/responsables_sst.php
+                │
+                ▼
+5. VISTA DE TIPO usa componentes: view('_components/panel_fases'), view('_components/tabla_documentos')
+```
+
+#### Cómo Agregar un Nuevo Tipo de Carpeta
+
+**PASO 1: Crear vista del tipo**
+
+```bash
+# Crear archivo en _tipos/
+touch app/Views/documentacion/_tipos/nuevo_tipo.php
+```
+
+```php
+<?php
+/**
+ * Vista de Tipo: Nuevo Tipo
+ * Código: X.X.X
+ * Descripción de qué muestra esta carpeta
+ */
+?>
+
+<!-- Card específica con botón de acción -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h4><?= esc($carpeta['nombre']) ?></h4>
+        <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-nuevo') ?>" method="post">
+            <button type="submit" class="btn btn-success">Generar Documento</button>
+        </form>
+    </div>
+</div>
+
+<!-- Componentes reutilizables -->
+<?= view('documentacion/_components/panel_fases', ['fasesInfo' => $fasesInfo ?? null]) ?>
+<?= view('documentacion/_components/tabla_documentos', ['documentosSSTAprobados' => $documentosSSTAprobados ?? []]) ?>
+```
+
+**PASO 2: Agregar detección en DocumentacionController**
+
+```php
+// En determinarTipo() - línea ~150
+protected function determinarTipo(array $carpeta): ?string
+{
+    $codigo = strtolower($carpeta['codigo'] ?? '');
+
+    // AGREGAR: Detectar nuevo tipo por código
+    if ($codigo === 'x.x.x') return 'nuevo_tipo';
+
+    // ... otros tipos ...
+    return null;
+}
+```
+
+**PASO 3: Agregar al array de tipos con documentos SST (si aplica)**
+
+```php
+// En carpeta() - buscar la línea con in_array para tipos SST
+$tiposConDocumentos = ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'nuevo_tipo'];
+```
+
+**IMPORTANTE:** Ya NO se edita `carpeta.php` directamente. Los botones y dropdowns van en `_tipos/nuevo_tipo.php`.
+
+---
+
+### ⛔ Códigos de Documento - CENTRALIZADOS EN BD (NO HARDCODEAR)
+
+**Los códigos de documentos se almacenan en `tbl_doc_plantillas`:**
+
+| Columna | Descripcion | Ejemplo |
+|---------|-------------|---------|
+| `codigo_sugerido` | Código base del documento | `PRG-CAP` |
+| `tipo_documento` | Tipo usado en PHP (TIPOS_DOCUMENTO) | `programa_capacitacion` |
+
+**Cómo funciona:**
+
+```php
+// El controlador obtiene el código desde BD:
+$codigoBase = $this->obtenerCodigoPlantilla('programa_capacitacion');
+// Retorna: 'PRG-CAP' (desde tbl_doc_plantillas.codigo_sugerido)
+
+// Genera código con consecutivo:
+$codigo = $this->generarCodigoDocumento($idCliente, 'programa_capacitacion');
+// Retorna: 'PRG-CAP-001'
+```
+
+**Reglas:**
+
+| Accion | Permitido |
+|--------|-----------|
+| Agregar código en PHP (CODIGOS_DOCUMENTO) | ❌ **PROHIBIDO** - Constante OBSOLETA |
+| Agregar código en tbl_doc_plantillas | ✅ **CORRECTO** |
+| Hardcodear códigos en cualquier archivo PHP | ❌ **PROHIBIDO** |
+
+**Para agregar un nuevo tipo de documento:**
+
+```sql
+-- 1. PRIMERO en BD (sin esto el documento NO funciona)
+INSERT INTO tbl_doc_plantillas (
+    id_tipo, nombre, codigo_sugerido, tipo_documento, version, activo
+) VALUES (
+    3, 'Mi Nuevo Documento', 'MND-DOC', 'mi_nuevo_documento', '001', 1
+);
+
+-- 2. Mapear a carpeta
+INSERT INTO tbl_doc_plantilla_carpeta (codigo_plantilla, codigo_carpeta)
+VALUES ('MND-DOC', '1.1.1');
+```
+
+```php
+// 3. DESPUÉS en DocumentosSSTController (tipo_documento debe coincidir)
+public const TIPOS_DOCUMENTO = [
+    'mi_nuevo_documento' => [  // <-- DEBE coincidir con BD
+        'nombre' => 'Mi Nuevo Documento',
+        'flujo' => 'auto_contexto',
+        // ...
+    ]
+];
+```
+
+### ⛔ Controladores Legacy (Pz*/Hz*) - CONGELADOS
+
+**ESTADO: 42 controladores Pz* + 10 controladores Hz* = TODOS CONGELADOS**
+
+| Accion | Permitido |
+|--------|-----------|
+| Crear Pz* o Hz* nuevo | ❌ **PROHIBIDO** |
+| Modificar Pz* o Hz* existente | ❌ **PROHIBIDO** |
+| Agregar metodos a Pz* o Hz* | ❌ **PROHIBIDO** |
+| Leer codigo de Pz* o Hz* | ✅ Permitido |
+| Copiar logica a DocumentosSSTController | ✅ Permitido |
+
+**Los controladores Pz*/Hz* siguen funcionando pero estan CONGELADOS. No se tocan.**
+
+### Como "Migrar" Funcionalidad de un Pz*/Hz*
+
+**IMPORTANTE: Migrar NO significa modificar el Pz*/Hz*. Significa DUPLICAR su logica en DocumentosSSTController.**
+
+Pasos correctos:
+1. **LEER** el controlador Pz*/Hz* para entender su logica (ej: `construirContenido()`)
+2. **COPIAR** esa logica a un nuevo metodo en `DocumentosSSTController.php`
+3. **AGREGAR** entrada en TIPOS_DOCUMENTO con flujo='auto_contexto'
+4. **CREAR** nuevas rutas en Routes.php (NO modificar las existentes)
+5. **PROBAR** que la nueva implementacion funciona
+6. **DEJAR** el controlador Pz*/Hz* intacto - sigue funcionando para documentos antiguos
+
+```
+⛔ INCORRECTO:
+   - Editar PzasignacionresponsableSstController.php
+   - Agregar @deprecated al archivo
+   - Eliminar el controlador
+
+✅ CORRECTO:
+   - Leer PzasignacionresponsableSstController.php
+   - Crear asignacionResponsable() en DocumentosSSTController.php
+   - Crear ruta /documentos-sst/asignacion/{id}
+   - Ambos coexisten sin conflicto
+```
 
 ---
 
@@ -368,20 +726,34 @@ php app/SQL/ejecutar_{nombre}.php
 
 ## CHECKLIST RAPIDO PARA NUEVO DOCUMENTO
 
+**⚠️ ACTUALIZADO: Usa la nueva arquitectura de vistas por componentes**
+
+**Ver:** `docs/ARQUITECTURA_VISTAS_COMPONENTES.md`
+
 ```
-[ ] BLOQUE CONSULTOR
-    [ ] Controlador creado/actualizado
-    [ ] Vista previa creada
-    [ ] Rutas agregadas
-    [ ] Boton en carpeta.php (si aplica)
+[ ] BLOQUE BASE DE DATOS (PRIMERO - SIN ESTO NO FUNCIONA)
+    [ ] INSERT en tbl_doc_plantillas con codigo_sugerido Y tipo_documento
+    [ ] INSERT en tbl_doc_plantilla_carpeta (codigo -> estandar)
+    [ ] Script de migracion creado y ejecutado en LOCAL y PRODUCCION
+
+[ ] BLOQUE DocumentosSSTController (UNICO CONTROLADOR)
+    [ ] Agregar en TIPOS_DOCUMENTO con flujo correcto
+    [ ] ⛔ NO agregar en CODIGOS_DOCUMENTO (OBSOLETO - usar BD)
+    [ ] Si flujo=secciones_ia: agregar prompts en getPromptBaseParaSeccion()
+    [ ] Si flujo=auto_contexto: agregar logica en generarAutoContexto()
+    [ ] Crear metodo vista previa (ej: nuevoDocumento())
+    [ ] Crear vista en app/Views/documentos_sst/[nuevo].php
+    [ ] Agregar rutas en Routes.php
+
+[ ] BLOQUE ACCESO EN CARPETA (NUEVA ARQUITECTURA _tipos/_components)
+    [ ] Crear app/Views/documentacion/_tipos/mi_tipo.php (con botón/dropdown)
+    [ ] Agregar detección en determinarTipo() de DocumentacionController
+    [ ] Agregar tipo al array $tiposConDocumentos en carpeta()
+    [ ] Si múltiples docs: dropdown va EN _tipos/mi_tipo.php (no en carpeta.php)
+    [ ] Configurar mapa de URLs en _components/tabla_documentos.php
 
 [ ] BLOQUE CLIENTE
-    [ ] Mapeo en mapearPlantillaATipoDocumento()
-
-[ ] BLOQUE BASE DE DATOS
-    [ ] Script de migracion creado
-    [ ] Ejecutado en LOCAL
-    [ ] Ejecutado en PRODUCCION
+    [ ] Agregar mapeo en mapearPlantillaATipoDocumento()
 
 [ ] VERIFICACION
     [ ] Consultor puede crear documento
@@ -391,7 +763,89 @@ php app/SQL/ejecutar_{nombre}.php
     [ ] Consultor puede solicitar firmas
     [ ] Cliente ve documento aprobado/firmado
     [ ] Cliente puede descargar PDF
-    [ ] Negritas y formato se renderizan correctamente en PDF/Word
+```
+
+---
+
+## IMPLEMENTACION DE FLUJO auto_contexto
+
+Para documentos simples que se generan automaticamente desde el contexto del cliente:
+
+### PASO 1: Agregar en Base de Datos (OBLIGATORIO)
+
+```sql
+-- Primero crear la plantilla con tipo_documento
+INSERT INTO tbl_doc_plantillas (
+    id_tipo, nombre, descripcion, codigo_sugerido, tipo_documento, version, activo
+) VALUES (
+    3,  -- Tipo: Programa (ver tbl_doc_tipos)
+    'Nuevo Documento Simple',
+    'Descripcion del documento',
+    'NUE-DOC',           -- codigo_sugerido: genera NUE-DOC-001, NUE-DOC-002, etc.
+    'nuevo_documento_simple',  -- tipo_documento: DEBE coincidir con TIPOS_DOCUMENTO
+    '001',
+    1
+);
+
+-- Mapear a la carpeta del estandar
+INSERT INTO tbl_doc_plantilla_carpeta (codigo_plantilla, codigo_carpeta, descripcion)
+VALUES ('NUE-DOC', '1.1.1', 'Nuevo Documento Simple');
+```
+
+### PASO 2: En DocumentosSSTController.php:
+
+```php
+// 1. Agregar en TIPOS_DOCUMENTO (el tipo_documento DEBE coincidir con la BD)
+public const TIPOS_DOCUMENTO = [
+    'nuevo_documento_simple' => [
+        'nombre' => 'Nuevo Documento Simple',
+        'descripcion' => 'Descripcion del documento',
+        'flujo' => 'auto_contexto',
+        'estandar' => '1.1.1',
+        'firmantes' => ['representante_legal', 'consultor']
+    ]
+];
+
+// ⛔ NO agregar en CODIGOS_DOCUMENTO - está OBSOLETO
+// Los códigos se obtienen automáticamente de tbl_doc_plantillas.codigo_sugerido
+
+// 3. Crear metodo para generar contenido automatico
+protected function generarContenidoAutoContexto(string $tipo, array $cliente, array $contexto): array
+{
+    switch ($tipo) {
+        case 'nuevo_documento_simple':
+            return $this->construirContenidoNuevoDocumento($cliente, $contexto);
+        // ... otros casos
+    }
+}
+
+// 4. Crear metodo especifico del documento
+protected function construirContenidoNuevoDocumento(array $cliente, array $contexto): array
+{
+    return [
+        'titulo' => 'Titulo del Documento',
+        'secciones' => [
+            [
+                'numero' => 1,
+                'nombre' => 'Seccion 1',
+                'contenido' => 'Contenido generado desde contexto...'
+            ]
+        ],
+        'firmantes' => [
+            'representante_legal' => [
+                'nombre' => $contexto['representante_legal_nombre'],
+                'cedula' => $contexto['representante_legal_cedula'],
+                'cargo' => 'Representante Legal'
+            ]
+        ]
+    ];
+}
+
+// 5. Crear metodo de vista previa
+public function nuevoDocumentoSimple(int $idCliente, int $anio = null)
+{
+    // Similar a asignacionResponsable() pero para el nuevo documento
+}
 ```
 
 ---
@@ -985,51 +1439,67 @@ $seccionesListas = $todasSeccionesListas ?? false;
 
 ### 22. Configurar Acceso en carpeta.php para Nuevos Documentos
 
+**⚠️ ACTUALIZADO: Nueva arquitectura de vistas por componentes**
+
+**Ver:** `docs/ARQUITECTURA_VISTAS_COMPONENTES.md` para documentación completa.
+
 **Problema:** Creaste el controlador, la vista y las rutas, pero al entrar a la carpeta no aparece el botón para crear el documento.
 
-**Causa:** La vista `carpeta.php` usa `$tipoCarpetaFases` para decidir qué botones mostrar. Si no configuras el tipo de carpeta, no aparece nada.
+**Causa:** El sistema usa `determinarTipo()` para detectar el tipo de carpeta y cargar la vista correspondiente de `_tipos/`.
 
-**Solucion - 3 pasos obligatorios:**
+**Solución - 3 pasos con nueva arquitectura:**
 
-**Paso 1: Agregar detección en DocumentacionController.php**
+**Paso 1: Crear vista del tipo en `_tipos/`**
+
+```bash
+touch app/Views/documentacion/_tipos/mi_nuevo_tipo.php
+```
 
 ```php
-// En determinarTipoCarpetaFases()
-protected function determinarTipoCarpetaFases(array $carpeta): ?string
+<?php
+/**
+ * Vista de Tipo: Mi Nuevo Tipo
+ * Código: X.X.X
+ */
+?>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h4><?= esc($carpeta['nombre']) ?></h4>
+        <!-- Tu botón aquí -->
+        <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-mi-documento') ?>" method="post">
+            <button type="submit" class="btn btn-success">Generar Documento</button>
+        </form>
+    </div>
+</div>
+
+<?= view('documentacion/_components/panel_fases', ['fasesInfo' => $fasesInfo ?? null]) ?>
+<?= view('documentacion/_components/tabla_documentos', ['documentosSSTAprobados' => $documentosSSTAprobados ?? []]) ?>
+```
+
+**Paso 2: Agregar detección en DocumentacionController.php**
+
+```php
+// En determinarTipo() - NO en determinarTipoCarpetaFases (OBSOLETO)
+protected function determinarTipo(array $carpeta): ?string
 {
-    $nombre = strtolower($carpeta['nombre'] ?? '');
     $codigo = strtolower($carpeta['codigo'] ?? '');
 
-    // ... otros tipos existentes ...
-
-    // AGREGAR: Detectar tu nueva carpeta por código o nombre
-    if ($codigo === '1.1.2' || strpos($nombre, 'responsabilidades') !== false) {
-        return 'responsabilidades_sgsst';  // <-- Tu nuevo tipo
-    }
+    // AGREGAR: Detectar tu nueva carpeta por código
+    if ($codigo === 'x.x.x') return 'mi_nuevo_tipo';
 
     return null;
 }
 ```
 
-**Paso 2: Agregar tipo al array de documentos SST**
+**Paso 3: Agregar tipo al array de documentos SST (si requiere documentos)**
 
 ```php
-// En carpeta() de DocumentacionController.php - buscar la línea con in_array
-if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst'])) {
-    // ^^^^ AGREGAR tu nuevo tipo aquí
+// En carpeta() de DocumentacionController.php
+$tiposConDocumentos = ['capacitacion_sst', 'responsables_sst', 'mi_nuevo_tipo'];
 ```
 
-**Paso 3: Agregar condición en carpeta.php para el botón**
-
-```php
-// En carpeta.php - sección de botones (~línea 280)
-<?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsabilidades_sgsst'): ?>
-    <!-- Tu botón o dropdown aquí -->
-    <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-tu-documento') ?>" method="post">
-        <button type="submit" class="btn btn-success">Generar Documento</button>
-    </form>
-<?php elseif ...
-```
+**⚠️ IMPORTANTE:** Ya NO se edita `carpeta.php` directamente. Los botones van en la vista de tipo `_tipos/mi_nuevo_tipo.php`.
 
 **Regla:** Sin estos 3 pasos, el documento NO aparecerá en la interfaz aunque el controlador y rutas existan.
 
@@ -1037,123 +1507,122 @@ if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'respon
 
 ### 23. Múltiples Documentos en Una Carpeta (Patrón Dropdown)
 
+**⚠️ ACTUALIZADO: Nueva arquitectura de vistas por componentes**
+
 **Problema:** Una carpeta contiene varios documentos relacionados (ej: 1.1.2 tiene 4 documentos de responsabilidades).
 
-**Solucion:** Usar dropdown en lugar de botón único.
+**Solución con nueva arquitectura:** El dropdown va en la vista de tipo `_tipos/responsabilidades_sgsst.php`, NO en carpeta.php.
 
-**Paso 1: En DocumentacionController - obtener todos los tipos**
+**Paso 1: Crear vista de tipo con dropdown**
 
 ```php
-// En carpeta() - buscar documentos de múltiples tipos
-if ($tipoCarpetaFases === 'responsabilidades_sgsst') {
+<?php
+// app/Views/documentacion/_tipos/responsabilidades_sgsst.php
+
+/**
+ * Vista de Tipo: Responsabilidades SG-SST
+ * Código: 1.1.2
+ * Contiene 4 documentos de responsabilidades
+ */
+
+$nivelEstandares = $contextoCliente['estandares_aplicables'] ?? 60;
+$docsExistentesTipos = [];
+if (!empty($documentosSSTAprobados)) {
+    foreach ($documentosSSTAprobados as $d) {
+        if ($d['anio'] == date('Y')) {
+            $docsExistentesTipos[$d['tipo_documento']] = true;
+        }
+    }
+}
+?>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4><?= esc($carpeta['nombre']) ?></h4>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-plus-lg me-1"></i>Nuevo Documento
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <?php if (!isset($docsExistentesTipos['responsabilidades_rep_legal_sgsst'])): ?>
+                        <li>
+                            <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-resp-rep-legal') ?>" method="post">
+                                <button type="submit" class="dropdown-item">Resp. Representante Legal</button>
+                            </form>
+                        </li>
+                        <?php endif; ?>
+                        <!-- Más opciones... -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?= view('documentacion/_components/tabla_documentos', ['documentosSSTAprobados' => $documentosSSTAprobados ?? []]) ?>
+```
+
+**Paso 2: En DocumentacionController - pasar contextoCliente y obtener todos los tipos**
+
+```php
+// En carpeta() - configurar tipos de documentos
+if ($tipo === 'responsabilidades_sgsst') {
     $queryDocs->whereIn('tipo_documento', [
         'responsabilidades_rep_legal_sgsst',
         'responsabilidades_responsable_sgsst',
         'responsabilidades_trabajadores_sgsst',
         'responsabilidades_vigia_sgsst'
     ]);
-}
-```
 
-**Paso 2: Si necesitas filtrar por nivel de estándares, pasar contextoCliente**
-
-```php
-// En carpeta() - obtener contexto del cliente
-$contextoCliente = null;
-if ($tipoCarpetaFases === 'responsabilidades_sgsst') {
-    $db = \Config\Database::connect();
-    $contextoCliente = $db->table('tbl_cliente_contexto_sst')
+    // Pasar contexto para filtros por estándares
+    $data['contextoCliente'] = $db->table('tbl_cliente_contexto_sst')
         ->where('id_cliente', $cliente['id_cliente'])
-        ->get()
-        ->getRowArray();
+        ->get()->getRowArray();
 }
-
-// Pasar a la vista
-return view('documentacion/carpeta', [
-    // ... otros datos ...
-    'contextoCliente' => $contextoCliente ?? null
-]);
 ```
 
-**Paso 3: En carpeta.php - crear dropdown con filtro**
+**Paso 3: Configurar mapa de URLs en el componente `_components/tabla_documentos.php`**
 
 ```php
-<?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsabilidades_sgsst'): ?>
-    <?php
-    $nivelEstandares = $contextoCliente['estandares_aplicables'] ?? 60;
-    $docsExistentesTipos = [];
-    if (!empty($documentosSSTAprobados)) {
-        foreach ($documentosSSTAprobados as $d) {
-            if ($d['anio'] == date('Y')) {
-                $docsExistentesTipos[$d['tipo_documento']] = true;
-            }
-        }
-    }
-    ?>
-    <div class="dropdown">
-        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            <i class="bi bi-plus-lg me-1"></i>Nuevo Documento
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            <?php if (!isset($docsExistentesTipos['tipo_doc_1'])): ?>
-            <li>
-                <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-doc-1') ?>" method="post">
-                    <button type="submit" class="dropdown-item">Documento 1</button>
-                </form>
-            </li>
-            <?php endif; ?>
-
-            <!-- Documento condicional (solo 7 estándares) -->
-            <?php if ($nivelEstandares <= 7 && !isset($docsExistentesTipos['tipo_doc_vigia'])): ?>
-            <li>
-                <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-vigia') ?>" method="post">
-                    <button type="submit" class="dropdown-item">Vigía SST (Solo 7 est.)</button>
-                </form>
-            </li>
-            <?php endif; ?>
-        </ul>
-    </div>
-<?php endif; ?>
-```
-
-**Paso 4: Configurar URLs de visualización para cada tipo**
-
-```php
-// En carpeta.php - sección de acciones de la tabla
+<?php
+// En _components/tabla_documentos.php
 $mapaRutas = [
-    'responsabilidades_rep_legal_sgsst' => 'responsabilidades-rep-legal/' . $docSST['id_documento'],
-    'responsabilidades_responsable_sgsst' => 'responsabilidades-responsable-sst/' . $docSST['id_documento'],
+    'responsabilidades_rep_legal_sgsst' => 'responsabilidades-rep-legal/',
+    'responsabilidades_responsable_sgsst' => 'responsabilidades-responsable-sst/',
     // ... agregar todos los tipos
 ];
-
-if (isset($mapaRutas[$tipoDoc])) {
-    $urlVer = base_url('documentos-sst/' . $cliente['id_cliente'] . '/' . $mapaRutas[$tipoDoc]);
-}
+?>
 ```
 
-**Regla:** Cuando una carpeta tiene múltiples documentos:
-1. Usar `whereIn()` para obtener todos los tipos
-2. Pasar `$contextoCliente` si hay filtros por estándares
-3. Crear dropdown con verificación de documentos existentes
-4. Configurar mapa de URLs para cada tipo de documento
+**Regla:** Con la nueva arquitectura:
+1. Los dropdowns van en `_tipos/nombre_tipo.php`, NO en carpeta.php
+2. La lógica de filtrado por estándares va en la vista de tipo
+3. Los componentes reutilizables van en `_components/`
+4. carpeta.php es solo el layout base
 
 ---
 
 ### 24. Checklist Ampliado para Documentos con Acceso en Carpeta
 
+**⚠️ ACTUALIZADO: Nueva arquitectura de vistas por componentes**
+
 ```
 [ ] BLOQUE CONSULTOR
-    [ ] Controlador creado/actualizado
-    [ ] Vista previa creada
+    [ ] Controlador creado/actualizado en DocumentosSSTController.php
+    [ ] Vista previa creada en app/Views/documentos_sst/
     [ ] Rutas agregadas en Routes.php
 
-[ ] BLOQUE ACCESO EN CARPETA (NUEVO)
-    [ ] determinarTipoCarpetaFases() - agregar detección del tipo
-    [ ] in_array() en carpeta() - agregar tipo para obtener documentos
-    [ ] carpeta.php - agregar condición para botón/dropdown
-    [ ] Si múltiples docs: configurar dropdown con filtros
-    [ ] Si filtro por estándares: pasar contextoCliente
-    [ ] Configurar mapaRutas para URLs de visualización
+[ ] BLOQUE ACCESO EN CARPETA (NUEVA ARQUITECTURA)
+    [ ] Crear vista de tipo: app/Views/documentacion/_tipos/mi_tipo.php
+    [ ] determinarTipo() en DocumentacionController - agregar detección del código
+    [ ] Agregar tipo al array $tiposConDocumentos en carpeta()
+    [ ] Si múltiples docs: crear dropdown EN la vista de tipo (no en carpeta.php)
+    [ ] Si filtro por estándares: pasar contextoCliente desde controlador
+    [ ] Configurar mapaRutas en _components/tabla_documentos.php
 
 [ ] BLOQUE CLIENTE
     [ ] Mapeo en mapearPlantillaATipoDocumento()
@@ -1471,7 +1940,7 @@ $routes->post('/documentos-sst/adjuntar-firmado', 'DocumentosSSTController::adju
 | Firma pixelada | Sin devicePixelRatio | Agregar dpr al canvas |
 | Boton volver error | URL incorrecta | Usar base_url + id_cliente |
 | Aprobado sin firmas | Flujo incorrecto | Firmar ANTES de aprobar |
-| **Botón no aparece en carpeta** | **Falta tipo en determinarTipoCarpetaFases** | **Agregar detección + in_array + condición en vista** |
+| **Botón no aparece en carpeta** | **Falta vista en _tipos/ o detección en determinarTipo()** | **Crear _tipos/mi_tipo.php + agregar código en determinarTipo()** |
 | **Dropdown vacío** | **Falta whereIn para múltiples tipos** | **Agregar todos los tipo_documento al whereIn** |
 | **Documento Vigía aparece siempre** | **Falta filtro por estándares** | **Pasar contextoCliente y verificar nivelEstandares <= 7** |
 | **HTML visible en PDF/Word** | **htmlspecialchars escapa HTML válido** | **Detectar HTML existente y retornar sin procesar** |
@@ -1479,6 +1948,7 @@ $routes->post('/documentos-sst/adjuntar-firmado', 'DocumentosSSTController::adju
 | **PDF/Word con firmas incorrectas** | **Template no detecta tipo de documento** | **Agregar detección $esFirmaFisica y $soloFirmaConsultor** |
 | **Trabajadores con firma electrónica** | **Falta tipo_firma = 'fisica'** | **Agregar flag en controlador y bloque en templates** |
 | **Rep Legal muestra Vigía en vez de Delegado** | **Condición solo verifica estándares, no requiere_delegado** | **Usar $esDelegado en lugar de solo $estandares >= 21** |
+| **Vista no carga (tipo nuevo)** | **Falta archivo en _tipos/** | **Crear app/Views/documentacion/_tipos/mi_tipo.php** |
 
 ---
 
