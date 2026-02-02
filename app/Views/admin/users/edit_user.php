@@ -6,6 +6,7 @@
     <title>Editar Usuario</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             background-color: #f8f9fa;
@@ -39,6 +40,30 @@
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 5px;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 45px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .password-toggle:hover {
+            color: #343a40;
         }
     </style>
 </head>
@@ -115,8 +140,13 @@
 
                 <div class="form-group">
                     <label for="password">Nueva Contraseña</label>
-                    <input type="password" class="form-control" id="password" name="password"
-                           placeholder="Dejar vacío para mantener la actual" minlength="6">
+                    <div class="password-wrapper">
+                        <input type="password" class="form-control" id="password" name="password"
+                               placeholder="Dejar vacío para mantener la actual" minlength="6">
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="toggleIcon"></i>
+                        </button>
+                    </div>
                     <small class="form-text text-muted">Solo complete si desea cambiar la contraseña.</small>
                 </div>
 
@@ -211,6 +241,22 @@
             // Trigger inicial
             $('#tipo_usuario').trigger('change');
         });
+
+        // Toggle mostrar/ocultar contraseña
+        function togglePassword() {
+            var passwordInput = document.getElementById('password');
+            var toggleIcon = document.getElementById('toggleIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
     </script>
 
 </body>
