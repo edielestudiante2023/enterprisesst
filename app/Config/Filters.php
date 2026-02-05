@@ -75,7 +75,7 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'sessiontimeout' => ['except' => ['login', 'login/*', 'logout', 'forgot-password', 'forgot-password/*', 'reset-password', 'reset-password/*']],
+            'sessiontimeout' => ['except' => ['login', 'login/*', 'logout', 'forgot-password', 'forgot-password/*', 'reset-password', 'reset-password/*', 'votar', 'votar/*']],
         ],
         'after' => [
             // 'honeypot',
@@ -123,6 +123,10 @@ class Filters extends BaseFilters
                 'inventario/*',
                 'generatePdf*',
                 'pausasActivas/*',
+                'actas/*',
+                'comites-elecciones/*',
+                'acciones-correctivas/*',
+                'indicadores-sst/*',
             ],
         ],
     ];

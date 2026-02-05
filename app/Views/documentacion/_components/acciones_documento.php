@@ -15,6 +15,7 @@ $mapaRutas = [
     'programa_capacitacion' => 'programa-capacitacion/' . $docSST['anio'],
     'procedimiento_control_documental' => 'procedimiento-control-documental/' . $docSST['anio'],
     'presupuesto_sst' => 'presupuesto/preview/' . $docSST['anio'],
+    'identificacion_alto_riesgo' => 'identificacion-alto-riesgo/' . $docSST['anio'],
 ];
 
 // Presupuesto SST tiene ruta diferente
@@ -33,6 +34,8 @@ if ($tipoDoc === 'programa_capacitacion') {
     $urlEditar = base_url('documentos/generar/procedimiento_control_documental/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 } elseif ($tipoDoc === 'presupuesto_sst') {
     $urlEditar = base_url('documentos-sst/presupuesto/' . $cliente['id_cliente'] . '/' . $docSST['anio']);
+} elseif ($tipoDoc === 'identificacion_alto_riesgo') {
+    $urlEditar = base_url('documentos/generar/identificacion_alto_riesgo/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 }
 ?>
 <div class="btn-group btn-group-sm">
@@ -88,8 +91,8 @@ if ($tipoDoc === 'programa_capacitacion') {
         <i class="bi bi-pen"></i>
     </a>
     <a href="<?= base_url('documentos-sst/publicar-pdf/' . $docSST['id_documento']) ?>"
-       class="btn btn-outline-dark" title="Publicar en Reportes"
-       onclick="return confirm('Publicar este documento en Reportes? Sera consultable desde reportList.')">
+       class="btn btn-outline-dark" title="Publicar nueva versión en Reportes (se mantiene historial)"
+       onclick="return confirm('¿Publicar nueva versión de este documento en Reportes?\n\nSe creará un nuevo registro manteniendo el historial de publicaciones anteriores.')">
         <i class="bi bi-cloud-upload"></i>
     </a>
     <?php endif; ?>

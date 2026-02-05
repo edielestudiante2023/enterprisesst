@@ -27,6 +27,9 @@ class DocumentoSSTFactory
     private static array $tiposRegistrados = [
         'programa_capacitacion' => ProgramaCapacitacion::class,
         'procedimiento_control_documental' => ProcedimientoControlDocumental::class,
+        'programa_promocion_prevencion_salud' => ProgramaPromocionPrevencionSalud::class,
+        'programa_induccion_reinduccion' => ProgramaInduccionReinduccion::class,
+        'procedimiento_matriz_legal' => ProcedimientoMatrizLegal::class,
     ];
 
     /**

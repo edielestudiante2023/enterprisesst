@@ -100,6 +100,10 @@ if (!isset($fasesInfo) || !$fasesInfo || !$fasesInfo['tiene_fases']) {
                         // Documento auto-generado, no usa IA
                     } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'capacitacion_sst') {
                         $urlCrearIA = base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente']);
+                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'promocion_prevencion_salud') {
+                        $urlCrearIA = base_url('documentos/generar/programa_promocion_prevencion_salud/' . $cliente['id_cliente']);
+                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'induccion_reinduccion') {
+                        $urlCrearIA = base_url('documentos/generar/programa_induccion_reinduccion/' . $cliente['id_cliente']);
                     } else {
                         $urlCrearIA = base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta'] . '&ia=1');
                     }

@@ -739,12 +739,49 @@ $routes->post('/generador-ia/(:num)/generar-flujo-completo', 'GeneradorIAControl
 $routes->post('/generador-ia/(:num)/generar-programa-capacitacion', 'GeneradorIAController::generarProgramaCapacitacion/$1');
 $routes->get('/generador-ia/(:num)/resumen', 'GeneradorIAController::resumen/$1');
 
+// Módulo 3.1.2 - Programa de Promoción y Prevención en Salud
+$routes->get('/generador-ia/(:num)/pyp-salud', 'GeneradorIAController::pypSalud/$1');
+$routes->get('/generador-ia/(:num)/preview-actividades-pyp', 'GeneradorIAController::previewActividadesPyP/$1');
+$routes->post('/generador-ia/(:num)/generar-actividades-pyp', 'GeneradorIAController::generarActividadesPyP/$1');
+$routes->get('/generador-ia/(:num)/resumen-pyp-salud', 'GeneradorIAController::resumenPyPSalud/$1');
+
+// Módulo 3.1.2 - Indicadores de PyP Salud
+$routes->get('/generador-ia/(:num)/indicadores-pyp-salud', 'GeneradorIAController::indicadoresPyPSalud/$1');
+$routes->get('/generador-ia/(:num)/preview-indicadores-pyp', 'GeneradorIAController::previewIndicadoresPyP/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores-pyp', 'GeneradorIAController::generarIndicadoresPyP/$1');
+
+// Módulo 1.2.2 - Inducción y Reinducción
+$routes->get('/induccion-etapas/(:num)', 'InduccionEtapasController::index/$1');
+$routes->get('/induccion-etapas/(:num)/generar', 'InduccionEtapasController::generar/$1');
+$routes->post('/induccion-etapas/(:num)/generar', 'InduccionEtapasController::generarPost/$1');
+$routes->post('/induccion-etapas/(:num)/aprobar', 'InduccionEtapasController::aprobar/$1');
+$routes->get('/induccion-etapas/(:num)/generar-pta', 'InduccionEtapasController::generarPTA/$1');
+$routes->post('/induccion-etapas/(:num)/enviar-pta', 'InduccionEtapasController::enviarPTA/$1');
+$routes->get('/induccion-etapas/(:num)/generar-indicadores', 'InduccionEtapasController::generarIndicadores/$1');
+$routes->post('/induccion-etapas/(:num)/enviar-indicadores', 'InduccionEtapasController::enviarIndicadores/$1');
+$routes->post('/induccion-etapas/(:num)/ajustar-indicador', 'InduccionEtapasController::ajustarIndicador/$1');
+$routes->get('/induccion-etapas/(:num)/api', 'InduccionEtapasController::getEtapasJson/$1');
+$routes->post('/induccion-etapas/etapa/(:num)/aprobar', 'InduccionEtapasController::aprobarEtapa/$1');
+$routes->post('/induccion-etapas/etapa/(:num)/desaprobar', 'InduccionEtapasController::desaprobarEtapa/$1');
+$routes->post('/induccion-etapas/etapa/(:num)/tema', 'InduccionEtapasController::agregarTema/$1');
+$routes->delete('/induccion-etapas/etapa/(:num)/tema/(:num)', 'InduccionEtapasController::eliminarTema/$1/$2');
+$routes->post('/induccion-etapas/etapa/(:num)/editar-temas', 'InduccionEtapasController::editarTemas/$1');
+
 // Documentos SST generados
 $routes->get('/documentos-sst/(:num)/programa-capacitacion/(:num)', 'DocumentosSSTController::programaCapacitacion/$1/$2');
 
 // Procedimiento de Control Documental (2.5.1)
 $routes->get('/documentos-sst/(:num)/procedimiento-control-documental/(:num)', 'DocumentosSSTController::procedimientoControlDocumental/$1/$2');
 $routes->post('/documentos-sst/(:num)/crear-control-documental', 'DocumentosSSTController::crearControlDocumental/$1');
+
+// Programa de Induccion y Reinduccion (1.2.2)
+$routes->get('/documentos-sst/(:num)/programa-induccion-reinduccion/(:num)', 'DocumentosSSTController::programaInduccionReinduccion/$1/$2');
+
+// Programa de Promocion y Prevencion en Salud (3.1.2)
+$routes->get('/documentos-sst/(:num)/programa-promocion-prevencion-salud/(:num)', 'DocumentosSSTController::programaPromocionPrevencionSalud/$1/$2');
+
+// Procedimiento de Matriz Legal (2.7.1)
+$routes->get('/documentos-sst/(:num)/procedimiento-matriz-legal/(:num)', 'DocumentosSSTController::procedimientoMatrizLegal/$1/$2');
 
 // Asignacion de Responsable SG-SST (Patron B - controlador independiente)
 $routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'PzasignacionresponsableSstController::crear/$1');
@@ -783,12 +820,36 @@ $routes->get('/documentos-sst/exportar-word/(:num)', 'DocumentosSSTController::e
 $routes->get('/documentos-sst/publicar-pdf/(:num)', 'DocumentosSSTController::publicarPDF/$1');
 $routes->post('/documentos-sst/adjuntar-firmado', 'DocumentosSSTController::adjuntarFirmado');
 $routes->post('/documentos-sst/adjuntar-planilla-srl', 'DocumentosSSTController::adjuntarPlanillaSRL');
+$routes->post('/documentos-sst/adjuntar-soporte-verificacion', 'DocumentosSSTController::adjuntarSoporteVerificacion');
+$routes->post('/documentos-sst/adjuntar-soporte-auditoria', 'DocumentosSSTController::adjuntarSoporteAuditoria');
+$routes->post('/documentos-sst/adjuntar-soporte-epp', 'DocumentosSSTController::adjuntarSoporteEPP');
+$routes->post('/documentos-sst/adjuntar-soporte-emergencias', 'DocumentosSSTController::adjuntarSoporteEmergencias');
+$routes->post('/documentos-sst/adjuntar-soporte-brigada', 'DocumentosSSTController::adjuntarSoporteBrigada');
+$routes->post('/documentos-sst/adjuntar-soporte-revision', 'DocumentosSSTController::adjuntarSoporteRevision');
+$routes->post('/documentos-sst/adjuntar-soporte-agua', 'DocumentosSSTController::adjuntarSoporteAgua');
+$routes->post('/documentos-sst/adjuntar-soporte-residuos', 'DocumentosSSTController::adjuntarSoporteResiduos');
+$routes->post('/documentos-sst/adjuntar-soporte-mediciones', 'DocumentosSSTController::adjuntarSoporteMediciones');
+$routes->post('/documentos-sst/adjuntar-soporte-medidas-control', 'DocumentosSSTController::adjuntarSoporteMedidasControl');
+$routes->post('/documentos-sst/adjuntar-soporte-diagnostico-salud', 'DocumentosSSTController::adjuntarSoporteDiagnosticoSalud');
+$routes->post('/documentos-sst/adjuntar-soporte-perfiles-medico', 'DocumentosSSTController::adjuntarSoportePerfilesMedico');
+$routes->post('/documentos-sst/adjuntar-soporte-evaluaciones-medicas', 'DocumentosSSTController::adjuntarSoporteEvaluacionesMedicas');
+$routes->post('/documentos-sst/adjuntar-soporte-custodia-hc', 'DocumentosSSTController::adjuntarSoporteCustodiaHC');
+$routes->post('/documentos-sst/adjuntar-soporte-curso-50h', 'DocumentosSSTController::adjuntarSoporteCurso50h');
+$routes->post('/documentos-sst/adjuntar-soporte-evaluacion-prioridades', 'DocumentosSSTController::adjuntarSoporteEvaluacionPrioridades');
+$routes->post('/documentos-sst/adjuntar-soporte-plan-objetivos', 'DocumentosSSTController::adjuntarSoportePlanObjetivos');
+$routes->post('/documentos-sst/adjuntar-soporte-rendicion', 'DocumentosSSTController::adjuntarSoporteRendicion');
+$routes->post('/documentos-sst/adjuntar-soporte-copasst', 'DocumentosSSTController::adjuntarSoporteCopasst');
+$routes->post('/documentos-sst/adjuntar-soporte-convivencia', 'DocumentosSSTController::adjuntarSoporteConvivencia');
+$routes->post('/documentos-sst/adjuntar-soporte-pyp-salud', 'DocumentosSSTController::adjuntarSoportePypSalud');
+$routes->post('/documentos-sst/adjuntar-soporte-induccion', 'DocumentosSSTController::adjuntarSoporteInduccion');
+$routes->post('/documentos-sst/adjuntar-soporte-matriz-legal', 'DocumentosSSTController::adjuntarSoporteMatrizLegal');
 
 // Aprobacion y versionamiento de documentos SST
 $routes->post('/documentos-sst/aprobar-documento', 'DocumentosSSTController::aprobarDocumento');
 $routes->post('/documentos-sst/iniciar-nueva-version', 'DocumentosSSTController::iniciarNuevaVersion');
 $routes->get('/documentos-sst/historial-versiones/(:num)', 'DocumentosSSTController::historialVersiones/$1');
 $routes->post('/documentos-sst/restaurar-version', 'DocumentosSSTController::restaurarVersion');
+$routes->post('/documentos-sst/cancelar-nueva-version', 'DocumentosSSTController::cancelarNuevaVersion');
 $routes->get('/documentos-sst/descargar-version-pdf/(:num)', 'DocumentosSSTController::descargarVersionPDF/$1');
 
 // Temporal: Ejecutar migraciones SQL (ELIMINAR DESPUES DE USAR)
@@ -807,6 +868,7 @@ $routes->get('/sql-runner/buscar-usuario', 'SqlRunnerController::buscarUsuario')
 $routes->get('/sql-runner/probar-login', 'SqlRunnerController::probarLogin');
 $routes->get('/sql-runner/ver-triggers', 'SqlRunnerController::verTriggers');
 $routes->get('/sql-runner/agregar-miembro-enum', 'SqlRunnerController::agregarMiembroEnum');
+$routes->get('/sql-runner/estandarizar-versiones', 'SqlRunnerController::estandarizarVersiones');
 
 /* *********************MÓDULO PRESUPUESTO SST (1.1.3) ****************************************/
 
@@ -850,6 +912,84 @@ $routes->post('/documentos-sst/presupuesto/generar-token-consulta', 'Pzpresupues
 
 // Crear nueva versión del presupuesto
 $routes->post('/documentos-sst/presupuesto/nueva-version/(:num)/(:num)', 'PzpresupuestoSstController::crearNuevaVersion/$1/$2');
+
+/* *****************************************************************************
+ * MÓDULO DE CONFORMACIÓN DE COMITÉS - ELECCIONES SST
+ * COPASST, COCOLAB, Brigada, Vigía
+ * *****************************************************************************/
+
+// Dashboard de comités electorales por cliente
+$routes->get('/comites-elecciones/(:num)', 'ComitesEleccionesController::dashboard/$1');
+
+// Crear nuevo proceso electoral
+$routes->get('/comites-elecciones/(:num)/nuevo', 'ComitesEleccionesController::nuevoProceso/$1');
+$routes->get('/comites-elecciones/(:num)/nuevo/(:segment)', 'ComitesEleccionesController::nuevoProceso/$1/$2');
+$routes->post('/comites-elecciones/guardar-proceso', 'ComitesEleccionesController::guardarProceso');
+
+// Ver proceso específico
+$routes->get('/comites-elecciones/(:num)/proceso/(:num)', 'ComitesEleccionesController::verProceso/$1/$2');
+$routes->post('/comites-elecciones/proceso/(:num)/cambiar-estado/(:segment)', 'ComitesEleccionesController::cambiarEstado/$1/$2');
+
+// Fase 2: Inscripción de candidatos
+$routes->get('/comites-elecciones/proceso/(:num)/inscribir/(:segment)', 'ComitesEleccionesController::inscribirCandidato/$1/$2');
+$routes->get('/comites-elecciones/proceso/(:num)/inscribir', 'ComitesEleccionesController::inscribirCandidato/$1');
+$routes->post('/comites-elecciones/guardar-candidato', 'ComitesEleccionesController::guardarCandidato');
+$routes->get('/comites-elecciones/proceso/(:num)/candidatos', 'ComitesEleccionesController::listaCandidatos/$1');
+$routes->get('/comites-elecciones/candidato/(:num)/editar', 'ComitesEleccionesController::editarCandidato/$1');
+$routes->post('/comites-elecciones/candidato/(:num)/actualizar', 'ComitesEleccionesController::actualizarCandidato/$1');
+$routes->post('/comites-elecciones/candidato/(:num)/eliminar', 'ComitesEleccionesController::eliminarCandidato/$1');
+$routes->get('/comites-elecciones/candidato/(:num)', 'ComitesEleccionesController::verCandidato/$1');
+
+// Fase 3: Sistema de Votacion Electronica
+$routes->post('/comites-elecciones/proceso/(:num)/iniciar-votacion', 'ComitesEleccionesController::iniciarVotacion/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/censo', 'ComitesEleccionesController::censovotantes/$1');
+$routes->post('/comites-elecciones/proceso/agregar-votante', 'ComitesEleccionesController::agregarVotante');
+$routes->post('/comites-elecciones/proceso/importar-votantes', 'ComitesEleccionesController::importarVotantes');
+$routes->get('/comites-elecciones/proceso/(:num)/plantilla-csv', 'ComitesEleccionesController::descargarPlantillaCSV/$1');
+$routes->post('/comites-elecciones/proceso/importar-csv', 'ComitesEleccionesController::importarCSV');
+$routes->post('/comites-elecciones/votante/(:num)/enviar-enlace', 'ComitesEleccionesController::enviarEnlaceVotante/$1');
+$routes->post('/comites-elecciones/proceso/(:num)/enviar-enlaces-todos', 'ComitesEleccionesController::enviarEnlacesTodos/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/resultados', 'ComitesEleccionesController::resultadosVotacion/$1');
+$routes->post('/comites-elecciones/proceso/(:num)/finalizar-votacion', 'ComitesEleccionesController::finalizarVotacion/$1');
+
+// Fase 4: Completar Proceso
+$routes->post('/comites-elecciones/proceso/(:num)/completar', 'ComitesEleccionesController::completarProceso/$1');
+
+// Administración de procesos electorales (admin/consultant)
+$routes->get('/comites-elecciones/admin/procesos', 'ComitesEleccionesController::administrarProcesos');
+$routes->post('/comites-elecciones/admin/reabrir-proceso', 'ComitesEleccionesController::reabrirProceso');
+$routes->post('/comites-elecciones/admin/cancelar-proceso', 'ComitesEleccionesController::cancelarProcesoElectoral');
+
+// Jurados de votacion
+$routes->post('/comites-elecciones/jurado/agregar', 'ComitesEleccionesController::agregarJurado');
+$routes->get('/comites-elecciones/proceso/(:num)/jurados', 'ComitesEleccionesController::obtenerJurados/$1');
+$routes->post('/comites-elecciones/jurado/(:num)/eliminar', 'ComitesEleccionesController::eliminarJurado/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/buscar-trabajador', 'ComitesEleccionesController::buscarTrabajadorJurado/$1');
+
+// Acta de Constitucion del Comite
+$routes->get('/comites-elecciones/proceso/(:num)/acta', 'ComitesEleccionesController::generarActaConstitucion/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/acta/pdf', 'ComitesEleccionesController::generarActaConstitucionPDF/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/acta/descargar', 'ComitesEleccionesController::descargarActaConstitucion/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/acta/word', 'ComitesEleccionesController::exportarActaWord/$1');
+
+// Firmas electronicas del Acta de Constitucion
+$routes->get('/comites-elecciones/proceso/(:num)/firmas', 'ComitesEleccionesController::solicitarFirmasActa/$1');
+$routes->post('/comites-elecciones/proceso/crear-solicitudes-acta', 'ComitesEleccionesController::crearSolicitudesActa');
+$routes->get('/comites-elecciones/proceso/(:num)/firmas/estado', 'ComitesEleccionesController::estadoFirmasActa/$1');
+
+// Recomposicion de Comites
+$routes->get('/comites-elecciones/proceso/(:num)/recomposiciones', 'ComitesEleccionesController::listarRecomposiciones/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/recomposicion/nueva', 'ComitesEleccionesController::nuevaRecomposicion/$1');
+$routes->post('/comites-elecciones/proceso/guardar-recomposicion', 'ComitesEleccionesController::guardarRecomposicion');
+$routes->get('/comites-elecciones/proceso/(:num)/recomposicion/(:num)', 'ComitesEleccionesController::verRecomposicion/$1/$2');
+$routes->get('/comites-elecciones/proceso/(:num)/recomposicion/(:num)/acta-pdf', 'ComitesEleccionesController::generarActaRecomposicionPdf/$1/$2');
+$routes->get('/comites-elecciones/proceso/(:num)/siguiente-votacion', 'ComitesEleccionesController::getSiguienteEnVotacion/$1');
+
+// Rutas PUBLICAS de votacion (sin autenticacion)
+$routes->get('/votar/(:alphanum)', 'ComitesEleccionesController::votarAcceso/$1');
+$routes->post('/votar/validar', 'ComitesEleccionesController::validarVotante');
+$routes->get('/votar/emitir/(:alphanum)', 'ComitesEleccionesController::votarPublico/$1');
+$routes->post('/votar/registrar', 'ComitesEleccionesController::registrarVoto');
 
 /* *****************************************************************************
  * MÓDULO DE ACTAS - COPASST, COCOLAB, BRIGADA, GENERALES
@@ -914,6 +1054,76 @@ $routes->post('/acta/tarea/(:segment)', 'ActaFirmaPublicaController::procesarAct
 // Verificar código de acta (público)
 $routes->get('/acta/verificar', 'ActaFirmaPublicaController::verificarActa');
 $routes->post('/acta/verificar', 'ActaFirmaPublicaController::verificarActa');
+
+// ============================================
+// MÓDULO DE ACCIONES CORRECTIVAS
+// Numerales 7.1.1, 7.1.2, 7.1.3, 7.1.4 - Resolución 0312
+// ============================================
+
+// Dashboard general (seleccionar cliente)
+$routes->get('/acciones-correctivas', 'AccionesCorrectivasController::dashboard');
+
+// Dashboard de un cliente
+$routes->get('/acciones-correctivas/(:num)', 'AccionesCorrectivasController::index/$1');
+
+// Vista por numeral (para embeber en carpetas)
+$routes->get('/acciones-correctivas/(:num)/numeral/(:segment)', 'AccionesCorrectivasController::porNumeral/$1/$2');
+
+// Hallazgos
+$routes->get('/acciones-correctivas/(:num)/hallazgos', 'AccionesCorrectivasController::hallazgos/$1');
+$routes->get('/acciones-correctivas/(:num)/hallazgo/crear', 'AccionesCorrectivasController::crearHallazgo/$1');
+$routes->get('/acciones-correctivas/(:num)/hallazgo/crear/(:segment)', 'AccionesCorrectivasController::crearHallazgo/$1/$2');
+$routes->post('/acciones-correctivas/(:num)/hallazgo/guardar', 'AccionesCorrectivasController::guardarHallazgo/$1');
+$routes->get('/acciones-correctivas/(:num)/hallazgo/(:num)', 'AccionesCorrectivasController::verHallazgo/$1/$2');
+
+// Acciones
+$routes->get('/acciones-correctivas/(:num)/hallazgo/(:num)/accion/crear', 'AccionesCorrectivasController::crearAccion/$1/$2');
+$routes->post('/acciones-correctivas/(:num)/hallazgo/(:num)/accion/guardar', 'AccionesCorrectivasController::guardarAccion/$1/$2');
+$routes->get('/acciones-correctivas/(:num)/accion/(:num)', 'AccionesCorrectivasController::verAccion/$1/$2');
+$routes->post('/acciones-correctivas/(:num)/accion/(:num)/cambiar-estado', 'AccionesCorrectivasController::cambiarEstadoAccion/$1/$2');
+
+// Seguimientos y Evidencias
+$routes->post('/acciones-correctivas/(:num)/accion/(:num)/avance', 'AccionesCorrectivasController::registrarAvance/$1/$2');
+$routes->post('/acciones-correctivas/(:num)/accion/(:num)/evidencia', 'AccionesCorrectivasController::subirEvidencia/$1/$2');
+$routes->post('/acciones-correctivas/(:num)/accion/(:num)/comentario', 'AccionesCorrectivasController::registrarComentario/$1/$2');
+$routes->get('/acciones-correctivas/evidencia/(:num)/descargar', 'AccionesCorrectivasController::descargarEvidencia/$1');
+$routes->get('/acciones-correctivas/(:num)/hallazgo/(:num)/evidencia', 'AccionesCorrectivasController::descargarEvidenciaHallazgo/$1/$2');
+
+// Verificación de Efectividad
+$routes->post('/acciones-correctivas/(:num)/accion/(:num)/verificacion', 'AccionesCorrectivasController::registrarVerificacion/$1/$2');
+
+// Análisis de Causa Raíz con IA
+$routes->get('/acciones-correctivas/(:num)/accion/(:num)/analisis-causa-raiz', 'AccionesCorrectivasController::analisisCausaRaiz/$1/$2');
+$routes->post('/acciones-correctivas/(:num)/accion/(:num)/analisis-ia', 'AccionesCorrectivasController::procesarAnalisisIA/$1/$2');
+$routes->post('/acciones-correctivas/(:num)/accion/(:num)/causa-raiz', 'AccionesCorrectivasController::guardarCausaRaiz/$1/$2');
+
+// Reportes
+$routes->get('/acciones-correctivas/(:num)/reporte/pdf', 'AccionesCorrectivasController::reportePDF/$1');
+$routes->get('/acciones-correctivas/(:num)/reporte/excel', 'AccionesCorrectivasController::exportarExcel/$1');
+
+// API Endpoints (AJAX)
+$routes->get('/acciones-correctivas/(:num)/api/estadisticas', 'AccionesCorrectivasController::apiEstadisticas/$1');
+$routes->get('/acciones-correctivas/(:num)/api/hallazgos', 'AccionesCorrectivasController::apiHallazgos/$1');
+$routes->get('/acciones-correctivas/(:num)/api/acciones', 'AccionesCorrectivasController::apiAcciones/$1');
+
+// ============================================
+// MATRIZ LEGAL SST
+// ============================================
+$routes->get('/matriz-legal', 'MatrizLegalController::index');
+$routes->get('/matriz-legal/datatable', 'MatrizLegalController::datatable');
+$routes->get('/matriz-legal/ver/(:num)', 'MatrizLegalController::ver/$1');
+$routes->get('/matriz-legal/crear', 'MatrizLegalController::crear');
+$routes->post('/matriz-legal/guardar', 'MatrizLegalController::guardar');
+$routes->get('/matriz-legal/editar/(:num)', 'MatrizLegalController::editar/$1');
+$routes->post('/matriz-legal/eliminar/(:num)', 'MatrizLegalController::eliminar/$1');
+$routes->get('/matriz-legal/importar', 'MatrizLegalController::importarCSV');
+$routes->post('/matriz-legal/preview-csv', 'MatrizLegalController::previewCSV');
+$routes->post('/matriz-legal/procesar-csv', 'MatrizLegalController::procesarCSV');
+$routes->get('/matriz-legal/buscar-ia', 'MatrizLegalController::buscarIA');
+$routes->post('/matriz-legal/procesar-busqueda-ia', 'MatrizLegalController::procesarBusquedaIA');
+$routes->post('/matriz-legal/guardar-desde-ia', 'MatrizLegalController::guardarDesdeIA');
+$routes->get('/matriz-legal/exportar', 'MatrizLegalController::exportar');
+$routes->get('/matriz-legal/descargar-muestra', 'MatrizLegalController::descargarMuestra');
 
 // ============================================
 // ACCESO DE MIEMBROS AUTENTICADOS (con login)

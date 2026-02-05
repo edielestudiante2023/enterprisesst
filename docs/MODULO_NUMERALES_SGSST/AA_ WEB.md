@@ -1,4 +1,15 @@
-1. ESTRUCTURA GENERAL DE LA PÁGINA
+Estilos Vista WEB - Referencia Técnica
+
+> **Nota sobre FIRMAS**: Para la sección de firmas de documentos, consultar:
+> - `AA_PDF_FIRMAS.md` - Firmas para exportación PDF
+> - `AA_WORD_FIRMAS.md` - Firmas para exportación Word
+> - `SISTEMA_FIRMAS_DOCUMENTOS.md` - Documentación completa del sistema de firmas
+>
+> ⚠️ **REGLA CRÍTICA**: TODOS los documentos técnicos DEBEN incluir "Elaboró / Consultor SST"
+
+---
+
+## 1. ESTRUCTURA GENERAL DE LA PÁGINA
 
 Layout General
 
@@ -434,3 +445,81 @@ Imágenes firma	URL directa	Base64	No
 Interactividad	Modales, botones	N/A	N/A
 Comando para Replicar
 "Usa el estilo WEB estándar: Bootstrap 5.3, encabezado tabla 3 cols (logo 150px, info 170px), títulos 1.1rem bold #0d6efd border-bottom 2px #e9ecef, line-height 1.7, Control Cambios gradiente azul-morado, Firmas gradiente verde, contenedor max-width 900px padding 40px shadow"
+
+---
+
+## 16. ⚠️ FIRMA DEL CONSULTOR EN VISTA WEB (CRÍTICO)
+
+**La firma del Consultor SST tiene DOS fuentes posibles (en orden de prioridad):**
+
+### Fuente 1: Firma Electrónica (si firmó electrónicamente el documento)
+
+```php
+$firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+```
+
+- Origen: `tbl_doc_firma_evidencias` (cuando el consultor firma un documento específico)
+- Formato: URL con imagen base64 en `$firmaConsultorElectronica['evidencia']['firma_imagen']`
+
+### Fuente 2: Firma Física (del perfil del consultor)
+
+```php
+$firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
+```
+
+- Origen: `tbl_consultor.firma_consultor` (firma subida en el perfil)
+- Formato: Nombre de archivo en `uploads/`
+
+### Implementación correcta para WEB
+
+Para WEB, NO se necesita conversión a base64. Usar URL directa:
+
+```php
+// Definir fuentes de firma
+$firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+$firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
+
+// Mostrar (prioridad: electrónica > física)
+<?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+    <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>"
+         alt="Firma Consultor" style="max-height: 60px; max-width: 150px;">
+<?php elseif (!empty($firmaConsultorFisica)): ?>
+    <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>"
+         alt="Firma Consultor" style="max-height: 60px; max-width: 150px;">
+<?php endif; ?>
+```
+
+### ❌ ERROR COMÚN (NO hacer esto)
+
+```php
+// INCORRECTO: Solo busca firma electrónica, ignora firma física del perfil
+$firmaConsultor = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+<?php if ($firmaConsultor): ?> <!-- Si no firmó electrónicamente, nunca muestra firma -->
+```
+
+---
+
+## 17. DIFERENCIA CLAVE: WEB vs PDF
+
+| Aspecto | WEB | PDF (DOMPDF) |
+|---------|-----|--------------|
+| Firma física consultor | URL directa `base_url('uploads/' . $firma)` | Convertir a Base64 |
+| Firma electrónica | URL directa (ya es base64) | URL directa (ya es base64) |
+| Motivo | El navegador puede cargar URLs | DOMPDF no puede cargar archivos externos |
+
+---
+
+## 18. TIPOS DE DOCUMENTO Y SUS FIRMANTES (Referencia Rápida)
+
+| Tipo Documento | Firmantes | Notas |
+|----------------|-----------|-------|
+| `responsabilidades_responsable_sgsst` | 1: Consultor SST | Solo firma consultor |
+| `responsabilidades_rep_legal_sgsst` (sin 2do firmante) | 2: Elaboró + Aprobó | Consultor + Rep. Legal |
+| `responsabilidades_rep_legal_sgsst` (con 2do firmante) | 3: Elaboró + Aprobó + Revisó | Consultor + Rep. Legal + Vigía/Delegado |
+| Otros documentos (≤10 estándares) | 2: Elaboró + Aprobó | Consultor + Rep. Legal |
+| Otros documentos (>10 estándares) | 3: Elaboró + Revisó + Aprobó | Consultor + Vigía/COPASST + Rep. Legal |
+
+### ⚠️ REGLA DE ORO
+
+**NUNCA** crear un tipo de firma que excluya al Consultor en documentos técnicos.
+Si un nuevo tipo de documento excluye "Elaboró/Consultor", está **violando la regla de auditoría**.

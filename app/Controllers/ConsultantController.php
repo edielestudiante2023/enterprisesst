@@ -8,6 +8,7 @@ use App\Models\ReporteModel;
 use App\Models\PlanModel;
 use App\Models\CronogcapacitacionModel;
 use App\Models\SimpleEvaluationModel;
+use App\Models\DashboardItemModel;
 use App\Libraries\WorkPlanLibrary;
 use App\Libraries\TrainingLibrary;
 use App\Libraries\StandardsLibrary;
@@ -17,7 +18,19 @@ class ConsultantController extends Controller
 {
     public function index()
     {
-        return view('consultant/dashboard');
+        $clientModel = new ClientModel();
+        $dashboardItemModel = new DashboardItemModel();
+
+        // Obtener todos los clientes activos para el selector de actas
+        $clientes = $clientModel->where('estado', 'activo')->findAll();
+
+        // Obtener todos los items del dashboard para la tabla (sin filtrar por rol)
+        $items = $dashboardItemModel->findAll();
+
+        return view('consultant/dashboard', [
+            'clientes' => $clientes,
+            'items' => $items
+        ]);
     }
 
     public function addClient()

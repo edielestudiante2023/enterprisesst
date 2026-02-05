@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\DashboardItemModel;
+use App\Models\ClientModel;
 
 class CustomDashboardController extends BaseController
 {
@@ -21,6 +22,10 @@ class CustomDashboardController extends BaseController
         if ($session->get('id_usuario')) {
             $data['usuario'] = $userModel->find($session->get('id_usuario'));
         }
+
+        // Obtener clientes activos para el selector de actas
+        $clientModel = new ClientModel();
+        $data['clientes'] = $clientModel->where('estado', 'activo')->findAll();
 
         // Cargar la vista principal del dashboard y pasarle los datos
         return view('consultant/admindashboard', $data);

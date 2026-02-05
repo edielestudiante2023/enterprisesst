@@ -233,7 +233,7 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <a href="<?= base_url('generador-ia/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
+                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
                         <i class="bi bi-arrow-left me-1"></i>Volver
                     </a>
                     <span class="ms-3"><?= esc($cliente['nombre_cliente']) ?> - Programa de Capacitacion <?= $anio ?></span>
@@ -248,7 +248,7 @@
                     <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2">
                         <i class="bi bi-file-earmark-word me-1"></i>Word
                     </a>
-                    <?php if (in_array($documento['estado'] ?? '', ['aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                    <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
                         <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
                         </a>

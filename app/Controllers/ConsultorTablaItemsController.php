@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\Controller;
 use App\Models\DashboardItemModel;
+use App\Models\ClientModel;
 
 class ConsultorTablaItemsController extends Controller
 {
@@ -11,10 +12,14 @@ class ConsultorTablaItemsController extends Controller
     {
         $session = session();
         $model = new DashboardItemModel();
+        $clientModel = new ClientModel();
 
         $data['items'] = $model->where('orden >=', 1)
             ->where('orden <=', 5)
             ->findAll();
+
+        // Obtener todos los clientes activos para los selectores
+        $data['clientes'] = $clientModel->where('estado', 'activo')->findAll();
 
         // Obtener datos del usuario en sesión
         $userModel = new \App\Models\UserModel();

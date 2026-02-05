@@ -217,7 +217,7 @@
         <tr>
             <td width="80" rowspan="2" align="center" valign="middle" bgcolor="#FFFFFF" style="border:1px solid #333; padding:5px; background-color:#ffffff;">
                 <?php if (!empty($logoBase64)): ?>
-                    <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo">
+                    <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo" style="background-color:#ffffff;">
                 <?php else: ?>
                     <b style="font-size:8pt;"><?= esc($cliente['nombre_cliente']) ?></b>
                 <?php endif; ?>
@@ -331,79 +331,6 @@
         <tr style="border-top:2px solid #1a5f7a;">
             <td style="font-weight:bold; font-size:11pt;">TOTAL PRESUPUESTO APROBADO</td>
             <td style="text-align:right; font-weight:bold; color:#1a5f7a; font-family:'Courier New',monospace; font-size:11pt;">$<?= number_format($totales['general_presupuestado'], 0, ',', '.') ?></td>
-        </tr>
-    </table>
-
-    <!-- Firmas de Aprobacion -->
-    <p style="text-align:center; font-weight:bold; margin-top:40px; font-size:11pt; color:#1a5f7a;">
-        FIRMAS DE APROBACION DEL PRESUPUESTO
-    </p>
-
-    <?php
-    // Firmas electrónicas del sistema unificado
-    $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
-    $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
-    ?>
-
-    <table width="100%" cellpadding="15" cellspacing="0" style="margin-top:20px;">
-        <tr>
-            <td width="50%" align="center" valign="bottom" style="padding:20px;">
-                <table width="200" cellpadding="10" cellspacing="0" style="border:1px solid #ccc; background-color:#fafafa; min-height:80px;">
-                    <tr>
-                        <td align="center" height="60">
-                            <?php if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])): ?>
-                                <!-- Firma electrónica del sistema unificado -->
-                                <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" width="120" height="50">
-                            <?php elseif (!empty($presupuesto['firma_imagen'])): ?>
-                                <!-- Firma legacy del presupuesto -->
-                                <img src="<?= base_url('uploads/' . $presupuesto['firma_imagen']) ?>" width="120" height="50">
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                </table>
-                <p style="border-top:1px solid #000; padding-top:8px; font-weight:bold; font-size:9pt; margin-top:10px;">REPRESENTANTE LEGAL</p>
-                <?php if ($firmaRepLegal): ?>
-                    <p style="font-size:9pt; color:#666; margin:3px 0;"><?= esc($firmaRepLegal['solicitud']['firmante_nombre'] ?? $contexto['representante_legal_nombre'] ?? '') ?></p>
-                    <?php if (!empty($firmaRepLegal['solicitud']['firmante_documento'])): ?>
-                        <p style="font-size:9pt; color:#666; margin:3px 0;">C.C. <?= esc($firmaRepLegal['solicitud']['firmante_documento']) ?></p>
-                    <?php endif; ?>
-                    <p style="font-size:8pt; color:#999; margin:3px 0;">Fecha: <?= date('d/m/Y H:i', strtotime($firmaRepLegal['evidencia']['fecha_firma'] ?? $firmaRepLegal['solicitud']['updated_at'])) ?></p>
-                <?php elseif (!empty($presupuesto['firmado_por'])): ?>
-                    <p style="font-size:9pt; color:#666; margin:3px 0;"><?= esc($presupuesto['firmado_por']) ?></p>
-                    <?php if (!empty($presupuesto['cedula_firmante'])): ?>
-                        <p style="font-size:9pt; color:#666; margin:3px 0;">C.C. <?= esc($presupuesto['cedula_firmante']) ?></p>
-                    <?php endif; ?>
-                <?php else: ?>
-                    <p style="font-size:9pt; color:#666; margin:3px 0;"><?= esc($contexto['representante_legal_nombre'] ?? $cliente['representante_legal'] ?? '') ?></p>
-                <?php endif; ?>
-            </td>
-            <td width="50%" align="center" valign="bottom" style="padding:20px;">
-                <table width="200" cellpadding="10" cellspacing="0" style="border:1px solid #ccc; background-color:#fafafa; min-height:80px;">
-                    <tr>
-                        <td align="center" height="60">
-                            <?php if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])): ?>
-                                <!-- Firma electrónica del sistema unificado -->
-                                <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" width="120" height="50">
-                            <?php elseif (!empty($presupuesto['firma_delegado_imagen'])): ?>
-                                <!-- Firma legacy del presupuesto -->
-                                <img src="<?= base_url('uploads/' . $presupuesto['firma_delegado_imagen']) ?>" width="120" height="50">
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                </table>
-                <p style="border-top:1px solid #000; padding-top:8px; font-weight:bold; font-size:9pt; margin-top:10px;">RESPONSABLE DEL SG-SST</p>
-                <?php if ($firmaDelegado): ?>
-                    <p style="font-size:9pt; color:#666; margin:3px 0;"><?= esc($firmaDelegado['solicitud']['firmante_nombre'] ?? $contexto['responsable_sst_nombre'] ?? $contexto['delegado_sst_nombre'] ?? '') ?></p>
-                    <?php if (!empty($firmaDelegado['solicitud']['firmante_documento'])): ?>
-                        <p style="font-size:9pt; color:#666; margin:3px 0;">C.C. <?= esc($firmaDelegado['solicitud']['firmante_documento']) ?></p>
-                    <?php endif; ?>
-                    <p style="font-size:8pt; color:#999; margin:3px 0;">Fecha: <?= date('d/m/Y H:i', strtotime($firmaDelegado['evidencia']['fecha_firma'] ?? $firmaDelegado['solicitud']['updated_at'])) ?></p>
-                <?php elseif (!empty($presupuesto['firmado_delegado_por'])): ?>
-                    <p style="font-size:9pt; color:#666; margin:3px 0;"><?= esc($presupuesto['firmado_delegado_por']) ?></p>
-                <?php else: ?>
-                    <p style="font-size:9pt; color:#666; margin:3px 0;"><?= esc($contexto['responsable_sst_nombre'] ?? $contexto['delegado_sst_nombre'] ?? '') ?></p>
-                <?php endif; ?>
-            </td>
         </tr>
     </table>
 

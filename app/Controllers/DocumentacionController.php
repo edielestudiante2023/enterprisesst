@@ -275,6 +275,7 @@ class DocumentacionController extends Controller
             $mapaTipoDocumento = [
                 'capacitacion_sst' => 'programa_capacitacion',
                 'responsables_sst' => 'asignacion_responsable_sgsst',
+                'promocion_prevencion_salud' => 'programa_promocion_prevencion_salud',
             ];
             $tipoDocBuscar = $mapaTipoDocumento[$tipoCarpetaFases] ?? null;
             if ($tipoDocBuscar) {
@@ -300,7 +301,7 @@ class DocumentacionController extends Controller
 
         // Obtener documentos SST aprobados para mostrar en tabla
         $documentosSSTAprobados = [];
-        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl'])) {
+        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal'])) {
             $db = \Config\Database::connect();
             $queryDocs = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
@@ -324,6 +325,75 @@ class DocumentacionController extends Controller
             } elseif ($tipoCarpetaFases === 'afiliacion_srl') {
                 // 1.1.4: Afiliación al Sistema General de Riesgos Laborales
                 $queryDocs->where('tipo_documento', 'planilla_afiliacion_srl');
+            } elseif ($tipoCarpetaFases === 'verificacion_medidas_prevencion') {
+                // 4.2.2: Verificación de aplicación de medidas de prevención y control
+                $queryDocs->where('tipo_documento', 'soporte_verificacion_medidas');
+            } elseif ($tipoCarpetaFases === 'planificacion_auditorias_copasst') {
+                // 6.1.4: Planificación auditorías con el COPASST
+                $queryDocs->where('tipo_documento', 'soporte_planificacion_auditoria');
+            } elseif ($tipoCarpetaFases === 'entrega_epp') {
+                // 4.2.6: Entrega de EPP
+                $queryDocs->where('tipo_documento', 'soporte_entrega_epp');
+            } elseif ($tipoCarpetaFases === 'plan_emergencias') {
+                // 5.1.1: Plan de emergencias
+                $queryDocs->where('tipo_documento', 'soporte_plan_emergencias');
+            } elseif ($tipoCarpetaFases === 'brigada_emergencias') {
+                // 5.1.2: Brigada de emergencias
+                $queryDocs->where('tipo_documento', 'soporte_brigada_emergencias');
+            } elseif ($tipoCarpetaFases === 'revision_direccion') {
+                // 6.1.3: Revisión por la dirección
+                $queryDocs->where('tipo_documento', 'soporte_revision_direccion');
+            } elseif ($tipoCarpetaFases === 'agua_servicios_sanitarios') {
+                // 3.1.8: Agua potable, servicios sanitarios
+                $queryDocs->where('tipo_documento', 'soporte_agua_servicios');
+            } elseif ($tipoCarpetaFases === 'eliminacion_residuos') {
+                // 3.1.9: Eliminación de residuos
+                $queryDocs->where('tipo_documento', 'soporte_eliminacion_residuos');
+            } elseif ($tipoCarpetaFases === 'mediciones_ambientales') {
+                // 4.1.4: Mediciones ambientales
+                $queryDocs->where('tipo_documento', 'soporte_mediciones_ambientales');
+            } elseif ($tipoCarpetaFases === 'medidas_prevencion_control') {
+                // 4.2.1: Medidas de prevención y control
+                $queryDocs->where('tipo_documento', 'soporte_medidas_prevencion_control');
+            } elseif ($tipoCarpetaFases === 'diagnostico_condiciones_salud') {
+                // 3.1.1: Diagnóstico condiciones de salud
+                $queryDocs->where('tipo_documento', 'soporte_diagnostico_salud');
+            } elseif ($tipoCarpetaFases === 'informacion_medico_perfiles') {
+                // 3.1.3: Información al médico perfiles de cargo
+                $queryDocs->where('tipo_documento', 'soporte_perfiles_medico');
+            } elseif ($tipoCarpetaFases === 'evaluaciones_medicas') {
+                // 3.1.4: Evaluaciones médicas ocupacionales
+                $queryDocs->where('tipo_documento', 'soporte_evaluaciones_medicas');
+            } elseif ($tipoCarpetaFases === 'custodia_historias_clinicas') {
+                // 3.1.5: Custodia historias clínicas
+                $queryDocs->where('tipo_documento', 'soporte_custodia_hc');
+            } elseif ($tipoCarpetaFases === 'responsables_curso_50h') {
+                // 1.2.3: Responsables del SG-SST con curso virtual de 50 horas
+                $queryDocs->where('tipo_documento', 'soporte_curso_50h');
+            } elseif ($tipoCarpetaFases === 'evaluacion_prioridades') {
+                // 2.3.1: Evaluación e identificación de prioridades
+                $queryDocs->where('tipo_documento', 'soporte_evaluacion_prioridades');
+            } elseif ($tipoCarpetaFases === 'plan_objetivos_metas') {
+                // 2.4.1: Plan que identifica objetivos, metas, responsabilidad, recursos
+                $queryDocs->where('tipo_documento', 'soporte_plan_objetivos');
+            } elseif ($tipoCarpetaFases === 'rendicion_desempeno') {
+                // 2.6.1: Rendición sobre el desempeño
+                $queryDocs->where('tipo_documento', 'soporte_rendicion_desempeno');
+            } elseif ($tipoCarpetaFases === 'conformacion_copasst') {
+                // 1.1.6: Conformación COPASST / Vigía
+                $queryDocs->where('tipo_documento', 'soporte_conformacion_copasst');
+            } elseif ($tipoCarpetaFases === 'comite_convivencia') {
+                // 1.1.8: Conformación Comité de Convivencia
+                $queryDocs->where('tipo_documento', 'soporte_comite_convivencia');
+            } elseif ($tipoCarpetaFases === 'promocion_prevencion_salud') {
+                // 3.1.2: Programa de Promoción y Prevención en Salud
+                $queryDocs->where('tipo_documento', 'programa_promocion_prevencion_salud');
+            } elseif ($tipoCarpetaFases === 'induccion_reinduccion') {
+                // 1.2.2: Programa de Inducción y Reinducción en SG-SST
+                $queryDocs->where('tipo_documento', 'programa_induccion_reinduccion');
+            } elseif ($tipoCarpetaFases === 'matriz_legal') {
+                // 2.7.1: Procedimiento de Matriz Legal
+                $queryDocs->where('tipo_documento', 'procedimiento_matriz_legal');
             } elseif (isset($tipoDocBuscar)) {
                 $queryDocs->where('tipo_documento', $tipoDocBuscar);
             }
@@ -384,6 +454,37 @@ class DocumentacionController extends Controller
             unset($docSST);
         }
 
+        // Soportes adicionales para carpetas con fases
+        $soportesAdicionales = [];
+        if ($tipoCarpetaFases === 'promocion_prevencion_salud') {
+            // 3.1.2 Promoción y Prevención en Salud
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_pyp_salud')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'induccion_reinduccion') {
+            // 1.2.2 Inducción y Reinducción en SG-SST
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_induccion')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'matriz_legal') {
+            // 2.7.1 Matriz Legal
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_matriz_legal')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        }
+
         // Determinar qué vista de tipo cargar
         $vistaTipo = $tipoCarpetaFases ?? 'generica';
         $vistaPath = "documentacion/_tipos/{$vistaTipo}";
@@ -404,6 +505,7 @@ class DocumentacionController extends Controller
             'tipoCarpetaFases' => $tipoCarpetaFases,
             'documentoExistente' => $documentoExistente,
             'documentosSSTAprobados' => $documentosSSTAprobados,
+            'soportesAdicionales' => $soportesAdicionales,
             'contextoCliente' => $contextoCliente ?? null,
             'vistaContenido' => $vistaPath
         ];
@@ -420,16 +522,40 @@ class DocumentacionController extends Controller
         $nombre = strtolower($carpeta['nombre'] ?? '');
         $codigo = strtolower($carpeta['codigo'] ?? '');
 
+        // ============================================
+        // 1.1.7. Capacitación COPASST - Formato de asistencia
+        // NO es un programa de capacitación con IA, es registro de asistencia
+        // Debe verificarse ANTES de la condición genérica "capacitaci"
+        // ============================================
+        if ($codigo === '1.1.7') {
+            return null; // Sin fases de dependencia - usa formato de asistencia
+        }
+
         // 1.2.1. Programa Capacitacion PYP (Ciclo Planear)
-        if (strpos($nombre, 'capacitaci') !== false ||
-            $codigo === '1.2.1') {
+        if ($codigo === '1.2.1' ||
+            (strpos($nombre, 'programa') !== false && strpos($nombre, 'capacitaci') !== false)) {
             return 'capacitacion_sst';
         }
 
-        // 2.4.1. Plan Anual de Trabajo (Ciclo Planear)
+        // 1.2.2. Inducción y Reinducción en SG-SST
+        if ($codigo === '1.2.2' ||
+            strpos($nombre, 'induccion') !== false ||
+            strpos($nombre, 'reinduccion') !== false) {
+            return 'induccion_reinduccion';
+        }
+
+        // 2.4.1. Plan que identifica objetivos, metas, responsabilidad, recursos
         if ((strpos($nombre, 'plan') !== false && strpos($nombre, 'objetivos') !== false) ||
+            strpos($nombre, 'objetivos') !== false && strpos($nombre, 'metas') !== false ||
             $codigo === '2.4.1') {
-            return 'plan_trabajo';
+            return 'plan_objetivos_metas';
+        }
+
+        // 1.2.3. Responsables del SG-SST con curso virtual de 50 horas (ANTES de 1.1.1 porque es más específico)
+        if ($codigo === '1.2.3' ||
+            strpos($nombre, 'curso') !== false && strpos($nombre, '50') !== false ||
+            strpos($nombre, 'responsables') !== false && strpos($nombre, 'curso') !== false) {
+            return 'responsables_curso_50h';
         }
 
         // 1.1.1. Responsable del SG-SST (Ciclo Planear)
@@ -463,6 +589,179 @@ class DocumentacionController extends Controller
             strpos($nombre, 'archivo') !== false ||
             strpos($nombre, 'retencion documental') !== false) {
             return 'archivo_documental';
+        }
+
+        // 4.2.2. Verificación de aplicación de medidas de prevención y control
+        if ($codigo === '4.2.2' ||
+            strpos($nombre, 'verificacion') !== false && strpos($nombre, 'medidas') !== false ||
+            strpos($nombre, 'verificacion') !== false && strpos($nombre, 'prevencion') !== false) {
+            return 'verificacion_medidas_prevencion';
+        }
+
+        // 6.1.4. Planificación auditorías con el COPASST
+        if ($codigo === '6.1.4' ||
+            strpos($nombre, 'planificacion') !== false && strpos($nombre, 'auditoria') !== false ||
+            strpos($nombre, 'auditoria') !== false && strpos($nombre, 'copasst') !== false) {
+            return 'planificacion_auditorias_copasst';
+        }
+
+        // 4.2.6. Entrega de EPP, verificación con contratistas y subcontratistas
+        if ($codigo === '4.2.6' ||
+            strpos($nombre, 'entrega') !== false && strpos($nombre, 'epp') !== false ||
+            strpos($nombre, 'elementos') !== false && strpos($nombre, 'proteccion') !== false) {
+            return 'entrega_epp';
+        }
+
+        // 5.1.1. Plan de Prevención, Preparación y respuesta ante emergencias
+        if ($codigo === '5.1.1' ||
+            strpos($nombre, 'plan') !== false && strpos($nombre, 'emergencia') !== false ||
+            strpos($nombre, 'prevencion') !== false && strpos($nombre, 'preparacion') !== false) {
+            return 'plan_emergencias';
+        }
+
+        // 5.1.2. Brigada de prevención conformada, capacitada y dotada
+        if ($codigo === '5.1.2' ||
+            strpos($nombre, 'brigada') !== false) {
+            return 'brigada_emergencias';
+        }
+
+        // 6.1.3. Revisión anual de la alta dirección, resultados de auditoría
+        if ($codigo === '6.1.3' ||
+            strpos($nombre, 'revision') !== false && strpos($nombre, 'direccion') !== false ||
+            strpos($nombre, 'revision') !== false && strpos($nombre, 'anual') !== false) {
+            return 'revision_direccion';
+        }
+
+        // 3.1.8. Agua potable, servicios sanitarios y disposición de basuras
+        if ($codigo === '3.1.8' ||
+            strpos($nombre, 'agua') !== false && strpos($nombre, 'potable') !== false ||
+            strpos($nombre, 'servicios') !== false && strpos($nombre, 'sanitarios') !== false) {
+            return 'agua_servicios_sanitarios';
+        }
+
+        // 3.1.9. Eliminación adecuada de residuos sólidos, líquidos o gaseosos
+        if ($codigo === '3.1.9' ||
+            strpos($nombre, 'eliminacion') !== false && strpos($nombre, 'residuos') !== false ||
+            strpos($nombre, 'residuos') !== false && strpos($nombre, 'solidos') !== false) {
+            return 'eliminacion_residuos';
+        }
+
+        // 4.1.4. Realización mediciones ambientales, químicos, físicos y biológicos
+        if ($codigo === '4.1.4' ||
+            strpos($nombre, 'mediciones') !== false && strpos($nombre, 'ambientales') !== false ||
+            strpos($nombre, 'mediciones') !== false && strpos($nombre, 'quimicos') !== false) {
+            return 'mediciones_ambientales';
+        }
+
+        // 4.2.1. Implementación de medidas de prevención y control frente a peligros/riesgos
+        if ($codigo === '4.2.1' ||
+            strpos($nombre, 'implementacion') !== false && strpos($nombre, 'medidas') !== false ||
+            strpos($nombre, 'medidas') !== false && strpos($nombre, 'control') !== false && strpos($nombre, 'peligros') !== false) {
+            return 'medidas_prevencion_control';
+        }
+
+        // 3.1.1. Descripción sociodemográfica - Diagnóstico de Condiciones de Salud
+        if ($codigo === '3.1.1' ||
+            strpos($nombre, 'sociodemograf') !== false ||
+            strpos($nombre, 'diagnostico') !== false && strpos($nombre, 'salud') !== false) {
+            return 'diagnostico_condiciones_salud';
+        }
+
+        // 3.1.2. Programa de Promoción y Prevención en Salud
+        if ($codigo === '3.1.2' ||
+            strpos($nombre, 'promocion') !== false && strpos($nombre, 'prevencion') !== false ||
+            strpos($nombre, 'promocion') !== false && strpos($nombre, 'salud') !== false) {
+            return 'promocion_prevencion_salud';
+        }
+
+        // 3.1.3. Información al médico de los perfiles de cargo
+        if ($codigo === '3.1.3' ||
+            strpos($nombre, 'informacion') !== false && strpos($nombre, 'medico') !== false ||
+            strpos($nombre, 'perfiles') !== false && strpos($nombre, 'cargo') !== false) {
+            return 'informacion_medico_perfiles';
+        }
+
+        // 3.1.4. Realización de evaluaciones médicas ocupacionales
+        if ($codigo === '3.1.4' ||
+            strpos($nombre, 'evaluaciones') !== false && strpos($nombre, 'medicas') !== false ||
+            strpos($nombre, 'examenes') !== false && strpos($nombre, 'medicos') !== false) {
+            return 'evaluaciones_medicas';
+        }
+
+        // 3.1.5. Custodia de Historias Clínicas
+        if ($codigo === '3.1.5' ||
+            strpos($nombre, 'custodia') !== false && strpos($nombre, 'historias') !== false ||
+            strpos($nombre, 'historias') !== false && strpos($nombre, 'clinicas') !== false) {
+            return 'custodia_historias_clinicas';
+        }
+
+        // 2.3.1. Evaluación e identificación de prioridades
+        if ($codigo === '2.3.1' ||
+            strpos($nombre, 'evaluacion') !== false && strpos($nombre, 'prioridades') !== false ||
+            strpos($nombre, 'identificacion') !== false && strpos($nombre, 'prioridades') !== false) {
+            return 'evaluacion_prioridades';
+        }
+
+        // 2.6.1. Rendición sobre el desempeño
+        if ($codigo === '2.6.1' ||
+            strpos($nombre, 'rendicion') !== false && strpos($nombre, 'desempeno') !== false ||
+            strpos($nombre, 'rendicion') !== false && strpos($nombre, 'cuentas') !== false) {
+            return 'rendicion_desempeno';
+        }
+
+        // 2.7.1. Matriz de requisitos legales
+        if ($codigo === '2.7.1' ||
+            strpos($nombre, 'matriz') !== false && strpos($nombre, 'legal') !== false ||
+            strpos($nombre, 'requisitos') !== false && strpos($nombre, 'legales') !== false) {
+            return 'matriz_legal';
+        }
+
+        // 1.1.6. Conformación COPASST / Vigía
+        if ($codigo === '1.1.6' ||
+            strpos($nombre, 'copasst') !== false ||
+            strpos($nombre, 'vigia') !== false && strpos($nombre, 'seguridad') !== false) {
+            return 'conformacion_copasst';
+        }
+
+        // 1.1.8. Conformación Comité de Convivencia Laboral
+        if ($codigo === '1.1.8' ||
+            strpos($nombre, 'convivencia') !== false ||
+            strpos($nombre, 'comite') !== false && strpos($nombre, 'convivencia') !== false) {
+            return 'comite_convivencia';
+        }
+
+        // ============================================
+        // MÓDULO DE ACCIONES CORRECTIVAS (7.1.x)
+        // ============================================
+
+        // 7.1.1. Definición de acciones preventivas y correctivas con base en resultados del SG-SST
+        if ($codigo === '7.1.1' ||
+            strpos($nombre, 'acciones') !== false && strpos($nombre, 'resultados') !== false ||
+            strpos($nombre, 'preventivas') !== false && strpos($nombre, 'correctivas') !== false && strpos($nombre, 'resultados') !== false) {
+            return 'acciones_resultados_sgsst';
+        }
+
+        // 7.1.2. Acciones de mejora conforme a revisión de la alta dirección (efectividad medidas)
+        if ($codigo === '7.1.2' ||
+            strpos($nombre, 'acciones') !== false && strpos($nombre, 'mejora') !== false && strpos($nombre, 'revision') !== false ||
+            strpos($nombre, 'efectividad') !== false && strpos($nombre, 'medidas') !== false) {
+            return 'acciones_efectividad_medidas';
+        }
+
+        // 7.1.3. Acciones de mejora con base en investigaciones de accidentes de trabajo y enfermedades
+        if ($codigo === '7.1.3' ||
+            strpos($nombre, 'acciones') !== false && strpos($nombre, 'investigacion') !== false ||
+            strpos($nombre, 'acciones') !== false && strpos($nombre, 'accidentes') !== false ||
+            strpos($nombre, 'acciones') !== false && strpos($nombre, 'enfermedades') !== false) {
+            return 'acciones_investigacion_atel';
+        }
+
+        // 7.1.4. Elaboración Plan de mejoramiento, implementación de medidas y acciones correctivas por autoridades y ARL
+        if ($codigo === '7.1.4' ||
+            strpos($nombre, 'plan') !== false && strpos($nombre, 'mejoramiento') !== false ||
+            strpos($nombre, 'acciones') !== false && strpos($nombre, 'arl') !== false ||
+            strpos($nombre, 'acciones') !== false && strpos($nombre, 'autoridades') !== false) {
+            return 'acciones_arl_autoridades';
         }
 
         return null;

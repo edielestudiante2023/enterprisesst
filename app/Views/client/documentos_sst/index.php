@@ -88,6 +88,84 @@
         <?php endforeach; ?>
 
         <?php if (empty($arbolCarpetas)): ?>
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>No hay estructura de carpetas configurada para su empresa.
+            Puede ver todos sus documentos en la tabla de abajo.
+        </div>
+        <?php endif; ?>
+
+        <!-- Lista completa de documentos del cliente -->
+        <?php if (!empty($todosDocumentos)): ?>
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-text me-2"></i>Todos mis Documentos
+                </h5>
+                <span class="badge bg-primary"><?= count($todosDocumentos) ?> documento(s)</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 120px;">Codigo</th>
+                                <th>Documento</th>
+                                <th style="width: 80px;" class="text-center">Ano</th>
+                                <th style="width: 140px;" class="text-center">Estado</th>
+                                <th style="width: 100px;" class="text-center">Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($todosDocumentos as $doc): ?>
+                            <tr>
+                                <td>
+                                    <code class="text-primary"><?= esc($doc['codigo'] ?? 'N/A') ?></code>
+                                </td>
+                                <td>
+                                    <strong><?= esc($doc['titulo']) ?></strong>
+                                    <br><small class="text-muted"><?= esc(ucwords(str_replace('_', ' ', $doc['tipo_documento'] ?? ''))) ?></small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary"><?= esc($doc['anio']) ?></span>
+                                </td>
+                                <td class="text-center">
+                                    <?php
+                                    $estadoConfig = [
+                                        'borrador' => ['badge' => 'bg-secondary', 'texto' => 'Borrador', 'icono' => 'bi-pencil'],
+                                        'generado' => ['badge' => 'bg-info', 'texto' => 'Generado', 'icono' => 'bi-file-earmark-text'],
+                                        'pendiente_firma' => ['badge' => 'bg-warning text-dark', 'texto' => 'Pendiente Firma', 'icono' => 'bi-hourglass-split'],
+                                        'aprobado' => ['badge' => 'bg-primary', 'texto' => 'Aprobado', 'icono' => 'bi-check-circle'],
+                                        'firmado' => ['badge' => 'bg-success', 'texto' => 'Firmado', 'icono' => 'bi-patch-check-fill'],
+                                    ];
+                                    $config = $estadoConfig[$doc['estado']] ?? ['badge' => 'bg-secondary', 'texto' => ucfirst($doc['estado']), 'icono' => 'bi-question-circle'];
+                                    ?>
+                                    <span class="badge <?= $config['badge'] ?>">
+                                        <i class="bi <?= $config['icono'] ?> me-1"></i><?= $config['texto'] ?>
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <?php if (!empty($doc['archivo_firmado'])): ?>
+                                        <a href="<?= esc($doc['archivo_firmado']) ?>"
+                                           class="btn btn-sm btn-success text-white"
+                                           title="Descargar documento firmado" target="_blank">
+                                            <i class="bi bi-patch-check-fill"></i>
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="<?= base_url('documentos-sst/exportar-pdf/' . $doc['id_documento']) ?>"
+                                           class="btn btn-sm btn-danger text-white"
+                                           title="Descargar PDF" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <?php elseif (empty($arbolCarpetas)): ?>
         <div class="text-center py-5">
             <i class="bi bi-folder-x text-muted" style="font-size: 4rem;"></i>
             <p class="text-muted mt-3">No hay documentos disponibles.</p>

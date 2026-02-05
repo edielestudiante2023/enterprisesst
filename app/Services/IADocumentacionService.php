@@ -218,6 +218,13 @@ ADVERTENCIAS:
             $userPrompt .= "(Usa esta información para hacer el documento más relevante y específico)\n";
         }
 
+        // CRÍTICO: Agregar contexto base del documento (actividades, indicadores, etc.)
+        // Este contexto viene del método getContextoBase() de cada tipo de documento
+        $contextoBase = $datos['contexto_base'] ?? '';
+        if (!empty($contextoBase)) {
+            $userPrompt .= "\n" . $contextoBase . "\n";
+        }
+
         $userPrompt .= "\nDOCUMENTO A GENERAR:\n";
         $userPrompt .= "- Tipo: " . ($documento['tipo_nombre'] ?? 'Documento') . "\n";
         $userPrompt .= "- Nombre: " . ($documento['nombre'] ?? '') . "\n";
@@ -707,5 +714,61 @@ Longitud: 1 párrafo de 100-150 palabras",
                 10 => "Describe el mecanismo de seguimiento y control"
             ]
         ];
+    }
+
+    /**
+     * Genera contenido simple para chat/analisis
+     * Usado para analisis de causa raiz y otras interacciones simples
+     */
+    public function generarContenido(string $prompt, int $maxTokens = 500): string
+    {
+        if (empty($this->apiKey)) {
+            throw new \Exception('OPENAI_API_KEY no esta configurada');
+        }
+
+        $data = [
+            'model' => $this->model,
+            'messages' => [
+                ['role' => 'system', 'content' => 'Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia. Responde de forma clara, concisa y profesional.'],
+                ['role' => 'user', 'content' => $prompt]
+            ],
+            'temperature' => 0.7,
+            'max_tokens' => $maxTokens
+        ];
+
+        $ch = curl_init($this->apiUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $this->apiKey
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            throw new \Exception("Error de conexion: {$error}");
+        }
+
+        $result = json_decode($response, true);
+
+        if ($httpCode !== 200) {
+            $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
+            throw new \Exception($errorMsg);
+        }
+
+        if (isset($result['choices'][0]['message']['content'])) {
+            return trim($result['choices'][0]['message']['content']);
+        }
+
+        throw new \Exception('Respuesta inesperada de la API');
     }
 }

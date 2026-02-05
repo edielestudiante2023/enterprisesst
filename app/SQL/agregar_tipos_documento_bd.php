@@ -38,7 +38,7 @@ VALUES
 ('programa_capacitacion',
  'Programa de Capacitación en SST',
  'Documento formal del programa de capacitación y entrenamiento en Seguridad y Salud en el Trabajo',
- '3.1.1',
+ '1.2.1',
  'secciones_ia',
  'programas',
  'bi-mortarboard',

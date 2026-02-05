@@ -42,6 +42,49 @@ class ActasController extends BaseController
     }
 
     /**
+     * Dashboard general de Actas - muestra todos los clientes con acceso a actas
+     */
+    public function dashboard()
+    {
+        $session = session();
+        $clienteModel = new ClientModel();
+
+        // Obtener todos los clientes activos
+        $clientes = $clienteModel->where('estado', 'activo')->findAll();
+
+        // Agregar estadísticas de comités y actas por cliente
+        foreach ($clientes as &$cliente) {
+            $comites = $this->comiteModel->getByCliente($cliente['id_cliente']);
+            $cliente['total_comites'] = count($comites);
+            $cliente['total_actas'] = 0;
+            $cliente['actas_pendientes'] = 0;
+
+            foreach ($comites as $comite) {
+                $actasComite = $this->actaModel->where('id_comite', $comite['id_comite'])->findAll();
+                $cliente['total_actas'] += count($actasComite);
+
+                // Contar actas pendientes de firma
+                foreach ($actasComite as $acta) {
+                    if ($acta['estado'] === 'en_firma') {
+                        $cliente['actas_pendientes']++;
+                    }
+                }
+            }
+
+            // Compromisos pendientes
+            $cliente['compromisos_pendientes'] = count($this->compromisosModel->getVencidos($cliente['id_cliente']));
+        }
+
+        return view('actas/dashboard', [
+            'clientes' => $clientes,
+            'usuario' => [
+                'nombre' => $session->get('nombre') ?? $session->get('email'),
+                'role' => $role
+            ]
+        ]);
+    }
+
+    /**
      * Dashboard de comités de un cliente
      */
     public function index(int $idCliente)

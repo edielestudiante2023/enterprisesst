@@ -11,6 +11,7 @@ use App\Services\CronogramaIAService;
 use App\Services\PTAGeneratorService;
 use App\Services\IADocumentacionService;
 use App\Services\DocumentoConfigService;
+use App\Services\DocumentoVersionService;
 use App\Services\FirmanteService;
 use App\Libraries\DocumentosSSTTypes\DocumentoSSTFactory;
 use Config\Database;
@@ -23,6 +24,7 @@ class DocumentosSSTController extends BaseController
     protected $db;
     protected ClientModel $clienteModel;
     protected DocumentoConfigService $configService;
+    protected DocumentoVersionService $versionService;
     protected FirmanteService $firmanteService;
 
     /**
@@ -91,6 +93,7 @@ class DocumentosSSTController extends BaseController
         $this->db = Database::connect();
         $this->clienteModel = new ClientModel();
         $this->configService = new DocumentoConfigService();
+        $this->versionService = new DocumentoVersionService();
         $this->firmanteService = new FirmanteService();
     }
 
@@ -297,17 +300,26 @@ class DocumentosSSTController extends BaseController
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
-        // Si hay contexto adicional, usar el servicio de IA real (OpenAI)
-        if (!empty(trim($contextoAdicional))) {
-            $contenido = $this->generarConIAReal($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional, $tipo);
-        } else {
-            // Sin contexto adicional, usar plantillas estaticas
-            $contenido = $this->generarContenidoSeccion($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional, $tipo);
+        // SIEMPRE usar el servicio de IA real (OpenAI) cuando se presiona "Generar con IA"
+        // El contexto base del documento (actividades, indicadores) ya está incluido en la clase del documento
+        $contenido = $this->generarConIAReal($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional, $tipo);
+
+        // Obtener metadata de las consultas a BD para mostrar al usuario
+        $metadataBD = null;
+        try {
+            $documentoHandler = DocumentoSSTFactory::crear($tipo);
+            if (method_exists($documentoHandler, 'getMetadataConsultas')) {
+                $metadataBD = $documentoHandler->getMetadataConsultas($cliente, $contexto);
+            }
+        } catch (\Exception $e) {
+            // Si falla, no es crítico - solo no mostramos la metadata
+            log_message('debug', "No se pudo obtener metadata de consultas: " . $e->getMessage());
         }
 
         return $this->response->setJSON([
             'success' => true,
-            'contenido' => $contenido
+            'contenido' => $contenido,
+            'metadata_bd' => $metadataBD
         ]);
     }
 
@@ -1349,6 +1361,180 @@ Se debe generar acta que registre:
     }
 
     /**
+     * Vista previa del Programa de Induccion y Reinduccion (1.2.2)
+     */
+    public function programaInduccionReinduccion(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'programa_induccion_reinduccion')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/programa_induccion_reinduccion/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Programa de Induccion y Reinduccion.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        // Normalizar secciones para eliminar duplicados
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'programa_induccion_reinduccion');
+        }
+
+        // Obtener historial de versiones para la tabla de Control de Cambios
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener responsables del cliente para las firmas
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        // Obtener contexto SST para datos adicionales
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        // Obtener datos del consultor asignado
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        // Obtener firmas electrónicas del documento
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Programa de Induccion y Reinduccion - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas
+        ];
+
+        return view('documentos_sst/programa_induccion_reinduccion', $data);
+    }
+
+    /**
+     * Vista previa del Programa de Promocion y Prevencion en Salud (3.1.2)
+     */
+    public function programaPromocionPrevencionSalud(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'programa_promocion_prevencion_salud')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('generador-ia/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Programa de Promocion y Prevencion en Salud.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        // Normalizar secciones para eliminar duplicados
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'programa_promocion_prevencion_salud');
+        }
+
+        // Obtener historial de versiones para la tabla de Control de Cambios
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener responsables del cliente para las firmas
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        // Obtener contexto SST para datos adicionales
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        // Obtener datos del consultor asignado
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        // Obtener firmas electronicas del documento
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Programa de Promocion y Prevencion en Salud - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas
+        ];
+
+        return view('documentos_sst/programa_promocion_prevencion_salud', $data);
+    }
+
+    /**
      * Exporta el documento a PDF usando Dompdf
      */
     public function exportarPDF(int $idDocumento)
@@ -2001,6 +2187,762 @@ Se debe generar acta que registre:
     }
 
     /**
+     * Adjuntar soporte de verificación de medidas de prevención y control (4.2.2)
+     */
+    public function adjuntarSoporteVerificacion()
+    {
+        $idCliente = $this->request->getPost('id_cliente');
+        $idCarpeta = $this->request->getPost('id_carpeta');
+        $tipoCarga = $this->request->getPost('tipo_carga'); // 'archivo' o 'enlace'
+        $descripcion = $this->request->getPost('descripcion');
+        $anio = $this->request->getPost('anio') ?? date('Y');
+        $observaciones = $this->request->getPost('observaciones') ?? '';
+
+        if (!$idCliente || !$descripcion) {
+            return redirect()->back()->with('error', 'Cliente y descripción son requeridos.');
+        }
+
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado.');
+        }
+
+        $enlaceFinal = null;
+        $esEnlaceExterno = false;
+
+        if ($tipoCarga === 'enlace') {
+            // Enlace externo (Google Drive, OneDrive, etc.)
+            $urlExterna = $this->request->getPost('url_externa');
+            if (empty($urlExterna) || !filter_var($urlExterna, FILTER_VALIDATE_URL)) {
+                return redirect()->back()->with('error', 'El enlace proporcionado no es válido.');
+            }
+            $enlaceFinal = $urlExterna;
+            $esEnlaceExterno = true;
+        } else {
+            // Archivo subido
+            $archivo = $this->request->getFile('archivo_soporte');
+
+            if (!$archivo || !$archivo->isValid()) {
+                return redirect()->back()->with('error', 'Error al subir el archivo. Intente nuevamente.');
+            }
+
+            // Validar tipo de archivo
+            $tiposPermitidos = [
+                'application/pdf',
+                'image/jpeg', 'image/png', 'image/jpg',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            if (!in_array($archivo->getMimeType(), $tiposPermitidos)) {
+                return redirect()->back()->with('error', 'Tipo de archivo no permitido. Use PDF, JPG, PNG, Excel o Word.');
+            }
+
+            // Validar tamaño (10MB máximo)
+            if ($archivo->getSize() > 10 * 1024 * 1024) {
+                return redirect()->back()->with('error', 'El archivo excede el tamaño máximo de 10MB.');
+            }
+
+            // Crear directorio si no existe
+            $carpetaNit = $cliente['nit_cliente'];
+            $uploadPath = FCPATH . 'uploads/' . $carpetaNit;
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            // Generar nombre único
+            $extension = $archivo->getExtension();
+            $nombreArchivo = 'soporte_verificacion_' . date('Ymd_His') . '.' . $extension;
+
+            // Mover archivo
+            if (!$archivo->move($uploadPath, $nombreArchivo)) {
+                return redirect()->back()->with('error', 'Error al guardar el archivo en el servidor.');
+            }
+
+            $enlaceFinal = base_url('uploads/' . $carpetaNit . '/' . $nombreArchivo);
+        }
+
+        // Generar código secuencial para soportes de verificación
+        $ultimoDoc = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'soporte_verificacion_medidas')
+            ->orderBy('id_documento', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        $secuencia = 1;
+        if ($ultimoDoc && preg_match('/SOP-VMP-(\d{3})/', $ultimoDoc['codigo'], $matches)) {
+            $secuencia = intval($matches[1]) + 1;
+        }
+        $codigo = 'SOP-VMP-' . str_pad($secuencia, 3, '0', STR_PAD_LEFT);
+
+        // Crear registro en tbl_documentos_sst
+        $datosDocumento = [
+            'id_cliente' => $idCliente,
+            'tipo_documento' => 'soporte_verificacion_medidas',
+            'codigo' => $codigo,
+            'titulo' => $descripcion,
+            'anio' => $anio,
+            'version' => 1,
+            'estado' => 'aprobado',
+            'contenido' => json_encode([
+                'descripcion' => $descripcion,
+                'observaciones' => $observaciones,
+                'es_enlace_externo' => $esEnlaceExterno,
+                'url' => $enlaceFinal
+            ]),
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'url_externa' => $esEnlaceExterno ? $enlaceFinal : null,
+            'observaciones' => $observaciones,
+            'fecha_aprobacion' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->table('tbl_documentos_sst')->insert($datosDocumento);
+        $idDocumento = $this->db->insertID();
+
+        // Crear versión inicial
+        $this->db->table('tbl_doc_versiones_sst')->insert([
+            'id_documento' => $idDocumento,
+            'codigo' => $codigo,
+            'version_texto' => '1.0',
+            'tipo_cambio' => 'mayor',
+            'descripcion_cambio' => 'Carga inicial de soporte de verificación',
+            'estado' => 'vigente',
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'autorizado_por' => session()->get('nombre') ?? 'Sistema',
+            'fecha_autorizacion' => date('Y-m-d H:i:s')
+        ]);
+
+        // Publicar en reportList
+        $detailReport = $this->db->table('detail_report')
+            ->where("detail_report COLLATE utf8mb4_general_ci LIKE '%Documento SG-SST%'", null, false)
+            ->get()
+            ->getRowArray();
+        $idDetailReport = $detailReport['id_detailreport'] ?? 2;
+
+        $tituloReporte = $codigo . ' - ' . $descripcion . ' (' . $anio . ')';
+        $obsReporte = 'Soporte verificación medidas prevención. ' . ($observaciones ?: 'Sin observaciones.');
+        if ($esEnlaceExterno) {
+            $obsReporte .= ' (Enlace externo)';
+        }
+
+        $this->db->table('tbl_reporte')->insert([
+            'titulo_reporte' => $tituloReporte,
+            'id_detailreport' => $idDetailReport,
+            'id_report_type' => 12, // Reportes SST
+            'id_cliente' => $idCliente,
+            'enlace' => $enlaceFinal,
+            'estado' => 'CERRADO',
+            'observaciones' => $obsReporte,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // Redirigir a la carpeta
+        return redirect()->to('documentacion/carpeta/' . $idCarpeta)
+            ->with('success', 'Soporte de verificación adjuntado y publicado exitosamente.');
+    }
+
+    /**
+     * Adjuntar soporte de planificación de auditorías con el COPASST (6.1.4)
+     */
+    public function adjuntarSoporteAuditoria()
+    {
+        $idCliente = $this->request->getPost('id_cliente');
+        $idCarpeta = $this->request->getPost('id_carpeta');
+        $tipoCarga = $this->request->getPost('tipo_carga'); // 'archivo' o 'enlace'
+        $descripcion = $this->request->getPost('descripcion');
+        $anio = $this->request->getPost('anio') ?? date('Y');
+        $observaciones = $this->request->getPost('observaciones') ?? '';
+
+        if (!$idCliente || !$descripcion) {
+            return redirect()->back()->with('error', 'Cliente y descripción son requeridos.');
+        }
+
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado.');
+        }
+
+        $enlaceFinal = null;
+        $esEnlaceExterno = false;
+
+        if ($tipoCarga === 'enlace') {
+            // Enlace externo (Google Drive, OneDrive, etc.)
+            $urlExterna = $this->request->getPost('url_externa');
+            if (empty($urlExterna) || !filter_var($urlExterna, FILTER_VALIDATE_URL)) {
+                return redirect()->back()->with('error', 'El enlace proporcionado no es válido.');
+            }
+            $enlaceFinal = $urlExterna;
+            $esEnlaceExterno = true;
+        } else {
+            // Archivo subido
+            $archivo = $this->request->getFile('archivo_soporte');
+
+            if (!$archivo || !$archivo->isValid()) {
+                return redirect()->back()->with('error', 'Error al subir el archivo. Intente nuevamente.');
+            }
+
+            // Validar tipo de archivo
+            $tiposPermitidos = [
+                'application/pdf',
+                'image/jpeg', 'image/png', 'image/jpg',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            if (!in_array($archivo->getMimeType(), $tiposPermitidos)) {
+                return redirect()->back()->with('error', 'Tipo de archivo no permitido. Use PDF, JPG, PNG, Excel o Word.');
+            }
+
+            // Validar tamaño (10MB máximo)
+            if ($archivo->getSize() > 10 * 1024 * 1024) {
+                return redirect()->back()->with('error', 'El archivo excede el tamaño máximo de 10MB.');
+            }
+
+            // Crear directorio si no existe
+            $carpetaNit = $cliente['nit_cliente'];
+            $uploadPath = FCPATH . 'uploads/' . $carpetaNit;
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            // Generar nombre único
+            $extension = $archivo->getExtension();
+            $nombreArchivo = 'soporte_auditoria_' . date('Ymd_His') . '.' . $extension;
+
+            // Mover archivo
+            if (!$archivo->move($uploadPath, $nombreArchivo)) {
+                return redirect()->back()->with('error', 'Error al guardar el archivo en el servidor.');
+            }
+
+            $enlaceFinal = base_url('uploads/' . $carpetaNit . '/' . $nombreArchivo);
+        }
+
+        // Generar código secuencial para soportes de auditoría
+        $ultimoDoc = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'soporte_planificacion_auditoria')
+            ->orderBy('id_documento', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        $secuencia = 1;
+        if ($ultimoDoc && preg_match('/SOP-AUD-(\d{3})/', $ultimoDoc['codigo'], $matches)) {
+            $secuencia = intval($matches[1]) + 1;
+        }
+        $codigo = 'SOP-AUD-' . str_pad($secuencia, 3, '0', STR_PAD_LEFT);
+
+        // Crear registro en tbl_documentos_sst
+        $datosDocumento = [
+            'id_cliente' => $idCliente,
+            'tipo_documento' => 'soporte_planificacion_auditoria',
+            'codigo' => $codigo,
+            'titulo' => $descripcion,
+            'anio' => $anio,
+            'version' => 1,
+            'estado' => 'aprobado',
+            'contenido' => json_encode([
+                'descripcion' => $descripcion,
+                'observaciones' => $observaciones,
+                'es_enlace_externo' => $esEnlaceExterno,
+                'url' => $enlaceFinal
+            ]),
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'url_externa' => $esEnlaceExterno ? $enlaceFinal : null,
+            'observaciones' => $observaciones,
+            'fecha_aprobacion' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->table('tbl_documentos_sst')->insert($datosDocumento);
+        $idDocumento = $this->db->insertID();
+
+        // Crear versión inicial
+        $this->db->table('tbl_doc_versiones_sst')->insert([
+            'id_documento' => $idDocumento,
+            'codigo' => $codigo,
+            'version_texto' => '1.0',
+            'tipo_cambio' => 'mayor',
+            'descripcion_cambio' => 'Carga inicial de soporte de auditoría',
+            'estado' => 'vigente',
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'autorizado_por' => session()->get('nombre') ?? 'Sistema',
+            'fecha_autorizacion' => date('Y-m-d H:i:s')
+        ]);
+
+        // Publicar en reportList
+        $detailReport = $this->db->table('detail_report')
+            ->where("detail_report COLLATE utf8mb4_general_ci LIKE '%Documento SG-SST%'", null, false)
+            ->get()
+            ->getRowArray();
+        $idDetailReport = $detailReport['id_detailreport'] ?? 2;
+
+        $tituloReporte = $codigo . ' - ' . $descripcion . ' (' . $anio . ')';
+        $obsReporte = 'Soporte planificación auditoría COPASST. ' . ($observaciones ?: 'Sin observaciones.');
+        if ($esEnlaceExterno) {
+            $obsReporte .= ' (Enlace externo)';
+        }
+
+        $this->db->table('tbl_reporte')->insert([
+            'titulo_reporte' => $tituloReporte,
+            'id_detailreport' => $idDetailReport,
+            'id_report_type' => 12, // Reportes SST
+            'id_cliente' => $idCliente,
+            'enlace' => $enlaceFinal,
+            'estado' => 'CERRADO',
+            'observaciones' => $obsReporte,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // Redirigir a la carpeta
+        return redirect()->to('documentacion/carpeta/' . $idCarpeta)
+            ->with('success', 'Soporte de auditoría adjuntado y publicado exitosamente.');
+    }
+
+    /**
+     * Adjuntar soporte de entrega de EPP (4.2.6)
+     */
+    public function adjuntarSoporteEPP()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_entrega_epp',
+            'SOP-EPP',
+            'soporte_epp_',
+            'Soporte entrega EPP',
+            'Soporte de entrega de EPP adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de plan de emergencias (5.1.1)
+     */
+    public function adjuntarSoporteEmergencias()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_plan_emergencias',
+            'SOP-EME',
+            'soporte_emergencias_',
+            'Soporte plan emergencias',
+            'Soporte de plan de emergencias adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de brigada de emergencias (5.1.2)
+     */
+    public function adjuntarSoporteBrigada()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_brigada_emergencias',
+            'SOP-BRI',
+            'soporte_brigada_',
+            'Soporte brigada emergencias',
+            'Soporte de brigada adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de revisión por la dirección (6.1.3)
+     */
+    public function adjuntarSoporteRevision()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_revision_direccion',
+            'SOP-REV',
+            'soporte_revision_',
+            'Soporte revisión dirección',
+            'Soporte de revisión por la dirección adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de agua y servicios sanitarios (3.1.8)
+     */
+    public function adjuntarSoporteAgua()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_agua_servicios',
+            'SOP-SAN',
+            'soporte_agua_',
+            'Soporte agua y servicios sanitarios',
+            'Soporte de agua y servicios sanitarios adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de eliminación de residuos (3.1.9)
+     */
+    public function adjuntarSoporteResiduos()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_eliminacion_residuos',
+            'SOP-RES',
+            'soporte_residuos_',
+            'Soporte eliminación residuos',
+            'Soporte de eliminación de residuos adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de mediciones ambientales (4.1.4)
+     */
+    public function adjuntarSoporteMediciones()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_mediciones_ambientales',
+            'SOP-MED',
+            'soporte_mediciones_',
+            'Soporte mediciones ambientales',
+            'Soporte de mediciones ambientales adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de medidas de prevención y control (4.2.1)
+     */
+    public function adjuntarSoporteMedidasControl()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_medidas_prevencion_control',
+            'SOP-MPC',
+            'soporte_medidas_control_',
+            'Soporte medidas prevención y control',
+            'Soporte de medidas de prevención y control adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de diagnóstico de condiciones de salud (3.1.1)
+     */
+    public function adjuntarSoporteDiagnosticoSalud()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_diagnostico_salud',
+            'SOP-DCS',
+            'soporte_diagnostico_salud_',
+            'Soporte diagnóstico condiciones salud',
+            'Soporte de diagnóstico de condiciones de salud adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de información al médico perfiles de cargo (3.1.3)
+     */
+    public function adjuntarSoportePerfilesMedico()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_perfiles_medico',
+            'SOP-IMP',
+            'soporte_perfiles_medico_',
+            'Soporte información médico perfiles',
+            'Soporte de información al médico adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de evaluaciones médicas ocupacionales (3.1.4)
+     */
+    public function adjuntarSoporteEvaluacionesMedicas()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_evaluaciones_medicas',
+            'SOP-EMO',
+            'soporte_evaluaciones_medicas_',
+            'Soporte evaluaciones médicas ocupacionales',
+            'Soporte de evaluaciones médicas adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de custodia de historias clínicas (3.1.5)
+     */
+    public function adjuntarSoporteCustodiaHC()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_custodia_hc',
+            'SOP-CHC',
+            'soporte_custodia_hc_',
+            'Soporte custodia historias clínicas',
+            'Soporte de custodia de historias clínicas adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de curso 50 horas (1.2.3)
+     */
+    public function adjuntarSoporteCurso50h()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_curso_50h',
+            'SOP-C50',
+            'soporte_curso_50h_',
+            'Certificado curso 50 horas SST',
+            'Certificado del curso de 50 horas adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de evaluación de prioridades (2.3.1)
+     */
+    public function adjuntarSoporteEvaluacionPrioridades()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_evaluacion_prioridades',
+            'SOP-EVP',
+            'soporte_evaluacion_prioridades_',
+            'Soporte evaluación e identificación de prioridades',
+            'Soporte de evaluación de prioridades adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de plan de objetivos y metas (2.4.1)
+     */
+    public function adjuntarSoportePlanObjetivos()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_plan_objetivos',
+            'SOP-POM',
+            'soporte_plan_objetivos_',
+            'Soporte plan objetivos, metas, recursos',
+            'Soporte del plan de objetivos y metas adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de rendición sobre el desempeño (2.6.1)
+     */
+    public function adjuntarSoporteRendicion()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_rendicion_desempeno',
+            'SOP-RDD',
+            'soporte_rendicion_',
+            'Soporte rendición sobre el desempeño',
+            'Soporte de rendición de cuentas adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de conformación COPASST (1.1.6)
+     */
+    public function adjuntarSoporteCopasst()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_conformacion_copasst',
+            'SOP-COP',
+            'soporte_copasst_',
+            'Soporte conformación COPASST',
+            'Soporte de conformación COPASST adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de comité de convivencia (1.1.8)
+     */
+    public function adjuntarSoporteConvivencia()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_comite_convivencia',
+            'SOP-CCV',
+            'soporte_convivencia_',
+            'Soporte comité de convivencia',
+            'Soporte del comité de convivencia adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de Promoción y Prevención en Salud (3.1.2)
+     */
+    public function adjuntarSoportePypSalud()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_pyp_salud',
+            'SOP-PYP',
+            'soporte_pyp_salud_',
+            'Soporte PyP Salud',
+            'Soporte de Promoción y Prevención en Salud adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de Inducción y Reinducción (1.2.2)
+     */
+    public function adjuntarSoporteInduccion()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_induccion',
+            'SOP-IND',
+            'soporte_induccion_',
+            'Soporte Inducción Reinducción',
+            'Soporte de Inducción y Reinducción adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de Matriz Legal (2.7.1)
+     */
+    public function adjuntarSoporteMatrizLegal()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_matriz_legal',
+            'SOP-MRL',
+            'soporte_matriz_legal_',
+            'Soporte Matriz Legal',
+            'Soporte de Matriz Legal adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Método genérico para adjuntar soportes (reutilizable)
+     */
+    protected function adjuntarSoporteGenerico(
+        string $tipoDocumento,
+        string $prefijoCode,
+        string $prefijoArchivo,
+        string $descripcionReporte,
+        string $mensajeExito
+    ) {
+        $idCliente = $this->request->getPost('id_cliente');
+        $idCarpeta = $this->request->getPost('id_carpeta');
+        $tipoCarga = $this->request->getPost('tipo_carga');
+        $descripcion = $this->request->getPost('descripcion');
+        $anio = $this->request->getPost('anio') ?? date('Y');
+        $observaciones = $this->request->getPost('observaciones') ?? '';
+
+        if (!$idCliente || !$descripcion) {
+            return redirect()->back()->with('error', 'Cliente y descripción son requeridos.');
+        }
+
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado.');
+        }
+
+        $enlaceFinal = null;
+        $esEnlaceExterno = false;
+
+        if ($tipoCarga === 'enlace') {
+            $urlExterna = $this->request->getPost('url_externa');
+            if (empty($urlExterna) || !filter_var($urlExterna, FILTER_VALIDATE_URL)) {
+                return redirect()->back()->with('error', 'El enlace proporcionado no es válido.');
+            }
+            $enlaceFinal = $urlExterna;
+            $esEnlaceExterno = true;
+        } else {
+            $archivo = $this->request->getFile('archivo_soporte');
+            if (!$archivo || !$archivo->isValid()) {
+                return redirect()->back()->with('error', 'Error al subir el archivo.');
+            }
+
+            $tiposPermitidos = [
+                'application/pdf',
+                'image/jpeg', 'image/png', 'image/jpg',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            if (!in_array($archivo->getMimeType(), $tiposPermitidos)) {
+                return redirect()->back()->with('error', 'Tipo de archivo no permitido.');
+            }
+
+            if ($archivo->getSize() > 10 * 1024 * 1024) {
+                return redirect()->back()->with('error', 'El archivo excede 10MB.');
+            }
+
+            $carpetaNit = $cliente['nit_cliente'];
+            $uploadPath = FCPATH . 'uploads/' . $carpetaNit;
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            $extension = $archivo->getExtension();
+            $nombreArchivo = $prefijoArchivo . date('Ymd_His') . '.' . $extension;
+
+            if (!$archivo->move($uploadPath, $nombreArchivo)) {
+                return redirect()->back()->with('error', 'Error al guardar el archivo.');
+            }
+
+            $enlaceFinal = base_url('uploads/' . $carpetaNit . '/' . $nombreArchivo);
+        }
+
+        // Generar código secuencial
+        $ultimoDoc = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', $tipoDocumento)
+            ->orderBy('id_documento', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        $secuencia = 1;
+        if ($ultimoDoc && preg_match('/' . $prefijoCode . '-(\d{3})/', $ultimoDoc['codigo'], $matches)) {
+            $secuencia = intval($matches[1]) + 1;
+        }
+        $codigo = $prefijoCode . '-' . str_pad($secuencia, 3, '0', STR_PAD_LEFT);
+
+        // Crear documento
+        $this->db->table('tbl_documentos_sst')->insert([
+            'id_cliente' => $idCliente,
+            'tipo_documento' => $tipoDocumento,
+            'codigo' => $codigo,
+            'titulo' => $descripcion,
+            'anio' => $anio,
+            'version' => 1,
+            'estado' => 'aprobado',
+            'contenido' => json_encode(['descripcion' => $descripcion, 'observaciones' => $observaciones]),
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'url_externa' => $esEnlaceExterno ? $enlaceFinal : null,
+            'observaciones' => $observaciones,
+            'fecha_aprobacion' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+        $idDocumento = $this->db->insertID();
+
+        // Crear versión
+        $this->db->table('tbl_doc_versiones_sst')->insert([
+            'id_documento' => $idDocumento,
+            'codigo' => $codigo,
+            'version_texto' => '1.0',
+            'tipo_cambio' => 'mayor',
+            'descripcion_cambio' => 'Carga inicial',
+            'estado' => 'vigente',
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'autorizado_por' => session()->get('nombre') ?? 'Sistema',
+            'fecha_autorizacion' => date('Y-m-d H:i:s')
+        ]);
+
+        // Publicar en reportList
+        $detailReport = $this->db->table('detail_report')
+            ->where("detail_report COLLATE utf8mb4_general_ci LIKE '%Documento SG-SST%'", null, false)
+            ->get()
+            ->getRowArray();
+        $idDetailReport = $detailReport['id_detailreport'] ?? 2;
+
+        $this->db->table('tbl_reporte')->insert([
+            'titulo_reporte' => $codigo . ' - ' . $descripcion . ' (' . $anio . ')',
+            'id_detailreport' => $idDetailReport,
+            'id_report_type' => 12,
+            'id_cliente' => $idCliente,
+            'enlace' => $enlaceFinal,
+            'estado' => 'CERRADO',
+            'observaciones' => $descripcionReporte . '. ' . ($observaciones ?: 'Sin observaciones.'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        return redirect()->to('documentacion/carpeta/' . $idCarpeta)->with('success', $mensajeExito);
+    }
+
+    /**
      * Exporta el documento a Word (.doc) usando HTML compatible
      */
     public function exportarWord(int $idDocumento)
@@ -2074,7 +3016,9 @@ Se debe generar acta que registre:
             'versiones' => $versiones,
             'contexto' => $contexto,
             'consultor' => $consultor,
-            'firmaConsultorBase64' => $firmaConsultorBase64
+            'firmaConsultorBase64' => $firmaConsultorBase64,
+            // Firmantes desde servicio (arquitectura escalable) - igual que PDF
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento'])
         ];
 
         // Renderizar la vista HTML para Word
@@ -2094,6 +3038,7 @@ Se debe generar acta que registre:
 
     /**
      * Aprueba el documento completo y crea una nueva version
+     * Usa el servicio centralizado DocumentoVersionService para garantizar consistencia
      */
     public function aprobarDocumento()
     {
@@ -2101,135 +3046,43 @@ Se debe generar acta que registre:
         $tipoCambio = $this->request->getPost('tipo_cambio') ?? 'menor';
         $descripcionCambio = $this->request->getPost('descripcion_cambio');
 
-        if (empty($idDocumento) || empty($descripcionCambio)) {
+        if (empty($idDocumento)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Faltan datos requeridos'
-            ]);
-        }
-
-        $documento = $this->db->table('tbl_documentos_sst')
-            ->where('id_documento', $idDocumento)
-            ->get()
-            ->getRowArray();
-
-        if (!$documento) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Documento no encontrado'
+                'message' => 'ID de documento requerido'
             ]);
         }
 
         // Obtener usuario actual
         $session = session();
-        $usuarioId = $session->get('id_usuario');
+        $usuarioId = $session->get('id_usuario') ?? 0;
         $usuarioNombre = $session->get('nombre_usuario') ?? 'Usuario del sistema';
 
-        // Si el documento tiene un motivo_version guardado (de iniciarNuevaVersion), usarlo
-        // si no se proporciono otra descripcion
-        if (empty($descripcionCambio) && !empty($documento['motivo_version'])) {
-            $descripcionCambio = $documento['motivo_version'];
-        }
+        // Usar el servicio centralizado de versiones
+        $resultado = $this->versionService->aprobarVersion(
+            (int)$idDocumento,
+            (int)$usuarioId,
+            $usuarioNombre,
+            $descripcionCambio,
+            $tipoCambio
+        );
 
-        // Verificar si es la primera aprobacion del documento (no hay versiones previas)
-        $versionesPrevias = $this->db->table('tbl_doc_versiones_sst')
-            ->where('id_documento', $idDocumento)
-            ->countAllResults();
-
-        // Calcular nueva version
-        $versionActual = (int)$documento['version'];
-
-        if ($versionesPrevias === 0) {
-            // Primera aprobacion: siempre version 1.0
-            $nuevaVersion = 1;
-            $versionTexto = '1.0';
-        } elseif ($tipoCambio === 'mayor') {
-            // Obtener la version mayor mas reciente
-            $ultimaVersionMayor = $this->db->table('tbl_doc_versiones_sst')
-                ->selectMax('version')
-                ->where('id_documento', $idDocumento)
-                ->get()
-                ->getRow();
-
-            $nuevaVersion = ($ultimaVersionMayor && $ultimaVersionMayor->version) ? (int)$ultimaVersionMayor->version + 1 : $versionActual + 1;
-            $versionTexto = $nuevaVersion . '.0';
-        } else {
-            // Version menor: incrementar el decimal de la version actual
-            $sql = "SELECT MAX(CAST(SUBSTRING_INDEX(version_texto, '.', -1) AS UNSIGNED)) as max_decimal
-                    FROM tbl_doc_versiones_sst
-                    WHERE id_documento = ? AND version = ?";
-            $ultimoDecimal = $this->db->query($sql, [$idDocumento, $versionActual])->getRow();
-
-            $decimal = ($ultimoDecimal && $ultimoDecimal->max_decimal !== null) ? (int)$ultimoDecimal->max_decimal + 1 : 1;
-            $nuevaVersion = $versionActual;
-            $versionTexto = $versionActual . '.' . $decimal;
-        }
-
-        try {
-            $this->db->transStart();
-
-            // Marcar versiones anteriores como obsoletas
-            $this->db->table('tbl_doc_versiones_sst')
-                ->where('id_documento', $idDocumento)
-                ->update(['estado' => 'obsoleto']);
-
-            // Insertar nueva version con snapshot del contenido
-            // Incluir datos del cliente, codigo, titulo y anio para facilitar consultas
-            $this->db->table('tbl_doc_versiones_sst')->insert([
-                'id_documento' => $idDocumento,
-                'id_cliente' => $documento['id_cliente'],
-                'codigo' => $documento['codigo'] ?? null,
-                'titulo' => $documento['titulo'],
-                'anio' => $documento['anio'],
-                'version' => $nuevaVersion,
-                'version_texto' => $versionTexto,
-                'tipo_cambio' => $tipoCambio,
-                'descripcion_cambio' => $descripcionCambio,
-                'contenido_snapshot' => $documento['contenido'],
-                'estado' => 'vigente',
-                'autorizado_por' => $usuarioNombre,
-                'autorizado_por_id' => $usuarioId,
-                'fecha_autorizacion' => date('Y-m-d H:i:s'),
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-
-            $idVersion = $this->db->insertID();
-
-            // Actualizar documento principal
-            $this->db->table('tbl_documentos_sst')
-                ->where('id_documento', $idDocumento)
-                ->update([
-                    'version' => $nuevaVersion,
-                    'estado' => 'aprobado',
-                    'fecha_aprobacion' => date('Y-m-d H:i:s'),
-                    'aprobado_por' => $usuarioId,
-                    'motivo_version' => $descripcionCambio,
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]);
-
-            $this->db->transComplete();
-
-            if ($this->db->transStatus() === false) {
-                throw new \Exception('Error en la transaccion');
-            }
-
+        // Adaptar respuesta para mantener compatibilidad con frontend existente
+        if ($resultado['success'] && isset($resultado['data'])) {
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Documento aprobado correctamente',
-                'version' => $versionTexto,
-                'id_version' => $idVersion
-            ]);
-
-        } catch (\Exception $e) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Error al aprobar documento: ' . $e->getMessage()
+                'message' => $resultado['message'],
+                'version' => $resultado['data']['version_texto'],
+                'id_version' => $resultado['data']['id_version']
             ]);
         }
+
+        return $this->response->setJSON($resultado);
     }
 
     /**
      * Inicia el proceso de nueva version: cambia estado a borrador y redirige a edicion
+     * Usa el servicio centralizado DocumentoVersionService para garantizar consistencia
      */
     public function iniciarNuevaVersion()
     {
@@ -2240,63 +3093,77 @@ Se debe generar acta que registre:
         if (empty($idDocumento) || empty($descripcionCambio)) {
             return $this->response->setJSON([
                 'success' => false,
+                'message' => 'Faltan datos requeridos (id_documento y descripcion_cambio son obligatorios)'
+            ]);
+        }
+
+        // Usar el servicio centralizado de versiones
+        $resultado = $this->versionService->iniciarNuevaVersion(
+            (int)$idDocumento,
+            $tipoCambio,
+            $descripcionCambio
+        );
+
+        // Adaptar respuesta para mantener compatibilidad con frontend existente
+        if ($resultado['success'] && isset($resultado['data'])) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => $resultado['message'],
+                'proxima_version' => $resultado['data']['proxima_version'],
+                'tipo_cambio' => $resultado['data']['tipo_cambio'],
+                'redirect_url' => $resultado['data']['url_edicion']
+            ]);
+        }
+
+        return $this->response->setJSON($resultado);
+    }
+
+    /**
+     * Restaura una version anterior del documento
+     * Usa el servicio centralizado DocumentoVersionService
+     */
+    public function restaurarVersion()
+    {
+        $idDocumento = $this->request->getPost('id_documento');
+        $idVersion = $this->request->getPost('id_version');
+
+        if (empty($idDocumento) || empty($idVersion)) {
+            return $this->response->setJSON([
+                'success' => false,
                 'message' => 'Faltan datos requeridos'
             ]);
         }
 
-        $documento = $this->db->table('tbl_documentos_sst')
-            ->where('id_documento', $idDocumento)
-            ->get()
-            ->getRowArray();
+        $session = session();
+        $usuarioId = $session->get('id_usuario') ?? 0;
+        $usuarioNombre = $session->get('nombre_usuario') ?? 'Usuario del sistema';
 
-        if (!$documento) {
+        $resultado = $this->versionService->restaurarVersion(
+            (int)$idDocumento,
+            (int)$idVersion,
+            (int)$usuarioId,
+            $usuarioNombre
+        );
+
+        return $this->response->setJSON($resultado);
+    }
+
+    /**
+     * Cancela la edicion de una nueva version y restaura el estado anterior
+     */
+    public function cancelarNuevaVersion()
+    {
+        $idDocumento = $this->request->getPost('id_documento');
+
+        if (empty($idDocumento)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Documento no encontrado'
+                'message' => 'ID de documento requerido'
             ]);
         }
 
-        // Calcular cual sera la proxima version para mostrar al usuario
-        $versionActual = (int)$documento['version'];
-        if ($tipoCambio === 'mayor') {
-            $proximaVersion = ($versionActual + 1) . '.0';
-        } else {
-            // Buscar el ultimo decimal de esta version
-            $sql = "SELECT MAX(CAST(SUBSTRING_INDEX(version_texto, '.', -1) AS UNSIGNED)) as max_decimal
-                    FROM tbl_doc_versiones_sst
-                    WHERE id_documento = ? AND version = ?";
-            $ultimoDecimal = $this->db->query($sql, [$idDocumento, $versionActual])->getRow();
-            $decimal = ($ultimoDecimal && $ultimoDecimal->max_decimal !== null) ? (int)$ultimoDecimal->max_decimal + 1 : 1;
-            $proximaVersion = $versionActual . '.' . $decimal;
-        }
-
-        try {
-            // Cambiar estado a borrador y guardar el motivo pendiente
-            $this->db->table('tbl_documentos_sst')
-                ->where('id_documento', $idDocumento)
-                ->update([
-                    'estado' => 'borrador',
-                    'motivo_version' => $descripcionCambio,
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]);
-
-            // URL de redireccion a la pantalla de edicion
-            $urlEdicion = base_url('documentos/generar/programa_capacitacion/' . $documento['id_cliente'] . '?anio=' . $documento['anio']);
-
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Documento listo para edicion. La proxima version sera v' . $proximaVersion,
-                'proxima_version' => $proximaVersion,
-                'tipo_cambio' => $tipoCambio,
-                'redirect_url' => $urlEdicion
-            ]);
-
-        } catch (\Exception $e) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Error al iniciar nueva version: ' . $e->getMessage()
-            ]);
-        }
+        $resultado = $this->versionService->cancelarNuevaVersion((int)$idDocumento);
+        return $this->response->setJSON($resultado);
     }
 
     /**
@@ -2314,55 +3181,6 @@ Se debe generar acta que registre:
             'success' => true,
             'versiones' => $versiones
         ]);
-    }
-
-    /**
-     * Restaura una version anterior del documento
-     */
-    public function restaurarVersion()
-    {
-        $idVersion = $this->request->getPost('id_version');
-
-        if (empty($idVersion)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'ID de version no proporcionado'
-            ]);
-        }
-
-        $version = $this->db->table('tbl_doc_versiones_sst')
-            ->where('id_version', $idVersion)
-            ->get()
-            ->getRowArray();
-
-        if (!$version) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Version no encontrada'
-            ]);
-        }
-
-        try {
-            // Restaurar contenido del snapshot
-            $this->db->table('tbl_documentos_sst')
-                ->where('id_documento', $version['id_documento'])
-                ->update([
-                    'contenido' => $version['contenido_snapshot'],
-                    'estado' => 'borrador', // Vuelve a borrador para nueva revision
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]);
-
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Version restaurada. El documento esta ahora en estado borrador para revision.'
-            ]);
-
-        } catch (\Exception $e) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Error al restaurar version: ' . $e->getMessage()
-            ]);
-        }
     }
 
     /**
@@ -2583,6 +3401,94 @@ Se debe generar acta que registre:
         ];
 
         return view('documentos_sst/procedimiento_control_documental', $data);
+    }
+
+    /**
+     * Muestra el Procedimiento de Matriz Legal (2.7.1)
+     */
+    public function procedimientoMatrizLegal(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_matriz_legal')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/procedimiento_matriz_legal/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Procedimiento de Matriz Legal.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        // Normalizar secciones para eliminar duplicados
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'procedimiento_matriz_legal');
+        }
+
+        // Obtener historial de versiones para la tabla de Control de Cambios
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener responsables del cliente para las firmas
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        // Obtener contexto SST para datos adicionales
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        // Obtener datos del consultor asignado
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        // Obtener firmas electrónicas del documento
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Procedimiento de Identificación de Requisitos Legales - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('procedimiento_matriz_legal')
+        ];
+
+        return view('documentos_sst/procedimiento_matriz_legal', $data);
     }
 
     /**

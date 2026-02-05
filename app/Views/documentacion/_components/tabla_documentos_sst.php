@@ -3,7 +3,7 @@
  * Componente: Tabla de Documentos SST
  * Variables requeridas: $tipoCarpetaFases, $documentosSSTAprobados, $cliente
  */
-$tiposConTabla = ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst'];
+$tiposConTabla = ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'induccion_reinduccion', 'promocion_prevencion_salud', 'matriz_legal'];
 if (!isset($tipoCarpetaFases) || !in_array($tipoCarpetaFases, $tiposConTabla)) {
     return;
 }

@@ -205,6 +205,29 @@ class PzpresupuestoSstController extends BaseController
             ->where('id_cliente', $idCliente)
             ->get()->getRowArray() ?? [];
 
+        // Obtener datos del consultor (múltiples métodos de búsqueda)
+        $consultor = null;
+        // 1. Intentar desde la sesión
+        $idConsultor = session('id_consultor');
+        if ($idConsultor) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_consultor', $idConsultor)
+                ->get()->getRowArray();
+        }
+        // 2. Si no, buscar por id_cliente
+        if (!$consultor) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_cliente', $idCliente)
+                ->get()->getRowArray();
+        }
+        // 3. Si no, buscar por cliente.id_consultor
+        if (!$consultor && !empty($cliente['id_consultor'])) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_consultor', $cliente['id_consultor'])
+                ->get()->getRowArray();
+        }
+        $consultor = $consultor ?? [];
+
         // Obtener items con detalles
         $items = $this->getItemsConDetalles($presupuesto['id_presupuesto'], $anio);
         $totales = $this->calcularTotales($items);
@@ -239,6 +262,7 @@ class PzpresupuestoSstController extends BaseController
             'itemsPorCategoria' => $itemsPorCategoria,
             'totales' => $totales,
             'contexto' => $contexto,
+            'consultor' => $consultor,
             'firmasElectronicas' => $firmasElectronicas,
             'versiones' => $versiones,
             'codigoDocumento' => $this->generarCodigoCompleto($idCliente),
@@ -832,6 +856,7 @@ class PzpresupuestoSstController extends BaseController
     /**
      * Exportar a PDF (formato vertical con firmas de aprobacion)
      * @updated 2026-01-31 - Incluye firmas electrónicas del sistema unificado
+     * @updated 2026-02-02 - Incluye consultor para firma Elaboró
      */
     public function exportarPdf($idCliente, $anio)
     {
@@ -853,6 +878,33 @@ class PzpresupuestoSstController extends BaseController
         $contexto = $this->db->table('tbl_cliente_contexto_sst')
             ->where('id_cliente', $idCliente)
             ->get()->getRowArray() ?? [];
+
+        // Obtener datos del consultor (múltiples métodos de búsqueda)
+        $consultor = null;
+
+        // 1. Intentar desde la sesión
+        $idConsultor = session('id_consultor');
+        if ($idConsultor) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_consultor', $idConsultor)
+                ->get()->getRowArray();
+        }
+
+        // 2. Si no, buscar por id_cliente
+        if (!$consultor) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_cliente', $idCliente)
+                ->get()->getRowArray();
+        }
+
+        // 3. Si no, buscar por cliente.id_consultor
+        if (!$consultor && !empty($cliente['id_consultor'])) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_consultor', $cliente['id_consultor'])
+                ->get()->getRowArray();
+        }
+
+        $consultor = $consultor ?? [];
 
         $items = $this->getItemsConDetalles($presupuesto['id_presupuesto'], $anio);
         $totales = $this->calcularTotales($items);
@@ -902,6 +954,7 @@ class PzpresupuestoSstController extends BaseController
             'presupuesto' => $presupuesto,
             'documento' => $documento,
             'contexto' => $contexto,
+            'consultor' => $consultor,
             'itemsPorCategoria' => $itemsPorCategoria,
             'totales' => $totales,
             'meses' => $meses,
@@ -953,6 +1006,33 @@ class PzpresupuestoSstController extends BaseController
             ->where('id_cliente', $idCliente)
             ->get()->getRowArray() ?? [];
 
+        // Obtener datos del consultor (múltiples métodos de búsqueda)
+        $consultor = null;
+
+        // 1. Intentar desde la sesión
+        $idConsultor = session('id_consultor');
+        if ($idConsultor) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_consultor', $idConsultor)
+                ->get()->getRowArray();
+        }
+
+        // 2. Si no, buscar por id_cliente
+        if (!$consultor) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_cliente', $idCliente)
+                ->get()->getRowArray();
+        }
+
+        // 3. Si no, buscar por cliente.id_consultor
+        if (!$consultor && !empty($cliente['id_consultor'])) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_consultor', $cliente['id_consultor'])
+                ->get()->getRowArray();
+        }
+
+        $consultor = $consultor ?? [];
+
         $items = $this->getItemsConDetalles($presupuesto['id_presupuesto'], $anio);
         $totales = $this->calcularTotales($items);
         $meses = $this->getMesesPresupuesto($presupuesto['mes_inicio'], $anio);
@@ -1001,6 +1081,7 @@ class PzpresupuestoSstController extends BaseController
             'presupuesto' => $presupuesto,
             'documento' => $documento,
             'contexto' => $contexto,
+            'consultor' => $consultor,
             'itemsPorCategoria' => $itemsPorCategoria,
             'totales' => $totales,
             'meses' => $meses,

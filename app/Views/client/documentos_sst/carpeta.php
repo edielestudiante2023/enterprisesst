@@ -94,7 +94,104 @@
         </div>
         <?php endif; ?>
 
-        <!-- Tabla de documentos -->
+        <!-- Tabla de documentos/soportes SST -->
+        <?php if (!empty($documentosSSTAprobados)): ?>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-file-earmark-check me-2"></i>Documentos y Soportes
+                    <span class="badge bg-light text-dark ms-2"><?= count($documentosSSTAprobados) ?></span>
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 120px;">Codigo</th>
+                                <th>Documento</th>
+                                <th style="width: 80px;" class="text-center">Ano</th>
+                                <th style="width: 80px;" class="text-center">Version</th>
+                                <th style="width: 130px;" class="text-center">Estado</th>
+                                <th style="width: 100px;" class="text-center">Firmas</th>
+                                <th style="width: 120px;" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($documentosSSTAprobados as $docSST): ?>
+                            <?php
+                            $estadoConfig = [
+                                'borrador' => ['badge' => 'bg-secondary', 'texto' => 'Borrador', 'icono' => 'bi-pencil'],
+                                'generado' => ['badge' => 'bg-info', 'texto' => 'Generado', 'icono' => 'bi-file-earmark-text'],
+                                'pendiente_firma' => ['badge' => 'bg-warning text-dark', 'texto' => 'Pendiente Firma', 'icono' => 'bi-hourglass-split'],
+                                'aprobado' => ['badge' => 'bg-primary', 'texto' => 'Aprobado', 'icono' => 'bi-check-circle'],
+                                'firmado' => ['badge' => 'bg-success', 'texto' => 'Firmado', 'icono' => 'bi-patch-check-fill'],
+                            ];
+                            $config = $estadoConfig[$docSST['estado']] ?? ['badge' => 'bg-secondary', 'texto' => ucfirst($docSST['estado']), 'icono' => 'bi-question-circle'];
+                            $esEnlace = !empty($docSST['url_externa']);
+                            $urlArchivo = $esEnlace ? $docSST['url_externa'] : ($docSST['archivo_pdf'] ?? null);
+                            ?>
+                            <tr class="documento-row">
+                                <td><code class="text-primary"><?= esc($docSST['codigo'] ?? 'N/A') ?></code></td>
+                                <td>
+                                    <strong><?= esc($docSST['titulo']) ?></strong>
+                                    <?php if (!empty($docSST['observaciones'])): ?>
+                                        <br><small class="text-muted"><?= esc($docSST['observaciones']) ?></small>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary"><?= esc($docSST['anio']) ?></span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">v<?= esc($docSST['version_texto'] ?? '1.0') ?></span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge <?= $config['badge'] ?>">
+                                        <i class="bi <?= $config['icono'] ?> me-1"></i><?= $config['texto'] ?>
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <?php if ($docSST['firmas_total'] > 0): ?>
+                                        <span class="badge <?= $docSST['firmas_firmadas'] == $docSST['firmas_total'] ? 'bg-success' : 'bg-warning text-dark' ?>">
+                                            <?= $docSST['firmas_firmadas'] ?>/<?= $docSST['firmas_total'] ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-muted small">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <?php if ($esEnlace && $urlArchivo): ?>
+                                            <!-- Enlace externo (Google Drive, etc.) -->
+                                            <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Abrir enlace">
+                                                <i class="bi bi-box-arrow-up-right"></i>
+                                            </a>
+                                        <?php elseif ($urlArchivo): ?>
+                                            <!-- Archivo PDF -->
+                                            <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Ver">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="<?= esc($urlArchivo) ?>" class="btn btn-danger" download title="Descargar">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        <?php else: ?>
+                                            <!-- Generar PDF dinámico -->
+                                            <a href="<?= base_url('documentos-sst/exportar-pdf/' . $docSST['id_documento']) ?>"
+                                               class="btn btn-danger" target="_blank" title="Descargar PDF">
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <?php elseif (!empty($documentos)): ?>
+        <!-- Fallback: documentos por mapeo antiguo -->
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom">
                 <h6 class="mb-0">
@@ -102,7 +199,6 @@
                 </h6>
             </div>
             <div class="card-body p-0">
-                <?php if (!empty($documentos)): ?>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
@@ -117,39 +213,32 @@
                         <tbody>
                             <?php foreach ($documentos as $doc): ?>
                             <tr class="documento-row">
-                                <td>
-                                    <code class="text-primary"><?= esc($doc['codigo'] ?? 'N/A') ?></code>
-                                </td>
-                                <td>
-                                    <strong><?= esc($doc['titulo']) ?></strong>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-secondary"><?= esc($doc['anio']) ?></span>
-                                </td>
+                                <td><code class="text-primary"><?= esc($doc['codigo'] ?? 'N/A') ?></code></td>
+                                <td><strong><?= esc($doc['titulo']) ?></strong></td>
+                                <td class="text-center"><span class="badge bg-secondary"><?= esc($doc['anio']) ?></span></td>
                                 <td class="text-center">
                                     <?php
-                                    $estadoBadge = $doc['estado'] === 'firmado' ? 'bg-success' : 'bg-primary';
-                                    $estadoTexto = $doc['estado'] === 'firmado' ? 'Firmado' : 'Aprobado';
-                                    $estadoIcono = $doc['estado'] === 'firmado' ? 'bi-patch-check-fill' : 'bi-check-circle';
+                                    $estadoConfig = [
+                                        'borrador' => ['badge' => 'bg-secondary', 'texto' => 'Borrador', 'icono' => 'bi-pencil'],
+                                        'generado' => ['badge' => 'bg-info', 'texto' => 'Generado', 'icono' => 'bi-file-earmark-text'],
+                                        'pendiente_firma' => ['badge' => 'bg-warning text-dark', 'texto' => 'Pendiente Firma', 'icono' => 'bi-hourglass-split'],
+                                        'aprobado' => ['badge' => 'bg-primary', 'texto' => 'Aprobado', 'icono' => 'bi-check-circle'],
+                                        'firmado' => ['badge' => 'bg-success', 'texto' => 'Firmado', 'icono' => 'bi-patch-check-fill'],
+                                    ];
+                                    $config = $estadoConfig[$doc['estado']] ?? ['badge' => 'bg-secondary', 'texto' => ucfirst($doc['estado']), 'icono' => 'bi-question-circle'];
                                     ?>
-                                    <span class="badge <?= $estadoBadge ?>">
-                                        <i class="bi <?= $estadoIcono ?> me-1"></i><?= $estadoTexto ?>
+                                    <span class="badge <?= $config['badge'] ?>">
+                                        <i class="bi <?= $config['icono'] ?> me-1"></i><?= $config['texto'] ?>
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     <?php if (!empty($doc['archivo_firmado'])): ?>
-                                        <!-- Documento con firma fisica: mostrar el escaneado -->
-                                        <a href="<?= esc($doc['archivo_firmado']) ?>"
-                                           class="btn btn-sm btn-success text-white"
-                                           title="Descargar documento firmado" target="_blank">
-                                            <i class="bi bi-patch-check-fill me-1"></i>Firmado
+                                        <a href="<?= esc($doc['archivo_firmado']) ?>" class="btn btn-sm btn-success text-white" target="_blank">
+                                            <i class="bi bi-patch-check-fill"></i>
                                         </a>
                                     <?php else: ?>
-                                        <!-- Documento sin archivo escaneado: mostrar PDF generado -->
-                                        <a href="<?= base_url('documentos-sst/exportar-pdf/' . $doc['id_documento']) ?>"
-                                           class="btn btn-sm btn-pdf text-white"
-                                           title="Descargar PDF" target="_blank">
-                                            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                                        <a href="<?= base_url('documentos-sst/exportar-pdf/' . $doc['id_documento']) ?>" class="btn btn-sm btn-danger" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>
                                         </a>
                                     <?php endif; ?>
                                 </td>
@@ -158,15 +247,17 @@
                         </tbody>
                     </table>
                 </div>
-                <?php else: ?>
-                <div class="text-center py-5">
-                    <i class="bi bi-file-earmark-x text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-3 mb-0">No hay documentos disponibles en esta carpeta.</p>
-                    <small class="text-muted">Los documentos apareceran aqui cuando sean aprobados.</small>
-                </div>
-                <?php endif; ?>
             </div>
         </div>
+        <?php else: ?>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-file-earmark-x text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3 mb-0">No hay documentos disponibles en esta carpeta.</p>
+                <small class="text-muted">Los documentos apareceran aqui cuando se generen.</small>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Boton volver -->
         <div class="mt-4">

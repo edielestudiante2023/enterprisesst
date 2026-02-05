@@ -168,10 +168,34 @@ class PzresponsabilidadesResponsableSstController extends Controller
 
         // Obtener datos del consultor
         $consultor = null;
+        $consultorModel = new ConsultantModel();
         $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
         if ($idConsultor) {
-            $consultorModel = new ConsultantModel();
             $consultor = $consultorModel->find($idConsultor);
+        }
+        // Fallback: buscar por id_cliente
+        if (!$consultor) {
+            $consultor = $consultorModel->where('id_cliente', $idCliente)->first();
+        }
+
+        // Obtener firmas electrónicas del documento (sistema unificado)
+        $firmasElectronicas = [];
+        if (!empty($documento['id_documento'])) {
+            $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+                ->where('id_documento', $documento['id_documento'])
+                ->where('estado', 'firmado')
+                ->get()
+                ->getResultArray();
+            foreach ($solicitudesFirma as $sol) {
+                $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                    ->where('id_solicitud', $sol['id_solicitud'])
+                    ->get()
+                    ->getRowArray();
+                $firmasElectronicas[$sol['firmante_tipo']] = [
+                    'solicitud' => $sol,
+                    'evidencia' => $evidencia
+                ];
+            }
         }
 
         $data = [
@@ -182,7 +206,8 @@ class PzresponsabilidadesResponsableSstController extends Controller
             'anio' => $anio,
             'versiones' => $versiones,
             'contexto' => $contexto,
-            'consultor' => $consultor
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas
         ];
 
         return view('documentos_sst/responsabilidades_responsable_sst', $data);

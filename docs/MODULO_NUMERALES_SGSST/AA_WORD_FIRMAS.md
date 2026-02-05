@@ -1,14 +1,31 @@
 Estilos SECCIÓN FIRMAS WORD - Referencia Técnica
-1. TIPOS DE FIRMAS DISPONIBLES
+
+## ⚠️ REGLA CRÍTICA DE AUDITORÍA
+
+**TODOS los documentos técnicos del SG-SST DEBEN incluir la firma de "Elaboró / Consultor SST"**.
+Esta regla es OBLIGATORIA para cumplimiento de auditorías de la Resolución 0312/2019.
+
+### Estructura mínima de firmas para auditoría:
+
+- **ELABORÓ**: Consultor SST (quien redacta el documento técnico)
+- **APROBÓ**: Representante Legal (máxima autoridad)
+- **REVISÓ** (opcional según estándares): Vigía SST / Delegado SST / COPASST
+
+**NO se permite** generar documentos técnicos sin la firma del Consultor/Elaboró.
+
+---
+
+## 1. TIPOS DE FIRMAS DISPONIBLES
+
 El sistema determina automáticamente el tipo de firma según:
 
 Variable	Condición	Tipo de Firma
 $esFirmaFisica	tipo_firma === 'fisica' o tipo_documento === 'responsabilidades_trabajadores_sgsst'	Tabla múltiples trabajadores
 $soloFirmaConsultor	solo_firma_consultor o tipo_documento === 'responsabilidades_responsable_sgsst'	1 firmante: Consultor
-$soloFirmaRepLegal	solo_firma_rep_legal	1 firmante: Rep. Legal
-$firmasRepLegalYSegundo	Doc responsabilidades rep legal + segundo firmante	2 firmantes: Rep. Legal + Vigía/Delegado
-$esSoloDosFirmantes	estandares <= 10 y no requiere delegado	2 firmantes: Consultor + Rep. Legal
-Default	estandares > 10 o requiere delegado	3 firmantes: Consultor + Vigía/COPASST + Rep. Legal
+$soloFirmaRepLegal	solo_firma_rep_legal	2 firmantes: Elaboró (Consultor) + Aprobó (Rep. Legal) **CORREGIDO**
+$firmasRepLegalYSegundo	Doc responsabilidades rep legal + segundo firmante	3 firmantes: Elaboró (Consultor) + Aprobó (Rep. Legal) + Revisó (Vigía/Delegado) **CORREGIDO**
+$esSoloDosFirmantes	estandares <= 10 y no requiere delegado	2 firmantes: Elaboró (Consultor) + Aprobó (Rep. Legal)
+Default	estandares > 10 o requiere delegado	3 firmantes: Elaboró (Consultor) + Revisó (Vigía/COPASST) + Aprobó (Rep. Legal)
 2. TÍTULO DE LA SECCIÓN
 Código (línea 421-422)
 
@@ -96,65 +113,84 @@ Código (líneas 450-475)
         </td>
     </tr>
 </table>
-5. TIPO C: REP. LEGAL + VIGÍA/DELEGADO (2 Firmantes)
+5. TIPO C: RESPONSABILIDADES REP. LEGAL (3 Firmantes) **CORREGIDO**
+
+⚠️ **IMPORTANTE**: Este tipo fue corregido para incluir la firma del Consultor (Elaboró).
+Anteriormente solo tenía 2 firmantes, ahora tiene 3 para cumplir con auditorías.
+
 Código (líneas 477-522)
 
 <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
     <tr>
-        <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
-            REPRESENTANTE LEGAL
+        <td width="33%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
+            ELABORÓ
         </td>
-        <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
-            VIGÍA SST / DELEGADO SST
+        <td width="34%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
+            APROBÓ
+        </td>
+        <td width="33%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
+            REVISÓ
         </td>
     </tr>
     <tr>
-        <!-- Datos Rep. Legal -->
-        <td style="vertical-align: top; padding: 10px; border: 1px solid #999; font-size: 8pt;">
+        <!-- CONSULTOR SST (ELABORÓ) -->
+        <td style="vertical-align: top; padding: 8px; border: 1px solid #999; font-size: 8pt;">
+            <p style="margin: 2px 0;"><b>Nombre:</b> ___</p>
+            <p style="margin: 2px 0;"><b>Cargo:</b> Consultor SST</p>
+            <p style="margin: 2px 0;"><b>Licencia:</b> ___</p>
+        </td>
+        <!-- REPRESENTANTE LEGAL (APROBÓ) -->
+        <td style="vertical-align: top; padding: 8px; border: 1px solid #999; font-size: 8pt;">
             <p style="margin: 2px 0;"><b>Nombre:</b> ___</p>
             <p style="margin: 2px 0;"><b>Documento:</b> ___</p>
             <p style="margin: 2px 0;"><b>Cargo:</b> Representante Legal</p>
         </td>
-        <!-- Datos Vigía/Delegado -->
-        <td style="vertical-align: top; padding: 10px; border: 1px solid #999; font-size: 8pt;">
+        <!-- VIGIA/DELEGADO SST (REVISÓ) -->
+        <td style="vertical-align: top; padding: 8px; border: 1px solid #999; font-size: 8pt;">
             <p style="margin: 2px 0;"><b>Nombre:</b> ___</p>
             <p style="margin: 2px 0;"><b>Documento:</b> ___</p>
-            <p style="margin: 2px 0;"><b>Cargo:</b> Vigía SST</p>
+            <p style="margin: 2px 0;"><b>Cargo:</b> Vigía SST / Delegado SST</p>
         </td>
     </tr>
     <tr>
-        <!-- Firma Rep. Legal -->
-        <td style="padding: 10px; text-align: center; border: 1px solid #999; height: 60px; vertical-align: bottom;">
-            <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
+        <!-- Fila de firmas alineadas -->
+        <td style="padding: 8px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+            <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
                 <span style="color: #666; font-size: 6pt;">Firma</span>
             </div>
         </td>
-        <!-- Firma Vigía/Delegado -->
-        <td style="padding: 10px; text-align: center; border: 1px solid #999; height: 60px; vertical-align: bottom;">
-            <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
+        <td style="padding: 8px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+            <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                <span style="color: #666; font-size: 6pt;">Firma</span>
+            </div>
+        </td>
+        <td style="padding: 8px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+            <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
                 <span style="color: #666; font-size: 6pt;">Firma</span>
             </div>
         </td>
     </tr>
 </table>
+
 Estructura Visual
 
-┌────────────────────────────┬────────────────────────────┐
-│    REPRESENTANTE LEGAL     │    VIGÍA SST / DELEGADO    │
-│   (50%, #e9ecef, 8pt)      │   (50%, #e9ecef, 8pt)      │
-├────────────────────────────┼────────────────────────────┤
-│                            │                            │
-│  Nombre: ___________       │  Nombre: ___________       │
-│  Documento: ________       │  Documento: ________       │
-│  Cargo: Rep. Legal         │  Cargo: Vigía SST          │
-│  (8pt, left)               │  (8pt, left)               │
-│                            │                            │
-├────────────────────────────┼────────────────────────────┤
-│                            │                            │
-│     ─────────────────      │     ─────────────────      │
-│          Firma             │          Firma             │
-│      (height: 60px)        │      (height: 60px)        │
-└────────────────────────────┴────────────────────────────┘
+┌──────────────────┬───────────────────┬──────────────────┐
+│     ELABORÓ      │      APROBÓ       │     REVISÓ       │
+│      (33%)       │      (34%)        │      (33%)       │
+│    #e9ecef       │     #e9ecef       │    #e9ecef       │
+├──────────────────┼───────────────────┼──────────────────┤
+│                  │                   │                  │
+│  Nombre: ___     │  Nombre: ___      │  Nombre: ___     │
+│  Cargo:          │  Documento: ___   │  Documento: ___  │
+│  Consultor SST   │  Cargo:           │  Cargo:          │
+│  Licencia: ___   │  Rep. Legal       │  Vigía/Delegado  │
+│                  │                   │                  │
+├──────────────────┼───────────────────┼──────────────────┤
+│                  │                   │                  │
+│  ─────────────   │  ─────────────    │  ─────────────   │
+│     Firma        │     Firma         │     Firma        │
+│  (height: 50px)  │  (height: 50px)   │  (height: 50px)  │
+└──────────────────┴───────────────────┴──────────────────┘
 6. TIPO D: CONSULTOR + REP. LEGAL (2 Firmantes - 7 Estándares)
 Código (líneas 524-556)
 
@@ -415,3 +451,78 @@ Tabla firma física	8pt
 </div>
 Comando para Replicar
 "Usa la sección FIRMAS WORD estándar: título barra #198754 white padding 5px 8px, tabla table-layout:fixed border #999, TH #e9ecef #333 8pt bold center padding 4px, TD 8pt padding 5px, fila firma height 45px vertical-align bottom, línea firma border-top #333 width 65%, texto Firma #666 6pt"
+
+---
+
+## 14. IMÁGENES CON FONDO NEGRO - SOLUCIÓN TRANSPARENCIA PNG
+
+### Problema
+Las imágenes PNG con fondo transparente (canal alpha) se renderizan con **fondo negro** en documentos Word/HTML. Esto ocurre porque Word no interpreta correctamente la transparencia de los PNG.
+
+### Causa
+- Las imágenes de firma o logos son PNG con transparencia
+- El renderizador de Word convierte el canal alpha (transparente) a negro
+- Afecta tanto la vista previa HTML como el documento Word descargado
+
+### Solución: Fondo Blanco Explícito
+
+**SIEMPRE** aplicar fondo blanco tanto al contenedor (`<td>`) como a la imagen (`<img>`):
+
+```html
+<!-- CORRECTO: Fondo blanco en celda + imagen -->
+<td align="center" height="50" bgcolor="#FFFFFF" style="background-color:#ffffff;">
+    <img src="<?= $imagenBase64 ?>" width="100" height="40" style="background-color:#ffffff;">
+</td>
+
+<!-- INCORRECTO: Sin fondo explícito (aparece negro) -->
+<td align="center" height="50">
+    <img src="<?= $imagenBase64 ?>" width="100" height="40">
+</td>
+```
+
+### Atributos Requeridos
+
+| Elemento | Atributo | Valor | Propósito |
+|----------|----------|-------|-----------|
+| `<td>` | `bgcolor` | `#FFFFFF` | Compatibilidad Word antiguo |
+| `<td>` | `style` | `background-color:#ffffff;` | Compatibilidad navegadores |
+| `<img>` | `style` | `background-color:#ffffff;` | Fondo directo en imagen |
+
+### Aplicar a Todas las Imágenes Word
+
+#### Logo del Encabezado
+```html
+<td width="80" rowspan="2" align="center" valign="middle" bgcolor="#FFFFFF" style="border:1px solid #333; padding:5px; background-color:#ffffff;">
+    <?php if (!empty($logoBase64)): ?>
+        <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo" style="background-color:#ffffff;">
+    <?php endif; ?>
+</td>
+```
+
+#### Imágenes de Firma
+```html
+<table width="160" cellpadding="8" cellspacing="0" style="border:1px solid #ccc; background-color:#fafafa; min-height:60px;">
+    <tr>
+        <td align="center" height="50" bgcolor="#FFFFFF" style="background-color:#ffffff;">
+            <?php if (!empty($firmaImagen)): ?>
+                <img src="<?= $firmaImagen ?>" width="100" height="40" style="background-color:#ffffff;">
+            <?php endif; ?>
+        </td>
+    </tr>
+</table>
+```
+
+### Checklist de Verificación
+
+- [ ] Logo encabezado: `bgcolor="#FFFFFF"` en `<td>` + `style="background-color:#ffffff;"` en `<img>`
+- [ ] Firma Consultor: `bgcolor="#FFFFFF"` en `<td>` + `style="background-color:#ffffff;"` en `<img>`
+- [ ] Firma Rep. Legal: `bgcolor="#FFFFFF"` en `<td>` + `style="background-color:#ffffff;"` en `<img>`
+- [ ] Firma Delegado/Vigía: `bgcolor="#FFFFFF"` en `<td>` + `style="background-color:#ffffff;"` en `<img>`
+
+### Nota Importante
+
+La combinación de `bgcolor` (atributo HTML) y `background-color` (CSS) es **intencional**:
+- `bgcolor="#FFFFFF"` → Compatibilidad con Word y navegadores antiguos
+- `style="background-color:#ffffff;"` → Compatibilidad con navegadores modernos
+
+**Usar ambos** garantiza que funcione en todos los contextos de renderizado.

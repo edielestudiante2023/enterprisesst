@@ -128,7 +128,7 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <a href="<?= base_url('generador-ia/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm me-3">
+                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm me-3">
                         <i class="bi bi-arrow-left me-1"></i>Volver
                     </a>
                     <span class="fs-5"><?= esc($tipoDoc['nombre']) ?></span>
@@ -253,17 +253,23 @@
                                     <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-warning btn-sm w-100">
                                         <i class="bi bi-pen me-1"></i>Estado Firmas
                                     </a>
-                                <?php elseif ($todasSeccionesListas && $idDocumento): ?>
-                                    <!-- Listo para enviar a firmas -->
+                                <?php elseif (in_array($estadoDoc, ['borrador', 'generado', 'aprobado', 'en_revision']) && $idDocumento): ?>
+                                    <!-- Listo para enviar a firmas (documento existe y estado válido) -->
                                     <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-success btn-sm w-100">
                                         <i class="bi bi-pen me-1"></i>Enviar a Firmas
                                         <small class="d-block" style="font-size: 0.6rem;">El cliente revisara y firmara</small>
                                     </a>
-                                <?php else: ?>
-                                    <!-- Secciones no listas -->
+                                <?php elseif ($idDocumento): ?>
+                                    <!-- Documento existe pero estado no permite firmas -->
                                     <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
                                         <i class="bi bi-pen me-1"></i>Enviar a Firmas
-                                        <small class="d-block" style="font-size: 0.6rem;">Primero aprueba todas las secciones</small>
+                                        <small class="d-block" style="font-size: 0.6rem;">Estado: <?= esc($estadoDoc) ?></small>
+                                    </button>
+                                <?php else: ?>
+                                    <!-- Documento no existe aún -->
+                                    <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
+                                        <i class="bi bi-pen me-1"></i>Enviar a Firmas
+                                        <small class="d-block" style="font-size: 0.6rem;">Primero guarda el documento</small>
                                     </button>
                                 <?php endif; ?>
                             </div>
@@ -364,8 +370,8 @@
                     <div class="spinner-border text-primary mb-3" role="status">
                         <span class="visually-hidden">Generando...</span>
                     </div>
-                    <h5 id="progresoTitulo">Generando contenido...</h5>
-                    <p class="text-muted mb-0" id="progresoDetalle">Por favor espere</p>
+                    <h5 id="progresoTitulo">Redactando documento...</h5>
+                    <p class="text-muted mb-0" id="progresoDetalle">Consultando bases de datos...</p>
                 </div>
             </div>
         </div>
@@ -427,6 +433,7 @@
         const anio = <?= $anio ?>;
         const secciones = <?= json_encode(array_column($secciones, 'key')) ?>;
         const seccionesNombres = <?= json_encode(array_column($secciones, 'nombre', 'key')) ?>;
+        const seccionesNumeros = <?= json_encode(array_column($secciones, 'numero', 'key')) ?>;
         const totalSecciones = <?= $totalSecciones ?>;
         let seccionesAprobadasCount = <?= $seccionesAprobadas ?>;
 
@@ -499,17 +506,60 @@
                     toastHeader.classList.add('bg-success', 'text-white');
                     toastIcono.classList.add('bi-save-fill', 'text-white');
                     break;
+                case 'database':
+                    toastHeader.classList.add('bg-info', 'text-white');
+                    toastIcono.classList.add('bi-database-check', 'text-white');
+                    break;
             }
 
             toastTitulo.textContent = titulo;
-            toastMensaje.textContent = mensaje;
+            toastMensaje.innerHTML = mensaje; // Cambiado a innerHTML para permitir HTML
 
-            const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+            // Duraciones: database=15s (mucha info), success/warning=6s, otros=5s
+            const duraciones = { 'database': 15000, 'success': 6000, 'warning': 6000, 'save': 5000, 'error': 8000 };
+            const delay = duraciones[tipo] || 5000;
+            const toast = new bootstrap.Toast(toastEl, { delay: delay });
             toast.show();
+        }
+
+        // Mostrar toast especial con metadata de BD consultadas
+        function mostrarToastBD(metadata) {
+            if (!metadata || !metadata.tablas_consultadas) return;
+
+            let mensaje = '<div class="small">';
+            mensaje += '<strong class="d-block mb-1">' + metadata.resumen + '</strong>';
+            mensaje += '<ul class="list-unstyled mb-0 mt-2" style="font-size: 0.85em;">';
+
+            metadata.tablas_consultadas.forEach(tabla => {
+                const icono = tabla.icono || 'bi-table';
+                const registros = tabla.registros;
+                const colorRegistros = registros > 0 ? 'text-success' : 'text-warning';
+
+                mensaje += `<li class="mb-1">`;
+                mensaje += `<i class="bi ${icono} me-1"></i>`;
+                mensaje += `<strong>${tabla.descripcion}:</strong> `;
+                mensaje += `<span class="${colorRegistros}">${registros} registros</span>`;
+
+                // Mostrar datos si hay pocos
+                if (tabla.datos && tabla.datos.length > 0 && tabla.datos.length <= 3) {
+                    mensaje += `<br><small class="text-muted ms-3">→ ${tabla.datos.join(', ')}</small>`;
+                } else if (tabla.datos && tabla.datos.length > 3) {
+                    mensaje += `<br><small class="text-muted ms-3">→ ${tabla.datos.slice(0, 2).join(', ')}... (+${tabla.datos.length - 2} más)</small>`;
+                }
+                mensaje += `</li>`;
+            });
+
+            mensaje += '</ul></div>';
+
+            mostrarToast('database', '✅ Bases de Datos Consultadas', mensaje);
         }
 
         function getNombreSeccion(key) {
             return seccionesNombres[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function getNumeroSeccion(key) {
+            return seccionesNumeros[key] || '?';
         }
 
         function actualizarProgreso() {
@@ -589,6 +639,13 @@
                     // Toast de exito
                     const usaIA = contextoAdicional ? ' con IA (OpenAI)' : '';
                     mostrarToast('ia', 'Contenido Generado' + usaIA, `Seccion "${getNombreSeccion(seccionKey)}" generada correctamente.`);
+
+                    // Toast de BD consultadas (si hay metadata)
+                    if (data.metadata_bd && data.metadata_bd.tablas_consultadas) {
+                        setTimeout(() => {
+                            mostrarToastBD(data.metadata_bd);
+                        }, 500); // Pequeño delay para que se vean ambos toasts
+                    }
                 } else {
                     mostrarToast('error', 'Error al Generar', data.message || `No se pudo generar la seccion "${getNombreSeccion(seccionKey)}".`);
                 }
@@ -716,8 +773,9 @@
             for (let i = 0; i < ordenGeneracion.length; i++) {
                 const seccionKey = ordenGeneracion[i];
                 const nombreSeccion = getNombreSeccion(seccionKey);
-                document.getElementById('progresoTitulo').textContent = `Generando: ${nombreSeccion}`;
-                document.getElementById('progresoDetalle').textContent = `Seccion ${i + 1} de ${ordenGeneracion.length}...`;
+                const numeroSeccion = getNumeroSeccion(seccionKey);
+                document.getElementById('progresoTitulo').textContent = `Redactando seccion ${numeroSeccion}: ${nombreSeccion}`;
+                document.getElementById('progresoDetalle').textContent = `(${i + 1} de ${ordenGeneracion.length} secciones)`;
 
                 try {
                     await generarSeccion(seccionKey);

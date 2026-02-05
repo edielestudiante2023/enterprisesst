@@ -976,4 +976,101 @@ class SqlRunnerController extends Controller
             'resultados' => $resultados
         ]);
     }
+
+    /**
+     * Ejecuta la migracion para estandarizar el sistema de versiones
+     * Ejecutar via: /sql-runner/estandarizar-versiones
+     *
+     * Esta migracion:
+     * 1. Agrega campo tipo_documento a tbl_doc_versiones_sst
+     * 2. Agrega campo tipo_cambio_pendiente a tbl_documentos_sst
+     * 3. Sincroniza tipo_documento en versiones existentes
+     * 4. Crea indices para optimizar consultas
+     */
+    public function estandarizarVersiones()
+    {
+        $db = Database::connect();
+        $resultados = [];
+
+        try {
+            // 1. Agregar campo tipo_documento a tbl_doc_versiones_sst
+            $columnaExiste = $db->query("SHOW COLUMNS FROM tbl_doc_versiones_sst LIKE 'tipo_documento'")->getNumRows() > 0;
+
+            if (!$columnaExiste) {
+                $db->query("ALTER TABLE `tbl_doc_versiones_sst`
+                           ADD COLUMN `tipo_documento` VARCHAR(100) NULL AFTER `id_cliente`");
+                $resultados[] = "OK: Campo tipo_documento agregado a tbl_doc_versiones_sst";
+            } else {
+                $resultados[] = "SKIP: tipo_documento ya existe en tbl_doc_versiones_sst";
+            }
+
+            // 2. Agregar campo tipo_cambio_pendiente a tbl_documentos_sst
+            $columnaExiste2 = $db->query("SHOW COLUMNS FROM tbl_documentos_sst LIKE 'tipo_cambio_pendiente'")->getNumRows() > 0;
+
+            if (!$columnaExiste2) {
+                $db->query("ALTER TABLE `tbl_documentos_sst`
+                           ADD COLUMN `tipo_cambio_pendiente` ENUM('mayor', 'menor') NULL AFTER `motivo_version`");
+                $resultados[] = "OK: Campo tipo_cambio_pendiente agregado a tbl_documentos_sst";
+            } else {
+                $resultados[] = "SKIP: tipo_cambio_pendiente ya existe en tbl_documentos_sst";
+            }
+
+            // 3. Sincronizar tipo_documento en versiones existentes
+            $syncResult = $db->query("UPDATE tbl_doc_versiones_sst v
+                                      INNER JOIN tbl_documentos_sst d ON v.id_documento = d.id_documento
+                                      SET v.tipo_documento = d.tipo_documento
+                                      WHERE v.tipo_documento IS NULL");
+
+            $affectedRows = $db->affectedRows();
+            if ($affectedRows > 0) {
+                $resultados[] = "OK: Sincronizados {$affectedRows} registros con tipo_documento";
+            } else {
+                $resultados[] = "SKIP: No hay versiones pendientes de sincronizar";
+            }
+
+            // 4. Crear indice para tipo_documento (si no existe)
+            $indiceExiste = $db->query("SHOW INDEX FROM tbl_doc_versiones_sst WHERE Key_name = 'idx_tipo_documento'")->getNumRows() > 0;
+
+            if (!$indiceExiste) {
+                $db->query("ALTER TABLE `tbl_doc_versiones_sst`
+                           ADD INDEX `idx_tipo_documento` (`tipo_documento`)");
+                $resultados[] = "OK: Indice idx_tipo_documento creado";
+            } else {
+                $resultados[] = "SKIP: Indice idx_tipo_documento ya existe";
+            }
+
+            // 5. Crear indice compuesto id_documento + estado (si no existe)
+            $indiceExiste2 = $db->query("SHOW INDEX FROM tbl_doc_versiones_sst WHERE Key_name = 'idx_doc_estado'")->getNumRows() > 0;
+
+            if (!$indiceExiste2) {
+                $db->query("ALTER TABLE `tbl_doc_versiones_sst`
+                           ADD INDEX `idx_doc_estado` (`id_documento`, `estado`)");
+                $resultados[] = "OK: Indice idx_doc_estado creado";
+            } else {
+                $resultados[] = "SKIP: Indice idx_doc_estado ya existe";
+            }
+
+            // Estadisticas
+            $stats = $db->query("SELECT
+                                    COUNT(DISTINCT id_documento) as total_docs,
+                                    COUNT(*) as total_versiones,
+                                    SUM(CASE WHEN estado = 'vigente' THEN 1 ELSE 0 END) as vigentes,
+                                    SUM(CASE WHEN estado = 'obsoleto' THEN 1 ELSE 0 END) as obsoletas
+                                 FROM tbl_doc_versiones_sst")->getRowArray();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Migracion de sistema de versiones completada',
+                'resultados' => $resultados,
+                'estadisticas' => $stats
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error en migracion: ' . $e->getMessage(),
+                'resultados' => $resultados
+            ]);
+        }
+    }
 }

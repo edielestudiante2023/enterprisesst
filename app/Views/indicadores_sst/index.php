@@ -52,7 +52,7 @@
                     <i class="bi bi-building me-1"></i>
                     <?= esc($cliente['nombre_cliente']) ?>
                 </span>
-                <a href="<?= base_url('generador-ia/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
+                <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>Volver
                 </a>
             </div>

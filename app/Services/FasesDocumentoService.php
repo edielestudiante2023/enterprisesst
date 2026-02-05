@@ -6,6 +6,7 @@ use App\Models\CronogcapacitacionModel;
 use App\Models\PtaclienteModel;
 use App\Models\IndicadorSSTModel;
 use App\Models\ClienteContextoSstModel;
+use App\Models\InduccionEtapasModel;
 
 /**
  * Servicio para verificar el estado de las fases previas
@@ -84,6 +85,50 @@ class FasesDocumentoService
                 'url_modulo' => '/responsables-sst/{cliente}',
                 'url_generar' => null,
                 'orden' => 1
+            ]
+        ],
+        // 1.2.2. Inducción y Reinducción en SG-SST
+        'induccion_reinduccion' => [
+            'etapas_induccion' => [
+                'nombre' => 'Etapas del Proceso',
+                'descripcion' => 'Etapas y temas de induccion personalizados segun peligros',
+                'url_modulo' => '/induccion-etapas/{cliente}',
+                'url_generar' => '/induccion-etapas/{cliente}/generar',
+                'orden' => 1
+            ],
+            'pta_induccion' => [
+                'nombre' => 'Plan de Trabajo',
+                'descripcion' => 'Actividades derivadas de las etapas de induccion',
+                'url_modulo' => '/pta-cliente-nueva/list',
+                'url_generar' => '/induccion-etapas/{cliente}/generar-pta',
+                'orden' => 2,
+                'depende_de' => 'etapas_induccion'
+            ],
+            'indicadores_induccion' => [
+                'nombre' => 'Indicadores',
+                'descripcion' => 'Indicadores de cobertura y cumplimiento de induccion',
+                'url_modulo' => '/indicadores-sst/{cliente}',
+                'url_generar' => '/induccion-etapas/{cliente}/generar-indicadores',
+                'orden' => 3,
+                'depende_de' => 'pta_induccion'
+            ]
+        ],
+        // 3.1.2. Programa de Promoción y Prevención en Salud
+        'promocion_prevencion_salud' => [
+            'pta_pyp_salud' => [
+                'nombre' => 'Actividades PyP Salud',
+                'descripcion' => 'Actividades de promoción y prevención en salud para el PTA',
+                'url_modulo' => '/pta-cliente-nueva/list/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/pyp-salud',
+                'orden' => 1
+            ],
+            'indicadores_pyp_salud' => [
+                'nombre' => 'Indicadores PyP Salud',
+                'descripcion' => 'Indicadores para medir el programa de promoción y prevención',
+                'url_modulo' => '/indicadores-sst/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/indicadores-pyp-salud',
+                'orden' => 2,
+                'depende_de' => 'pta_pyp_salud'
             ]
         ]
     ];
@@ -192,6 +237,21 @@ class FasesDocumentoService
 
             case 'responsables':
                 return $this->verificarResponsables($idCliente);
+
+            case 'etapas_induccion':
+                return $this->verificarEtapasInduccion($idCliente, $anio);
+
+            case 'pta_induccion':
+                return $this->verificarPTAInduccion($idCliente, $anio);
+
+            case 'indicadores_induccion':
+                return $this->verificarIndicadoresInduccion($idCliente);
+
+            case 'pta_pyp_salud':
+                return $this->verificarPTAPyPSalud($idCliente, $anio);
+
+            case 'indicadores_pyp_salud':
+                return $this->verificarIndicadoresPyPSalud($idCliente);
 
             default:
                 return [
@@ -418,6 +478,8 @@ class FasesDocumentoService
             'FOR-ASI' => 'capacitacion_sst',
             'PLA-PTA' => 'plan_trabajo',
             'PRO-IPVR' => 'plan_trabajo',
+            'PRG-IND' => 'induccion_reinduccion',
+            'PRG-PPS' => 'promocion_prevencion_salud',
         ];
 
         $tipoCarpeta = $mapeoDocumentos[$codigoDocumento] ?? null;
@@ -470,5 +532,205 @@ class FasesDocumentoService
         }
 
         return $verificacion;
+    }
+
+    /**
+     * Verifica estado de las etapas de inducción
+     * NOTA: El número de etapas es FLEXIBLE (el usuario elige cuáles incluir)
+     */
+    protected function verificarEtapasInduccion(int $idCliente, int $anio): array
+    {
+        $induccionModel = new InduccionEtapasModel();
+        $stats = $induccionModel->contarPorEstado($idCliente, $anio);
+
+        if ($stats['total'] === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay etapas de induccion definidas para ' . $anio,
+                'cantidad' => 0
+            ];
+        }
+
+        // Verificar si hay al menos 1 etapa aprobada (flexible, no requiere 5)
+        if ($stats['aprobadas'] === 0) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "{$stats['total']} etapas en borrador, pendientes de aprobar",
+                'cantidad' => $stats['total']
+            ];
+        }
+
+        // Si todas las etapas generadas están aprobadas, está completo
+        if ($stats['aprobadas'] === $stats['total']) {
+            return [
+                'estado' => self::ESTADO_COMPLETO,
+                'mensaje' => "{$stats['aprobadas']} etapas configuradas y aprobadas",
+                'cantidad' => $stats['aprobadas']
+            ];
+        }
+
+        // Algunas aprobadas, otras pendientes
+        return [
+            'estado' => self::ESTADO_EN_PROCESO,
+            'mensaje' => "{$stats['aprobadas']} de {$stats['total']} etapas aprobadas",
+            'cantidad' => $stats['total']
+        ];
+    }
+
+    /**
+     * Verifica estado del PTA para inducción
+     */
+    protected function verificarPTAInduccion(int $idCliente, int $anio): array
+    {
+        $db = \Config\Database::connect();
+
+        // Contar actividades de inducción en el PTA
+        $cantidad = $db->table('tbl_pta_cliente')
+            ->where('id_cliente', $idCliente)
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->groupStart()
+                ->like('tipo_servicio', 'Induccion', 'both', true, true)
+                ->orLike('actividad_plandetrabajo', 'Induccion', 'both', true, true)
+                ->orLike('actividad_plandetrabajo', 'Reinduccion', 'both', true, true)
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay actividades de induccion en el PTA para ' . $anio,
+                'cantidad' => 0
+            ];
+        }
+
+        // Con al menos 1 actividad ya está completo (flexible)
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} actividades de induccion en el PTA",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado de los indicadores de inducción
+     */
+    protected function verificarIndicadoresInduccion(int $idCliente): array
+    {
+        $cantidad = $this->indicadorModel
+            ->where('id_cliente', $idCliente)
+            ->where('activo', 1)
+            ->groupStart()
+                ->where('categoria', 'induccion')
+                ->orLike('nombre_indicador', 'induccion', 'both', true, true)
+                ->orLike('nombre_indicador', 'cobertura', 'both', true, true)
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay indicadores de induccion definidos',
+                'cantidad' => 0
+            ];
+        }
+
+        // Con al menos 1 indicador ya está completo (flexible)
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} indicadores de induccion configurados",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado del PTA para Promoción y Prevención en Salud
+     */
+    protected function verificarPTAPyPSalud(int $idCliente, int $anio): array
+    {
+        $db = \Config\Database::connect();
+
+        // Contar actividades de PyP Salud en el PTA
+        $cantidad = $db->table('tbl_pta_cliente')
+            ->where('id_cliente', $idCliente)
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->groupStart()
+                ->like('tipo_servicio', 'PyP Salud', 'both', true, true)
+                ->orLike('tipo_servicio', 'Promocion', 'both', true, true)
+                ->orLike('tipo_servicio', 'Prevencion', 'both', true, true)
+                ->orLike('actividad_plandetrabajo', 'examen medico', 'both', true, true)
+                ->orLike('actividad_plandetrabajo', 'exámenes médicos', 'both', true, true)
+                ->orLike('actividad_plandetrabajo', 'pausas activas', 'both', true, true)
+                ->orLike('actividad_plandetrabajo', 'campaña de salud', 'both', true, true)
+                ->orLike('actividad_plandetrabajo', 'semana de la salud', 'both', true, true)
+                ->orLike('actividad_plandetrabajo', 'vacunacion', 'both', true, true)
+                ->orLike('actividad_plandetrabajo', 'promocion de la salud', 'both', true, true)
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay actividades de PyP Salud en el PTA para ' . $anio,
+                'cantidad' => 0
+            ];
+        }
+
+        // Mínimo recomendado: al menos 5 actividades
+        if ($cantidad < 5) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "Tiene {$cantidad} actividades de PyP Salud (mínimo 5)",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} actividades de PyP Salud en el PTA",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado de los indicadores de Promoción y Prevención en Salud
+     */
+    protected function verificarIndicadoresPyPSalud(int $idCliente): array
+    {
+        $cantidad = $this->indicadorModel
+            ->where('id_cliente', $idCliente)
+            ->where('activo', 1)
+            ->groupStart()
+                ->where('categoria', 'pyp_salud')
+                ->orWhere('categoria', 'promocion_prevencion')
+                ->orLike('nombre_indicador', 'examen', 'both', true, true)
+                ->orLike('nombre_indicador', 'enfermedad', 'both', true, true)
+                ->orLike('nombre_indicador', 'salud', 'both', true, true)
+                ->orLike('nombre_indicador', 'medico', 'both', true, true)
+                ->orLike('nombre_indicador', 'ausentismo', 'both', true, true)
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay indicadores de PyP Salud definidos',
+                'cantidad' => 0
+            ];
+        }
+
+        // Mínimo 3 indicadores para PyP Salud
+        if ($cantidad < 3) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "Tiene {$cantidad} de 3 indicadores recomendados",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} indicadores de PyP Salud configurados",
+            'cantidad' => $cantidad
+        ];
     }
 }

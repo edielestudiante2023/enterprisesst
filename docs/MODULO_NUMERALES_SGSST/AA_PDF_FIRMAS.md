@@ -1,13 +1,27 @@
 Estilos SECCIÓN FIRMAS PDF - Referencia Técnica
-1. TIPOS DE FIRMAS DISPONIBLES
+
+## ⚠️ REGLA CRÍTICA DE AUDITORÍA
+**TODOS los documentos técnicos del SG-SST DEBEN incluir la firma de "Elaboró / Consultor SST"**.
+Esta regla es OBLIGATORIA para cumplimiento de auditorías de la Resolución 0312/2019.
+
+### Estructura mínima de firmas para auditoría:
+- **ELABORÓ**: Consultor SST (quien redacta el documento técnico)
+- **APROBÓ**: Representante Legal (máxima autoridad)
+- **REVISÓ** (opcional según estándares): Vigía SST / Delegado SST / COPASST
+
+**NO se permite** generar documentos técnicos sin la firma del Consultor/Elaboró.
+
+---
+
+## 1. TIPOS DE FIRMAS DISPONIBLES
 Lógica de Determinación (líneas 428-452)
 Variable	Condición	Tipo de Firma
 $esFirmaFisica	tipo_firma === 'fisica' o tipo_documento === 'responsabilidades_trabajadores_sgsst'	Tabla múltiples trabajadores
 $soloFirmaConsultor	solo_firma_consultor o tipo_documento === 'responsabilidades_responsable_sgsst'	1 firmante: Consultor
-$soloFirmaRepLegal	solo_firma_rep_legal	1 firmante: Rep. Legal
-$firmasRepLegalYSegundo	Doc responsabilidades rep legal + segundo firmante	2 firmantes: Rep. Legal + Vigía/Delegado
-$esSoloDosFirmantes	estandares <= 10 y no requiere delegado	2 firmantes: Consultor + Rep. Legal
-Default	estandares > 10 o requiere delegado	3 firmantes: Consultor + Vigía/COPASST + Rep. Legal
+$soloFirmaRepLegal	solo_firma_rep_legal	2 firmantes: Elaboró (Consultor) + Aprobó (Rep. Legal) **CORREGIDO**
+$firmasRepLegalYSegundo	Doc responsabilidades rep legal + segundo firmante	3 firmantes: Elaboró (Consultor) + Aprobó (Rep. Legal) + Revisó (Vigía/Delegado) **CORREGIDO**
+$esSoloDosFirmantes	estandares <= 10 y no requiere delegado	2 firmantes: Elaboró (Consultor) + Aprobó (Rep. Legal)
+Default	estandares > 10 o requiere delegado	3 firmantes: Elaboró (Consultor) + Revisó (Vigía/COPASST) + Aprobó (Rep. Legal)
 2. TÍTULO DE LA SECCIÓN
 Código (líneas 535-538)
 
@@ -471,3 +485,135 @@ Salto página firma física	page-break-before: always	<br clear="all" style="pag
 </div>
 Comando para Replicar
 "Usa la sección FIRMAS PDF estándar: título barra #198754 white padding 8px 12px font 10pt bold, margin-top 25px, TH #e9ecef #333 33.33%, TD height 70px padding 10px font 9pt, fila firma vertical-align bottom, imagen firma max 49x140px, línea firma border-top #333 width 85%, texto Firma #666 7pt"
+
+---
+
+## 16. ⚠️ FUENTES DE FIRMA DEL CONSULTOR (CRÍTICO)
+
+**La firma del Consultor SST tiene DOS fuentes posibles (en orden de prioridad):**
+
+### Fuente 1: Firma Electrónica (si firmó electrónicamente el documento)
+```php
+$firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+```
+- Origen: `tbl_doc_firma_evidencias` (cuando el consultor firma un documento específico)
+- Formato: URL con imagen base64 en `$firmaConsultorElectronica['evidencia']['firma_imagen']`
+
+### Fuente 2: Firma Física (del perfil del consultor)
+```php
+$firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
+```
+- Origen: `tbl_consultor.firma_consultor` (firma subida en el perfil)
+- Formato: Nombre de archivo en `uploads/`
+
+### Implementación correcta para PDF (DOMPDF requiere base64):
+```php
+// 1. Obtener firma física y convertir a base64
+$firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
+$firmaConsultorBase64 = '';
+if (!empty($firmaConsultorFisica)) {
+    $rutaFirma = FCPATH . 'uploads/' . $firmaConsultorFisica;
+    if (file_exists($rutaFirma)) {
+        $firmaConsultorBase64 = 'data:image/' . pathinfo($rutaFirma, PATHINFO_EXTENSION)
+                              . ';base64,' . base64_encode(file_get_contents($rutaFirma));
+    }
+}
+
+// 2. Mostrar firma (prioridad: electrónica > física)
+<?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+    <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" style="max-height: 56px; max-width: 168px;">
+<?php elseif (!empty($firmaConsultorBase64)): ?>
+    <img src="<?= $firmaConsultorBase64 ?>" style="max-height: 56px; max-width: 168px;">
+<?php endif; ?>
+```
+
+### ❌ ERROR COMÚN (NO hacer esto):
+```php
+// INCORRECTO: Solo busca firma electrónica, ignora firma física del perfil
+$firmaConsultor = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+<?php if ($firmaConsultor): ?> <!-- Si no firmó electrónicamente, nunca muestra firma -->
+```
+
+---
+
+## 17. ⚠️ FUENTES DE FIRMA DEL VIGÍA/DELEGADO
+
+**La firma del Vigía/Delegado SST tiene TRES fuentes posibles (en orden de prioridad):**
+
+### Fuente 1: Firma Electrónica Delegado (si firmó electrónicamente)
+```php
+$firmaElectronica = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+```
+- Origen: `tbl_doc_firma_evidencias` (cuando el delegado firma un documento específico)
+
+### Fuente 2: Firma Electrónica Vigía (si firmó electrónicamente)
+```php
+$firmaElectronica = ($firmasElectronicas ?? [])['vigia_sst'] ?? null;
+```
+- Origen: `tbl_doc_firma_evidencias` (cuando el vigía firma un documento específico)
+
+### Fuente 3: Firma Física del Vigía (del perfil)
+```php
+$firmaVigiaFisica = $vigia['firma_vigia'] ?? '';
+```
+- Origen: `tbl_vigia.firma_vigia` (firma subida en el perfil del vigía)
+- **NOTA**: El Delegado SST NO tiene firma física en el sistema (solo email, nombre, cargo, cédula en contexto)
+
+### Implementación correcta para PDF:
+```php
+// En el controlador: cargar vigía y convertir firma a base64
+$vigiaModel = new \App\Models\VigiaModel();
+$vigia = $vigiaModel->where('id_cliente', $documento['id_cliente'])->first();
+$firmaVigiaBase64 = '';
+if ($vigia && !empty($vigia['firma_vigia'])) {
+    $rutaFirma = FCPATH . 'uploads/' . $vigia['firma_vigia'];
+    if (file_exists($rutaFirma)) {
+        $firmaVigiaBase64 = 'data:image/' . pathinfo($rutaFirma, PATHINFO_EXTENSION)
+                          . ';base64,' . base64_encode(file_get_contents($rutaFirma));
+    }
+}
+
+// En la vista: mostrar firma (prioridad: electrónica > física)
+<?php
+$firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? ($firmasElectronicas ?? [])['vigia_sst'] ?? null;
+if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])):
+?>
+    <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" style="max-height: 49px; max-width: 140px;">
+<?php elseif (!empty($firmaVigiaBase64)): ?>
+    <img src="<?= $firmaVigiaBase64 ?>" style="max-height: 49px; max-width: 140px;">
+<?php endif; ?>
+```
+
+### ⚠️ Diferencia Vigía vs Delegado:
+| Aspecto | Vigía SST | Delegado SST |
+|---------|-----------|--------------|
+| Tabla origen | `tbl_vigia` | `tbl_cliente_contexto_sst` |
+| Tiene firma física | ✅ Sí (`firma_vigia`) | ❌ No |
+| Firma electrónica | ✅ Sí | ✅ Sí |
+
+---
+
+## 18. TIPOS DE DOCUMENTO Y SUS FIRMANTES
+
+| Tipo Documento | Variable/Condición | Firmantes | Notas |
+|----------------|-------------------|-----------|-------|
+| `responsabilidades_responsable_sgsst` | `$soloFirmaConsultor` | 1: Consultor SST | Solo firma consultor |
+| `responsabilidades_rep_legal_sgsst` (sin 2do firmante) | `$soloFirmaRepLegal` | 2: Elaboró + Aprobó | Consultor + Rep. Legal |
+| `responsabilidades_rep_legal_sgsst` (con 2do firmante) | `$firmasRepLegalYSegundo` | 3: Elaboró + Aprobó + Revisó | Consultor + Rep. Legal + Vigía/Delegado |
+| `responsabilidades_trabajadores_sgsst` | `$esFirmaFisica` | Firma física | Tabla para múltiples trabajadores |
+| Otros documentos (≤10 estándares) | `$esSoloDosFirmantes` | 2: Elaboró + Aprobó | Consultor + Rep. Legal |
+| Otros documentos (>10 estándares o con delegado) | Default | 3: Elaboró + Revisó + Aprobó | Consultor + Vigía/COPASST + Rep. Legal |
+
+### ⚠️ REGLA DE ORO:
+**NUNCA** crear un tipo de firma que excluya al Consultor en documentos técnicos.
+Si un nuevo tipo de documento excluye "Elaboró/Consultor", está **violando la regla de auditoría**.
+
+---
+
+## 18. DIFERENCIA CLAVE: PDF vs WEB
+
+| Aspecto | PDF (DOMPDF) | WEB |
+|---------|--------------|-----|
+| Firma física consultor | Convertir a Base64 | URL directa `base_url('uploads/' . $firma)` |
+| Firma electrónica | URL directa (ya es base64) | URL directa (ya es base64) |
+| Motivo | DOMPDF no puede cargar archivos externos | El navegador sí puede cargar URLs |

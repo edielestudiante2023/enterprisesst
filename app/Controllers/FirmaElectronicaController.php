@@ -53,8 +53,8 @@ class FirmaElectronicaController extends Controller
             return redirect()->back()->with('error', 'Documento no encontrado');
         }
 
-        if (!in_array($documento['estado'], ['aprobado', 'en_revision', 'pendiente_firma'])) {
-            return redirect()->back()->with('error', 'El documento debe estar aprobado para solicitar firmas');
+        if (!in_array($documento['estado'], ['borrador', 'generado', 'aprobado', 'en_revision', 'pendiente_firma'])) {
+            return redirect()->back()->with('error', 'El documento debe estar guardado para solicitar firmas');
         }
 
         $cliente = $this->clienteModel->find($documento['id_cliente']);
@@ -481,16 +481,31 @@ class FirmaElectronicaController extends Controller
 
             // report_type = 12 (Reportes SST)
             $idReportType = 12;
+            $codigoBusqueda = $doc['codigo'] ?? $doc['titulo'];
 
-            // Insertar en tbl_reporte
+            // Contar publicaciones anteriores de este documento para numerar
+            $publicacionesAnteriores = $this->db->table('tbl_reporte')
+                ->where("titulo_reporte COLLATE utf8mb4_general_ci LIKE '%" . $this->db->escapeLikeString($codigoBusqueda) . "%'", null, false)
+                ->where('id_cliente', $doc['id_cliente'])
+                ->where('id_detailreport', $idDetailReport)
+                ->countAllResults();
+
+            $numPublicacion = $publicacionesAnteriores + 1;
+            $fechaPublicacion = date('d/m/Y H:i');
+
+            $tituloReporte = ($doc['codigo'] ?? '') . ' - ' . $doc['titulo']
+                . ' (v' . $doc['version'] . ' - Firmado)'
+                . ' - Pub. #' . $numPublicacion . ' ' . $fechaPublicacion;
+
+            // Siempre insertar nuevo registro para mantener historial de publicaciones
             $this->db->table('tbl_reporte')->insert([
-                'titulo_reporte' => ($doc['codigo'] ?? '') . ' - ' . $doc['titulo'] . ' (v' . $doc['version'] . ' - Firmado)',
+                'titulo_reporte' => $tituloReporte,
                 'id_detailreport' => $idDetailReport,
                 'id_report_type' => $idReportType,
                 'id_cliente' => $doc['id_cliente'],
                 'enlace' => $enlace,
                 'estado' => 'CERRADO',
-                'observaciones' => 'Documento generado automaticamente al completar firmas electronicas. Año: ' . $doc['anio'],
+                'observaciones' => 'Publicación #' . $numPublicacion . '. Documento generado automaticamente al completar firmas electronicas. Año: ' . $doc['anio'],
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ]);

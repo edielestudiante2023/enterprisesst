@@ -27,75 +27,174 @@ $estandar = $tipoDocConfig['estandar'] ?? $documento['estandar'] ?? '';
 $categoria = $tipoDocConfig['categoria'] ?? 'documento';
 $icono = $tipoDocConfig['icono'] ?? 'bi-file-text';
 
-// Función para convertir Markdown a HTML
+/**
+ * Función mejorada para convertir Markdown a HTML
+ * Soporta: tablas, negritas, cursivas, listas, encabezados
+ */
 if (!function_exists('convertirMarkdownAHtml')) {
     function convertirMarkdownAHtml($texto) {
         if (empty($texto)) return '';
 
-        // Si ya tiene HTML, devolverlo
-        if (preg_match('/<(p|ol|ul|li|div|table|br)\b[^>]*>/i', $texto)) {
-            return $texto;
+        // 1. Primero convertir tablas Markdown
+        $texto = convertirTablasMarkdown($texto);
+
+        // 2. Dividir en partes HTML (tablas) y texto normal
+        $partes = preg_split('/(<div class="table-responsive[^>]*>.*?<\/div>)/s', $texto, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+        $resultado = '';
+        foreach ($partes as $parte) {
+            if (strpos($parte, '<div class="table-responsive') === 0) {
+                // Es una tabla HTML, no modificar
+                $resultado .= $parte;
+            } else {
+                // Es texto, convertir markdown
+                $resultado .= convertirTextoMarkdown($parte);
+            }
         }
 
-        // Separar por líneas y procesar
+        return $resultado;
+    }
+
+    function convertirTablasMarkdown($texto) {
         $lineas = explode("\n", $texto);
-        $html = '';
-        $enLista = false;
-        $tipoLista = '';
+        $enTabla = false;
+        $resultado = [];
+        $tablaHtml = '';
+        $esEncabezado = true;
 
         foreach ($lineas as $linea) {
             $lineaTrim = trim($linea);
 
-            // Saltar líneas vacías
-            if (empty($lineaTrim)) {
-                if ($enLista) {
-                    $html .= "</{$tipoLista}>\n";
-                    $enLista = false;
+            // Detectar linea de tabla (empieza con |)
+            if (preg_match('/^\|(.+)\|$/', $lineaTrim)) {
+                // Ignorar linea separadora (|---|---|)
+                if (preg_match('/^\|[\s\-\:\|]+\|$/', $lineaTrim)) {
+                    $esEncabezado = false;
+                    continue;
                 }
-                continue;
-            }
 
-            // Detectar listas numeradas
-            if (preg_match('/^(\d+)\.\s+(.+)$/', $lineaTrim, $matches)) {
-                if (!$enLista || $tipoLista !== 'ol') {
-                    if ($enLista) $html .= "</{$tipoLista}>\n";
-                    $html .= "<ol>\n";
-                    $enLista = true;
-                    $tipoLista = 'ol';
+                if (!$enTabla) {
+                    $enTabla = true;
+                    $tablaHtml = '<div class="table-responsive mt-3 mb-3"><table class="table table-bordered table-sm" style="font-size: 0.85rem;">';
                 }
-                $contenidoItem = $matches[2];
-                $contenidoItem = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $contenidoItem);
-                $contenidoItem = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $contenidoItem);
-                $html .= "<li>" . htmlspecialchars_decode(htmlspecialchars($contenidoItem, ENT_QUOTES, 'UTF-8')) . "</li>\n";
-            }
-            // Detectar viñetas
-            elseif (preg_match('/^[-*•]\s+(.+)$/', $lineaTrim, $matches)) {
-                if (!$enLista || $tipoLista !== 'ul') {
-                    if ($enLista) $html .= "</{$tipoLista}>\n";
-                    $html .= "<ul>\n";
-                    $enLista = true;
-                    $tipoLista = 'ul';
+
+                // Extraer celdas
+                $celdas = array_map('trim', explode('|', trim($lineaTrim, '|')));
+                $tag = $esEncabezado ? 'th' : 'td';
+                $estilo = $esEncabezado ? ' style="background-color: #0d6efd; color: white; font-weight: 600;"' : '';
+
+                $tablaHtml .= '<tr>';
+                foreach ($celdas as $celda) {
+                    // Convertir negritas dentro de celdas
+                    $celdaHtml = htmlspecialchars($celda);
+                    $celdaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $celdaHtml);
+                    $celdaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $celdaHtml);
+                    $tablaHtml .= "<{$tag}{$estilo}>" . $celdaHtml . "</{$tag}>";
                 }
-                $contenidoItem = $matches[1];
-                $contenidoItem = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $contenidoItem);
-                $contenidoItem = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $contenidoItem);
-                $html .= "<li>" . htmlspecialchars_decode(htmlspecialchars($contenidoItem, ENT_QUOTES, 'UTF-8')) . "</li>\n";
-            }
-            // Párrafo normal
-            else {
-                if ($enLista) {
-                    $html .= "</{$tipoLista}>\n";
-                    $enLista = false;
+                $tablaHtml .= '</tr>';
+            } else {
+                // Si estábamos en una tabla, cerrarla
+                if ($enTabla) {
+                    $tablaHtml .= '</table></div>';
+                    $resultado[] = $tablaHtml;
+                    $tablaHtml = '';
+                    $enTabla = false;
+                    $esEncabezado = true;
                 }
-                $lineaProcesada = $lineaTrim;
-                $lineaProcesada = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $lineaProcesada);
-                $lineaProcesada = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $lineaProcesada);
-                $html .= "<p>" . htmlspecialchars_decode(htmlspecialchars($lineaProcesada, ENT_QUOTES, 'UTF-8')) . "</p>\n";
+                $resultado[] = $linea;
             }
         }
 
+        // Cerrar tabla si terminó en una
+        if ($enTabla) {
+            $tablaHtml .= '</table></div>';
+            $resultado[] = $tablaHtml;
+        }
+
+        return implode("\n", $resultado);
+    }
+
+    function convertirTextoMarkdown($texto) {
+        // Escapar HTML primero (pero preservar saltos de linea)
+        $lineas = explode("\n", $texto);
+        $resultado = [];
+        $enLista = false;
+        $listaHtml = '';
+
+        foreach ($lineas as $linea) {
+            $lineaTrim = trim($linea);
+
+            // Detectar items de lista (- item o * item o numero. item)
+            if (preg_match('/^[\-\*]\s+(.+)$/', $lineaTrim, $matches) ||
+                preg_match('/^\d+\.\s+(.+)$/', $lineaTrim, $matches)) {
+
+                if (!$enLista) {
+                    $enLista = true;
+                    $listaHtml = '<ul class="mb-3">';
+                }
+
+                $itemTexto = htmlspecialchars($matches[1]);
+                // Convertir negritas y cursivas en el item
+                $itemTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $itemTexto);
+                $itemTexto = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $itemTexto);
+                $listaHtml .= '<li>' . $itemTexto . '</li>';
+
+            } else {
+                // Si estábamos en lista, cerrarla
+                if ($enLista) {
+                    $listaHtml .= '</ul>';
+                    $resultado[] = $listaHtml;
+                    $listaHtml = '';
+                    $enLista = false;
+                }
+
+                // Línea normal
+                if (!empty($lineaTrim)) {
+                    $lineaHtml = htmlspecialchars($linea);
+
+                    // Convertir encabezados markdown (## Titulo)
+                    if (preg_match('/^#{1,6}\s+(.+)$/', $lineaTrim, $matches)) {
+                        $nivel = strlen(preg_replace('/[^#]/', '', $lineaTrim));
+                        $tituloTexto = htmlspecialchars(trim($matches[1]));
+                        $tituloTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $tituloTexto);
+                        $resultado[] = "<h{$nivel} class='mt-3 mb-2'>{$tituloTexto}</h{$nivel}>";
+                        continue;
+                    }
+
+                    // Convertir **negrita** y *cursiva*
+                    $lineaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $lineaHtml);
+                    $lineaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $lineaHtml);
+
+                    $resultado[] = $lineaHtml;
+                } else {
+                    $resultado[] = '<br>';
+                }
+            }
+        }
+
+        // Cerrar lista si terminó en una
         if ($enLista) {
-            $html .= "</{$tipoLista}>\n";
+            $listaHtml .= '</ul>';
+            $resultado[] = $listaHtml;
+        }
+
+        // Unir con saltos de línea HTML
+        $html = '';
+        foreach ($resultado as $i => $item) {
+            if (strpos($item, '<ul') === 0 || strpos($item, '<h') === 0 ||
+                strpos($item, '<div') === 0 || strpos($item, '<br') === 0) {
+                $html .= $item;
+            } else {
+                // Es texto normal, agregar <br> si no es el último
+                $html .= $item;
+                if ($i < count($resultado) - 1 && !empty(trim($item))) {
+                    $nextItem = $resultado[$i + 1] ?? '';
+                    if (strpos($nextItem, '<ul') !== 0 && strpos($nextItem, '<h') !== 0 &&
+                        strpos($nextItem, '<div') !== 0 && strpos($nextItem, '<br') !== 0) {
+                        $html .= '<br>';
+                    }
+                }
+            }
         }
 
         return $html;
@@ -237,6 +336,77 @@ if (!function_exists('convertirMarkdownAHtml')) {
             padding: 15px;
             margin-bottom: 25px;
         }
+
+        .seccion {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .tabla-cronograma {
+            font-size: 0.85rem;
+        }
+
+        .tabla-cronograma th {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: 600;
+        }
+
+        .firma-section {
+            margin-top: 40px;
+            padding-top: 0;
+        }
+
+        .firma-box {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .firma-linea {
+            border-top: 1px solid #333;
+            width: 250px;
+            margin: 40px auto 10px auto;
+        }
+
+        .tabla-firmas td {
+            vertical-align: top;
+            min-height: 120px;
+        }
+
+        .historial-version {
+            border-left: 3px solid #0d6efd;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+
+        .historial-version.vigente {
+            border-left-color: #198754;
+        }
+
+        .historial-version.obsoleto {
+            border-left-color: #6c757d;
+            opacity: 0.7;
+        }
+
+        .btn-aprobar {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+
+        .btn-aprobar:hover {
+            background: linear-gradient(135deg, #218838 0%, #1aa179 100%);
+        }
+
+        @media print {
+            .firma-section {
+                page-break-inside: avoid;
+            }
+            .seccion:last-of-type {
+                page-break-inside: avoid;
+            }
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -245,7 +415,7 @@ if (!function_exists('convertirMarkdownAHtml')) {
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <a href="<?= base_url('generador-ia/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
+                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
                         <i class="bi bi-arrow-left me-1"></i>Volver
                     </a>
                     <span class="ms-3">
@@ -263,7 +433,7 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2">
                         <i class="bi bi-file-earmark-word me-1"></i>Word
                     </a>
-                    <?php if (in_array($documento['estado'] ?? '', ['aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                    <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
                         <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
                         </a>
@@ -271,6 +441,11 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     <?php if (($documento['estado'] ?? '') === 'firmado'): ?>
                         <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-success btn-sm me-2">
                             <i class="bi bi-patch-check me-1"></i>Ver Firmas
+                        </a>
+                    <?php endif; ?>
+                    <?php if (($documento['estado'] ?? '') === 'pendiente_firma'): ?>
+                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-warning btn-sm me-2">
+                            <i class="bi bi-clock-history me-1"></i>Estado Firmas
                         </a>
                     <?php endif; ?>
                 </div>
@@ -402,93 +577,269 @@ if (!function_exists('convertirMarkdownAHtml')) {
                 ]) ?>
             <?php endforeach; ?>
 
-            <!-- Control de Cambios -->
-            <?php if (!empty($versiones)): ?>
-            <div class="seccion-titulo mt-4">
-                <i class="bi bi-clock-history me-2"></i>CONTROL DE CAMBIOS
-            </div>
-            <div class="table-responsive">
-                <table class="table table-bordered tabla-codigos">
-                    <thead style="background-color: #0d6efd; color: white;">
-                        <tr>
-                            <th style="width: 60px;">Versión</th>
-                            <th style="width: 90px;">Fecha</th>
-                            <th>Descripción del Cambio</th>
-                            <th style="width: 120px;">Elaboró</th>
-                            <th style="width: 120px;">Aprobó</th>
+            <!-- Control de Cambios (SIEMPRE visible) -->
+            <div class="seccion" style="page-break-inside: avoid; margin-top: 40px;">
+                <div class="seccion-titulo" style="background: linear-gradient(90deg, #0d6efd, #6610f2); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
+                    <i class="bi bi-journal-text me-2"></i>CONTROL DE CAMBIOS
+                </div>
+                <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                            <th style="width: 100px; text-align: center; font-weight: 600; color: #495057; border-top: none;">Versión</th>
+                            <th style="font-weight: 600; color: #495057; border-top: none;">Descripción del Cambio</th>
+                            <th style="width: 130px; text-align: center; font-weight: 600; color: #495057; border-top: none;">Fecha</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($versiones as $v): ?>
-                        <tr>
-                            <td class="text-center"><?= str_pad($v['numero_version'], 3, '0', STR_PAD_LEFT) ?></td>
-                            <td class="text-center"><?= date('d/m/Y', strtotime($v['fecha_autorizacion'])) ?></td>
-                            <td><?= esc($v['descripcion_cambio']) ?></td>
-                            <td><?= esc($v['responsable_elaboracion']) ?></td>
-                            <td><?= esc($v['responsable_aprobacion']) ?></td>
-                        </tr>
-                        <?php endforeach; ?>
+                        <?php if (!empty($versiones)): ?>
+                            <?php foreach ($versiones as $idx => $v): ?>
+                            <tr style="<?= $idx % 2 === 0 ? 'background-color: #fff;' : 'background-color: #f8f9fa;' ?>">
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <span style="display: inline-block; background: #0d6efd; color: white; padding: 3px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;">
+                                        <?= esc($v['version_texto'] ?? str_pad($v['numero_version'], 3, '0', STR_PAD_LEFT)) ?>
+                                    </span>
+                                </td>
+                                <td style="vertical-align: middle;"><?= esc($v['descripcion_cambio']) ?></td>
+                                <td style="text-align: center; vertical-align: middle; font-weight: 500;"><?= date('d/m/Y', strtotime($v['fecha_autorizacion'])) ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <span style="display: inline-block; background: #0d6efd; color: white; padding: 3px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;">
+                                        1.0
+                                    </span>
+                                </td>
+                                <td style="vertical-align: middle;">Elaboración inicial del documento</td>
+                                <td style="text-align: center; vertical-align: middle; font-weight: 500;"><?= date('d/m/Y', strtotime($documento['created_at'] ?? 'now')) ?></td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-            <?php endif; ?>
 
-            <!-- Sección de Firmas usando componente reutilizable -->
+            <!-- ============================================== -->
+            <!-- SECCIÓN: FIRMAS - Según configuración del contexto -->
+            <!-- Si requiere_delegado_sst: Consultor + Delegado SST + Rep. Legal -->
+            <!-- Si 7 estándares sin delegado: Solo Consultor + Rep. Legal -->
+            <!-- Si 21+ estándares sin delegado: Consultor + Vigía/COPASST + Rep. Legal -->
+            <!-- ============================================== -->
             <?php
-            // Determinar firmantes según configuración
-            $firmantesArr = $firmantesDefinidos ?? [];
             $estandares = $contexto['estandares_aplicables'] ?? 60;
             $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
 
-            // Construir array de firmantes para el componente
-            $firmantesParaComponente = [];
+            // Determinar si son solo 2 firmantes (7 estándares SIN delegado)
+            $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
 
-            // Si hay firmantes definidos específicamente para este tipo
-            if (!empty($firmantesArr) && is_array($firmantesArr)) {
-                foreach ($firmantesArr as $tipo) {
-                    switch ($tipo) {
-                        case 'responsable_sst':
-                            $firmantesParaComponente[] = [
-                                'tipo' => 'responsable_sst',
-                                'columna_encabezado' => 'Elaboró / Responsable del SG-SST',
-                                'nombre' => $consultor['nombre_consultor'] ?? '',
-                                'cargo' => 'Responsable del SG-SST',
-                                'licencia' => $consultor['numero_licencia'] ?? '',
-                                'mostrar_licencia' => true,
-                                'firma_archivo' => $consultor['firma_consultor'] ?? null
-                            ];
-                            break;
-                        case 'delegado_sst':
-                            $firmantesParaComponente[] = [
-                                'tipo' => 'delegado_sst',
-                                'columna_encabezado' => 'Revisó / Delegado SST',
-                                'nombre' => $contexto['delegado_sst_nombre'] ?? '',
-                                'cargo' => $contexto['delegado_sst_cargo'] ?? 'Delegado SST',
-                                'firma_imagen' => $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'] ?? null
-                            ];
-                            break;
-                        case 'representante_legal':
-                            $firmantesParaComponente[] = [
-                                'tipo' => 'representante_legal',
-                                'columna_encabezado' => 'Aprobó / Representante Legal',
-                                'nombre' => $contexto['representante_legal_nombre'] ?? $cliente['nombre_rep_legal'] ?? '',
-                                'cargo' => 'Representante Legal',
-                                'firma_imagen' => $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'] ?? null
-                            ];
-                            break;
-                    }
-                }
-            }
+            // Datos del Consultor desde tbl_consultor
+            $consultorNombre = $consultor['nombre_consultor'] ?? '';
+            $consultorCargo = 'Responsable del SG-SST';
+            $consultorLicencia = $consultor['numero_licencia'] ?? '';
 
-            // Renderizar componente de firmas
-            if (!empty($firmantesParaComponente)):
-                echo view('documentos_sst/_components/firmas_documento', [
-                    'firmantes' => $firmantesParaComponente,
-                    'titulo' => 'FIRMAS DE APROBACIÓN',
-                    'formato' => 'web'
-                ]);
-            endif;
+            // Datos del Delegado SST (si aplica)
+            $delegadoNombre = $contexto['delegado_sst_nombre'] ?? '';
+            $delegadoCargo = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
+
+            // Datos del Representante Legal - primero del contexto, luego del cliente
+            $repLegalNombre = $contexto['representante_legal_nombre'] ?? $cliente['nombre_rep_legal'] ?? $cliente['representante_legal'] ?? '';
+            $repLegalCargo = 'Representante Legal';
             ?>
+
+            <div class="firma-section" style="margin-top: 40px; page-break-inside: avoid;">
+                <div class="seccion-titulo" style="background: linear-gradient(90deg, #198754, #20c997); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
+                    <i class="bi bi-pen me-2"></i>FIRMAS DE APROBACIÓN
+                </div>
+
+                <?php
+                // Firma del consultor
+                $firmaConsultor = $consultor['firma_consultor'] ?? '';
+                ?>
+
+                <?php if ($esSoloDosFirmantes): ?>
+                <!-- ========== 7 ESTÁNDARES SIN DELEGADO: Solo 2 firmantes ========== -->
+                <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                            <th style="width: 50%; text-align: center; font-weight: 600; color: #495057; border-top: none;">
+                                <i class="bi bi-person-badge me-1"></i>Elaboró / Responsable del SG-SST
+                            </th>
+                            <th style="width: 50%; text-align: center; font-weight: 600; color: #495057; border-top: none;">
+                                <i class="bi bi-person-check me-1"></i>Aprobó / Representante Legal
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <!-- RESPONSABLE SG-SST -->
+                            <td style="vertical-align: top; padding: 20px; height: 180px; position: relative;">
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #495057;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px; padding-bottom: 2px;">
+                                        <?= !empty($consultorNombre) ? esc($consultorNombre) : '' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #495057;">Cargo:</strong>
+                                    <span><?= esc($consultorCargo) ?></span>
+                                </div>
+                                <?php if (!empty($consultorLicencia)): ?>
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #495057;">Licencia SST:</strong>
+                                    <span><?= esc($consultorLicencia) ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <!-- Firma posicionada al fondo -->
+                                <div style="position: absolute; bottom: 15px; left: 20px; right: 20px; text-align: center;">
+                                    <?php if (!empty($firmaConsultor)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" alt="Firma Responsable SST" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 80%; margin: 0 auto; padding-top: 5px;">
+                                        <small style="color: #666;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- REPRESENTANTE LEGAL -->
+                            <td style="vertical-align: top; padding: 20px; height: 180px; position: relative;">
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #495057;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px; padding-bottom: 2px;">
+                                        <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #495057;">Cargo:</strong>
+                                    <span><?= esc($repLegalCargo) ?></span>
+                                </div>
+                                <!-- Firma posicionada al fondo -->
+                                <div style="position: absolute; bottom: 15px; left: 20px; right: 20px; text-align: center;">
+                                    <?php
+                                    $firmaRepLegal2col = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+                                    if ($firmaRepLegal2col && !empty($firmaRepLegal2col['evidencia']['firma_imagen'])):
+                                    ?>
+                                        <img src="<?= $firmaRepLegal2col['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 80%; margin: 0 auto; padding-top: 5px;">
+                                        <small style="color: #666;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <?php else: ?>
+                <!-- ========== 3 FIRMANTES: Delegado SST o Vigía/COPASST ========== -->
+                <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                            <th style="width: 33.33%; text-align: center; font-weight: 600; color: #495057; border-top: none;">
+                                <i class="bi bi-person-badge me-1"></i>Elaboró
+                            </th>
+                            <th style="width: 33.33%; text-align: center; font-weight: 600; color: #495057; border-top: none;">
+                                <?php if ($requiereDelegado): ?>
+                                <i class="bi bi-shield-check me-1"></i>Revisó / Delegado SST
+                                <?php else: ?>
+                                <i class="bi bi-people me-1"></i>Revisó / <?= $estandares <= 21 ? 'Vigía SST' : 'COPASST' ?>
+                                <?php endif; ?>
+                            </th>
+                            <th style="width: 33.33%; text-align: center; font-weight: 600; color: #495057; border-top: none;">
+                                <i class="bi bi-person-check me-1"></i>Aprobó
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <!-- RESPONSABLE SG-SST / ELABORÓ -->
+                            <td style="vertical-align: top; padding: 15px; height: 160px; position: relative;">
+                                <div style="margin-bottom: 6px;">
+                                    <strong style="color: #495057; font-size: 0.8rem;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 120px; padding-bottom: 2px; font-size: 0.85rem;">
+                                        <?= !empty($consultorNombre) ? esc($consultorNombre) : '' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 6px;">
+                                    <strong style="color: #495057; font-size: 0.8rem;">Cargo:</strong>
+                                    <span style="font-size: 0.85rem;"><?= esc($consultorCargo) ?></span>
+                                </div>
+                                <!-- Firma posicionada al fondo -->
+                                <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
+                                    <?php if (!empty($firmaConsultor)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" alt="Firma Responsable SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
+                                        <small style="color: #666; font-size: 0.7rem;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- DELEGADO SST o COPASST / REVISÓ -->
+                            <td style="vertical-align: top; padding: 15px; height: 160px; position: relative;">
+                                <div style="margin-bottom: 6px;">
+                                    <strong style="color: #495057; font-size: 0.8rem;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 120px; padding-bottom: 2px; font-size: 0.85rem;">
+                                        <?php if ($requiereDelegado): ?>
+                                            <?= !empty($delegadoNombre) ? esc($delegadoNombre) : '' ?>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 6px;">
+                                    <strong style="color: #495057; font-size: 0.8rem;">Cargo:</strong>
+                                    <span style="font-size: 0.85rem;">
+                                        <?php if ($requiereDelegado): ?>
+                                            <?= esc($delegadoCargo) ?>
+                                        <?php else: ?>
+                                            <?= $estandares <= 21 ? 'Vigía de SST' : 'COPASST' ?>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <!-- Firma posicionada al fondo -->
+                                <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
+                                    <?php
+                                    $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+                                    if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])):
+                                    ?>
+                                        <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
+                                        <small style="color: #666; font-size: 0.7rem;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- REPRESENTANTE LEGAL / APROBÓ -->
+                            <td style="vertical-align: top; padding: 15px; height: 160px; position: relative;">
+                                <div style="margin-bottom: 6px;">
+                                    <strong style="color: #495057; font-size: 0.8rem;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 120px; padding-bottom: 2px; font-size: 0.85rem;">
+                                        <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 6px;">
+                                    <strong style="color: #495057; font-size: 0.8rem;">Cargo:</strong>
+                                    <span style="font-size: 0.85rem;"><?= esc($repLegalCargo) ?></span>
+                                </div>
+                                <!-- Firma posicionada al fondo -->
+                                <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
+                                    <?php
+                                    $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+                                    if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])):
+                                    ?>
+                                        <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
+                                        <small style="color: #666; font-size: 0.7rem;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <?php endif; ?>
+            </div>
+
+            <!-- Pie de documento -->
+            <div class="text-center text-muted mt-4 pt-3 border-top" style="font-size: 0.75rem;">
+                <p class="mb-1">Documento generado el <?= date('d/m/Y') ?> - Sistema de Gestión SST</p>
+                <p class="mb-0"><?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente'] ?? 'N/A') ?></p>
+            </div>
 
         </div>
     </div>
@@ -498,39 +849,119 @@ if (!function_exists('convertirMarkdownAHtml')) {
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-clock-history me-2"></i>Historial de Versiones
-                    </h5>
+                    <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i>Historial de Versiones</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <?php if (!empty($versiones)): ?>
-                        <?php foreach ($versiones as $v): ?>
-                        <div class="historial-version <?= $v['estado_version'] === 'vigente' ? 'vigente' : 'obsoleto' ?>">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <strong>Versión <?= $v['numero_version'] ?></strong>
-                                    <span class="badge bg-<?= $v['estado_version'] === 'vigente' ? 'success' : 'secondary' ?> ms-2">
-                                        <?= ucfirst($v['estado_version']) ?>
-                                    </span>
-                                </div>
-                                <small class="text-muted"><?= date('d/m/Y', strtotime($v['fecha_autorizacion'])) ?></small>
-                            </div>
-                            <p class="mb-1 mt-2"><?= esc($v['descripcion_cambio']) ?></p>
-                            <small class="text-muted">
-                                Elaboró: <?= esc($v['responsable_elaboracion']) ?> |
-                                Aprobó: <?= esc($v['responsable_aprobacion']) ?>
-                            </small>
+                    <div id="contenedorHistorial">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 text-muted">Cargando historial...</p>
                         </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <p class="text-muted">No hay historial de versiones disponible.</p>
-                    <?php endif; ?>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const idDocumento = <?= $documento['id_documento'] ?>;
+
+        // Cargar historial cuando se abre el modal
+        document.getElementById('modalHistorialVersiones')?.addEventListener('show.bs.modal', function() {
+            const contenedor = document.getElementById('contenedorHistorial');
+
+            fetch('<?= base_url('documentos-sst/historial-versiones/') ?>' + idDocumento)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.versiones.length > 0) {
+                    let html = '<div class="table-responsive"><table class="table table-hover">';
+                    html += '<thead><tr><th>Versión</th><th>Tipo</th><th>Descripción</th><th>Fecha</th><th>Autorizado por</th><th>Acciones</th></tr></thead><tbody>';
+
+                    data.versiones.forEach(v => {
+                        const fecha = new Date(v.fecha_autorizacion).toLocaleDateString('es-CO', {
+                            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        });
+                        const estadoBadge = v.estado === 'vigente'
+                            ? '<span class="badge bg-success">Vigente</span>'
+                            : '<span class="badge bg-secondary">Obsoleto</span>';
+                        const tipoBadge = v.tipo_cambio === 'mayor'
+                            ? '<span class="badge bg-danger">Mayor</span>'
+                            : '<span class="badge bg-info">Menor</span>';
+
+                        html += `<tr class="${v.estado === 'obsoleto' ? 'table-secondary' : ''}">
+                            <td><strong>v${v.version_texto}</strong> ${estadoBadge}</td>
+                            <td>${tipoBadge}</td>
+                            <td>${v.descripcion_cambio}</td>
+                            <td><small>${fecha}</small></td>
+                            <td>${v.autorizado_por || 'N/A'}</td>
+                            <td>
+                                <a href="<?= base_url('documentos-sst/descargar-version-pdf/') ?>${v.id_version}"
+                                   class="btn btn-sm btn-outline-danger" title="Descargar PDF de esta versión">
+                                    <i class="bi bi-file-pdf"></i>
+                                </a>
+                                ${v.estado === 'obsoleto' ? `
+                                <button type="button" class="btn btn-sm btn-outline-warning btn-restaurar"
+                                        data-id="${v.id_version}" title="Restaurar esta versión">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>` : ''}
+                            </td>
+                        </tr>`;
+                    });
+
+                    html += '</tbody></table></div>';
+                    contenedor.innerHTML = html;
+
+                    // Agregar eventos a botones de restaurar
+                    contenedor.querySelectorAll('.btn-restaurar').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            if (confirm('¿Restaurar esta versión? El documento actual pasará a estado borrador.')) {
+                                restaurarVersion(this.dataset.id);
+                            }
+                        });
+                    });
+                } else {
+                    contenedor.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <p class="mt-2 text-muted">No hay versiones registradas aún.<br>
+                            Apruebe el documento para crear la primera versión.</p>
+                        </div>`;
+                }
+            })
+            .catch(error => {
+                contenedor.innerHTML = '<div class="alert alert-danger">Error al cargar historial</div>';
+            });
+        });
+
+        // Función para restaurar versión
+        function restaurarVersion(idVersion) {
+            const formData = new FormData();
+            formData.append('id_version', idVersion);
+
+            fetch('<?= base_url('documentos-sst/restaurar-version') ?>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error de conexión');
+            });
+        }
+    });
+    </script>
 </body>
 </html>

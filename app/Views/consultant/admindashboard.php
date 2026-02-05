@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <style>
         :root {
             --primary-dark: #1c2437;
@@ -680,6 +683,148 @@
                 </div>
             </div>
 
+            <!-- Módulo de Comités y Actas -->
+            <div class="mb-5">
+                <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
+                    <i class="fas fa-users me-2"></i>Gestión de Comités y Actas
+                </h4>
+                <div class="row justify-content-center">
+                    <!-- Card 1: Gestión de Actas -->
+                    <div class="col-lg-5 col-md-6 mb-3">
+                        <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-body p-4" style="background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);">
+                                <h5 class="text-white text-center mb-3">
+                                    <i class="fas fa-clipboard-list me-2"></i>Actas de Reunión
+                                </h5>
+                                <div class="row align-items-center">
+                                    <div class="col-12 mb-3">
+                                        <label class="text-white fw-bold mb-2">
+                                            <i class="fas fa-building me-2"></i>Seleccione un Cliente
+                                        </label>
+                                        <select id="selectClienteActas" class="form-select" style="width: 100%;">
+                                            <option value="">-- Buscar cliente --</option>
+                                            <?php foreach ($clientes ?? [] as $cliente): ?>
+                                                <option value="<?= esc($cliente['id_cliente']) ?>">
+                                                    <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button" id="btnIrActas" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
+                                            <i class="fas fa-clipboard-list me-2"></i>Ir a Gestión de Actas
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card 2: Conformación de Comités (Elecciones) -->
+                    <div class="col-lg-5 col-md-6 mb-3">
+                        <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-body p-4" style="background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);">
+                                <h5 class="text-white text-center mb-3">
+                                    <i class="fas fa-vote-yea me-2"></i>Conformación de Comités
+                                </h5>
+                                <div class="row align-items-center">
+                                    <div class="col-12 mb-3">
+                                        <label class="text-white fw-bold mb-2">
+                                            <i class="fas fa-building me-2"></i>Seleccione un Cliente
+                                        </label>
+                                        <select id="selectClienteComites" class="form-select" style="width: 100%;">
+                                            <option value="">-- Buscar cliente --</option>
+                                            <?php foreach ($clientes ?? [] as $cliente): ?>
+                                                <option value="<?= esc($cliente['id_cliente']) ?>">
+                                                    <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button" id="btnIrComites" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
+                                            <i class="fas fa-vote-yea me-2"></i>Ir a Conformación
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="text-white-50 d-block text-center mt-2">
+                                    COPASST, COCOLAB, Brigada, Vigía
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fila 2: Acciones Correctivas e Indicadores SST -->
+                <div class="row justify-content-center mt-3">
+                    <!-- Card: Acciones Correctivas -->
+                    <div class="col-lg-5 col-md-6 mb-3">
+                        <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-body p-4" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                                <h5 class="text-white text-center mb-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Acciones Correctivas
+                                </h5>
+                                <div class="row align-items-center">
+                                    <div class="col-12 mb-3">
+                                        <label class="text-white fw-bold mb-2">
+                                            <i class="fas fa-building me-2"></i>Seleccione un Cliente
+                                        </label>
+                                        <select id="selectClienteAcciones" class="form-select" style="width: 100%;">
+                                            <option value="">-- Buscar cliente --</option>
+                                            <?php foreach ($clientes ?? [] as $cliente): ?>
+                                                <option value="<?= esc($cliente['id_cliente']) ?>">
+                                                    <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button" id="btnIrAcciones" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
+                                            <i class="fas fa-tasks me-2"></i>Ir a Acciones Correctivas
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="text-white-50 d-block text-center mt-2">
+                                    Numerales 7.1.1, 7.1.2, 7.1.3, 7.1.4
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card: Indicadores SST -->
+                    <div class="col-lg-5 col-md-6 mb-3">
+                        <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-body p-4" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
+                                <h5 class="text-white text-center mb-3">
+                                    <i class="fas fa-chart-line me-2"></i>Indicadores del SG-SST
+                                </h5>
+                                <div class="row align-items-center">
+                                    <div class="col-12 mb-3">
+                                        <label class="text-white fw-bold mb-2">
+                                            <i class="fas fa-building me-2"></i>Seleccione un Cliente
+                                        </label>
+                                        <select id="selectClienteIndicadores" class="form-select" style="width: 100%;">
+                                            <option value="">-- Buscar cliente --</option>
+                                            <?php foreach ($clientes ?? [] as $cliente): ?>
+                                                <option value="<?= esc($cliente['id_cliente']) ?>">
+                                                    <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button" id="btnIrIndicadores" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
+                                            <i class="fas fa-chart-line me-2"></i>Ir a Indicadores SST
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="text-white-50 d-block text-center mt-2">
+                                    Estructura, Proceso y Resultado
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Card contenedor de tabla -->
             <div class="table-card-custom">
                 <div class="d-flex align-items-center mb-4">
@@ -864,6 +1009,104 @@
         });
     </script>
 
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inicializar Select2 para selector de clientes
+            $('#selectClienteActas').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Buscar cliente por nombre o NIT --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Habilitar/deshabilitar botón según selección
+            $('#selectClienteActas').on('change', function() {
+                var clienteId = $(this).val();
+                if (clienteId) {
+                    $('#btnIrActas').prop('disabled', false);
+                } else {
+                    $('#btnIrActas').prop('disabled', true);
+                }
+            });
+
+            // Abrir página de actas en nueva pestaña
+            $('#btnIrActas').on('click', function() {
+                var clienteId = $('#selectClienteActas').val();
+                if (clienteId) {
+                    window.open('<?= base_url('actas/') ?>' + clienteId, '_blank');
+                }
+            });
+
+            // === SELECTOR DE COMITÉS ===
+            // Inicializar Select2 para selector de clientes (Comités)
+            $('#selectClienteComites').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Buscar cliente por nombre o NIT --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Habilitar/deshabilitar botón según selección
+            $('#selectClienteComites').on('change', function() {
+                var clienteId = $(this).val();
+                if (clienteId) {
+                    $('#btnIrComites').prop('disabled', false);
+                } else {
+                    $('#btnIrComites').prop('disabled', true);
+                }
+            });
+
+            // Abrir página de comités en nueva pestaña
+            $('#btnIrComites').on('click', function() {
+                var clienteId = $('#selectClienteComites').val();
+                if (clienteId) {
+                    window.open('<?= base_url('comites-elecciones/') ?>' + clienteId, '_blank');
+                }
+            });
+
+            // === SELECTOR DE ACCIONES CORRECTIVAS ===
+            $('#selectClienteAcciones').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Buscar cliente por nombre o NIT --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            $('#selectClienteAcciones').on('change', function() {
+                var clienteId = $(this).val();
+                $('#btnIrAcciones').prop('disabled', !clienteId);
+            });
+
+            $('#btnIrAcciones').on('click', function() {
+                var clienteId = $('#selectClienteAcciones').val();
+                if (clienteId) {
+                    window.open('<?= base_url('acciones-correctivas/') ?>' + clienteId, '_blank');
+                }
+            });
+
+            // === SELECTOR DE INDICADORES SST ===
+            $('#selectClienteIndicadores').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Buscar cliente por nombre o NIT --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            $('#selectClienteIndicadores').on('change', function() {
+                var clienteId = $(this).val();
+                $('#btnIrIndicadores').prop('disabled', !clienteId);
+            });
+
+            $('#btnIrIndicadores').on('click', function() {
+                var clienteId = $('#selectClienteIndicadores').val();
+                if (clienteId) {
+                    window.open('<?= base_url('indicadores-sst/') ?>' + clienteId, '_blank');
+                }
+            });
+        });
+    </script>
 
 </body>
 

@@ -106,6 +106,12 @@ class IndicadorSSTModel extends Model
             'color' => 'secondary',
             'descripcion' => 'Gestión de peligros y riesgos'
         ],
+        'pyp_salud' => [
+            'nombre' => 'Promoción y Prevención en Salud',
+            'icono' => 'bi-heart-pulse',
+            'color' => 'danger',
+            'descripcion' => 'Indicadores del programa de promoción y prevención en salud (3.1.2)'
+        ],
         'otro' => [
             'nombre' => 'Otros',
             'icono' => 'bi-three-dots',
@@ -396,6 +402,34 @@ class IndicadorSSTModel extends Model
             'porcentaje_medicion' => $total > 0
                 ? round(($medidos / $total) * 100)
                 : 0
+        ];
+    }
+
+    /**
+     * Verificar cumplimiento de indicadores específicos de PyP Salud
+     */
+    public function verificarCumplimientoPyPSalud(int $idCliente): array
+    {
+        $indicadores = $this->where('id_cliente', $idCliente)
+            ->where('activo', 1)
+            ->groupStart()
+                ->where('categoria', 'pyp_salud')
+                ->orWhere('categoria', 'promocion_prevencion')
+                ->orLike('nombre_indicador', 'examen', 'both', true, true)
+                ->orLike('nombre_indicador', 'enfermedad', 'both', true, true)
+                ->orLike('nombre_indicador', 'salud', 'both', true, true)
+                ->orLike('nombre_indicador', 'medico', 'both', true, true)
+                ->orLike('nombre_indicador', 'ausentismo', 'both', true, true)
+            ->groupEnd()
+            ->findAll();
+
+        $total = count($indicadores);
+
+        return [
+            'total' => $total,
+            'completo' => $total >= 3,
+            'minimo' => 3,
+            'indicadores' => $indicadores
         ];
     }
 

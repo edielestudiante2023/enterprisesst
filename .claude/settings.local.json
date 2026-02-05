@@ -68,7 +68,19 @@
       "Bash(del \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\Views\\\\documentacion\\\\plantillas.php\")",
       "Bash(grep:*)",
       "Bash(C:xamppphpphp.exe C:xampphtdocsenterprisesstappSQLactualizar_emails_actas.php)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "Bash(del \"C:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\docs\\\\MODULO_NUMERALES_SGSST\\\\FALLA_PROMPTS_IA_NO_CARGAN.md\")",
+      "Bash(c:xamppmysqlbinmysql.exe -u root empresas_sst -e \"SELECT id_cliente, nombre_cliente, correo_cliente FROM tbl_clientes WHERE nombre_cliente LIKE ''%VALIDACION%'' OR correo_cliente LIKE ''%cycloidtalent%'';\")",
+      "Bash(powershell -Command:*)",
+      "Bash(c:/xampp/mysql/bin/mysql -u root empresas_sst -e \"SELECT COUNT\\(*\\) as total FROM clientes WHERE estado = ''Activo'';\")",
+      "Bash(c:/xampp/mysql/bin/mysql -u root empresas_sst -e \"SHOW TABLES LIKE ''%client%'';\")",
+      "Bash(c:/xampp/mysql/bin/mysql:*)",
+      "Bash(\"C:/xampp/php/php.exe\" \"C:/xampp/htdocs/enterprisesst/app/SQL/ejecutar_en_produccion.php\")",
+      "Bash(find:*)",
+      "Bash(./mysql.exe:*)",
+      "Bash(C:xamppphpphp.exe app/SQL/agregar_programa_promocion_prevencion_salud.php)",
+      "Bash(composer dump-autoload:*)",
+      "Bash(tail:*)"
     ]
   }
 }

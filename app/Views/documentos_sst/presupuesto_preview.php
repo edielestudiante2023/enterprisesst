@@ -179,7 +179,7 @@
                     // Usar estado del documento SST unificado
                     $estadoDoc = $documento['estado'] ?? 'aprobado';
                     ?>
-                    <?php if (in_array($estadoDoc, ['aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                    <?php if (in_array($estadoDoc, ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
                         <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
                         </a>
@@ -319,30 +319,55 @@
                 <div class="row">
                     <?php
                     // Firmas electrónicas del sistema unificado
+                    $firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
                     $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
                     $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+                    // Datos del consultor
+                    $consultorNombre = $consultor['nombre_consultor'] ?? '';
+                    $consultorLicencia = $consultor['numero_licencia'] ?? '';
+                    // Firma física del consultor (del perfil)
+                    $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
                     ?>
-                    <div class="col-md-6">
+                    <!-- ELABORÓ: Consultor SST -->
+                    <div class="col-md-4">
+                        <div class="firma-box">
+                            <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 60px; max-width: 130px;">
+                            <?php elseif (!empty($firmaConsultorFisica)): ?>
+                                <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 60px; max-width: 130px;">
+                            <?php endif; ?>
+                        </div>
+                        <div class="firma-linea text-center">ELABORÓ</div>
+                        <div class="firma-nombre text-center"><?= esc($consultorNombre) ?></div>
+                        <?php if (!empty($consultorLicencia)): ?>
+                        <div class="text-center" style="font-size: 0.75rem; color: #666;">Lic. SST: <?= esc($consultorLicencia) ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <!-- APROBÓ: Representante Legal -->
+                    <div class="col-md-4">
                         <div class="firma-box">
                             <?php if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])): ?>
-                                <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 60px; max-width: 150px;">
+                                <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 60px; max-width: 130px;">
                             <?php elseif (!empty($presupuesto['firma_imagen'])): ?>
                                 <img src="<?= base_url('uploads/' . $presupuesto['firma_imagen']) ?>" alt="Firma">
                             <?php endif; ?>
                         </div>
-                        <div class="firma-linea text-center">REPRESENTANTE LEGAL</div>
+                        <div class="firma-linea text-center">APROBÓ</div>
                         <div class="firma-nombre text-center"><?= esc($contexto['representante_legal_nombre'] ?? '') ?></div>
+                        <div class="text-center" style="font-size: 0.75rem; color: #666;">Representante Legal</div>
                     </div>
-                    <div class="col-md-6">
+                    <!-- REVISÓ: Responsable SG-SST -->
+                    <div class="col-md-4">
                         <div class="firma-box">
                             <?php if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])): ?>
-                                <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 60px; max-width: 150px;">
+                                <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 60px; max-width: 130px;">
                             <?php elseif (!empty($presupuesto['firma_delegado_imagen'])): ?>
                                 <img src="<?= base_url('uploads/' . $presupuesto['firma_delegado_imagen']) ?>" alt="Firma">
                             <?php endif; ?>
                         </div>
-                        <div class="firma-linea text-center">RESPONSABLE DEL SG-SST</div>
+                        <div class="firma-linea text-center">REVISÓ</div>
                         <div class="firma-nombre text-center"><?= esc($contexto['responsable_sst_nombre'] ?? $contexto['delegado_sst_nombre'] ?? '') ?></div>
+                        <div class="text-center" style="font-size: 0.75rem; color: #666;">Responsable SG-SST</div>
                     </div>
                 </div>
             </div>

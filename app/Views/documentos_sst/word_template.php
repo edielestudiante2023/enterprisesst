@@ -336,6 +336,18 @@ if (!function_exists('renderizarTablaHtml')) {
     // Determinar si son solo 2 firmantes (7 estándares SIN delegado) - NO aplica para doc responsabilidades rep legal
     $esSoloDosFirmantes = !$esDocResponsabilidadesRepLegal && ($estandares <= 10) && !$requiereDelegado;
 
+    // Firmantes definidos en TIPOS_DOCUMENTO - tiene prioridad sobre lógica de estándares (igual que PDF)
+    $firmantesDefinidosArr = (isset($firmantesDefinidos) && is_array($firmantesDefinidos)) ? $firmantesDefinidos : [];
+    $usaFirmantesDefinidos = !empty($firmantesDefinidosArr);
+
+    // Si tiene firmantes definidos ['representante_legal', 'responsable_sst'], son solo 2 firmantes
+    $esDosFirmantesPorDefinicion = $usaFirmantesDefinidos
+        && in_array('representante_legal', $firmantesDefinidosArr)
+        && in_array('responsable_sst', $firmantesDefinidosArr)
+        && !in_array('delegado_sst', $firmantesDefinidosArr)
+        && !in_array('vigia_sst', $firmantesDefinidosArr)
+        && !in_array('copasst', $firmantesDefinidosArr);
+
     // Datos del Consultor desde tbl_consultor
     $consultorNombre = $consultor['nombre_consultor'] ?? '';
     $consultorCargo = $soloFirmaConsultor ? 'Consultor SST / Responsable del SG-SST' : 'Consultor SST';
@@ -475,7 +487,7 @@ if (!function_exists('renderizarTablaHtml')) {
         </table>
 
         <?php elseif ($firmasRepLegalYSegundo): ?>
-        <!-- RESPONSABILIDADES REP. LEGAL: Rep. Legal + Vigia/Delegado (SIN Consultor) -->
+        <!-- RESPONSABILIDADES REP. LEGAL: 3 firmantes - Elaboró (Consultor) + Aprobó (Rep. Legal) + Revisó (Vigia/Delegado) -->
         <?php
         $segundoFirmante = $contenido['segundo_firmante'] ?? null;
         $segundoNombre = $segundoFirmante['nombre'] ?? $delegadoNombre ?? '';
@@ -485,21 +497,30 @@ if (!function_exists('renderizarTablaHtml')) {
         ?>
         <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
             <tr>
-                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">REPRESENTANTE LEGAL</td>
-                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;"><?= strtoupper(esc($segundoRol)) ?></td>
+                <td width="33%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">ELABORÓ</td>
+                <td width="34%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">APROBÓ</td>
+                <td width="33%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">REVISÓ</td>
             </tr>
             <tr>
-                <!-- REPRESENTANTE LEGAL -->
-                <td style="vertical-align: top; padding: 10px; border: 1px solid #999; font-size: 8pt;">
-                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '_________________' ?></p>
+                <!-- CONSULTOR SST (ELABORÓ) -->
+                <td style="vertical-align: top; padding: 8px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($consultorNombre) ? esc($consultorNombre) : '____________' ?></p>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> Consultor SST</p>
+                    <?php if (!empty($consultorLicencia)): ?>
+                    <p style="margin: 2px 0;"><b>Licencia:</b> <?= esc($consultorLicencia) ?></p>
+                    <?php endif; ?>
+                </td>
+                <!-- REPRESENTANTE LEGAL (APROBÓ) -->
+                <td style="vertical-align: top; padding: 8px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '____________' ?></p>
                     <?php if (!empty($repLegalCedulaWord2)): ?>
                     <p style="margin: 2px 0;"><b>Documento:</b> <?= esc($repLegalCedulaWord2) ?></p>
                     <?php endif; ?>
                     <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($repLegalCargo) ?></p>
                 </td>
-                <!-- VIGIA/DELEGADO SST -->
-                <td style="vertical-align: top; padding: 10px; border: 1px solid #999; font-size: 8pt;">
-                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($segundoNombre) ? esc($segundoNombre) : '_________________' ?></p>
+                <!-- VIGIA/DELEGADO SST (REVISÓ) -->
+                <td style="vertical-align: top; padding: 8px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($segundoNombre) ? esc($segundoNombre) : '____________' ?></p>
                     <?php if (!empty($segundoCedula)): ?>
                     <p style="margin: 2px 0;"><b>Documento:</b> <?= esc($segundoCedula) ?></p>
                     <?php endif; ?>
@@ -508,12 +529,61 @@ if (!function_exists('renderizarTablaHtml')) {
             </tr>
             <tr>
                 <!-- Fila de firmas alineadas -->
-                <td style="padding: 10px; text-align: center; border: 1px solid #999; height: 60px; vertical-align: bottom;">
+                <td style="padding: 8px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 6pt;">Firma</span>
+                    </div>
+                </td>
+                <td style="padding: 8px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 6pt;">Firma</span>
+                    </div>
+                </td>
+                <td style="padding: 8px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 6pt;">Firma</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <?php elseif ($requiereDelegado): ?>
+        <!-- 3 FIRMANTES: Cliente tiene Delegado SST (PRIORIDAD MÁXIMA) -->
+        <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
+            <tr>
+                <td width="33%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Elaboro</td>
+                <td width="34%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Reviso / Delegado SST</td>
+                <td width="33%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Aprobo</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 5px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($consultorNombre) ? esc($consultorNombre) : '____________' ?></p>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> Consultor SST</p>
+                    <?php if (!empty($consultorLicencia)): ?>
+                    <p style="margin: 2px 0;"><b>Licencia:</b> <?= esc($consultorLicencia) ?></p>
+                    <?php endif; ?>
+                </td>
+                <td style="vertical-align: top; padding: 5px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($delegadoNombre) ? esc($delegadoNombre) : '____________' ?></p>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($delegadoCargo) ?></p>
+                </td>
+                <td style="vertical-align: top; padding: 5px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '____________' ?></p>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($repLegalCargo) ?></p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
                     <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
                         <span style="color: #666; font-size: 6pt;">Firma</span>
                     </div>
                 </td>
-                <td style="padding: 10px; text-align: center; border: 1px solid #999; height: 60px; vertical-align: bottom;">
+                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 6pt;">Firma</span>
+                    </div>
+                </td>
+                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
                     <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
                         <span style="color: #666; font-size: 6pt;">Firma</span>
                     </div>
@@ -521,8 +591,42 @@ if (!function_exists('renderizarTablaHtml')) {
             </tr>
         </table>
 
+        <?php elseif ($esDosFirmantesPorDefinicion): ?>
+        <!-- 2 FIRMANTES POR DEFINICIÓN: Responsable SST + Rep Legal (solo si NO hay delegado) -->
+        <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
+            <tr>
+                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Elaboro / Responsable del SG-SST</td>
+                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Aprobo / Representante Legal</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 6px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($consultorNombre) ? esc($consultorNombre) : '_________________' ?></p>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> Responsable del SG-SST</p>
+                    <?php if (!empty($consultorLicencia)): ?>
+                    <p style="margin: 2px 0;"><b>Licencia SST:</b> <?= esc($consultorLicencia) ?></p>
+                    <?php endif; ?>
+                </td>
+                <td style="vertical-align: top; padding: 6px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '_________________' ?></p>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($repLegalCargo) ?></p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 7pt;">Firma</span>
+                    </div>
+                </td>
+                <td style="padding: 6px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 7pt;">Firma</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
         <?php elseif ($esSoloDosFirmantes): ?>
-        <!-- 2 firmantes -->
+        <!-- 2 firmantes (7 estándares sin delegado) -->
         <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
             <tr>
                 <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Elaboro / Consultor SST</td>

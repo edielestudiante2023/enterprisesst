@@ -196,3 +196,121 @@ Comando para Replicar
 Cuando necesites el encabezado Word estándar, solicítalo así:
 
 "Usa el encabezado estándar WORD: tabla 100%, logo 70x45px en celda 80px con bgcolor=#FFFFFF, info 120px, bordes #333, fuente Arial 9pt bold"
+
+---
+
+## 9. PROBLEMA: IMAGEN PNG CON FONDO NEGRO EN WORD
+
+### Síntoma
+
+Las imágenes PNG con transparencia se muestran con **fondo negro** en Word, aunque la celda tenga `bgcolor="#FFFFFF"` y `background-color:#ffffff`.
+
+### Causa Raíz
+
+- Microsoft Word no maneja correctamente la **transparencia alpha** de imágenes PNG embebidas en HTML
+- El canal alpha se interpreta como negro en lugar de transparente
+- Los atributos `bgcolor` y `background-color` de la celda NO afectan al fondo interno de la imagen
+
+### Solución Implementada
+
+Convertir la imagen PNG a una versión con **fondo blanco explícito** usando GD de PHP **antes** de codificarla en base64.
+
+**Método auxiliar en `DocumentosSSTController.php`:**
+
+```php
+/**
+ * Convierte una imagen a base64 con fondo blanco (para evitar fondo negro en Word)
+ */
+private function convertirImagenConFondoBlanco(string $imagePath): string
+{
+    if (!file_exists($imagePath)) {
+        return '';
+    }
+
+    $mime = mime_content_type($imagePath);
+
+    // Si no es PNG, devolver la imagen normal como base64
+    if ($mime !== 'image/png') {
+        $imageData = file_get_contents($imagePath);
+        return 'data:' . $mime . ';base64,' . base64_encode($imageData);
+    }
+
+    // Para PNG, crear una imagen con fondo blanco
+    $imagenOriginal = @imagecreatefrompng($imagePath);
+    if (!$imagenOriginal) {
+        $imageData = file_get_contents($imagePath);
+        return 'data:image/png;base64,' . base64_encode($imageData);
+    }
+
+    $ancho = imagesx($imagenOriginal);
+    $alto = imagesy($imagenOriginal);
+
+    // Crear nueva imagen con fondo blanco
+    $imagenConFondo = imagecreatetruecolor($ancho, $alto);
+    $blanco = imagecolorallocate($imagenConFondo, 255, 255, 255);
+    imagefill($imagenConFondo, 0, 0, $blanco);
+
+    // Preservar transparencia al copiar
+    imagealphablending($imagenConFondo, true);
+    imagesavealpha($imagenConFondo, true);
+
+    // Copiar imagen original sobre el fondo blanco
+    imagecopy($imagenConFondo, $imagenOriginal, 0, 0, 0, 0, $ancho, $alto);
+
+    // Capturar la imagen como PNG en memoria
+    ob_start();
+    imagepng($imagenConFondo);
+    $imageData = ob_get_clean();
+
+    // Liberar memoria
+    imagedestroy($imagenOriginal);
+    imagedestroy($imagenConFondo);
+
+    return 'data:image/png;base64,' . base64_encode($imageData);
+}
+```
+
+### Uso en exportarWord()
+
+**Antes (problema):**
+
+```php
+$logoPath = FCPATH . 'uploads/' . $cliente['logo'];
+if (file_exists($logoPath)) {
+    $logoData = file_get_contents($logoPath);
+    $logoMime = mime_content_type($logoPath);
+    $logoBase64 = 'data:' . $logoMime . ';base64,' . base64_encode($logoData);
+}
+```
+
+**Después (solución):**
+
+```php
+$logoPath = FCPATH . 'uploads/' . $cliente['logo'];
+if (file_exists($logoPath)) {
+    $logoBase64 = $this->convertirImagenConFondoBlanco($logoPath);
+}
+```
+
+### Requisitos
+
+- Extensión GD de PHP habilitada (`php_gd` en XAMPP)
+- Funciones: `imagecreatefrompng()`, `imagecreatetruecolor()`, `imagecopy()`, `imagepng()`
+
+### Aplicar en Otros Controladores
+
+Si otros controladores exportan a Word con logos/imágenes PNG, aplicar la misma solución:
+
+- `ActasController::exportarWord()`
+- `PzpresupuestoSstController::exportarWord()`
+- `ExportacionDocumentoController`
+
+### Resumen
+
+| Aspecto | Detalle |
+|---------|---------|
+| Archivo afectado | `DocumentosSSTController.php` |
+| Método modificado | `exportarWord()` línea ~2280 |
+| Método agregado | `convertirImagenConFondoBlanco()` línea ~3373 |
+| Técnica | GD: crear canvas blanco + copiar imagen encima |
+| Formatos soportados | PNG (procesado), otros (pass-through) |

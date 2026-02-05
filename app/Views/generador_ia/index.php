@@ -27,21 +27,10 @@
 
     <div class="container-fluid py-4">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="<?= base_url('clientes') ?>" target="_blank">Clientes</a></li>
-                        <li class="breadcrumb-item"><a href="<?= base_url('cliente/' . $cliente['id_cliente']) ?>" target="_blank"><?= esc($cliente['nombre_cliente']) ?></a></li>
-                        <li class="breadcrumb-item active">Generador IA</li>
-                    </ol>
-                </nav>
-            </div>
-            <div>
-                <span class="badge bg-<?= $estandares <= 7 ? 'info' : ($estandares <= 21 ? 'warning' : 'danger') ?> fs-6">
-                    <?= $estandares ?> Estandares
-                </span>
-            </div>
+        <div class="d-flex justify-content-end mb-4">
+            <span class="badge bg-<?= $estandares <= 7 ? 'info' : ($estandares <= 21 ? 'warning' : 'danger') ?> fs-6">
+                <?= $estandares ?> Estandares
+            </span>
         </div>
 
         <!-- Alertas -->

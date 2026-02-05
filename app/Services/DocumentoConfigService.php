@@ -298,6 +298,28 @@ class DocumentoConfigService
                     ['numero' => 13, 'nombre' => 'Listado Maestro de Documentos', 'key' => 'listado_maestro'],
                     ['numero' => 14, 'nombre' => 'Disposición Final', 'key' => 'disposicion_final'],
                 ]
+            ],
+            'programa_induccion_reinduccion' => [
+                'nombre' => 'Programa de Inducción y Reinducción en SG-SST',
+                'descripcion' => 'Establece el proceso de inducción y reinducción para todos los trabajadores',
+                'flujo' => 'secciones_ia',
+                'estandar' => '1.2.2',
+                'firmantes' => ['representante_legal', 'responsable_sst'],
+                'secciones' => [
+                    ['numero' => 1, 'nombre' => 'Objetivo', 'key' => 'objetivo'],
+                    ['numero' => 2, 'nombre' => 'Alcance', 'key' => 'alcance'],
+                    ['numero' => 3, 'nombre' => 'Requisitos Generales', 'key' => 'requisitos_generales'],
+                    ['numero' => 4, 'nombre' => 'Contenido: Esquema General', 'key' => 'contenido_esquema'],
+                    ['numero' => 5, 'nombre' => 'Etapa 1: Introducción a la Empresa', 'key' => 'etapa_introduccion'],
+                    ['numero' => 6, 'nombre' => 'Etapa 2: Seguridad y Salud en el Trabajo', 'key' => 'etapa_sst'],
+                    ['numero' => 7, 'nombre' => 'Etapa 3: Relaciones Laborales', 'key' => 'etapa_relaciones'],
+                    ['numero' => 8, 'nombre' => 'Etapa 4: Recorrido de Instalaciones', 'key' => 'etapa_recorrido'],
+                    ['numero' => 9, 'nombre' => 'Etapa 5: Entrenamiento al Cargo', 'key' => 'etapa_entrenamiento'],
+                    ['numero' => 10, 'nombre' => 'Entrega de Memorias', 'key' => 'entrega_memorias'],
+                    ['numero' => 11, 'nombre' => 'Evaluación y Control', 'key' => 'evaluacion_control'],
+                    ['numero' => 12, 'nombre' => 'Indicadores del Programa', 'key' => 'indicadores'],
+                    ['numero' => 13, 'nombre' => 'Cronograma de Actividades', 'key' => 'cronograma'],
+                ]
             ]
         ];
 

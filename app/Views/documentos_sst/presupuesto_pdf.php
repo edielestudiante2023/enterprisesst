@@ -411,23 +411,52 @@
 
         <?php
         // Firmas electrónicas del sistema unificado
+        $firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
         $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
         $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+        // Datos del consultor
+        $consultorNombre = $consultor['nombre_consultor'] ?? '';
+        $consultorLicencia = $consultor['numero_licencia'] ?? '';
+        // Firma física del consultor (del perfil)
+        $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
+        // Para PDF, convertir firma física a base64 si existe
+        $firmaConsultorBase64 = '';
+        if (!empty($firmaConsultorFisica)) {
+            $rutaFirma = FCPATH . 'uploads/' . $firmaConsultorFisica;
+            if (file_exists($rutaFirma)) {
+                $firmaConsultorBase64 = 'data:image/' . pathinfo($rutaFirma, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($rutaFirma));
+            }
+        }
         ?>
 
-        <table class="firmas">
+        <table class="firmas" style="width: 100%;">
             <tr>
-                <td>
+                <!-- ELABORÓ: Consultor SST -->
+                <td style="width: 33.33%;">
+                    <div class="firma-box">
+                        <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                            <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" class="firma-imagen">
+                        <?php elseif (!empty($firmaConsultorBase64)): ?>
+                            <img src="<?= $firmaConsultorBase64 ?>" class="firma-imagen">
+                        <?php endif; ?>
+                    </div>
+                    <div class="firma-linea">ELABORÓ</div>
+                    <div class="firma-nombre"><?= esc($consultorNombre) ?></div>
+                    <?php if (!empty($consultorLicencia)): ?>
+                        <div class="firma-nombre" style="font-size: 7pt;">Lic. SST: <?= esc($consultorLicencia) ?></div>
+                    <?php endif; ?>
+                    <div class="firma-nombre" style="font-size: 7pt; color: #666;">Consultor SST</div>
+                </td>
+                <!-- APROBÓ: Representante Legal -->
+                <td style="width: 33.33%;">
                     <div class="firma-box">
                         <?php if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])): ?>
-                            <!-- Firma electrónica del sistema unificado -->
                             <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" class="firma-imagen">
                         <?php elseif (!empty($presupuesto['firma_imagen'])): ?>
-                            <!-- Firma legacy del presupuesto -->
                             <img src="<?= base_url('uploads/' . $presupuesto['firma_imagen']) ?>" class="firma-imagen">
                         <?php endif; ?>
                     </div>
-                    <div class="firma-linea">REPRESENTANTE LEGAL</div>
+                    <div class="firma-linea">APROBÓ</div>
                     <?php if ($firmaRepLegal): ?>
                         <div class="firma-nombre"><?= esc($firmaRepLegal['solicitud']['firmante_nombre'] ?? $contexto['representante_legal_nombre'] ?? '') ?></div>
                         <?php if (!empty($firmaRepLegal['solicitud']['firmante_documento'])): ?>
@@ -445,18 +474,18 @@
                     <?php else: ?>
                         <div class="firma-nombre"><?= esc($contexto['representante_legal_nombre'] ?? $cliente['representante_legal'] ?? '') ?></div>
                     <?php endif; ?>
+                    <div class="firma-nombre" style="font-size: 7pt; color: #666;">Representante Legal</div>
                 </td>
-                <td>
+                <!-- REVISÓ: Responsable SG-SST -->
+                <td style="width: 33.33%;">
                     <div class="firma-box">
                         <?php if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])): ?>
-                            <!-- Firma electrónica del sistema unificado -->
                             <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" class="firma-imagen">
                         <?php elseif (!empty($presupuesto['firma_delegado_imagen'])): ?>
-                            <!-- Firma legacy del presupuesto -->
                             <img src="<?= base_url('uploads/' . $presupuesto['firma_delegado_imagen']) ?>" class="firma-imagen">
                         <?php endif; ?>
                     </div>
-                    <div class="firma-linea">RESPONSABLE DEL SG-SST</div>
+                    <div class="firma-linea">REVISÓ</div>
                     <?php if ($firmaDelegado): ?>
                         <div class="firma-nombre"><?= esc($firmaDelegado['solicitud']['firmante_nombre'] ?? $contexto['responsable_sst_nombre'] ?? $contexto['delegado_sst_nombre'] ?? '') ?></div>
                         <?php if (!empty($firmaDelegado['solicitud']['firmante_documento'])): ?>
@@ -471,6 +500,7 @@
                     <?php else: ?>
                         <div class="firma-nombre"><?= esc($contexto['responsable_sst_nombre'] ?? $contexto['delegado_sst_nombre'] ?? '') ?></div>
                     <?php endif; ?>
+                    <div class="firma-nombre" style="font-size: 7pt; color: #666;">Responsable SG-SST</div>
                 </td>
             </tr>
         </table>

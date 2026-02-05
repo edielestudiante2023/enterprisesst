@@ -149,7 +149,7 @@
                             </span>
                         </div>
                         <small class="opacity-75">
-                            Documento firmado por el Consultor SST
+                            Elaboró: Consultor SST | Aprobó: Representante Legal
                         </small>
                     </div>
                 </div>
@@ -167,8 +167,8 @@
                         <span class="fw-bold"><?= $anio ?></span>
                     </div>
                     <div class="col-md-4">
-                        <small class="text-muted">Firma:</small>
-                        <span class="fw-bold text-success">Consultor SST (automatica)</span>
+                        <small class="text-muted">Firmas:</small>
+                        <span class="fw-bold text-success">Elaboró + Aprobó</span>
                     </div>
                 </div>
             </div>
@@ -263,56 +263,178 @@
                 </table>
             </div>
 
-            <!-- Seccion de Firma del Consultor -->
+            <!-- Sección de Firmas -->
             <?php
-            $responsableSst = $contenido['responsable_sst'] ?? [];
-            $firmaConsultor = $consultor['firma_consultor'] ?? '';
+            // Datos del Consultor SST (Elaboró)
+            $consultorNombre = $consultor['nombre_consultor'] ?? '';
+            $consultorLicencia = $consultor['numero_licencia'] ?? '';
+            $consultorCedula = $consultor['cedula_consultor'] ?? '';
+            $firmaConsultorImg = $consultor['firma_consultor'] ?? '';
+            $firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+
+            // Datos del Delegado SST (si aplica) - PRIORIDAD MÁXIMA
+            $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
+            $delegadoNombre = $contexto['delegado_sst_nombre'] ?? '';
+            $delegadoCargo = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
+            $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+
+            // Datos del Representante Legal (Aprobó)
+            $repLegalNombre = $contexto['representante_legal_nombre'] ?? $cliente['nombre_rep_legal'] ?? $cliente['representante_legal'] ?? '';
+            $repLegalCedula = $contexto['representante_legal_documento'] ?? $cliente['cedula_rep_legal'] ?? '';
+            $repLegalCargo = $contexto['representante_legal_cargo'] ?? 'Representante Legal';
+            $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
             ?>
 
             <div class="firma-section" style="margin-top: 40px; page-break-inside: avoid;">
                 <div class="seccion-titulo" style="background: linear-gradient(90deg, #198754, #20c997); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
-                    <i class="bi bi-pen me-2"></i>FIRMA DE ACEPTACION
+                    <i class="bi bi-pen me-2"></i>FIRMAS DE APROBACIÓN
                 </div>
 
+                <?php if ($requiereDelegado): ?>
+                <!-- ========== 3 FIRMANTES: Cliente tiene Delegado SST (PRIORIDAD MÁXIMA) ========== -->
                 <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                            <th style="width: 33.33%; text-align: center; padding: 10px;">ELABORÓ</th>
+                            <th style="width: 33.33%; text-align: center; padding: 10px;">REVISÓ / Delegado SST</th>
+                            <th style="width: 33.33%; text-align: center; padding: 10px;">APROBÓ</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <tr>
-                            <td style="vertical-align: top; padding: 25px; height: 200px; position: relative;">
-                                <div class="text-center mb-3">
-                                    <strong style="color: #495057; font-size: 1rem;">RESPONSABLE DEL SG-SST</strong>
-                                </div>
-                                <div style="margin-bottom: 10px;">
-                                    <strong style="color: #495057;">Nombre:</strong>
-                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 300px; padding-bottom: 2px;">
-                                        <?= esc($responsableSst['nombre'] ?? '') ?>
-                                    </span>
-                                </div>
-                                <div style="margin-bottom: 10px;">
-                                    <strong style="color: #495057;">Documento:</strong>
-                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px; padding-bottom: 2px;">
-                                        <?= esc($responsableSst['cedula'] ?? '') ?>
-                                    </span>
-                                </div>
-                                <div style="margin-bottom: 10px;">
-                                    <strong style="color: #495057;">Licencia SST:</strong>
-                                    <span><?= esc($responsableSst['licencia'] ?? '') ?></span>
-                                </div>
-                                <div style="margin-bottom: 10px;">
-                                    <strong style="color: #495057;">Cargo:</strong>
-                                    <span>Consultor SST / Responsable del SG-SST</span>
-                                </div>
-                                <div style="text-align: center; margin-top: 30px;">
-                                    <?php if (!empty($firmaConsultor)): ?>
-                                        <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" alt="Firma Consultor" style="max-height: 70px; max-width: 200px; margin-bottom: 5px;">
+                            <!-- ELABORÓ: Consultor SST -->
+                            <td style="vertical-align: top; padding: 15px; height: 180px;">
+                                <div class="text-center mb-2">
+                                    <?php if (!empty($firmaConsultorImg)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultorImg) ?>" alt="Firma Consultor" style="max-height: 50px; max-width: 120px;">
+                                    <?php elseif ($firmaConsultorElectronica): ?>
+                                        <span class="text-success"><i class="bi bi-patch-check-fill"></i> Firmado</span>
+                                    <?php else: ?>
+                                        <div style="height: 50px; border-bottom: 1px solid #333; width: 80%; margin: 0 auto;"></div>
                                     <?php endif; ?>
-                                    <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
-                                        <small style="color: #666;">Firma</small>
-                                    </div>
+                                </div>
+                                <div class="text-center" style="font-size: 0.75rem;">
+                                    <strong><?= esc($consultorNombre) ?></strong><br>
+                                    <span class="text-muted">Consultor SST</span><br>
+                                    <?php if (!empty($consultorLicencia)): ?>
+                                        <small>Lic. SST: <?= esc($consultorLicencia) ?></small><br>
+                                    <?php endif; ?>
+                                    <?php if (!empty($consultorCedula)): ?>
+                                        <small>C.C. <?= esc($consultorCedula) ?></small>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <!-- REVISÓ: Delegado SST -->
+                            <td style="vertical-align: top; padding: 15px; height: 180px;">
+                                <div class="text-center mb-2">
+                                    <?php if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 50px; max-width: 120px;">
+                                    <?php elseif ($firmaDelegado): ?>
+                                        <span class="text-success"><i class="bi bi-patch-check-fill"></i> Firmado</span>
+                                    <?php else: ?>
+                                        <div style="height: 50px; border-bottom: 1px solid #333; width: 80%; margin: 0 auto;"></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="text-center" style="font-size: 0.75rem;">
+                                    <?php if ($firmaDelegado && !empty($firmaDelegado['solicitud']['firmante_nombre'])): ?>
+                                        <strong><?= esc($firmaDelegado['solicitud']['firmante_nombre']) ?></strong><br>
+                                    <?php else: ?>
+                                        <strong><?= esc($delegadoNombre) ?></strong><br>
+                                    <?php endif; ?>
+                                    <span class="text-muted"><?= esc($delegadoCargo) ?></span>
+                                </div>
+                            </td>
+                            <!-- APROBÓ: Representante Legal -->
+                            <td style="vertical-align: top; padding: 15px; height: 180px;">
+                                <div class="text-center mb-2">
+                                    <?php if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 50px; max-width: 120px;">
+                                    <?php elseif ($firmaRepLegal): ?>
+                                        <span class="text-success"><i class="bi bi-patch-check-fill"></i> Firmado</span>
+                                    <?php else: ?>
+                                        <div style="height: 50px; border-bottom: 1px solid #333; width: 80%; margin: 0 auto;"></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="text-center" style="font-size: 0.75rem;">
+                                    <?php if ($firmaRepLegal && !empty($firmaRepLegal['solicitud']['firmante_nombre'])): ?>
+                                        <strong><?= esc($firmaRepLegal['solicitud']['firmante_nombre']) ?></strong><br>
+                                    <?php else: ?>
+                                        <strong><?= esc($repLegalNombre) ?></strong><br>
+                                    <?php endif; ?>
+                                    <span class="text-muted"><?= esc($repLegalCargo) ?></span><br>
+                                    <?php if ($firmaRepLegal && !empty($firmaRepLegal['solicitud']['firmante_documento'])): ?>
+                                        <small>C.C. <?= esc($firmaRepLegal['solicitud']['firmante_documento']) ?></small>
+                                    <?php elseif (!empty($repLegalCedula)): ?>
+                                        <small>C.C. <?= esc($repLegalCedula) ?></small>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+
+                <?php else: ?>
+                <!-- ========== 2 FIRMANTES: Sin Delegado SST ========== -->
+                <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                            <th style="width: 50%; text-align: center; padding: 10px;">ELABORÓ</th>
+                            <th style="width: 50%; text-align: center; padding: 10px;">APROBÓ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <!-- ELABORÓ: Consultor SST -->
+                            <td style="vertical-align: top; padding: 20px; height: 200px;">
+                                <div class="text-center mb-2">
+                                    <?php if (!empty($firmaConsultorImg)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultorImg) ?>" alt="Firma Consultor" style="max-height: 60px; max-width: 150px;">
+                                    <?php elseif ($firmaConsultorElectronica): ?>
+                                        <span class="text-success"><i class="bi bi-patch-check-fill"></i> Firmado electrónicamente</span>
+                                    <?php else: ?>
+                                        <div style="height: 60px; border-bottom: 1px solid #333; width: 80%; margin: 0 auto;"></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="text-center" style="font-size: 0.8rem;">
+                                    <strong><?= esc($consultorNombre) ?></strong><br>
+                                    <span class="text-muted">Consultor SST / Responsable SG-SST</span><br>
+                                    <?php if (!empty($consultorLicencia)): ?>
+                                        <small>Lic. SST: <?= esc($consultorLicencia) ?></small><br>
+                                    <?php endif; ?>
+                                    <?php if (!empty($consultorCedula)): ?>
+                                        <small>C.C. <?= esc($consultorCedula) ?></small>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <!-- APROBÓ: Representante Legal -->
+                            <td style="vertical-align: top; padding: 20px; height: 200px;">
+                                <div class="text-center mb-2">
+                                    <?php if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 60px; max-width: 150px;">
+                                    <?php elseif ($firmaRepLegal): ?>
+                                        <span class="text-success"><i class="bi bi-patch-check-fill"></i> Firmado electrónicamente</span>
+                                    <?php else: ?>
+                                        <div style="height: 60px; border-bottom: 1px solid #333; width: 80%; margin: 0 auto;"></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="text-center" style="font-size: 0.8rem;">
+                                    <?php if ($firmaRepLegal && !empty($firmaRepLegal['solicitud']['firmante_nombre'])): ?>
+                                        <strong><?= esc($firmaRepLegal['solicitud']['firmante_nombre']) ?></strong><br>
+                                    <?php else: ?>
+                                        <strong><?= esc($repLegalNombre) ?></strong><br>
+                                    <?php endif; ?>
+                                    <span class="text-muted"><?= esc($repLegalCargo) ?></span><br>
+                                    <?php if ($firmaRepLegal && !empty($firmaRepLegal['solicitud']['firmante_documento'])): ?>
+                                        <small>C.C. <?= esc($firmaRepLegal['solicitud']['firmante_documento']) ?></small>
+                                    <?php elseif (!empty($repLegalCedula)): ?>
+                                        <small>C.C. <?= esc($repLegalCedula) ?></small>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <?php endif; ?>
             </div>
 
             <!-- Pie de documento -->

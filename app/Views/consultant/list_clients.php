@@ -328,6 +328,9 @@
                                         <a href="<?= base_url('/editClient/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar Cliente">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <a href="<?= base_url('/actas/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="Gestión de Actas y Comités">
+                                            <i class="fas fa-clipboard-list"></i>
+                                        </a>
                                         <a href="<?= base_url('/contracts/client-history/' . htmlspecialchars($client['id_cliente'])) ?>" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Ver Historial de Contratos">
                                             <i class="fas fa-file-contract"></i>
                                         </a>

@@ -198,10 +198,14 @@ class PzresponsabilidadesRepLegalController extends Controller
 
         // Obtener datos del consultor
         $consultor = null;
+        $consultorModel = new ConsultantModel();
         $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
         if ($idConsultor) {
-            $consultorModel = new ConsultantModel();
             $consultor = $consultorModel->find($idConsultor);
+        }
+        // Fallback: buscar por id_cliente si no se encontró
+        if (!$consultor) {
+            $consultor = $consultorModel->where('id_cliente', $idCliente)->first();
         }
 
         // Obtener firmas electronicas

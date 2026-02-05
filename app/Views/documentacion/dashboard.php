@@ -333,28 +333,49 @@
         </div>
 
         <!-- Accesos rapidos -->
-        <div class="row mt-3">
-            <div class="col-md-4">
-                <a href="/estandares/<?= $cliente['id_cliente'] ?>" class="card border-0 shadow-sm text-decoration-none">
+        <div class="row mt-3 g-2">
+            <div class="col-6 col-md">
+                <a href="<?= base_url('indicadores-sst/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-graph-up-arrow text-danger fs-4"></i>
+                        <h6 class="mt-2 mb-0 text-dark">Indicadores KPI</h6>
+                        <small class="text-muted">Metricas SG-SST</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md">
+                <a href="<?= base_url('pta/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                    <div class="card-body text-center py-3">
+                        <i class="bi bi-calendar-check text-info fs-4"></i>
+                        <h6 class="mt-2 mb-0 text-dark">Plan de Trabajo</h6>
+                        <small class="text-muted">Actividades PTA</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md">
+                <a href="<?= base_url('estandares/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-list-check text-primary fs-4"></i>
                         <h6 class="mt-2 mb-0 text-dark">Ver Estandares</h6>
+                        <small class="text-muted">Res. 0312/2019</small>
                     </div>
                 </a>
             </div>
-            <div class="col-md-4">
-                <a href="/estandares/catalogo" class="card border-0 shadow-sm text-decoration-none">
+            <div class="col-6 col-md">
+                <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100">
                     <div class="card-body text-center py-3">
-                        <i class="bi bi-book text-success fs-4"></i>
-                        <h6 class="mt-2 mb-0 text-dark">Catalogo 60 Estandares</h6>
+                        <i class="bi bi-robot text-purple fs-4" style="color: #6f42c1 !important;"></i>
+                        <h6 class="mt-2 mb-0 text-dark">Generador IA</h6>
+                        <small class="text-muted">Cronograma y PTA</small>
                     </div>
                 </a>
             </div>
-            <div class="col-md-4">
-                <a href="/documentacion/instructivo" class="card border-0 shadow-sm text-decoration-none">
+            <div class="col-6 col-md">
+                <a href="<?= base_url('documentacion/instructivo') ?>" class="card border-0 shadow-sm text-decoration-none h-100">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-question-circle text-warning fs-4"></i>
                         <h6 class="mt-2 mb-0 text-dark">Instructivo</h6>
+                        <small class="text-muted">Guia de uso</small>
                     </div>
                 </a>
             </div>

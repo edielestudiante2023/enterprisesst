@@ -451,9 +451,18 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <!-- Firmas del presupuesto -->
-                        <div class="d-flex gap-4">
+                        <div class="d-flex gap-4 flex-wrap">
+                            <!-- ELABORÓ: Consultor SST -->
                             <div>
-                                <small class="text-muted d-block"><strong>FIRMA REPRESENTANTE LEGAL:</strong></small>
+                                <small class="text-muted d-block"><strong>ELABORÓ (CONSULTOR SST):</strong></small>
+                                <span class="text-primary"><?= esc($consultor['nombre_consultor'] ?? 'No asignado') ?></span>
+                                <?php if (!empty($consultor['numero_licencia'])): ?>
+                                    <br><small class="text-muted">Lic: <?= esc($consultor['numero_licencia']) ?></small>
+                                <?php endif; ?>
+                            </div>
+                            <!-- APROBÓ: Representante Legal -->
+                            <div>
+                                <small class="text-muted d-block"><strong>APROBÓ (REP. LEGAL):</strong></small>
                                 <?php if (!empty($presupuesto['firma_imagen'])): ?>
                                     <img src="<?= base_url($presupuesto['firma_imagen']) ?>" alt="Firma" class="border rounded" style="max-height: 50px;">
                                     <br><small class="text-success"><?= esc($presupuesto['firmado_por'] ?? '') ?> - <?= date('d/m/Y', strtotime($presupuesto['fecha_aprobacion'])) ?></small>
@@ -466,8 +475,9 @@
                             $tieneDelegado = !empty($contexto['delegado_sst_nombre']);
                             ?>
                             <?php if ($tieneDelegado): ?>
+                            <!-- REVISÓ: Delegado SST -->
                             <div>
-                                <small class="text-muted d-block"><strong>FIRMA DELEGADO SST:</strong></small>
+                                <small class="text-muted d-block"><strong>REVISÓ (DELEGADO SST):</strong></small>
                                 <?php if (!empty($presupuesto['firma_delegado_imagen'])): ?>
                                     <img src="<?= base_url($presupuesto['firma_delegado_imagen']) ?>" alt="Firma Delegado" class="border rounded" style="max-height: 50px;">
                                     <br><small class="text-success"><?= esc($presupuesto['firmado_delegado_por'] ?? $contexto['delegado_sst_nombre']) ?></small>

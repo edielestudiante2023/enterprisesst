@@ -358,4 +358,193 @@ class GeneradorIAController extends BaseController
             ]
         ]);
     }
+
+    // =========================================================================
+    // PROGRAMA DE PROMOCIÓN Y PREVENCIÓN EN SALUD (3.1.2)
+    // =========================================================================
+
+    /**
+     * Vista principal del generador de Actividades PyP Salud
+     */
+    public function pypSalud(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $pypService = new \App\Services\ActividadesPyPSaludService();
+        $indicadorModel = new IndicadorSSTModel();
+
+        $anio = (int)date('Y');
+
+        $data = [
+            'titulo' => 'Generador IA - Programa PyP Salud',
+            'cliente' => $cliente,
+            'contexto' => $contexto,
+            'anio' => $anio,
+            'resumenActividades' => $pypService->getResumenActividades($idCliente, $anio),
+            'actividadesExistentes' => $pypService->getActividadesCliente($idCliente, $anio),
+            'verificacionIndicadores' => $indicadorModel->verificarCumplimientoPyPSalud($idCliente)
+        ];
+
+        return view('generador_ia/pyp_salud', $data);
+    }
+
+    /**
+     * Preview de las actividades de PyP Salud que se generarían
+     */
+    public function previewActividadesPyP(int $idCliente)
+    {
+        $anio = $this->request->getGet('anio') ?? (int)date('Y');
+        $instrucciones = $this->request->getGet('instrucciones') ?? '';
+
+        // Obtener contexto del cliente
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $service = new \App\Services\ActividadesPyPSaludService();
+        $preview = $service->previewActividades($idCliente, (int)$anio, $contexto, $instrucciones);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera las actividades de PyP Salud en el PTA
+     * Acepta JSON con actividades seleccionadas y meses personalizados
+     */
+    public function generarActividadesPyP(int $idCliente)
+    {
+        // Intentar obtener JSON del body
+        $json = $this->request->getJSON(true);
+
+        $anio = $json['anio'] ?? $this->request->getPost('anio') ?? (int)date('Y');
+        $actividadesSeleccionadas = $json['actividades'] ?? null;
+
+        try {
+            $service = new \App\Services\ActividadesPyPSaludService();
+            $resultado = $service->generarActividades($idCliente, (int)$anio, $actividadesSeleccionadas);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Actividades generadas: {$resultado['creadas']} nuevas, {$resultado['existentes']} ya existían",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar actividades: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Resumen del estado de PyP Salud para un cliente
+     */
+    public function resumenPyPSalud(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $anio = (int)date('Y');
+
+        $pypService = new \App\Services\ActividadesPyPSaludService();
+        $indicadorModel = new IndicadorSSTModel();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'cliente' => $cliente['nombre_cliente'],
+                'anio' => $anio,
+                'actividades' => $pypService->getResumenActividades($idCliente, $anio),
+                'indicadores' => $indicadorModel->verificarCumplimientoPyPSalud($idCliente)
+            ]
+        ]);
+    }
+
+    /**
+     * Vista principal de Indicadores PyP Salud
+     */
+    public function indicadoresPyPSalud(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->to('/clientes')->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int)date('Y');
+
+        // Obtener contexto del cliente
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        // Servicio de indicadores PyP Salud
+        $indicadoresService = new \App\Services\IndicadoresPyPSaludService();
+
+        return view('generador_ia/indicadores_pyp_salud', [
+            'cliente' => $cliente,
+            'anio' => $anio,
+            'contexto' => $contexto ?? [],
+            'resumenIndicadores' => $indicadoresService->getResumenIndicadores($idCliente),
+            'indicadoresExistentes' => $indicadoresService->getIndicadoresCliente($idCliente)
+        ]);
+    }
+
+    /**
+     * Preview de indicadores PyP Salud (AJAX)
+     */
+    public function previewIndicadoresPyP(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        // Obtener contexto del cliente
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresPyPSaludService();
+        $preview = $indicadoresService->previewIndicadores($idCliente, $contexto);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera indicadores PyP Salud (AJAX POST)
+     */
+    public function generarIndicadoresPyP(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+        $indicadoresSeleccionados = $json['indicadores'] ?? null;
+
+        try {
+            $indicadoresService = new \App\Services\IndicadoresPyPSaludService();
+            $resultado = $indicadoresService->generarIndicadores($idCliente, $indicadoresSeleccionados);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Indicadores generados: {$resultado['creados']} nuevos, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar indicadores: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
