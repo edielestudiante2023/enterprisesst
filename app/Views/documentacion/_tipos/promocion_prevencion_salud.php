@@ -52,13 +52,13 @@ $puedeGenerarDocumento = isset($fasesInfo) && $fasesInfo && $fasesInfo['puede_ge
                     <small class="d-block text-muted mt-1">Complete las fases previas</small>
                 <?php elseif (!$hayAprobadoAnioActual): ?>
                     <!-- Botón activo: puede generar -->
-                    <a href="<?= base_url('documentos/generar/programa_promocion_prevencion_salud/' . $cliente['id_cliente']) ?>"
+                    <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/pyp-salud') ?>"
                        class="btn btn-success">
                         <i class="bi bi-magic me-1"></i>Crear con IA <?= date('Y') ?>
                     </a>
                 <?php else: ?>
                     <!-- Ya existe documento -->
-                    <a href="<?= base_url('documentos/generar/programa_promocion_prevencion_salud/' . $cliente['id_cliente']) ?>"
+                    <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/pyp-salud') ?>"
                        class="btn btn-outline-primary">
                         <i class="bi bi-pencil me-1"></i>Editar / Nueva Versión
                     </a>

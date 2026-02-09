@@ -78,15 +78,15 @@
         }
 
         .encabezado-logo {
-            width: 100px;
+            width: 120px;
             padding: 8px;
             text-align: center;
             background-color: #ffffff;
         }
 
         .encabezado-logo img {
-            max-width: 80px;
-            max-height: 50px;
+            max-width: 100px;
+            max-height: 60px;
             background-color: #ffffff;
         }
 
@@ -109,7 +109,7 @@
         }
 
         .encabezado-info {
-            width: 130px;
+            width: 140px;
             padding: 0;
         }
 
@@ -216,7 +216,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
     <tr>
         <td class="encabezado-logo" rowspan="2" valign="middle" align="center">
             <?php if (!empty($logoBase64)): ?>
-                <img src="<?= $logoBase64 ?>" style="max-width:80px; max-height:50px;">
+                <img src="<?= $logoBase64 ?>" style="max-width:100px; max-height:60px;">
             <?php else: ?>
                 <div style="font-size:8pt; font-weight:bold;"><?= esc($cliente['nombre_cliente']) ?></div>
             <?php endif; ?>
@@ -496,7 +496,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
             <li>Servir como organismo de coordinacion entre empleador y trabajadores en SST.</li>
         </ol>
         <?php elseif ($proceso['tipo_comite'] === 'COCOLAB'): ?>
-        <p>De conformidad con la Resolucion 652 de 2012, son funciones del Comite de Convivencia Laboral:</p>
+        <p>De conformidad con la Resolucion 652 de 2012, modificada por la Resolucion 1356 de 2012 y la Resolucion 3461 de 2025, son funciones del Comite de Convivencia Laboral:</p>
         <ol>
             <li>Recibir y dar tramite a las quejas de acoso laboral.</li>
             <li>Examinar de manera confidencial los casos de acoso laboral.</li>

@@ -186,15 +186,16 @@ if (!function_exists('renderizarTablaHtml')) {
             margin: 4px 0;
             font-size: 9pt;
         }
-        table.tabla-contenido th,
-        table.tabla-contenido td {
-            border: 1px solid #999;
-            padding: 2px 4px;
-        }
         table.tabla-contenido th {
+            border: 1px solid #999;
+            padding: 4px 6px;
             background-color: #0d6efd;
             color: white;
             font-weight: bold;
+        }
+        table.tabla-contenido td {
+            border: 1px solid #999;
+            padding: 3px 5px;
         }
         ul { margin: 2px 0 2px 15px; padding-left: 0; line-height: 1.0; }
         li { margin-bottom: 1px; line-height: 1.0; }

@@ -333,4 +333,123 @@ class DocumentoConfigService
     {
         $this->cache = [];
     }
+
+    /**
+     * SOLUCIÓN ARQUITECTÓNICA: Crea contenido inicial dinámico desde BD
+     *
+     * Este método elimina la necesidad de hardcodear el contenido inicial en
+     * los controladores. Lee las secciones configuradas en BD y genera una
+     * estructura compatible con el sistema de documentos.
+     *
+     * PATRÓN DE USO:
+     *   $configService = new DocumentoConfigService();
+     *   $contenidoInicial = $configService->crearContenidoInicial('plan_objetivos_metas');
+     *
+     * ANTES (hardcodeado en controlador):
+     *   $contenido = ['secciones' => [
+     *       'objetivo' => 'texto...',
+     *       'alcance' => 'texto...',
+     *   ]];
+     *
+     * DESPUÉS (dinámico desde BD):
+     *   $contenido = $configService->crearContenidoInicial('plan_objetivos_metas');
+     *
+     * @param string $tipoDocumento Identificador del tipo de documento
+     * @param array $valoresIniciales Opcional: valores por defecto para secciones específicas
+     *                                 Formato: ['key_seccion' => 'valor inicial']
+     * @return array Estructura de contenido compatible con documentos SST:
+     *               ['secciones' => ['key1' => 'valor1', 'key2' => 'valor2', ...]]
+     */
+    public function crearContenidoInicial(string $tipoDocumento, array $valoresIniciales = []): array
+    {
+        $secciones = $this->obtenerSecciones($tipoDocumento);
+
+        if (empty($secciones)) {
+            log_message('warning', "crearContenidoInicial: No hay secciones configuradas para '$tipoDocumento'");
+            return ['secciones' => []];
+        }
+
+        $contenido = ['secciones' => []];
+
+        foreach ($secciones as $seccion) {
+            $key = $seccion['key'];
+            $nombre = $seccion['nombre'];
+
+            // Prioridad: 1) Valor inicial provisto, 2) String vacío
+            if (isset($valoresIniciales[$key])) {
+                $contenido['secciones'][$key] = $valoresIniciales[$key];
+            } else {
+                // Valor por defecto vacío - la IA lo llenará
+                $contenido['secciones'][$key] = '';
+            }
+
+            // Agregar metadatos útiles para la vista
+            $contenido['_meta'][$key] = [
+                'nombre' => $nombre,
+                'numero' => $seccion['numero'],
+                'prompt_ia' => $seccion['prompt_ia'] ?? null,
+                'tipo_contenido' => $seccion['tipo_contenido'] ?? 'texto',
+                'es_obligatoria' => $seccion['es_obligatoria'] ?? true
+            ];
+        }
+
+        return $contenido;
+    }
+
+    /**
+     * Genera contenido inicial con datos de contexto del cliente
+     *
+     * Versión extendida de crearContenidoInicial que puede inyectar
+     * datos dinámicos del cliente (objetivos, indicadores, etc.)
+     *
+     * @param string $tipoDocumento Identificador del tipo
+     * @param int $idCliente ID del cliente
+     * @param array $contextoAdicional Datos adicionales para incluir
+     * @return array Contenido con secciones pobladas
+     */
+    public function crearContenidoConContexto(string $tipoDocumento, int $idCliente, array $contextoAdicional = []): array
+    {
+        $contenido = $this->crearContenidoInicial($tipoDocumento);
+        $secciones = $this->obtenerSecciones($tipoDocumento);
+
+        // Procesar tablas dinámicas si están configuradas
+        foreach ($secciones as $seccion) {
+            $key = $seccion['key'];
+            $tablaDinamica = $seccion['tabla_dinamica'] ?? null;
+
+            if ($tablaDinamica) {
+                $datos = $this->obtenerDatosTablaDinamica($tablaDinamica, $idCliente);
+                if (!empty($datos)) {
+                    $contenido['_tablas'][$key] = $datos;
+                }
+            }
+        }
+
+        // Agregar contexto adicional
+        if (!empty($contextoAdicional)) {
+            $contenido['_contexto'] = $contextoAdicional;
+        }
+
+        return $contenido;
+    }
+
+    /**
+     * Obtiene el mapeo de keys de secciones para un tipo de documento
+     *
+     * Útil para normalizarSecciones() y otros procesos de matching
+     *
+     * @param string $tipoDocumento
+     * @return array ['key1' => 'Nombre Sección 1', 'key2' => 'Nombre Sección 2', ...]
+     */
+    public function obtenerMapeoSecciones(string $tipoDocumento): array
+    {
+        $secciones = $this->obtenerSecciones($tipoDocumento);
+        $mapeo = [];
+
+        foreach ($secciones as $seccion) {
+            $mapeo[$seccion['key']] = $seccion['nombre'];
+        }
+
+        return $mapeo;
+    }
 }

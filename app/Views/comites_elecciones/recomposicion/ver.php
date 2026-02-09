@@ -133,7 +133,7 @@ $cargoEntrante = $entrante
                 Recomposicion #<?= $recomposicion['numero_recomposicion'] ?>
             </h4>
             <p class="text-muted mb-0">
-                <?= esc($tipoComiteNombre) ?> - <?= esc($cliente['razon_social']) ?>
+                <?= esc($tipoComiteNombre) ?> - <?= esc($cliente['nombre_cliente']) ?>
             </p>
         </div>
         <div>
@@ -338,13 +338,23 @@ $cargoEntrante = $entrante
                     ?>
                     <span class="badge <?= $estadoBadge ?> fs-5 mb-3"><?= $estadoLabel ?></span>
 
-                    <?php if ($recomposicion['estado'] === 'borrador'): ?>
                     <div class="d-grid gap-2">
-                        <a href="#" class="btn btn-primary">
+                        <?php if ($recomposicion['estado'] === 'borrador'): ?>
+                        <a href="<?= base_url("comites-elecciones/proceso/{$proceso['id_proceso']}/recomposicion/{$recomposicion['id_recomposicion']}/firmas") ?>"
+                           class="btn btn-primary">
                             <i class="fas fa-signature me-1"></i> Solicitar Firmas
                         </a>
+                        <?php elseif ($recomposicion['estado'] === 'pendiente_firmas'): ?>
+                        <a href="<?= base_url("comites-elecciones/proceso/{$proceso['id_proceso']}/recomposicion/{$recomposicion['id_recomposicion']}/firmas/estado") ?>"
+                           class="btn btn-info">
+                            <i class="fas fa-tasks me-1"></i> Ver Estado de Firmas
+                        </a>
+                        <?php elseif ($recomposicion['estado'] === 'firmado'): ?>
+                        <span class="text-success">
+                            <i class="fas fa-check-circle me-1"></i> Documento firmado
+                        </span>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
                 </div>
             </div>
 

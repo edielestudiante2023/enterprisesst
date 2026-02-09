@@ -65,6 +65,12 @@ if (!function_exists('convertirMarkdownAHtml')) {
         foreach ($lineas as $linea) {
             $lineaTrim = trim($linea);
 
+            // Normalizar tablas Markdown sin pipes al inicio/final
+            // "Col1 | Col2 | Col3" → "| Col1 | Col2 | Col3 |"
+            if (strpos($lineaTrim, '|') !== false && substr($lineaTrim, 0, 1) !== '|') {
+                $lineaTrim = '| ' . $lineaTrim . ' |';
+            }
+
             // Detectar linea de tabla (empieza con |)
             if (preg_match('/^\|(.+)\|$/', $lineaTrim)) {
                 // Ignorar linea separadora (|---|---|)
@@ -633,7 +639,9 @@ if (!function_exists('convertirMarkdownAHtml')) {
 
             // Datos del Consultor desde tbl_consultor
             $consultorNombre = $consultor['nombre_consultor'] ?? '';
-            $consultorCargo = 'Responsable del SG-SST';
+            // Según 1_A_SISTEMA_FIRMAS: Tipo E (2 firmantes por estándares) = "Consultor SST"
+            // Tipo D (firmantesDefinidos) = "Responsable del SG-SST"
+            $consultorCargo = $esSoloDosFirmantes ? 'Consultor SST' : 'Responsable del SG-SST';
             $consultorLicencia = $consultor['numero_licencia'] ?? '';
 
             // Datos del Delegado SST (si aplica)
@@ -643,6 +651,13 @@ if (!function_exists('convertirMarkdownAHtml')) {
             // Datos del Representante Legal - primero del contexto, luego del cliente
             $repLegalNombre = $contexto['representante_legal_nombre'] ?? $cliente['nombre_rep_legal'] ?? $cliente['representante_legal'] ?? '';
             $repLegalCargo = 'Representante Legal';
+
+            // ================================================
+            // FIRMA CONSULTOR: Prioridad electrónica > física
+            // Según 2_AA_WEB.md Sección 16
+            // ================================================
+            $firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+            $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
             ?>
 
             <div class="firma-section" style="margin-top: 40px; page-break-inside: avoid;">
@@ -650,18 +665,13 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     <i class="bi bi-pen me-2"></i>FIRMAS DE APROBACIÓN
                 </div>
 
-                <?php
-                // Firma del consultor
-                $firmaConsultor = $consultor['firma_consultor'] ?? '';
-                ?>
-
                 <?php if ($esSoloDosFirmantes): ?>
-                <!-- ========== 7 ESTÁNDARES SIN DELEGADO: Solo 2 firmantes ========== -->
+                <!-- ========== 7 ESTÁNDARES SIN DELEGADO: Solo 2 firmantes (Tipo E) ========== -->
                 <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
                     <thead>
                         <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
                             <th style="width: 50%; text-align: center; font-weight: 600; color: #495057; border-top: none;">
-                                <i class="bi bi-person-badge me-1"></i>Elaboró / Responsable del SG-SST
+                                <i class="bi bi-person-badge me-1"></i>Elaboró / Consultor SST
                             </th>
                             <th style="width: 50%; text-align: center; font-weight: 600; color: #495057; border-top: none;">
                                 <i class="bi bi-person-check me-1"></i>Aprobó / Representante Legal
@@ -670,7 +680,7 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     </thead>
                     <tbody>
                         <tr>
-                            <!-- RESPONSABLE SG-SST -->
+                            <!-- CONSULTOR SST / ELABORÓ (Tipo E: 2 firmantes por estándares) -->
                             <td style="vertical-align: top; padding: 20px; height: 180px; position: relative;">
                                 <div style="margin-bottom: 8px;">
                                     <strong style="color: #495057;">Nombre:</strong>
@@ -688,10 +698,12 @@ if (!function_exists('convertirMarkdownAHtml')) {
                                     <span><?= esc($consultorLicencia) ?></span>
                                 </div>
                                 <?php endif; ?>
-                                <!-- Firma posicionada al fondo -->
+                                <!-- Firma posicionada al fondo (prioridad: electrónica > física) -->
                                 <div style="position: absolute; bottom: 15px; left: 20px; right: 20px; text-align: center;">
-                                    <?php if (!empty($firmaConsultor)): ?>
-                                        <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" alt="Firma Responsable SST" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;">
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;">
+                                    <?php elseif (!empty($firmaConsultorFisica)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor SST" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 80%; margin: 0 auto; padding-top: 5px;">
                                         <small style="color: #666;">Firma</small>
@@ -761,10 +773,12 @@ if (!function_exists('convertirMarkdownAHtml')) {
                                     <strong style="color: #495057; font-size: 0.8rem;">Cargo:</strong>
                                     <span style="font-size: 0.85rem;"><?= esc($consultorCargo) ?></span>
                                 </div>
-                                <!-- Firma posicionada al fondo -->
+                                <!-- Firma posicionada al fondo (prioridad: electrónica > física) -->
                                 <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
-                                    <?php if (!empty($firmaConsultor)): ?>
-                                        <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" alt="Firma Responsable SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php elseif (!empty($firmaConsultorFisica)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Responsable SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                         <small style="color: #666; font-size: 0.7rem;">Firma</small>

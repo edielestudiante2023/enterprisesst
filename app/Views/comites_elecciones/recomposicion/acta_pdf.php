@@ -369,7 +369,7 @@
     <div class="seccion-titulo">2. FUNCIONES DEL <?= strtoupper($tipoComiteCorto) ?></div>
     <div class="seccion-contenido">
         <?php if ($proceso['tipo_comite'] === 'COCOLAB'): ?>
-        <p>De acuerdo con la Resolucion 652 de 2012, modificada por la Resolucion 1356 de 2012, el Comite de Convivencia Laboral tiene las siguientes funciones:</p>
+        <p>De acuerdo con la Resolucion 652 de 2012, modificada por la Resolucion 1356 de 2012 y la Resolucion 3461 de 2025, el Comite de Convivencia Laboral tiene las siguientes funciones:</p>
         <ol>
             <li>Recibir y dar tramite a las quejas presentadas en las que se describan situaciones que puedan constituir acoso laboral.</li>
             <li>Examinar de manera confidencial los casos especificos en los que se formule queja o reclamo.</li>
@@ -527,6 +527,10 @@
                 </td>
             </tr>
             <?php foreach ($trabajadores as $m): ?>
+            <?php
+                // Marcar como (B) si es el candidato entrante de esta recomposición o si es_recomposicion = 1
+                $esNuevo = ($m['id_candidato'] == ($entrante['id_candidato'] ?? 0)) || !empty($m['es_recomposicion']);
+            ?>
             <tr>
                 <td style="text-align: center;"><?= $contador++ ?></td>
                 <td><?= esc($m['nombres'] . ' ' . $m['apellidos']) ?></td>
@@ -534,7 +538,7 @@
                 <td><?= esc($m['cargo']) ?></td>
                 <td style="text-align: center;"><?= ucfirst($m['tipo_plaza'] ?? 'Principal') ?></td>
                 <td style="text-align: center;">
-                    <?php if (isset($m['es_nuevo']) && $m['es_nuevo']): ?>
+                    <?php if ($esNuevo): ?>
                         <span class="badge-tipo badge-b">(B)</span>
                     <?php else: ?>
                         <span class="badge-tipo badge-a">(A)</span>
@@ -550,6 +554,10 @@
                 </td>
             </tr>
             <?php foreach ($empleadores as $m): ?>
+            <?php
+                // Marcar como (B) si es el candidato entrante de esta recomposición o si es_recomposicion = 1
+                $esNuevo = ($m['id_candidato'] == ($entrante['id_candidato'] ?? 0)) || !empty($m['es_recomposicion']);
+            ?>
             <tr>
                 <td style="text-align: center;"><?= $contador++ ?></td>
                 <td><?= esc($m['nombres'] . ' ' . $m['apellidos']) ?></td>
@@ -557,7 +565,7 @@
                 <td><?= esc($m['cargo']) ?></td>
                 <td style="text-align: center;"><?= ucfirst($m['tipo_plaza'] ?? 'Principal') ?></td>
                 <td style="text-align: center;">
-                    <?php if (isset($m['es_nuevo']) && $m['es_nuevo']): ?>
+                    <?php if ($esNuevo): ?>
                         <span class="badge-tipo badge-b">(B)</span>
                     <?php else: ?>
                         <span class="badge-tipo badge-a">(A)</span>
@@ -590,24 +598,85 @@
             del mes de <?= strtolower(fechaLargaPdf($recomposicion['fecha_recomposicion'])) ?>.
         </p>
 
+        <?php
+        // Preparar datos de firmantes
+        $firmasElectronicas = $firmasElectronicas ?? [];
+
+        // 1. Nuevo Integrante
+        $firmaEntrante = $firmasElectronicas['nuevo_integrante'] ?? null;
+
+        // 2. Delegado SST (si existe)
+        $firmaDelegado = $firmasElectronicas['delegado_sst'] ?? null;
+        $tieneDelegado = !empty($contexto['delegado_sst_nombre']);
+
+        // 3. Representante Legal
+        $firmaRepLegal = $firmasElectronicas['representante_legal'] ?? null;
+        ?>
+
         <table style="width: 100%; margin-top: 30px;">
+            <!-- Fila 1: Nuevo Integrante y Delegado SST o Rep Legal -->
             <tr>
+                <!-- Nuevo Integrante -->
                 <td style="width: 48%; text-align: center; vertical-align: top; padding: 20px;">
                     <div class="firma-linea">
-                        <div class="firma-nombre"><?= esc($cliente['nombre_rep_legal'] ?? 'Representante Legal') ?></div>
-                        <div class="firma-cargo">Representante Legal</div>
-                        <div class="firma-cargo">C.C. <?= esc($cliente['cedula_rep_legal'] ?? '') ?></div>
-                    </div>
-                </td>
-                <td style="width: 4%;"></td>
-                <td style="width: 48%; text-align: center; vertical-align: top; padding: 20px;">
-                    <div class="firma-linea">
+                        <?php if ($firmaEntrante && !empty($firmaEntrante['firma_imagen'])): ?>
+                            <img src="<?= $firmaEntrante['firma_imagen'] ?>" style="max-width: 150px; max-height: 60px; margin-bottom: 5px;">
+                        <?php else: ?>
+                            <div style="height: 60px; border-bottom: 1px solid #333; margin-bottom: 10px;"></div>
+                        <?php endif; ?>
                         <div class="firma-nombre"><?= esc($nombreEntrante) ?></div>
                         <div class="firma-cargo">Nuevo Miembro del <?= $tipoComiteCorto ?></div>
                         <div class="firma-cargo">C.C. <?= esc($documentoEntrante) ?></div>
                     </div>
                 </td>
+                <td style="width: 4%;"></td>
+                <?php if ($tieneDelegado): ?>
+                <!-- Delegado SST -->
+                <td style="width: 48%; text-align: center; vertical-align: top; padding: 20px;">
+                    <div class="firma-linea">
+                        <?php if ($firmaDelegado && !empty($firmaDelegado['firma_imagen'])): ?>
+                            <img src="<?= $firmaDelegado['firma_imagen'] ?>" style="max-width: 150px; max-height: 60px; margin-bottom: 5px;">
+                        <?php else: ?>
+                            <div style="height: 60px; border-bottom: 1px solid #333; margin-bottom: 10px;"></div>
+                        <?php endif; ?>
+                        <div class="firma-nombre"><?= esc($contexto['delegado_sst_nombre'] ?? 'Delegado SST') ?></div>
+                        <div class="firma-cargo"><?= esc($contexto['delegado_sst_cargo'] ?? 'Delegado SST') ?></div>
+                        <div class="firma-cargo">C.C. <?= esc($contexto['delegado_sst_cedula'] ?? '') ?></div>
+                    </div>
+                </td>
+                <?php else: ?>
+                <!-- Representante Legal (si no hay delegado, va aquí) -->
+                <td style="width: 48%; text-align: center; vertical-align: top; padding: 20px;">
+                    <div class="firma-linea">
+                        <?php if ($firmaRepLegal && !empty($firmaRepLegal['firma_imagen'])): ?>
+                            <img src="<?= $firmaRepLegal['firma_imagen'] ?>" style="max-width: 150px; max-height: 60px; margin-bottom: 5px;">
+                        <?php else: ?>
+                            <div style="height: 60px; border-bottom: 1px solid #333; margin-bottom: 10px;"></div>
+                        <?php endif; ?>
+                        <div class="firma-nombre"><?= esc($cliente['nombre_rep_legal'] ?? 'Representante Legal') ?></div>
+                        <div class="firma-cargo">Representante Legal</div>
+                        <div class="firma-cargo">C.C. <?= esc($cliente['cedula_rep_legal'] ?? '') ?></div>
+                    </div>
+                </td>
+                <?php endif; ?>
             </tr>
+            <?php if ($tieneDelegado): ?>
+            <!-- Fila 2: Representante Legal (centrado) -->
+            <tr>
+                <td colspan="3" style="text-align: center; vertical-align: top; padding: 20px;">
+                    <div class="firma-linea" style="display: inline-block; width: 48%;">
+                        <?php if ($firmaRepLegal && !empty($firmaRepLegal['firma_imagen'])): ?>
+                            <img src="<?= $firmaRepLegal['firma_imagen'] ?>" style="max-width: 150px; max-height: 60px; margin-bottom: 5px;">
+                        <?php else: ?>
+                            <div style="height: 60px; border-bottom: 1px solid #333; margin-bottom: 10px;"></div>
+                        <?php endif; ?>
+                        <div class="firma-nombre"><?= esc($cliente['nombre_rep_legal'] ?? 'Representante Legal') ?></div>
+                        <div class="firma-cargo">Representante Legal</div>
+                        <div class="firma-cargo">C.C. <?= esc($cliente['cedula_rep_legal'] ?? '') ?></div>
+                    </div>
+                </td>
+            </tr>
+            <?php endif; ?>
         </table>
     </div>
 </div>

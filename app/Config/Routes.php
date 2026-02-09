@@ -335,6 +335,12 @@ $routes->post('/addcronogCapacitacionPost', 'CronogcapacitacionController::addcr
 $routes->get('/editcronogCapacitacion/(:num)', 'CronogcapacitacionController::editcronogCapacitacion/$1');
 $routes->post('/editcronogCapacitacionPost/(:num)', 'CronogcapacitacionController::editcronogCapacitacionPost/$1');
 $routes->get('/deletecronogCapacitacion/(:num)', 'CronogcapacitacionController::deletecronogCapacitacion/$1');
+// Rutas para generación automática y actualización de fechas
+$routes->post('/cronogCapacitacion/generate', 'CronogcapacitacionController::generate');
+$routes->post('/cronogCapacitacion/updateDateByMonth', 'CronogcapacitacionController::updateDateByMonth');
+$routes->get('/cronogCapacitacion/getClients', 'CronogcapacitacionController::getClients');
+$routes->get('/cronogCapacitacion/getClientContract', 'CronogcapacitacionController::getClientContract');
+$routes->post('/cronogCapacitacion/socializarEmail', 'CronogcapacitacionController::socializarEmail');
 
 $routes->get('/listPlanDeTrabajoAnual', 'PlanDeTrabajoAnualController::listPlanDeTrabajoAnual');
 $routes->get('/addPlanDeTrabajoAnual', 'PlanDeTrabajoAnualController::addPlanDeTrabajoAnual');
@@ -526,6 +532,12 @@ $routes->get('consultant/actualizar_pta_cliente', 'CsvUploadController::index');
 $routes->post('csv/upload', 'CsvUploadController::upload'); // Procesa el CSV
 
 $routes->post('/pta-cliente-nueva/updateCerradas', 'PtaClienteNuevaController::updateCerradas');
+
+// Ruta para socialización del Plan de Trabajo por email
+$routes->post('/socializacion/send-plan-trabajo', 'SocializacionEmailController::sendPlanTrabajo');
+// Ruta para socialización de Evaluación de Estándares Mínimos por email
+$routes->post('/socializacion/send-evaluacion-estandares', 'SocializacionEmailController::sendEvaluacionEstandares');
+
 $routes->post('api/getCronogramasAjax', 'CronogramaCapacitacionController::getCronogramasAjax');
 
 $routes->post('api/recalcularConteoDias', 'PendientesController::recalcularConteoDias');
@@ -750,6 +762,31 @@ $routes->get('/generador-ia/(:num)/indicadores-pyp-salud', 'GeneradorIAControlle
 $routes->get('/generador-ia/(:num)/preview-indicadores-pyp', 'GeneradorIAController::previewIndicadoresPyP/$1');
 $routes->post('/generador-ia/(:num)/generar-indicadores-pyp', 'GeneradorIAController::generarIndicadoresPyP/$1');
 
+// Módulo 2.2.1 - Objetivos del SG-SST (Parte 1)
+$routes->get('/generador-ia/(:num)/objetivos-sgsst', 'GeneradorIAController::objetivosSgsst/$1');
+$routes->get('/generador-ia/(:num)/preview-objetivos', 'GeneradorIAController::previewObjetivos/$1');
+$routes->post('/generador-ia/(:num)/generar-objetivos', 'GeneradorIAController::generarObjetivos/$1');
+$routes->delete('/generador-ia/(:num)/eliminar-objetivo/(:num)', 'GeneradorIAController::eliminarObjetivo/$1/$2');
+$routes->delete('/generador-ia/(:num)/eliminar-todos-objetivos', 'GeneradorIAController::eliminarTodosObjetivos/$1');
+$routes->post('/generador-ia/(:num)/regenerar-objetivo', 'GeneradorIAController::regenerarObjetivo/$1');
+
+// Módulo 2.2.1 - Indicadores de Objetivos (Parte 2)
+$routes->get('/generador-ia/(:num)/indicadores-objetivos', 'GeneradorIAController::indicadoresObjetivos/$1');
+$routes->get('/generador-ia/(:num)/preview-indicadores-objetivos', 'GeneradorIAController::previewIndicadoresObjetivos/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores-objetivos', 'GeneradorIAController::generarIndicadoresObjetivos/$1');
+$routes->post('/generador-ia/(:num)/regenerar-indicador', 'GeneradorIAController::regenerarIndicador/$1');
+
+// Módulo 1.2.1 - Programa de Capacitación SST
+$routes->get('/generador-ia/(:num)/capacitacion-sst', 'GeneradorIAController::capacitacionSst/$1');
+$routes->get('/generador-ia/(:num)/preview-capacitaciones-sst', 'GeneradorIAController::previewCapacitacionesSst/$1');
+$routes->post('/generador-ia/(:num)/generar-capacitaciones-sst', 'GeneradorIAController::generarCapacitacionesSst/$1');
+$routes->get('/generador-ia/(:num)/resumen-capacitacion-sst', 'GeneradorIAController::resumenCapacitacionSst/$1');
+$routes->post('/generador-ia/(:num)/regenerar-capacitacion', 'GeneradorIAController::regenerarCapacitacion/$1');
+// Indicadores de Capacitación SST (Parte 2 del módulo 1.2.1)
+$routes->get('/generador-ia/(:num)/preview-indicadores-capacitacion', 'GeneradorIAController::previewIndicadoresCapacitacion/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores-capacitacion', 'GeneradorIAController::generarIndicadoresCapacitacion/$1');
+$routes->post('/generador-ia/(:num)/regenerar-indicador-capacitacion', 'GeneradorIAController::regenerarIndicadorCapacitacion/$1');
+
 // Módulo 1.2.2 - Inducción y Reinducción
 $routes->get('/induccion-etapas/(:num)', 'InduccionEtapasController::index/$1');
 $routes->get('/induccion-etapas/(:num)/generar', 'InduccionEtapasController::generar/$1');
@@ -783,6 +820,19 @@ $routes->get('/documentos-sst/(:num)/programa-promocion-prevencion-salud/(:num)'
 // Procedimiento de Matriz Legal (2.7.1)
 $routes->get('/documentos-sst/(:num)/procedimiento-matriz-legal/(:num)', 'DocumentosSSTController::procedimientoMatrizLegal/$1/$2');
 
+// 2.2.1 Plan de Objetivos y Metas del SG-SST
+$routes->get('/documentos-sst/(:num)/plan-objetivos-metas/(:num)', 'DocumentosSSTController::planObjetivosMetas/$1/$2');
+
+// 2.1.1 Políticas de SST
+$routes->get('/documentos-sst/(:num)/politica-sst-general/(:num)', 'DocumentosSSTController::politicaSstGeneral/$1/$2');
+$routes->get('/documentos-sst/(:num)/politica-prevencion-emergencias/(:num)', 'DocumentosSSTController::politicaPrevencionEmergencias/$1/$2');
+
+// 1.1.8 Manual de Convivencia Laboral
+$routes->get('/documentos-sst/(:num)/manual-convivencia-laboral/(:num)', 'DocumentosSSTController::manualConvivenciaLaboral/$1/$2');
+
+// 2.8.1 Mecanismos de Comunicación, Auto Reporte en SG-SST
+$routes->get('/documentos-sst/(:num)/mecanismos-comunicacion/(:num)', 'DocumentosSSTController::mecanismosComunicacion/$1/$2');
+
 // Asignacion de Responsable SG-SST (Patron B - controlador independiente)
 $routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'PzasignacionresponsableSstController::crear/$1');
 $routes->get('/documentos-sst/(:num)/asignacion-responsable-sst/(:num)', 'PzasignacionresponsableSstController::ver/$1/$2');
@@ -811,6 +861,7 @@ $routes->post('/documentos-sst/(:num)/regenerar-responsabilidades-vigia-sst/(:nu
 
 // Generador de documentos por secciones con IA
 $routes->get('/documentos/generar/(:segment)/(:num)', 'DocumentosSSTController::generarConIA/$1/$2');
+$routes->get('/documentos/previsualizar-datos/(:segment)/(:num)', 'DocumentosSSTController::previsualizarDatos/$1/$2');
 $routes->post('/documentos/generar-seccion', 'DocumentosSSTController::generarSeccionIA');
 $routes->post('/documentos/guardar-seccion', 'DocumentosSSTController::guardarSeccion');
 $routes->post('/documentos/aprobar-seccion', 'DocumentosSSTController::aprobarSeccion');
@@ -839,6 +890,7 @@ $routes->post('/documentos-sst/adjuntar-soporte-evaluacion-prioridades', 'Docume
 $routes->post('/documentos-sst/adjuntar-soporte-plan-objetivos', 'DocumentosSSTController::adjuntarSoportePlanObjetivos');
 $routes->post('/documentos-sst/adjuntar-soporte-rendicion', 'DocumentosSSTController::adjuntarSoporteRendicion');
 $routes->post('/documentos-sst/adjuntar-soporte-copasst', 'DocumentosSSTController::adjuntarSoporteCopasst');
+$routes->post('/documentos-sst/adjuntar-soporte-capacitacion-copasst', 'DocumentosSSTController::adjuntarSoporteCapacitacionCopasst');
 $routes->post('/documentos-sst/adjuntar-soporte-convivencia', 'DocumentosSSTController::adjuntarSoporteConvivencia');
 $routes->post('/documentos-sst/adjuntar-soporte-pyp-salud', 'DocumentosSSTController::adjuntarSoportePypSalud');
 $routes->post('/documentos-sst/adjuntar-soporte-induccion', 'DocumentosSSTController::adjuntarSoporteInduccion');
@@ -984,6 +1036,12 @@ $routes->post('/comites-elecciones/proceso/guardar-recomposicion', 'ComitesElecc
 $routes->get('/comites-elecciones/proceso/(:num)/recomposicion/(:num)', 'ComitesEleccionesController::verRecomposicion/$1/$2');
 $routes->get('/comites-elecciones/proceso/(:num)/recomposicion/(:num)/acta-pdf', 'ComitesEleccionesController::generarActaRecomposicionPdf/$1/$2');
 $routes->get('/comites-elecciones/proceso/(:num)/siguiente-votacion', 'ComitesEleccionesController::getSiguienteEnVotacion/$1');
+
+// Firmas de Recomposicion
+$routes->get('/comites-elecciones/proceso/(:num)/recomposicion/(:num)/firmas', 'ComitesEleccionesController::solicitarFirmasRecomposicion/$1/$2');
+$routes->post('/comites-elecciones/proceso/crear-solicitudes-recomposicion', 'ComitesEleccionesController::crearSolicitudesFirmaRecomposicion');
+$routes->get('/comites-elecciones/proceso/(:num)/recomposicion/(:num)/firmas/estado', 'ComitesEleccionesController::estadoFirmasRecomposicion/$1/$2');
+$routes->get('/comites-elecciones/firma/reenviar/(:num)', 'ComitesEleccionesController::reenviarFirmaRecomposicion/$1');
 
 // Rutas PUBLICAS de votacion (sin autenticacion)
 $routes->get('/votar/(:alphanum)', 'ComitesEleccionesController::votarAcceso/$1');

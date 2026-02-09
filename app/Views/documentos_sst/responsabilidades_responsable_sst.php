@@ -124,9 +124,24 @@
                     <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2">
                         <i class="bi bi-file-earmark-word me-1"></i>Word
                     </a>
-                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegenerarDocumento">
+                    <button type="button" class="btn btn-warning btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalRegenerarDocumento">
                         <i class="bi bi-arrow-repeat me-1"></i>Actualizar Datos
                     </button>
+                    <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                        <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2">
+                            <i class="bi bi-pen me-1"></i>Solicitar Firmas
+                        </a>
+                    <?php endif; ?>
+                    <?php if (($documento['estado'] ?? '') === 'firmado'): ?>
+                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-success btn-sm me-2">
+                            <i class="bi bi-patch-check me-1"></i>Ver Firmas
+                        </a>
+                    <?php endif; ?>
+                    <?php if (($documento['estado'] ?? '') === 'pendiente_firma'): ?>
+                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-warning btn-sm me-2">
+                            <i class="bi bi-clock-history me-1"></i>Estado Firmas
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

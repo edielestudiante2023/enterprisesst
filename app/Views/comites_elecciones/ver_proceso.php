@@ -484,19 +484,46 @@ $esVistaHistorica = isset($_GET['fase']) && $_GET['fase'] !== $proceso['estado']
             </div>
 
             <?php elseif ($faseVisualizar === 'designacion_empleador'): ?>
-            <!-- Estado: Designacion Empleador -->
+            <!-- Estado: Designacion Empleador / Brigada / Vigia -->
+            <?php
+            $tituloDesignacion = match($proceso['tipo_comite']) {
+                'BRIGADA' => 'Designacion de Brigadistas',
+                'VIGIA' => 'Designacion del Vigia SST',
+                default => 'Designacion de Representantes del Empleador'
+            };
+            $descripcionDesignacion = match($proceso['tipo_comite']) {
+                'BRIGADA' => 'Registre los integrantes de la Brigada de Emergencias.',
+                'VIGIA' => 'Registre al Vigia de Seguridad y Salud en el Trabajo.',
+                default => 'Registre los representantes designados por el empleador.'
+            };
+            $botonDesignacion = match($proceso['tipo_comite']) {
+                'BRIGADA' => 'Agregar Brigadista',
+                'VIGIA' => 'Designar Vigia SST',
+                default => 'Designar Representante del Empleador'
+            };
+            $mensajeVacio = match($proceso['tipo_comite']) {
+                'BRIGADA' => 'No hay brigadistas designados aun.',
+                'VIGIA' => 'No se ha designado un Vigia SST aun.',
+                default => 'No hay representantes del empleador designados aun.'
+            };
+            $iconoDesignacion = match($proceso['tipo_comite']) {
+                'BRIGADA' => 'bi-fire',
+                'VIGIA' => 'bi-person-badge',
+                default => 'bi-building'
+            };
+            ?>
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-building me-2"></i>Designacion de Representantes del Empleador</h5>
+                    <h5 class="mb-0"><i class="bi <?= $iconoDesignacion ?> me-2"></i><?= $tituloDesignacion ?></h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Registre los representantes designados por el empleador.</p>
+                    <p class="text-muted"><?= $descripcionDesignacion ?></p>
 
                     <?php if (!$esVistaHistorica): ?>
                     <!-- Boton agregar representante -->
                     <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/inscribir/empleador') ?>"
                        class="btn btn-success mb-3">
-                        <i class="bi bi-plus-lg me-1"></i>Designar Representante del Empleador
+                        <i class="bi bi-plus-lg me-1"></i><?= $botonDesignacion ?>
                     </a>
                     <?php endif; ?>
 
@@ -504,7 +531,7 @@ $esVistaHistorica = isset($_GET['fase']) && $_GET['fase'] !== $proceso['estado']
                     <?php if (empty($candidatosEmpleador)): ?>
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle me-2"></i>
-                        No hay representantes del empleador designados aun.
+                        <?= $mensajeVacio ?>
                     </div>
                     <?php else: ?>
                     <div class="table-responsive">
@@ -515,7 +542,9 @@ $esVistaHistorica = isset($_GET['fase']) && $_GET['fase'] !== $proceso['estado']
                                     <th>Nombre</th>
                                     <th>Documento</th>
                                     <th>Cargo</th>
+                                    <?php if (!in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA'])): ?>
                                     <th>Plaza</th>
+                                    <?php endif; ?>
                                     <?php if (in_array($proceso['tipo_comite'], ['COPASST', 'VIGIA'])): ?>
                                     <th>Cert. 50h</th>
                                     <?php endif; ?>
@@ -530,20 +559,29 @@ $esVistaHistorica = isset($_GET['fase']) && $_GET['fase'] !== $proceso['estado']
                                         <img src="<?= base_url($e['foto']) ?>" alt="Foto"
                                              class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                                         <?php else: ?>
-                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                        <?php
+                                        $bgColor = match($proceso['tipo_comite']) {
+                                            'BRIGADA' => 'bg-danger',
+                                            'VIGIA' => 'bg-info',
+                                            default => 'bg-primary'
+                                        };
+                                        ?>
+                                        <div class="rounded-circle <?= $bgColor ?> text-white d-flex align-items-center justify-content-center"
                                              style="width: 40px; height: 40px;">
-                                            <i class="bi bi-building"></i>
+                                            <i class="bi <?= $iconoDesignacion ?>"></i>
                                         </div>
                                         <?php endif; ?>
                                     </td>
                                     <td><strong><?= esc($e['nombres'] . ' ' . $e['apellidos']) ?></strong></td>
                                     <td><?= esc($e['documento_identidad']) ?></td>
                                     <td><?= esc($e['cargo']) ?></td>
+                                    <?php if (!in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA'])): ?>
                                     <td>
                                         <span class="badge <?= $e['tipo_plaza'] === 'principal' ? 'bg-primary' : 'bg-secondary' ?>">
                                             <?= ucfirst($e['tipo_plaza']) ?>
                                         </span>
                                     </td>
+                                    <?php endif; ?>
                                     <?php if (in_array($proceso['tipo_comite'], ['COPASST', 'VIGIA'])): ?>
                                     <td>
                                         <?php if ($e['tiene_certificado_50h']): ?>

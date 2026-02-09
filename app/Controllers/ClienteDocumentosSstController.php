@@ -205,6 +205,7 @@ class ClienteDocumentosSstController extends Controller
             'capacitacion_sst' => ['programa_capacitacion'],
             'responsables_sst' => ['asignacion_responsable_sgsst'],
             'identificacion_alto_riesgo' => ['identificacion_alto_riesgo'],
+            'mecanismos_comunicacion_sgsst' => ['mecanismos_comunicacion_sgsst'],
         ];
 
         if (isset($filtros[$tipoCarpetaFases])) {
@@ -271,7 +272,7 @@ class ClienteDocumentosSstController extends Controller
             '1.1.4' => 'afiliacion_srl',
             '1.1.5' => 'identificacion_alto_riesgo',
             '1.1.6' => 'conformacion_copasst',
-            '1.1.8' => 'comite_convivencia',
+            '1.1.8' => 'manual_convivencia_1_1_8',
             '1.2.1' => 'capacitacion_sst',
             '1.2.3' => 'responsables_curso_50h',
             '2.3.1' => 'evaluacion_prioridades',
@@ -292,6 +293,7 @@ class ClienteDocumentosSstController extends Controller
             '5.1.2' => 'brigada_emergencias',
             '6.1.3' => 'revision_direccion',
             '6.1.4' => 'planificacion_auditorias_copasst',
+            '2.8.1' => 'mecanismos_comunicacion_sgsst',
         ];
 
         if (isset($mapaCodigos[$codigo])) {
@@ -454,8 +456,9 @@ class ClienteDocumentosSstController extends Controller
             'PR-SST-AR' => 'identificacion_alto_riesgo',
             // 1.1.6 Conformación COPASST / Vigía
             'COPASST' => 'soporte_conformacion_copasst',
-            // 1.1.8 Comité de Convivencia Laboral
+            // 1.1.8 Comité de Convivencia Laboral / Manual de Convivencia
             'COCOLAB' => 'soporte_comite_convivencia',
+            'MAN-CVL' => 'manual_convivencia_laboral',
             // 1.2.3 Responsables con curso 50 horas
             'CURSO-50H' => 'soporte_curso_50h',
             // 2.3.1 Evaluación e identificación de prioridades
@@ -498,6 +501,8 @@ class ClienteDocumentosSstController extends Controller
             'AUD-COP' => 'soporte_planificacion_auditoria',
             // 2.7.1 Procedimiento Matriz de Requisitos Legales
             'PRC-MRL' => 'procedimiento_matriz_legal',
+            // 2.8.1 Mecanismos de Comunicación, Auto Reporte
+            'MEC-COM' => 'mecanismos_comunicacion_sgsst',
         ];
 
         return $mapa[$codigoPlantilla] ?? null;

@@ -16,6 +16,26 @@ $mapaRutas = [
     'procedimiento_control_documental' => 'procedimiento-control-documental/' . $docSST['anio'],
     'presupuesto_sst' => 'presupuesto/preview/' . $docSST['anio'],
     'identificacion_alto_riesgo' => 'identificacion-alto-riesgo/' . $docSST['anio'],
+    // 2.1.1 Políticas de SST
+    'politica_sst_general' => 'politica-sst-general/' . $docSST['anio'],
+    'politica_alcohol_drogas' => 'politica-alcohol-drogas/' . $docSST['anio'],
+    'politica_acoso_laboral' => 'politica-acoso-laboral/' . $docSST['anio'],
+    'politica_violencias_genero' => 'politica-violencias-genero/' . $docSST['anio'],
+    'politica_discriminacion' => 'politica-discriminacion/' . $docSST['anio'],
+    'politica_prevencion_emergencias' => 'politica-prevencion-emergencias/' . $docSST['anio'],
+    // 2.2.1 Plan de Objetivos y Metas
+    'plan_objetivos_metas' => 'plan-objetivos-metas/' . $docSST['anio'],
+    // 1.2.1 Programa de Capacitación (ya incluido arriba)
+    // 3.1.3 Programa de Promoción y Prevención en Salud
+    'programa_promocion_prevencion_salud' => 'programa-promocion-prevencion-salud/' . $docSST['anio'],
+    // 3.1.1 Programa de Inducción y Reinducción
+    'programa_induccion_reinduccion' => 'programa-induccion-reinduccion/' . $docSST['anio'],
+    // 2.4.1 Procedimiento Matriz Legal
+    'procedimiento_matriz_legal' => 'procedimiento-matriz-legal/' . $docSST['anio'],
+    // 1.1.8 Manual de Convivencia Laboral
+    'manual_convivencia_laboral' => 'manual-convivencia-laboral/' . $docSST['anio'],
+    // 2.8.1 Mecanismos de Comunicación, Auto Reporte
+    'mecanismos_comunicacion_sgsst' => 'mecanismos-comunicacion/' . $docSST['anio'],
 ];
 
 // Presupuesto SST tiene ruta diferente
@@ -36,6 +56,30 @@ if ($tipoDoc === 'programa_capacitacion') {
     $urlEditar = base_url('documentos-sst/presupuesto/' . $cliente['id_cliente'] . '/' . $docSST['anio']);
 } elseif ($tipoDoc === 'identificacion_alto_riesgo') {
     $urlEditar = base_url('documentos/generar/identificacion_alto_riesgo/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'politica_sst_general') {
+    $urlEditar = base_url('documentos/generar/politica_sst_general/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'politica_prevencion_emergencias') {
+    $urlEditar = base_url('documentos/generar/politica_prevencion_emergencias/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'plan_objetivos_metas') {
+    $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/objetivos-sgsst');
+} elseif ($tipoDoc === 'politica_alcohol_drogas') {
+    $urlEditar = base_url('documentos/generar/politica_alcohol_drogas/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'politica_acoso_laboral') {
+    $urlEditar = base_url('documentos/generar/politica_acoso_laboral/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'politica_violencias_genero') {
+    $urlEditar = base_url('documentos/generar/politica_violencias_genero/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'politica_discriminacion') {
+    $urlEditar = base_url('documentos/generar/politica_discriminacion/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'programa_promocion_prevencion_salud') {
+    $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/pyp-salud');
+} elseif ($tipoDoc === 'programa_induccion_reinduccion') {
+    $urlEditar = base_url('documentos/generar/programa_induccion_reinduccion/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'procedimiento_matriz_legal') {
+    $urlEditar = base_url('documentos/generar/procedimiento_matriz_legal/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'manual_convivencia_laboral') {
+    $urlEditar = base_url('documentos/generar/manual_convivencia_laboral/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'mecanismos_comunicacion_sgsst') {
+    $urlEditar = base_url('documentos/generar/mecanismos_comunicacion_sgsst/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 }
 ?>
 <div class="btn-group btn-group-sm">

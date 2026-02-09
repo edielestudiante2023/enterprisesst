@@ -3593,6 +3593,32 @@ class ComitesEleccionesController extends BaseController
             return redirect()->back()->with('error', 'Datos de recomposición no encontrados');
         }
 
+        // Obtener firmas electrónicas si el documento existe
+        $firmasElectronicas = [];
+        if (!empty($data['recomposicion']['id_documento'])) {
+            $solicitudes = $this->db->table('tbl_doc_firma_solicitudes')
+                ->where('id_documento', $data['recomposicion']['id_documento'])
+                ->where('estado', 'firmado')
+                ->get()
+                ->getResultArray();
+
+            foreach ($solicitudes as $sol) {
+                $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                    ->where('id_solicitud', $sol['id_solicitud'])
+                    ->get()
+                    ->getRowArray();
+
+                $firmasElectronicas[$sol['firmante_tipo']] = [
+                    'nombre' => $sol['firmante_nombre'],
+                    'cargo' => $sol['firmante_cargo'],
+                    'cedula' => $sol['firmante_documento'],
+                    'fecha_firma' => $sol['fecha_firma'],
+                    'firma_imagen' => $evidencia['firma_imagen'] ?? null
+                ];
+            }
+        }
+        $data['firmasElectronicas'] = $firmasElectronicas;
+
         // Generar HTML
         $html = view('comites_elecciones/recomposicion/acta_pdf', $data);
 
@@ -3696,6 +3722,9 @@ class ComitesEleccionesController extends BaseController
             'otro' => 'otros motivos'
         ];
 
+        // Combinar todos los miembros actuales
+        $miembrosActuales = array_merge($miembrosTrabajadores, $miembrosEmpleador);
+
         return [
             'proceso' => $proceso,
             'cliente' => $cliente,
@@ -3705,9 +3734,456 @@ class ComitesEleccionesController extends BaseController
             'entrante' => $entrante,
             'miembrosEmpleador' => $miembrosEmpleador,
             'miembrosTrabajadores' => $miembrosTrabajadores,
+            'miembrosActuales' => $miembrosActuales,
             'motivoTexto' => $motivosTexto[$recomposicion['motivo_salida']] ?? 'motivos justificados',
             'codigoDocumento' => 'FT-SST-055',
             'versionDocumento' => '1'
         ];
+    }
+
+    /**
+     * Solicitar firmas para acta de recomposición
+     * Firmantes: Nuevo integrante, Representante Legal, Delegado SST (si existe)
+     */
+    public function solicitarFirmasRecomposicion(int $idProceso, int $idRecomposicion)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $data = $this->obtenerDatosActaRecomposicion($idProceso, $idRecomposicion);
+        if (!$data) {
+            return redirect()->back()->with('error', 'Recomposición no encontrada');
+        }
+
+        // Obtener o crear documento de recomposición
+        $documento = $this->obtenerOCrearDocumentoRecomposicion($data);
+
+        // Obtener solicitudes existentes
+        $solicitudesExistentes = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->get()
+            ->getResultArray();
+
+        $firmasExistentes = [];
+        foreach ($solicitudesExistentes as $sol) {
+            $firmasExistentes[$sol['firmante_tipo']] = $sol;
+        }
+
+        // Preparar firmantes (solo 3)
+        $firmantesDisponibles = [];
+
+        // 1. NUEVO INTEGRANTE (Obligatorio)
+        $nombreEntrante = $data['entrante']
+            ? $data['entrante']['nombres'] . ' ' . $data['entrante']['apellidos']
+            : trim(($data['recomposicion']['entrante_nombres'] ?? '') . ' ' . ($data['recomposicion']['entrante_apellidos'] ?? ''));
+        $cedulaEntrante = $data['entrante']
+            ? $data['entrante']['documento_identidad']
+            : ($data['recomposicion']['entrante_documento'] ?? '');
+        $cargoEntrante = $data['entrante']
+            ? $data['entrante']['cargo']
+            : ($data['recomposicion']['entrante_cargo'] ?? '');
+        $emailEntrante = $data['entrante']
+            ? ($data['entrante']['email'] ?? '')
+            : ($data['recomposicion']['entrante_email'] ?? '');
+
+        $firmantesDisponibles[] = [
+            'grupo' => 'Nuevo Integrante del Comité',
+            'tipo' => 'nuevo_integrante',
+            'nombre' => $nombreEntrante,
+            'cargo' => $cargoEntrante,
+            'cedula' => $cedulaEntrante,
+            'email' => $emailEntrante,
+            'ya_solicitado' => isset($firmasExistentes['nuevo_integrante']),
+            'estado_firma' => $firmasExistentes['nuevo_integrante']['estado'] ?? null,
+            'obligatorio' => true
+        ];
+
+        // 2. DELEGADO SST (Si existe) - Firma segundo
+        if (!empty($data['contexto']['delegado_sst_nombre'])) {
+            $firmantesDisponibles[] = [
+                'grupo' => 'Aprobación Empresarial',
+                'tipo' => 'delegado_sst',
+                'nombre' => $data['contexto']['delegado_sst_nombre'],
+                'cargo' => $data['contexto']['delegado_sst_cargo'] ?? 'Delegado SST',
+                'cedula' => $data['contexto']['delegado_sst_cedula'] ?? '',
+                'email' => $data['contexto']['delegado_sst_email'] ?? '',
+                'ya_solicitado' => isset($firmasExistentes['delegado_sst']),
+                'estado_firma' => $firmasExistentes['delegado_sst']['estado'] ?? null,
+                'obligatorio' => true
+            ];
+        }
+
+        // 3. REPRESENTANTE LEGAL (Obligatorio) - Firma último por jerarquía
+        if (!empty($data['contexto']['representante_legal_nombre']) || !empty($data['cliente']['nombre_rep_legal'])) {
+            $firmantesDisponibles[] = [
+                'grupo' => 'Aprobación Empresarial',
+                'tipo' => 'representante_legal',
+                'nombre' => $data['contexto']['representante_legal_nombre'] ?? $data['cliente']['nombre_rep_legal'] ?? '',
+                'cargo' => 'Representante Legal',
+                'cedula' => $data['contexto']['representante_legal_cedula'] ?? $data['cliente']['cedula_rep_legal'] ?? '',
+                'email' => $data['contexto']['representante_legal_email'] ?? $data['cliente']['email_rep_legal'] ?? '',
+                'ya_solicitado' => isset($firmasExistentes['representante_legal']),
+                'estado_firma' => $firmasExistentes['representante_legal']['estado'] ?? null,
+                'obligatorio' => true
+            ];
+        }
+
+        // Agrupar por grupo
+        $firmantesAgrupados = [];
+        foreach ($firmantesDisponibles as $f) {
+            $firmantesAgrupados[$f['grupo']][] = $f;
+        }
+
+        return view('comites_elecciones/recomposicion/solicitar_firmas', [
+            'proceso' => $data['proceso'],
+            'cliente' => $data['cliente'],
+            'recomposicion' => $data['recomposicion'],
+            'documento' => $documento,
+            'firmantesAgrupados' => $firmantesAgrupados,
+            'solicitudesExistentes' => $solicitudesExistentes,
+            'totalFirmantes' => count($firmantesDisponibles),
+            'firmadosCount' => count(array_filter($solicitudesExistentes, fn($s) => $s['estado'] === 'firmado')),
+            'pendientesCount' => count(array_filter($solicitudesExistentes, fn($s) => in_array($s['estado'], ['pendiente', 'esperando'])))
+        ]);
+    }
+
+    /**
+     * Obtener o crear documento de recomposición en tbl_documentos_sst
+     */
+    private function obtenerOCrearDocumentoRecomposicion(array $data): array
+    {
+        $tipoDocumento = 'acta_recomposicion_' . strtolower($data['proceso']['tipo_comite']);
+        $idCliente = $data['cliente']['id_cliente'];
+        $idRecomposicion = $data['recomposicion']['id_recomposicion'];
+
+        // Buscar documento existente
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', $tipoDocumento)
+            ->like('titulo', 'Recomposicion #' . $data['recomposicion']['numero_recomposicion'])
+            ->get()
+            ->getRowArray();
+
+        if ($documento) {
+            return $documento;
+        }
+
+        // Crear nuevo documento
+        $tipoComiteNombre = [
+            'COPASST' => 'COPASST',
+            'COCOLAB' => 'Comité de Convivencia Laboral',
+            'BRIGADA' => 'Brigada de Emergencias',
+            'VIGIA' => 'Vigía SST'
+        ][$data['proceso']['tipo_comite']] ?? $data['proceso']['tipo_comite'];
+
+        $titulo = "Acta de Recomposicion #{$data['recomposicion']['numero_recomposicion']} - {$tipoComiteNombre} {$data['proceso']['anio']}";
+        $codigo = $data['proceso']['tipo_comite'] === 'COCOLAB' ? 'FT-SST-155' : 'FT-SST-156';
+
+        $nuevoDocumento = [
+            'id_cliente' => $idCliente,
+            'tipo_documento' => $tipoDocumento,
+            'titulo' => $titulo,
+            'codigo' => $codigo,
+            'version' => 1,
+            'estado' => 'borrador',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->table('tbl_documentos_sst')->insert($nuevoDocumento);
+        $nuevoDocumento['id_documento'] = $this->db->insertID();
+
+        // Vincular con recomposición
+        $this->db->table('tbl_recomposiciones_comite')
+            ->where('id_recomposicion', $idRecomposicion)
+            ->update(['id_documento' => $nuevoDocumento['id_documento']]);
+
+        return $nuevoDocumento;
+    }
+
+    /**
+     * Crear solicitudes de firma para recomposición
+     */
+    public function crearSolicitudesFirmaRecomposicion()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $idProceso = $this->request->getPost('id_proceso');
+        $idRecomposicion = $this->request->getPost('id_recomposicion');
+        $idDocumento = $this->request->getPost('id_documento');
+        $firmantesSeleccionados = $this->request->getPost('firmantes') ?? [];
+
+        if (empty($firmantesSeleccionados)) {
+            return redirect()->back()->with('error', 'Debe seleccionar al menos un firmante');
+        }
+
+        $data = $this->obtenerDatosActaRecomposicion($idProceso, $idRecomposicion);
+        if (!$data) {
+            return redirect()->back()->with('error', 'Recomposición no encontrada');
+        }
+
+        $orden = 1;
+        $solicitudesCreadas = 0;
+
+        foreach ($firmantesSeleccionados as $tipoFirmante => $info) {
+            // Verificar que no exista ya
+            $existe = $this->db->table('tbl_doc_firma_solicitudes')
+                ->where('id_documento', $idDocumento)
+                ->where('firmante_tipo', $tipoFirmante)
+                ->get()
+                ->getRow();
+
+            if ($existe) {
+                continue;
+            }
+
+            // Generar token único
+            $token = bin2hex(random_bytes(32));
+
+            $solicitud = [
+                'id_documento' => $idDocumento,
+                'token' => $token,
+                'firmante_tipo' => $tipoFirmante,
+                'firmante_nombre' => $info['nombre'],
+                'firmante_email' => $info['email'],
+                'firmante_cargo' => $info['cargo'],
+                'firmante_documento' => $info['cedula'],
+                'orden_firma' => $orden,
+                'estado' => $orden === 1 ? 'pendiente' : 'esperando',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            $this->db->table('tbl_doc_firma_solicitudes')->insert($solicitud);
+            $solicitud['id_solicitud'] = $this->db->insertID();
+
+            // Enviar correo si es el primero
+            if ($orden === 1 && !empty($info['email'])) {
+                $this->enviarCorreoFirmaRecomposicion($solicitud, $data);
+            }
+
+            $orden++;
+            $solicitudesCreadas++;
+        }
+
+        // Actualizar estado de recomposición
+        if ($solicitudesCreadas > 0) {
+            $this->db->table('tbl_recomposiciones_comite')
+                ->where('id_recomposicion', $idRecomposicion)
+                ->update(['estado' => 'pendiente_firmas']);
+        }
+
+        return redirect()
+            ->to("comites-elecciones/proceso/{$idProceso}/recomposicion/{$idRecomposicion}/firmas/estado")
+            ->with('success', "Se crearon {$solicitudesCreadas} solicitudes de firma");
+    }
+
+    /**
+     * Enviar correo de firma para recomposición
+     */
+    private function enviarCorreoFirmaRecomposicion(array $solicitud, array $data): bool
+    {
+        $tipoComite = [
+            'COPASST' => 'COPASST',
+            'COCOLAB' => 'Comité de Convivencia Laboral',
+            'BRIGADA' => 'Brigada de Emergencias',
+            'VIGIA' => 'Vigía SST'
+        ][$data['proceso']['tipo_comite']] ?? $data['proceso']['tipo_comite'];
+
+        $nombreCliente = $data['cliente']['nombre_cliente'];
+        $enlaceFirma = base_url("firma/firmar/{$solicitud['token']}");
+
+        $tipoFirmanteDisplay = match($solicitud['firmante_tipo']) {
+            'nuevo_integrante' => 'Nuevo Integrante del Comité',
+            'representante_legal' => 'Representante Legal',
+            'delegado_sst' => 'Delegado SST',
+            default => $solicitud['firmante_cargo']
+        };
+
+        $mensaje = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 20px; text-align: center;'>
+                <h2 style='color: white; margin: 0;'>Solicitud de Firma Electronica</h2>
+                <p style='color: #e0e0e0; margin: 5px 0 0 0;'>Acta de Recomposicion - {$tipoComite}</p>
+            </div>
+            <div style='padding: 30px; background: #f8f9fa;'>
+                <p>Estimado/a <strong>{$solicitud['firmante_nombre']}</strong>,</p>
+                <p>Se requiere su firma electronica como <strong>{$tipoFirmanteDisplay}</strong> para el Acta de Recomposicion del {$tipoComite} de la empresa <strong>{$nombreCliente}</strong>.</p>
+
+                <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;'>
+                    <p style='margin: 5px 0;'><strong>Documento:</strong> Acta de Recomposicion #{$data['recomposicion']['numero_recomposicion']}</p>
+                    <p style='margin: 5px 0;'><strong>Comité:</strong> {$tipoComite}</p>
+                    <p style='margin: 5px 0;'><strong>Empresa:</strong> {$nombreCliente}</p>
+                </div>
+
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='{$enlaceFirma}' style='background: #dc3545; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>
+                        Firmar Documento
+                    </a>
+                </div>
+
+                <p style='font-size: 12px; color: #666;'>Este enlace es personal e intransferible. No lo comparta con terceros.</p>
+            </div>
+            <div style='background: #333; color: white; padding: 15px; text-align: center; font-size: 12px;'>
+                EnterpriseSST - Sistema de Gestión de Seguridad y Salud en el Trabajo
+            </div>
+        </div>";
+
+        try {
+            $email = new \SendGrid\Mail\Mail();
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setSubject("Solicitud de Firma: Acta de Recomposicion - {$nombreCliente}");
+            $email->addTo($solicitud['firmante_email'], $solicitud['firmante_nombre']);
+            $email->addContent("text/html", $mensaje);
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY') ?: 'SG.placeholder');
+            $response = $sendgrid->send($email);
+
+            return $response->statusCode() >= 200 && $response->statusCode() < 300;
+        } catch (\Exception $e) {
+            log_message('error', 'Error enviando correo firma recomposicion: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Estado de firmas de recomposición
+     */
+    public function estadoFirmasRecomposicion(int $idProceso, int $idRecomposicion)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $data = $this->obtenerDatosActaRecomposicion($idProceso, $idRecomposicion);
+        if (!$data) {
+            return redirect()->back()->with('error', 'Recomposición no encontrada');
+        }
+
+        // Obtener documento
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_documento', $data['recomposicion']['id_documento'])
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->back()->with('error', 'Documento no encontrado');
+        }
+
+        // Obtener solicitudes
+        $solicitudes = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('orden_firma', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener evidencias
+        $evidencias = [];
+        foreach ($solicitudes as $sol) {
+            $ev = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            if ($ev) {
+                $evidencias[$sol['id_solicitud']] = $ev;
+            }
+        }
+
+        $totalSolicitudes = count($solicitudes);
+        $firmados = count(array_filter($solicitudes, fn($s) => $s['estado'] === 'firmado'));
+        $pendientes = count(array_filter($solicitudes, fn($s) => in_array($s['estado'], ['pendiente', 'esperando'])));
+        $porcentaje = $totalSolicitudes > 0 ? round(($firmados / $totalSolicitudes) * 100) : 0;
+
+        return view('comites_elecciones/recomposicion/estado_firmas', [
+            'proceso' => $data['proceso'],
+            'cliente' => $data['cliente'],
+            'recomposicion' => $data['recomposicion'],
+            'documento' => $documento,
+            'solicitudes' => $solicitudes,
+            'evidencias' => $evidencias,
+            'totalSolicitudes' => $totalSolicitudes,
+            'firmados' => $firmados,
+            'pendientes' => $pendientes,
+            'porcentaje' => $porcentaje
+        ]);
+    }
+
+    /**
+     * Reenviar correo de firma para recomposición
+     */
+    public function reenviarFirmaRecomposicion(int $idSolicitud)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        // Obtener la solicitud
+        $solicitud = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_solicitud', $idSolicitud)
+            ->get()
+            ->getRowArray();
+
+        if (!$solicitud) {
+            return redirect()->back()->with('error', 'Solicitud no encontrada');
+        }
+
+        // Verificar que no esté firmada
+        if ($solicitud['estado'] === 'firmado') {
+            return redirect()->back()->with('error', 'Esta solicitud ya fue firmada');
+        }
+
+        // Obtener documento para saber el proceso y recomposición
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_documento', $solicitud['id_documento'])
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->back()->with('error', 'Documento no encontrado');
+        }
+
+        // Obtener recomposición
+        $recomposicion = $this->db->table('tbl_recomposiciones_comite')
+            ->where('id_documento', $documento['id_documento'])
+            ->get()
+            ->getRowArray();
+
+        if (!$recomposicion) {
+            return redirect()->back()->with('error', 'Recomposición no encontrada');
+        }
+
+        // Obtener datos completos
+        $data = $this->obtenerDatosActaRecomposicion($recomposicion['id_proceso'], $recomposicion['id_recomposicion']);
+        if (!$data) {
+            return redirect()->back()->with('error', 'Error al obtener datos de recomposición');
+        }
+
+        // Generar nuevo token y extender fecha de expiración
+        $nuevoToken = bin2hex(random_bytes(32));
+        $nuevaExpiracion = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+        // Actualizar solicitud: nuevo token, nueva expiración, estado pendiente
+        $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_solicitud', $idSolicitud)
+            ->update([
+                'token' => $nuevoToken,
+                'estado' => 'pendiente',
+                'fecha_expiracion' => $nuevaExpiracion
+            ]);
+
+        // Actualizar la solicitud local para el correo
+        $solicitud['token'] = $nuevoToken;
+        $solicitud['estado'] = 'pendiente';
+
+        // Reenviar correo
+        $enviado = $this->enviarCorreoFirmaRecomposicion($solicitud, $data);
+
+        if ($enviado) {
+            return redirect()->back()->with('success', "Correo reenviado exitosamente a {$solicitud['firmante_nombre']}. El firmante ya puede firmar.");
+        } else {
+            return redirect()->back()->with('error', 'Error al reenviar el correo');
+        }
     }
 }

@@ -328,7 +328,13 @@
             $consultorNombre = $consultor['nombre_consultor'] ?? '';
             $consultorCargo = 'Consultor SST';
             $consultorLicencia = $consultor['numero_licencia'] ?? '';
-            $firmaConsultor = $consultor['firma_consultor'] ?? '';
+
+            // ================================================
+            // FIRMA CONSULTOR: Prioridad electrónica > física
+            // Según 2_AA_WEB.md Sección 16
+            // ================================================
+            $firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+            $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
 
             $delegadoNombre = $contexto['delegado_sst_nombre'] ?? '';
             $delegadoCargo = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
@@ -374,9 +380,12 @@
                                     <span><?= esc($consultorLicencia) ?></span>
                                 </div>
                                 <?php endif; ?>
+                                <!-- Firma (prioridad: electrónica > física) -->
                                 <div style="position: absolute; bottom: 15px; left: 20px; right: 20px; text-align: center;">
-                                    <?php if (!empty($firmaConsultor)): ?>
-                                        <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" alt="Firma Consultor" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;">
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;">
+                                    <?php elseif (!empty($firmaConsultorFisica)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 80%; margin: 0 auto; padding-top: 5px;">
                                         <small style="color: #666;">Firma</small>
@@ -443,9 +452,12 @@
                                     <strong style="color: #495057; font-size: 0.8rem;">Cargo:</strong>
                                     <span style="font-size: 0.85rem;"><?= esc($consultorCargo) ?></span>
                                 </div>
+                                <!-- Firma (prioridad: electrónica > física) -->
                                 <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
-                                    <?php if (!empty($firmaConsultor)): ?>
-                                        <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php elseif (!empty($firmaConsultorFisica)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                         <small style="color: #666; font-size: 0.7rem;">Firma</small>

@@ -244,14 +244,45 @@ class DocumentosSSTController extends BaseController
 
         // Obtener el handler del documento desde el Factory (arquitectura escalable)
         $documentoHandler = null;
+        $usaIA = true; // Por defecto, los documentos usan IA
         try {
             $documentoHandler = DocumentoSSTFactory::crear($tipo);
+
+            // Verificar si el documento requiere generación con IA
+            if (method_exists($documentoHandler, 'requiereGeneracionIA')) {
+                $usaIA = $documentoHandler->requiereGeneracionIA();
+            }
+
+            // Si el documento NO usa IA, pre-cargar contenido estático para secciones vacías
+            if (!$usaIA && !$documentoExistente) {
+                foreach ($secciones as &$seccion) {
+                    if (empty($seccion['contenido'])) {
+                        $seccion['contenido'] = $documentoHandler->getContenidoEstatico(
+                            $seccion['key'],
+                            $cliente,
+                            $contexto,
+                            $estandares,
+                            $anio
+                        );
+                    }
+                }
+                unset($seccion);
+
+                // Recalcular secciones guardadas ya que ahora tienen contenido
+                $seccionesGuardadas = $totalSecciones;
+            }
         } catch (\Exception $e) {
             log_message('warning', "Factory no encontró handler para '{$tipo}': " . $e->getMessage());
         }
 
+        // Obtener historial de versiones si el documento existe
+        $historialVersiones = [];
+        if (!empty($documentoExistente['id_documento'])) {
+            $historialVersiones = $this->versionService->obtenerHistorial((int)$documentoExistente['id_documento']);
+        }
+
         $data = [
-            'titulo' => 'Generar ' . $tipoDoc['nombre'] . ' con IA',
+            'titulo' => $usaIA ? ('Generar ' . $tipoDoc['nombre'] . ' con IA') : ('Editar ' . $tipoDoc['nombre']),
             'cliente' => $cliente,
             'tipo' => $tipo,
             'tipoDoc' => $tipoDoc,
@@ -268,15 +299,198 @@ class DocumentosSSTController extends BaseController
             'seccionesGuardadas' => $seccionesGuardadas,
             'seccionesAprobadas' => $seccionesAprobadas,
             'todasSeccionesListas' => $todasSeccionesListas,
+            // Flag para indicar si el documento usa generación con IA
+            'usaIA' => $usaIA,
             // NUEVO: Handler del documento para URLs y configuración
             'documentoHandler' => $documentoHandler,
             // URLs pre-calculadas (usa Factory si disponible, fallback a convención)
             'urlVistaPrevia' => $documentoHandler
                 ? $documentoHandler->getUrlVistaPrevia($idCliente, $anio)
                 : base_url('documentos-sst/' . $idCliente . '/' . str_replace('_', '-', $tipo) . '/' . $anio),
+            // Sistema de versionamiento estandarizado
+            'historialVersiones' => $historialVersiones,
         ];
 
         return view('documentos_sst/generar_con_ia', $data);
+    }
+
+    /**
+     * Previsualiza los datos que alimentarán la IA antes de generar (AJAX)
+     * Muestra al usuario qué actividades, indicadores y contexto se usarán
+     */
+    public function previsualizarDatos(string $tipoDocumento, int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['ok' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+        $anio = (int) date('Y');
+
+        try {
+            $handler = DocumentoSSTFactory::crear($tipoDocumento);
+        } catch (\Exception $e) {
+            return $this->response->setJSON(['ok' => false, 'message' => 'Tipo de documento no válido']);
+        }
+
+        $db = \Config\Database::connect();
+
+        // ═══════════════════════════════════════════════════════════
+        // ACTIVIDADES DEL PLAN DE TRABAJO (Fase 1)
+        // ═══════════════════════════════════════════════════════════
+        $actividades = [];
+        try {
+            $query = $db->table('tbl_pta_cliente')
+                ->select('actividad_plandetrabajo, tipo_servicio, fecha_propuesta, estado_actividad')
+                ->where('id_cliente', $idCliente)
+                ->where('YEAR(fecha_propuesta)', $anio);
+
+            // Filtrar según el tipo de documento
+            $filtroServicio = $this->getFiltroServicioPTA($tipoDocumento);
+            if (!empty($filtroServicio)) {
+                $query->groupStart();
+                foreach ($filtroServicio as $i => $filtro) {
+                    if ($i === 0) {
+                        if ($filtro['type'] === 'exact') {
+                            $query->where('tipo_servicio', $filtro['value']);
+                        } else {
+                            $query->like('tipo_servicio', $filtro['value'], 'both');
+                        }
+                    } else {
+                        if ($filtro['type'] === 'exact') {
+                            $query->orWhere('tipo_servicio', $filtro['value']);
+                        } else {
+                            $query->orLike($filtro['field'] ?? 'tipo_servicio', $filtro['value'], 'both');
+                        }
+                    }
+                }
+                $query->groupEnd();
+            }
+
+            $rows = $query->orderBy('fecha_propuesta', 'ASC')->get()->getResultArray();
+
+            foreach ($rows as $row) {
+                $fecha = $row['fecha_propuesta'] ?? '';
+                $actividades[] = [
+                    'nombre' => $row['actividad_plandetrabajo'] ?? 'Sin nombre',
+                    'mes'    => $fecha ? date('M Y', strtotime($fecha)) : 'No programada',
+                    'estado' => $row['estado_actividad'] ?? 'ABIERTA',
+                ];
+            }
+        } catch (\Exception $e) {
+            log_message('error', "Error previsualizando actividades: " . $e->getMessage());
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // INDICADORES (Fase 2)
+        // ═══════════════════════════════════════════════════════════
+        $indicadores = [];
+        try {
+            $categoriaIndicador = $this->getCategoriaIndicador($tipoDocumento);
+
+            $queryInd = $db->table('tbl_indicadores_sst')
+                ->select('nombre_indicador, tipo_indicador, meta, periodicidad')
+                ->where('id_cliente', $idCliente)
+                ->where('activo', 1);
+
+            if (!empty($categoriaIndicador)) {
+                $queryInd->groupStart();
+                foreach ($categoriaIndicador as $i => $cat) {
+                    if ($i === 0) {
+                        $queryInd->where('categoria', $cat);
+                    } else {
+                        $queryInd->orWhere('categoria', $cat);
+                    }
+                }
+                $queryInd->groupEnd();
+            }
+
+            $rowsInd = $queryInd->get()->getResultArray();
+
+            foreach ($rowsInd as $row) {
+                $indicadores[] = [
+                    'nombre' => $row['nombre_indicador'] ?? 'Sin nombre',
+                    'tipo'   => $row['tipo_indicador'] ?? 'proceso',
+                    'meta'   => $row['meta'] ?? 'No definida',
+                ];
+            }
+        } catch (\Exception $e) {
+            log_message('error', "Error previsualizando indicadores: " . $e->getMessage());
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // RESPUESTA
+        // ═══════════════════════════════════════════════════════════
+        return $this->response->setJSON([
+            'ok'          => true,
+            'tipo'        => $handler->getNombre(),
+            'actividades' => $actividades,
+            'indicadores' => $indicadores,
+            'contexto'    => [
+                'empresa'              => $cliente['nombre_cliente'] ?? '',
+                'actividad_economica'  => $contexto['actividad_economica_principal']
+                                          ?? $contexto['sector_economico']
+                                          ?? $cliente['codigo_actividad_economica']
+                                          ?? 'No especificada',
+                'nivel_riesgo'         => $contexto['nivel_riesgo_arl'] ?? 'No especificado',
+                'total_trabajadores'   => $contexto['total_trabajadores'] ?? 'No especificado',
+                'estandares_aplicables'=> $contexto['estandares_aplicables'] ?? 7,
+                'peligros'             => $contexto['peligros_identificados'] ?? '[]',
+                'tiene_copasst'        => (bool)($contexto['tiene_copasst'] ?? false),
+                'tiene_vigia_sst'      => (bool)($contexto['tiene_vigia_sst'] ?? false),
+                'tiene_comite_convivencia' => (bool)($contexto['tiene_comite_convivencia'] ?? false),
+                'tiene_brigada'        => (bool)($contexto['tiene_brigada_emergencias'] ?? false),
+                'observaciones'        => $contexto['observaciones_contexto'] ?? '',
+            ]
+        ]);
+    }
+
+    /**
+     * Retorna filtros de tipo_servicio para tbl_pta_cliente según el tipo de documento
+     */
+    private function getFiltroServicioPTA(string $tipoDocumento): array
+    {
+        $filtros = [
+            'programa_capacitacion' => [
+                ['type' => 'exact', 'value' => 'Programa de Capacitacion'],
+                ['type' => 'like',  'value' => 'Capacitacion'],
+                ['type' => 'like',  'value' => 'Capacitación'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'capacitacion'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'induccion'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'reinduccion'],
+            ],
+            'programa_promocion_prevencion_salud' => [
+                ['type' => 'exact', 'value' => 'Programa PyP Salud'],
+                ['type' => 'like',  'value' => 'Promocion'],
+                ['type' => 'like',  'value' => 'Prevencion'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'examen medico'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'pausas activas'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'promocion'],
+            ],
+            'plan_objetivos_metas' => [
+                ['type' => 'like',  'value' => 'Objetivos'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'objetivo'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'meta'],
+            ],
+        ];
+
+        return $filtros[$tipoDocumento] ?? [];
+    }
+
+    /**
+     * Retorna las categorías de indicador para tbl_indicadores_sst según el tipo de documento
+     */
+    private function getCategoriaIndicador(string $tipoDocumento): array
+    {
+        $categorias = [
+            'programa_capacitacion' => ['capacitacion', 'capacitacion_sst'],
+            'programa_promocion_prevencion_salud' => ['pyp_salud'],
+            'plan_objetivos_metas' => ['objetivos', 'objetivos_sgsst'],
+        ];
+
+        return $categorias[$tipoDocumento] ?? [];
     }
 
     /**
@@ -1165,9 +1379,23 @@ Se debe generar acta que registre:
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ]);
+
+            // Retornar id_documento para actualizar UI de firmas
+            $nuevoIdDocumento = $this->db->insertID();
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Seccion guardada',
+                'id_documento' => $nuevoIdDocumento,
+                'documento_creado' => true
+            ]);
         }
 
-        return $this->response->setJSON(['success' => true, 'message' => 'Seccion guardada']);
+        // Documento ya existia, retornar su id
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Seccion guardada',
+            'id_documento' => $documento['id_documento'] ?? null
+        ]);
     }
 
     /**
@@ -1325,6 +1553,11 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
+        // Obtener datos del vigía SST para firma física
+        $vigia = null;
+        $vigiaModel = new \App\Models\VigiaModel();
+        $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
+
         // Obtener firmas electrónicas del documento
         $firmasElectronicas = [];
         $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
@@ -1354,6 +1587,7 @@ Se debe generar acta que registre:
             'responsables' => $responsables,
             'contexto' => $contexto,
             'consultor' => $consultor,
+            'vigia' => $vigia,
             'firmasElectronicas' => $firmasElectronicas
         ];
 
@@ -2745,6 +2979,20 @@ Se debe generar acta que registre:
     }
 
     /**
+     * Adjuntar soporte de capacitación COPASST (1.1.7)
+     */
+    public function adjuntarSoporteCapacitacionCopasst()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_capacitacion_copasst',
+            'SOP-CCP',
+            'soporte_capacitacion_copasst_',
+            'Soporte de Capacitación COPASST',
+            'Soporte de capacitación COPASST adjuntado exitosamente.'
+        );
+    }
+
+    /**
      * Adjuntar soporte de comité de convivencia (1.1.8)
      */
     public function adjuntarSoporteConvivencia()
@@ -2964,14 +3212,12 @@ Se debe generar acta que registre:
             $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], $documento['tipo_documento']);
         }
 
-        // Preparar logo como base64
+        // Preparar logo como base64 (con fondo blanco para evitar fondo negro en Word)
         $logoBase64 = '';
         if (!empty($cliente['logo'])) {
             $logoPath = FCPATH . 'uploads/' . $cliente['logo'];
             if (file_exists($logoPath)) {
-                $logoData = file_get_contents($logoPath);
-                $logoMime = mime_content_type($logoPath);
-                $logoBase64 = 'data:' . $logoMime . ';base64,' . base64_encode($logoData);
+                $logoBase64 = $this->convertirImagenConFondoBlanco($logoPath);
             }
         }
 
@@ -3492,6 +3738,148 @@ Se debe generar acta que registre:
     }
 
     /**
+     * Muestra el Plan de Objetivos y Metas del SG-SST (2.2.1)
+     */
+    public function planObjetivosMetas(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'plan_objetivos_metas')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        // Si no existe el documento, intentar crearlo automáticamente
+        if (!$documento) {
+            // Verificar que existan datos de las fases anteriores
+            $objetivosExistentes = $this->db->table('tbl_pta_cliente')
+                ->where('id_cliente', $idCliente)
+                ->where('tipo_servicio', 'Objetivos SG-SST')
+                ->where('YEAR(fecha_propuesta)', $anio)
+                ->countAllResults();
+
+            if ($objetivosExistentes === 0) {
+                return redirect()->to(base_url('generador-ia/' . $idCliente . '/objetivos-sgsst'))
+                    ->with('error', 'Primero debe generar los Objetivos del SG-SST en la Fase 1.');
+            }
+
+            // SOLUCIÓN ARQUITECTÓNICA: Crear contenido dinámico desde BD
+            // Usa DocumentoConfigService para obtener secciones configuradas
+            // Elimina hardcodeo y garantiza consistencia con Vista Web
+            $codigo = 'POM-' . str_pad($idCliente, 3, '0', STR_PAD_LEFT) . '-' . $anio;
+            $contenidoInicial = $this->configService->crearContenidoInicial('plan_objetivos_metas');
+
+            $idDocumento = $this->db->table('tbl_documentos_sst')->insert([
+                'id_cliente' => $idCliente,
+                'tipo_documento' => 'plan_objetivos_metas',
+                'codigo' => $codigo,
+                'titulo' => 'Plan de Objetivos y Metas del SG-SST',
+                'anio' => $anio,
+                'version' => 1,
+                'estado' => 'borrador',
+                'contenido' => json_encode($contenidoInicial),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ], true);
+
+            // Obtener el documento recién creado
+            $documento = $this->db->table('tbl_documentos_sst')
+                ->where('id_documento', $idDocumento)
+                ->get()
+                ->getRowArray();
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        // Normalizar secciones para eliminar duplicados
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'plan_objetivos_metas');
+        }
+
+        // Obtener historial de versiones para la tabla de Control de Cambios
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener responsables del cliente para las firmas
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        // Obtener contexto SST para datos adicionales
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        // Obtener datos del consultor asignado
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        // Obtener objetivos del PTA
+        $objetivos = $this->db->table('tbl_pta_cliente')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_servicio', 'Objetivos SG-SST')
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->orderBy('fecha_propuesta', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener indicadores de objetivos
+        $indicadores = $this->db->table('tbl_indicadores_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('categoria', 'objetivos_sgsst')
+            ->where('activo', 1)
+            ->get()
+            ->getResultArray();
+
+        // Obtener firmas electrónicas del documento
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Plan de Objetivos y Metas del SG-SST - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'objetivos' => $objetivos,
+            'indicadores' => $indicadores,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('plan_objetivos_metas')
+        ];
+
+        return view('documentos_sst/plan_objetivos_metas', $data);
+    }
+
+    /**
      * Crea el Procedimiento de Control Documental
      */
     public function crearControlDocumental(int $idCliente)
@@ -3573,5 +3961,398 @@ Se debe generar acta que registre:
         // Redirigir al editor de secciones
         return redirect()->to(base_url('documentos/generar/procedimiento_control_documental/' . $idCliente))
             ->with('success', 'Procedimiento de Control Documental creado. Ahora puede editar las secciones.');
+    }
+
+    /**
+     * Vista previa de la Política de Seguridad y Salud en el Trabajo (2.1.1)
+     */
+    public function politicaSstGeneral(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'politica_sst_general')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/politica_sst_general/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Política de SST.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        // Normalizar secciones para eliminar duplicados
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_sst_general');
+        }
+
+        // Obtener historial de versiones para la tabla de Control de Cambios
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener responsables del cliente para las firmas
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        // Obtener contexto SST para datos adicionales
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        // Obtener datos del consultor asignado
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        // Obtener firmas electrónicas del documento
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Política de Seguridad y Salud en el Trabajo - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'politica_sst_general'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista previa de la Política de Prevención y Respuesta ante Emergencias (2.1.1)
+     */
+    public function politicaPrevencionEmergencias(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'politica_prevencion_emergencias')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/politica_prevencion_emergencias/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Política de Emergencias.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_prevencion_emergencias');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Política de Prevención y Respuesta ante Emergencias - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'politica_prevencion_emergencias'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista previa del Manual de Convivencia Laboral (1.1.8)
+     */
+    public function manualConvivenciaLaboral(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'manual_convivencia_laboral')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/manual_convivencia_laboral/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Manual de Convivencia Laboral.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'manual_convivencia_laboral');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Manual de Convivencia Laboral - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'manual_convivencia_laboral'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * 2.8.1 Mecanismos de Comunicación, Auto Reporte en SG-SST
+     */
+    public function mecanismosComunicacion(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'mecanismos_comunicacion_sgsst')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/mecanismos_comunicacion_sgsst/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el documento de Mecanismos de Comunicación.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'mecanismos_comunicacion_sgsst');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Mecanismos de Comunicación, Auto Reporte en SG-SST - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'mecanismos_comunicacion_sgsst'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Convierte una imagen a base64 con fondo blanco (para evitar fondo negro en Word)
+     *
+     * Las imágenes PNG con transparencia aparecen con fondo negro en Word porque
+     * Word no maneja correctamente el canal alpha. Esta función crea un canvas blanco
+     * y copia la imagen encima, eliminando la transparencia.
+     *
+     * @param string $imagePath Ruta absoluta al archivo de imagen
+     * @return string Imagen en formato base64 Data URI
+     */
+    private function convertirImagenConFondoBlanco(string $imagePath): string
+    {
+        if (!file_exists($imagePath)) {
+            return '';
+        }
+
+        $mime = mime_content_type($imagePath);
+
+        // Si no es PNG, devolver la imagen normal como base64
+        if ($mime !== 'image/png') {
+            $imageData = file_get_contents($imagePath);
+            return 'data:' . $mime . ';base64,' . base64_encode($imageData);
+        }
+
+        // Para PNG, crear una imagen con fondo blanco
+        $imagenOriginal = @imagecreatefrompng($imagePath);
+        if (!$imagenOriginal) {
+            // Si falla GD, devolver imagen normal
+            $imageData = file_get_contents($imagePath);
+            return 'data:image/png;base64,' . base64_encode($imageData);
+        }
+
+        $ancho = imagesx($imagenOriginal);
+        $alto = imagesy($imagenOriginal);
+
+        // Crear nueva imagen con fondo blanco
+        $imagenConFondo = imagecreatetruecolor($ancho, $alto);
+        $blanco = imagecolorallocate($imagenConFondo, 255, 255, 255);
+        imagefill($imagenConFondo, 0, 0, $blanco);
+
+        // Preservar transparencia al copiar
+        imagealphablending($imagenConFondo, true);
+        imagesavealpha($imagenConFondo, true);
+
+        // Copiar imagen original sobre el fondo blanco
+        imagecopy($imagenConFondo, $imagenOriginal, 0, 0, 0, 0, $ancho, $alto);
+
+        // Capturar la imagen como PNG en memoria
+        ob_start();
+        imagepng($imagenConFondo);
+        $imageData = ob_get_clean();
+
+        // Liberar memoria
+        imagedestroy($imagenOriginal);
+        imagedestroy($imagenConFondo);
+
+        return 'data:image/png;base64,' . base64_encode($imageData);
     }
 }

@@ -112,6 +112,18 @@ class IndicadorSSTModel extends Model
             'color' => 'danger',
             'descripcion' => 'Indicadores del programa de promoción y prevención en salud (3.1.2)'
         ],
+        'objetivos_sgsst' => [
+            'nombre' => 'Objetivos del SG-SST',
+            'icono' => 'bi-bullseye',
+            'color' => 'success',
+            'descripcion' => 'Indicadores de medición de objetivos (Estándar 2.2.1)'
+        ],
+        'induccion' => [
+            'nombre' => 'Inducción y Reinducción',
+            'icono' => 'bi-person-badge',
+            'color' => 'info',
+            'descripcion' => 'Indicadores del programa de inducción y reinducción'
+        ],
         'otro' => [
             'nombre' => 'Otros',
             'icono' => 'bi-three-dots',
@@ -560,6 +572,34 @@ class IndicadorSSTModel extends Model
         }
 
         return $creados;
+    }
+
+    /**
+     * Verificar cumplimiento de indicadores de Capacitacion SST
+     */
+    public function verificarCumplimientoCapacitacion(int $idCliente): array
+    {
+        $indicadores = $this->where('id_cliente', $idCliente)
+            ->where('activo', 1)
+            ->groupStart()
+                ->where('categoria', 'capacitacion')
+                ->orLike('nombre_indicador', 'capacitacion', 'both', true, true)
+                ->orLike('nombre_indicador', 'cobertura', 'both', true, true)
+                ->orLike('nombre_indicador', 'cronograma', 'both', true, true)
+            ->groupEnd()
+            ->findAll();
+
+        $total = count($indicadores);
+
+        // Minimo segun estandares (simplificado a 2)
+        $minimo = 2;
+
+        return [
+            'total' => $total,
+            'completo' => $total >= $minimo,
+            'minimo' => $minimo,
+            'indicadores' => $indicadores
+        ];
     }
 
     /**

@@ -165,6 +165,18 @@
           <h6 class="mb-1" style="font-size: 16px;">Ir a Dashboard</h6>
           <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm">Ir a DashBoard</a>
         </div>
+        <div class="text-center me-3">
+          <h6 class="mb-1" style="font-size: 16px;">Cargar Cronograma</h6>
+          <a href="<?= base_url('/consultant/csvcronogramadecapacitacion') ?>" class="btn btn-info btn-sm">
+            <i class="fas fa-file-csv"></i> Cargar CSV
+          </a>
+        </div>
+        <div class="text-center me-3">
+          <h6 class="mb-1" style="font-size: 16px;">Generar Automático</h6>
+          <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#generateTrainingModal">
+            <i class="fas fa-magic"></i> Generar
+          </button>
+        </div>
         <div class="text-center">
           <h6 class="mb-1" style="font-size: 16px;">Añadir Registro</h6>
           <a href="<?= base_url('/addcronogCapacitacion') ?>" class="btn btn-success btn-sm" target="_blank">Añadir Registro</a>
@@ -187,17 +199,70 @@
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <!-- Sección de Filtros por Año -->
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="section-title mb-0">
-        <i class="fas fa-calendar-alt"></i> Filtrar por Año
+    <!-- Sección de Contrato y Filtros por Año -->
+    <div class="row mb-4">
+      <!-- Tarjeta de Contrato del Cliente -->
+      <div class="col-md-4">
+        <div id="contractCard" class="card h-100 d-none" style="background: linear-gradient(135deg, #1a5276 0%, #2e86ab 100%);">
+          <div class="card-body text-white">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h5 class="card-title mb-0">
+                <i class="fas fa-file-contract"></i> Contrato
+              </h5>
+              <span id="contractStatusBadge" class="badge bg-success">Activo</span>
+            </div>
+            <h6 id="contractClientName" class="text-warning fw-bold text-center my-3">Seleccione un cliente</h6>
+            <div class="text-center mb-3">
+              <span id="contractServiceType" class="badge bg-light text-dark fs-6">
+                <i class="fas fa-calendar-alt"></i> -
+              </span>
+            </div>
+            <div class="row small">
+              <div class="col-12 mb-2">
+                <i class="fas fa-hashtag"></i> <strong>Número:</strong>
+                <span id="contractNum" class="float-end">-</span>
+              </div>
+              <div class="col-12 mb-2">
+                <i class="fas fa-play-circle text-success"></i> <strong>Inicio:</strong>
+                <span id="contractStartDate" class="float-end">-</span>
+              </div>
+              <div class="col-12 mb-2">
+                <i class="fas fa-stop-circle text-danger"></i> <strong>Fin:</strong>
+                <span id="contractEndDate" class="float-end">-</span>
+              </div>
+            </div>
+            <div class="text-center mt-3">
+              <a id="btnVerContrato" href="#" class="btn btn-light btn-sm d-none" target="_blank">
+                <i class="fas fa-eye"></i> Ver Contrato
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Placeholder cuando no hay cliente seleccionado -->
+        <div id="contractPlaceholder" class="card h-100 bg-light">
+          <div class="card-body d-flex align-items-center justify-content-center text-muted">
+            <div class="text-center">
+              <i class="fas fa-file-contract fa-3x mb-3"></i>
+              <p class="mb-0">Seleccione un cliente para ver la información del contrato</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <button type="button" id="btnClearCardFilters" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-times"></i> Limpiar Filtros de Tarjetas
-      </button>
-    </div>
-    <div class="row mb-4 mt-2" id="yearCards">
-      <!-- Se generarán dinámicamente con JavaScript -->
+
+      <!-- Filtros por Año -->
+      <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="section-title mb-0">
+            <i class="fas fa-calendar-alt"></i> Filtrar por Año
+          </div>
+          <button type="button" id="btnClearCardFilters" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-times"></i> Limpiar Filtros de Tarjetas
+          </button>
+        </div>
+        <div class="row mt-2" id="yearCards">
+          <!-- Se generarán dinámicamente con JavaScript -->
+        </div>
+      </div>
     </div>
 
     <!-- Tarjetas de Estados (clickeables) -->
@@ -354,6 +419,9 @@
         <button id="loadData" class="btn btn-primary">Cargar Datos</button>
       </div>
       <div class="col-md-7 align-self-end">
+        <button id="btnSocializarCronograma" class="btn btn-success btn-sm me-2 d-none">
+          <i class="fas fa-envelope"></i> Socializar Cronograma
+        </button>
         <button id="clearState" class="btn btn-danger btn-sm me-2">Restablecer Filtros</button>
         <div id="buttonsContainer" class="d-inline-block"></div>
       </div>
@@ -443,6 +511,81 @@
           <!-- Los datos se cargarán vía AJAX -->
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Modal de Generación Automática de Cronogramas -->
+  <div class="modal fade" id="generateTrainingModal" tabindex="-1" aria-labelledby="generateTrainingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title" id="generateTrainingModalLabel">
+            <i class="fas fa-magic"></i> Generar Cronograma Automático
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form action="<?= base_url('/cronogCapacitacion/generate') ?>" method="post" id="generateForm">
+          <div class="modal-body">
+            <!-- Información del contrato -->
+            <div id="contractInfo" class="alert alert-info d-none mb-3">
+              <h6><i class="fas fa-file-contract"></i> Información del Contrato</h6>
+              <div class="row">
+                <div class="col-md-4">
+                  <strong>Número:</strong> <span id="contractNumber">-</span>
+                </div>
+                <div class="col-md-4">
+                  <strong>Estado:</strong> <span id="contractStatus">-</span>
+                </div>
+                <div class="col-md-4">
+                  <strong>Frecuencia:</strong> <span id="contractFrequency">-</span>
+                </div>
+              </div>
+              <div class="row mt-2">
+                <div class="col-md-6">
+                  <strong>Inicio:</strong> <span id="contractStart">-</span>
+                </div>
+                <div class="col-md-6">
+                  <strong>Fin:</strong> <span id="contractEnd">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="modalClientSelect" class="form-label">Seleccione el Cliente <span class="text-danger">*</span></label>
+              <select name="id_cliente" id="modalClientSelect" class="form-select" required>
+                <option value="">-- Seleccione un cliente --</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="serviceTypeSelect" class="form-label">Tipo de Servicio <span class="text-danger">*</span></label>
+              <select name="service_type" id="serviceTypeSelect" class="form-select" required>
+                <option value="mensual">Mensual (Todas las capacitaciones)</option>
+                <option value="bimensual">Bimensual (Capacitaciones seleccionadas)</option>
+                <option value="trimestral">Trimestral (Capacitaciones mínimas)</option>
+                <option value="proyecto">Proyecto (Capacitaciones mínimas)</option>
+              </select>
+              <div class="form-text">
+                <i class="fas fa-info-circle"></i> El tipo de servicio determina qué capacitaciones se incluirán según el archivo CSV maestro.
+              </div>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <strong>Importante:</strong> Esta acción generará múltiples cronogramas de capacitación para el cliente seleccionado.
+              Las capacitaciones se programarán con la fecha actual y estado "PROGRAMADA".
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="btn btn-warning" id="btnGenerate">
+              <i class="fas fa-magic"></i> Generar Cronograma
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -1117,6 +1260,8 @@
       // Recargar la tabla automáticamente al cambiar el select
       $('#clientSelect').on('change', function() {
         var clientId = $(this).val();
+        var clientName = $(this).find('option:selected').text();
+
         if (clientId) {
           localStorage.setItem('selectedClient', clientId);
           table.ajax.reload(function() {
@@ -1124,8 +1269,76 @@
             updateMonthlyCounts();
             generateYearCards();
           });
+
+          // Cargar información del contrato
+          loadContractInfo(clientId, clientName);
+
+          // Mostrar botón de socializar
+          $('#btnSocializarCronograma').removeClass('d-none');
+        } else {
+          // Ocultar tarjeta de contrato y mostrar placeholder
+          $('#contractCard').addClass('d-none');
+          $('#contractPlaceholder').removeClass('d-none');
+          $('#btnSocializarCronograma').addClass('d-none');
         }
       });
+
+      // Función para cargar información del contrato
+      function loadContractInfo(clientId, clientName) {
+        $.ajax({
+          url: '<?= base_url('/cronogCapacitacion/getClientContract') ?>',
+          method: 'GET',
+          data: { id_cliente: clientId },
+          dataType: 'json',
+          success: function(response) {
+            if (response.success && response.contract) {
+              var contract = response.contract;
+
+              // Actualizar datos de la tarjeta
+              $('#contractClientName').text(clientName);
+              $('#contractNum').text(contract.numero_contrato || '-');
+              $('#contractStartDate').text(contract.fecha_inicio || '-');
+              $('#contractEndDate').text(contract.fecha_fin || '-');
+
+              // Badge de estado
+              var statusClass = {
+                'activo': 'bg-success',
+                'vencido': 'bg-danger',
+                'cancelado': 'bg-secondary'
+              };
+              $('#contractStatusBadge')
+                .removeClass('bg-success bg-danger bg-secondary')
+                .addClass(statusClass[contract.estado] || 'bg-secondary')
+                .text(contract.estado ? contract.estado.charAt(0).toUpperCase() + contract.estado.slice(1) : 'Sin estado');
+
+              // Tipo de servicio
+              var frecuencia = contract.frecuencia_visitas || 'No definida';
+              $('#contractServiceType').html('<i class="fas fa-calendar-alt"></i> ' + frecuencia.toUpperCase());
+
+              // Botón ver contrato
+              if (contract.id_contrato) {
+                $('#btnVerContrato')
+                  .attr('href', '<?= base_url('/viewContract/') ?>' + contract.id_contrato)
+                  .removeClass('d-none');
+              } else {
+                $('#btnVerContrato').addClass('d-none');
+              }
+
+              // Mostrar tarjeta y ocultar placeholder
+              $('#contractCard').removeClass('d-none');
+              $('#contractPlaceholder').addClass('d-none');
+            } else {
+              // No hay contrato, mostrar placeholder
+              $('#contractCard').addClass('d-none');
+              $('#contractPlaceholder').removeClass('d-none');
+            }
+          },
+          error: function() {
+            $('#contractCard').addClass('d-none');
+            $('#contractPlaceholder').removeClass('d-none');
+          }
+        });
+      }
 
       // Botón para restablecer filtros y estado guardado
       $("#clearState").on("click", function() {
@@ -1162,6 +1375,240 @@
       table.on('draw.dt', function() {
         setTimeout(initializeTooltips, 100);
       });
+
+      // ===== MODAL DE GENERACIÓN AUTOMÁTICA =====
+
+      // Cargar clientes cuando se abre el modal
+      $('#generateTrainingModal').on('show.bs.modal', function() {
+        var $modalClientSelect = $('#modalClientSelect');
+
+        // Solo cargar si el select está vacío (excepto la opción por defecto)
+        if ($modalClientSelect.find('option').length <= 1) {
+          $.ajax({
+            url: '<?= base_url('/cronogCapacitacion/getClients') ?>',
+            method: 'GET',
+            dataType: 'json',
+            success: function(response) {
+              if (response.success && response.clients) {
+                response.clients.forEach(function(client) {
+                  $modalClientSelect.append(
+                    '<option value="' + client.id + '">' + client.nombre + '</option>'
+                  );
+                });
+              }
+            },
+            error: function() {
+              alert('Error al cargar la lista de clientes');
+            }
+          });
+        }
+
+        // Ocultar info del contrato
+        $('#contractInfo').addClass('d-none');
+      });
+
+      // Cargar información del contrato cuando se selecciona un cliente
+      $('#modalClientSelect').on('change', function() {
+        var idCliente = $(this).val();
+        var $contractInfo = $('#contractInfo');
+
+        if (!idCliente) {
+          $contractInfo.addClass('d-none');
+          return;
+        }
+
+        $.ajax({
+          url: '<?= base_url('/cronogCapacitacion/getClientContract') ?>',
+          method: 'GET',
+          data: { id_cliente: idCliente },
+          dataType: 'json',
+          success: function(response) {
+            if (response.success && response.contract) {
+              var contract = response.contract;
+
+              $('#contractNumber').text(contract.numero_contrato || 'Sin número');
+              $('#contractStatus').html(getStatusBadge(contract.estado));
+              $('#contractFrequency').text(capitalizeFirst(contract.frecuencia_visitas || 'No definida'));
+              $('#contractStart').text(contract.fecha_inicio || '-');
+              $('#contractEnd').text(contract.fecha_fin || '-');
+
+              // Auto-seleccionar el tipo de servicio según la frecuencia del contrato
+              var frecuencia = (contract.frecuencia_visitas || 'mensual').toLowerCase();
+              if (['mensual', 'bimensual', 'trimestral', 'proyecto'].includes(frecuencia)) {
+                $('#serviceTypeSelect').val(frecuencia);
+              }
+
+              $contractInfo.removeClass('d-none');
+            } else {
+              $contractInfo.addClass('d-none');
+            }
+          },
+          error: function() {
+            $contractInfo.addClass('d-none');
+          }
+        });
+      });
+
+      // Helper functions
+      function getStatusBadge(status) {
+        var badges = {
+          'activo': '<span class="badge bg-success">Activo</span>',
+          'vencido': '<span class="badge bg-danger">Vencido</span>',
+          'cancelado': '<span class="badge bg-secondary">Cancelado</span>'
+        };
+        return badges[status] || '<span class="badge bg-secondary">' + status + '</span>';
+      }
+
+      function capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      }
+
+      // Validación del formulario de generación
+      $('#generateForm').on('submit', function(e) {
+        var idCliente = $('#modalClientSelect').val();
+        if (!idCliente) {
+          e.preventDefault();
+          alert('Por favor, seleccione un cliente.');
+          return false;
+        }
+
+        // Mostrar loading
+        $('#btnGenerate').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generando...');
+        return true;
+      });
+
+      // ===== BOTONES MENSUALES PARA ACTUALIZAR FECHAS =====
+
+      // Manejador de clic en botones de mes
+      $(document).on('click', '.btn-month', function() {
+        var $btn = $(this);
+        var trainingId = $btn.data('id');
+        var month = $btn.data('month');
+
+        // Deshabilitar botón temporalmente
+        $btn.prop('disabled', true);
+
+        $.ajax({
+          url: '<?= base_url('/cronogCapacitacion/updateDateByMonth') ?>',
+          method: 'POST',
+          data: { id: trainingId, month: month },
+          dataType: 'json',
+          success: function(response) {
+            if (response.success) {
+              // Mostrar toast de confirmación
+              showToast('Fecha actualizada: ' + response.newDate, 'success');
+
+              // Recargar la tabla para mostrar el cambio
+              table.ajax.reload(null, false);
+            } else {
+              showToast('Error: ' + response.message, 'danger');
+            }
+          },
+          error: function() {
+            showToast('Error al comunicarse con el servidor', 'danger');
+          },
+          complete: function() {
+            $btn.prop('disabled', false);
+          }
+        });
+      });
+
+      // Función para mostrar toast de notificación
+      function showToast(message, type) {
+        type = type || 'info';
+        var toastHtml = '<div class="toast-container position-fixed bottom-0 end-0 p-3">' +
+          '<div class="toast align-items-center text-white bg-' + type + ' border-0" role="alert">' +
+          '<div class="d-flex">' +
+          '<div class="toast-body">' + message + '</div>' +
+          '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
+          '</div></div></div>';
+
+        var $toast = $(toastHtml).appendTo('body');
+        var toast = new bootstrap.Toast($toast.find('.toast')[0], { autohide: true, delay: 3000 });
+        toast.show();
+
+        // Remover del DOM después de ocultarse
+        $toast.find('.toast').on('hidden.bs.toast', function() {
+          $toast.remove();
+        });
+      }
+
+      // ===== BOTÓN SOCIALIZAR CRONOGRAMA =====
+      // Envía automáticamente al cliente y consultor sin modal
+      // Usa el año seleccionado en las tarjetas de filtro o el año actual
+      $('#btnSocializarCronograma').on('click', function() {
+        var clientId = $('#clientSelect').val();
+        var clientName = $('#clientSelect option:selected').text();
+        var $btn = $(this);
+
+        // Obtener el año seleccionado o usar el año actual
+        var yearToSend = activeYear || new Date().getFullYear();
+
+        if (!clientId) {
+          showToast('Seleccione un cliente primero', 'warning');
+          return;
+        }
+
+        // Deshabilitar botón y mostrar loading
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Enviando...');
+
+        $.ajax({
+          url: '<?= base_url('/cronogCapacitacion/socializarEmail') ?>',
+          method: 'POST',
+          data: {
+            id_cliente: clientId,
+            year: yearToSend
+          },
+          dataType: 'json',
+          success: function(response) {
+            if (response.success) {
+              // Construir lista de emails enviados
+              var emailsList = '';
+              if (response.emailsEnviados && response.emailsEnviados.length > 0) {
+                emailsList = '<ul class="mb-0">';
+                response.emailsEnviados.forEach(function(email) {
+                  emailsList += '<li>' + email + '</li>';
+                });
+                emailsList += '</ul>';
+              }
+
+              // Mostrar alerta de éxito más visible
+              var yearLabel = response.year || yearToSend;
+              var alertHtml = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                '<h5 class="alert-heading"><i class="fas fa-check-circle"></i> ¡Cronograma ' + yearLabel + ' Socializado Exitosamente!</h5>' +
+                '<p><strong>Cliente:</strong> ' + (response.cliente || clientName) + '</p>' +
+                '<p>' + response.message + '</p>' +
+                '<hr>' +
+                '<p class="mb-0"><strong>Emails enviados a:</strong></p>' +
+                emailsList +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                '</div>';
+
+              // Remover alertas anteriores de éxito
+              $('.container-fluid.px-2 > .alert-success').remove();
+
+              // Insertar alerta al inicio del contenedor principal
+              $('.container-fluid.px-2').prepend(alertHtml);
+
+              // También mostrar toast
+              showToast('Email del año ' + yearLabel + ' enviado correctamente', 'success');
+
+              // Scroll al inicio para ver la alerta
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              showToast('Error: ' + response.message, 'danger');
+            }
+          },
+          error: function(xhr, status, error) {
+            console.error('Error:', error);
+            showToast('Error al enviar el email: ' + error, 'danger');
+          },
+          complete: function() {
+            $btn.prop('disabled', false).html('<i class="fas fa-envelope"></i> Socializar Cronograma');
+          }
+        });
+      });
+
     });
 
   </script>

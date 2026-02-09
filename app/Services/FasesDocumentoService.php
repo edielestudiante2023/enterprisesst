@@ -38,8 +38,8 @@ class FasesDocumentoService
             'cronograma' => [
                 'nombre' => 'Cronograma',
                 'descripcion' => 'Programacion anual de capacitaciones',
-                'url_modulo' => '/listcronogCapacitacion',
-                'url_generar' => '/generador-ia/{cliente}',
+                'url_modulo' => '/generador-ia/{cliente}/capacitacion-sst',
+                'url_generar' => '/generador-ia/{cliente}/capacitacion-sst',
                 'orden' => 1
             ],
             'pta' => [
@@ -129,6 +129,24 @@ class FasesDocumentoService
                 'url_generar' => '/generador-ia/{cliente}/indicadores-pyp-salud',
                 'orden' => 2,
                 'depende_de' => 'pta_pyp_salud'
+            ]
+        ],
+        // 2.2.1. Objetivos definidos, claros, medibles, cuantificables con metas
+        'plan_objetivos_metas' => [
+            'objetivos_sgsst' => [
+                'nombre' => 'Objetivos SG-SST',
+                'descripcion' => 'Objetivos del Sistema de Gestión con metas medibles',
+                'url_modulo' => '/generador-ia/{cliente}/objetivos-sgsst',
+                'url_generar' => '/generador-ia/{cliente}/objetivos-sgsst',
+                'orden' => 1
+            ],
+            'indicadores_objetivos' => [
+                'nombre' => 'Indicadores de Objetivos',
+                'descripcion' => 'Indicadores para medir el cumplimiento de objetivos',
+                'url_modulo' => '/generador-ia/{cliente}/indicadores-objetivos',
+                'url_generar' => '/generador-ia/{cliente}/indicadores-objetivos',
+                'orden' => 2,
+                'depende_de' => 'objetivos_sgsst'
             ]
         ]
     ];
@@ -252,6 +270,12 @@ class FasesDocumentoService
 
             case 'indicadores_pyp_salud':
                 return $this->verificarIndicadoresPyPSalud($idCliente);
+
+            case 'objetivos_sgsst':
+                return $this->verificarObjetivosSgsst($idCliente, $anio);
+
+            case 'indicadores_objetivos':
+                return $this->verificarIndicadoresObjetivos($idCliente);
 
             default:
                 return [
@@ -730,6 +754,96 @@ class FasesDocumentoService
         return [
             'estado' => self::ESTADO_COMPLETO,
             'mensaje' => "{$cantidad} indicadores de PyP Salud configurados",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado de los Objetivos del SG-SST
+     */
+    protected function verificarObjetivosSgsst(int $idCliente, int $anio): array
+    {
+        $db = \Config\Database::connect();
+
+        // Contar objetivos en el PTA con tipo_servicio = 'Objetivos SG-SST'
+        $cantidad = $db->table('tbl_pta_cliente')
+            ->where('id_cliente', $idCliente)
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->where('tipo_servicio', 'Objetivos SG-SST')
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay objetivos SG-SST definidos para ' . $anio,
+                'cantidad' => 0
+            ];
+        }
+
+        // Mínimos según estándares: 7 → 3, 21 → 4, 60 → 6
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+        $estandares = $contexto['estandares_aplicables'] ?? 7;
+
+        $minimo = $estandares <= 7 ? 3 : ($estandares <= 21 ? 4 : 6);
+
+        if ($cantidad < $minimo) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "Tiene {$cantidad} de {$minimo} objetivos requeridos",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} objetivos SG-SST definidos",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado de los indicadores de Objetivos SG-SST
+     */
+    protected function verificarIndicadoresObjetivos(int $idCliente): array
+    {
+        $cantidad = $this->indicadorModel
+            ->where('id_cliente', $idCliente)
+            ->where('activo', 1)
+            ->groupStart()
+                ->where('categoria', 'objetivos_sgsst')
+                ->orLike('nombre_indicador', 'objetivo', 'both', true, true)
+                ->orLike('nombre_indicador', 'meta', 'both', true, true)
+                ->orLike('nombre_indicador', 'cumplimiento', 'both', true, true)
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay indicadores de objetivos definidos',
+                'cantidad' => 0
+            ];
+        }
+
+        // Mínimos según estándares: 7 → 5, 21 → 8, 60 → 10
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+        $estandares = $contexto['estandares_aplicables'] ?? 7;
+
+        $minimo = $estandares <= 7 ? 5 : ($estandares <= 21 ? 8 : 10);
+
+        if ($cantidad < $minimo) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "Tiene {$cantidad} de {$minimo} indicadores recomendados",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} indicadores de objetivos configurados",
             'cantidad' => $cantidad
         ];
     }

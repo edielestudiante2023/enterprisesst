@@ -13,6 +13,8 @@
   <link href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.bootstrap5.min.css" rel="stylesheet">
   <!-- Select2 CSS para select buscable -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <!-- Font Awesome para iconos -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
   <style>
     body {
@@ -120,6 +122,11 @@
       </div>
       <div class="col-md-2 align-self-end">
         <button id="loadData" class="btn btn-primary">Cargar Datos</button>
+      </div>
+      <div class="col-md-3 align-self-end">
+        <button id="btnSocializarEvaluacion" class="btn btn-success" title="Enviar Evaluación de Estándares Mínimos por email">
+          <i class="fas fa-envelope"></i> Socializar Evaluación
+        </button>
       </div>
     </div>
 
@@ -693,6 +700,50 @@ columns: [{
       table.on('draw.dt', function () {
         updateFilters(table);
         initializeTooltips();
+      });
+
+      // Botón Socializar Evaluación de Estándares Mínimos
+      $('#btnSocializarEvaluacion').on('click', function() {
+        var clienteId = $('#clientSelect').val();
+
+        if (!clienteId) {
+          alert('Debe seleccionar un cliente primero.');
+          return;
+        }
+
+        if (!confirm('¿Desea enviar la Evaluación de Estándares Mínimos por email al cliente y consultor asignado?')) {
+          return;
+        }
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Enviando...');
+
+        $.ajax({
+          url: '<?= base_url('/socializacion/send-evaluacion-estandares') ?>',
+          method: 'POST',
+          data: {
+            id_cliente: clienteId,
+            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+          },
+          dataType: 'json',
+          success: function(response) {
+            if (response.success) {
+              var mensaje = 'Email enviado correctamente.\n\n';
+              mensaje += 'Cliente: ' + response.cliente + '\n';
+              mensaje += 'Indicador: ' + response.indicador + '\n';
+              mensaje += 'Enviado a: ' + response.emailsEnviados.join(', ');
+              alert(mensaje);
+            } else {
+              alert('Error: ' + response.message);
+            }
+          },
+          error: function(xhr, status, error) {
+            alert('Error al comunicarse con el servidor: ' + error);
+          },
+          complete: function() {
+            $btn.prop('disabled', false).html('<i class="fas fa-envelope"></i> Socializar Evaluación');
+          }
+        });
       });
     });
   </script>

@@ -89,7 +89,7 @@ $tipoComiteNombre = [
                 Nueva Recomposicion del <?= esc($tipoComiteNombre) ?>
             </h4>
             <p class="text-muted mb-0">
-                <?= esc($cliente['razon_social']) ?> - Periodo <?= esc($proceso['anio']) ?>
+                <?= esc($cliente['nombre_cliente']) ?> - Periodo <?= esc($proceso['anio']) ?>
             </p>
         </div>
         <a href="<?= base_url("comites-elecciones/proceso/{$proceso['id_proceso']}/recomposiciones") ?>"

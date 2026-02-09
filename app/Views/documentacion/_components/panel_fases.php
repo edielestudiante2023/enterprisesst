@@ -88,6 +88,21 @@ if (!isset($fasesInfo) || !$fasesInfo || !$fasesInfo['tiene_fases']) {
                            class="btn btn-sm btn-primary">
                             <i class="bi bi-eye me-1"></i>Ver Documento
                         </a>
+                    <?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'plan_objetivos_metas'): ?>
+                        <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/objetivos-sgsst') ?>"
+                           class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil-square me-1"></i>Ver/Editar
+                        </a>
+                    <?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'promocion_prevencion_salud'): ?>
+                        <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/pyp-salud') ?>"
+                           class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil-square me-1"></i>Ver/Editar
+                        </a>
+                    <?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'capacitacion_sst'): ?>
+                        <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/capacitacion-sst') ?>"
+                           class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil-square me-1"></i>Ver/Editar
+                        </a>
                     <?php else: ?>
                         <a href="<?= base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente']) ?>"
                            class="btn btn-sm btn-primary">
@@ -99,11 +114,13 @@ if (!isset($fasesInfo) || !$fasesInfo || !$fasesInfo['tiene_fases']) {
                     if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsables_sst') {
                         // Documento auto-generado, no usa IA
                     } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'capacitacion_sst') {
-                        $urlCrearIA = base_url('documentos/generar/programa_capacitacion/' . $cliente['id_cliente']);
+                        $urlCrearIA = base_url('generador-ia/' . $cliente['id_cliente'] . '/capacitacion-sst');
                     } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'promocion_prevencion_salud') {
-                        $urlCrearIA = base_url('documentos/generar/programa_promocion_prevencion_salud/' . $cliente['id_cliente']);
+                        $urlCrearIA = base_url('generador-ia/' . $cliente['id_cliente'] . '/pyp-salud');
                     } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'induccion_reinduccion') {
                         $urlCrearIA = base_url('documentos/generar/programa_induccion_reinduccion/' . $cliente['id_cliente']);
+                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'plan_objetivos_metas') {
+                        $urlCrearIA = base_url('generador-ia/' . $cliente['id_cliente'] . '/objetivos-sgsst');
                     } else {
                         $urlCrearIA = base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta'] . '&ia=1');
                     }

@@ -90,7 +90,7 @@ $motivosLabels = [
                     Recomposiciones del <?= esc($tipoComiteNombre) ?>
                 </h4>
                 <p class="mb-0 opacity-75">
-                    <?= esc($cliente['razon_social']) ?> - Periodo <?= esc($proceso['anio']) ?>
+                    <?= esc($cliente['nombre_cliente']) ?> - Periodo <?= esc($proceso['anio']) ?>
                 </p>
             </div>
             <div class="col-md-4 text-end">

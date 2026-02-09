@@ -1,8 +1,15 @@
 <?php
 /**
  * Componente: Scripts JavaScript
+ * Incluye jQuery para DataTables y Bootstrap
  */
 ?>
+<script>
+// Cargar jQuery solo si no está definido
+if (typeof jQuery === 'undefined') {
+    document.write('<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>');
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Manejar apertura del modal de adjuntar firmado

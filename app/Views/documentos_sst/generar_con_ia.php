@@ -94,6 +94,21 @@
         }
         .toast {
             min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.15);
+            margin-bottom: 8px;
+        }
+        .toast-retry-btn {
+            background: none;
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            border-radius: 4px;
+            padding: 2px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .toast-retry-btn:hover {
+            background: #dc3545;
+            color: white;
         }
         /* Boton Vista Previa deshabilitado */
         #btnVistaPrevia.disabled {
@@ -108,20 +123,8 @@
     </style>
 </head>
 <body class="bg-light">
-    <!-- Toast Container -->
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-        <div id="toastNotificacion" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header" id="toastHeader">
-                <i class="bi me-2" id="toastIcono"></i>
-                <strong class="me-auto" id="toastTitulo">Notificacion</strong>
-                <small id="toastTiempo">Ahora</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body" id="toastMensaje">
-                Mensaje aqui
-            </div>
-        </div>
-    </div>
+    <!-- Toast Stack Container (toasts se crean dinamicamente) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastStack"></div>
 
     <!-- Header -->
     <div class="bg-dark text-white py-3">
@@ -139,9 +142,13 @@
                 </div>
                 <div>
                     <span class="text-light me-3"><?= esc($cliente['nombre_cliente']) ?></span>
+                    <?php if ($usaIA ?? true): ?>
                     <button type="button" class="btn btn-success btn-sm" id="btnGenerarTodo">
                         <i class="bi bi-magic me-1"></i>Generar Todo con IA
                     </button>
+                    <?php else: ?>
+                    <span class="badge bg-info">Contenido Normativo</span>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -272,6 +279,21 @@
                                         <small class="d-block" style="font-size: 0.6rem;">Primero guarda el documento</small>
                                     </button>
                                 <?php endif; ?>
+
+                                <!-- Versionamiento (solo si documento existe) -->
+                                <?php if ($idDocumento): ?>
+                                <hr class="my-2">
+                                <div class="btn-group w-100">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHistorialVersiones" title="Ver historial de versiones">
+                                        <i class="bi bi-clock-history"></i>
+                                    </button>
+                                    <?php if ($estadoDoc === 'aprobado' || $estadoDoc === 'firmado'): ?>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaVersion" title="Crear nueva version">
+                                        <i class="bi bi-plus-circle me-1"></i>Nueva Version
+                                    </button>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -317,7 +339,8 @@
                             $tieneContenido = !empty($contenidoSeccion);
                         ?>
                         <div class="card-body">
-                            <!-- Contexto IA para esta seccion -->
+                            <?php if ($usaIA ?? true): ?>
+                            <!-- Contexto IA para esta seccion (solo si usa IA) -->
                             <div class="mb-3">
                                 <button class="btn btn-outline-secondary btn-sm w-100 text-start btn-toggle-contexto" type="button" data-bs-toggle="collapse" data-bs-target="#contexto-<?= $seccion['key'] ?>">
                                     <i class="bi bi-robot me-1"></i>Dar contexto a la IA
@@ -331,13 +354,21 @@
                                     <small class="text-muted">Este contexto se enviara junto con la solicitud de generacion.</small>
                                 </div>
                             </div>
+                            <?php else: ?>
+                            <!-- Banner informativo para documentos sin IA -->
+                            <div class="alert alert-info py-2 mb-3">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <small>Contenido normativo pre-cargado. Puedes editar si es necesario.</small>
+                            </div>
+                            <?php endif; ?>
 
                             <textarea class="form-control contenido-seccion mb-3"
                                       id="contenido-<?= $seccion['key'] ?>"
                                       rows="8"
-                                      placeholder="Haz clic en 'Generar con IA' para crear el contenido de esta seccion..."><?= esc($contenidoSeccion) ?></textarea>
+                                      placeholder="<?= ($usaIA ?? true) ? "Haz clic en 'Generar con IA' para crear el contenido de esta seccion..." : "Revisa el contenido normativo y edita si es necesario..." ?>"><?= esc($contenidoSeccion) ?></textarea>
 
                             <div class="d-flex justify-content-between align-items-center">
+                                <?php if ($usaIA ?? true): ?>
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-generar-ia btn-sm btn-generar" data-seccion="<?= $seccion['key'] ?>">
                                         <i class="bi bi-magic me-1"></i>Generar con IA
@@ -346,6 +377,11 @@
                                         <i class="bi bi-arrow-clockwise me-1"></i>Regenerar
                                     </button>
                                 </div>
+                                <?php else: ?>
+                                <div>
+                                    <span class="badge bg-secondary"><i class="bi bi-file-text me-1"></i>Contenido Normativo</span>
+                                </div>
+                                <?php endif; ?>
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-outline-success btn-sm btn-guardar" data-seccion="<?= $seccion['key'] ?>">
                                         <i class="bi bi-save me-1"></i>Guardar
@@ -425,7 +461,26 @@
         </div>
     </div>
 
+    <!-- Modal Nueva Version (Estandar) -->
+    <?php if (!empty($documento['id_documento'])): ?>
+        <?= view('documentos_sst/_components/modal_nueva_version', [
+            'id_documento' => $documento['id_documento'],
+            'version_actual' => $documento['version'] ? $documento['version'] . '.0' : '1.0',
+            'tipo_documento' => $tipo
+        ]) ?>
+    <?php endif; ?>
+
+    <!-- Modal Historial Versiones (Estandar) -->
+    <?php if (!empty($documento['id_documento'])): ?>
+        <?= view('documentos_sst/_components/modal_historial_versiones', [
+            'id_documento' => $documento['id_documento'],
+            'tipo_documento' => $tipo,
+            'versiones' => $historialVersiones ?? []
+        ]) ?>
+    <?php endif; ?>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const idCliente = <?= $cliente['id_cliente'] ?>;
@@ -436,8 +491,184 @@
         const seccionesNumeros = <?= json_encode(array_column($secciones, 'numero', 'key')) ?>;
         const totalSecciones = <?= $totalSecciones ?>;
         let seccionesAprobadasCount = <?= $seccionesAprobadas ?>;
+        let idDocumentoActual = <?= isset($documento['id_documento']) ? $documento['id_documento'] : 'null' ?>;
 
         const modalProgreso = new bootstrap.Modal(document.getElementById('modalProgreso'));
+
+        // ==========================================
+        // SWEETALERT DE VERIFICACION DE DATOS
+        // ==========================================
+        let datosPreviewCache = null; // Cache para no consultar cada vez
+        let verificacionConfirmada = false; // Se muestra UNA vez, luego se omite
+
+        async function obtenerDatosPreview() {
+            if (datosPreviewCache) return datosPreviewCache;
+
+            const url = `<?= base_url('documentos/previsualizar-datos') ?>/${tipo}/${idCliente}`;
+            console.log('Consultando preview:', url);
+
+            try {
+                const resp = await fetch(url);
+                console.log('Response status:', resp.status);
+
+                if (!resp.ok) {
+                    console.error('HTTP error:', resp.status);
+                    return null;
+                }
+
+                const data = await resp.json();
+                console.log('Preview data:', data);
+
+                if (data.ok) {
+                    datosPreviewCache = data;
+                    return data;
+                } else {
+                    console.error('Backend error:', data.message);
+                }
+            } catch (e) {
+                console.error('Error obteniendo preview:', e);
+            }
+            return null;
+        }
+
+        async function mostrarVerificacionDatos(callback) {
+            // Si ya confirmo una vez, ejecutar directamente sin SweetAlert
+            if (verificacionConfirmada) {
+                callback();
+                return;
+            }
+
+            // Mostrar loading mientras consulta
+            Swal.fire({
+                title: 'Consultando datos...',
+                text: 'Verificando Plan de Trabajo e Indicadores',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const data = await obtenerDatosPreview();
+
+            // Si falla la consulta, mostrar error y dar opcion de continuar
+            if (!data) {
+                const errorResult = await Swal.fire({
+                    title: 'No se pudieron obtener los datos',
+                    text: 'Hubo un error consultando las fuentes de datos. Puedes continuar de todas formas.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Generar de todas formas',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#f0ad4e'
+                });
+                if (errorResult.isConfirmed) callback();
+                return;
+            }
+
+            // Construir HTML del resumen
+            let html = '<div style="text-align: left; max-height: 400px; overflow-y: auto;">';
+
+            // Plan de Trabajo
+            const totalAct = data.actividades.length;
+            html += '<h6 style="margin-bottom: 8px;"><strong>' + (totalAct > 0 ? '&#9989;' : '&#9888;&#65039;') + ' Plan de Trabajo (' + totalAct + ' actividades):</strong></h6>';
+            if (totalAct > 0) {
+                html += '<ul style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">';
+                data.actividades.forEach(function(a) {
+                    html += '<li>' + a.nombre + ' <small style="color: #6c757d;">(' + a.mes + ')</small></li>';
+                });
+                html += '</ul>';
+            } else {
+                html += '<p style="color: #856404; font-size: 0.85rem; padding-left: 20px; margin-bottom: 15px;">No hay actividades registradas en el Plan de Trabajo para este modulo.</p>';
+            }
+
+            // Indicadores
+            const totalInd = data.indicadores.length;
+            html += '<h6 style="margin-bottom: 8px;"><strong>' + (totalInd > 0 ? '&#9989;' : '&#9888;&#65039;') + ' Indicadores (' + totalInd + ' configurados):</strong></h6>';
+            if (totalInd > 0) {
+                html += '<ul style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">';
+                data.indicadores.forEach(function(i) {
+                    html += '<li>' + i.nombre + ' <small style="color: #6c757d;">(Meta: ' + i.meta + ')</small></li>';
+                });
+                html += '</ul>';
+            } else {
+                html += '<p style="color: #856404; font-size: 0.85rem; padding-left: 20px; margin-bottom: 15px;">No hay indicadores configurados para este modulo.</p>';
+            }
+
+            // Contexto del cliente
+            html += '<h6 style="margin-bottom: 8px;"><strong>&#127970; Contexto de la empresa:</strong></h6>';
+            html += '<div style="font-size: 0.9rem; padding-left: 20px;">';
+            html += '<p style="margin-bottom: 4px;"><strong>Empresa:</strong> ' + data.contexto.empresa + '</p>';
+            html += '<p style="margin-bottom: 4px;"><strong>Actividad:</strong> ' + data.contexto.actividad_economica + '</p>';
+            html += '<p style="margin-bottom: 4px;"><strong>Riesgo ARL:</strong> ' + data.contexto.nivel_riesgo + ' | <strong>Trabajadores:</strong> ' + data.contexto.total_trabajadores + ' | <strong>Estandares:</strong> ' + data.contexto.estandares_aplicables + '</p>';
+
+            // Peligros identificados
+            let peligros = [];
+            try { peligros = typeof data.contexto.peligros === 'string' ? JSON.parse(data.contexto.peligros) : (data.contexto.peligros || []); } catch(e) { peligros = []; }
+            if (peligros.length > 0) {
+                html += '<p style="margin-bottom: 2px;"><strong>Peligros:</strong> ' + peligros.join(', ') + '</p>';
+            }
+
+            // Estructuras organizacionales
+            let estructuras = [];
+            if (data.contexto.tiene_copasst) estructuras.push('COPASST');
+            if (data.contexto.tiene_vigia_sst) estructuras.push('Vigia SST');
+            if (data.contexto.tiene_comite_convivencia) estructuras.push('Comite Convivencia');
+            if (data.contexto.tiene_brigada) estructuras.push('Brigada Emergencias');
+            if (estructuras.length > 0) {
+                html += '<p style="margin-bottom: 4px;"><strong>Estructuras:</strong> ' + estructuras.join(', ') + '</p>';
+            }
+
+            // Observaciones de contexto
+            if (data.contexto.observaciones && data.contexto.observaciones.trim() !== '') {
+                html += '<p style="margin-bottom: 0;"><strong>Observaciones:</strong> ' + data.contexto.observaciones + '</p>';
+            }
+            html += '</div>';
+
+            html += '</div>';
+
+            const result = await Swal.fire({
+                title: data.tipo,
+                html: html,
+                icon: 'info',
+                iconColor: '#667eea',
+                showCancelButton: true,
+                confirmButtonText: 'Generar con IA',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                width: '600px'
+            });
+
+            if (result.isConfirmed) {
+                verificacionConfirmada = true; // No volver a mostrar en esta sesion
+                callback();
+            }
+        }
+
+        // ==========================================
+        // ACTUALIZACION BOTON DE FIRMAS
+        // ==========================================
+        function actualizarBotonFirmas(idDocumento) {
+            if (!idDocumento) return;
+
+            idDocumentoActual = idDocumento;
+
+            // Buscar el contenedor del boton de firmas
+            const contenedorAcciones = document.querySelector('.sidebar .d-grid.gap-2');
+            if (!contenedorAcciones) return;
+
+            // Buscar el boton deshabilitado de firmas
+            const btnFirmasDeshabilitado = contenedorAcciones.querySelector('button.btn-secondary[disabled]');
+            if (btnFirmasDeshabilitado && btnFirmasDeshabilitado.innerHTML.includes('Enviar a Firmas')) {
+                // Reemplazar con enlace activo
+                const nuevoBtn = document.createElement('a');
+                nuevoBtn.href = '<?= base_url('firma/solicitar/') ?>' + idDocumento;
+                nuevoBtn.className = 'btn btn-success btn-sm w-100';
+                nuevoBtn.innerHTML = '<i class="bi bi-pen me-1"></i>Enviar a Firmas<small class="d-block" style="font-size: 0.6rem;">El cliente revisara y firmara</small>';
+
+                btnFirmasDeshabilitado.replaceWith(nuevoBtn);
+
+                mostrarToast('info', 'Documento Creado', 'El documento fue guardado. Ahora puedes enviarlo a firmas.');
+            }
+        }
 
         // ==========================================
         // VERIFICACION DE VISTA PREVIA
@@ -467,59 +698,81 @@
         }
 
         // ==========================================
-        // SISTEMA DE TOAST NOTIFICATIONS
+        // SISTEMA DE TOAST NOTIFICATIONS (Stack Dinamico)
         // ==========================================
-        function mostrarToast(tipo, titulo, mensaje) {
-            const toastEl = document.getElementById('toastNotificacion');
-            const toastTitulo = document.getElementById('toastTitulo');
-            const toastMensaje = document.getElementById('toastMensaje');
-            const toastIcono = document.getElementById('toastIcono');
-            const toastHeader = document.getElementById('toastHeader');
+        let modoBatch = false; // Suprime toasts individuales en operaciones masivas
 
-            // Limpiar clases anteriores
-            toastHeader.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-info', 'bg-primary', 'text-white', 'text-dark');
-            toastIcono.classList.remove('bi-check-circle-fill', 'bi-x-circle-fill', 'bi-exclamation-triangle-fill', 'bi-info-circle-fill', 'bi-robot', 'bi-save-fill', 'bi-magic', 'text-success', 'text-danger', 'text-warning', 'text-info', 'text-white');
+        function mostrarToast(tipo, titulo, mensaje, reintentarCallback) {
+            const container = document.getElementById('toastStack');
+            const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+            const hora = new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
 
-            // Configurar segun tipo
-            switch(tipo) {
-                case 'success':
-                    toastHeader.classList.add('bg-success', 'text-white');
-                    toastIcono.classList.add('bi-check-circle-fill', 'text-white');
-                    break;
-                case 'error':
-                    toastHeader.classList.add('bg-danger', 'text-white');
-                    toastIcono.classList.add('bi-x-circle-fill', 'text-white');
-                    break;
-                case 'warning':
-                    toastHeader.classList.add('bg-warning', 'text-dark');
-                    toastIcono.classList.add('bi-exclamation-triangle-fill', 'text-dark');
-                    break;
-                case 'info':
-                    toastHeader.classList.add('bg-info', 'text-white');
-                    toastIcono.classList.add('bi-info-circle-fill', 'text-white');
-                    break;
-                case 'ia':
-                    toastHeader.classList.add('bg-primary', 'text-white');
-                    toastIcono.classList.add('bi-robot', 'text-white');
-                    break;
-                case 'save':
-                    toastHeader.classList.add('bg-success', 'text-white');
-                    toastIcono.classList.add('bi-save-fill', 'text-white');
-                    break;
-                case 'database':
-                    toastHeader.classList.add('bg-info', 'text-white');
-                    toastIcono.classList.add('bi-database-check', 'text-white');
-                    break;
+            // Configuracion visual por tipo
+            const configs = {
+                'success':  { bg: 'bg-success', text: 'text-white', icon: 'bi-check-circle-fill' },
+                'error':    { bg: 'bg-danger',  text: 'text-white', icon: 'bi-x-circle-fill' },
+                'warning':  { bg: 'bg-warning', text: 'text-dark',  icon: 'bi-exclamation-triangle-fill' },
+                'info':     { bg: 'bg-info',    text: 'text-white', icon: 'bi-info-circle-fill' },
+                'ia':       { bg: 'bg-primary', text: 'text-white', icon: 'bi-robot' },
+                'save':     { bg: 'bg-success', text: 'text-white', icon: 'bi-save-fill' },
+                'database': { bg: 'bg-info',    text: 'text-white', icon: 'bi-database-check' },
+                'progress': { bg: 'bg-primary', text: 'text-white', icon: '' }
+            };
+            const cfg = configs[tipo] || configs['info'];
+
+            // Icono: spinner para progress, icono normal para el resto
+            const iconHtml = tipo === 'progress'
+                ? '<span class="spinner-border spinner-border-sm me-2"></span>'
+                : '<i class="bi ' + cfg.icon + ' me-2"></i>';
+
+            // Boton Reintentar (solo para errores con callback)
+            let retryHtml = '';
+            if (reintentarCallback) {
+                retryHtml = '<div class="mt-1"><button class="toast-retry-btn" data-retry="' + toastId + '"><i class="bi bi-arrow-clockwise me-1"></i>Reintentar</button></div>';
             }
 
-            toastTitulo.textContent = titulo;
-            toastMensaje.innerHTML = mensaje; // Cambiado a innerHTML para permitir HTML
+            // Crear toast en el DOM
+            const closeWhite = cfg.text === 'text-white' ? ' btn-close-white' : '';
+            const toastHtml = '<div id="' + toastId + '" class="toast" role="alert" aria-live="assertive" aria-atomic="true">'
+                + '<div class="toast-header ' + cfg.bg + ' ' + cfg.text + '">'
+                + iconHtml
+                + '<strong class="me-auto">' + titulo + '</strong>'
+                + '<small>' + hora + '</small>'
+                + '<button type="button" class="btn-close' + closeWhite + '" data-bs-dismiss="toast"></button>'
+                + '</div>'
+                + '<div class="toast-body">' + mensaje + retryHtml + '</div>'
+                + '</div>';
 
-            // Duraciones: database=15s (mucha info), success/warning=6s, otros=5s
-            const duraciones = { 'database': 15000, 'success': 6000, 'warning': 6000, 'save': 5000, 'error': 8000 };
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            const toastEl = document.getElementById(toastId);
+
+            // Vincular boton Reintentar
+            if (reintentarCallback) {
+                toastEl.querySelector('[data-retry="' + toastId + '"]').addEventListener('click', function() {
+                    const bsToast = bootstrap.Toast.getInstance(toastEl);
+                    if (bsToast) bsToast.hide();
+                    reintentarCallback();
+                });
+            }
+
+            // Duraciones por tipo
+            const duraciones = { 'database': 15000, 'error': 8000, 'success': 6000, 'warning': 6000, 'save': 5000, 'progress': 60000 };
             const delay = duraciones[tipo] || 5000;
-            const toast = new bootstrap.Toast(toastEl, { delay: delay });
+            const autohide = tipo !== 'progress';
+
+            const toast = new bootstrap.Toast(toastEl, { delay: delay, autohide: autohide });
+
+            // Limpiar del DOM al cerrarse
+            toastEl.addEventListener('hidden.bs.toast', function() { toastEl.remove(); });
             toast.show();
+
+            // Retornar referencia para cierre programatico
+            return { id: toastId, element: toastEl, instance: toast };
+        }
+
+        // Cerrar un toast programaticamente (util para progress)
+        function cerrarToast(ref) {
+            if (ref && ref.instance) ref.instance.hide();
         }
 
         // Mostrar toast especial con metadata de BD consultadas
@@ -575,13 +828,13 @@
             document.getElementById('seccionesCompletas').textContent = completas;
         }
 
-        // Generar seccion individual
+        // Generar seccion individual - con verificacion SweetAlert
         document.querySelectorAll('.btn-generar, .btn-regenerar').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const seccion = this.dataset.seccion;
                 console.log('Click en boton generar, seccion:', seccion);
-                generarSeccion(seccion);
+                mostrarVerificacionDatos(() => generarSeccion(seccion));
             });
         });
 
@@ -601,6 +854,12 @@
 
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generando...';
+
+            // Toast de progreso (solo en generacion individual, no en batch)
+            let toastProgreso = null;
+            if (!modoBatch) {
+                toastProgreso = mostrarToast('progress', 'Generando...', 'Seccion "' + getNombreSeccion(seccionKey) + '" siendo redactada por la IA...');
+            }
 
             try {
                 let body = `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccionKey}&anio=${anio}`;
@@ -623,6 +882,8 @@
                 const data = await response.json();
                 console.log('Response data:', data);
 
+                cerrarToast(toastProgreso);
+
                 if (data.success) {
                     textarea.value = data.contenido;
                     card.classList.add('generada');
@@ -636,21 +897,23 @@
                         navLink.innerHTML = '<i class="bi bi-circle-fill text-warning" style="font-size: 0.6rem;"></i>';
                     }
 
-                    // Toast de exito
-                    const usaIA = contextoAdicional ? ' con IA (OpenAI)' : '';
-                    mostrarToast('ia', 'Contenido Generado' + usaIA, `Seccion "${getNombreSeccion(seccionKey)}" generada correctamente.`);
+                    // Toast de exito (suprimido en batch)
+                    if (!modoBatch) {
+                        const usaIA = contextoAdicional ? ' con IA (OpenAI)' : '';
+                        mostrarToast('ia', 'Contenido Generado' + usaIA, 'Seccion "' + getNombreSeccion(seccionKey) + '" generada correctamente.');
 
-                    // Toast de BD consultadas (si hay metadata)
-                    if (data.metadata_bd && data.metadata_bd.tablas_consultadas) {
-                        setTimeout(() => {
-                            mostrarToastBD(data.metadata_bd);
-                        }, 500); // Pequeño delay para que se vean ambos toasts
+                        // Toast de BD consultadas (si hay metadata)
+                        if (data.metadata_bd && data.metadata_bd.tablas_consultadas) {
+                            setTimeout(function() { mostrarToastBD(data.metadata_bd); }, 500);
+                        }
                     }
                 } else {
-                    mostrarToast('error', 'Error al Generar', data.message || `No se pudo generar la seccion "${getNombreSeccion(seccionKey)}".`);
+                    const msgError = data.message || 'No se pudo generar la seccion "' + getNombreSeccion(seccionKey) + '".';
+                    mostrarToast('error', 'Error al Generar', msgError, function() { generarSeccion(seccionKey); });
                 }
             } catch (error) {
-                mostrarToast('error', 'Error de Conexion', 'No se pudo conectar con el servidor: ' + error.message);
+                cerrarToast(toastProgreso);
+                mostrarToast('error', 'Error de Conexion', 'No se pudo conectar con el servidor: ' + error.message, function() { generarSeccion(seccionKey); });
             }
 
             btn.disabled = false;
@@ -682,6 +945,13 @@
                     if (data.success) {
                         this.innerHTML = '<i class="bi bi-check me-1"></i>Guardado';
                         card.classList.add('generada');
+
+                        // Si se creo el documento, actualizar boton de firmas
+                        if (data.id_documento && !idDocumentoActual) {
+                            actualizarBotonFirmas(data.id_documento);
+                        } else if (data.id_documento) {
+                            idDocumentoActual = data.id_documento;
+                        }
 
                         // Toast de exito
                         mostrarToast('save', 'Seccion Guardada', `"${getNombreSeccion(seccion)}" guardada en la base de datos.`);
@@ -754,12 +1024,105 @@
         });
 
         // Generar todo - con jerarquia: primero secciones con datos de tablas, luego texto estatico
-        document.getElementById('btnGenerarTodo').addEventListener('click', async function() {
-            if (!confirm('Esto generara contenido para todas las secciones. Desea continuar?')) return;
+        const btnGenerarTodo = document.getElementById('btnGenerarTodo');
+        if (btnGenerarTodo) btnGenerarTodo.addEventListener('click', async function() {
+            // Si ya confirmo una vez, saltar directamente a generar
+            if (verificacionConfirmada) {
+                // Ir directo a generar sin SweetAlert
+            } else {
+            // Mostrar verificacion de datos antes de generar todo
+            Swal.fire({
+                title: 'Consultando datos...',
+                text: 'Verificando Plan de Trabajo e Indicadores',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const data = await obtenerDatosPreview();
+
+            if (data) {
+                const totalAct = data.actividades.length;
+                const totalInd = data.indicadores.length;
+
+                let htmlResumen = '<div style="text-align: left; max-height: 450px; overflow-y: auto;">';
+                htmlResumen += '<p style="margin-bottom: 12px;">Se generaran <strong>' + secciones.length + ' secciones</strong> del documento.</p>';
+
+                // Lista de actividades
+                htmlResumen += '<h6 style="margin-bottom: 6px;"><strong>' + (totalAct > 0 ? '&#9989;' : '&#9888;&#65039;') + ' Plan de Trabajo (' + totalAct + ' actividades):</strong></h6>';
+                if (totalAct > 0) {
+                    htmlResumen += '<ul style="font-size: 0.85rem; padding-left: 20px; margin-bottom: 12px; max-height: 180px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px; padding-top: 8px; padding-bottom: 8px;">';
+                    data.actividades.forEach(function(a) {
+                        htmlResumen += '<li style="margin-bottom: 2px;">' + a.nombre + ' <small style="color: #6c757d;">(' + a.mes + ')</small></li>';
+                    });
+                    htmlResumen += '</ul>';
+                } else {
+                    htmlResumen += '<p style="color: #856404; font-size: 0.85rem; margin-bottom: 12px;">No hay actividades registradas.</p>';
+                }
+
+                // Lista de indicadores
+                htmlResumen += '<h6 style="margin-bottom: 6px;"><strong>' + (totalInd > 0 ? '&#9989;' : '&#9888;&#65039;') + ' Indicadores (' + totalInd + ' configurados):</strong></h6>';
+                if (totalInd > 0) {
+                    htmlResumen += '<ul style="font-size: 0.85rem; padding-left: 20px; margin-bottom: 12px;">';
+                    data.indicadores.forEach(function(i) {
+                        htmlResumen += '<li style="margin-bottom: 2px;">' + i.nombre + ' <small style="color: #6c757d;">(Meta: ' + i.meta + ')</small></li>';
+                    });
+                    htmlResumen += '</ul>';
+                } else {
+                    htmlResumen += '<p style="color: #856404; font-size: 0.85rem; margin-bottom: 12px;">No hay indicadores configurados.</p>';
+                }
+
+                // Contexto
+                htmlResumen += '<h6 style="margin-bottom: 6px;"><strong>&#127970; Contexto:</strong></h6>';
+                htmlResumen += '<div style="font-size: 0.85rem;">';
+                htmlResumen += '<p style="margin-bottom: 2px;"><strong>Empresa:</strong> ' + data.contexto.empresa + '</p>';
+                htmlResumen += '<p style="margin-bottom: 2px;"><strong>Actividad:</strong> ' + data.contexto.actividad_economica + '</p>';
+                htmlResumen += '<p style="margin-bottom: 2px;"><strong>Riesgo:</strong> ' + data.contexto.nivel_riesgo + ' | <strong>Trabajadores:</strong> ' + data.contexto.total_trabajadores + ' | <strong>Estandares:</strong> ' + data.contexto.estandares_aplicables + '</p>';
+
+                let peligrosResumen = [];
+                try { peligrosResumen = typeof data.contexto.peligros === 'string' ? JSON.parse(data.contexto.peligros) : (data.contexto.peligros || []); } catch(e) { peligrosResumen = []; }
+                if (peligrosResumen.length > 0) {
+                    htmlResumen += '<p style="margin-bottom: 2px;"><strong>Peligros:</strong> ' + peligrosResumen.join(', ') + '</p>';
+                }
+
+                let estructurasResumen = [];
+                if (data.contexto.tiene_copasst) estructurasResumen.push('COPASST');
+                if (data.contexto.tiene_vigia_sst) estructurasResumen.push('Vigia SST');
+                if (data.contexto.tiene_comite_convivencia) estructurasResumen.push('Comite Convivencia');
+                if (data.contexto.tiene_brigada) estructurasResumen.push('Brigada Emergencias');
+                if (estructurasResumen.length > 0) {
+                    htmlResumen += '<p style="margin-bottom: 2px;"><strong>Estructuras:</strong> ' + estructurasResumen.join(', ') + '</p>';
+                }
+
+                // Observaciones de contexto
+                if (data.contexto.observaciones && data.contexto.observaciones.trim() !== '') {
+                    htmlResumen += '<p style="margin-bottom: 0;"><strong>Observaciones:</strong> ' + data.contexto.observaciones + '</p>';
+                }
+                htmlResumen += '</div>';
+                htmlResumen += '</div>';
+
+                const result = await Swal.fire({
+                    title: data.tipo,
+                    html: htmlResumen,
+                    icon: 'info',
+                    iconColor: '#667eea',
+                    showCancelButton: true,
+                    confirmButtonText: 'Generar Todo con IA',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    width: '650px'
+                });
+
+                if (!result.isConfirmed) return;
+                verificacionConfirmada = true; // No volver a mostrar
+            }
+            } // cierre del else (verificacionConfirmada)
 
             modalProgreso.show();
+            modoBatch = true;
             let exitosas = 0;
             let errores = 0;
+            let seccionesFallidas = [];
 
             // Jerarquia de generacion:
             // 1. Secciones que consumen datos de tablas (deben ir primero)
@@ -774,24 +1137,28 @@
                 const seccionKey = ordenGeneracion[i];
                 const nombreSeccion = getNombreSeccion(seccionKey);
                 const numeroSeccion = getNumeroSeccion(seccionKey);
-                document.getElementById('progresoTitulo').textContent = `Redactando seccion ${numeroSeccion}: ${nombreSeccion}`;
-                document.getElementById('progresoDetalle').textContent = `(${i + 1} de ${ordenGeneracion.length} secciones)`;
+                document.getElementById('progresoTitulo').textContent = 'Redactando seccion ' + numeroSeccion + ': ' + nombreSeccion;
+                document.getElementById('progresoDetalle').textContent = '(' + (i + 1) + ' de ' + ordenGeneracion.length + ' secciones)';
 
                 try {
                     await generarSeccion(seccionKey);
                     exitosas++;
                 } catch (e) {
                     errores++;
+                    seccionesFallidas.push(nombreSeccion);
                 }
                 await new Promise(resolve => setTimeout(resolve, 300));
             }
 
+            modoBatch = false;
             modalProgreso.hide();
 
             if (errores === 0) {
-                mostrarToast('success', 'Generacion Completa', `Las ${exitosas} secciones fueron generadas exitosamente.`);
+                mostrarToast('success', 'Generacion Completa', 'Las ' + exitosas + ' secciones fueron generadas exitosamente.');
             } else {
-                mostrarToast('warning', 'Generacion Parcial', `${exitosas} secciones generadas, ${errores} con errores.`);
+                mostrarToast('warning', 'Generacion Parcial',
+                    exitosas + ' secciones generadas, ' + errores + ' con errores.'
+                    + '<br><small class="text-muted">Fallidas: ' + seccionesFallidas.join(', ') + '</small>');
             }
         });
 
@@ -823,6 +1190,13 @@
                     if (data.success) {
                         guardadas++;
                         card.classList.add('generada');
+
+                        // Si se creo el documento en esta iteracion, actualizar boton de firmas
+                        if (data.id_documento && !idDocumentoActual) {
+                            actualizarBotonFirmas(data.id_documento);
+                        } else if (data.id_documento) {
+                            idDocumentoActual = data.id_documento;
+                        }
                     }
                 } catch (e) {
                     console.error('Error guardando', seccion, e);
@@ -833,7 +1207,11 @@
             this.disabled = false;
             this.innerHTML = '<i class="bi bi-save me-1"></i>Guardar Todo';
 
-            mostrarToast('save', 'Guardado Masivo', `${guardadas} de ${total} secciones guardadas en la base de datos.`);
+            if (guardadas === total) {
+                mostrarToast('save', 'Guardado Completo', 'Las ' + guardadas + ' secciones fueron guardadas en la base de datos.');
+            } else {
+                mostrarToast('warning', 'Guardado Parcial', guardadas + ' de ' + total + ' secciones guardadas. Algunas no pudieron guardarse.');
+            }
         });
 
         // Aprobar todo

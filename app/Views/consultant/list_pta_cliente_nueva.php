@@ -465,6 +465,11 @@
                             </button>
                         </div>
                         <div class="col-md-4 text-end">
+                            <?php if (!empty($filters['cliente'])): ?>
+                            <button type="button" id="btnSocializarPlanTrabajo" class="btn btn-success me-2">
+                                <i class="fas fa-envelope"></i> Socializar Plan
+                            </button>
+                            <?php endif; ?>
                             <button type="button" id="btnCalificarCerradas" class="btn btn-warning me-2">
                                 <i class="fas fa-check-double"></i> Calificar Cerradas
                             </button>
@@ -1164,6 +1169,63 @@
                     error: function(xhr, status, error) {
                         alert('Error en la comunicación con el servidor');
                         console.error(error);
+                    }
+                });
+            });
+
+            // Manejador para el botón Socializar Plan de Trabajo
+            $('#btnSocializarPlanTrabajo').on('click', function() {
+                var clienteId = '<?= $filters['cliente'] ?? '' ?>';
+
+                if (!clienteId) {
+                    showAlert('Debe seleccionar un cliente primero.', 'warning');
+                    return;
+                }
+
+                if (!$('#ptaTable').length) {
+                    showAlert('Primero debe realizar una búsqueda para obtener registros.', 'warning');
+                    return;
+                }
+
+                // Usar el año seleccionado en la tarjeta o el año actual por defecto
+                var yearToSend = activeYear || new Date().getFullYear();
+
+                var confirmMsg = '¿Desea enviar el Plan de Trabajo del año ' + yearToSend + ' por email al cliente y al consultor asignado?';
+                if (!confirm(confirmMsg)) {
+                    return;
+                }
+
+                var $btn = $(this);
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Enviando...');
+
+                $.ajax({
+                    url: '<?= base_url('/socializacion/send-plan-trabajo') ?>',
+                    method: 'POST',
+                    data: {
+                        id_cliente: clienteId,
+                        year: yearToSend,
+                        '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            var mensaje = 'Email enviado exitosamente.\n\n';
+                            mensaje += 'Cliente: ' + response.cliente + '\n';
+                            mensaje += 'Año: ' + response.year + '\n';
+                            mensaje += 'Total actividades: ' + response.totalActividades + '\n';
+                            mensaje += 'Enviado a: ' + response.emailsEnviados.join(', ');
+                            alert(mensaje);
+                            showAlert('Email de socialización enviado correctamente.', 'success');
+                        } else {
+                            showAlert('Error: ' + response.message, 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        showAlert('Error al enviar el email: ' + error, 'error');
+                        console.error('Error AJAX:', status, error);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html('<i class="fas fa-envelope"></i> Socializar Plan');
                     }
                 });
             });

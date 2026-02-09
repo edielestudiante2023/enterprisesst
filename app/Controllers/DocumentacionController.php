@@ -276,6 +276,7 @@ class DocumentacionController extends Controller
                 'capacitacion_sst' => 'programa_capacitacion',
                 'responsables_sst' => 'asignacion_responsable_sgsst',
                 'promocion_prevencion_salud' => 'programa_promocion_prevencion_salud',
+                'plan_objetivos_metas' => 'plan_objetivos_metas',
             ];
             $tipoDocBuscar = $mapaTipoDocumento[$tipoCarpetaFases] ?? null;
             if ($tipoDocBuscar) {
@@ -289,9 +290,9 @@ class DocumentacionController extends Controller
             }
         }
 
-        // Obtener contexto del cliente para nivel de estándares (necesario para 1.1.2)
+        // Obtener contexto del cliente para nivel de estándares (necesario para 1.1.2 y 2.1.1)
         $contextoCliente = null;
-        if ($tipoCarpetaFases === 'responsabilidades_sgsst') {
+        if ($tipoCarpetaFases === 'responsabilidades_sgsst' || $tipoCarpetaFases === 'politicas_2_1_1') {
             $db = \Config\Database::connect();
             $contextoCliente = $db->table('tbl_cliente_contexto_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
@@ -301,7 +302,7 @@ class DocumentacionController extends Controller
 
         // Obtener documentos SST aprobados para mostrar en tabla
         $documentosSSTAprobados = [];
-        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal'])) {
+        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'manual_convivencia_1_1_8', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal', 'capacitacion_copasst', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst'])) {
             $db = \Config\Database::connect();
             $queryDocs = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
@@ -318,6 +319,16 @@ class DocumentacionController extends Controller
                     'responsabilidades_rep_legal_sgsst',
                     'responsabilidades_responsable_sgsst',
                     'responsabilidades_trabajadores_sgsst'
+                ]);
+            } elseif ($tipoCarpetaFases === 'politicas_2_1_1') {
+                // 2.1.1: Buscar las 6 políticas de SST
+                $queryDocs->whereIn('tipo_documento', [
+                    'politica_sst_general',
+                    'politica_alcohol_drogas',
+                    'politica_acoso_laboral',
+                    'politica_violencias_genero',
+                    'politica_discriminacion',
+                    'politica_prevencion_emergencias'
                 ]);
             } elseif ($tipoCarpetaFases === 'presupuesto_sst') {
                 // 1.1.3: Presupuesto SST
@@ -374,8 +385,11 @@ class DocumentacionController extends Controller
                 // 2.3.1: Evaluación e identificación de prioridades
                 $queryDocs->where('tipo_documento', 'soporte_evaluacion_prioridades');
             } elseif ($tipoCarpetaFases === 'plan_objetivos_metas') {
-                // 2.4.1: Plan que identifica objetivos, metas, responsabilidad, recursos
-                $queryDocs->where('tipo_documento', 'soporte_plan_objetivos');
+                // 2.2.1/2.4.1: Plan de Objetivos y Metas SG-SST
+                $queryDocs->whereIn('tipo_documento', [
+                    'plan_objetivos_metas',
+                    'soporte_plan_objetivos'
+                ]);
             } elseif ($tipoCarpetaFases === 'rendicion_desempeno') {
                 // 2.6.1: Rendición sobre el desempeño
                 $queryDocs->where('tipo_documento', 'soporte_rendicion_desempeno');
@@ -383,8 +397,14 @@ class DocumentacionController extends Controller
                 // 1.1.6: Conformación COPASST / Vigía
                 $queryDocs->where('tipo_documento', 'soporte_conformacion_copasst');
             } elseif ($tipoCarpetaFases === 'comite_convivencia') {
-                // 1.1.8: Conformación Comité de Convivencia
+                // 1.1.8: Conformación Comité de Convivencia (legacy)
                 $queryDocs->where('tipo_documento', 'soporte_comite_convivencia');
+            } elseif ($tipoCarpetaFases === 'manual_convivencia_1_1_8') {
+                // 1.1.8: Manual de Convivencia + Soportes del Comité
+                $queryDocs->whereIn('tipo_documento', [
+                    'manual_convivencia_laboral',
+                    'soporte_comite_convivencia'
+                ]);
             } elseif ($tipoCarpetaFases === 'promocion_prevencion_salud') {
                 // 3.1.2: Programa de Promoción y Prevención en Salud
                 $queryDocs->where('tipo_documento', 'programa_promocion_prevencion_salud');
@@ -394,6 +414,12 @@ class DocumentacionController extends Controller
             } elseif ($tipoCarpetaFases === 'matriz_legal') {
                 // 2.7.1: Procedimiento de Matriz Legal
                 $queryDocs->where('tipo_documento', 'procedimiento_matriz_legal');
+            } elseif ($tipoCarpetaFases === 'capacitacion_copasst') {
+                // 1.1.7: Capacitación COPASST
+                $queryDocs->where('tipo_documento', 'soporte_capacitacion_copasst');
+            } elseif ($tipoCarpetaFases === 'mecanismos_comunicacion_sgsst') {
+                // 2.8.1: Mecanismos de Comunicación, Auto Reporte
+                $queryDocs->where('tipo_documento', 'mecanismos_comunicacion_sgsst');
             } elseif (isset($tipoDocBuscar)) {
                 $queryDocs->where('tipo_documento', $tipoDocBuscar);
             }
@@ -483,6 +509,15 @@ class DocumentacionController extends Controller
                 ->orderBy('created_at', 'DESC')
                 ->get()
                 ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'capacitacion_copasst') {
+            // 1.1.7 Capacitación COPASST
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_capacitacion_copasst')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
         }
 
         // Determinar qué vista de tipo cargar
@@ -523,12 +558,11 @@ class DocumentacionController extends Controller
         $codigo = strtolower($carpeta['codigo'] ?? '');
 
         // ============================================
-        // 1.1.7. Capacitación COPASST - Formato de asistencia
-        // NO es un programa de capacitación con IA, es registro de asistencia
-        // Debe verificarse ANTES de la condición genérica "capacitaci"
+        // 1.1.7. Capacitación COPASST - Adjuntar soportes de capacitación
+        // Permite adjuntar archivos o enlaces de capacitaciones realizadas al COPASST
         // ============================================
         if ($codigo === '1.1.7') {
-            return null; // Sin fases de dependencia - usa formato de asistencia
+            return 'capacitacion_copasst';
         }
 
         // 1.2.1. Programa Capacitacion PYP (Ciclo Planear)
@@ -544,11 +578,20 @@ class DocumentacionController extends Controller
             return 'induccion_reinduccion';
         }
 
+        // 2.2.1. Objetivos definidos, claros, medibles, cuantificables, con metas
         // 2.4.1. Plan que identifica objetivos, metas, responsabilidad, recursos
-        if ((strpos($nombre, 'plan') !== false && strpos($nombre, 'objetivos') !== false) ||
-            strpos($nombre, 'objetivos') !== false && strpos($nombre, 'metas') !== false ||
-            $codigo === '2.4.1') {
+        if ($codigo === '2.2.1' ||
+            $codigo === '2.4.1' ||
+            (strpos($nombre, 'plan') !== false && strpos($nombre, 'objetivos') !== false) ||
+            (strpos($nombre, 'objetivos') !== false && strpos($nombre, 'metas') !== false)) {
             return 'plan_objetivos_metas';
+        }
+
+        // 2.1.1. Políticas de Seguridad y Salud en el Trabajo (5 documentos)
+        if ($codigo === '2.1.1' ||
+            strpos($nombre, 'politica') !== false && strpos($nombre, 'seguridad') !== false ||
+            strpos($nombre, 'politicas') !== false && strpos($nombre, 'sst') !== false) {
+            return 'politicas_2_1_1';
         }
 
         // 1.2.3. Responsables del SG-SST con curso virtual de 50 horas (ANTES de 1.1.1 porque es más específico)
@@ -716,6 +759,14 @@ class DocumentacionController extends Controller
             return 'matriz_legal';
         }
 
+        // 2.8.1. Mecanismos de comunicación, auto reporte en SG-SST
+        if ($codigo === '2.8.1' ||
+            strpos($nombre, 'mecanismos') !== false && strpos($nombre, 'comunicacion') !== false ||
+            strpos($nombre, 'auto reporte') !== false ||
+            strpos($nombre, 'autoreporte') !== false) {
+            return 'mecanismos_comunicacion_sgsst';
+        }
+
         // 1.1.6. Conformación COPASST / Vigía
         if ($codigo === '1.1.6' ||
             strpos($nombre, 'copasst') !== false ||
@@ -723,11 +774,11 @@ class DocumentacionController extends Controller
             return 'conformacion_copasst';
         }
 
-        // 1.1.8. Conformación Comité de Convivencia Laboral
+        // 1.1.8. Conformación Comité de Convivencia Laboral / Manual de Convivencia
         if ($codigo === '1.1.8' ||
             strpos($nombre, 'convivencia') !== false ||
             strpos($nombre, 'comite') !== false && strpos($nombre, 'convivencia') !== false) {
-            return 'comite_convivencia';
+            return 'manual_convivencia_1_1_8';
         }
 
         // ============================================

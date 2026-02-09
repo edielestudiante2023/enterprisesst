@@ -473,6 +473,34 @@ private static array $tiposRegistrados = [
 
 ---
 
+#### BLOQUE 9: AGREGAR AL COMPONENTE TABLA_DOCUMENTOS_SST (⚠️ OBLIGATORIO)
+
+**Agregar en `app/Views/documentacion/_components/tabla_documentos_sst.php`:**
+
+Este componente controla qué tipos de documento muestran la tabla con DataTables en la carpeta. **SIN ESTE PASO, después de generar y firmar el documento, la tabla NO se mostrará.**
+
+```php
+// Línea ~7 del archivo
+$tiposConTabla = [
+    'capacitacion_sst',
+    'responsables_sst',
+    'responsabilidades_sgsst',
+    'archivo_documental',
+    'presupuesto_sst',
+    'induccion_reinduccion',
+    'promocion_prevencion_salud',
+    'matriz_legal',
+    'politicas_2_1_1',
+    'mi_nuevo_documento',  // <-- AGREGAR AQUÍ
+];
+```
+
+**SÍNTOMA SI FALTA:** El documento se genera, se aprueba, se firma correctamente, pero al volver a la carpeta no aparece ningún botón ni tabla para acceder al documento.
+
+**IMPORTANTE:** Este es un paso crítico que se olvida frecuentemente. Sin él, el usuario no podrá ver ni descargar el documento después de firmarlo.
+
+---
+
 ### FASE 3: Crear Vistas con Estilos Estándar
 
 **CRÍTICO:** Las vistas de documento DEBEN usar los estilos documentados.
@@ -870,6 +898,7 @@ $firmantes = $firmanteService->obtenerFirmantesDocumento(
 | Agregar firmantes en BD (tbl_doc_firmantes_config) | ✅ **CORRECTO** |
 | Crear clase PHP en DocumentosSSTTypes/ | ✅ **OBLIGATORIO** |
 | Registrar clase en DocumentoSSTFactory | ✅ **OBLIGATORIO** |
+| Agregar tipo en tabla_documentos_sst.php | ✅ **OBLIGATORIO** |
 | Usar DocumentoConfigService para leer configuración | ✅ **CORRECTO** |
 | Usar FirmanteService para obtener firmantes | ✅ **CORRECTO** |
 | Consultar docs/MODULO_NUMERALES_SGSST/ para estilos | ✅ **CORRECTO** |
@@ -878,12 +907,15 @@ $firmantes = $firmanteService->obtenerFirmantesDocumento(
 | Hardcodear códigos de documento en PHP | ❌ **PROHIBIDO** |
 | Inventar estilos CSS sin consultar documentación | ❌ **PROHIBIDO** |
 | Omitir clase PHP pensando que BD es suficiente | ❌ **ERROR COMÚN** |
+| Omitir registro en tabla_documentos_sst.php | ❌ **ERROR COMÚN** |
 
 ⚠️ **IMPORTANTE:** Aunque la configuración está en BD, SIEMPRE se requiere:
 1. Clase PHP en `app/Libraries/DocumentosSSTTypes/`
 2. Registro en `DocumentoSSTFactory.php`
+3. Agregar tipo en `$tiposConTabla` de `tabla_documentos_sst.php`
 
-Sin estos, la generación con IA mostrará "[Seccion no definida]".
+Sin los puntos 1-2, la generación con IA mostrará "[Seccion no definida]".
+Sin el punto 3, el documento firmado no aparecerá en la tabla de la carpeta.
 
 ---
 

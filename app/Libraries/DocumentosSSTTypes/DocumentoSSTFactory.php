@@ -30,6 +30,19 @@ class DocumentoSSTFactory
         'programa_promocion_prevencion_salud' => ProgramaPromocionPrevencionSalud::class,
         'programa_induccion_reinduccion' => ProgramaInduccionReinduccion::class,
         'procedimiento_matriz_legal' => ProcedimientoMatrizLegal::class,
+        // 2.1.1 Políticas de SST
+        'politica_sst_general' => PoliticaSstGeneral::class,
+        'politica_alcohol_drogas' => PoliticaAlcoholDrogas::class,
+        'politica_acoso_laboral' => PoliticaAcosoLaboral::class,
+        'politica_violencias_genero' => PoliticaViolenciasGenero::class,
+        'politica_discriminacion' => PoliticaDiscriminacion::class,
+        'politica_prevencion_emergencias' => PoliticaPrevencionEmergencias::class,
+        // 1.1.8 Conformacion Comite de Convivencia
+        'manual_convivencia_laboral' => ManualConvivenciaLaboral::class,
+        // 2.2.1 Objetivos y Metas del SG-SST
+        'plan_objetivos_metas' => PlanObjetivosMetas::class,
+        // 2.8.1 Mecanismos de Comunicación, Auto Reporte
+        'mecanismos_comunicacion_sgsst' => MecanismosComunicacionSgsst::class,
     ];
 
     /**

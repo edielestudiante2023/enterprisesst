@@ -657,11 +657,12 @@ class DocumentoVersionService
             'programa_capacitacion' => "documentos/generar/programa_capacitacion/{$idCliente}?anio={$anio}",
             'procedimiento_control_documental' => "documentos/generar/procedimiento_control_documental/{$idCliente}?anio={$anio}",
             'programa_induccion_reinduccion' => "documentos/generar/programa_induccion_reinduccion/{$idCliente}?anio={$anio}",
-            'programa_promocion_prevencion_salud' => "documentos/generar/programa_promocion_prevencion_salud/{$idCliente}?anio={$anio}",
+            'programa_promocion_prevencion_salud' => "generador-ia/{$idCliente}/pyp-salud",
             'procedimiento_matriz_legal' => "documentos/generar/procedimiento_matriz_legal/{$idCliente}?anio={$anio}",
             'presupuesto_sst' => "presupuesto-sst/editar/{$idCliente}/{$anio}",
             'responsabilidades_rep_legal_sgsst' => "documentos-sst/{$idCliente}/asignacion-responsable-sst/{$anio}",
             'responsabilidades_responsable_sst' => "documentos-sst/{$idCliente}/responsabilidades-responsable-sst/{$anio}",
+            'plan_objetivos_metas' => "generador-ia/{$idCliente}/objetivos-sgsst",
         ];
 
         $ruta = $rutas[$tipo] ?? "documentos-sst/{$idCliente}";
