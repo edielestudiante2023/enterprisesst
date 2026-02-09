@@ -125,6 +125,9 @@
     </style>
 </head>
 <body class="bg-light">
+    <!-- Toast Stack -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastStack" style="z-index: 9999;"></div>
+
     <!-- Barra de herramientas -->
     <div class="no-print bg-dark text-white py-2 sticky-top">
         <div class="container-fluid">
@@ -247,8 +250,8 @@
                                 <td><?= str_pad($documento['version'] ?? 1, 3, '0', STR_PAD_LEFT) ?></td>
                             </tr>
                             <tr>
-                                <td class="label">Entra en Vigor:</td>
-                                <td><?= date('j M Y', strtotime($documento['created_at'] ?? 'now')) ?></td>
+                                <td class="label">Fecha:</td>
+                                <td><?= date('d/m/Y', strtotime($documento['created_at'] ?? 'now')) ?></td>
                             </tr>
                         </table>
                     </td>
@@ -267,9 +270,15 @@
 
             <!-- Contenido del documento -->
             <?php if (!empty($contenido['secciones'])): ?>
+                <?php $parsedown = new \Parsedown(); ?>
                 <?php foreach ($contenido['secciones'] as $seccion): ?>
-                    <div class="documento-cuerpo">
-                        <?= $seccion['contenido'] ?>
+                    <div class="seccion">
+                        <?php if (!empty($seccion['titulo'])): ?>
+                            <div class="seccion-titulo"><?= esc($seccion['titulo']) ?></div>
+                        <?php endif; ?>
+                        <div class="seccion-contenido">
+                            <?= $parsedown->text($seccion['contenido'] ?? '') ?>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -602,8 +611,6 @@
                                 <select class="form-select" id="regenerarConsultor">
                                     <option value="">-- Seleccione --</option>
                                     <?php
-                                    $consultorModel = new \App\Models\ConsultantModel();
-                                    $listaConsultores = $consultorModel->orderBy('nombre_consultor', 'ASC')->findAll();
                                     $idConsultorActual = $contexto['id_consultor_responsable'] ?? null;
                                     foreach ($listaConsultores as $c):
                                     ?>
@@ -648,6 +655,40 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+    function mostrarToast(tipo, titulo, mensaje) {
+        const container = document.getElementById('toastStack');
+        const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+        const hora = new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        const configs = {
+            'success':  { bg: 'bg-success', text: 'text-white', icon: 'bi-check-circle-fill' },
+            'error':    { bg: 'bg-danger',  text: 'text-white', icon: 'bi-x-circle-fill' },
+            'warning':  { bg: 'bg-warning', text: 'text-dark',  icon: 'bi-exclamation-triangle-fill' },
+            'info':     { bg: 'bg-info',    text: 'text-white', icon: 'bi-info-circle-fill' },
+            'save':     { bg: 'bg-success', text: 'text-white', icon: 'bi-save-fill' }
+        };
+        const cfg = configs[tipo] || configs['info'];
+        const duraciones = { 'error': 8000, 'success': 6000, 'warning': 6000, 'save': 5000 };
+        const duracion = duraciones[tipo] || 5000;
+        const closeWhite = cfg.text === 'text-white' ? ' btn-close-white' : '';
+
+        const toastHtml = `<div id="${toastId}" class="toast" role="alert" style="min-width:300px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-bottom:8px;">
+            <div class="toast-header ${cfg.bg} ${cfg.text}">
+                <i class="bi ${cfg.icon} me-2"></i>
+                <strong class="me-auto">${titulo}</strong>
+                <small>${hora}</small>
+                <button type="button" class="btn-close${closeWhite}" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">${mensaje}</div>
+        </div>`;
+
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        const toastEl = document.getElementById(toastId);
+        const instance = new bootstrap.Toast(toastEl, { delay: duracion });
+        toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        instance.show();
+        return { id: toastId, element: toastEl, instance };
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const idDocumento = <?= $documento['id_documento'] ?>;
 
@@ -727,14 +768,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    mostrarToast('success', 'Version Restaurada', data.message);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert('Error: ' + data.message);
+                    mostrarToast('error', 'Error al Restaurar', data.message);
                 }
             })
             .catch(error => {
-                alert('Error de conexion');
+                mostrarToast('error', 'Error de Conexion', 'No se pudo conectar con el servidor');
             });
         }
 
@@ -769,7 +810,7 @@
             const idConsultor = document.getElementById('regenerarConsultor').value;
 
             if (!repLegalNombre) {
-                alert('El nombre del representante legal es obligatorio');
+                mostrarToast('warning', 'Dato Requerido', 'El nombre del representante legal es obligatorio');
                 return;
             }
 
@@ -789,16 +830,16 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    mostrarToast('success', 'Documento Actualizado', data.message);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert('Error: ' + data.message);
+                    mostrarToast('error', 'Error al Actualizar', data.message);
                     btn.disabled = false;
                     btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Actualizar y Crear Nueva Version';
                 }
             })
             .catch(error => {
-                alert('Error de conexion');
+                mostrarToast('error', 'Error de Conexion', 'No se pudo conectar con el servidor');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Actualizar y Crear Nueva Version';
             });

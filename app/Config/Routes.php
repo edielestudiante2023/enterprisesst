@@ -508,6 +508,10 @@ $routes->get('listPendientesAjax', 'PendientesController::listPendientesAjax');
 $routes->get('consultor/dashboard', 'ConsultorTablaItemsController::index');
 $routes->get('consultant/dashboard', 'ConsultantDashboardController::index');
 
+// Ver vista del cliente como consultor/admin
+$routes->get('consultor/selector-cliente', 'ConsultorTablaItemsController::selectorCliente');
+$routes->get('consultor/vista-cliente/(:num)', 'ConsultorTablaItemsController::vistaCliente/$1');
+
 // Vista de listado (ya existente)
 $routes->get('/pta-cliente-nueva/list', 'PtaClienteNuevaController::listPtaClienteNuevaModel');
 

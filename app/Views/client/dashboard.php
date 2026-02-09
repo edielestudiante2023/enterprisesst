@@ -441,6 +441,7 @@
                 </div>
             </div>
 
+            <?php /* COMENTADO - Dispositivos Documentales ya no se maneja
             <!-- Título -->
             <h4 class="section-title fade-in-up">
                 <i class="fas fa-shield-alt"></i> Dispositivos Documentales Sistema de Gestión en Seguridad y Salud en el Trabajo
@@ -454,7 +455,7 @@
                     $index = 1;
                     $dimension_items = [];
                     $dimension_count = [];
-                    
+
                     // Primero agrupamos los accesos por dimensión
                     foreach ($accesos as $acceso) {
                         $dimension_items[$acceso['dimension']][] = $acceso;
@@ -472,7 +473,7 @@
                     </div>
                 <?php
                 endif;
-                
+
                 if (isset($accesos) && !empty($accesos)):
                     $accordion_index = 0;
                     foreach ($dimension_items as $dimension => $items):
@@ -505,12 +506,13 @@
                             </div>
                         </div>
                     </div>
-                <?php 
+                <?php
                     $accordion_index++;
-                endforeach; 
+                endforeach;
                 endif;
                 ?>
             </div>
+            FIN COMENTADO - Dispositivos Documentales */ ?>
 
             <!-- Botón de cerrar sesión -->
             <div class="text-center mt-4 fade-in-up">

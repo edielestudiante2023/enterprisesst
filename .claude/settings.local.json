@@ -82,7 +82,8 @@
       "Bash(composer dump-autoload:*)",
       "Bash(tail:*)",
       "Bash(C:xamppmysqlbinmysql -u root enterprisesst -e \"UPDATE tbl_comites_candidatos SET representacion = ''empleador'' WHERE id_proceso = 4 AND estado = ''designado''\")",
-      "Bash(c:xamppmysqlbinmysql -u root -e \"UPDATE tbl_clientes SET correo_cliente = ''afiancolactas@gmail.com'' WHERE nombre_cliente = ''CYCLOID TALENT SAS'';\" enterprisesabordo)"
+      "Bash(c:xamppmysqlbinmysql -u root -e \"UPDATE tbl_clientes SET correo_cliente = ''afiancolactas@gmail.com'' WHERE nombre_cliente = ''CYCLOID TALENT SAS'';\" enterprisesabordo)",
+      "WebFetch(domain:dashboard.cycloidtalent.com)"
     ]
   }
 }

@@ -633,9 +633,9 @@
 
             <!-- Botones de Acceso Rápido -->
             <div class="text-center mb-4">
-                <a href="<?= base_url('/quick-access') ?>" target="_blank" rel="noopener noreferrer">
-                    <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary)); border: none;" aria-label="Acceso Rápido">
-                        <i class="fas fa-bolt me-2"></i>Acceso Rápido
+                <a href="<?= base_url('/consultor/selector-cliente') ?>" target="_blank" rel="noopener noreferrer">
+                    <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary)); border: none;" aria-label="Ver Vista del Cliente">
+                        <i class="fas fa-eye me-2"></i>Ver Vista del Cliente
                     </button>
                 </a>
                 <a href="<?= base_url('/admin/users') ?>" rel="noopener noreferrer">

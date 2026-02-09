@@ -105,20 +105,57 @@ $contexto['actividad_economica_principal']
 
 ---
 
+## Rutas de Generacion de Documentos
+
+El sistema tiene **3 variantes** de generacion. Antes de crear un numeral nuevo, determinar a cual pertenece:
+
+| Variante | Cuando usar | Boton en vista | Controlador destino |
+|----------|------------|----------------|---------------------|
+| **A: Soporte** | El numeral pide evidencia (certificados, actas, planillas) | "Adjuntar Soporte" | POST directo (formulario en la misma vista) |
+| **B: Documento IA** | El numeral pide un documento formal personalizado por empresa | "Crear con IA" | `DocumentosSSTController::generarConIA()` |
+| **C: Normativo** | El numeral pide un documento formal pero el texto es legal/estandar | "Crear con IA" (pero handler retorna `requiereGeneracionIA() = false`) | `DocumentosSSTController::generarConIA()` |
+
+**Puntos de decision clave:**
+1. `DocumentacionController::determinarTipoCarpetaFases()` → mapea carpeta a tipo
+2. La vista `_tipos/{tipo}.php` → decide que boton mostrar (Adjuntar vs Crear con IA)
+3. `handler->requiereGeneracionIA()` → bifurca entre Variante B y C
+
+**Doc completa:** `ZZ_93_ARBOLES_DECISION.md`
+
+---
+
 ## Checklist para Nuevo Tipo de Documento
 
 Al agregar un nuevo tipo de documento SST al sistema:
 
+### Si es Variante A (Soporte/Adjunto):
+
+1. [ ] Agregar mapeo en `DocumentacionController::determinarTipoCarpetaFases()`
+2. [ ] Crear vista en `app/Views/documentacion/_tipos/{tipo}.php` con boton "Adjuntar"
+3. [ ] Agregar filtro en `DocumentacionController::carpeta()` para consultar documentosSSTAprobados
+4. [ ] Crear endpoint POST para recibir el archivo/enlace
+5. [ ] Agregar ruta en `app/Config/Routes.php`
+
+### Si es Variante B (Documento con IA):
+
 1. [ ] Crear clase en `app/Libraries/DocumentosSSTTypes/NuevoDocumento.php`
 2. [ ] Registrar en `DocumentoSSTFactory.php` con key en **snake_case**
-3. [ ] Crear vista en `app/Views/documentos_sst/nuevo_documento.php`
-4. [ ] Agregar ruta en `app/Config/Routes.php`
-5. [ ] Sobrescribir `getContextoBase()` con las fuentes de datos correctas
-6. [ ] Agregar entrada en `getFiltroServicioPTA()` (filtros de Plan de Trabajo)
-7. [ ] Agregar entrada en `getCategoriaIndicador()` (categoria de indicadores)
-8. [ ] Verificar que el SweetAlert muestre datos para este tipo
-9. [ ] Agregar SQL de insercion en `app/SQL/`
-10. [ ] Verificar que la URL use **snake_case** y coincida con Factory key
+3. [ ] Agregar mapeo en `DocumentacionController::determinarTipoCarpetaFases()`
+4. [ ] Crear vista en `app/Views/documentacion/_tipos/{tipo}.php` con boton "Crear con IA"
+5. [ ] Agregar ruta en `app/Config/Routes.php`
+6. [ ] Sobrescribir `getContextoBase()` con las fuentes de datos correctas
+7. [ ] Agregar entrada en `getFiltroServicioPTA()` (filtros de Plan de Trabajo)
+8. [ ] Agregar entrada en `getCategoriaIndicador()` (categoria de indicadores)
+9. [ ] Verificar que el SweetAlert muestre datos para este tipo
+10. [ ] Agregar SQL de insercion en `app/SQL/`
+11. [ ] Verificar que la URL use **snake_case** y coincida con Factory key
+
+### Si es Variante C (Normativo):
+
+1. [ ] Seguir los pasos de Variante B, PERO:
+2. [ ] Implementar `requiereGeneracionIA()` retornando `false`
+3. [ ] Implementar `getContenidoEstatico()` con el texto normativo por seccion
+4. [ ] NO necesita `getFiltroServicioPTA()` ni `getCategoriaIndicador()`
 
 ---
 
@@ -136,13 +173,14 @@ Al agregar un nuevo tipo de documento SST al sistema:
 
 | Archivo | Contenido |
 |---------|-----------|
-| `ZZ_77_PREPARACION.md` | Configuracion de contexto del cliente |
-| `ZZ_80_PARTE1.md` | Parte 1: Plan de Trabajo (tbl_pta_cliente) |
-| `ZZ_81_PARTE2.md` | Parte 2: Indicadores (tbl_indicadores_sst) |
-| `ZZ_90_PARTESWEETALERT.md` | SweetAlert de verificacion antes de generar |
-| `ZZ_91_MENSAJESTOAST.md` | Sistema de toast notifications |
-| `ZZ_95_PARTE3.md` | Parte 3: Documento formal y clases |
-| `ZZ_96_PARTE4.md` | Parte 4 |
-| `ZZ_97_PARTE5.md` | Parte 5 |
 | `ZZ_11_PROMPTNUEVO.md` | Prompt para crear documentos nuevos |
 | `ZZ_22_PROMPTREPARACIONES.md` | Prompt para reparaciones |
+| `ZZ_77_PREPARACION.md` | Configuracion de contexto del cliente |
+| `ZZ_88_PARTE1.md` | Parte 1: Plan de Trabajo (tbl_pta_cliente) |
+| `ZZ_89_PARTE2.md` | Parte 2: Indicadores (tbl_indicadores_sst) |
+| `ZZ_90_PARTESWEETALERT.md` | SweetAlert de verificacion antes de generar |
+| `ZZ_91_MENSAJESTOAST.md` | Sistema de toast notifications |
+| `ZZ_93_ARBOLES_DECISION.md` | Arboles de decision: 3 variantes de generacion |
+| `ZZ_95_PARTE3.md` | Parte 3: Documento formal y clases |
+| `ZZ_91_PARTE4.md` | Parte 4 |
+| `ZZ_92_PARTE5.md` | Parte 5 |

@@ -176,6 +176,10 @@ class PzasignacionresponsableSstController extends Controller
         // Obtener firmas electronicas
         $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento']);
 
+        // Lista de consultores para el modal de actualizar datos
+        $consultorModelLista = new ConsultantModel();
+        $listaConsultores = $consultorModelLista->orderBy('nombre_consultor', 'ASC')->findAll();
+
         $data = [
             'titulo' => self::NOMBRE_DOCUMENTO . ' - ' . $cliente['nombre_cliente'],
             'cliente' => $cliente,
@@ -185,7 +189,8 @@ class PzasignacionresponsableSstController extends Controller
             'versiones' => $versiones,
             'contexto' => $contexto,
             'consultor' => $consultor,
-            'firmasElectronicas' => $firmasElectronicas
+            'firmasElectronicas' => $firmasElectronicas,
+            'listaConsultores' => $listaConsultores
         ];
 
         return view('documentos_sst/asignacion_responsable', $data);

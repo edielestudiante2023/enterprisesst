@@ -198,6 +198,9 @@ class PzresponsabilidadesResponsableSstController extends Controller
             }
         }
 
+        // Lista de consultores para el modal de actualizar datos
+        $listaConsultores = $consultorModel->orderBy('nombre_consultor', 'ASC')->findAll();
+
         $data = [
             'titulo' => self::NOMBRE_DOCUMENTO . ' - ' . $cliente['nombre_cliente'],
             'cliente' => $cliente,
@@ -207,7 +210,8 @@ class PzresponsabilidadesResponsableSstController extends Controller
             'versiones' => $versiones,
             'contexto' => $contexto,
             'consultor' => $consultor,
-            'firmasElectronicas' => $firmasElectronicas
+            'firmasElectronicas' => $firmasElectronicas,
+            'listaConsultores' => $listaConsultores
         ];
 
         return view('documentos_sst/responsabilidades_responsable_sst', $data);
