@@ -24,6 +24,8 @@ if (!empty($documentosSSTAprobados)) {
 
 // Verificar si las fases están completas para habilitar el botón
 $puedeGenerarDocumento = isset($fasesInfo) && $fasesInfo && $fasesInfo['puede_generar_documento'];
+
+$anioActual = date('Y');
 ?>
 
 <!-- Card de Carpeta con Botón IA -->
@@ -36,20 +38,31 @@ $puedeGenerarDocumento = isset($fasesInfo) && $fasesInfo && $fasesInfo['puede_ge
                     <?= esc($carpeta['nombre']) ?>
                 </h4>
                 <?php if (!empty($carpeta['codigo'])): ?>
-                    <span class="badge bg-light text-dark me-2"><?= esc($carpeta['codigo']) ?></span>
+                    <span class="badge bg-primary me-2"><?= esc($carpeta['codigo']) ?></span>
                 <?php endif; ?>
+                <span class="badge bg-info">Programa con PTA</span>
                 <p class="text-muted mb-0 mt-2">
                     Define los objetivos del Sistema de Gestión con metas medibles, cuantificables
                     e indicadores de seguimiento. <strong>Requiere completar fases previas.</strong>
                 </p>
             </div>
             <div class="col-md-4 text-end">
-                <!-- Botón principal: Siempre visible para acceder al módulo -->
-                <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/objetivos-sgsst') ?>"
-                   class="btn btn-success btn-lg">
-                    <i class="bi bi-magic me-1"></i>Ir al Módulo IA
-                </a>
-                <small class="d-block text-muted mt-1">Objetivos, Indicadores y Documento</small>
+                <?php if (isset($fasesInfo) && $fasesInfo && !$fasesInfo['puede_generar_documento']): ?>
+                    <button type="button" class="btn btn-secondary" disabled title="Complete las fases previas">
+                        <i class="bi bi-lock me-1"></i>Crear Documento
+                    </button>
+                    <small class="d-block text-muted mt-1">Complete las 3 fases primero</small>
+                <?php elseif (!$hayAprobadoAnioActual): ?>
+                    <a href="<?= base_url('documentos/generar/plan_objetivos_metas/' . $cliente['id_cliente']) ?>"
+                       class="btn btn-success">
+                        <i class="bi bi-magic me-1"></i>Crear con IA <?= $anioActual ?>
+                    </a>
+                <?php else: ?>
+                    <a href="<?= base_url('documentos/generar/plan_objetivos_metas/' . $cliente['id_cliente']) ?>"
+                       class="btn btn-outline-success">
+                        <i class="bi bi-arrow-repeat me-1"></i>Nueva versión <?= $anioActual ?>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -65,7 +78,8 @@ $puedeGenerarDocumento = isset($fasesInfo) && $fasesInfo && $fasesInfo['puede_ge
 ]) ?>
 
 <!-- Tabla de Documentos SST -->
-<?= view('documentacion/_components/tabla_documentos', [
+<?= view('documentacion/_components/tabla_documentos_sst', [
+    'tipoCarpetaFases' => 'plan_objetivos_metas',
     'documentosSSTAprobados' => $documentosSSTAprobados ?? [],
     'cliente' => $cliente
 ]) ?>

@@ -12,6 +12,7 @@ use App\Models\DashboardItemModel;
 use App\Libraries\WorkPlanLibrary;
 use App\Libraries\TrainingLibrary;
 use App\Libraries\StandardsLibrary;
+use App\Models\IndicadorSSTModel;
 use CodeIgniter\Controller;
 
 class ConsultantController extends Controller
@@ -196,6 +197,16 @@ class ConsultantController extends Controller
             } catch (\Exception $e) {
                 // Log del error pero no interrumpir el flujo
                 log_message('error', 'Error al generar Estándares Mínimos automáticos: ' . $e->getMessage());
+            }
+
+            // Generar automáticamente los 18 Indicadores Legales Obligatorios
+            // Decreto 1072/2015 + Resolución 0312/2019
+            try {
+                $indicadorModel = new IndicadorSSTModel();
+                $resultado = $indicadorModel->crearIndicadoresLegales($clientId);
+                log_message('info', "Indicadores Legales generados para cliente ID {$clientId}: {$resultado['creados']} creados, {$resultado['corregidos']} corregidos");
+            } catch (\Exception $e) {
+                log_message('error', 'Error al generar Indicadores Legales: ' . $e->getMessage());
             }
 
             session()->setFlashdata('msg', 'Cliente agregado exitosamente.');

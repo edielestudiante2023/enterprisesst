@@ -267,9 +267,27 @@ class DocumentacionController extends Controller
         $tipoCarpetaFases = $this->determinarTipoCarpetaFases($carpeta);
         $documentoExistente = null;
 
-        if ($tipoCarpetaFases) {
+        // Para procedimientos_seguridad (4.2.3), obtener fasesInfo de cada programa implementado
+        $programasFasesInfo = [];
+        if ($tipoCarpetaFases === 'procedimientos_seguridad') {
             $fasesService = new \App\Services\FasesDocumentoService();
-            $fasesInfo = $fasesService->getResumenFases($cliente['id_cliente'], $tipoCarpetaFases);
+            $programasImplementados = [
+                'pve_riesgo_biomecanico' => 'PVE Riesgo Biomecánico',
+                'pve_riesgo_psicosocial' => 'PVE Riesgo Psicosocial',
+            ];
+            foreach ($programasImplementados as $tipoProg => $nombreProg) {
+                $programasFasesInfo[$tipoProg] = [
+                    'nombre' => $nombreProg,
+                    'fases' => $fasesService->getResumenFases($cliente['id_cliente'], $tipoProg)
+                ];
+            }
+        }
+
+        if ($tipoCarpetaFases) {
+            $fasesService = $fasesService ?? new \App\Services\FasesDocumentoService();
+            if ($tipoCarpetaFases !== 'procedimientos_seguridad') {
+                $fasesInfo = $fasesService->getResumenFases($cliente['id_cliente'], $tipoCarpetaFases);
+            }
 
             // Verificar si ya existe un documento generado para esta carpeta
             $mapaTipoDocumento = [
@@ -302,7 +320,7 @@ class DocumentacionController extends Controller
 
         // Obtener documentos SST aprobados para mostrar en tabla
         $documentosSSTAprobados = [];
-        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'manual_convivencia_1_1_8', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal', 'capacitacion_copasst', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst'])) {
+        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'manual_convivencia_1_1_8', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal', 'capacitacion_copasst', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'adquisiciones_sst', 'evaluacion_proveedores', 'evaluacion_impacto_cambios', 'estilos_vida_saludable', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'procedimientos_seguridad', 'mantenimiento_periodico', 'identificacion_sustancias_cancerigenas', 'metodologia_identificacion_peligros'])) {
             $db = \Config\Database::connect();
             $queryDocs = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
@@ -367,14 +385,20 @@ class DocumentacionController extends Controller
                 // 4.2.1: Medidas de prevención y control
                 $queryDocs->where('tipo_documento', 'soporte_medidas_prevencion_control');
             } elseif ($tipoCarpetaFases === 'diagnostico_condiciones_salud') {
-                // 3.1.1: Diagnóstico condiciones de salud
-                $queryDocs->where('tipo_documento', 'soporte_diagnostico_salud');
+                // 3.1.1: Procedimiento de Evaluaciones Médicas + Soportes
+                $queryDocs->whereIn('tipo_documento', [
+                    'procedimiento_evaluaciones_medicas',
+                    'soporte_diagnostico_salud'
+                ]);
             } elseif ($tipoCarpetaFases === 'informacion_medico_perfiles') {
                 // 3.1.3: Información al médico perfiles de cargo
                 $queryDocs->where('tipo_documento', 'soporte_perfiles_medico');
             } elseif ($tipoCarpetaFases === 'evaluaciones_medicas') {
-                // 3.1.4: Evaluaciones médicas ocupacionales
-                $queryDocs->where('tipo_documento', 'soporte_evaluaciones_medicas');
+                // 3.1.4: Evaluaciones médicas ocupacionales (Programa IA + Soportes)
+                $queryDocs->whereIn('tipo_documento', [
+                    'programa_evaluaciones_medicas_ocupacionales',
+                    'soporte_evaluaciones_medicas'
+                ]);
             } elseif ($tipoCarpetaFases === 'custodia_historias_clinicas') {
                 // 3.1.5: Custodia historias clínicas
                 $queryDocs->where('tipo_documento', 'soporte_custodia_hc');
@@ -420,6 +444,42 @@ class DocumentacionController extends Controller
             } elseif ($tipoCarpetaFases === 'mecanismos_comunicacion_sgsst') {
                 // 2.8.1: Mecanismos de Comunicación, Auto Reporte
                 $queryDocs->where('tipo_documento', 'mecanismos_comunicacion_sgsst');
+            } elseif ($tipoCarpetaFases === 'responsables_sst') {
+                // 1.1.1: Asignación Responsable del SG-SST
+                $queryDocs->where('tipo_documento', 'asignacion_responsable_sgsst');
+            } elseif ($tipoCarpetaFases === 'adquisiciones_sst') {
+                // 2.9.1: Procedimiento de Adquisiciones en SST
+                $queryDocs->where('tipo_documento', 'procedimiento_adquisiciones');
+            } elseif ($tipoCarpetaFases === 'evaluacion_proveedores') {
+                // 2.10.1: Evaluación y Selección de Proveedores y Contratistas
+                $queryDocs->where('tipo_documento', 'procedimiento_evaluacion_proveedores');
+            } elseif ($tipoCarpetaFases === 'evaluacion_impacto_cambios') {
+                // 2.11.1: Procedimiento de Gestion del Cambio
+                $queryDocs->where('tipo_documento', 'procedimiento_gestion_cambio');
+            } elseif ($tipoCarpetaFases === 'estilos_vida_saludable') {
+                // 3.1.7: Programa de Estilos de Vida Saludable
+                $queryDocs->where('tipo_documento', 'programa_estilos_vida_saludable');
+            } elseif ($tipoCarpetaFases === 'reporte_accidentes_trabajo') {
+                // 3.2.1: Procedimiento de Investigacion de Accidentes
+                $queryDocs->where('tipo_documento', 'procedimiento_investigacion_accidentes');
+            } elseif ($tipoCarpetaFases === 'investigacion_incidentes') {
+                // 3.2.2: Investigacion de Incidentes, Accidentes y Enfermedades Laborales
+                $queryDocs->where('tipo_documento', 'procedimiento_investigacion_incidentes');
+            } elseif ($tipoCarpetaFases === 'metodologia_identificacion_peligros') {
+                // 4.1.1: Metodologia Identificacion de Peligros y Valoracion de Riesgos
+                $queryDocs->where('tipo_documento', 'metodologia_identificacion_peligros');
+            } elseif ($tipoCarpetaFases === 'identificacion_sustancias_cancerigenas') {
+                // 4.1.3: Identificacion de Sustancias Cancerigenas o con Toxicidad Aguda
+                $queryDocs->where('tipo_documento', 'identificacion_sustancias_cancerigenas');
+            } elseif ($tipoCarpetaFases === 'procedimientos_seguridad') {
+                // 4.2.3: Programas de Vigilancia Epidemiologica / PVEs
+                $queryDocs->whereIn('tipo_documento', [
+                    'pve_riesgo_biomecanico',
+                    'pve_riesgo_psicosocial'
+                ]);
+            } elseif ($tipoCarpetaFases === 'mantenimiento_periodico') {
+                // 4.2.5: Mantenimiento Periodico
+                $queryDocs->where('tipo_documento', 'programa_mantenimiento_periodico');
             } elseif (isset($tipoDocBuscar)) {
                 $queryDocs->where('tipo_documento', $tipoDocBuscar);
             }
@@ -509,12 +569,111 @@ class DocumentacionController extends Controller
                 ->orderBy('created_at', 'DESC')
                 ->get()
                 ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'mecanismos_comunicacion_sgsst') {
+            // 2.8.1 Mecanismos de Comunicación, Auto Reporte
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_mecanismos_comunicacion')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'diagnostico_condiciones_salud') {
+            // 3.1.1 Diagnóstico de Condiciones de Salud - Soportes adjuntos
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_diagnostico_salud')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
         } elseif ($tipoCarpetaFases === 'capacitacion_copasst') {
             // 1.1.7 Capacitación COPASST
             $db = $db ?? \Config\Database::connect();
             $soportesAdicionales = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
                 ->where('tipo_documento', 'soporte_capacitacion_copasst')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'estilos_vida_saludable') {
+            // 3.1.7 Estilos de Vida Saludable
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_estilos_vida_saludable')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'evaluacion_impacto_cambios') {
+            // 2.11.1 Evaluación del Impacto de Cambios / Gestión del Cambio
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_gestion_cambio')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'evaluaciones_medicas') {
+            // 3.1.4 Evaluaciones Médicas Ocupacionales - Soportes adjuntos
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_evaluaciones_medicas')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'reporte_accidentes_trabajo') {
+            // 3.2.1 Investigacion de Accidentes de Trabajo y Enfermedades Laborales
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_investigacion_accidentes')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'investigacion_incidentes') {
+            // 3.2.2 Investigacion de Incidentes, Accidentes y Enfermedades Laborales
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_investigacion_incidentes')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'metodologia_identificacion_peligros') {
+            // 4.1.1 Metodologia Identificacion de Peligros y Valoracion de Riesgos
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_metodologia_peligros')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'identificacion_sustancias_cancerigenas') {
+            // 4.1.3 Identificacion de Sustancias Cancerigenas o con Toxicidad Aguda
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_sustancias_cancerigenas')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'procedimientos_seguridad') {
+            // 4.2.3 Programas de Vigilancia Epidemiologica - Soportes PVE
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->whereIn('tipo_documento', ['soporte_pve_biomecanico', 'soporte_pve_psicosocial'])
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'mantenimiento_periodico') {
+            // 4.2.5 Mantenimiento Periodico
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_mantenimiento_periodico')
                 ->orderBy('created_at', 'DESC')
                 ->get()
                 ->getResultArray();
@@ -542,7 +701,8 @@ class DocumentacionController extends Controller
             'documentosSSTAprobados' => $documentosSSTAprobados,
             'soportesAdicionales' => $soportesAdicionales,
             'contextoCliente' => $contextoCliente ?? null,
-            'vistaContenido' => $vistaPath
+            'vistaContenido' => $vistaPath,
+            'programasFasesInfo' => $programasFasesInfo ?? [],
         ];
 
         return view('documentacion/carpeta', $data);
@@ -673,6 +833,14 @@ class DocumentacionController extends Controller
             strpos($nombre, 'revision') !== false && strpos($nombre, 'direccion') !== false ||
             strpos($nombre, 'revision') !== false && strpos($nombre, 'anual') !== false) {
             return 'revision_direccion';
+        }
+
+        // 3.1.7. Estilos de vida y entornos saludables
+        if ($codigo === '3.1.7' ||
+            strpos($nombre, 'estilos') !== false && strpos($nombre, 'vida') !== false ||
+            strpos($nombre, 'entornos') !== false && strpos($nombre, 'saludables') !== false ||
+            strpos($nombre, 'tabaquismo') !== false || strpos($nombre, 'farmacodependencia') !== false) {
+            return 'estilos_vida_saludable';
         }
 
         // 3.1.8. Agua potable, servicios sanitarios y disposición de basuras
@@ -813,6 +981,79 @@ class DocumentacionController extends Controller
             strpos($nombre, 'acciones') !== false && strpos($nombre, 'arl') !== false ||
             strpos($nombre, 'acciones') !== false && strpos($nombre, 'autoridades') !== false) {
             return 'acciones_arl_autoridades';
+        }
+
+        // 2.9.1. Identificación, evaluación para adquisición de productos y servicios en SST
+        if ($codigo === '2.9.1' ||
+            strpos($nombre, 'adquisicion') !== false && strpos($nombre, 'producto') !== false ||
+            strpos($nombre, 'adquisicion') !== false && strpos($nombre, 'servicio') !== false ||
+            strpos($nombre, 'adquisiciones') !== false && strpos($nombre, 'sst') !== false) {
+            return 'adquisiciones_sst';
+        }
+
+        // 2.10.1. Evaluación y selección de proveedores y contratistas
+        if ($codigo === '2.10.1' ||
+            strpos($nombre, 'evaluacion') !== false && strpos($nombre, 'proveedores') !== false ||
+            strpos($nombre, 'seleccion') !== false && strpos($nombre, 'proveedores') !== false ||
+            strpos($nombre, 'seleccion') !== false && strpos($nombre, 'contratistas') !== false) {
+            return 'evaluacion_proveedores';
+        }
+
+        // 2.11.1. Evaluación del impacto de cambios / Gestión del cambio
+        if ($codigo === '2.11.1' ||
+            strpos($nombre, 'gestion') !== false && strpos($nombre, 'cambio') !== false ||
+            strpos($nombre, 'impacto') !== false && strpos($nombre, 'cambios') !== false ||
+            strpos($nombre, 'evaluacion') !== false && strpos($nombre, 'impacto') !== false && strpos($nombre, 'cambios') !== false) {
+            return 'evaluacion_impacto_cambios';
+        }
+
+        // 3.2.2. Investigación de incidentes, accidentes y enfermedades laborales (determinación de causas)
+        // DEBE ir ANTES de 3.2.1 para que el código '3.2.2' se capture primero
+        if ($codigo === '3.2.2' ||
+            strpos($nombre, 'investigacion') !== false && strpos($nombre, 'incidentes') !== false ||
+            strpos($nombre, 'causas') !== false && strpos($nombre, 'basicas') !== false ||
+            strpos($nombre, 'causas') !== false && strpos($nombre, 'inmediatas') !== false) {
+            return 'investigacion_incidentes';
+        }
+
+        // 4.1.1. Metodología para la identificación de peligros, evaluación y valoración de riesgos
+        if ($codigo === '4.1.1' ||
+            strpos($nombre, 'metodologia') !== false && strpos($nombre, 'peligros') !== false ||
+            strpos($nombre, 'identificacion') !== false && strpos($nombre, 'peligros') !== false && strpos($nombre, 'riesgos') !== false ||
+            strpos($nombre, 'valoracion') !== false && strpos($nombre, 'riesgos') !== false) {
+            return 'metodologia_identificacion_peligros';
+        }
+
+        // 4.1.3. Identificación de sustancias catalogadas como cancerígenas o con toxicidad aguda
+        if ($codigo === '4.1.3' ||
+            strpos($nombre, 'sustancias') !== false && strpos($nombre, 'cancerigenas') !== false ||
+            strpos($nombre, 'sustancias') !== false && strpos($nombre, 'toxicidad') !== false ||
+            strpos($nombre, 'cancerigenas') !== false && strpos($nombre, 'toxicidad') !== false) {
+            return 'identificacion_sustancias_cancerigenas';
+        }
+
+        // 3.2.1. Reporte e investigación de accidentes de trabajo y enfermedades laborales
+        if ($codigo === '3.2.1' ||
+            strpos($nombre, 'reporte') !== false && strpos($nombre, 'accidentes') !== false ||
+            strpos($nombre, 'investigacion') !== false && strpos($nombre, 'accidentes') !== false) {
+            return 'reporte_accidentes_trabajo';
+        }
+
+        // 4.2.3. Programas de vigilancia epidemiológica / PVE / Procedimientos de seguridad
+        if ($codigo === '4.2.3' ||
+            strpos($nombre, 'vigilancia') !== false && strpos($nombre, 'epidemiologica') !== false ||
+            strpos($nombre, 'procedimientos') !== false && strpos($nombre, 'seguridad') !== false ||
+            strpos($nombre, 'programas') !== false && strpos($nombre, 'seguridad') !== false && strpos($nombre, 'salud') !== false ||
+            strpos($nombre, 'pve') !== false) {
+            return 'procedimientos_seguridad';
+        }
+
+        // 4.2.5. Mantenimiento periódico de instalaciones, equipos, máquinas, herramientas
+        if ($codigo === '4.2.5' ||
+            strpos($nombre, 'mantenimiento') !== false && strpos($nombre, 'periodico') !== false ||
+            strpos($nombre, 'mantenimiento') !== false && strpos($nombre, 'instalaciones') !== false ||
+            strpos($nombre, 'mantenimiento') !== false && strpos($nombre, 'equipos') !== false) {
+            return 'mantenimiento_periodico';
         }
 
         return null;

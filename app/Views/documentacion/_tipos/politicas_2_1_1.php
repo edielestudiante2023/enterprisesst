@@ -1,7 +1,7 @@
 <?php
 /**
  * Vista de Tipo: 2.1.1 Políticas de Seguridad y Salud en el Trabajo
- * Carpeta con dropdown para 5 políticas de SST
+ * Carpeta con dropdown para 6 políticas de SST
  * Variables: $carpeta, $cliente, $fasesInfo, $documentosSSTAprobados, $contextoCliente
  */
 
@@ -49,50 +49,36 @@ $totalEsperado = 6; // 6 políticas
                             <i class="bi bi-plus-lg me-1"></i>Nueva Política
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <?php if (!isset($docsExistentesTipos['politica_sst_general'])): ?>
+                            <?php
+                            // Listado de políticas: siempre visibles (§3.7 ZZ_22_PROMPTREPARACIONES)
+                            // Si ya existe, mostrar "Nueva versión" en lugar de ocultar
+                            $politicas = [
+                                'politica_sst_general'            => ['icono' => 'bi-shield-check',        'color' => 'text-primary', 'nombre' => 'Política SST General'],
+                                'politica_alcohol_drogas'         => ['icono' => 'bi-cup-straw',           'color' => 'text-warning', 'nombre' => 'Política Alcohol y SPA'],
+                                'politica_acoso_laboral'          => ['icono' => 'bi-person-x',            'color' => 'text-danger',  'nombre' => 'Política Acoso Laboral'],
+                                'politica_violencias_genero'      => ['icono' => 'bi-gender-ambiguous',    'color' => 'text-purple',  'nombre' => 'Política Violencias de Género'],
+                                'politica_discriminacion'         => ['icono' => 'bi-people',              'color' => 'text-info',    'nombre' => 'Política Discriminación'],
+                                'politica_prevencion_emergencias' => ['icono' => 'bi-exclamation-triangle','color' => 'text-danger',  'nombre' => 'Política Emergencias'],
+                            ];
+                            foreach ($politicas as $tipo => $info):
+                                $yaExiste = isset($docsExistentesTipos[$tipo]);
+                                $url = base_url('documentos/generar/' . $tipo . '/' . $cliente['id_cliente']);
+                            ?>
                             <li>
-                                <a href="<?= base_url('documentos/generar/politica_sst_general/' . $cliente['id_cliente']) ?>" class="dropdown-item">
-                                    <i class="bi bi-shield-check me-2 text-primary"></i>Política SST General
-                                </a>
+                                <?php if ($yaExiste): ?>
+                                    <a href="<?= $url ?>" class="dropdown-item">
+                                        <i class="bi bi-arrow-repeat me-2 text-success"></i>Nueva versión: <?= esc($info['nombre']) ?>
+                                    </a>
+                                <?php else: ?>
+                                    <a href="<?= $url ?>" class="dropdown-item">
+                                        <i class="bi <?= $info['icono'] ?> me-2 <?= $info['color'] ?>"></i><?= esc($info['nombre']) ?>
+                                    </a>
+                                <?php endif; ?>
                             </li>
-                            <?php endif; ?>
-                            <?php if (!isset($docsExistentesTipos['politica_alcohol_drogas'])): ?>
-                            <li>
-                                <a href="<?= base_url('documentos/generar/politica_alcohol_drogas/' . $cliente['id_cliente']) ?>" class="dropdown-item">
-                                    <i class="bi bi-cup-straw me-2 text-warning"></i>Política Alcohol y SPA
-                                </a>
-                            </li>
-                            <?php endif; ?>
-                            <?php if (!isset($docsExistentesTipos['politica_acoso_laboral'])): ?>
-                            <li>
-                                <a href="<?= base_url('documentos/generar/politica_acoso_laboral/' . $cliente['id_cliente']) ?>" class="dropdown-item">
-                                    <i class="bi bi-person-x me-2 text-danger"></i>Política Acoso Laboral
-                                </a>
-                            </li>
-                            <?php endif; ?>
-                            <?php if (!isset($docsExistentesTipos['politica_violencias_genero'])): ?>
-                            <li>
-                                <a href="<?= base_url('documentos/generar/politica_violencias_genero/' . $cliente['id_cliente']) ?>" class="dropdown-item">
-                                    <i class="bi bi-gender-ambiguous me-2 text-purple"></i>Política Violencias de Género
-                                </a>
-                            </li>
-                            <?php endif; ?>
-                            <?php if (!isset($docsExistentesTipos['politica_discriminacion'])): ?>
-                            <li>
-                                <a href="<?= base_url('documentos/generar/politica_discriminacion/' . $cliente['id_cliente']) ?>" class="dropdown-item">
-                                    <i class="bi bi-people me-2 text-info"></i>Política Discriminación
-                                </a>
-                            </li>
-                            <?php endif; ?>
-                            <?php if (!isset($docsExistentesTipos['politica_prevencion_emergencias'])): ?>
-                            <li>
-                                <a href="<?= base_url('documentos/generar/politica_prevencion_emergencias/' . $cliente['id_cliente']) ?>" class="dropdown-item">
-                                    <i class="bi bi-exclamation-triangle me-2 text-danger"></i>Política Emergencias
-                                </a>
-                            </li>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                             <?php if (count($docsExistentesTipos) >= $totalEsperado): ?>
-                            <li><span class="dropdown-item text-muted"><i class="bi bi-check-circle me-2"></i>Todas creadas <?= date('Y') ?></span></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><span class="dropdown-item text-muted"><i class="bi bi-check-circle me-2 text-success"></i>Todas creadas <?= date('Y') ?></span></li>
                             <?php endif; ?>
                         </ul>
                     </div>

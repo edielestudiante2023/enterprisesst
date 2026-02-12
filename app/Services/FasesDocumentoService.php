@@ -148,6 +148,96 @@ class FasesDocumentoService
                 'orden' => 2,
                 'depende_de' => 'objetivos_sgsst'
             ]
+        ],
+        // 3.1.4. Evaluaciones Medicas Ocupacionales
+        'evaluaciones_medicas' => [
+            'pta_evaluaciones_medicas' => [
+                'nombre' => 'Actividades Evaluaciones Médicas',
+                'descripcion' => 'Actividades de evaluaciones médicas ocupacionales según peligros identificados y periodicidad',
+                'url_modulo' => '/pta-cliente-nueva/list/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/evaluaciones-medicas-ocupacionales',
+                'orden' => 1
+            ],
+            'indicadores_evaluaciones_medicas' => [
+                'nombre' => 'Indicadores Evaluaciones Médicas',
+                'descripcion' => 'Indicadores para medir el cumplimiento del programa de evaluaciones médicas ocupacionales',
+                'url_modulo' => '/indicadores-sst/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/indicadores-evaluaciones-medicas-ocupacionales',
+                'orden' => 2,
+                'depende_de' => 'pta_evaluaciones_medicas'
+            ]
+        ],
+        // 3.1.7. Estilos de Vida Saludable y Entornos Saludables
+        'estilos_vida_saludable' => [
+            'pta_estilos_vida' => [
+                'nombre' => 'Actividades Estilos de Vida',
+                'descripcion' => 'Actividades de promoción de estilos de vida saludables y controles de tabaquismo, alcoholismo y farmacodependencia',
+                'url_modulo' => '/pta-cliente-nueva/list/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/estilos-vida-saludable',
+                'orden' => 1
+            ],
+            'indicadores_estilos_vida' => [
+                'nombre' => 'Indicadores Estilos de Vida',
+                'descripcion' => 'Indicadores para medir el programa de estilos de vida saludable',
+                'url_modulo' => '/indicadores-sst/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/indicadores-estilos-vida',
+                'orden' => 2,
+                'depende_de' => 'pta_estilos_vida'
+            ]
+        ],
+        // 4.2.3. PVE Riesgo Biomecánico
+        'pve_riesgo_biomecanico' => [
+            'pta_pve_biomecanico' => [
+                'nombre' => 'Actividades PVE Biomecánico',
+                'descripcion' => 'Actividades de prevención de riesgo biomecánico para el PTA',
+                'url_modulo' => '/pta-cliente-nueva/list/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/pve-riesgo-biomecanico',
+                'orden' => 1
+            ],
+            'indicadores_pve_biomecanico' => [
+                'nombre' => 'Indicadores PVE Biomecánico',
+                'descripcion' => 'Indicadores para medir el PVE de riesgo biomecánico',
+                'url_modulo' => '/indicadores-sst/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/indicadores-pve-biomecanico',
+                'orden' => 2,
+                'depende_de' => 'pta_pve_biomecanico'
+            ]
+        ],
+        // 4.2.5. Mantenimiento Periódico de Instalaciones, Equipos, Máquinas, Herramientas
+        'mantenimiento_periodico' => [
+            'pta_mantenimiento' => [
+                'nombre' => 'Actividades Mantenimiento',
+                'descripcion' => 'Actividades de mantenimiento periódico de instalaciones, equipos, máquinas y herramientas',
+                'url_modulo' => '/pta-cliente-nueva/list/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/mantenimiento-periodico',
+                'orden' => 1
+            ],
+            'indicadores_mantenimiento' => [
+                'nombre' => 'Indicadores Mantenimiento',
+                'descripcion' => 'Indicadores para medir el cumplimiento del programa de mantenimiento periódico',
+                'url_modulo' => '/indicadores-sst/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/indicadores-mantenimiento-periodico',
+                'orden' => 2,
+                'depende_de' => 'pta_mantenimiento'
+            ]
+        ],
+        // 4.2.3. PVE Riesgo Psicosocial
+        'pve_riesgo_psicosocial' => [
+            'pta_pve_psicosocial' => [
+                'nombre' => 'Actividades PVE Psicosocial',
+                'descripcion' => 'Actividades de prevención de riesgo psicosocial para el PTA',
+                'url_modulo' => '/pta-cliente-nueva/list/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/pve-riesgo-psicosocial',
+                'orden' => 1
+            ],
+            'indicadores_pve_psicosocial' => [
+                'nombre' => 'Indicadores PVE Psicosocial',
+                'descripcion' => 'Indicadores para medir el PVE de riesgo psicosocial',
+                'url_modulo' => '/indicadores-sst/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/indicadores-pve-psicosocial',
+                'orden' => 2,
+                'depende_de' => 'pta_pve_psicosocial'
+            ]
         ]
     ];
 
@@ -276,6 +366,24 @@ class FasesDocumentoService
 
             case 'indicadores_objetivos':
                 return $this->verificarIndicadoresObjetivos($idCliente);
+
+            case 'pta_evaluaciones_medicas':
+                return $this->verificarPTAEvaluacionesMedicas($idCliente, $anio);
+
+            case 'indicadores_evaluaciones_medicas':
+                return $this->verificarIndicadoresEvaluacionesMedicas($idCliente);
+
+            case 'pta_estilos_vida':
+                return $this->verificarPTAEstilosVida($idCliente, $anio);
+
+            case 'indicadores_estilos_vida':
+                return $this->verificarIndicadoresEstilosVida($idCliente);
+
+            case 'pta_mantenimiento':
+                return $this->verificarPTAMantenimiento($idCliente, $anio);
+
+            case 'indicadores_mantenimiento':
+                return $this->verificarIndicadoresMantenimiento($idCliente);
 
             default:
                 return [
@@ -844,6 +952,256 @@ class FasesDocumentoService
         return [
             'estado' => self::ESTADO_COMPLETO,
             'mensaje' => "{$cantidad} indicadores de objetivos configurados",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado del PTA de Evaluaciones Médicas Ocupacionales (3.1.4)
+     */
+    protected function verificarPTAEvaluacionesMedicas(int $idCliente, int $anio): array
+    {
+        $cantidad = $this->ptaModel
+            ->where('id_cliente', $idCliente)
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->groupStart()
+                ->where('tipo_servicio', 'Evaluaciones Medicas Ocupacionales')
+                ->orLike('tipo_servicio', 'Evaluaciones Medicas', 'both')
+                ->orLike('tipo_servicio', 'Evaluaciones Médicas', 'both')
+                ->orLike('actividad_plandetrabajo', 'evaluacion medica', 'both')
+                ->orLike('actividad_plandetrabajo', 'evaluación médica', 'both')
+                ->orLike('actividad_plandetrabajo', 'profesiograma', 'both')
+                ->orLike('actividad_plandetrabajo', 'examen ocupacional', 'both')
+                ->orLike('actividad_plandetrabajo', 'aptitud medica', 'both')
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay actividades de Evaluaciones Médicas Ocupacionales en el PTA',
+                'cantidad' => 0
+            ];
+        }
+
+        if ($cantidad < 3) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "{$cantidad} actividades (se recomiendan al menos 3)",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} actividades de Evaluaciones Médicas Ocupacionales en el PTA",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado de los indicadores de Evaluaciones Médicas Ocupacionales (3.1.4)
+     */
+    protected function verificarIndicadoresEvaluacionesMedicas(int $idCliente): array
+    {
+        $cantidad = $this->indicadorModel
+            ->where('id_cliente', $idCliente)
+            ->where('activo', 1)
+            ->groupStart()
+                ->where('categoria', 'evaluaciones_medicas_ocupacionales')
+                ->orLike('nombre_indicador', 'evaluacion medica', 'both', true, true)
+                ->orLike('nombre_indicador', 'evaluación médica', 'both', true, true)
+                ->orLike('nombre_indicador', 'profesiograma', 'both', true, true)
+                ->orLike('nombre_indicador', 'examen ocupacional', 'both', true, true)
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay indicadores de Evaluaciones Médicas Ocupacionales definidos',
+                'cantidad' => 0
+            ];
+        }
+
+        if ($cantidad < 2) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "{$cantidad} indicadores (se recomiendan al menos 2)",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} indicadores de Evaluaciones Médicas configurados",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado del PTA de Estilos de Vida Saludable (3.1.7)
+     */
+    protected function verificarPTAEstilosVida(int $idCliente, int $anio): array
+    {
+        $cantidad = $this->ptaModel
+            ->where('id_cliente', $idCliente)
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->groupStart()
+                ->where('tipo_servicio', 'Estilos de Vida Saludable')
+                ->orLike('tipo_servicio', 'Estilos de Vida', 'both')
+                ->orLike('tipo_servicio', 'Vida Saludable', 'both')
+                ->orLike('actividad_plandetrabajo', 'tabaquismo', 'both')
+                ->orLike('actividad_plandetrabajo', 'alcoholismo', 'both')
+                ->orLike('actividad_plandetrabajo', 'farmacodependencia', 'both')
+                ->orLike('actividad_plandetrabajo', 'estilos de vida', 'both')
+                ->orLike('actividad_plandetrabajo', 'entorno saludable', 'both')
+                ->orLike('actividad_plandetrabajo', 'sustancias psicoactivas', 'both')
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay actividades de Estilos de Vida Saludable en el PTA',
+                'cantidad' => 0
+            ];
+        }
+
+        if ($cantidad < 5) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "{$cantidad} actividades (se recomiendan al menos 5)",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} actividades de Estilos de Vida Saludable en el PTA",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado de los indicadores de Estilos de Vida Saludable (3.1.7)
+     */
+    protected function verificarIndicadoresEstilosVida(int $idCliente): array
+    {
+        $cantidad = $this->indicadorModel
+            ->where('id_cliente', $idCliente)
+            ->where('activo', 1)
+            ->groupStart()
+                ->where('categoria', 'estilos_vida_saludable')
+                ->orLike('nombre_indicador', 'estilos de vida', 'both', true, true)
+                ->orLike('nombre_indicador', 'tabaquismo', 'both', true, true)
+                ->orLike('nombre_indicador', 'fumadores', 'both', true, true)
+                ->orLike('nombre_indicador', 'farmacodependencia', 'both', true, true)
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay indicadores de Estilos de Vida Saludable definidos',
+                'cantidad' => 0
+            ];
+        }
+
+        if ($cantidad < 3) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "{$cantidad} indicadores (se recomiendan al menos 3)",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} indicadores de Estilos de Vida configurados",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado del PTA de Mantenimiento Periódico (4.2.5)
+     */
+    protected function verificarPTAMantenimiento(int $idCliente, int $anio): array
+    {
+        $cantidad = $this->ptaModel
+            ->where('id_cliente', $idCliente)
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->groupStart()
+                ->where('tipo_servicio', 'Mantenimiento Periodico')
+                ->orLike('tipo_servicio', 'Mantenimiento', 'both')
+                ->orLike('actividad_plandetrabajo', 'mantenimiento preventivo', 'both')
+                ->orLike('actividad_plandetrabajo', 'mantenimiento correctivo', 'both')
+                ->orLike('actividad_plandetrabajo', 'inspeccion de equipos', 'both')
+                ->orLike('actividad_plandetrabajo', 'inspección de equipos', 'both')
+                ->orLike('actividad_plandetrabajo', 'ficha tecnica', 'both')
+                ->orLike('actividad_plandetrabajo', 'inventario de equipos', 'both')
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay actividades de Mantenimiento Periódico en el PTA',
+                'cantidad' => 0
+            ];
+        }
+
+        if ($cantidad < 3) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "{$cantidad} actividades (se recomiendan al menos 3)",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} actividades de Mantenimiento Periódico en el PTA",
+            'cantidad' => $cantidad
+        ];
+    }
+
+    /**
+     * Verifica estado de los indicadores de Mantenimiento Periódico (4.2.5)
+     */
+    protected function verificarIndicadoresMantenimiento(int $idCliente): array
+    {
+        $cantidad = $this->indicadorModel
+            ->where('id_cliente', $idCliente)
+            ->where('activo', 1)
+            ->groupStart()
+                ->where('categoria', 'mantenimiento_periodico')
+                ->orLike('nombre_indicador', 'mantenimiento', 'both', true, true)
+                ->orLike('nombre_indicador', 'disponibilidad operativa', 'both', true, true)
+                ->orLike('nombre_indicador', 'ficha tecnica', 'both', true, true)
+                ->orLike('nombre_indicador', 'fallas', 'both', true, true)
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($cantidad === 0) {
+            return [
+                'estado' => self::ESTADO_PENDIENTE,
+                'mensaje' => 'No hay indicadores de Mantenimiento Periódico definidos',
+                'cantidad' => 0
+            ];
+        }
+
+        if ($cantidad < 2) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "{$cantidad} indicadores (se recomiendan al menos 2)",
+                'cantidad' => $cantidad
+            ];
+        }
+
+        return [
+            'estado' => self::ESTADO_COMPLETO,
+            'mensaje' => "{$cantidad} indicadores de Mantenimiento Periódico configurados",
             'cantidad' => $cantidad
         ];
     }

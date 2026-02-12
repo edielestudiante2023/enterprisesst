@@ -90,7 +90,6 @@ Carpetas que requieren **evidencia documental** pero NO generan contenido con IA
 | 5.1.2 | Brigada de emergencias | `brigada_emergencias` |
 | 6.1.3 | Revision por la direccion | `revision_direccion` |
 | 6.1.4 | Planificacion auditorias COPASST | `planificacion_auditorias_copasst` |
-| 3.1.1 | Diagnostico condiciones de salud | `diagnostico_condiciones_salud` |
 | 3.1.3 | Informacion al medico perfiles | `informacion_medico_perfiles` |
 | 3.1.4 | Evaluaciones medicas ocupacionales | `evaluaciones_medicas` |
 | 3.1.5 | Custodia historias clinicas | `custodia_historias_clinicas` |
@@ -99,6 +98,7 @@ Carpetas que requieren **evidencia documental** pero NO generan contenido con IA
 | 2.6.1 | Rendicion sobre el desempeno | `rendicion_desempeno` |
 | 1.1.3 | Presupuesto SST | `presupuesto_sst` (formulario propio) |
 | 1.1.4 | Afiliacion al SRL | `afiliacion_srl` |
+| 2.5.1 | Archivo o retencion documental del SG-SST | `archivo_documental` (listado maestro — muestra TODOS los documentos sin filtro, con enlace a Variante C `procedimiento_control_documental`) |
 
 ### Flujo Tecnico
 
@@ -453,7 +453,6 @@ Estas carpetas NO generan contenido — el usuario sube evidencia:
 | 2.3.1 | Evaluacion prioridades | evaluacion_prioridades | "Adjuntar" |
 | 2.5.1 | Archivo documental | archivo_documental | (lista todos los docs) |
 | 2.6.1 | Rendicion desempeno | rendicion_desempeno | "Adjuntar" |
-| 3.1.1 | Diagnostico salud | diagnostico_condiciones_salud | "Adjuntar" |
 | 3.1.3 | Perfiles medico | informacion_medico_perfiles | "Adjuntar" |
 | 3.1.4 | Evaluaciones medicas | evaluaciones_medicas | "Adjuntar" |
 | 3.1.5 | Custodia HC | custodia_historias_clinicas | "Adjuntar" |
@@ -490,6 +489,22 @@ Usan el mismo editor por secciones pero con contenido normativo pre-cargado:
 | tipo_documento | Handler | Contenido |
 |----------------|---------|-----------|
 | procedimiento_control_documental | ProcedimientoControlDocumental | Texto legal estandar de control documental |
+
+### CARPETAS HIBRIDAS (Variante A + B)
+
+Combinan **carga de soportes** (Variante A) con **generacion de documento formal con IA** (Variante B) en la misma vista. El usuario puede tanto adjuntar evidencia como generar un documento formal.
+
+| Codigo | Numeral                          | tipoCarpetaFases                | tipo_documento IA                    | Handler                          | Soportes                    |
+|--------|----------------------------------|---------------------------------|--------------------------------------|----------------------------------|-----------------------------|
+| 3.1.1  | Diagnostico condiciones de salud | `diagnostico_condiciones_salud` | `procedimiento_evaluaciones_medicas` | ProcedimientoEvaluacionesMedicas | `soporte_diagnostico_salud` |
+
+**Caracteristicas:**
+
+- La vista `_tipos/{tipoCarpetaFases}.php` tiene DOS secciones: boton "Crear con IA" (arriba) y seccion "Soportes Adicionales" (abajo)
+- El boton "Crear con IA" apunta a `/documentos/generar/{tipo_documento_IA}/{idCliente}`
+- Los soportes se adjuntan via modal con POST a endpoint especifico
+- `DocumentacionController::carpeta()` filtra `documentosSSTAprobados` por AMBOS tipos: el tipo_documento IA y el tipo de soporte
+- Los soportes se consultan por separado en `$soportesAdicionales`
 
 ---
 

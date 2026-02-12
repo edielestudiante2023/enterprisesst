@@ -323,6 +323,11 @@ Cada indicador tiene los siguientes campos:
 | `numeral` | string | Numeral de la Resolución 0312 |
 | `descripcion` | string | Descripción del indicador |
 | `menor_es_mejor` | bool | Para indicadores donde el objetivo es reducir |
+| `definicion` | string | Definición formal del indicador para Ficha Técnica |
+| `interpretacion` | string | Cómo interpretar los resultados y umbrales |
+| `origen_datos` | string | Fuentes de datos para alimentar el indicador |
+| `cargo_responsable` | string | Cargo encargado de medir el indicador |
+| `cargos_conocer_resultado` | string | Cargos que deben conocer los resultados |
 
 ### Tipos de Indicadores
 
@@ -405,7 +410,13 @@ class [NombreDocumento]IndicadoresService
             'numeral' => 'X.X.X',
             'descripcion' => '[Descripción del indicador]',
             'menor_es_mejor' => true,  // Solo si aplica
-            'actividad_relacionada' => '[Texto para buscar actividad asociada]'
+            'actividad_relacionada' => '[Texto para buscar actividad asociada]',
+            // ── Campos Ficha Técnica (OBLIGATORIOS) ──
+            'definicion' => '[Definición formal del indicador]',
+            'interpretacion' => '[Cómo interpretar resultados y umbrales]',
+            'origen_datos' => '[Fuentes: registros, formatos, bases de datos]',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigía'
         ],
         // ... más indicadores
     ];
@@ -610,6 +621,12 @@ class [NombreDocumento]IndicadoresService
                     'periodicidad' => $ind['periodicidad'],
                     'phva' => $ind['phva'],
                     'numeral_resolucion' => $ind['numeral'] ?? 'X.X.X',
+                    // ── Campos Ficha Técnica ──
+                    'definicion' => $ind['definicion'] ?? null,
+                    'interpretacion' => $ind['interpretacion'] ?? null,
+                    'origen_datos' => $ind['origen_datos'] ?? null,
+                    'cargo_responsable' => $ind['cargo_responsable'] ?? null,
+                    'cargos_conocer_resultado' => $ind['cargos_conocer_resultado'] ?? null,
                     'activo' => 1
                 ]);
                 $creados++;
@@ -1157,3 +1174,5 @@ public const INDICADORES_BASE = [
 5. **UX Consistente**: El patrón de selección con checkbox, edición inline y panel IA colapsable es idéntico a Parte 1.
 
 6. **Método para Parte 3**: `getIndicadoresParaContexto()` formatea los indicadores para ser consumidos por la generación del documento formal.
+
+7. **Campos Ficha Técnica (OBLIGATORIOS)**: Todo indicador en `INDICADORES_BASE` debe incluir los 5 campos de ficha técnica: `definicion`, `interpretacion`, `origen_datos`, `cargo_responsable`, `cargos_conocer_resultado`. Estos campos alimentan la **Ficha Técnica** formal (reporte de auditoría Res. 0312/2019). Valores específicos por indicador, NO genéricos. El INSERT en `generarIndicadores()` debe incluirlos con fallback `?? null`.

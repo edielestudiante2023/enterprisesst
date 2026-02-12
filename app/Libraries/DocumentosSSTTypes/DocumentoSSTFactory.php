@@ -43,6 +43,31 @@ class DocumentoSSTFactory
         'plan_objetivos_metas' => PlanObjetivosMetas::class,
         // 2.8.1 Mecanismos de Comunicación, Auto Reporte
         'mecanismos_comunicacion_sgsst' => MecanismosComunicacionSgsst::class,
+        // 3.1.1 Procedimiento de Evaluaciones Médicas Ocupacionales
+        'procedimiento_evaluaciones_medicas' => ProcedimientoEvaluacionesMedicas::class,
+        // 2.9.1 Procedimiento de Adquisiciones en SST
+        'procedimiento_adquisiciones' => ProcedimientoAdquisiciones::class,
+        // 2.10.1 Evaluacion y Seleccion de Proveedores y Contratistas
+        'procedimiento_evaluacion_proveedores' => ProcedimientoEvaluacionProveedores::class,
+        // 2.11.1 Procedimiento de Gestion del Cambio
+        'procedimiento_gestion_cambio' => ProcedimientoGestionCambio::class,
+        // 3.1.7 Estilos de Vida Saludable y Entornos Saludables
+        'programa_estilos_vida_saludable' => ProgramaEstilosVidaSaludable::class,
+        // 3.1.4 Programa de Evaluaciones Medicas Ocupacionales
+        'programa_evaluaciones_medicas_ocupacionales' => ProgramaEvaluacionesMedicasOcupacionales::class,
+        // 3.2.1 Procedimiento de Investigacion de Accidentes de Trabajo y Enfermedades Laborales
+        'procedimiento_investigacion_accidentes' => ProcedimientoInvestigacionAccidentes::class,
+        // 3.2.2 Investigacion de Incidentes, Accidentes de Trabajo y Enfermedades Laborales
+        'procedimiento_investigacion_incidentes' => ProcedimientoInvestigacionIncidentes::class,
+        // 4.1.1 Metodologia para la Identificacion de Peligros, Evaluacion y Valoracion de Riesgos
+        'metodologia_identificacion_peligros' => MetodologiaIdentificacionPeligros::class,
+        // 4.1.3 Identificacion de Sustancias Cancerigenas o con Toxicidad Aguda
+        'identificacion_sustancias_cancerigenas' => IdentificacionSustanciasCancerigenas::class,
+        // 4.2.3 Programas de Seguridad - PVEs
+        'pve_riesgo_biomecanico' => PveRiesgoBiomecanico::class,
+        'pve_riesgo_psicosocial' => PveRiesgoPsicosocial::class,
+        // 4.2.5 Mantenimiento Periodico de Instalaciones, Equipos, Maquinas, Herramientas
+        'programa_mantenimiento_periodico' => ProgramaMantenimientoPeriodico::class,
     ];
 
     /**

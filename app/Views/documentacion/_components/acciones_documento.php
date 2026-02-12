@@ -36,6 +36,31 @@ $mapaRutas = [
     'manual_convivencia_laboral' => 'manual-convivencia-laboral/' . $docSST['anio'],
     // 2.8.1 Mecanismos de Comunicación, Auto Reporte
     'mecanismos_comunicacion_sgsst' => 'mecanismos-comunicacion/' . $docSST['anio'],
+    // 3.1.1 Procedimiento de Evaluaciones Médicas Ocupacionales
+    'procedimiento_evaluaciones_medicas' => 'procedimiento-evaluaciones-medicas/' . $docSST['anio'],
+    // 2.9.1 Procedimiento de Adquisiciones en SST
+    'procedimiento_adquisiciones' => 'procedimiento-adquisiciones/' . $docSST['anio'],
+    // 2.10.1 Evaluacion y Seleccion de Proveedores y Contratistas
+    'procedimiento_evaluacion_proveedores' => 'procedimiento-evaluacion-proveedores/' . $docSST['anio'],
+    // 2.11.1 Procedimiento de Gestion del Cambio
+    'procedimiento_gestion_cambio' => 'procedimiento-gestion-cambio/' . $docSST['anio'],
+    // 3.1.7 Programa de Estilos de Vida Saludable
+    'programa_estilos_vida_saludable' => 'programa-estilos-vida-saludable/' . $docSST['anio'],
+    // 3.1.4 Programa de Evaluaciones Medicas Ocupacionales
+    'programa_evaluaciones_medicas_ocupacionales' => 'programa-evaluaciones-medicas-ocupacionales/' . $docSST['anio'],
+    // 3.2.1 Procedimiento de Investigacion de Accidentes
+    'procedimiento_investigacion_accidentes' => 'procedimiento-investigacion-accidentes/' . $docSST['anio'],
+    // 3.2.2 Investigacion de Incidentes, Accidentes y Enfermedades Laborales
+    'procedimiento_investigacion_incidentes' => 'procedimiento-investigacion-incidentes/' . $docSST['anio'],
+    // 4.1.1 Metodologia Identificacion de Peligros y Valoracion de Riesgos
+    'metodologia_identificacion_peligros' => 'metodologia-identificacion-peligros/' . $docSST['anio'],
+    // 4.1.3 Identificacion de Sustancias Cancerigenas o con Toxicidad Aguda
+    'identificacion_sustancias_cancerigenas' => 'identificacion-sustancias-cancerigenas/' . $docSST['anio'],
+    // 4.2.5 Mantenimiento Periodico de Instalaciones, Equipos, Maquinas, Herramientas
+    'programa_mantenimiento_periodico' => 'programa-mantenimiento-periodico/' . $docSST['anio'],
+    // 4.2.3 PVE Riesgo Biomecanico y Psicosocial
+    'pve_riesgo_biomecanico' => 'pve-riesgo-biomecanico/' . $docSST['anio'],
+    'pve_riesgo_psicosocial' => 'pve-riesgo-psicosocial/' . $docSST['anio'],
 ];
 
 // Presupuesto SST tiene ruta diferente
@@ -80,6 +105,32 @@ if ($tipoDoc === 'programa_capacitacion') {
     $urlEditar = base_url('documentos/generar/manual_convivencia_laboral/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 } elseif ($tipoDoc === 'mecanismos_comunicacion_sgsst') {
     $urlEditar = base_url('documentos/generar/mecanismos_comunicacion_sgsst/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'procedimiento_evaluaciones_medicas') {
+    $urlEditar = base_url('documentos/generar/procedimiento_evaluaciones_medicas/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'procedimiento_adquisiciones') {
+    $urlEditar = base_url('documentos/generar/procedimiento_adquisiciones/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'procedimiento_evaluacion_proveedores') {
+    $urlEditar = base_url('documentos/generar/procedimiento_evaluacion_proveedores/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'procedimiento_gestion_cambio') {
+    $urlEditar = base_url('documentos/generar/procedimiento_gestion_cambio/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'programa_estilos_vida_saludable') {
+    $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/estilos-vida-saludable');
+} elseif ($tipoDoc === 'programa_evaluaciones_medicas_ocupacionales') {
+    $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/evaluaciones-medicas-ocupacionales');
+} elseif ($tipoDoc === 'procedimiento_investigacion_accidentes') {
+    $urlEditar = base_url('documentos/generar/procedimiento_investigacion_accidentes/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'procedimiento_investigacion_incidentes') {
+    $urlEditar = base_url('documentos/generar/procedimiento_investigacion_incidentes/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'metodologia_identificacion_peligros') {
+    $urlEditar = base_url('documentos/generar/metodologia_identificacion_peligros/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'identificacion_sustancias_cancerigenas') {
+    $urlEditar = base_url('documentos/generar/identificacion_sustancias_cancerigenas/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'programa_mantenimiento_periodico') {
+    $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/mantenimiento-periodico');
+} elseif ($tipoDoc === 'pve_riesgo_biomecanico') {
+    $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/pve-riesgo-biomecanico');
+} elseif ($tipoDoc === 'pve_riesgo_psicosocial') {
+    $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/pve-riesgo-psicosocial');
 }
 ?>
 <div class="btn-group btn-group-sm">

@@ -4,6 +4,17 @@
  * Carpeta maestra con todos los documentos del SG-SST
  * Variables: $carpeta, $cliente, $documentosSSTAprobados
  */
+
+// Verificar si ya existe procedimiento_control_documental para el año actual
+$hayProcedimientoAnioActual = false;
+if (!empty($documentosSSTAprobados)) {
+    foreach ($documentosSSTAprobados as $d) {
+        if (($d['tipo_documento'] ?? '') === 'procedimiento_control_documental' && $d['anio'] == date('Y')) {
+            $hayProcedimientoAnioActual = true;
+            break;
+        }
+    }
+}
 ?>
 
 <!-- Card de Carpeta con Botón Procedimiento -->
@@ -23,10 +34,17 @@
                 <?php endif; ?>
             </div>
             <div class="col-md-4 text-end">
-                <a href="<?= base_url('documentos/generar/procedimiento_control_documental/' . $cliente['id_cliente']) ?>"
-                   class="btn btn-primary">
-                    <i class="bi bi-file-earmark-text me-1"></i>Procedimiento Control Documental
-                </a>
+                <?php if ($hayProcedimientoAnioActual): ?>
+                    <a href="<?= base_url('documentos/generar/procedimiento_control_documental/' . $cliente['id_cliente']) ?>"
+                       class="btn btn-outline-success">
+                        <i class="bi bi-arrow-repeat me-1"></i>Nueva versión <?= date('Y') ?>
+                    </a>
+                <?php else: ?>
+                    <a href="<?= base_url('documentos/generar/procedimiento_control_documental/' . $cliente['id_cliente']) ?>"
+                       class="btn btn-primary">
+                        <i class="bi bi-file-earmark-text me-1"></i>Procedimiento Control Documental
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>

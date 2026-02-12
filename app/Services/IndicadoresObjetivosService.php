@@ -44,7 +44,12 @@ class IndicadoresObjetivosService
             'numeral' => '2.2.1',
             'descripcion' => 'Mide la frecuencia de accidentes de trabajo por horas trabajadas',
             'menor_es_mejor' => true,
-            'objetivo_relacionado' => 'Reducir la accidentalidad laboral'
+            'objetivo_relacionado' => 'Reducir la accidentalidad laboral',
+            'definicion' => 'Mide la relacion entre el numero de accidentes de trabajo ocurridos y las horas hombre trabajadas durante un periodo, expresado por cada 240.000 HHT.',
+            'interpretacion' => 'A menor valor, menor frecuencia de accidentalidad. Un IF=0 indica cero accidentes. Valores crecientes requieren investigacion y acciones correctivas inmediatas.',
+            'origen_datos' => 'Registros FURAT, reportes de accidentes de trabajo, nomina (horas trabajadas)',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL'
         ],
         [
             'nombre' => 'Indice de Severidad de Accidentes de Trabajo',
@@ -57,7 +62,12 @@ class IndicadoresObjetivosService
             'numeral' => '2.2.1',
             'descripcion' => 'Mide la severidad de accidentes de trabajo en dias perdidos',
             'menor_es_mejor' => true,
-            'objetivo_relacionado' => 'Reducir la accidentalidad laboral'
+            'objetivo_relacionado' => 'Reducir la accidentalidad laboral',
+            'definicion' => 'Mide la gravedad de los accidentes de trabajo ocurridos, relacionando los dias de incapacidad generados con las horas hombre trabajadas.',
+            'interpretacion' => 'A menor valor, menor severidad de los accidentes. Un IS=0 indica cero dias perdidos. Valores altos indican accidentes graves que requieren intervencion prioritaria.',
+            'origen_datos' => 'Registros FURAT, incapacidades por AT, nomina (horas trabajadas)',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL'
         ],
         [
             'nombre' => 'Tasa de Incidencia de Enfermedad Laboral',
@@ -70,7 +80,12 @@ class IndicadoresObjetivosService
             'numeral' => '2.2.1',
             'descripcion' => 'Mide la aparicion de nuevos casos de enfermedad laboral',
             'menor_es_mejor' => true,
-            'objetivo_relacionado' => 'Prevenir enfermedades laborales'
+            'objetivo_relacionado' => 'Prevenir enfermedades laborales',
+            'definicion' => 'Mide la proporcion de nuevos casos de enfermedad calificada como laboral respecto al promedio de trabajadores en el periodo.',
+            'interpretacion' => 'A menor valor, mejor gestion preventiva. Un valor de 0 indica que no se presentaron nuevos casos de enfermedad laboral en el periodo.',
+            'origen_datos' => 'Calificaciones de origen EPS/ARL, registros de enfermedad laboral, nomina promedio',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL, medico ocupacional'
         ],
         [
             'nombre' => 'Porcentaje de Cumplimiento de Estandares Minimos',
@@ -82,7 +97,12 @@ class IndicadoresObjetivosService
             'phva' => 'verificar',
             'numeral' => '2.2.1',
             'descripcion' => 'Mide el cumplimiento de la Resolucion 0312/2019',
-            'objetivo_relacionado' => 'Cumplir los requisitos legales en SST'
+            'objetivo_relacionado' => 'Cumplir los requisitos legales en SST',
+            'definicion' => 'Mide el porcentaje de estandares minimos de la Resolucion 0312/2019 que la empresa cumple segun su clasificacion de riesgo y numero de trabajadores.',
+            'interpretacion' => 'El 100% indica cumplimiento total. Valores >=85% son aceptables, entre 60-85% requieren plan de mejora, <60% estado critico.',
+            'origen_datos' => 'Autoevaluacion de estandares minimos Res. 0312/2019, plan de mejora',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL'
         ],
         [
             'nombre' => 'Cobertura de Capacitacion en SST',
@@ -94,7 +114,12 @@ class IndicadoresObjetivosService
             'phva' => 'verificar',
             'numeral' => '2.2.1',
             'descripcion' => 'Mide el porcentaje de trabajadores capacitados en SST',
-            'objetivo_relacionado' => 'Fortalecer la cultura de autocuidado'
+            'objetivo_relacionado' => 'Fortalecer la cultura de autocuidado',
+            'definicion' => 'Mide la proporcion de trabajadores que han recibido capacitacion en temas de SST respecto al total de la poblacion trabajadora.',
+            'interpretacion' => 'El 100% indica que todos los trabajadores han sido capacitados. Valores menores requieren refuerzo en cobertura de formacion.',
+            'origen_datos' => 'Registros de asistencia a capacitaciones, cronograma de capacitacion, nomina',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, trabajadores'
         ],
         [
             'nombre' => 'Cumplimiento del Plan de Trabajo Anual',
@@ -105,7 +130,12 @@ class IndicadoresObjetivosService
             'periodicidad' => 'trimestral',
             'phva' => 'verificar',
             'numeral' => '2.2.1',
-            'descripcion' => 'Mide la ejecucion de las actividades del plan de trabajo SST'
+            'descripcion' => 'Mide la ejecucion de las actividades del plan de trabajo SST',
+            'definicion' => 'Mide el porcentaje de actividades ejecutadas del Plan de Trabajo Anual del SG-SST frente a las actividades programadas para el periodo.',
+            'interpretacion' => 'Un resultado >=90% indica buen cumplimiento. Valores menores requieren reprogramacion y analisis de causas de incumplimiento.',
+            'origen_datos' => 'Plan de Trabajo Anual, cronograma de actividades, actas de ejecucion',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia'
         ],
         [
             'nombre' => 'Porcentaje de Peligros Intervenidos',
@@ -117,7 +147,12 @@ class IndicadoresObjetivosService
             'phva' => 'verificar',
             'numeral' => '2.2.1',
             'descripcion' => 'Mide la gestion de peligros identificados en la matriz',
-            'objetivo_relacionado' => 'Gestionar eficazmente los peligros identificados'
+            'objetivo_relacionado' => 'Gestionar eficazmente los peligros identificados',
+            'definicion' => 'Mide la proporcion de peligros prioritarios identificados en la Matriz IPVR que cuentan con medidas de control implementadas.',
+            'interpretacion' => 'A mayor porcentaje, mejor gestion de peligros. Un 80% o superior indica buena intervencion. Priorizar peligros con nivel de riesgo alto e inaceptable.',
+            'origen_datos' => 'Matriz de identificacion de peligros y valoracion de riesgos (IPVR), registros de controles',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, trabajadores'
         ],
         [
             'nombre' => 'Participacion en Simulacros de Emergencia',
@@ -129,7 +164,12 @@ class IndicadoresObjetivosService
             'phva' => 'verificar',
             'numeral' => '2.2.1',
             'descripcion' => 'Mide la participacion del personal en simulacros',
-            'objetivo_relacionado' => 'Mejorar la respuesta ante emergencias'
+            'objetivo_relacionado' => 'Mejorar la respuesta ante emergencias',
+            'definicion' => 'Mide el porcentaje de trabajadores que participan activamente en los simulacros de emergencia programados.',
+            'interpretacion' => 'Un 90% o mas indica participacion adecuada. Valores menores requieren refuerzo en convocatoria y sensibilizacion sobre preparacion ante emergencias.',
+            'origen_datos' => 'Registros de asistencia a simulacros, plan de emergencias, informe post-simulacro',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, brigada de emergencias'
         ],
         [
             'nombre' => 'Indice de Lesiones Incapacitantes',
@@ -141,7 +181,12 @@ class IndicadoresObjetivosService
             'phva' => 'verificar',
             'numeral' => '2.2.1',
             'descripcion' => 'Indicador combinado de frecuencia y severidad',
-            'menor_es_mejor' => true
+            'menor_es_mejor' => true,
+            'definicion' => 'Indicador combinado que relaciona la frecuencia y la severidad de los accidentes de trabajo. Resulta de multiplicar IF por IS y dividir entre 1000.',
+            'interpretacion' => 'A menor valor, menor impacto de la accidentalidad. Un ILI=0 indica cero accidentes o cero dias perdidos. Valores crecientes indican deterioro en seguridad.',
+            'origen_datos' => 'Calculado a partir del Indice de Frecuencia (IF) y el Indice de Severidad (IS)',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL'
         ],
         [
             'nombre' => 'Investigacion de Incidentes y Accidentes',
@@ -152,7 +197,12 @@ class IndicadoresObjetivosService
             'periodicidad' => 'mensual',
             'phva' => 'verificar',
             'numeral' => '2.2.1',
-            'descripcion' => 'Mide el cumplimiento de investigacion de eventos'
+            'descripcion' => 'Mide el cumplimiento de investigacion de eventos',
+            'definicion' => 'Mide el porcentaje de incidentes y accidentes de trabajo que fueron investigados dentro de los 15 dias calendario siguientes a su ocurrencia.',
+            'interpretacion' => 'El 100% indica que todos los eventos fueron investigados oportunamente. Es obligatorio investigar todos los accidentes graves y mortales (Res. 1401/2007).',
+            'origen_datos' => 'Informes de investigacion de accidentes, FURAT, registros de incidentes',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL, trabajadores'
         ]
     ];
 
@@ -356,6 +406,11 @@ class IndicadoresObjetivosService
                     'periodicidad' => $ind['periodicidad'],
                     'phva' => $ind['phva'],
                     'numeral_resolucion' => $ind['numeral'] ?? '2.2.1',
+                    'definicion' => $ind['definicion'] ?? null,
+                    'interpretacion' => $ind['interpretacion'] ?? null,
+                    'origen_datos' => $ind['origen_datos'] ?? null,
+                    'cargo_responsable' => $ind['cargo_responsable'] ?? null,
+                    'cargos_conocer_resultado' => $ind['cargos_conocer_resultado'] ?? null,
                     'activo' => 1
                 ]);
                 $creados++;

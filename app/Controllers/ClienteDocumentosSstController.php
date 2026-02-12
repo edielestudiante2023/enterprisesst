@@ -21,10 +21,15 @@ class ClienteDocumentosSstController extends Controller
     /**
      * Lista los documentos SST del cliente organizados por carpeta/estandar
      */
-    public function index()
+    public function index($idClienteParam = null)
     {
         $session = session();
-        $idCliente = $session->get('id_cliente') ?? $session->get('user_id');
+        $role = $session->get('role');
+        if ($idClienteParam && in_array($role, ['consultant', 'admin'])) {
+            $idCliente = $idClienteParam;
+        } else {
+            $idCliente = $session->get('id_cliente') ?? $session->get('user_id');
+        }
 
         if (!$idCliente) {
             return redirect()->to('/login')->with('error', 'Debe iniciar sesion');

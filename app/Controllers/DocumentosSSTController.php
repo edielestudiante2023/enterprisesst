@@ -474,6 +474,51 @@ class DocumentosSSTController extends BaseController
                 ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'objetivo'],
                 ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'meta'],
             ],
+            'programa_induccion_reinduccion' => [
+                ['type' => 'exact', 'value' => 'Programa de Induccion y Reinduccion'],
+                ['type' => 'like',  'value' => 'Induccion'],
+                ['type' => 'like',  'value' => 'Reinduccion'],
+                ['type' => 'like',  'value' => 'Inducción'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'induccion'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'reinduccion'],
+            ],
+            'procedimiento_matriz_legal' => [
+                ['type' => 'like',  'value' => 'Matriz Legal'],
+                ['type' => 'like',  'value' => 'Requisitos Legales'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'matriz legal'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'requisitos legales'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'normativa'],
+            ],
+            'programa_estilos_vida_saludable' => [
+                ['type' => 'exact', 'value' => 'Estilos de Vida Saludable'],
+                ['type' => 'like',  'value' => 'Estilos de Vida'],
+                ['type' => 'like',  'value' => 'Vida Saludable'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'tabaquismo'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'alcoholismo'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'farmacodependencia'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'estilos de vida'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'sustancias psicoactivas'],
+            ],
+            'programa_evaluaciones_medicas_ocupacionales' => [
+                ['type' => 'exact', 'value' => 'Evaluaciones Medicas Ocupacionales'],
+                ['type' => 'like',  'value' => 'Evaluaciones Medicas'],
+                ['type' => 'like',  'value' => 'Examenes Medicos'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'evaluacion medica'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'examen medico'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'profesiograma'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'aptitud medica'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'evaluaciones periodicas'],
+            ],
+            'programa_mantenimiento_periodico' => [
+                ['type' => 'exact', 'value' => 'Mantenimiento Periodico'],
+                ['type' => 'like',  'value' => 'Mantenimiento'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'mantenimiento preventivo'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'mantenimiento correctivo'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'mantenimiento periodico'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'inspeccion de seguridad'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'fichas tecnicas'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'inventario de equipos'],
+            ],
         ];
 
         return $filtros[$tipoDocumento] ?? [];
@@ -488,6 +533,11 @@ class DocumentosSSTController extends BaseController
             'programa_capacitacion' => ['capacitacion', 'capacitacion_sst'],
             'programa_promocion_prevencion_salud' => ['pyp_salud'],
             'plan_objetivos_metas' => ['objetivos', 'objetivos_sgsst'],
+            'programa_induccion_reinduccion' => ['induccion'],
+            'procedimiento_matriz_legal' => ['matriz_legal', 'requisitos_legales'],
+            'programa_estilos_vida_saludable' => ['estilos_vida_saludable'],
+            'programa_evaluaciones_medicas_ocupacionales' => ['evaluaciones_medicas_ocupacionales'],
+            'programa_mantenimiento_periodico' => ['mantenimiento_periodico'],
         ];
 
         return $categorias[$tipoDocumento] ?? [];
@@ -1646,6 +1696,11 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
+        // Obtener datos del vigía SST para firma física
+        $vigia = null;
+        $vigiaModel = new \App\Models\VigiaModel();
+        $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
+
         // Obtener firmas electrónicas del documento
         $firmasElectronicas = [];
         $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
@@ -1675,6 +1730,7 @@ Se debe generar acta que registre:
             'responsables' => $responsables,
             'contexto' => $contexto,
             'consultor' => $consultor,
+            'vigia' => $vigia,
             'firmasElectronicas' => $firmasElectronicas
         ];
 
@@ -1766,6 +1822,94 @@ Se debe generar acta que registre:
         ];
 
         return view('documentos_sst/programa_promocion_prevencion_salud', $data);
+    }
+
+    /**
+     * Vista web del Programa de Mantenimiento Periodico (4.2.5)
+     */
+    public function programaMantenimientoPeriodico(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'programa_mantenimiento_periodico')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('generador-ia/' . $idCliente . '/mantenimiento-periodico'))
+                ->with('error', 'Documento no encontrado. Genere primero el Programa de Mantenimiento Periodico.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        // Normalizar secciones para eliminar duplicados
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'programa_mantenimiento_periodico');
+        }
+
+        // Obtener historial de versiones para la tabla de Control de Cambios
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Obtener responsables del cliente para las firmas
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        // Obtener contexto SST para datos adicionales
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        // Obtener datos del consultor asignado
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        // Obtener firmas electronicas del documento
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Programa de Mantenimiento Periodico - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'programa_mantenimiento_periodico'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
     }
 
     /**
@@ -3049,6 +3193,48 @@ Se debe generar acta que registre:
     }
 
     /**
+     * Adjuntar soporte de Mecanismos de Comunicacion (2.8.1)
+     */
+    public function adjuntarSoporteMecanismosComunicacion()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_mecanismos_comunicacion',
+            'SOP-MEC',
+            'soporte_mecanismos_comunicacion_',
+            'Soporte Mecanismos de Comunicacion',
+            'Soporte de Mecanismos de Comunicacion adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de Evaluacion de Proveedores y Contratistas (2.10.1)
+     */
+    public function adjuntarSoporteEvaluacionProveedores()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_evaluacion_proveedores',
+            'SOP-EVP',
+            'soporte_evaluacion_proveedores_',
+            'Soporte Evaluacion de Proveedores',
+            'Soporte de Evaluacion de Proveedores adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de Gestion del Cambio (2.11.1)
+     */
+    public function adjuntarSoporteGestionCambio()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_gestion_cambio',
+            'SOP-GDC',
+            'soporte_gestion_cambio_',
+            'Soporte Gestion del Cambio',
+            'Soporte de Gestion del Cambio adjuntado exitosamente.'
+        );
+    }
+
+    /**
      * Método genérico para adjuntar soportes (reutilizable)
      */
     protected function adjuntarSoporteGenerico(
@@ -4298,6 +4484,527 @@ Se debe generar acta que registre:
     }
 
     /**
+     * Muestra el Procedimiento de Evaluaciones Medicas Ocupacionales (3.1.1)
+     */
+    public function procedimientoEvaluacionesMedicas(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_evaluaciones_medicas')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/procedimiento_evaluaciones_medicas/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Procedimiento de Evaluaciones Médicas.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'procedimiento_evaluaciones_medicas');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Procedimiento de Evaluaciones Médicas Ocupacionales - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'procedimiento_evaluaciones_medicas'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista Web: Procedimiento de Adquisiciones en SST (2.9.1)
+     */
+    public function procedimientoAdquisiciones(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_adquisiciones')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/procedimiento_adquisiciones/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Procedimiento de Adquisiciones.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'procedimiento_adquisiciones');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Procedimiento de Adquisiciones en SST - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'procedimiento_adquisiciones'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Muestra el Procedimiento de Evaluacion y Seleccion de Proveedores y Contratistas (2.10.1)
+     */
+    public function procedimientoEvaluacionProveedores(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_evaluacion_proveedores')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/procedimiento_evaluacion_proveedores/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Procedimiento de Evaluacion de Proveedores.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'procedimiento_evaluacion_proveedores');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Procedimiento de Evaluacion y Seleccion de Proveedores - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'procedimiento_evaluacion_proveedores'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista web del Procedimiento de Gestion del Cambio (2.11.1)
+     */
+    public function procedimientoGestionCambio(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_gestion_cambio')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/procedimiento_gestion_cambio/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Procedimiento de Gestion del Cambio.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'procedimiento_gestion_cambio');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Procedimiento de Gestion del Cambio - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('procedimiento_gestion_cambio'),
+            'tipoDocumento' => 'procedimiento_gestion_cambio'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * 3.1.7 - Adjuntar soporte de Estilos de Vida Saludable
+     */
+    public function adjuntarSoporteEstilosVida()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_estilos_vida_saludable',
+            'SOP-EVS',
+            'soporte_estilos_vida_saludable_',
+            'Soporte de Estilos de Vida Saludable',
+            'Soporte de estilos de vida saludable adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * 4.2.5 - Adjuntar soporte de Mantenimiento Periodico
+     */
+    public function adjuntarSoporteMantenimientoPeriodico()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_mantenimiento_periodico',
+            'SOP-MTP',
+            'soporte_mantenimiento_periodico_',
+            'Soporte de Mantenimiento Periodico',
+            'Soporte de mantenimiento periodico adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Vista web del Programa de Estilos de Vida Saludable (3.1.7)
+     */
+    public function programaEstilosVidaSaludable(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'programa_estilos_vida_saludable')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/programa_estilos_vida_saludable/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Programa de Estilos de Vida Saludable.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'programa_estilos_vida_saludable');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Programa de Estilos de Vida Saludable - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'programa_estilos_vida_saludable'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista web del Programa de Evaluaciones Medicas Ocupacionales (3.1.4)
+     */
+    public function programaEvaluacionesMedicasOcupacionales(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'programa_evaluaciones_medicas_ocupacionales')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/programa_evaluaciones_medicas_ocupacionales/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Programa de Evaluaciones Medicas Ocupacionales.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'programa_evaluaciones_medicas_ocupacionales');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Programa de Evaluaciones Medicas Ocupacionales - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'programa_evaluaciones_medicas_ocupacionales'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
      * Convierte una imagen a base64 con fondo blanco (para evitar fondo negro en Word)
      *
      * Las imágenes PNG con transparencia aparecen con fondo negro en Word porque
@@ -4354,5 +5061,588 @@ Se debe generar acta que registre:
         imagedestroy($imagenConFondo);
 
         return 'data:image/png;base64,' . base64_encode($imageData);
+    }
+
+    /**
+     * Vista web del Procedimiento de Investigacion de Accidentes de Trabajo (3.2.1)
+     */
+    public function procedimientoInvestigacionAccidentes(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_investigacion_accidentes')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/procedimiento_investigacion_accidentes/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Procedimiento de Investigacion de Accidentes.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'procedimiento_investigacion_accidentes');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Procedimiento de Investigacion de Accidentes - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'procedimiento_investigacion_accidentes'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Adjuntar soporte de investigacion de accidentes (3.2.1)
+     */
+    public function adjuntarSoporteInvestigacionAccidentes()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_investigacion_accidentes',
+            'SOP-IAT',
+            'investigacion_accidentes',
+            'Investigacion de Accidentes',
+            'Soporte de investigacion de accidentes adjuntado correctamente'
+        );
+    }
+
+    /**
+     * Vista web del documento de Investigacion de Incidentes, Accidentes y Enfermedades Laborales (3.2.2)
+     */
+    public function procedimientoInvestigacionIncidentes(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_investigacion_incidentes')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/procedimiento_investigacion_incidentes/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el documento de Investigacion de Incidentes.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'procedimiento_investigacion_incidentes');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Investigacion de Incidentes, Accidentes y Enfermedades Laborales - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('procedimiento_investigacion_incidentes'),
+            'tipoDocumento' => 'procedimiento_investigacion_incidentes'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * 3.2.2 - Adjuntar soporte de Investigacion de Incidentes
+     */
+    public function adjuntarSoporteInvestigacionIncidentes()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_investigacion_incidentes',
+            'SOP-IIA',
+            'investigacion_incidentes',
+            'Investigacion de Incidentes',
+            'Soporte de investigacion de incidentes adjuntado correctamente'
+        );
+    }
+
+    /**
+     * Vista web de la Metodologia de Identificacion de Peligros (4.1.1)
+     */
+    public function metodologiaIdentificacionPeligros(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'metodologia_identificacion_peligros')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/metodologia_identificacion_peligros/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Metodologia de Identificacion de Peligros.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'metodologia_identificacion_peligros');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Metodologia Identificacion de Peligros - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('metodologia_identificacion_peligros'),
+            'tipoDocumento' => 'metodologia_identificacion_peligros'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * 4.1.1 - Adjuntar soporte de Metodologia Identificacion de Peligros
+     */
+    public function adjuntarSoporteMetodologiaPeligros()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_metodologia_peligros',
+            'SOP-MIP',
+            'soporte_metodologia_peligros_',
+            'Soporte de Metodologia de Identificacion de Peligros',
+            'Soporte de metodologia de identificacion de peligros adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * 4.1.3 - Vista web de Identificacion de Sustancias Cancerigenas o con Toxicidad Aguda
+     */
+    public function identificacionSustanciasCancerigenas(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'identificacion_sustancias_cancerigenas')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/identificacion_sustancias_cancerigenas/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Identificacion de Sustancias Cancerigenas.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'identificacion_sustancias_cancerigenas');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Identificacion Sustancias Cancerigenas - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('identificacion_sustancias_cancerigenas'),
+            'tipoDocumento' => 'identificacion_sustancias_cancerigenas'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * 4.1.3 - Adjuntar soporte de Sustancias Cancerigenas
+     */
+    public function adjuntarSoporteSustanciasCancerigenas()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_sustancias_cancerigenas',
+            'SOP-ISC',
+            'soporte_sustancias_cancerigenas_',
+            'Soporte de Identificacion de Sustancias Cancerigenas',
+            'Soporte de identificacion de sustancias cancerigenas adjuntado exitosamente.'
+        );
+    }
+
+    // =========================================================================
+    // 4.2.3 PVE RIESGO BIOMECÁNICO Y PSICOSOCIAL
+    // =========================================================================
+
+    /**
+     * Vista web del PVE de Riesgo Biomecanico (4.2.3)
+     */
+    public function pveRiesgoBiomecanico(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'pve_riesgo_biomecanico')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/pve_riesgo_biomecanico/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el PVE de Riesgo Biomecánico.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'pve_riesgo_biomecanico');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'PVE de Riesgo Biomecánico - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'pve_riesgo_biomecanico'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Adjuntar soporte PVE Biomecanico
+     */
+    public function adjuntarSoportePveBiomecanico()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_pve_biomecanico',
+            'SOP-PVB',
+            'soporte_pve_biomecanico_',
+            'Soporte de PVE Riesgo Biomecánico',
+            'Soporte de PVE riesgo biomecánico adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Vista web del PVE de Riesgo Psicosocial (4.2.3)
+     */
+    public function pveRiesgoPsicosocial(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'pve_riesgo_psicosocial')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/pve_riesgo_psicosocial/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el PVE de Riesgo Psicosocial.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'pve_riesgo_psicosocial');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'PVE de Riesgo Psicosocial - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'pve_riesgo_psicosocial'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Adjuntar soporte PVE Psicosocial
+     */
+    public function adjuntarSoportePvePsicosocial()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_pve_psicosocial',
+            'SOP-PVP',
+            'soporte_pve_psicosocial_',
+            'Soporte de PVE Riesgo Psicosocial',
+            'Soporte de PVE riesgo psicosocial adjuntado exitosamente.'
+        );
     }
 }

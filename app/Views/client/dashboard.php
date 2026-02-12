@@ -385,22 +385,22 @@
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <a href="<?= base_url('/report_dashboard') ?>" target="_blank" class="btn btn-success-custom w-100">
+                        <a href="<?= base_url('/report_dashboard/' . $client['id_cliente']) ?>" target="_blank" class="btn btn-success-custom w-100">
                             <i class="fas fa-file-alt me-2"></i> Documentos
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <a href="<?= base_url('client/panel') ?>" target="_blank" class="btn btn-info-custom w-100">
+                        <a href="<?= base_url('client/panel/' . $client['id_cliente']) ?>" target="_blank" class="btn btn-info-custom w-100">
                             <i class="fas fa-chart-line me-2"></i> Panel de Gestión
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <a href="<?= base_url('/report_dashboard') ?>" target="_blank" class="btn btn-danger w-100" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <a href="<?= base_url('/report_dashboard/' . $client['id_cliente']) ?>" target="_blank" class="btn btn-danger w-100" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                             <i class="fas fa-file-pdf me-2"></i> PDF Unificado
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <a href="<?= base_url('client/mis-documentos-sst') ?>" target="_blank" class="btn w-100" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <a href="<?= base_url('client/mis-documentos-sst/' . $client['id_cliente']) ?>" target="_blank" class="btn w-100" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                             <i class="fas fa-folder-open me-2"></i> Mis Documentos SST
                         </a>
                     </div>

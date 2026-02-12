@@ -21,6 +21,12 @@ if (!function_exists('convertirMarkdownAHtmlPdf')) {
         foreach ($lineas as $linea) {
             $lineaTrim = trim($linea);
 
+            // Normalizar tablas Markdown sin pipes al inicio/final
+            // "Col1 | Col2 | Col3" → "| Col1 | Col2 | Col3 |"
+            if (strpos($lineaTrim, '|') !== false && substr($lineaTrim, 0, 1) !== '|') {
+                $lineaTrim = '| ' . $lineaTrim . ' |';
+            }
+
             // Detectar línea de tabla (comienza con |)
             if (preg_match('/^\|(.+)\|$/', $lineaTrim)) {
                 // Ignorar línea separadora (|---|---|)
@@ -176,8 +182,8 @@ if (!function_exists('renderizarTablaPdf')) {
         }
 
         .encabezado-logo img {
-            max-width: 80px;
-            max-height: 50px;
+            max-width: 100px;
+            max-height: 60px;
             background-color: #ffffff;
         }
 
@@ -306,7 +312,7 @@ if (!function_exists('renderizarTablaPdf')) {
             <!-- Logo del cliente -->
             <td class="encabezado-logo" rowspan="2" style="width:100px;" valign="middle" align="center">
                 <?php if (!empty($logoBase64)): ?>
-                    <img src="<?= $logoBase64 ?>" alt="Logo" style="width:80px;height:auto;max-height:50px;">
+                    <img src="<?= $logoBase64 ?>" alt="Logo" style="max-width:100px;max-height:60px;">
                 <?php else: ?>
                     <div style="font-size: 8pt;">
                         <strong><?= esc($cliente['nombre_cliente']) ?></strong>
@@ -329,7 +335,7 @@ if (!function_exists('renderizarTablaPdf')) {
                         <td><?= str_pad($documento['version'] ?? 1, 3, '0', STR_PAD_LEFT) ?></td>
                     </tr>
                     <tr>
-                        <td class="label">Entra en Vigor:</td>
+                        <td class="label">Vigencia:</td>
                         <td><?= date('d/m/Y', strtotime($documento['created_at'] ?? 'now')) ?></td>
                     </tr>
                 </table>
@@ -573,6 +579,12 @@ if (!function_exists('renderizarTablaPdf')) {
     // Datos del Representante Legal - primero del contexto, luego del cliente
     $repLegalNombre = $contexto['representante_legal_nombre'] ?? $cliente['nombre_rep_legal'] ?? $cliente['representante_legal'] ?? '';
     $repLegalCargo = 'Representante Legal';
+
+    // Firma consultor: prioridad electrónica > física (3_AA_PDF_FIRMAS.md §16)
+    $firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+    if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])) {
+        $firmaConsultorBase64 = $firmaConsultorElectronica['evidencia']['firma_imagen'];
+    }
     ?>
 
     <?php if ($esFirmaFisica): ?>
@@ -585,7 +597,7 @@ if (!function_exists('renderizarTablaPdf')) {
         <tr>
             <td class="encabezado-logo" rowspan="2" style="width:100px; border: 1px solid #333;" valign="middle" align="center">
                 <?php if (!empty($logoBase64)): ?>
-                    <img src="<?= $logoBase64 ?>" alt="Logo" style="width:80px;height:auto;max-height:50px;">
+                    <img src="<?= $logoBase64 ?>" alt="Logo" style="max-width:100px;max-height:60px;">
                 <?php else: ?>
                     <div style="font-size: 8pt;"><strong><?= esc($cliente['nombre_cliente']) ?></strong></div>
                 <?php endif; ?>
@@ -647,18 +659,80 @@ if (!function_exists('renderizarTablaPdf')) {
         </div>
 
         <?php if ($soloFirmaConsultor): ?>
-        <!-- ========== DOCUMENTO CON FIRMA CONSULTOR + REP LEGAL (Responsabilidades Responsable SST) ========== -->
-        <?php
-        $firmaRepLegalConsultor = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
-        ?>
+        <!-- ========== TIPO A: SOLO FIRMA CONSULTOR (Responsabilidades Responsable SST) ========== -->
+        <?php if ($requiereDelegado): ?>
+        <!-- Override delegado: 3 firmantes (1_A_IMPACTO_DELEGADO_SST.md) -->
         <table class="tabla-contenido" style="width: 100%; margin-top: 0;">
             <tr>
-                <th style="width: 50%; background-color: #e9ecef; color: #333; text-align: center;">ELABORÓ</th>
-                <th style="width: 50%; background-color: #e9ecef; color: #333; text-align: center;">APROBÓ</th>
+                <th style="width: 33.33%; background-color: #e9ecef; color: #333;">Elaboró</th>
+                <th style="width: 33.33%; background-color: #e9ecef; color: #333;">Revisó / Delegado SST</th>
+                <th style="width: 33.33%; background-color: #e9ecef; color: #333;">Aprobó</th>
             </tr>
             <tr>
                 <!-- CONSULTOR SST / ELABORÓ -->
-                <td style="vertical-align: top; padding: 15px; height: 100px;">
+                <td style="vertical-align: top; padding: 10px; height: 70px;">
+                    <div style="margin-bottom: 4px; font-size: 9pt;"><strong>Nombre:</strong> <?= !empty($consultorNombre) ? esc($consultorNombre) : '________________' ?></div>
+                    <div style="margin-bottom: 4px; font-size: 9pt;"><strong>Cargo:</strong> Consultor SST</div>
+                    <?php if (!empty($consultorLicencia)): ?>
+                    <div style="margin-bottom: 4px; font-size: 9pt;"><strong>Licencia:</strong> <?= esc($consultorLicencia) ?></div>
+                    <?php endif; ?>
+                </td>
+                <!-- DELEGADO SST / REVISÓ -->
+                <td style="vertical-align: top; padding: 10px; height: 70px;">
+                    <div style="margin-bottom: 4px; font-size: 9pt;"><strong>Nombre:</strong> <?= !empty($delegadoNombre) ? esc($delegadoNombre) : '________________' ?></div>
+                    <div style="margin-bottom: 4px; font-size: 9pt;"><strong>Cargo:</strong> <?= esc($delegadoCargo) ?></div>
+                </td>
+                <!-- REPRESENTANTE LEGAL / APROBÓ -->
+                <td style="vertical-align: top; padding: 10px; height: 70px;">
+                    <div style="margin-bottom: 4px; font-size: 9pt;"><strong>Nombre:</strong> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '________________' ?></div>
+                    <div style="margin-bottom: 4px; font-size: 9pt;"><strong>Cargo:</strong> <?= esc($repLegalCargo) ?></div>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 10px; text-align: center; vertical-align: bottom;">
+                    <?php if (!empty($firmaConsultorBase64)): ?>
+                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma" style="max-height: 49px; max-width: 140px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 85%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666; font-size: 7pt;">Firma</small>
+                    </div>
+                </td>
+                <td style="padding: 8px 10px; text-align: center; vertical-align: bottom;">
+                    <?php
+                    $firmaDelegadoSoloConsultor = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+                    if ($firmaDelegadoSoloConsultor && !empty($firmaDelegadoSoloConsultor['evidencia']['firma_imagen'])):
+                    ?>
+                        <img src="<?= $firmaDelegadoSoloConsultor['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 49px; max-width: 140px;"><br>
+                    <?php elseif (!empty($firmaVigiaBase64)): ?>
+                        <img src="<?= $firmaVigiaBase64 ?>" alt="Firma" style="max-height: 49px; max-width: 140px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 85%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666; font-size: 7pt;">Firma</small>
+                    </div>
+                </td>
+                <td style="padding: 8px 10px; text-align: center; vertical-align: bottom;">
+                    <?php
+                    $firmaRepLegalSoloConsultor = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+                    if ($firmaRepLegalSoloConsultor && !empty($firmaRepLegalSoloConsultor['evidencia']['firma_imagen'])):
+                    ?>
+                        <img src="<?= $firmaRepLegalSoloConsultor['evidencia']['firma_imagen'] ?>" alt="Firma" style="max-height: 49px; max-width: 140px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 85%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666; font-size: 7pt;">Firma</small>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <?php else: ?>
+        <!-- 1 FIRMANTE: RESPONSABLE DEL SG-SST (Tipo A - 3_AA_PDF_FIRMAS.md §3) -->
+        <table class="tabla-contenido" style="width: 100%; margin-top: 0;">
+            <tr>
+                <th style="width: 100%; background-color: #e9ecef; color: #333; text-align: center;">
+                    RESPONSABLE DEL SG-SST
+                </th>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 15px; text-align: center;">
                     <div style="margin-bottom: 5px;"><strong>Nombre:</strong> <?= !empty($consultorNombre) ? esc($consultorNombre) : '________________________' ?></div>
                     <div style="margin-bottom: 5px;"><strong>Documento:</strong> <?= !empty($consultorCedula) ? esc($consultorCedula) : '________________________' ?></div>
                     <?php if (!empty($consultorLicencia)): ?>
@@ -666,39 +740,19 @@ if (!function_exists('renderizarTablaPdf')) {
                     <?php endif; ?>
                     <div style="margin-bottom: 5px;"><strong>Cargo:</strong> <?= esc($consultorCargo) ?></div>
                 </td>
-                <!-- REPRESENTANTE LEGAL / APROBÓ -->
-                <td style="vertical-align: top; padding: 15px; height: 100px;">
-                    <?php if ($firmaRepLegalConsultor && !empty($firmaRepLegalConsultor['solicitud']['firmante_nombre'])): ?>
-                        <div style="margin-bottom: 5px;"><strong>Nombre:</strong> <?= esc($firmaRepLegalConsultor['solicitud']['firmante_nombre']) ?></div>
-                    <?php else: ?>
-                        <div style="margin-bottom: 5px;"><strong>Nombre:</strong> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '________________________' ?></div>
-                    <?php endif; ?>
-                    <?php if ($firmaRepLegalConsultor && !empty($firmaRepLegalConsultor['solicitud']['firmante_documento'])): ?>
-                        <div style="margin-bottom: 5px;"><strong>Documento:</strong> <?= esc($firmaRepLegalConsultor['solicitud']['firmante_documento']) ?></div>
-                    <?php endif; ?>
-                    <div style="margin-bottom: 5px;"><strong>Cargo:</strong> <?= esc($repLegalCargo) ?></div>
-                </td>
             </tr>
             <tr>
-                <!-- Fila de firmas -->
                 <td style="padding: 15px; text-align: center; vertical-align: bottom;">
                     <?php if (!empty($firmaConsultorBase64)): ?>
-                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma Consultor" style="max-height: 60px; max-width: 180px;"><br>
+                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma" style="max-height: 60px; max-width: 180px;"><br>
                     <?php endif; ?>
-                    <div style="border-top: 1px solid #333; width: 70%; margin: 5px auto 0; padding-top: 3px;">
-                        <small style="color: #666;">Firma</small>
-                    </div>
-                </td>
-                <td style="padding: 15px; text-align: center; vertical-align: bottom;">
-                    <?php if ($firmaRepLegalConsultor && !empty($firmaRepLegalConsultor['evidencia']['firma_imagen'])): ?>
-                        <img src="<?= $firmaRepLegalConsultor['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 60px; max-width: 180px;"><br>
-                    <?php endif; ?>
-                    <div style="border-top: 1px solid #333; width: 70%; margin: 5px auto 0; padding-top: 3px;">
+                    <div style="border-top: 1px solid #333; width: 50%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666;">Firma</small>
                     </div>
                 </td>
             </tr>
         </table>
+        <?php endif; ?>
 
         <?php elseif ($soloFirmaRepLegal): ?>
         <!-- ========== RESPONSABILIDADES REP. LEGAL SIN SEGUNDO FIRMANTE: Consultor + Rep. Legal (2 firmantes) ========== -->

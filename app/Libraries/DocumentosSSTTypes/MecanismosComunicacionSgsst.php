@@ -78,7 +78,11 @@ class MecanismosComunicacionSgsst extends AbstractDocumentoSST
 
     public function getFirmantesRequeridos(int $estandares): array
     {
-        return ['responsable_sst', 'representante_legal'];
+        if ($estandares <= 10) {
+            return ['responsable_sst', 'representante_legal'];
+        }
+
+        return ['responsable_sst', 'representante_legal', 'copasst'];
     }
 
     public function getPromptParaSeccion(string $seccionKey, int $estandares): string
@@ -91,6 +95,12 @@ class MecanismosComunicacionSgsst extends AbstractDocumentoSST
 
         $comite = $this->getTextoComite($estandares);
 
+        $nivelTexto = match(true) {
+            $estandares <= 7 => 'básico (7 estándares)',
+            $estandares <= 21 => 'intermedio (21 estándares)',
+            default => 'avanzado (60 estándares)'
+        };
+
         // Fallback con prompts hardcodeados
         $prompts = [
             'objetivo' => "Genera el objetivo del procedimiento de Mecanismos de Comunicación, Auto Reporte en SG-SST.
@@ -98,205 +108,107 @@ Debe establecer:
 - El propósito de garantizar canales efectivos de comunicación interna y externa
 - La importancia del auto reporte de condiciones de trabajo y salud
 - Referencia al cumplimiento del estándar 2.8.1 de la Resolución 0312/2019
-Máximo 2 párrafos concisos.",
+FORMATO: Máximo 2 párrafos concisos.
+TONO: Formal, técnico, en tercera persona.",
 
             'alcance' => "Define el alcance del procedimiento de comunicación en SST.
-Debe especificar:
-- Que aplica a todos los trabajadores directos e indirectos
-- Incluye contratistas, proveedores y partes interesadas
-- Cubre comunicación interna, externa y auto reporte
-- Aplica a todas las sedes y centros de trabajo
-Máximo 2 párrafos.",
+Debe especificar a quién aplica:
+- Trabajadores directos e indirectos
+- Contratistas, proveedores y partes interesadas
+- Comunicación interna, externa y auto reporte
+- Sedes y centros de trabajo
+AJUSTAR según nivel de empresa ({$nivelTexto}):
+- 7 estándares: alcance simple, 3-4 ítems
+- 21 estándares: alcance moderado, 5-6 ítems
+- 60 estándares: alcance completo con todas las áreas y procesos
+FORMATO: Lista con viñetas.",
 
             'definiciones' => "Define los términos clave para el procedimiento de comunicación en SST.
-INCLUIR OBLIGATORIAMENTE:
-- Comunicación interna
-- Comunicación externa
-- Auto reporte
-- Condiciones de trabajo
-- Condiciones de salud
-- Canal de comunicación
-- Buzón de sugerencias
-- Reporte de peligros
-- Partes interesadas
-- Retroalimentación
-Formato: término en negrita seguido de definición. Máximo 10 definiciones.",
+TÉRMINOS BASE: Comunicación interna, Comunicación externa, Auto reporte, Condiciones de trabajo, Condiciones de salud, Canal de comunicación.
+CANTIDAD según estándares:
+- 7 estándares: MÁXIMO 6-8 términos esenciales
+- 21 estándares: MÁXIMO 10-12 términos (agregar: Buzón de sugerencias, Reporte de peligros, Partes interesadas, Retroalimentación)
+- 60 estándares: 12-15 términos completos (agregar: Gestión del cambio, Comunicación ascendente/descendente, Matriz de comunicaciones)
+Formato: término en **negrita** seguido de dos puntos y definición.
+BASARSE en normativa colombiana (Decreto 1072, Resolución 0312).
+NO usar tablas Markdown.",
 
-            'responsabilidades' => "Define las responsabilidades de cada actor en el proceso de comunicación del SG-SST.
-
-**Alta Dirección:**
-- Aprobar los canales oficiales de comunicación
-- Asignar recursos para el funcionamiento de los canales
-- Dar respuesta oportuna a comunicaciones de alto impacto
-
-**Responsable del SG-SST:**
-- Gestionar y mantener los canales de comunicación
-- Atender y dar trámite a los reportes recibidos
-- Generar informes de comunicación y auto reporte
-- Garantizar la confidencialidad cuando aplique
-
-**{$comite}:**
-- Canalizar inquietudes de los trabajadores
-- Verificar que se dé respuesta a los reportes
-- Participar en la revisión de comunicaciones
-
-**Trabajadores:**
-- Utilizar los canales oficiales establecidos
-- Reportar condiciones de trabajo y salud
-- Participar activamente en los mecanismos de comunicación",
+            'responsabilidades' => "Define los roles y responsabilidades en el proceso de comunicación del SG-SST.
+ROLES según estándares:
+- 7 estándares: SOLO 3-4 roles (Representante Legal, Responsable SST, {$comite}, Trabajadores)
+- 21 estándares: 5-6 roles (agregar Supervisores, Coordinadores de área)
+- 60 estándares: Todos los roles necesarios (agregar Brigada de emergencias, Jefes de proceso)
+IMPORTANTE para {$estandares} estándares:
+- Si son 7 estándares: usar 'Vigía de SST', NUNCA mencionar COPASST
+- Si son 21+ estándares: usar 'COPASST'
+FORMATO: Rol en **negrita**, seguido de lista de responsabilidades.",
 
             'comunicacion_interna' => "Describe los canales y mecanismos de comunicación INTERNA del SG-SST.
+AJUSTAR según nivel de empresa ({$nivelTexto}):
+- 7 estándares: 3 canales básicos (carteleras, reuniones, verbal)
+- 21 estándares: 4-5 canales (agregar correo institucional, capacitaciones)
+- 60 estándares: canales completos (agregar medios digitales, intranet, pantallas informativas)
 
-INCLUIR los siguientes canales con detalle de cada uno:
-
-**Carteleras Informativas:**
-- Ubicación en áreas de alta circulación
-- Actualización: mínimo mensual
-- Contenido: indicadores SST, alertas, reconocimientos
-
-**Correo Electrónico Institucional:**
-- Para comunicaciones oficiales del SG-SST
-- Difusión de políticas, programas y alertas
-- Confirmación de lectura cuando se requiera
-
-**Reuniones Periódicas:**
-- Charlas de 5 minutos (diarias o semanales)
-- Reuniones del {$comite}
-- Comités de seguridad por área
-
-**Capacitaciones:**
-- Espacio para comunicar novedades SST
-- Retroalimentación directa con trabajadores
-
-**Medios Digitales:**
-- Grupos de WhatsApp o Teams
-- Intranet corporativa
-- Pantallas informativas",
+CANALES A INCLUIR (según nivel):
+**Carteleras Informativas:** Ubicación, frecuencia de actualización, contenido.
+**Reuniones Periódicas:** Charlas de 5 minutos, reuniones del {$comite}.
+**Correo Electrónico Institucional:** Comunicaciones oficiales del SG-SST.
+**Capacitaciones:** Espacio para comunicar novedades SST.
+**Medios Digitales:** Grupos de mensajería, intranet corporativa.
+NO usar tablas Markdown.",
 
             'comunicacion_externa' => "Describe los canales y mecanismos de comunicación EXTERNA relacionados con SST.
+AJUSTAR según nivel de empresa ({$nivelTexto}):
+- 7 estándares: 2-3 canales externos esenciales (ARL, EPS)
+- 21 estándares: 4-5 canales (agregar Autoridades, Proveedores/Contratistas)
+- 60 estándares: canales completos (agregar Comunidad, Organismos de control)
 
-**Comunicación con la ARL:**
-- Reporte de accidentes de trabajo (FURAT)
-- Reporte de enfermedades laborales (FUREL)
-- Solicitud de asesorías y capacitaciones
-- Canal: plataforma ARL, correo, teléfono
-- Responsable: Responsable del SG-SST
+CANALES A INCLUIR (según nivel):
+**Comunicación con la ARL:** FURAT, FUREL, asesorías.
+**Comunicación con EPS/IPS:** Historias clínicas, exámenes médicos.
+**Reportes a Autoridades:** Ministerio del Trabajo, Secretarías de Salud.
+**Comunicación con Proveedores y Contratistas:** Requisitos SST.
+**Atención a la Comunidad:** Quejas por impacto SST.
+NO usar tablas Markdown.",
 
-**Comunicación con EPS/IPS:**
-- Solicitud de historias clínicas ocupacionales
-- Coordinación de exámenes médicos
-- Reporte de ausentismo por enfermedad común
+            'auto_reporte' => "Describe el procedimiento para que los trabajadores reporten condiciones de trabajo y salud.
+AJUSTAR según nivel de empresa ({$nivelTexto}):
+- 7 estándares: procedimiento básico (qué reportar, cómo, a quién)
+- 21 estándares: procedimiento intermedio (agregar tiempos de respuesta, confidencialidad)
+- 60 estándares: procedimiento completo (agregar protección contra represalias, seguimiento, indicadores)
 
-**Reportes a Autoridades:**
-- Ministerio del Trabajo (cuando aplique)
-- Secretarías de Salud
-- FURAT en casos de accidente grave o mortal
-
-**Comunicación con Proveedores y Contratistas:**
-- Requisitos SST para contratación
-- Verificación de cumplimiento
-- Reporte de incidentes en sus actividades
-
-**Atención a la Comunidad:**
-- Canal para quejas relacionadas con impacto SST
-- Respuesta a requerimientos de vecinos o comunidad",
-
-            'auto_reporte' => "Describe el procedimiento detallado para que los trabajadores reporten condiciones de trabajo y salud.
-
-**¿Qué se puede reportar?**
-- Condiciones inseguras en el lugar de trabajo
-- Actos inseguros observados
-- Peligros no identificados en la matriz
-- Incidentes y casi accidentes
-- Síntomas o condiciones de salud relacionadas con el trabajo
-- Sugerencias de mejora en SST
-
-**¿Cómo reportar?**
-1. Identificar la situación a reportar
-2. Diligenciar el formato de auto reporte (físico o digital)
-3. Entregar al supervisor inmediato o depositar en buzón
-4. Reportes urgentes: comunicar verbalmente de inmediato
-
-**Canales disponibles:**
-- Formato físico (disponible en cada área)
-- Formato digital (correo o aplicación)
-- Buzón de sugerencias SST
-- Comunicación directa con el {$comite}
-
-**Tiempos de respuesta:**
-- Situaciones de riesgo inminente: inmediato
-- Condiciones inseguras: máximo 48 horas para evaluación
-- Sugerencias de mejora: máximo 15 días para respuesta
-
-**Confidencialidad:**
-- Los reportes pueden ser anónimos si el trabajador lo prefiere
-- Se garantiza la no represalia por reportar
-
-**Protección contra represalias:**
-- Ningún trabajador será sancionado por reportar condiciones
-- Los reportes de buena fe están protegidos por la política de SST",
+INCLUIR:
+- Qué se puede reportar (condiciones inseguras, actos inseguros, incidentes, síntomas de salud)
+- Cómo reportar (paso a paso)
+- Canales disponibles (formato físico, digital, buzón, comunicación directa con el {$comite})
+- Tiempos de respuesta (riesgo inminente: inmediato, condiciones inseguras: 48h, sugerencias: 15 días)
+- Confidencialidad y protección contra represalias
+NO usar tablas Markdown.",
 
             'canales_inquietudes' => "Describe los canales disponibles para recibir inquietudes, ideas y aportes de los trabajadores.
+AJUSTAR según nivel de empresa ({$nivelTexto}):
+- 7 estándares: 2-3 canales básicos (buzón físico, reuniones del {$comite})
+- 21 estándares: 3-4 canales (agregar buzón virtual/correo, formato de reporte de peligros)
+- 60 estándares: canales completos (agregar línea telefónica, app digital, encuestas periódicas)
 
-**Buzón Físico de Sugerencias SST:**
-- Ubicación: [área de descanso/recepción/comedor]
-- Revisión: semanal por el Responsable del SG-SST
-- Seguimiento: registro en bitácora con número de radicado
+PARA CADA CANAL INCLUIR: descripción, ubicación o medio, frecuencia de revisión, responsable.
 
-**Buzón Virtual / Correo Electrónico:**
-- Correo: sst@[empresa].com
-- Respuesta automática de confirmación de recepción
-- Tiempo de respuesta: máximo 5 días hábiles
-
-**Línea Telefónica o Extensión:**
-- Extensión interna: [número]
-- Horario de atención: lunes a viernes 8am-5pm
-- Atención: Responsable del SG-SST o delegado
-
-**Reuniones del {$comite}:**
-- Los trabajadores pueden solicitar espacio en la agenda
-- Presentación de inquietudes colectivas
-- Acta con compromisos y seguimiento
-
-**Formato de Reporte de Peligros:**
-- Disponible en físico en cada área
-- Disponible en digital en la intranet
-- Campos: descripción, ubicación, fecha, quien reporta (opcional)",
+Reuniones del {$comite}: los trabajadores pueden solicitar espacio en agenda.
+NO usar tablas Markdown.",
 
             'registro_seguimiento' => "Describe cómo se documentan, registran y gestionan las comunicaciones y reportes.
+AJUSTAR según nivel de empresa ({$nivelTexto}):
+- 7 estándares: registro básico (formato simple, informe trimestral)
+- 21 estándares: registro intermedio (radicado, estados, informes mensuales, 2-3 indicadores)
+- 60 estándares: registro completo (todos los campos, indicadores de gestión, retroalimentación, conservación)
 
-**Formato de Registro de Comunicaciones:**
-- Número de radicado consecutivo
-- Fecha y hora de recepción
-- Canal utilizado
-- Tipo de comunicación (reporte, sugerencia, queja)
-- Descripción del contenido
-- Responsable asignado
-- Estado (pendiente, en trámite, cerrado)
-- Fecha de cierre y respuesta dada
-
-**Indicadores de Gestión:**
-| Indicador | Meta | Frecuencia |
-|-----------|------|------------|
-| Tiempo promedio de respuesta | ≤ 5 días | Mensual |
-| % de casos cerrados | ≥ 90% | Mensual |
-| Reportes de auto reporte | Tendencia creciente | Trimestral |
-| Satisfacción con respuestas | ≥ 80% | Semestral |
-
-**Informes Periódicos:**
-- Informe mensual al Responsable del SG-SST
-- Informe trimestral al {$comite}
-- Informe anual en la revisión por la dirección
-
-**Retroalimentación al Reportante:**
-- Notificación de recepción del reporte
-- Comunicación de acciones tomadas
-- Cierre formal con agradecimiento
-
-**Conservación de Registros:**
-- Tiempo de retención: 20 años
-- Medio: digital con backup
-- Acceso: restringido al personal autorizado"
+INCLUIR:
+- Formato de Registro: radicado, fecha, canal, tipo, descripción, responsable, estado, cierre
+- Indicadores de Gestión: tiempo promedio de respuesta, % casos cerrados, tendencia de reportes
+- Informes Periódicos: mensual al Responsable SST, trimestral al {$comite}, anual a la dirección
+- Retroalimentación al reportante
+- Conservación de registros (20 años)
+NO usar tablas Markdown. Usar listas con viñetas para los indicadores."
         ];
 
         return $prompts[$seccionKey] ?? "Genera el contenido para la sección '{$seccionKey}' del documento de Mecanismos de Comunicación, Auto Reporte en SG-SST según la Resolución 0312/2019 y el Decreto 1072/2015.";

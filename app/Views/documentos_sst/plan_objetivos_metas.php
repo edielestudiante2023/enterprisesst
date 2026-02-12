@@ -172,9 +172,9 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <button type="button" onclick="history.back()" class="btn btn-outline-light btn-sm">
+                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
                         <i class="bi bi-arrow-left me-1"></i>Volver
-                    </button>
+                    </a>
                     <span class="ms-3"><?= esc($cliente['nombre_cliente']) ?> - Plan Objetivos y Metas <?= $anio ?></span>
                 </div>
                 <div>
@@ -210,6 +210,12 @@
                     <?php if (in_array($documento['estado'] ?? '', ['borrador', 'generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
                         <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
+                        </a>
+                    <?php endif; ?>
+                    <!-- Estado Firmas (pendiente_firma) -->
+                    <?php if (($documento['estado'] ?? '') === 'pendiente_firma'): ?>
+                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-warning btn-sm me-2">
+                            <i class="bi bi-clock-history me-1"></i>Estado Firmas
                         </a>
                     <?php endif; ?>
                     <!-- Ver Firmas (documento firmado) -->
@@ -407,7 +413,6 @@
             <?php endif; ?>
 
             <!-- Tabla de Control de Cambios -->
-            <?php if (!empty($versiones)): ?>
             <div class="seccion" style="page-break-inside: avoid; margin-top: 40px;">
                 <div class="seccion-titulo" style="background: linear-gradient(90deg, #0d6efd, #6610f2); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
                     <i class="bi bi-journal-text me-2"></i>CONTROL DE CAMBIOS
@@ -421,21 +426,32 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($versiones as $ver): ?>
-                        <tr>
-                            <td style="text-align: center;">
-                                <span style="display: inline-block; background: #0d6efd; color: white; padding: 3px 12px; border-radius: 20px;">
-                                    <?= $ver['version_texto'] ?>
-                                </span>
-                            </td>
-                            <td><?= esc($ver['descripcion_cambio'] ?? 'Creacion inicial del documento') ?></td>
-                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($ver['fecha_autorizacion'] ?? $ver['created_at'])) ?></td>
-                        </tr>
-                        <?php endforeach; ?>
+                        <?php if (!empty($versiones)): ?>
+                            <?php foreach ($versiones as $ver): ?>
+                            <tr>
+                                <td style="text-align: center;">
+                                    <span style="display: inline-block; background: #0d6efd; color: white; padding: 3px 12px; border-radius: 20px;">
+                                        <?= $ver['version_texto'] ?>
+                                    </span>
+                                </td>
+                                <td><?= esc($ver['descripcion_cambio'] ?? 'Creacion inicial del documento') ?></td>
+                                <td style="text-align: center;"><?= date('d/m/Y', strtotime($ver['fecha_autorizacion'] ?? $ver['created_at'])) ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td style="text-align: center;">
+                                    <span style="display: inline-block; background: #0d6efd; color: white; padding: 3px 12px; border-radius: 20px;">
+                                        1.0
+                                    </span>
+                                </td>
+                                <td>Elaboracion inicial del documento</td>
+                                <td style="text-align: center;"><?= date('d/m/Y', strtotime($documento['created_at'] ?? 'now')) ?></td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-            <?php endif; ?>
 
             <!-- Seccion de Firmas -->
             <?php
@@ -463,6 +479,9 @@
             $consultorCargo = $esDosFirmantesPorDefinicion ? 'Responsable del SG-SST' : 'Consultor SST';
             $consultorLicencia = $consultor['numero_licencia'] ?? '';
             $firmaConsultor = $consultor['firma_consultor'] ?? '';
+
+            // Firma consultor: prioridad electronica > fisica (2_AA_WEB.md §16)
+            $firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
 
             // Datos del Delegado SST
             $delegadoNombre = $contexto['delegado_sst_nombre'] ?? '';
@@ -505,7 +524,9 @@
                                 <div><strong>Licencia SST:</strong> <?= esc($consultorLicencia) ?></div>
                                 <?php endif; ?>
                                 <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
-                                    <?php if (!empty($firmaConsultor)): ?>
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" style="max-height: 50px;">
+                                    <?php elseif (!empty($firmaConsultor)): ?>
                                         <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" style="max-height: 50px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto;">
@@ -582,7 +603,9 @@
                                 <div><strong>Licencia SST:</strong> <?= esc($consultorLicencia) ?></div>
                                 <?php endif; ?>
                                 <div style="position: absolute; bottom: 15px; left: 20px; right: 20px; text-align: center;">
-                                    <?php if (!empty($firmaConsultor)): ?>
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" style="max-height: 50px;">
+                                    <?php elseif (!empty($firmaConsultor)): ?>
                                         <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" style="max-height: 50px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0;">
@@ -639,7 +662,9 @@
                                 <div><strong>Licencia SST:</strong> <?= esc($consultorLicencia) ?></div>
                                 <?php endif; ?>
                                 <div style="position: absolute; bottom: 15px; left: 20px; right: 20px; text-align: center;">
-                                    <?php if (!empty($firmaConsultor)): ?>
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" style="max-height: 50px;">
+                                    <?php elseif (!empty($firmaConsultor)): ?>
                                         <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" style="max-height: 50px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0;">
@@ -700,7 +725,9 @@
                                 <div><strong>Licencia SST:</strong> <?= esc($consultorLicencia) ?></div>
                                 <?php endif; ?>
                                 <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
-                                    <?php if (!empty($firmaConsultor)): ?>
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" style="max-height: 50px;">
+                                    <?php elseif (!empty($firmaConsultor)): ?>
                                         <img src="<?= base_url('uploads/' . $firmaConsultor) ?>" style="max-height: 50px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto;">
@@ -718,6 +745,8 @@
                                     if ($firmaVigia && !empty($firmaVigia['evidencia']['firma_imagen'])):
                                     ?>
                                         <img src="<?= $firmaVigia['evidencia']['firma_imagen'] ?>" style="max-height: 50px;">
+                                    <?php elseif (!empty($vigia['firma_vigia'] ?? '')): ?>
+                                        <img src="<?= base_url('uploads/' . $vigia['firma_vigia']) ?>" style="max-height: 50px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto;">
                                         <small>Firma</small>

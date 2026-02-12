@@ -21,6 +21,12 @@ if (!function_exists('convertirMarkdownAHtml')) {
         foreach ($lineas as $linea) {
             $lineaTrim = trim($linea);
 
+            // Normalizar tablas Markdown sin pipes al inicio/final
+            // "Col1 | Col2 | Col3" → "| Col1 | Col2 | Col3 |"
+            if (strpos($lineaTrim, '|') !== false && substr($lineaTrim, 0, 1) !== '|') {
+                $lineaTrim = '| ' . $lineaTrim . ' |';
+            }
+
             // Detectar línea de tabla (comienza con |)
             if (preg_match('/^\|(.+)\|$/', $lineaTrim)) {
                 // Ignorar línea separadora (|---|---|)
@@ -207,7 +213,7 @@ if (!function_exists('renderizarTablaHtml')) {
         <tr>
             <td width="80" rowspan="2" align="center" valign="middle" bgcolor="#FFFFFF" style="border:1px solid #333; padding:5px; background-color:#ffffff;">
                 <?php if (!empty($logoBase64)): ?>
-                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo">
+                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo" style="background-color:#ffffff;">
                 <?php else: ?>
                 <b style="font-size:8pt;"><?= esc($cliente['nombre_cliente']) ?></b>
                 <?php endif; ?>
@@ -374,7 +380,7 @@ if (!function_exists('renderizarTablaHtml')) {
         <tr>
             <td width="80" rowspan="2" align="center" valign="middle" bgcolor="#FFFFFF" style="border:1px solid #333; padding:5px; background-color:#ffffff;">
                 <?php if (!empty($logoBase64)): ?>
-                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo">
+                <img src="<?= $logoBase64 ?>" width="70" height="45" alt="Logo" style="background-color:#ffffff;">
                 <?php else: ?>
                 <b style="font-size:8pt;"><?= esc($cliente['nombre_cliente']) ?></b>
                 <?php endif; ?>
@@ -461,26 +467,38 @@ if (!function_exists('renderizarTablaHtml')) {
         </table>
 
         <?php elseif ($soloFirmaRepLegal): ?>
-        <!-- SOLO FIRMA DEL REPRESENTANTE LEGAL -->
-        <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
+        <!-- RESPONSABILIDADES REP. LEGAL SIN SEGUNDO FIRMANTE: Consultor + Rep. Legal (2 firmantes) -->
+        <!-- REGLA AUDITORÍA: Todos los documentos técnicos DEBEN incluir Elaboró/Consultor SST -->
+        <?php $repLegalCedulaWord = $contenido['representante_legal']['cedula'] ?? ''; ?>
+        <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
             <tr>
-                <td width="100%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 9pt;">REPRESENTANTE LEGAL</td>
+                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Elaboro / Consultor SST</td>
+                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Aprobo / Representante Legal</td>
             </tr>
             <tr>
-                <td style="vertical-align: top; padding: 10px; border: 1px solid #999; font-size: 8pt; text-align: center;">
+                <td style="vertical-align: top; padding: 6px; border: 1px solid #999; font-size: 8pt;">
+                    <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($consultorNombre) ? esc($consultorNombre) : '_________________' ?></p>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> Consultor SST</p>
+                    <?php if (!empty($consultorLicencia)): ?>
+                    <p style="margin: 2px 0;"><b>Licencia SST:</b> <?= esc($consultorLicencia) ?></p>
+                    <?php endif; ?>
+                </td>
+                <td style="vertical-align: top; padding: 6px; border: 1px solid #999; font-size: 8pt;">
                     <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '_________________' ?></p>
-                    <?php
-                    $repLegalCedulaWord = $contenido['representante_legal']['cedula'] ?? '';
-                    if (!empty($repLegalCedulaWord)):
-                    ?>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($repLegalCargo) ?></p>
+                    <?php if (!empty($repLegalCedulaWord)): ?>
                     <p style="margin: 2px 0;"><b>Documento:</b> <?= esc($repLegalCedulaWord) ?></p>
                     <?php endif; ?>
-                    <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($repLegalCargo) ?></p>
                 </td>
             </tr>
             <tr>
-                <td style="padding: 10px; text-align: center; border: 1px solid #999; height: 60px; vertical-align: bottom;">
-                    <div style="border-top: 1px solid #333; width: 40%; margin: 3px auto 0;">
+                <td style="padding: 6px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                        <span style="color: #666; font-size: 7pt;">Firma</span>
+                    </div>
+                </td>
+                <td style="padding: 6px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
                         <span style="color: #666; font-size: 7pt;">Firma</span>
                     </div>
                 </td>

@@ -1000,7 +1000,12 @@ Los indicadores deben permitir evaluar si el programa de inducción se está eje
                 'periodicidad' => 'mensual',
                 'numeral' => '1.2.2',
                 'phva' => 'VERIFICAR',
-                'generado_por_ia' => false
+                'generado_por_ia' => false,
+                'definicion' => 'Mide la proporcion de trabajadores nuevos que completaron todas las etapas del programa de induccion antes de iniciar sus funciones.',
+                'interpretacion' => 'El 100% indica que todos los trabajadores nuevos recibieron induccion completa. Es obligatorio segun Art. 2.2.4.6.11 D.1072/2015.',
+                'origen_datos' => 'Registros de induccion, formato de asistencia firmado, evaluacion post-induccion',
+                'cargo_responsable' => 'Responsable del SG-SST',
+                'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, Recursos Humanos, COPASST/Vigia'
             ],
             [
                 'nombre' => 'Cumplimiento del Programa de Inducción',
@@ -1012,7 +1017,12 @@ Los indicadores deben permitir evaluar si el programa de inducción se está eje
                 'periodicidad' => 'trimestral',
                 'numeral' => '1.2.2',
                 'phva' => 'VERIFICAR',
-                'generado_por_ia' => false
+                'generado_por_ia' => false,
+                'definicion' => 'Mide el porcentaje de temas del programa de induccion y reinduccion que fueron efectivamente ejecutados respecto al total programado.',
+                'interpretacion' => 'El 100% indica ejecucion completa del programa. Valores menores requieren reprogramacion de temas pendientes antes de que el trabajador inicie labores.',
+                'origen_datos' => 'Programa de induccion aprobado, registros de ejecucion por etapa, evaluaciones',
+                'cargo_responsable' => 'Responsable del SG-SST',
+                'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, Recursos Humanos, COPASST/Vigia'
             ],
             [
                 'nombre' => 'Oportunidad de Inducción',
@@ -1024,7 +1034,12 @@ Los indicadores deben permitir evaluar si el programa de inducción se está eje
                 'periodicidad' => 'mensual',
                 'numeral' => '1.2.2',
                 'phva' => 'VERIFICAR',
-                'generado_por_ia' => false
+                'generado_por_ia' => false,
+                'definicion' => 'Mide el porcentaje de inducciones que se realizaron el primer dia de vinculacion del trabajador, antes de que inicie sus funciones.',
+                'interpretacion' => 'Un 90% o mas indica buena oportunidad. La induccion debe realizarse antes del inicio de labores para garantizar conocimiento de peligros y controles.',
+                'origen_datos' => 'Registros de induccion (fecha vs fecha de ingreso), nomina (fecha de vinculacion)',
+                'cargo_responsable' => 'Responsable del SG-SST',
+                'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, Recursos Humanos'
             ]
         ];
     }
@@ -1144,6 +1159,11 @@ Ajusta el indicador según la solicitud del usuario.";
                     'periodicidad' => $indicador['periodicidad'],
                     'numeral_resolucion' => $indicador['numeral'],
                     'phva' => $indicador['phva'],
+                    'definicion' => $indicador['definicion'] ?? null,
+                    'interpretacion' => $indicador['interpretacion'] ?? null,
+                    'origen_datos' => $indicador['origen_datos'] ?? null,
+                    'cargo_responsable' => $indicador['cargo_responsable'] ?? null,
+                    'cargos_conocer_resultado' => $indicador['cargos_conocer_resultado'] ?? null,
                     'activo' => 1
                 ];
                 $this->indicadorModel->insert($indicadorData);

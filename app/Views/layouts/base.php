@@ -126,6 +126,17 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Colores custom para categorias que no tienen clase Bootstrap bg-* */
+        .bg-orange { background-color: #fd7e14 !important; color: #fff !important; }
+        .text-orange { color: #fd7e14 !important; }
+        .bg-purple { background-color: #6f42c1 !important; color: #fff !important; }
+        .text-purple { color: #6f42c1 !important; }
+        .bg-teal { background-color: #20c997 !important; color: #fff !important; }
+        .text-teal { color: #20c997 !important; }
+        .border-orange { border-color: #fd7e14 !important; }
+        .border-purple { border-color: #6f42c1 !important; }
+        .border-teal { border-color: #20c997 !important; }
     </style>
 
     <?= $this->renderSection('styles') ?>

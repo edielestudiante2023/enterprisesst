@@ -52,15 +52,15 @@ $puedeGenerarDocumento = isset($fasesInfo) && $fasesInfo && $fasesInfo['puede_ge
                     <small class="d-block text-muted mt-1">Complete las fases previas</small>
                 <?php elseif (!$hayAprobadoAnioActual): ?>
                     <!-- Botón activo: puede generar -->
-                    <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/pyp-salud') ?>"
+                    <a href="<?= base_url('documentos/generar/programa_promocion_prevencion_salud/' . $cliente['id_cliente']) ?>"
                        class="btn btn-success">
                         <i class="bi bi-magic me-1"></i>Crear con IA <?= date('Y') ?>
                     </a>
                 <?php else: ?>
                     <!-- Ya existe documento -->
-                    <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/pyp-salud') ?>"
-                       class="btn btn-outline-primary">
-                        <i class="bi bi-pencil me-1"></i>Editar / Nueva Versión
+                    <a href="<?= base_url('documentos/generar/programa_promocion_prevencion_salud/' . $cliente['id_cliente']) ?>"
+                       class="btn btn-outline-success">
+                        <i class="bi bi-arrow-repeat me-1"></i>Nueva versión <?= date('Y') ?>
                     </a>
                 <?php endif; ?>
             </div>
@@ -78,7 +78,8 @@ $puedeGenerarDocumento = isset($fasesInfo) && $fasesInfo && $fasesInfo['puede_ge
 ]) ?>
 
 <!-- Tabla de Documentos SST -->
-<?= view('documentacion/_components/tabla_documentos', [
+<?= view('documentacion/_components/tabla_documentos_sst', [
+    'tipoCarpetaFases' => 'promocion_prevencion_salud',
     'documentosSSTAprobados' => $documentosSSTAprobados ?? [],
     'cliente' => $cliente
 ]) ?>
@@ -129,7 +130,7 @@ $puedeGenerarDocumento = isset($fasesInfo) && $fasesInfo && $fasesInfo['puede_ge
             <i class="bi bi-paperclip me-2"></i>Soportes Adjuntados
         </h6>
     </div>
-    <div class="card-body">
+    <div class="card-body p-0">
         <?php $soportes = $soportesAdicionales ?? []; ?>
         <?php if (!empty($soportes)): ?>
             <div class="table-responsive">
@@ -212,6 +213,7 @@ $puedeGenerarDocumento = isset($fasesInfo) && $fasesInfo && $fasesInfo['puede_ge
                   method="post"
                   enctype="multipart/form-data">
                 <div class="modal-body">
+                    <?= csrf_field() ?>
                     <input type="hidden" name="id_cliente" value="<?= $cliente['id_cliente'] ?>">
                     <input type="hidden" name="id_carpeta" value="<?= $carpeta['id_carpeta'] ?>">
 

@@ -34,7 +34,12 @@ if (!empty($documentosSSTAprobados)) {
                 <?php endif; ?>
             </div>
             <div class="col-md-4 text-end">
-                <?php if (!$hayAprobadoAnioActual): ?>
+                <?php if ($hayAprobadoAnioActual): ?>
+                    <a href="<?= base_url('documentos/generar/procedimiento_matriz_legal/' . $cliente['id_cliente']) ?>"
+                       class="btn btn-outline-success">
+                        <i class="bi bi-arrow-repeat me-1"></i>Nueva version <?= date('Y') ?>
+                    </a>
+                <?php else: ?>
                     <a href="<?= base_url('documentos/generar/procedimiento_matriz_legal/' . $cliente['id_cliente']) ?>"
                        class="btn btn-success">
                         <i class="bi bi-magic me-1"></i>Crear con IA <?= date('Y') ?>
@@ -163,7 +168,7 @@ if (!empty($documentosSSTAprobados)) {
 <div class="modal fade" id="modalAdjuntarML" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-success text-white">
                 <h5 class="modal-title"><i class="bi bi-cloud-upload me-2"></i>Adjuntar Soporte Matriz Legal</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>

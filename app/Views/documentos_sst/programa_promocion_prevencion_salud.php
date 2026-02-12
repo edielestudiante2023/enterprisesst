@@ -188,7 +188,7 @@
 
         /* Estilos para panel de aprobacion */
         .panel-aprobacion {
-            background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
@@ -370,188 +370,8 @@
             </table>
 
             <!-- Secciones del documento -->
-            <?php
-            /**
-             * Funcion mejorada para convertir Markdown a HTML
-             * Soporta: tablas, negritas, cursivas, listas, encabezados
-             */
-            if (!function_exists('convertirMarkdownAHtml')) {
-                function convertirMarkdownAHtml($texto) {
-                    if (empty($texto)) return '';
-
-                    // 1. Primero convertir tablas Markdown
-                    $texto = convertirTablasMarkdown($texto);
-
-                    // 2. Dividir en partes HTML (tablas) y texto normal
-                    $partes = preg_split('/(<div class="table-responsive[^>]*>.*?<\/div>)/s', $texto, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-                    $resultado = '';
-                    foreach ($partes as $parte) {
-                        if (strpos($parte, '<div class="table-responsive') === 0) {
-                            // Es una tabla HTML, no modificar
-                            $resultado .= $parte;
-                        } else {
-                            // Es texto, convertir markdown
-                            $resultado .= convertirTextoMarkdown($parte);
-                        }
-                    }
-
-                    return $resultado;
-                }
-
-                function convertirTablasMarkdown($texto) {
-                    $lineas = explode("\n", $texto);
-                    $enTabla = false;
-                    $resultado = [];
-                    $tablaHtml = '';
-                    $esEncabezado = true;
-
-                    foreach ($lineas as $linea) {
-                        $lineaTrim = trim($linea);
-
-                        // Normalizar tablas Markdown sin pipes al inicio/final
-                        // "Col1 | Col2 | Col3" → "| Col1 | Col2 | Col3 |"
-                        if (strpos($lineaTrim, '|') !== false && substr($lineaTrim, 0, 1) !== '|') {
-                            $lineaTrim = '| ' . $lineaTrim . ' |';
-                        }
-
-                        // Detectar linea de tabla (empieza con |)
-                        if (preg_match('/^\|(.+)\|$/', $lineaTrim)) {
-                            // Ignorar linea separadora (|---|---|)
-                            if (preg_match('/^\|[\s\-\:\|]+\|$/', $lineaTrim)) {
-                                $esEncabezado = false;
-                                continue;
-                            }
-
-                            if (!$enTabla) {
-                                $enTabla = true;
-                                $tablaHtml = '<div class="table-responsive mt-3 mb-3"><table class="table table-bordered table-sm" style="font-size: 0.85rem;">';
-                            }
-
-                            // Extraer celdas
-                            $celdas = array_map('trim', explode('|', trim($lineaTrim, '|')));
-                            $tag = $esEncabezado ? 'th' : 'td';
-                            $estilo = $esEncabezado ? ' style="background-color: #198754; color: white; font-weight: 600;"' : '';
-
-                            $tablaHtml .= '<tr>';
-                            foreach ($celdas as $celda) {
-                                // Convertir negritas dentro de celdas
-                                $celdaHtml = htmlspecialchars($celda);
-                                $celdaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $celdaHtml);
-                                $celdaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $celdaHtml);
-                                $tablaHtml .= "<{$tag}{$estilo}>" . $celdaHtml . "</{$tag}>";
-                            }
-                            $tablaHtml .= '</tr>';
-                        } else {
-                            // Si estabamos en una tabla, cerrarla
-                            if ($enTabla) {
-                                $tablaHtml .= '</table></div>';
-                                $resultado[] = $tablaHtml;
-                                $tablaHtml = '';
-                                $enTabla = false;
-                                $esEncabezado = true;
-                            }
-                            $resultado[] = $linea;
-                        }
-                    }
-
-                    // Cerrar tabla si termino en una
-                    if ($enTabla) {
-                        $tablaHtml .= '</table></div>';
-                        $resultado[] = $tablaHtml;
-                    }
-
-                    return implode("\n", $resultado);
-                }
-
-                function convertirTextoMarkdown($texto) {
-                    // Escapar HTML primero (pero preservar saltos de linea)
-                    $lineas = explode("\n", $texto);
-                    $resultado = [];
-                    $enLista = false;
-                    $listaHtml = '';
-
-                    foreach ($lineas as $linea) {
-                        $lineaTrim = trim($linea);
-
-                        // Detectar items de lista (- item o * item o numero. item)
-                        if (preg_match('/^[\-\*]\s+(.+)$/', $lineaTrim, $matches) ||
-                            preg_match('/^\d+\.\s+(.+)$/', $lineaTrim, $matches)) {
-
-                            if (!$enLista) {
-                                $enLista = true;
-                                $listaHtml = '<ul class="mb-3">';
-                            }
-
-                            $itemTexto = htmlspecialchars($matches[1]);
-                            // Convertir negritas y cursivas en el item
-                            $itemTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $itemTexto);
-                            $itemTexto = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $itemTexto);
-                            $listaHtml .= '<li>' . $itemTexto . '</li>';
-
-                        } else {
-                            // Si estabamos en lista, cerrarla
-                            if ($enLista) {
-                                $listaHtml .= '</ul>';
-                                $resultado[] = $listaHtml;
-                                $listaHtml = '';
-                                $enLista = false;
-                            }
-
-                            // Linea normal
-                            if (!empty($lineaTrim)) {
-                                $lineaHtml = htmlspecialchars($linea);
-
-                                // Convertir encabezados markdown (## Titulo)
-                                if (preg_match('/^#{1,6}\s+(.+)$/', $lineaTrim, $matches)) {
-                                    $nivel = strlen(preg_replace('/[^#]/', '', $lineaTrim));
-                                    $tituloTexto = htmlspecialchars(trim($matches[1]));
-                                    $tituloTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $tituloTexto);
-                                    $resultado[] = "<h{$nivel} class='mt-3 mb-2'>{$tituloTexto}</h{$nivel}>";
-                                    continue;
-                                }
-
-                                // Convertir **negrita** y *cursiva*
-                                $lineaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $lineaHtml);
-                                $lineaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $lineaHtml);
-
-                                $resultado[] = $lineaHtml;
-                            } else {
-                                $resultado[] = '<br>';
-                            }
-                        }
-                    }
-
-                    // Cerrar lista si termino en una
-                    if ($enLista) {
-                        $listaHtml .= '</ul>';
-                        $resultado[] = $listaHtml;
-                    }
-
-                    // Unir con saltos de linea HTML
-                    $html = '';
-                    foreach ($resultado as $i => $item) {
-                        if (strpos($item, '<ul') === 0 || strpos($item, '<h') === 0 ||
-                            strpos($item, '<div') === 0 || strpos($item, '<br') === 0) {
-                            $html .= $item;
-                        } else {
-                            // Es texto normal, agregar <br> si no es el ultimo
-                            $html .= $item;
-                            if ($i < count($resultado) - 1 && !empty(trim($item))) {
-                                $nextItem = $resultado[$i + 1] ?? '';
-                                if (strpos($nextItem, '<ul') !== 0 && strpos($nextItem, '<h') !== 0 &&
-                                    strpos($nextItem, '<div') !== 0 && strpos($nextItem, '<br') !== 0) {
-                                    $html .= '<br>';
-                                }
-                            }
-                        }
-                    }
-
-                    return $html;
-                }
-            }
-            ?>
             <?php if (!empty($contenido['secciones'])): ?>
+                <?php $parsedown = new \Parsedown(); ?>
                 <?php foreach ($contenido['secciones'] as $seccion): ?>
                     <div class="seccion">
                         <div class="seccion-titulo"><?= esc($seccion['titulo']) ?></div>
@@ -592,7 +412,7 @@
                                 <?php endif; ?>
                             <?php else: ?>
                                 <!-- Contenido de texto -->
-                                <?= convertirMarkdownAHtml($seccion['contenido'] ?? '') ?>
+                                <?= $parsedown->text($seccion['contenido'] ?? '') ?>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -603,7 +423,7 @@
             <!-- SECCION: CONTROL DE CAMBIOS (Imprimible) -->
             <!-- ============================================== -->
             <div class="seccion" style="page-break-inside: avoid; margin-top: 40px;">
-                <div class="seccion-titulo" style="background: linear-gradient(90deg, #198754, #20c997); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
+                <div class="seccion-titulo" style="background: linear-gradient(90deg, #0d6efd, #6610f2); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
                     <i class="bi bi-journal-text me-2"></i>CONTROL DE CAMBIOS
                 </div>
                 <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
@@ -619,7 +439,7 @@
                             <?php foreach ($versiones as $idx => $ver): ?>
                             <tr style="<?= $idx % 2 === 0 ? 'background-color: #fff;' : 'background-color: #f8f9fa;' ?>">
                                 <td style="text-align: center; vertical-align: middle;">
-                                    <span style="display: inline-block; background: #198754; color: white; padding: 3px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;">
+                                    <span style="display: inline-block; background: #0d6efd; color: white; padding: 3px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;">
                                         <?= esc($ver['version_texto']) ?>
                                     </span>
                                 </td>
@@ -630,7 +450,7 @@
                         <?php else: ?>
                             <tr>
                                 <td style="text-align: center; vertical-align: middle;">
-                                    <span style="display: inline-block; background: #198754; color: white; padding: 3px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;">
+                                    <span style="display: inline-block; background: #0d6efd; color: white; padding: 3px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;">
                                         1.0
                                     </span>
                                 </td>
@@ -820,13 +640,16 @@
                                         <?php endif; ?>
                                     </span>
                                 </div>
-                                <!-- Firma posicionada al fondo -->
+                                <!-- Firma posicionada al fondo (prioridad: electrónica delegado > electrónica vigía > física vigía) -->
                                 <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
                                     <?php
-                                    $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+                                    $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? ($firmasElectronicas ?? [])['vigia_sst'] ?? null;
+                                    $firmaVigiaFisica = $vigia['firma_vigia'] ?? '';
                                     if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])):
                                     ?>
-                                        <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                        <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado/Vigia SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php elseif (!empty($firmaVigiaFisica)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaVigiaFisica) ?>" alt="Firma Vigia SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                         <small style="color: #666; font-size: 0.7rem;">Firma</small>

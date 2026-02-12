@@ -1503,4 +1503,909 @@ Mejora el indicador segun las instrucciones. Responde SOLO con el JSON.";
         // Mezclar con datos originales
         return array_merge($indActual, $respuesta);
     }
+
+    // =========================================================================
+    // MÓDULO 3.1.7 - ESTILOS DE VIDA SALUDABLE Y ENTORNOS SALUDABLES
+    // =========================================================================
+
+    /**
+     * Vista principal de Estilos de Vida Saludable (Parte 1 - Actividades)
+     */
+    public function estilosVidaSaludable(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $estilosService = new \App\Services\ActividadesEstilosVidaService();
+
+        $anio = (int)date('Y');
+
+        $data = [
+            'titulo' => 'Generador IA - Estilos de Vida Saludable',
+            'cliente' => $cliente,
+            'contexto' => $contexto,
+            'anio' => $anio,
+            'resumenActividades' => $estilosService->getResumenActividades($idCliente, $anio),
+            'actividadesExistentes' => $estilosService->getActividadesCliente($idCliente, $anio),
+        ];
+
+        return view('generador_ia/estilos_vida_saludable', $data);
+    }
+
+    /**
+     * Preview de las actividades de Estilos de Vida que se generarian (AJAX)
+     */
+    public function previewActividadesEstilosVida(int $idCliente)
+    {
+        $anio = $this->request->getGet('anio') ?? (int)date('Y');
+        $instrucciones = $this->request->getGet('instrucciones') ?? '';
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $service = new \App\Services\ActividadesEstilosVidaService();
+        $preview = $service->previewActividades($idCliente, (int)$anio, $contexto, $instrucciones);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera las actividades de Estilos de Vida en el PTA (AJAX POST)
+     */
+    public function generarActividadesEstilosVida(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+
+        $anio = $json['anio'] ?? $this->request->getPost('anio') ?? (int)date('Y');
+        $actividadesSeleccionadas = $json['actividades'] ?? null;
+
+        try {
+            $service = new \App\Services\ActividadesEstilosVidaService();
+            $resultado = $service->generarActividades($idCliente, (int)$anio, $actividadesSeleccionadas);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Actividades generadas: {$resultado['creadas']} nuevas, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar actividades: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Resumen del estado de Estilos de Vida para un cliente (AJAX)
+     */
+    public function resumenEstilosVida(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $anio = (int)date('Y');
+
+        $estilosService = new \App\Services\ActividadesEstilosVidaService();
+        $indicadoresService = new \App\Services\IndicadoresEstilosVidaService();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'cliente' => $cliente['nombre_cliente'],
+                'anio' => $anio,
+                'actividades' => $estilosService->getResumenActividades($idCliente, $anio),
+                'indicadores' => $indicadoresService->getResumenIndicadores($idCliente)
+            ]
+        ]);
+    }
+
+    /**
+     * Vista principal de Indicadores de Estilos de Vida (Parte 2)
+     */
+    public function indicadoresEstilosVida(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->to('/clientes')->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int)date('Y');
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresEstilosVidaService();
+
+        return view('generador_ia/indicadores_estilos_vida_saludable', [
+            'cliente' => $cliente,
+            'anio' => $anio,
+            'contexto' => $contexto ?? [],
+            'resumenIndicadores' => $indicadoresService->getResumenIndicadores($idCliente),
+            'indicadoresExistentes' => $indicadoresService->getIndicadoresCliente($idCliente)
+        ]);
+    }
+
+    /**
+     * Preview de indicadores de Estilos de Vida (AJAX)
+     */
+    public function previewIndicadoresEstilosVida(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresEstilosVidaService();
+        $preview = $indicadoresService->previewIndicadores($idCliente, $contexto);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera indicadores de Estilos de Vida (AJAX POST)
+     */
+    public function generarIndicadoresEstilosVida(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+        $indicadoresSeleccionados = $json['indicadores'] ?? null;
+
+        try {
+            $indicadoresService = new \App\Services\IndicadoresEstilosVidaService();
+            $resultado = $indicadoresService->generarIndicadores($idCliente, $indicadoresSeleccionados);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Indicadores generados: {$resultado['creados']} nuevos, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar indicadores: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // =========================================================================
+    // MÓDULO 3.1.4 - EVALUACIONES MEDICAS OCUPACIONALES
+    // =========================================================================
+
+    /**
+     * Vista principal de Evaluaciones Medicas Ocupacionales (Parte 1 - Actividades)
+     */
+    public function evaluacionesMedicasOcupacionales(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $emoService = new \App\Services\ActividadesEvaluacionesMedicasService();
+
+        $anio = (int)date('Y');
+
+        $data = [
+            'titulo' => 'Generador IA - Evaluaciones Medicas Ocupacionales',
+            'cliente' => $cliente,
+            'contexto' => $contexto,
+            'anio' => $anio,
+            'resumenActividades' => $emoService->getResumenActividades($idCliente, $anio),
+            'actividadesExistentes' => $emoService->getActividadesCliente($idCliente, $anio),
+        ];
+
+        return view('generador_ia/evaluaciones_medicas_ocupacionales', $data);
+    }
+
+    /**
+     * Preview de las actividades de Evaluaciones Medicas que se generarian (AJAX)
+     */
+    public function previewActividadesEvaluacionesMedicas(int $idCliente)
+    {
+        $anio = $this->request->getGet('anio') ?? (int)date('Y');
+        $instrucciones = $this->request->getGet('instrucciones') ?? '';
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $service = new \App\Services\ActividadesEvaluacionesMedicasService();
+        $preview = $service->previewActividades($idCliente, (int)$anio, $contexto, $instrucciones);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera las actividades de Evaluaciones Medicas en el PTA (AJAX POST)
+     */
+    public function generarActividadesEvaluacionesMedicas(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+
+        $anio = $json['anio'] ?? $this->request->getPost('anio') ?? (int)date('Y');
+        $actividadesSeleccionadas = $json['actividades'] ?? null;
+
+        try {
+            $service = new \App\Services\ActividadesEvaluacionesMedicasService();
+            $resultado = $service->generarActividades($idCliente, (int)$anio, $actividadesSeleccionadas);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Actividades generadas: {$resultado['creadas']} nuevas, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar actividades: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Resumen del estado de Evaluaciones Medicas para un cliente (AJAX)
+     */
+    public function resumenEvaluacionesMedicas(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $anio = (int)date('Y');
+
+        $emoService = new \App\Services\ActividadesEvaluacionesMedicasService();
+        $indicadoresService = new \App\Services\IndicadoresEvaluacionesMedicasService();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'cliente' => $cliente['nombre_cliente'],
+                'anio' => $anio,
+                'actividades' => $emoService->getResumenActividades($idCliente, $anio),
+                'indicadores' => $indicadoresService->getResumenIndicadores($idCliente)
+            ]
+        ]);
+    }
+
+    /**
+     * Vista principal de Indicadores de Evaluaciones Medicas (Parte 2)
+     */
+    public function indicadoresEvaluacionesMedicas(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->to('/clientes')->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int)date('Y');
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresEvaluacionesMedicasService();
+
+        return view('generador_ia/indicadores_evaluaciones_medicas_ocupacionales', [
+            'cliente' => $cliente,
+            'anio' => $anio,
+            'contexto' => $contexto ?? [],
+            'resumenIndicadores' => $indicadoresService->getResumenIndicadores($idCliente),
+            'indicadoresExistentes' => $indicadoresService->getIndicadoresCliente($idCliente)
+        ]);
+    }
+
+    /**
+     * Preview de indicadores de Evaluaciones Medicas (AJAX)
+     */
+    public function previewIndicadoresEvaluacionesMedicas(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresEvaluacionesMedicasService();
+        $preview = $indicadoresService->previewIndicadores($idCliente, $contexto);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera indicadores de Evaluaciones Medicas (AJAX POST)
+     */
+    public function generarIndicadoresEvaluacionesMedicas(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+        $indicadoresSeleccionados = $json['indicadores'] ?? null;
+
+        try {
+            $indicadoresService = new \App\Services\IndicadoresEvaluacionesMedicasService();
+            $resultado = $indicadoresService->generarIndicadores($idCliente, $indicadoresSeleccionados);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Indicadores generados: {$resultado['creados']} nuevos, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar indicadores: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // =========================================================================
+    // MÓDULO 4.2.5 - MANTENIMIENTO PERIODICO DE INSTALACIONES, EQUIPOS, MAQUINAS
+    // =========================================================================
+
+    /**
+     * Vista principal de Mantenimiento Periodico (Parte 1 - Actividades)
+     */
+    public function mantenimientoPeriodico(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $mantenimientoService = new \App\Services\ActividadesMantenimientoPeriodicoService();
+
+        $anio = (int)date('Y');
+
+        $data = [
+            'titulo' => 'Generador IA - Mantenimiento Periodico',
+            'cliente' => $cliente,
+            'contexto' => $contexto,
+            'anio' => $anio,
+            'resumenActividades' => $mantenimientoService->getResumenActividades($idCliente, $anio),
+            'actividadesExistentes' => $mantenimientoService->getActividadesCliente($idCliente, $anio),
+        ];
+
+        return view('generador_ia/mantenimiento_periodico', $data);
+    }
+
+    /**
+     * Preview de actividades de Mantenimiento Periodico (AJAX)
+     */
+    public function previewActividadesMantenimiento(int $idCliente)
+    {
+        $anio = $this->request->getGet('anio') ?? (int)date('Y');
+        $instrucciones = $this->request->getGet('instrucciones') ?? '';
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $service = new \App\Services\ActividadesMantenimientoPeriodicoService();
+        $preview = $service->previewActividades($idCliente, (int)$anio, $contexto, $instrucciones);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera actividades de Mantenimiento Periodico en el PTA (AJAX POST)
+     */
+    public function generarActividadesMantenimiento(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+
+        $anio = $json['anio'] ?? $this->request->getPost('anio') ?? (int)date('Y');
+        $actividadesSeleccionadas = $json['actividades'] ?? null;
+
+        try {
+            $service = new \App\Services\ActividadesMantenimientoPeriodicoService();
+            $resultado = $service->generarActividades($idCliente, (int)$anio, $actividadesSeleccionadas);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Actividades generadas: {$resultado['creadas']} nuevas, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar actividades: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Resumen de Mantenimiento Periodico (AJAX)
+     */
+    public function resumenMantenimiento(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $anio = (int)date('Y');
+
+        $actividadesService = new \App\Services\ActividadesMantenimientoPeriodicoService();
+        $indicadoresService = new \App\Services\IndicadoresMantenimientoPeriodicoService();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'cliente' => $cliente['nombre_cliente'],
+                'anio' => $anio,
+                'actividades' => $actividadesService->getResumenActividades($idCliente, $anio),
+                'indicadores' => $indicadoresService->getResumenIndicadores($idCliente)
+            ]
+        ]);
+    }
+
+    /**
+     * Vista de indicadores de Mantenimiento Periodico (Parte 2)
+     */
+    public function indicadoresMantenimientoPeriodico(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->to('/clientes')->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int)date('Y');
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresMantenimientoPeriodicoService();
+
+        return view('generador_ia/indicadores_mantenimiento_periodico', [
+            'cliente' => $cliente,
+            'anio' => $anio,
+            'contexto' => $contexto ?? [],
+            'resumenIndicadores' => $indicadoresService->getResumenIndicadores($idCliente),
+            'indicadoresExistentes' => $indicadoresService->getIndicadoresCliente($idCliente)
+        ]);
+    }
+
+    /**
+     * Preview de indicadores de Mantenimiento Periodico (AJAX)
+     */
+    public function previewIndicadoresMantenimiento(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresMantenimientoPeriodicoService();
+        $preview = $indicadoresService->previewIndicadores($idCliente, $contexto);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera indicadores de Mantenimiento Periodico (AJAX POST)
+     */
+    public function generarIndicadoresMantenimiento(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+        $indicadoresSeleccionados = $json['indicadores'] ?? null;
+
+        try {
+            $indicadoresService = new \App\Services\IndicadoresMantenimientoPeriodicoService();
+            $resultado = $indicadoresService->generarIndicadores($idCliente, $indicadoresSeleccionados);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Indicadores generados: {$resultado['creados']} nuevos, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar indicadores: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // =========================================================================
+    // MÓDULO 4.2.3 - PVE RIESGO BIOMECÁNICO
+    // =========================================================================
+
+    /**
+     * Vista principal de PVE Riesgo Biomecanico (Parte 1 - Actividades)
+     */
+    public function pveRiesgoBiomecanico(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $pveBioService = new \App\Services\ActividadesPveBiomecanicoService();
+
+        $anio = (int)date('Y');
+
+        $data = [
+            'titulo' => 'Generador IA - PVE Riesgo Biomecánico',
+            'cliente' => $cliente,
+            'contexto' => $contexto,
+            'anio' => $anio,
+            'resumenActividades' => $pveBioService->getResumenActividades($idCliente, $anio),
+            'actividadesExistentes' => $pveBioService->getActividadesCliente($idCliente, $anio),
+        ];
+
+        return view('generador_ia/pve_riesgo_biomecanico', $data);
+    }
+
+    /**
+     * Preview de actividades PVE Biomecanico (AJAX)
+     */
+    public function previewActividadesPveBiomecanico(int $idCliente)
+    {
+        $anio = $this->request->getGet('anio') ?? (int)date('Y');
+        $instrucciones = $this->request->getGet('instrucciones') ?? '';
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $service = new \App\Services\ActividadesPveBiomecanicoService();
+        $preview = $service->previewActividades($idCliente, (int)$anio, $contexto, $instrucciones);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera actividades PVE Biomecanico en el PTA (AJAX POST)
+     */
+    public function generarActividadesPveBiomecanico(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+
+        $anio = $json['anio'] ?? $this->request->getPost('anio') ?? (int)date('Y');
+        $actividadesSeleccionadas = $json['actividades'] ?? null;
+
+        try {
+            $service = new \App\Services\ActividadesPveBiomecanicoService();
+            $resultado = $service->generarActividades($idCliente, (int)$anio, $actividadesSeleccionadas);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Actividades generadas: {$resultado['creadas']} nuevas, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar actividades: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Resumen de PVE Biomecanico (AJAX)
+     */
+    public function resumenPveBiomecanico(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $anio = (int)date('Y');
+
+        $actividadesService = new \App\Services\ActividadesPveBiomecanicoService();
+        $indicadoresService = new \App\Services\IndicadoresPveBiomecanicoService();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'cliente' => $cliente['nombre_cliente'],
+                'anio' => $anio,
+                'actividades' => $actividadesService->getResumenActividades($idCliente, $anio),
+                'indicadores' => $indicadoresService->getResumenIndicadores($idCliente)
+            ]
+        ]);
+    }
+
+    /**
+     * Vista de indicadores PVE Biomecanico (Parte 2)
+     */
+    public function indicadoresPveBiomecanico(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->to('/clientes')->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int)date('Y');
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresPveBiomecanicoService();
+
+        return view('generador_ia/indicadores_pve_biomecanico', [
+            'cliente' => $cliente,
+            'anio' => $anio,
+            'contexto' => $contexto ?? [],
+            'resumenIndicadores' => $indicadoresService->getResumenIndicadores($idCliente),
+            'indicadoresExistentes' => $indicadoresService->getIndicadoresCliente($idCliente)
+        ]);
+    }
+
+    /**
+     * Preview de indicadores PVE Biomecanico (AJAX)
+     */
+    public function previewIndicadoresPveBiomecanico(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresPveBiomecanicoService();
+        $preview = $indicadoresService->previewIndicadores($idCliente, $contexto);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera indicadores PVE Biomecanico (AJAX POST)
+     */
+    public function generarIndicadoresPveBiomecanico(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+        $indicadoresSeleccionados = $json['indicadores'] ?? null;
+
+        try {
+            $indicadoresService = new \App\Services\IndicadoresPveBiomecanicoService();
+            $resultado = $indicadoresService->generarIndicadores($idCliente, $indicadoresSeleccionados);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Indicadores generados: {$resultado['creados']} nuevos, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar indicadores: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // =========================================================================
+    // MÓDULO 4.2.3 - PVE RIESGO PSICOSOCIAL
+    // =========================================================================
+
+    /**
+     * Vista principal de PVE Riesgo Psicosocial (Parte 1 - Actividades)
+     */
+    public function pveRiesgoPsicosocial(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $pvePsiService = new \App\Services\ActividadesPvePsicosocialService();
+
+        $anio = (int)date('Y');
+
+        $data = [
+            'titulo' => 'Generador IA - PVE Riesgo Psicosocial',
+            'cliente' => $cliente,
+            'contexto' => $contexto,
+            'anio' => $anio,
+            'resumenActividades' => $pvePsiService->getResumenActividades($idCliente, $anio),
+            'actividadesExistentes' => $pvePsiService->getActividadesCliente($idCliente, $anio),
+        ];
+
+        return view('generador_ia/pve_riesgo_psicosocial', $data);
+    }
+
+    /**
+     * Preview de actividades PVE Psicosocial (AJAX)
+     */
+    public function previewActividadesPvePsicosocial(int $idCliente)
+    {
+        $anio = $this->request->getGet('anio') ?? (int)date('Y');
+        $instrucciones = $this->request->getGet('instrucciones') ?? '';
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $service = new \App\Services\ActividadesPvePsicosocialService();
+        $preview = $service->previewActividades($idCliente, (int)$anio, $contexto, $instrucciones);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera actividades PVE Psicosocial en el PTA (AJAX POST)
+     */
+    public function generarActividadesPvePsicosocial(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+
+        $anio = $json['anio'] ?? $this->request->getPost('anio') ?? (int)date('Y');
+        $actividadesSeleccionadas = $json['actividades'] ?? null;
+
+        try {
+            $service = new \App\Services\ActividadesPvePsicosocialService();
+            $resultado = $service->generarActividades($idCliente, (int)$anio, $actividadesSeleccionadas);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Actividades generadas: {$resultado['creadas']} nuevas, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar actividades: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Resumen de PVE Psicosocial (AJAX)
+     */
+    public function resumenPvePsicosocial(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $anio = (int)date('Y');
+
+        $actividadesService = new \App\Services\ActividadesPvePsicosocialService();
+        $indicadoresService = new \App\Services\IndicadoresPvePsicosocialService();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'cliente' => $cliente['nombre_cliente'],
+                'anio' => $anio,
+                'actividades' => $actividadesService->getResumenActividades($idCliente, $anio),
+                'indicadores' => $indicadoresService->getResumenIndicadores($idCliente)
+            ]
+        ]);
+    }
+
+    /**
+     * Vista de indicadores PVE Psicosocial (Parte 2)
+     */
+    public function indicadoresPvePsicosocial(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->to('/clientes')->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int)date('Y');
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresPvePsicosocialService();
+
+        return view('generador_ia/indicadores_pve_psicosocial', [
+            'cliente' => $cliente,
+            'anio' => $anio,
+            'contexto' => $contexto ?? [],
+            'resumenIndicadores' => $indicadoresService->getResumenIndicadores($idCliente),
+            'indicadoresExistentes' => $indicadoresService->getIndicadoresCliente($idCliente)
+        ]);
+    }
+
+    /**
+     * Preview de indicadores PVE Psicosocial (AJAX)
+     */
+    public function previewIndicadoresPvePsicosocial(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresPvePsicosocialService();
+        $preview = $indicadoresService->previewIndicadores($idCliente, $contexto);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Genera indicadores PVE Psicosocial (AJAX POST)
+     */
+    public function generarIndicadoresPvePsicosocial(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+        $indicadoresSeleccionados = $json['indicadores'] ?? null;
+
+        try {
+            $indicadoresService = new \App\Services\IndicadoresPvePsicosocialService();
+            $resultado = $indicadoresService->generarIndicadores($idCliente, $indicadoresSeleccionados);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Indicadores generados: {$resultado['creados']} nuevos, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar indicadores: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

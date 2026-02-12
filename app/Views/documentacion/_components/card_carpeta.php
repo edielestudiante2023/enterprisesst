@@ -115,10 +115,28 @@
                     </a>
                 <?php elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'archivo_documental'): ?>
                     <!-- 2.5.1 Control Documental: Enlace al procedimiento -->
-                    <a href="<?= base_url('documentos/generar/procedimiento_control_documental/' . $cliente['id_cliente']) ?>"
-                       class="btn btn-primary">
-                        <i class="bi bi-file-earmark-text me-1"></i>Procedimiento Control Documental
-                    </a>
+                    <?php
+                    $hayProcedimientoAnio = false;
+                    if (!empty($documentosSSTAprobados)) {
+                        foreach ($documentosSSTAprobados as $d) {
+                            if (($d['tipo_documento'] ?? '') === 'procedimiento_control_documental' && $d['anio'] == date('Y')) {
+                                $hayProcedimientoAnio = true;
+                                break;
+                            }
+                        }
+                    }
+                    ?>
+                    <?php if ($hayProcedimientoAnio): ?>
+                        <a href="<?= base_url('documentos/generar/procedimiento_control_documental/' . $cliente['id_cliente']) ?>"
+                           class="btn btn-outline-success">
+                            <i class="bi bi-arrow-repeat me-1"></i>Nueva versión <?= date('Y') ?>
+                        </a>
+                    <?php else: ?>
+                        <a href="<?= base_url('documentos/generar/procedimiento_control_documental/' . $cliente['id_cliente']) ?>"
+                           class="btn btn-primary">
+                            <i class="bi bi-file-earmark-text me-1"></i>Procedimiento Control Documental
+                        </a>
+                    <?php endif; ?>
                 <?php elseif (!isset($tipoCarpetaFases)): ?>
                     <a href="<?= base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta']) ?>"
                        class="btn btn-primary">

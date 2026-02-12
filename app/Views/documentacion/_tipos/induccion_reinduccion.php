@@ -60,8 +60,8 @@ $anioActual = date('Y');
                     </a>
                 <?php else: ?>
                     <a href="<?= base_url('documentos/generar/programa_induccion_reinduccion/' . $cliente['id_cliente']) ?>"
-                       class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-arrow-repeat me-1"></i>Nueva Version
+                       class="btn btn-outline-success">
+                        <i class="bi bi-arrow-repeat me-1"></i>Nueva versión <?= date('Y') ?>
                     </a>
                 <?php endif; ?>
             </div>

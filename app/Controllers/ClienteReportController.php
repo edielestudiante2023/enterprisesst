@@ -9,11 +9,16 @@ use CodeIgniter\Controller;
 
 class ClienteReportController extends Controller
 {
-    public function index()
+    public function index($idClienteParam = null)
     {
-        // Obtener el ID del cliente desde la sesión
+        // Obtener el ID del cliente desde la sesión o por URL (consultor/admin)
         $session = session();
-        $clientId = $session->get('user_id');
+        $role = $session->get('role');
+        if ($idClienteParam && in_array($role, ['consultant', 'admin'])) {
+            $clientId = $idClienteParam;
+        } else {
+            $clientId = $session->get('user_id');
+        }
 
         // Verificar que el ID del cliente se obtenga correctamente
         if (is_null($clientId)) {

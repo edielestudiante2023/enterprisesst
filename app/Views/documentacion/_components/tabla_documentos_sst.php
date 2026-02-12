@@ -4,7 +4,7 @@
  * Variables requeridas: $tipoCarpetaFases, $documentosSSTAprobados, $cliente
  * Características: Filtros por columna, Exportación Excel avanzada
  */
-$tiposConTabla = ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'induccion_reinduccion', 'promocion_prevencion_salud', 'matriz_legal', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst'];
+$tiposConTabla = ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'induccion_reinduccion', 'promocion_prevencion_salud', 'matriz_legal', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'plan_objetivos_metas', 'adquisiciones_sst', 'evaluacion_proveedores', 'procedimiento_evaluaciones_medicas', 'estilos_vida_saludable', 'evaluacion_impacto_cambios', 'diagnostico_condiciones_salud', 'evaluaciones_medicas', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'metodologia_identificacion_peligros', 'identificacion_sustancias_cancerigenas', 'procedimientos_seguridad', 'mantenimiento_periodico'];
 if (!isset($tipoCarpetaFases) || !in_array($tipoCarpetaFases, $tiposConTabla)) {
     return;
 }
@@ -13,6 +13,9 @@ $tableId = 'tablaDocumentosSST_' . uniqid();
 $nombreCliente = $cliente['nombre_cliente'] ?? $cliente['razon_social'] ?? $cliente['nombre'] ?? 'Cliente';
 $nitCliente = $cliente['nit_cliente'] ?? $cliente['nit'] ?? 'N/A';
 ?>
+<!-- Toast Stack (sistema estandar ZZ_91) -->
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toastStack" style="z-index: 9999;"></div>
+
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
@@ -88,8 +91,9 @@ $nitCliente = $cliente['nit_cliente'] ?? $cliente['nit'] ?? 'N/A';
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
-        <!-- Contenedor de la tabla -->
+        <!-- Contenedor de la tabla (siempre visible - patron ReportList) -->
         <div class="table-responsive tabla-container">
             <table id="<?= $tableId ?>" class="table table-hover tabla-documentos-moderna" style="width:100%">
                 <thead>
@@ -104,6 +108,7 @@ $nitCliente = $cliente['nit_cliente'] ?? $cliente['nit'] ?? 'N/A';
                         <th data-priority="3">Firmas</th>
                         <th data-priority="1" class="no-export">Acciones</th>
                     </tr>
+                    <?php if (!empty($documentosSSTAprobados)): ?>
                     <!-- Fila de filtros -->
                     <tr class="filters-row">
                         <th><input type="text" class="form-control form-control-sm filter-input" placeholder="Filtrar..."></th>
@@ -139,8 +144,10 @@ $nitCliente = $cliente['nit_cliente'] ?? $cliente['nit'] ?? 'N/A';
                         </th>
                         <th></th>
                     </tr>
+                    <?php endif; ?>
                 </thead>
                 <tbody>
+                    <?php if (!empty($documentosSSTAprobados)): ?>
                     <?php foreach ($documentosSSTAprobados as $docSST): ?>
                         <?php
                         $estadoDoc = $docSST['estado'] ?? 'aprobado';
@@ -250,24 +257,24 @@ $nitCliente = $cliente['nit_cliente'] ?? $cliente['nit'] ?? 'N/A';
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                    <?php else: ?>
+                    <!-- Fila vacia (patron ReportList - encabezados siempre visibles) -->
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="bi bi-folder2-open text-muted" style="font-size: 2rem;"></i>
+                            <?php if ($tipoCarpetaFases === 'archivo_documental'): ?>
+                                <p class="text-muted mt-2 mb-0">No hay documentos generados</p>
+                                <small class="text-muted">Los documentos del SG-SST aparecerán aquí cuando sean creados.</small>
+                            <?php else: ?>
+                                <p class="text-muted mt-2 mb-0">No hay documentos aprobados o firmados aún.</p>
+                                <small class="text-muted">Complete las fases y apruebe el documento para verlo aquí.</small>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
-        <?php else: ?>
-        <!-- Estado vacío mejorado -->
-        <div class="empty-state">
-            <div class="empty-icon">
-                <i class="bi bi-folder2-open"></i>
-            </div>
-            <?php if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'archivo_documental'): ?>
-                <h5>No hay documentos generados</h5>
-                <p>Los documentos del SG-SST aparecerán aquí cuando sean creados.</p>
-            <?php else: ?>
-                <h5>No hay documentos aprobados</h5>
-                <p>Complete las fases y apruebe el documento para verlo aquí.</p>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
     </div>
 </div>
 
@@ -284,6 +291,10 @@ $nitCliente = $cliente['nit_cliente'] ?? $cliente['nit'] ?? 'N/A';
 <script>
 $(document).ready(function() {
     const tableId = '<?= $tableId ?>';
+
+    // Solo inicializar DataTables si hay documentos en la tabla
+    if ($('#' + tableId + ' tbody tr[data-id]').length === 0) return;
+
     const nombreCliente = '<?= addslashes($nombreCliente) ?>';
     const nitCliente = '<?= addslashes($nitCliente) ?>';
     const fechaExport = new Date().toLocaleDateString('es-CO', {day: '2-digit', month: '2-digit', year: 'numeric'});
@@ -631,35 +642,70 @@ $(document).ready(function() {
         saveAs(blob, fileName);
 
         // Notificación de éxito
-        mostrarNotificacion('success', '¡Excel generado exitosamente!', `Se ha descargado: ${fileName}`);
+        mostrarToast('success', '¡Excel generado exitosamente!', `Se ha descargado: ${fileName}`);
     }
 
-    // Función para mostrar notificaciones
-    function mostrarNotificacion(tipo, titulo, mensaje) {
-        const toast = document.createElement('div');
-        toast.className = `toast-notification toast-${tipo}`;
-        toast.innerHTML = `
-            <div class="toast-icon">
-                <i class="bi ${tipo === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'}"></i>
+    // Sistema de Toast estandar (ZZ_91)
+    function mostrarToast(tipo, titulo, mensaje) {
+        const iconos = {
+            'success': 'bi-check-circle-fill',
+            'error': 'bi-x-circle-fill',
+            'warning': 'bi-exclamation-triangle-fill',
+            'info': 'bi-info-circle-fill'
+        };
+        const colores = {
+            'success': 'bg-success',
+            'error': 'bg-danger',
+            'warning': 'bg-warning',
+            'info': 'bg-info'
+        };
+        const duraciones = {
+            'error': 8000,
+            'success': 6000,
+            'warning': 6000
+        };
+
+        const toastId = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+        const ahora = new Date();
+        const timestamp = ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const duracion = duraciones[tipo] || 5000;
+
+        const toastEl = document.createElement('div');
+        toastEl.id = toastId;
+        toastEl.className = 'toast';
+        toastEl.setAttribute('role', 'alert');
+        toastEl.style.minWidth = '300px';
+        toastEl.style.boxShadow = '0 4px 12px rgba(0,0,0,.15)';
+        toastEl.style.marginBottom = '8px';
+        toastEl.innerHTML = `
+            <div class="toast-header ${colores[tipo] || 'bg-info'} text-white">
+                <i class="bi ${iconos[tipo] || 'bi-info-circle-fill'} me-2"></i>
+                <strong class="me-auto">${titulo}</strong>
+                <small>${timestamp}</small>
+                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast"></button>
             </div>
-            <div class="toast-content">
-                <strong>${titulo}</strong>
-                <p>${mensaje}</p>
-            </div>
-            <button class="toast-close" onclick="this.parentElement.remove()">
-                <i class="bi bi-x"></i>
-            </button>
+            <div class="toast-body">${mensaje}</div>
         `;
-        document.body.appendChild(toast);
 
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 100);
+        let container = document.getElementById('toastStack');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastStack';
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+        }
+        container.appendChild(toastEl);
 
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        const bsToast = new bootstrap.Toast(toastEl, { delay: duracion });
+        toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        bsToast.show();
+
+        return { id: toastId, element: toastEl, instance: bsToast };
+    }
+
+    function cerrarToast(ref) {
+        if (ref && ref.instance) ref.instance.hide();
     }
 
     // ========================================
@@ -843,7 +889,7 @@ $(document).ready(function() {
                 btn.disabled = false;
                 btn.querySelector('span').textContent = 'Exportar Excel';
                 btn.querySelector('i').className = 'bi bi-file-earmark-spreadsheet me-2';
-                mostrarNotificacion('error', 'Error al exportar', err.message || 'No se pudo generar el archivo Excel.');
+                mostrarToast('error', 'Error al exportar', err.message || 'No se pudo generar el archivo Excel.');
             }
         });
     } else {
@@ -1277,95 +1323,15 @@ $(document).ready(function() {
 }
 
 /* ========================================
-   NOTIFICACIONES TOAST
+   TOAST STACK ESTANDAR (ZZ_91)
    ======================================== */
-.toast-notification {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    min-width: 350px;
-    max-width: 450px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 25px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    padding: 16px 20px;
+.toast-container {
     z-index: 9999;
-    transform: translateX(120%);
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    border-left: 5px solid;
 }
-
-.toast-notification.show {
-    transform: translateX(0);
-    opacity: 1;
-}
-
-.toast-notification.toast-success {
-    border-left-color: #10b981;
-}
-
-.toast-notification.toast-error {
-    border-left-color: #ef4444;
-}
-
-.toast-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    margin-right: 16px;
-    flex-shrink: 0;
-}
-
-.toast-success .toast-icon {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-    color: #059669;
-}
-
-.toast-error .toast-icon {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-    color: #dc2626;
-}
-
-.toast-content {
-    flex: 1;
-}
-
-.toast-content strong {
-    display: block;
-    font-size: 0.95rem;
-    color: #1e293b;
-    margin-bottom: 4px;
-}
-
-.toast-content p {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin: 0;
-    line-height: 1.4;
-}
-
-.toast-close {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 4px;
-    margin-left: 12px;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-.toast-close:hover {
-    background: #f1f5f9;
-    color: #475569;
+.toast {
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    margin-bottom: 8px;
 }
 
 /* Dropdown de columnas */

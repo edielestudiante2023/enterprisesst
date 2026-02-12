@@ -52,6 +52,7 @@ $routes->post('/editReportPost/(:num)', 'ReportController::editReportPost/$1');
 $routes->get('/deleteReport/(:num)', 'ReportController::deleteReport/$1');
 
 $routes->get('/report_dashboard', 'ClienteReportController::index');
+$routes->get('/report_dashboard/(:num)', 'ClienteReportController::index/$1');
 $routes->get('/documento', 'DocumentoController::mostrarDocumento');
 
 $routes->get('/showPhoto/(:num)', 'ConsultantController::showPhoto/$1');
@@ -392,9 +393,11 @@ $routes->get('/client/lista-matrices', 'ClientMatrices::index');
 
 
 $routes->get('client/panel', 'ClientPanelController::showPanel');
+$routes->get('client/panel/(:num)', 'ClientPanelController::showPanel/$1');
 
 // Vista de documentos SST para cliente (solo lectura)
 $routes->get('client/mis-documentos-sst', 'ClienteDocumentosSstController::index');
+$routes->get('client/mis-documentos-sst/(:num)', 'ClienteDocumentosSstController::index/$1');
 $routes->get('client/mis-documentos-sst/carpeta/(:num)', 'ClienteDocumentosSstController::carpeta/$1');
 
 // Aprobaciones pendientes - ELIMINADO: Se usa PDF con firma electrónica en su lugar
@@ -742,6 +745,29 @@ $routes->get('/indicadores-sst/(:num)/api', 'IndicadoresSSTController::apiObtene
 $routes->get('/indicadores-sst/(:num)/verificar', 'IndicadoresSSTController::apiVerificar/$1');
 $routes->get('/indicadores-sst/historico/(:num)', 'IndicadoresSSTController::apiHistorico/$1');
 
+// Dashboard jerárquico de indicadores (ZZ_94)
+$routes->get('/indicadores-sst/(:num)/dashboard', 'IndicadoresSSTController::dashboard/$1');
+$routes->get('/indicadores-sst/(:num)/api/dashboard', 'IndicadoresSSTController::apiDashboard/$1');
+
+// Fichas Técnicas de Indicadores (ZZ_99)
+$routes->get('/indicadores-sst/(:num)/ficha-tecnica/(:num)', 'IndicadoresSSTController::fichaTecnica/$1/$2');
+$routes->get('/indicadores-sst/(:num)/ficha-tecnica/(:num)/pdf', 'IndicadoresSSTController::fichaTecnicaPDF/$1/$2');
+$routes->get('/indicadores-sst/(:num)/ficha-tecnica/(:num)/word', 'IndicadoresSSTController::fichaTecnicaWord/$1/$2');
+$routes->get('/indicadores-sst/(:num)/matriz-objetivos-metas', 'IndicadoresSSTController::matrizObjetivosMetas/$1');
+$routes->get('/indicadores-sst/(:num)/matriz-objetivos-metas/pdf', 'IndicadoresSSTController::matrizObjetivosMetasPDF/$1');
+
+// Generador IA de Indicadores (General - Grupos C+D)
+$routes->get('/indicadores-sst/(:num)/ia/contexto', 'IndicadoresSSTController::previsualizarContextoIA/$1');
+$routes->post('/indicadores-sst/(:num)/ia/preview', 'IndicadoresSSTController::previewIndicadoresIA/$1');
+$routes->post('/indicadores-sst/(:num)/ia/guardar', 'IndicadoresSSTController::guardarIndicadoresIA/$1');
+$routes->post('/indicadores-sst/(:num)/ia/regenerar', 'IndicadoresSSTController::regenerarIndicadorIA/$1');
+
+// Generador IA de Actividades desde Indicadores (Ingenieria Inversa)
+$routes->get('/indicadores-sst/(:num)/actividades-ia/contexto', 'IndicadoresSSTController::previsualizarContextoActividades/$1');
+$routes->post('/indicadores-sst/(:num)/actividades-ia/preview', 'IndicadoresSSTController::previewActividadesIA/$1');
+$routes->post('/indicadores-sst/(:num)/actividades-ia/guardar', 'IndicadoresSSTController::guardarActividadesIA/$1');
+$routes->post('/indicadores-sst/(:num)/actividades-ia/regenerar', 'IndicadoresSSTController::regenerarActividadIA/$1');
+
 // Generador IA - Cronograma, PTA, Indicadores
 $routes->get('/generador-ia/(:num)', 'GeneradorIAController::index/$1');
 $routes->get('/generador-ia/(:num)/preview-cronograma', 'GeneradorIAController::previewCronograma/$1');
@@ -791,6 +817,58 @@ $routes->get('/generador-ia/(:num)/preview-indicadores-capacitacion', 'Generador
 $routes->post('/generador-ia/(:num)/generar-indicadores-capacitacion', 'GeneradorIAController::generarIndicadoresCapacitacion/$1');
 $routes->post('/generador-ia/(:num)/regenerar-indicador-capacitacion', 'GeneradorIAController::regenerarIndicadorCapacitacion/$1');
 
+// Módulo 3.1.7 - Estilos de Vida Saludable y Entornos Saludables (Parte 1: Actividades)
+$routes->get('/generador-ia/(:num)/estilos-vida-saludable', 'GeneradorIAController::estilosVidaSaludable/$1');
+$routes->get('/generador-ia/(:num)/preview-actividades-estilos-vida', 'GeneradorIAController::previewActividadesEstilosVida/$1');
+$routes->post('/generador-ia/(:num)/generar-actividades-estilos-vida', 'GeneradorIAController::generarActividadesEstilosVida/$1');
+$routes->get('/generador-ia/(:num)/resumen-estilos-vida', 'GeneradorIAController::resumenEstilosVida/$1');
+// Módulo 3.1.7 - Estilos de Vida Saludable (Parte 2: Indicadores)
+$routes->get('/generador-ia/(:num)/indicadores-estilos-vida', 'GeneradorIAController::indicadoresEstilosVida/$1');
+$routes->get('/generador-ia/(:num)/preview-indicadores-estilos-vida', 'GeneradorIAController::previewIndicadoresEstilosVida/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores-estilos-vida', 'GeneradorIAController::generarIndicadoresEstilosVida/$1');
+
+// Módulo 3.1.4 - Evaluaciones Medicas Ocupacionales (Parte 1: Actividades)
+$routes->get('/generador-ia/(:num)/evaluaciones-medicas-ocupacionales', 'GeneradorIAController::evaluacionesMedicasOcupacionales/$1');
+$routes->get('/generador-ia/(:num)/preview-actividades-evaluaciones-medicas', 'GeneradorIAController::previewActividadesEvaluacionesMedicas/$1');
+$routes->post('/generador-ia/(:num)/generar-actividades-evaluaciones-medicas', 'GeneradorIAController::generarActividadesEvaluacionesMedicas/$1');
+$routes->get('/generador-ia/(:num)/resumen-evaluaciones-medicas', 'GeneradorIAController::resumenEvaluacionesMedicas/$1');
+// Módulo 3.1.4 - Evaluaciones Medicas Ocupacionales (Parte 2: Indicadores)
+$routes->get('/generador-ia/(:num)/indicadores-evaluaciones-medicas', 'GeneradorIAController::indicadoresEvaluacionesMedicas/$1');
+$routes->get('/generador-ia/(:num)/preview-indicadores-evaluaciones-medicas', 'GeneradorIAController::previewIndicadoresEvaluacionesMedicas/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores-evaluaciones-medicas', 'GeneradorIAController::generarIndicadoresEvaluacionesMedicas/$1');
+
+// Módulo 4.2.5 - Mantenimiento Periodico (Parte 1: Actividades)
+$routes->get('/generador-ia/(:num)/mantenimiento-periodico', 'GeneradorIAController::mantenimientoPeriodico/$1');
+$routes->get('/generador-ia/(:num)/preview-actividades-mantenimiento', 'GeneradorIAController::previewActividadesMantenimiento/$1');
+$routes->post('/generador-ia/(:num)/generar-actividades-mantenimiento', 'GeneradorIAController::generarActividadesMantenimiento/$1');
+$routes->get('/generador-ia/(:num)/resumen-mantenimiento', 'GeneradorIAController::resumenMantenimiento/$1');
+// Módulo 4.2.5 - Mantenimiento Periodico (Parte 2: Indicadores)
+$routes->get('/generador-ia/(:num)/indicadores-mantenimiento-periodico', 'GeneradorIAController::indicadoresMantenimientoPeriodico/$1');
+$routes->get('/generador-ia/(:num)/preview-indicadores-mantenimiento', 'GeneradorIAController::previewIndicadoresMantenimiento/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores-mantenimiento', 'GeneradorIAController::generarIndicadoresMantenimiento/$1');
+// Módulo 4.2.5 - Mantenimiento Periodico (Soportes)
+$routes->post('/documentos-sst/adjuntar-soporte-mantenimiento-periodico', 'DocumentosSSTController::adjuntarSoporteMantenimientoPeriodico');
+
+// 4.2.3 PVE Riesgo Biomecanico (Parte 1: Actividades)
+$routes->get('/generador-ia/(:num)/pve-riesgo-biomecanico', 'GeneradorIAController::pveRiesgoBiomecanico/$1');
+$routes->get('/generador-ia/(:num)/preview-actividades-pve-biomecanico', 'GeneradorIAController::previewActividadesPveBiomecanico/$1');
+$routes->post('/generador-ia/(:num)/generar-actividades-pve-biomecanico', 'GeneradorIAController::generarActividadesPveBiomecanico/$1');
+$routes->get('/generador-ia/(:num)/resumen-pve-biomecanico', 'GeneradorIAController::resumenPveBiomecanico/$1');
+// 4.2.3 PVE Riesgo Biomecanico (Parte 2: Indicadores)
+$routes->get('/generador-ia/(:num)/indicadores-pve-biomecanico', 'GeneradorIAController::indicadoresPveBiomecanico/$1');
+$routes->get('/generador-ia/(:num)/preview-indicadores-pve-biomecanico', 'GeneradorIAController::previewIndicadoresPveBiomecanico/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores-pve-biomecanico', 'GeneradorIAController::generarIndicadoresPveBiomecanico/$1');
+
+// 4.2.3 PVE Riesgo Psicosocial (Parte 1: Actividades)
+$routes->get('/generador-ia/(:num)/pve-riesgo-psicosocial', 'GeneradorIAController::pveRiesgoPsicosocial/$1');
+$routes->get('/generador-ia/(:num)/preview-actividades-pve-psicosocial', 'GeneradorIAController::previewActividadesPvePsicosocial/$1');
+$routes->post('/generador-ia/(:num)/generar-actividades-pve-psicosocial', 'GeneradorIAController::generarActividadesPvePsicosocial/$1');
+$routes->get('/generador-ia/(:num)/resumen-pve-psicosocial', 'GeneradorIAController::resumenPvePsicosocial/$1');
+// 4.2.3 PVE Riesgo Psicosocial (Parte 2: Indicadores)
+$routes->get('/generador-ia/(:num)/indicadores-pve-psicosocial', 'GeneradorIAController::indicadoresPvePsicosocial/$1');
+$routes->get('/generador-ia/(:num)/preview-indicadores-pve-psicosocial', 'GeneradorIAController::previewIndicadoresPvePsicosocial/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores-pve-psicosocial', 'GeneradorIAController::generarIndicadoresPvePsicosocial/$1');
+
 // Módulo 1.2.2 - Inducción y Reinducción
 $routes->get('/induccion-etapas/(:num)', 'InduccionEtapasController::index/$1');
 $routes->get('/induccion-etapas/(:num)/generar', 'InduccionEtapasController::generar/$1');
@@ -836,6 +914,51 @@ $routes->get('/documentos-sst/(:num)/manual-convivencia-laboral/(:num)', 'Docume
 
 // 2.8.1 Mecanismos de Comunicación, Auto Reporte en SG-SST
 $routes->get('/documentos-sst/(:num)/mecanismos-comunicacion/(:num)', 'DocumentosSSTController::mecanismosComunicacion/$1/$2');
+
+// 3.1.1 Procedimiento de Evaluaciones Médicas Ocupacionales
+$routes->get('/documentos-sst/(:num)/procedimiento-evaluaciones-medicas/(:num)', 'DocumentosSSTController::procedimientoEvaluacionesMedicas/$1/$2');
+
+// 2.9.1 Procedimiento de Adquisiciones en SST
+$routes->get('/documentos-sst/(:num)/procedimiento-adquisiciones/(:num)', 'DocumentosSSTController::procedimientoAdquisiciones/$1/$2');
+
+// 2.10.1 Evaluacion y Seleccion de Proveedores y Contratistas
+$routes->get('/documentos-sst/(:num)/procedimiento-evaluacion-proveedores/(:num)', 'DocumentosSSTController::procedimientoEvaluacionProveedores/$1/$2');
+
+// 2.11.1 Procedimiento de Gestion del Cambio
+$routes->get('/documentos-sst/(:num)/procedimiento-gestion-cambio/(:num)', 'DocumentosSSTController::procedimientoGestionCambio/$1/$2');
+
+// 3.1.7 Programa de Estilos de Vida Saludable
+$routes->get('/documentos-sst/(:num)/programa-estilos-vida-saludable/(:num)', 'DocumentosSSTController::programaEstilosVidaSaludable/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-estilos-vida', 'DocumentosSSTController::adjuntarSoporteEstilosVida');
+
+// 3.1.4 Programa de Evaluaciones Medicas Ocupacionales
+$routes->get('/documentos-sst/(:num)/programa-evaluaciones-medicas-ocupacionales/(:num)', 'DocumentosSSTController::programaEvaluacionesMedicasOcupacionales/$1/$2');
+
+// 3.2.1 Procedimiento de Investigacion de Accidentes de Trabajo y Enfermedades Laborales
+$routes->get('/documentos-sst/(:num)/procedimiento-investigacion-accidentes/(:num)', 'DocumentosSSTController::procedimientoInvestigacionAccidentes/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-investigacion-accidentes', 'DocumentosSSTController::adjuntarSoporteInvestigacionAccidentes');
+
+// 3.2.2 Investigacion de Incidentes, Accidentes y Enfermedades Laborales
+$routes->get('/documentos-sst/(:num)/procedimiento-investigacion-incidentes/(:num)', 'DocumentosSSTController::procedimientoInvestigacionIncidentes/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-investigacion-incidentes', 'DocumentosSSTController::adjuntarSoporteInvestigacionIncidentes');
+
+// 4.1.1 Metodologia Identificacion de Peligros y Valoracion de Riesgos
+$routes->get('/documentos-sst/(:num)/metodologia-identificacion-peligros/(:num)', 'DocumentosSSTController::metodologiaIdentificacionPeligros/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-metodologia-peligros', 'DocumentosSSTController::adjuntarSoporteMetodologiaPeligros');
+
+// 4.1.3 Identificacion de Sustancias Cancerigenas o con Toxicidad Aguda
+$routes->get('/documentos-sst/(:num)/identificacion-sustancias-cancerigenas/(:num)', 'DocumentosSSTController::identificacionSustanciasCancerigenas/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-sustancias-cancerigenas', 'DocumentosSSTController::adjuntarSoporteSustanciasCancerigenas');
+
+// 4.2.3 PVE Riesgo Biomecanico
+$routes->get('/documentos-sst/(:num)/pve-riesgo-biomecanico/(:num)', 'DocumentosSSTController::pveRiesgoBiomecanico/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-pve-biomecanico', 'DocumentosSSTController::adjuntarSoportePveBiomecanico');
+// 4.2.3 PVE Riesgo Psicosocial
+$routes->get('/documentos-sst/(:num)/pve-riesgo-psicosocial/(:num)', 'DocumentosSSTController::pveRiesgoPsicosocial/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-pve-psicosocial', 'DocumentosSSTController::adjuntarSoportePvePsicosocial');
+
+// 4.2.5 Programa de Mantenimiento Periodico de Instalaciones, Equipos, Maquinas, Herramientas
+$routes->get('/documentos-sst/(:num)/programa-mantenimiento-periodico/(:num)', 'DocumentosSSTController::programaMantenimientoPeriodico/$1/$2');
 
 // Asignacion de Responsable SG-SST (Patron B - controlador independiente)
 $routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'PzasignacionresponsableSstController::crear/$1');
@@ -899,6 +1022,9 @@ $routes->post('/documentos-sst/adjuntar-soporte-convivencia', 'DocumentosSSTCont
 $routes->post('/documentos-sst/adjuntar-soporte-pyp-salud', 'DocumentosSSTController::adjuntarSoportePypSalud');
 $routes->post('/documentos-sst/adjuntar-soporte-induccion', 'DocumentosSSTController::adjuntarSoporteInduccion');
 $routes->post('/documentos-sst/adjuntar-soporte-matriz-legal', 'DocumentosSSTController::adjuntarSoporteMatrizLegal');
+$routes->post('/documentos-sst/adjuntar-soporte-mecanismos-comunicacion', 'DocumentosSSTController::adjuntarSoporteMecanismosComunicacion');
+$routes->post('/documentos-sst/adjuntar-soporte-evaluacion-proveedores', 'DocumentosSSTController::adjuntarSoporteEvaluacionProveedores');
+$routes->post('/documentos-sst/adjuntar-soporte-gestion-cambio', 'DocumentosSSTController::adjuntarSoporteGestionCambio');
 
 // Aprobacion y versionamiento de documentos SST
 $routes->post('/documentos-sst/aprobar-documento', 'DocumentosSSTController::aprobarDocumento');

@@ -127,6 +127,27 @@
             margin-left: 20px;
         }
 
+        /* Tablas generadas por Parsedown */
+        .seccion-contenido table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.85rem;
+        }
+        .seccion-contenido table th,
+        .seccion-contenido table td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+        }
+        .seccion-contenido table th {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: 600;
+        }
+        .seccion-contenido table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
         .tabla-codigos {
             font-size: 0.85rem;
         }
@@ -302,7 +323,7 @@
                     <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2">
                         <i class="bi bi-file-earmark-word me-1"></i>Word
                     </a>
-                    <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                    <?php if (in_array($documento['estado'] ?? '', ['borrador', 'generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
                         <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
                         </a>
@@ -355,7 +376,11 @@
                         </small>
                     </div>
                     <div class="col-md-4 text-end">
-                        <!-- Acciones disponibles -->
+                        <?php if (in_array($documento['estado'] ?? '', ['aprobado', 'firmado'])): ?>
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaVersion">
+                                <i class="bi bi-plus-circle me-1"></i>Nueva Version
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -422,187 +447,7 @@
             </table>
 
             <!-- Secciones del documento -->
-            <?php
-            /**
-             * Funcion mejorada para convertir Markdown a HTML
-             * Soporta: tablas, negritas, cursivas, listas, encabezados
-             */
-            if (!function_exists('convertirMarkdownAHtml')) {
-                function convertirMarkdownAHtml($texto) {
-                    if (empty($texto)) return '';
-
-                    // 1. Primero convertir tablas Markdown
-                    $texto = convertirTablasMarkdown($texto);
-
-                    // 2. Dividir en partes HTML (tablas) y texto normal
-                    $partes = preg_split('/(<div class="table-responsive[^>]*>.*?<\/div>)/s', $texto, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-                    $resultado = '';
-                    foreach ($partes as $parte) {
-                        if (strpos($parte, '<div class="table-responsive') === 0) {
-                            // Es una tabla HTML, no modificar
-                            $resultado .= $parte;
-                        } else {
-                            // Es texto, convertir markdown
-                            $resultado .= convertirTextoMarkdown($parte);
-                        }
-                    }
-
-                    return $resultado;
-                }
-
-                function convertirTablasMarkdown($texto) {
-                    $lineas = explode("\n", $texto);
-                    $enTabla = false;
-                    $resultado = [];
-                    $tablaHtml = '';
-                    $esEncabezado = true;
-
-                    foreach ($lineas as $linea) {
-                        $lineaTrim = trim($linea);
-
-                        // Normalizar tablas Markdown sin pipes al inicio/final
-                        // "Col1 | Col2 | Col3" → "| Col1 | Col2 | Col3 |"
-                        if (strpos($lineaTrim, '|') !== false && substr($lineaTrim, 0, 1) !== '|') {
-                            $lineaTrim = '| ' . $lineaTrim . ' |';
-                        }
-
-                        // Detectar linea de tabla (empieza con |)
-                        if (preg_match('/^\|(.+)\|$/', $lineaTrim)) {
-                            // Ignorar linea separadora (|---|---|)
-                            if (preg_match('/^\|[\s\-\:\|]+\|$/', $lineaTrim)) {
-                                $esEncabezado = false;
-                                continue;
-                            }
-
-                            if (!$enTabla) {
-                                $enTabla = true;
-                                $tablaHtml = '<div class="table-responsive mt-3 mb-3"><table class="table table-bordered table-sm" style="font-size: 0.85rem;">';
-                            }
-
-                            // Extraer celdas
-                            $celdas = array_map('trim', explode('|', trim($lineaTrim, '|')));
-                            $tag = $esEncabezado ? 'th' : 'td';
-                            $estilo = $esEncabezado ? ' style="background-color: #0d6efd; color: white; font-weight: 600;"' : '';
-
-                            $tablaHtml .= '<tr>';
-                            foreach ($celdas as $celda) {
-                                // Convertir negritas dentro de celdas
-                                $celdaHtml = htmlspecialchars($celda);
-                                $celdaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $celdaHtml);
-                                $celdaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $celdaHtml);
-                                $tablaHtml .= "<{$tag}{$estilo}>" . $celdaHtml . "</{$tag}>";
-                            }
-                            $tablaHtml .= '</tr>';
-                        } else {
-                            // Si estabamos en una tabla, cerrarla
-                            if ($enTabla) {
-                                $tablaHtml .= '</table></div>';
-                                $resultado[] = $tablaHtml;
-                                $tablaHtml = '';
-                                $enTabla = false;
-                                $esEncabezado = true;
-                            }
-                            $resultado[] = $linea;
-                        }
-                    }
-
-                    // Cerrar tabla si termino en una
-                    if ($enTabla) {
-                        $tablaHtml .= '</table></div>';
-                        $resultado[] = $tablaHtml;
-                    }
-
-                    return implode("\n", $resultado);
-                }
-
-                function convertirTextoMarkdown($texto) {
-                    // Escapar HTML primero (pero preservar saltos de linea)
-                    $lineas = explode("\n", $texto);
-                    $resultado = [];
-                    $enLista = false;
-                    $listaHtml = '';
-
-                    foreach ($lineas as $linea) {
-                        $lineaTrim = trim($linea);
-
-                        // Detectar items de lista (- item o * item o numero. item)
-                        if (preg_match('/^[\-\*]\s+(.+)$/', $lineaTrim, $matches) ||
-                            preg_match('/^\d+\.\s+(.+)$/', $lineaTrim, $matches)) {
-
-                            if (!$enLista) {
-                                $enLista = true;
-                                $listaHtml = '<ul class="mb-3">';
-                            }
-
-                            $itemTexto = htmlspecialchars($matches[1]);
-                            // Convertir negritas y cursivas en el item
-                            $itemTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $itemTexto);
-                            $itemTexto = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $itemTexto);
-                            $listaHtml .= '<li>' . $itemTexto . '</li>';
-
-                        } else {
-                            // Si estabamos en lista, cerrarla
-                            if ($enLista) {
-                                $listaHtml .= '</ul>';
-                                $resultado[] = $listaHtml;
-                                $listaHtml = '';
-                                $enLista = false;
-                            }
-
-                            // Linea normal
-                            if (!empty($lineaTrim)) {
-                                $lineaHtml = htmlspecialchars($linea);
-
-                                // Convertir encabezados markdown (## Titulo)
-                                if (preg_match('/^#{1,6}\s+(.+)$/', $lineaTrim, $matches)) {
-                                    $nivel = strlen(preg_replace('/[^#]/', '', $lineaTrim));
-                                    $tituloTexto = htmlspecialchars(trim($matches[1]));
-                                    $tituloTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $tituloTexto);
-                                    $resultado[] = "<h{$nivel} class='mt-3 mb-2'>{$tituloTexto}</h{$nivel}>";
-                                    continue;
-                                }
-
-                                // Convertir **negrita** y *cursiva*
-                                $lineaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $lineaHtml);
-                                $lineaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $lineaHtml);
-
-                                $resultado[] = $lineaHtml;
-                            } else {
-                                $resultado[] = '<br>';
-                            }
-                        }
-                    }
-
-                    // Cerrar lista si termino en una
-                    if ($enLista) {
-                        $listaHtml .= '</ul>';
-                        $resultado[] = $listaHtml;
-                    }
-
-                    // Unir con saltos de linea HTML
-                    $html = '';
-                    foreach ($resultado as $i => $item) {
-                        if (strpos($item, '<ul') === 0 || strpos($item, '<h') === 0 ||
-                            strpos($item, '<div') === 0 || strpos($item, '<br') === 0) {
-                            $html .= $item;
-                        } else {
-                            // Es texto normal, agregar <br> si no es el ultimo
-                            $html .= $item;
-                            if ($i < count($resultado) - 1 && !empty(trim($item))) {
-                                $nextItem = $resultado[$i + 1] ?? '';
-                                if (strpos($nextItem, '<ul') !== 0 && strpos($nextItem, '<h') !== 0 &&
-                                    strpos($nextItem, '<div') !== 0 && strpos($nextItem, '<br') !== 0) {
-                                    $html .= '<br>';
-                                }
-                            }
-                        }
-                    }
-
-                    return $html;
-                }
-            }
-            ?>
+            <?php $parsedown = new \Parsedown(); ?>
             <?php if (!empty($contenido['secciones'])): ?>
                 <?php foreach ($contenido['secciones'] as $seccion): ?>
                     <div class="seccion">
@@ -617,7 +462,7 @@
                             if ($keySeccion === 'tipos_documentos'):
                                 // Mostrar contenido de texto introductorio
                                 if (!empty($seccion['contenido'])): ?>
-                                    <?= convertirMarkdownAHtml($seccion['contenido']) ?>
+                                    <?= $parsedown->text($seccion['contenido']) ?>
                                 <?php endif; ?>
                                 <?php // SIEMPRE mostrar tabla dinámica de tipos de documentos
                                 if (!empty($tiposDocumento)): ?>
@@ -649,7 +494,7 @@
                             elseif ($keySeccion === 'codificacion'):
                                 // Mostrar contenido de texto explicativo
                                 if (!empty($seccion['contenido'])): ?>
-                                    <?= convertirMarkdownAHtml($seccion['contenido']) ?>
+                                    <?= $parsedown->text($seccion['contenido']) ?>
                                 <?php endif; ?>
                                 <?php // SIEMPRE mostrar tabla dinámica de códigos
                                 if (!empty($plantillas)): ?>
@@ -679,7 +524,7 @@
                             // el listado maestro debe reflejar los documentos reales del cliente
                             elseif ($keySeccion === 'listado_maestro'): ?>
                                 <?php if (!empty($seccion['contenido'])): ?>
-                                    <?= convertirMarkdownAHtml($seccion['contenido']) ?>
+                                    <?= $parsedown->text($seccion['contenido']) ?>
                                 <?php else: ?>
                                     <p>A continuacion se presenta el Listado Maestro de Documentos del SG-SST:</p>
                                 <?php endif; ?>
@@ -728,7 +573,7 @@
                             <?php // Seccion 14: Tiempos de Retencion
                             elseif ($keySeccion === 'tiempos_retencion'): ?>
                                 <?php if (!empty($seccion['contenido'])): ?>
-                                    <?= convertirMarkdownAHtml($seccion['contenido']) ?>
+                                    <?= $parsedown->text($seccion['contenido']) ?>
                                 <?php else: ?>
                                     <p>Los documentos del SG-SST se conservaran por un periodo minimo de <strong>20 anos</strong>,
                                     contados a partir de la fecha de cese de la relacion laboral del trabajador,
@@ -745,7 +590,7 @@
                                 <?php
                                 $contenidoSeccion = $seccion['contenido'] ?? '';
                                 if (!empty($contenidoSeccion)):
-                                    echo convertirMarkdownAHtml($contenidoSeccion);
+                                    echo $parsedown->text($contenidoSeccion);
                                 else:
                                 ?>
                                     <p class="text-muted fst-italic">
@@ -913,10 +758,16 @@
                                 </div>
                                 <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
                                     <?php
-                                    $firmaDelegadoPrio = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+                                    // Fallback chain: delegado_sst → vigia_sst → firma física vigía
+                                    $firmaDelegadoPrio = ($firmasElectronicas ?? [])['delegado_sst']
+                                        ?? ($firmasElectronicas ?? [])['vigia_sst']
+                                        ?? null;
+                                    $firmaVigiaFisica = $vigia['firma_vigia'] ?? '';
                                     if ($firmaDelegadoPrio && !empty($firmaDelegadoPrio['evidencia']['firma_imagen'])):
                                     ?>
                                         <img src="<?= $firmaDelegadoPrio['evidencia']['firma_imagen'] ?>" alt="Firma Delegado" style="max-height: 50px; max-width: 120px; margin-bottom: 3px;">
+                                    <?php elseif (!empty($firmaVigiaFisica)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaVigiaFisica) ?>" alt="Firma Vigía" style="max-height: 50px; max-width: 120px; margin-bottom: 3px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                         <small style="color: #666; font-size: 0.7rem;">Firma</small>
@@ -1168,10 +1019,16 @@
                                 <!-- Firma posicionada al fondo -->
                                 <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
                                     <?php
-                                    $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+                                    // Fallback chain: delegado_sst → vigia_sst → firma física vigía
+                                    $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst']
+                                        ?? ($firmasElectronicas ?? [])['vigia_sst']
+                                        ?? null;
+                                    $firmaVigiaFisicaDef = $vigia['firma_vigia'] ?? '';
                                     if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])):
                                     ?>
                                         <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php elseif (!empty($firmaVigiaFisicaDef)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaVigiaFisicaDef) ?>" alt="Firma Vigía SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                         <small style="color: #666; font-size: 0.7rem;">Firma</small>
@@ -1217,124 +1074,20 @@
         </div>
     </div>
 
-    <!-- Modal Historial de Versiones -->
-    <div class="modal fade" id="modalHistorialVersiones" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i>Historial de Versiones</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="contenedorHistorial">
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status"></div>
-                            <p class="mt-2 text-muted">Cargando historial...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Modal Historial de Versiones (componente estandar) -->
+    <?= view('documentos_sst/_components/modal_historial_versiones', [
+        'id_documento' => $documento['id_documento'],
+        'versiones' => $versiones ?? []
+    ]) ?>
 
+    <!-- Modal Nueva Version (componente estandar) -->
+    <?= view('documentos_sst/_components/modal_nueva_version', [
+        'id_documento' => $documento['id_documento'],
+        'version_actual' => $versionVigente['version_texto'] ?? '1.0',
+        'tipo_documento' => $documento['tipo_documento']
+    ]) ?>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const idDocumento = <?= $documento['id_documento'] ?>;
-
-        // Cargar historial cuando se abre el modal
-        document.getElementById('modalHistorialVersiones')?.addEventListener('show.bs.modal', function() {
-            const contenedor = document.getElementById('contenedorHistorial');
-
-            fetch('<?= base_url('documentos-sst/historial-versiones/') ?>' + idDocumento)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.versiones.length > 0) {
-                    let html = '<div class="table-responsive"><table class="table table-hover">';
-                    html += '<thead><tr><th>Version</th><th>Tipo</th><th>Descripcion</th><th>Fecha</th><th>Autorizado por</th><th>Acciones</th></tr></thead><tbody>';
-
-                    data.versiones.forEach(v => {
-                        const fecha = new Date(v.fecha_autorizacion).toLocaleDateString('es-CO', {
-                            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                        });
-                        const estadoBadge = v.estado === 'vigente'
-                            ? '<span class="badge bg-success">Vigente</span>'
-                            : '<span class="badge bg-secondary">Obsoleto</span>';
-                        const tipoBadge = v.tipo_cambio === 'mayor'
-                            ? '<span class="badge bg-danger">Mayor</span>'
-                            : '<span class="badge bg-info">Menor</span>';
-
-                        html += `<tr class="${v.estado === 'obsoleto' ? 'table-secondary' : ''}">
-                            <td><strong>v${v.version_texto}</strong> ${estadoBadge}</td>
-                            <td>${tipoBadge}</td>
-                            <td>${v.descripcion_cambio}</td>
-                            <td><small>${fecha}</small></td>
-                            <td>${v.autorizado_por || 'N/A'}</td>
-                            <td>
-                                <a href="<?= base_url('documentos-sst/descargar-version-pdf/') ?>${v.id_version}"
-                                   class="btn btn-sm btn-outline-danger" title="Descargar PDF de esta version">
-                                    <i class="bi bi-file-pdf"></i>
-                                </a>
-                                ${v.estado === 'obsoleto' ? `
-                                <button type="button" class="btn btn-sm btn-outline-warning btn-restaurar"
-                                        data-id="${v.id_version}" title="Restaurar esta version">
-                                    <i class="bi bi-arrow-counterclockwise"></i>
-                                </button>` : ''}
-                            </td>
-                        </tr>`;
-                    });
-
-                    html += '</tbody></table></div>';
-                    contenedor.innerHTML = html;
-
-                    // Agregar eventos a botones de restaurar
-                    contenedor.querySelectorAll('.btn-restaurar').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            if (confirm('Restaurar esta version? El documento actual pasara a estado borrador.')) {
-                                restaurarVersion(this.dataset.id);
-                            }
-                        });
-                    });
-                } else {
-                    contenedor.innerHTML = `
-                        <div class="text-center py-4">
-                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-                            <p class="mt-2 text-muted">No hay versiones registradas aun.<br>
-                            Apruebe el documento para crear la primera version.</p>
-                        </div>`;
-                }
-            })
-            .catch(error => {
-                contenedor.innerHTML = '<div class="alert alert-danger">Error al cargar historial</div>';
-            });
-        });
-
-        // Funcion para restaurar version
-        function restaurarVersion(idVersion) {
-            const formData = new FormData();
-            formData.append('id_version', idVersion);
-
-            fetch('<?= base_url('documentos-sst/restaurar-version') ?>', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                alert('Error de conexion');
-            });
-        }
-    });
-    </script>
 </body>
 </html>

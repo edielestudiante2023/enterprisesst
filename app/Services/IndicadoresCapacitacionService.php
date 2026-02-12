@@ -44,7 +44,12 @@ class IndicadoresCapacitacionService
             'phva' => 'verificar',
             'descripcion' => 'Mide el porcentaje de capacitaciones ejecutadas respecto a las programadas en el cronograma anual',
             'obligatorio' => true,
-            'origen' => 'base'
+            'origen' => 'base',
+            'definicion' => 'Mide el porcentaje de capacitaciones ejecutadas del cronograma anual de formacion en SST frente a las programadas para el periodo.',
+            'interpretacion' => 'El 100% indica cumplimiento total del cronograma. Valores <80% requieren reprogramacion de actividades y analisis de causas de incumplimiento.',
+            'origen_datos' => 'Cronograma anual de capacitacion, registros de asistencia, actas de capacitacion',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, trabajadores'
         ],
         [
             'nombre' => 'Cobertura de Capacitacion en SST',
@@ -56,7 +61,12 @@ class IndicadoresCapacitacionService
             'phva' => 'verificar',
             'descripcion' => 'Mide el porcentaje de trabajadores que asistieron a las capacitaciones programadas',
             'obligatorio' => true,
-            'origen' => 'base'
+            'origen' => 'base',
+            'definicion' => 'Mide la proporcion de trabajadores que asistieron efectivamente a las capacitaciones programadas respecto al total de trabajadores convocados.',
+            'interpretacion' => 'El 100% indica asistencia total. Valores menores requieren estrategias de convocatoria y sensibilizacion para aumentar participacion.',
+            'origen_datos' => 'Registros de asistencia a capacitaciones, listados de convocatoria, nomina',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, trabajadores'
         ],
         [
             'nombre' => 'Evaluacion de Eficacia de Capacitaciones',
@@ -68,7 +78,12 @@ class IndicadoresCapacitacionService
             'phva' => 'verificar',
             'descripcion' => 'Mide el aprovechamiento y aprendizaje de los trabajadores en las capacitaciones',
             'obligatorio' => false,
-            'origen' => 'base'
+            'origen' => 'base',
+            'definicion' => 'Mide el nivel de aprendizaje y aprovechamiento de los trabajadores en las capacitaciones, evaluado mediante pruebas de conocimiento post-capacitacion.',
+            'interpretacion' => 'Valores >=80% indican buena eficacia de la formacion. Valores menores sugieren necesidad de ajustar metodologia, contenidos o duracion de las capacitaciones.',
+            'origen_datos' => 'Evaluaciones post-capacitacion, encuestas de satisfaccion, pruebas de conocimiento',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia'
         ],
         [
             'nombre' => 'Oportunidad en la Ejecucion de Capacitaciones',
@@ -80,7 +95,12 @@ class IndicadoresCapacitacionService
             'phva' => 'verificar',
             'descripcion' => 'Mide el cumplimiento de las fechas programadas en el cronograma de capacitacion',
             'obligatorio' => false,
-            'origen' => 'base'
+            'origen' => 'base',
+            'definicion' => 'Mide el porcentaje de capacitaciones que se ejecutaron en la fecha originalmente programada en el cronograma, sin reprogramaciones.',
+            'interpretacion' => 'Un 90% o mas indica buena planificacion y cumplimiento de fechas. Valores menores requieren revision de la programacion y coordinacion con areas.',
+            'origen_datos' => 'Cronograma de capacitacion (fechas programadas vs ejecutadas), registros de reprogramaciones',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia'
         ],
         [
             'nombre' => 'Horas de Capacitacion por Trabajador',
@@ -92,7 +112,12 @@ class IndicadoresCapacitacionService
             'phva' => 'verificar',
             'descripcion' => 'Mide el promedio de horas de formacion por trabajador durante el periodo',
             'obligatorio' => false,
-            'origen' => 'base'
+            'origen' => 'base',
+            'definicion' => 'Mide el promedio de horas de formacion en SST que recibio cada trabajador durante el ano, incluyendo inducciones, reinducciones y capacitaciones especificas.',
+            'interpretacion' => 'La meta de 20 horas/trabajador/ano es el estandar recomendado. Valores menores indican necesidad de intensificar la formacion en SST.',
+            'origen_datos' => 'Registros de asistencia con duracion, cronograma ejecutado, nomina',
+            'cargo_responsable' => 'Responsable del SG-SST',
+            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia'
         ]
     ];
 
@@ -286,6 +311,11 @@ class IndicadoresCapacitacionService
                     'periodicidad' => $ind['periodicidad'] ?? 'trimestral',
                     'phva' => $ind['phva'] ?? 'verificar',
                     'numeral_resolucion' => self::NUMERAL,
+                    'definicion' => $ind['definicion'] ?? null,
+                    'interpretacion' => $ind['interpretacion'] ?? null,
+                    'origen_datos' => $ind['origen_datos'] ?? null,
+                    'cargo_responsable' => $ind['cargo_responsable'] ?? null,
+                    'cargos_conocer_resultado' => $ind['cargos_conocer_resultado'] ?? null,
                     'activo' => 1
                 ]);
                 $creados++;
