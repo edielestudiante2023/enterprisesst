@@ -630,6 +630,39 @@
     <?php else : ?>
       <p class="text-muted">No hay reportes disponibles.</p>
     <?php endif; ?>
+
+    <!-- Sección para Descargar Documentación por Contrato -->
+    <div class="mt-5 mb-4">
+      <div class="section-title">
+        <i class="fas fa-download"></i> Descargar Documentación por Contrato
+      </div>
+      <div class="row g-3 align-items-end" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 20px; border-radius: 10px;">
+        <div class="col-md-6">
+          <label for="clientDownload" class="form-label text-white fw-bold">Seleccionar Cliente:</label>
+          <select id="clientDownload" class="form-select">
+            <option value="">-- Seleccione un cliente --</option>
+            <?php foreach ($clients as $client) : ?>
+              <option value="<?= $client['id_cliente'] ?>"><?= htmlspecialchars($client['nombre_cliente']) ?> (NIT: <?= htmlspecialchars($client['nit_cliente']) ?>)</option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button type="button" id="btnVerDocumentacion" class="btn btn-light w-100" disabled>
+            <i class="fas fa-eye"></i> Ver Documentación
+          </button>
+        </div>
+        <div class="col-md-3">
+          <button type="button" id="btnDescargarZip" class="btn btn-warning w-100" disabled>
+            <i class="fas fa-file-archive"></i> Descargar ZIP
+          </button>
+        </div>
+        <div class="col-12">
+          <small class="text-white">
+            <i class="fas fa-info-circle"></i> Seleccione un cliente para ver o descargar todos los documentos registrados durante el período de su último contrato.
+          </small>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Footer (sin cambios) -->
@@ -1098,6 +1131,81 @@
         $('#dateFrom, #dateTo').val('');
         $.fn.dataTable.ext.search.pop(); // Remover filtro de fechas
         location.reload();
+      });
+
+      // ============================================
+      // Precargar cliente desde localStorage (Quick Access)
+      // ============================================
+      var storedClientId = localStorage.getItem('selectedClient');
+      if (storedClientId) {
+        // Mapeo de id_cliente a nombre_cliente
+        var clientMap = {
+          <?php foreach ($clients as $client): ?>
+          '<?= $client['id_cliente'] ?>': '<?= addslashes($client['nombre_cliente']) ?>',
+          <?php endforeach; ?>
+        };
+
+        var clientName = clientMap[storedClientId];
+        if (clientName) {
+          // Seleccionar el cliente en el filtro
+          $('#clientFilter').val(clientName).trigger('change');
+          console.log('Cliente precargado desde Quick Access: ' + clientName);
+        }
+      }
+
+      // Inicializamos Select2 en el select de descarga de documentación
+      $('#clientDownload').select2({
+        placeholder: "-- Seleccione un cliente --",
+        allowClear: true,
+        width: '100%'
+      });
+
+      // Guardar en localStorage al cambiar filtro de cliente (Quick Access)
+      $('#clientFilter').on('change.quickaccess', function () {
+        var selected = $(this).val();
+        if (selected) {
+          var reverseClientMap = {
+            <?php foreach ($clients as $client): ?>
+            '<?= addslashes($client['nombre_cliente']) ?>': '<?= $client['id_cliente'] ?>',
+            <?php endforeach; ?>
+          };
+          var clientId = reverseClientMap[selected];
+          if (clientId) {
+            localStorage.setItem('selectedClient', clientId);
+          }
+        } else {
+          localStorage.removeItem('selectedClient');
+        }
+      });
+
+      // ============================================
+      // Descarga de Documentación por Contrato
+      // ============================================
+
+      // Habilitar/deshabilitar botones según selección de cliente
+      $('#clientDownload').on('change', function() {
+        var clientId = $(this).val();
+        if (clientId) {
+          $('#btnVerDocumentacion, #btnDescargarZip').prop('disabled', false);
+        } else {
+          $('#btnVerDocumentacion, #btnDescargarZip').prop('disabled', true);
+        }
+      });
+
+      // Botón Ver Documentación - abre vista de selección de contrato/fechas
+      $('#btnVerDocumentacion').on('click', function() {
+        var clientId = $('#clientDownload').val();
+        if (clientId) {
+          window.open('<?= base_url("/contracts/seleccionar-documentacion/") ?>' + clientId, '_blank');
+        }
+      });
+
+      // Botón Descargar ZIP - abre vista de selección de contrato/fechas
+      $('#btnDescargarZip').on('click', function() {
+        var clientId = $('#clientDownload').val();
+        if (clientId) {
+          window.open('<?= base_url("/contracts/seleccionar-documentacion/") ?>' + clientId, '_blank');
+        }
       });
     });
   </script>

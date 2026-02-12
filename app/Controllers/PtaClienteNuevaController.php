@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\PtaClienteNuevaModel;
 use App\Models\ClientModel;
+use App\Services\PtaAuditService;
 use CodeIgniter\Controller;
 
 class PtaClienteNuevaController extends Controller
@@ -305,6 +306,78 @@ class PtaClienteNuevaController extends Controller
                 'message' => 'Error updating records: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * GESTIÓN RÁPIDA: Actualiza fecha_propuesta al último día del mes seleccionado.
+     * Recibe vía AJAX: id (ID de la actividad) y month (1-12).
+     */
+    public function updateDateByMonth()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
+        $id    = $this->request->getPost('id');
+        $month = (int) $this->request->getPost('month');
+
+        if (!$id || $month < 1 || $month > 12) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Parámetros inválidos'
+            ]);
+        }
+
+        $model    = new PtaClienteNuevaModel();
+        $activity = $model->find($id);
+
+        if (!$activity) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Actividad no encontrada'
+            ]);
+        }
+
+        // Determinar el año: usar el de la fecha existente o el año actual
+        if (!empty($activity['fecha_propuesta'])) {
+            $year = date('Y', strtotime($activity['fecha_propuesta']));
+        } else {
+            $year = date('Y');
+        }
+
+        // Calcular último día del mes (maneja bisiestos automáticamente)
+        $lastDayDate = new \DateTime("{$year}-{$month}-01");
+        $lastDayDate->modify('last day of this month');
+        $newDate = $lastDayDate->format('Y-m-d');
+
+        $oldDate = $activity['fecha_propuesta'];
+
+        $model->update($id, ['fecha_propuesta' => $newDate]);
+
+        // Registrar en auditoría (no bloquea la operación principal si falla)
+        try {
+            PtaAuditService::log(
+                (int) $id,
+                'UPDATE',
+                'fecha_propuesta',
+                $oldDate,
+                $newDate,
+                'updateDateByMonth',
+                (int) $activity['id_cliente']
+            );
+        } catch (\Exception $e) {
+            log_message('error', 'Audit log failed in updateDateByMonth: ' . $e->getMessage());
+        }
+
+        return $this->response->setJSON([
+            'success'   => true,
+            'message'   => 'Fecha actualizada correctamente',
+            'newDate'   => $newDate,
+            'formatted' => $lastDayDate->format('d/m/Y')
+        ]);
     }
 
     public function exportExcelPtaClienteNuevaModel()

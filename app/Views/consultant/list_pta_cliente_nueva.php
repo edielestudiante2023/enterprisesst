@@ -219,10 +219,56 @@
             padding-left: 10px;
             margin: 20px 0 15px 0;
         }
+
+        /* ============ BOTONES DE GESTIÓN RÁPIDA ============ */
+        .btn-month {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #6c757d;
+            background-color: #fff;
+            color: #495057;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+
+        .btn-month:hover {
+            background-color: #007bff;
+            color: #fff;
+            border-color: #007bff;
+            transform: scale(1.1);
+        }
+
+        .btn-month.has-date {
+            background-color: #28a745;
+            color: #fff;
+            border-color: #28a745;
+        }
+
+        .btn-month:active {
+            transform: scale(0.95);
+        }
+
+        .month-buttons {
+            max-width: 200px;
+        }
+
+        /* ============ TOAST NOTIFICATIONS ============ */
+        .toast-container { z-index: 9999; }
+        .toast { min-width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,.15); margin-bottom: 8px; }
     </style>
 </head>
 
 <body>
+    <!-- Toast Stack -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastStack"></div>
+
     <div class="container-fluid">
         <!-- Enlace a Dashboard -->
         <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm mb-3">Ir a DashBoard</a>
@@ -501,6 +547,7 @@
                             <th>Estado Actividad</th>
                             <th>Porcentaje Avance</th>
                             <th>Observaciones</th>
+                            <th>Gestión Rápida</th>
                             <th class="d-none">Responsable Definido</th>
                             <th class="d-none">Semana</th>
                             <th class="d-none">Created At</th>
@@ -527,6 +574,29 @@
                                 <td class="editable"><?= esc($row['estado_actividad']) ?></td>
                                 <td class="editable"><?= esc($row['porcentaje_avance']) ?></td>
                                 <td class="editable"><?= esc($row['observaciones']) ?></td>
+                                <td class="text-center">
+                                    <div class="month-buttons" style="display: grid; grid-template-columns: repeat(4, 32px); gap: 4px; justify-content: center;">
+                                        <?php
+                                        $mesesEspanol = [
+                                            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                                            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                                        ];
+                                        $mesActual = 0;
+                                        if (!empty($row['fecha_propuesta'])) {
+                                            $mesActual = (int) date('m', strtotime($row['fecha_propuesta']));
+                                        }
+                                        for ($month = 1; $month <= 12; $month++):
+                                        ?>
+                                            <button type="button"
+                                                    class="btn-month<?= ($mesActual === $month) ? ' has-date' : '' ?>"
+                                                    data-id="<?= esc($row['id_ptacliente']) ?>"
+                                                    data-month="<?= $month ?>"
+                                                    title="<?= $mesesEspanol[$month - 1] ?>">
+                                                <?= $month ?>
+                                            </button>
+                                        <?php endfor; ?>
+                                    </div>
+                                </td>
                                 <td class="d-none"><?= esc($row['responsable_definido_paralaactividad']) ?></td>
                                 <td class="d-none"><?= esc($row['semana']) ?></td>
                                 <td class="d-none"><?= esc($row['created_at']) ?></td>
@@ -557,6 +627,7 @@
                             </th>
                             <th><input type="text" placeholder="Buscar Porcentaje Avance" class="form-control form-control-sm"></th>
                             <th><input type="text" placeholder="Buscar Observaciones" class="form-control form-control-sm"></th>
+                            <th></th>
                             <th class="d-none"></th>
                             <th class="d-none"></th>
                             <th class="d-none"></th>
@@ -600,6 +671,69 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
+            // ==========================================
+            // SISTEMA DE TOAST NOTIFICATIONS
+            // ==========================================
+            function mostrarToast(tipo, titulo, mensaje) {
+                var container = document.getElementById('toastStack');
+                var toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+                var hora = new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+
+                var configs = {
+                    'success':  { bg: 'bg-success', text: 'text-white', icon: 'fas fa-check-circle' },
+                    'error':    { bg: 'bg-danger',  text: 'text-white', icon: 'fas fa-times-circle' },
+                    'warning':  { bg: 'bg-warning', text: 'text-dark',  icon: 'fas fa-exclamation-triangle' },
+                    'info':     { bg: 'bg-info',    text: 'text-white', icon: 'fas fa-info-circle' },
+                    'progress': { bg: 'bg-primary', text: 'text-white', icon: '' }
+                };
+                var cfg = configs[tipo] || configs['info'];
+
+                var iconHtml = tipo === 'progress'
+                    ? '<span class="spinner-border spinner-border-sm me-2"></span>'
+                    : '<i class="' + cfg.icon + ' me-2"></i>';
+
+                var closeWhite = cfg.text === 'text-white' ? ' btn-close-white' : '';
+                var toastHtml = '<div id="' + toastId + '" class="toast" role="alert">'
+                    + '<div class="toast-header ' + cfg.bg + ' ' + cfg.text + '">'
+                    + iconHtml
+                    + '<strong class="me-auto">' + titulo + '</strong>'
+                    + '<small>' + hora + '</small>'
+                    + '<button type="button" class="btn-close' + closeWhite + '" data-bs-dismiss="toast"></button>'
+                    + '</div>'
+                    + '<div class="toast-body">' + mensaje + '</div>'
+                    + '</div>';
+
+                container.insertAdjacentHTML('beforeend', toastHtml);
+                var toastEl = document.getElementById(toastId);
+
+                var duraciones = { 'error': 8000, 'success': 5000, 'warning': 6000, 'info': 4000, 'progress': 60000 };
+                var delay = duraciones[tipo] || 5000;
+                var autohide = tipo !== 'progress';
+
+                var toast = new bootstrap.Toast(toastEl, { delay: delay, autohide: autohide });
+                toastEl.addEventListener('hidden.bs.toast', function() { toastEl.remove(); });
+                toast.show();
+
+                return { id: toastId, element: toastEl, instance: toast };
+            }
+
+            function cerrarToast(ref) {
+                if (ref && ref.instance) ref.instance.hide();
+            }
+
+            // Helper: leer CSRF token dinámico desde la cookie (soporta regenerate=true)
+            function getCsrfHash() {
+                var name = '<?= config('Security')->cookieName ?>=';
+                var cookies = decodeURIComponent(document.cookie).split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var c = cookies[i].trim();
+                    if (c.indexOf(name) === 0) {
+                        return c.substring(name.length);
+                    }
+                }
+                return '<?= csrf_hash() ?>'; // fallback al valor inicial
+            }
+
             // Variables globales para filtros activos
             var activeYear = null;
             var activeMonth = null;
@@ -902,6 +1036,9 @@
                         [6, 'asc']
                     ],
                     "dom": '<"row"<"col-sm-12"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
+                    "columnDefs": [
+                        { "orderable": false, "targets": 13 }
+                    ],
                     "buttons": [{
                         extend: 'excel',
                         text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
@@ -910,7 +1047,7 @@
                         charset: 'UTF-8',
                         bom: true,
                         exportOptions: {
-                            columns: ':visible',
+                            columns: [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                             format: {
                                 body: function(data, row, column, node) {
                                     // Decode HTML entities
@@ -1028,7 +1165,7 @@
                         11: 'porcentaje_avance',
                         12: 'observaciones'
                     };
-                    var disallowed = [0, 1, 2, 3, 13, 14, 15, 16];
+                    var disallowed = [0, 1, 2, 3, 13, 14, 15, 16, 17];
                     if (disallowed.indexOf(colIndex) !== -1 || !editableMapping.hasOwnProperty(colIndex)) {
                         cell.data(originalValue).draw();
                         return;
@@ -1169,6 +1306,79 @@
                     error: function(xhr, status, error) {
                         alert('Error en la comunicación con el servidor');
                         console.error(error);
+                    }
+                });
+            });
+
+            // ===================================================================
+            // GESTIÓN RÁPIDA: Asignación de fecha por mes con un solo clic
+            // ===================================================================
+            var mesesNombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                                'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+            $(document).on('click', '.btn-month', function() {
+                var $button    = $(this);
+                var activityId = $button.data('id');
+                var month      = $button.data('month');
+                var mesNombre  = mesesNombres[month - 1];
+
+                // Feedback visual inmediato
+                $button.prop('disabled', true).css('opacity', '0.5');
+
+                // Toast de progreso
+                var progressToast = mostrarToast('progress', 'Actualizando...', 'Asignando fecha a <strong>' + mesNombre + '</strong> para actividad #' + activityId);
+
+                var csrfData = {};
+                csrfData['<?= csrf_token() ?>'] = getCsrfHash();
+
+                $.ajax({
+                    url: '<?= site_url("/pta-cliente-nueva/updateDateByMonth") ?>',
+                    method: 'POST',
+                    data: $.extend({ id: activityId, month: month }, csrfData),
+                    dataType: 'json',
+                    success: function(response) {
+                        cerrarToast(progressToast);
+
+                        if (response.success) {
+                            // Actualizar la celda de fecha_propuesta en DataTables
+                            var row = table.row(function(idx, data, node) {
+                                return data[1] == activityId;
+                            });
+
+                            if (row.length > 0) {
+                                var rowData = row.data();
+                                rowData[8]  = response.newDate;
+                                row.data(rowData);
+                            }
+
+                            // Reordenar por fecha_propuesta ASC y redibujar
+                            table.order([8, 'asc']).draw(false);
+
+                            // Tras el redraw, re-buscar botones en la fila nueva
+                            if (row.length > 0) {
+                                var $newRow = $(row.node());
+                                $newRow.find('.btn-month').removeClass('has-date');
+                                $newRow.find('.btn-month[data-month="' + month + '"]').addClass('has-date');
+                            }
+
+                            // Actualizar contadores
+                            updateCardCounts();
+                            updateMonthlyCounts();
+
+                            // Toast de éxito
+                            mostrarToast('success', 'Fecha Asignada',
+                                'Actividad #' + activityId + ' &rarr; <strong>' + response.formatted + '</strong> (' + mesNombre + ')');
+                        } else {
+                            mostrarToast('error', 'Error', response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        cerrarToast(progressToast);
+                        mostrarToast('error', 'Error de Conexión', 'No se pudo actualizar la fecha: ' + error);
+                        console.error('Error AJAX:', xhr.responseText);
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false).css('opacity', '1');
                     }
                 });
             });

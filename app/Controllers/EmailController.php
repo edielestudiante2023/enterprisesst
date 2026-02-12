@@ -2,8 +2,6 @@
 namespace App\Controllers;
 
 use SendGrid\Mail\Mail;
-echo realpath(__DIR__ . '/../../vendor/autoload.php');
-
 require __DIR__ . '/../../vendor/autoload.php';
 
 class EmailController

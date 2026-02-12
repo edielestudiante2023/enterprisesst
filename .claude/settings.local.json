@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php app/SQL/apply_audit_table.php:*)",
+      "Bash(dir /b /o-d \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\writable\\\\logs\"\" 2>nul | findstr /i \"log \")",
+      "Bash(php -r:*)",
+      "Bash(php:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

@@ -540,6 +540,9 @@ $routes->post('csv/upload', 'CsvUploadController::upload'); // Procesa el CSV
 
 $routes->post('/pta-cliente-nueva/updateCerradas', 'PtaClienteNuevaController::updateCerradas');
 
+// Gestión Rápida: asignar fecha_propuesta al último día del mes seleccionado
+$routes->post('/pta-cliente-nueva/updateDateByMonth', 'PtaClienteNuevaController::updateDateByMonth');
+
 // Ruta para socialización del Plan de Trabajo por email
 $routes->post('/socializacion/send-plan-trabajo', 'SocializacionEmailController::sendPlanTrabajo');
 // Ruta para socialización de Evaluación de Estándares Mínimos por email

@@ -142,6 +142,42 @@
       padding-left: 10px;
       margin: 20px 0 15px 0;
     }
+
+    /* Botones circulares de mes - Gestión Rápida */
+    .btn-month {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #6c757d;
+      background-color: #fff;
+      color: #495057;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-month:hover {
+      background-color: #007bff;
+      color: #fff;
+      border-color: #007bff;
+      transform: scale(1.1);
+    }
+
+    .btn-month.has-date {
+      background-color: #28a745;
+      color: #fff;
+      border-color: #28a745;
+    }
+
+    .btn-month:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 
@@ -435,6 +471,7 @@
             <th></th>
             <th>#</th>
             <th>Acciones</th>
+            <th style="min-width: 200px;">Gestión Rápida</th>
             <th>Capacitación</th>
             <th>Objetivo</th>
             <th>Cliente</th>
@@ -457,6 +494,7 @@
           <tr class="filters">
             <th></th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar ID"></th>
+            <th></th>
             <th></th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Capacitación"></th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Objetivo"></th>
@@ -675,9 +713,19 @@
       });
 
       // Inicializar DataTable con fila expandible y render para inline editing
+      // Limpiar estado guardado si cambió la cantidad de columnas
+      var expectedColumns = 20; // 19 originales + 1 Gestión Rápida
+      var storageKey = 'DataTables_cronogramaTable_' + window.location.pathname;
+      try {
+        var savedState = JSON.parse(localStorage.getItem(storageKey));
+        if (savedState && savedState.columns && savedState.columns.length !== expectedColumns) {
+          localStorage.removeItem(storageKey);
+        }
+      } catch(e) { localStorage.removeItem(storageKey); }
+
       var table = $('#cronogramaTable').DataTable({
         stateSave: true,
-        order: [[6, 'asc']], // Ordenar por fecha programada ASC por defecto
+        order: [[7, 'asc']], // Ordenar por fecha programada ASC por defecto (índice 7 tras agregar Gestión Rápida)
         language: {
           url: "//cdn.datatables.net/plug-ins/1.13.1/i18n/es-ES.json"
         },
@@ -718,6 +766,36 @@
           {
             data: 'acciones',
             orderable: false
+          },
+          {
+            data: null,
+            orderable: false,
+            searchable: false,
+            render: function(data, type, row) {
+              var mesesEspanol = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+              ];
+              var currentMonth = 0;
+              if (row.fecha_programada) {
+                var parts = row.fecha_programada.split('-');
+                if (parts.length >= 2) {
+                  currentMonth = parseInt(parts[1], 10);
+                }
+              }
+              var html = '<div style="display: grid; grid-template-columns: repeat(4, 32px); gap: 4px; justify-content: center;">';
+              for (var m = 1; m <= 12; m++) {
+                var hasDateClass = (m === currentMonth) ? ' has-date' : '';
+                html += '<button type="button" class="btn-month' + hasDateClass + '" '
+                      + 'data-id="' + row.id_cronograma_capacitacion + '" '
+                      + 'data-month="' + m + '" '
+                      + 'title="' + mesesEspanol[m - 1] + '">'
+                      + m
+                      + '</button>';
+              }
+              html += '</div>';
+              return html;
+            }
           },
           {
             data: 'nombre_capacitacion',
@@ -1228,7 +1306,7 @@
                 var porcentaje = programados > 0 ? Math.round((asistentes / programados) * 100) : 0;
                 
                 // Encontrar y actualizar la celda del % Cobertura (columna 15)
-                var coberturaCell = cell.closest('tr').find('td').eq(15);
+                var coberturaCell = cell.closest('tr').find('td').eq(16);
                 coberturaCell.text(porcentaje + '%');
               }
             } else {
