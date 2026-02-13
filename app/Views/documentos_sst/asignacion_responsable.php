@@ -27,13 +27,13 @@
             vertical-align: middle;
         }
         .encabezado-logo {
-            width: 80px;
-            padding: 5px;
+            width: 150px;
+            padding: 10px;
             text-align: center;
         }
         .encabezado-logo img {
-            max-width: 70px;
-            max-height: 45px;
+            max-width: 130px;
+            max-height: 70px;
             object-fit: contain;
         }
         .encabezado-titulo-central {
@@ -41,20 +41,20 @@
             padding: 0;
         }
         .encabezado-titulo-central .sistema {
-            font-size: 9pt;
+            font-size: 0.85rem;
             font-weight: bold;
             color: #333;
-            padding: 5px;
+            padding: 8px 15px;
             border-bottom: 1px solid #333;
         }
         .encabezado-titulo-central .nombre-doc {
-            font-size: 9pt;
+            font-size: 0.85rem;
             font-weight: bold;
             color: #333;
-            padding: 5px;
+            padding: 8px 15px;
         }
         .encabezado-info {
-            width: 120px;
+            width: 170px;
             padding: 0;
         }
         .encabezado-info-table {
@@ -64,8 +64,8 @@
         .encabezado-info-table td {
             border: none;
             border-bottom: 1px solid #333;
-            padding: 2px 4px;
-            font-size: 8pt;
+            padding: 3px 8px;
+            font-size: 0.75rem;
         }
         .encabezado-info-table tr:last-child td {
             border-bottom: none;
@@ -90,22 +90,20 @@
         }
 
         .seccion {
-            margin-bottom: 6px;
+            margin-bottom: 25px;
             page-break-inside: avoid;
         }
         .seccion-titulo {
-            font-size: 11pt;
+            font-size: 1.1rem;
             font-weight: bold;
             color: #0d6efd;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 2px;
-            margin-bottom: 4px;
-            margin-top: 8px;
-            line-height: 1.0;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
         }
         .seccion-contenido {
             text-align: justify;
-            line-height: 1.0;
+            line-height: 1.7;
         }
 
         .panel-aprobacion {
@@ -290,31 +288,43 @@
             <!-- ============================================== -->
             <!-- SECCION: CONTROL DE CAMBIOS (Imprimible) -->
             <!-- ============================================== -->
-            <div class="seccion" style="page-break-inside: avoid; margin-top: 20px;">
-                <div class="seccion-titulo" style="background-color: #0d6efd; color: white; padding: 5px 8px; margin-bottom: 0; border: none;">
-                    CONTROL DE CAMBIOS
+            <div class="seccion" style="page-break-inside: avoid; margin-top: 40px;">
+                <div class="seccion-titulo" style="background: linear-gradient(90deg, #0d6efd, #6610f2); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
+                    <i class="bi bi-journal-text me-2"></i>CONTROL DE CAMBIOS
                 </div>
-                <table class="tabla-contenido" style="width: 100%; border-collapse: collapse; margin-top: 0;">
-                    <tr>
-                        <th style="width: 80px; background-color: #e9ecef; color: #333; border: 1px solid #999; padding: 4px 6px; font-weight: bold;">Version</th>
-                        <th style="background-color: #e9ecef; color: #333; border: 1px solid #999; padding: 4px 6px; font-weight: bold;">Descripcion del Cambio</th>
-                        <th style="width: 90px; background-color: #e9ecef; color: #333; border: 1px solid #999; padding: 4px 6px; font-weight: bold;">Fecha</th>
-                    </tr>
+                <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                            <th style="width: 100px; text-align: center;">Version</th>
+                            <th>Descripcion del Cambio</th>
+                            <th style="width: 130px; text-align: center;">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     <?php if (!empty($versiones)): ?>
                         <?php foreach ($versiones as $idx => $ver): ?>
-                        <tr style="<?= $idx % 2 === 0 ? '' : 'background-color: #f8f9fa;' ?>">
-                            <td style="text-align: center; font-weight: bold; border: 1px solid #999; padding: 3px 5px;"><?= esc($ver['version_texto']) ?></td>
-                            <td style="border: 1px solid #999; padding: 3px 5px;"><?= esc($ver['descripcion_cambio']) ?></td>
-                            <td style="text-align: center; border: 1px solid #999; padding: 3px 5px;"><?= date('d/m/Y', strtotime($ver['fecha_autorizacion'])) ?></td>
+                        <tr>
+                            <td style="text-align: center;">
+                                <span style="display: inline-block; background: #0d6efd; color: white; padding: 3px 12px; border-radius: 20px; font-weight: bold;">
+                                    <?= esc($ver['version_texto']) ?>
+                                </span>
+                            </td>
+                            <td><?= esc($ver['descripcion_cambio']) ?></td>
+                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($ver['fecha_autorizacion'])) ?></td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td style="text-align: center; font-weight: bold; border: 1px solid #999; padding: 3px 5px;">1.0</td>
-                            <td style="border: 1px solid #999; padding: 3px 5px;">Elaboracion inicial del documento</td>
-                            <td style="text-align: center; border: 1px solid #999; padding: 3px 5px;"><?= date('d/m/Y', strtotime($documento['created_at'] ?? 'now')) ?></td>
+                            <td style="text-align: center;">
+                                <span style="display: inline-block; background: #0d6efd; color: white; padding: 3px 12px; border-radius: 20px; font-weight: bold;">
+                                    1.0
+                                </span>
+                            </td>
+                            <td>Elaboracion inicial del documento</td>
+                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($documento['created_at'] ?? 'now')) ?></td>
                         </tr>
                     <?php endif; ?>
+                    </tbody>
                 </table>
             </div>
 
@@ -344,148 +354,195 @@
             $repLegalCargo = 'Representante Legal';
             ?>
 
-            <div class="firma-section" style="margin-top: 20px; page-break-inside: avoid;">
-                <div class="seccion-titulo" style="background-color: #198754; color: white; padding: 5px 8px; margin-bottom: 0; border: none;">
-                    FIRMAS DE APROBACION
+            <div class="firma-section" style="margin-top: 40px; page-break-inside: avoid;">
+                <div class="seccion-titulo" style="background: linear-gradient(90deg, #198754, #20c997); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
+                    <i class="bi bi-pen me-2"></i>FIRMAS DE APROBACION
                 </div>
 
                 <?php if ($esSoloDosFirmantes): ?>
-                <!-- 7 ESTANDARES SIN DELEGADO: Solo 2 firmantes (TIPO D) -->
-                <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
-                    <tr>
-                        <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
-                            Elaboro / Consultor SST
-                        </td>
-                        <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
-                            Aprobo / Representante Legal
-                        </td>
-                    </tr>
-                    <!-- Fila datos TIPO D -->
-                    <tr>
-                        <td style="vertical-align: top; padding: 6px; border: 1px solid #999; font-size: 8pt;">
-                            <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($consultorNombre) ? esc($consultorNombre) : '_______________' ?></p>
-                            <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($consultorCargo) ?></p>
-                            <?php if (!empty($consultorLicencia)): ?>
-                            <p style="margin: 2px 0;"><b>Licencia:</b> <?= esc($consultorLicencia) ?></p>
-                            <?php endif; ?>
-                        </td>
-                        <td style="vertical-align: top; padding: 6px; border: 1px solid #999; font-size: 8pt;">
-                            <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '_______________' ?></p>
-                            <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($repLegalCargo) ?></p>
-                        </td>
-                    </tr>
-                    <!-- Fila firmas TIPO D -->
-                    <tr>
-                        <td style="padding: 6px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
-                            <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
-                                <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 40px; max-width: 120px; margin-bottom: 3px;">
-                            <?php elseif (!empty($firmaConsultorFisica)): ?>
-                                <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 40px; max-width: 120px; margin-bottom: 3px;">
-                            <?php endif; ?>
-                            <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
-                                <span style="color: #666; font-size: 7pt;">Firma</span>
-                            </div>
-                        </td>
-                        <td style="padding: 6px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
-                            <?php
-                            $firmaRepLegal2col = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
-                            if ($firmaRepLegal2col && !empty($firmaRepLegal2col['evidencia']['firma_imagen'])):
-                            ?>
-                                <img src="<?= $firmaRepLegal2col['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 40px; max-width: 120px; margin-bottom: 3px;">
-                            <?php endif; ?>
-                            <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
-                                <span style="color: #666; font-size: 7pt;">Firma</span>
-                            </div>
-                        </td>
-                    </tr>
+                <!-- 7 ESTANDARES SIN DELEGADO: Solo 2 firmantes (TIPO D - WEB) -->
+                <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <tbody>
+                        <tr>
+                            <td style="vertical-align: top; padding: 25px; height: 200px; width: 50%;">
+                                <div class="text-center mb-3">
+                                    <strong style="color: #495057; font-size: 1rem;">ELABORO / CONSULTOR SST</strong>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 300px;">
+                                        <?= !empty($consultorNombre) ? esc($consultorNombre) : '&nbsp;' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Cargo:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 300px;">
+                                        <?= esc($consultorCargo) ?>
+                                    </span>
+                                </div>
+                                <?php if (!empty($consultorLicencia)): ?>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Licencia:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 300px;">
+                                        <?= esc($consultorLicencia) ?>
+                                    </span>
+                                </div>
+                                <?php endif; ?>
+                                <div style="text-align: center; margin-top: 30px;">
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 70px; max-width: 200px;">
+                                    <?php elseif (!empty($firmaConsultorFisica)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 70px; max-width: 200px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
+                                        <small style="color: #666;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="vertical-align: top; padding: 25px; height: 200px; width: 50%;">
+                                <div class="text-center mb-3">
+                                    <strong style="color: #495057; font-size: 1rem;">APROBO / REPRESENTANTE LEGAL</strong>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 300px;">
+                                        <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '&nbsp;' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Cargo:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 300px;">
+                                        <?= esc($repLegalCargo) ?>
+                                    </span>
+                                </div>
+                                <div style="text-align: center; margin-top: 30px;">
+                                    <?php
+                                    $firmaRepLegal2col = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+                                    if ($firmaRepLegal2col && !empty($firmaRepLegal2col['evidencia']['firma_imagen'])):
+                                    ?>
+                                        <img src="<?= $firmaRepLegal2col['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 70px; max-width: 200px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
+                                        <small style="color: #666;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
 
                 <?php else: ?>
-                <!-- 3 FIRMANTES (TIPO E) -->
-                <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
-                    <tr>
-                        <td width="33%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
-                            Elaboro
-                        </td>
-                        <td width="34%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
-                            <?php if ($requiereDelegado): ?>
-                            Reviso / Delegado SST
-                            <?php else: ?>
-                            Reviso / <?= $estandares <= 21 ? 'Vigia SST' : 'COPASST' ?>
-                            <?php endif; ?>
-                        </td>
-                        <td width="33%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">
-                            Aprobo
-                        </td>
-                    </tr>
-                    <!-- Fila datos TIPO E -->
-                    <tr>
-                        <td style="vertical-align: top; padding: 5px; border: 1px solid #999; font-size: 8pt;">
-                            <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($consultorNombre) ? esc($consultorNombre) : '_______________' ?></p>
-                            <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($consultorCargo) ?></p>
-                        </td>
-                        <td style="vertical-align: top; padding: 5px; border: 1px solid #999; font-size: 8pt;">
-                            <p style="margin: 2px 0;"><b>Nombre:</b>
-                                <?php if ($requiereDelegado): ?>
-                                    <?= !empty($delegadoNombre) ? esc($delegadoNombre) : '_______________' ?>
-                                <?php endif; ?>
-                            </p>
-                            <p style="margin: 2px 0;"><b>Cargo:</b>
-                                <?php if ($requiereDelegado): ?>
-                                    <?= esc($delegadoCargo) ?>
-                                <?php else: ?>
-                                    <?= $estandares <= 21 ? 'Vigia de SST' : 'COPASST' ?>
-                                <?php endif; ?>
-                            </p>
-                        </td>
-                        <td style="vertical-align: top; padding: 5px; border: 1px solid #999; font-size: 8pt;">
-                            <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '_______________' ?></p>
-                            <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($repLegalCargo) ?></p>
-                        </td>
-                    </tr>
-                    <!-- Fila firmas TIPO E -->
-                    <tr>
-                        <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
-                            <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
-                                <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 35px; max-width: 100px; margin-bottom: 3px;">
-                            <?php elseif (!empty($firmaConsultorFisica)): ?>
-                                <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 35px; max-width: 100px; margin-bottom: 3px;">
-                            <?php endif; ?>
-                            <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
-                                <span style="color: #666; font-size: 6pt;">Firma</span>
-                            </div>
-                        </td>
-                        <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
-                            <?php
-                            $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
-                            if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])):
-                            ?>
-                                <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 35px; max-width: 100px; margin-bottom: 3px;">
-                            <?php endif; ?>
-                            <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
-                                <span style="color: #666; font-size: 6pt;">Firma</span>
-                            </div>
-                        </td>
-                        <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
-                            <?php
-                            $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
-                            if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])):
-                            ?>
-                                <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 35px; max-width: 100px; margin-bottom: 3px;">
-                            <?php endif; ?>
-                            <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
-                                <span style="color: #666; font-size: 6pt;">Firma</span>
-                            </div>
-                        </td>
-                    </tr>
+                <!-- 3 FIRMANTES (TIPO E - WEB) -->
+                <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <tbody>
+                        <tr>
+                            <td style="vertical-align: top; padding: 25px; height: 200px; width: 33.33%;">
+                                <div class="text-center mb-3">
+                                    <strong style="color: #495057; font-size: 1rem;">ELABORO</strong>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;">
+                                        <?= !empty($consultorNombre) ? esc($consultorNombre) : '&nbsp;' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Cargo:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;">
+                                        <?= esc($consultorCargo) ?>
+                                    </span>
+                                </div>
+                                <div style="text-align: center; margin-top: 30px;">
+                                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 70px; max-width: 200px;">
+                                    <?php elseif (!empty($firmaConsultorFisica)): ?>
+                                        <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 70px; max-width: 200px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
+                                        <small style="color: #666;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="vertical-align: top; padding: 25px; height: 200px; width: 33.34%;">
+                                <div class="text-center mb-3">
+                                    <strong style="color: #495057; font-size: 1rem;">
+                                        <?php if ($requiereDelegado): ?>
+                                        REVISO / DELEGADO SST
+                                        <?php else: ?>
+                                        REVISO / <?= $estandares <= 21 ? 'VIGIA SST' : 'COPASST' ?>
+                                        <?php endif; ?>
+                                    </strong>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;">
+                                        <?php if ($requiereDelegado): ?>
+                                            <?= !empty($delegadoNombre) ? esc($delegadoNombre) : '&nbsp;' ?>
+                                        <?php else: ?>
+                                            &nbsp;
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Cargo:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;">
+                                        <?php if ($requiereDelegado): ?>
+                                            <?= esc($delegadoCargo) ?>
+                                        <?php else: ?>
+                                            <?= $estandares <= 21 ? 'Vigia de SST' : 'COPASST' ?>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <div style="text-align: center; margin-top: 30px;">
+                                    <?php
+                                    $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
+                                    if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])):
+                                    ?>
+                                        <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 70px; max-width: 200px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
+                                        <small style="color: #666;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="vertical-align: top; padding: 25px; height: 200px; width: 33.33%;">
+                                <div class="text-center mb-3">
+                                    <strong style="color: #495057; font-size: 1rem;">APROBO</strong>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Nombre:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;">
+                                        <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '&nbsp;' ?>
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="color: #495057;">Cargo:</strong>
+                                    <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;">
+                                        <?= esc($repLegalCargo) ?>
+                                    </span>
+                                </div>
+                                <div style="text-align: center; margin-top: 30px;">
+                                    <?php
+                                    $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+                                    if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])):
+                                    ?>
+                                        <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 70px; max-width: 200px;">
+                                    <?php endif; ?>
+                                    <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
+                                        <small style="color: #666;">Firma</small>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
                 <?php endif; ?>
             </div>
 
             <!-- Pie de documento -->
-            <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; text-align: center; font-size: 8pt; color: #666;">
-                <p style="margin: 2px 0;"><?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente'] ?? '') ?></p>
-                <p style="margin: 2px 0;">Documento generado el <?= date('d/m/Y') ?></p>
+            <div class="text-center text-muted mt-4 pt-3 border-top" style="font-size: 0.75rem;">
+                <p class="mb-1">Documento generado el <?= date('d/m/Y') ?> - Sistema de Gestion SST</p>
+                <p class="mb-0"><?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente'] ?? '') ?></p>
             </div>
         </div>
     </div>
