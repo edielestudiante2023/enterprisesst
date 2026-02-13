@@ -335,39 +335,89 @@ class ContractPDFGenerator
     }
 
     /**
+     * Genera una etiqueta <img> con la firma en base64 si el archivo existe
+     */
+    private function getSignatureImage($filePath, $height = 60)
+    {
+        if (!empty($filePath) && file_exists($filePath)) {
+            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            $mime = ($ext === 'png') ? 'image/png' : 'image/jpeg';
+            $base64 = base64_encode(file_get_contents($filePath));
+            return '<img src="data:' . $mime . ';base64,' . $base64 . '" style="height: ' . $height . 'px; max-width: 180px; object-fit: contain;">';
+        }
+        return '';
+    }
+
+    /**
      * Construye el HTML de las firmas
      */
     private function buildSignaturesHTML($data)
     {
         $fechaHoy = new \DateTime();
 
+        // Firma del representante legal de Cycloid (FIRMA_DIANITA.jpg)
+        $firmaContratista = $this->getSignatureImage(FCPATH . 'img/FIRMA_DIANITA.jpg');
+
+        // Firma del representante legal del cliente
+        $firmaCliente = '';
+        if (!empty($data['firma_representante_legal'])) {
+            $firmaCliente = $this->getSignatureImage(FCPATH . 'uploads/' . $data['firma_representante_legal']);
+        }
+
+        // Firma del consultor (responsable SG-SST)
+        $firmaConsultor = '';
+        if (!empty($data['firma_consultor'])) {
+            $firmaConsultor = $this->getSignatureImage(FCPATH . 'uploads/' . $data['firma_consultor']);
+        }
+
         $html = '<div style="margin-top: 30px;">';
         $html .= '<p>Las partes firman el presente documento el día ' . $fechaHoy->format('d/m/Y') . '.</p>';
 
-        $html .= '<table style="width: 100%; margin-top: 50px;">';
+        $html .= '<table style="width: 100%; margin-top: 30px;">';
         $html .= '<tr>';
+
+        // Firma contratista (Cycloid)
         $html .= '<td style="width: 45%; text-align: center; vertical-align: bottom;">';
+        if ($firmaContratista) {
+            $html .= '<div style="margin-bottom: 5px;">' . $firmaContratista . '</div>';
+        } else {
+            $html .= '<div style="height: 60px;"></div>';
+        }
         $html .= '<div style="border-top: 1px solid black; padding-top: 5px;">';
         $html .= '<b>' . strtoupper($data['nombre_rep_legal_contratista']) . '</b><br>';
         $html .= 'C.C. ' . $data['cedula_rep_legal_contratista'] . '<br>';
         $html .= 'Representante Legal<br>';
         $html .= '<b>CYCLOID TALENT S.A.S.</b>';
         $html .= '</div></td>';
+
         $html .= '<td style="width: 10%;"></td>';
+
+        // Firma cliente (representante legal)
         $html .= '<td style="width: 45%; text-align: center; vertical-align: bottom;">';
+        if ($firmaCliente) {
+            $html .= '<div style="margin-bottom: 5px;">' . $firmaCliente . '</div>';
+        } else {
+            $html .= '<div style="height: 60px;"></div>';
+        }
         $html .= '<div style="border-top: 1px solid black; padding-top: 5px;">';
         $html .= '<b>' . strtoupper($data['nombre_rep_legal_cliente']) . '</b><br>';
         $html .= 'C.C. ' . $data['cedula_rep_legal_cliente'] . '<br>';
         $html .= 'Representante Legal<br>';
         $html .= '<b>' . strtoupper($data['nombre_cliente']) . '</b>';
         $html .= '</div></td>';
+
         $html .= '</tr>';
         $html .= '</table>';
 
-        // Responsable SG-SST
-        $html .= '<div style="text-align: center; margin-top: 50px;">';
+        // Responsable SG-SST (consultor)
+        $html .= '<div style="text-align: center; margin-top: 40px;">';
         $html .= '<p><b>RESPONSABLE SG-SST ASIGNADO</b></p>';
-        $html .= '<div style="border-top: 1px solid black; width: 200px; margin: 50px auto 0 auto; padding-top: 5px;">';
+        if ($firmaConsultor) {
+            $html .= '<div style="margin-bottom: 5px;">' . $firmaConsultor . '</div>';
+        } else {
+            $html .= '<div style="height: 60px;"></div>';
+        }
+        $html .= '<div style="border-top: 1px solid black; width: 200px; margin: 0 auto; padding-top: 5px;">';
         $html .= '<b>' . strtoupper($data['nombre_responsable_sgsst']) . '</b><br>';
         $html .= 'C.C. ' . $data['cedula_responsable_sgsst'] . '<br>';
         $html .= 'Profesional SG-SST';

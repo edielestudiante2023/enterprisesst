@@ -629,6 +629,9 @@ $routes->get('/contracts/maintenance', 'ContractController::maintenance');
 $routes->get('/api/contracts/active/(:num)', 'ContractController::getActiveContract/$1');
 $routes->get('/api/contracts/stats', 'ContractController::getStats');
 
+// Generación IA de cláusula cuarta
+$routes->post('/contracts/generar-clausula-ia', 'ContractController::generarClausulaIA');
+
 // Editar datos y generar PDF
 $routes->get('/contracts/edit-contract-data/(:num)', 'ContractController::editContractData/$1');
 $routes->post('/contracts/save-and-generate/(:num)', 'ContractController::saveAndGeneratePDF/$1');

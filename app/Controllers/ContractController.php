@@ -138,8 +138,8 @@ class ContractController extends Controller
             $clients = [$client];
         } else {
             $clients = $role === 'consultor'
-                ? $this->clientModel->where('id_consultor', $idConsultor)->findAll()
-                : $this->clientModel->findAll();
+                ? $this->clientModel->where('id_consultor', $idConsultor)->orderBy('nombre_cliente', 'ASC')->findAll()
+                : $this->clientModel->orderBy('nombre_cliente', 'ASC')->findAll();
         }
 
         $data = [
@@ -591,6 +591,90 @@ class ContractController extends Controller
         } catch (\Exception $e) {
             log_message('error', 'Excepción al enviar email: ' . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Genera la Cláusula Cuarta con IA usando los acuerdos contractuales
+     */
+    public function generarClausulaIA()
+    {
+        if ($this->request->getMethod() !== 'post') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Método no permitido'])->setStatusCode(405);
+        }
+
+        $json = $this->request->getJSON(true);
+
+        $idCliente = $json['id_cliente'] ?? null;
+        $plazoEjecucion = $json['plazo_ejecucion'] ?? '';
+        $duracionContrato = $json['duracion_contrato'] ?? '';
+        $porcentajeAnticipo = $json['porcentaje_anticipo'] ?? '';
+        $condicionesPago = $json['condiciones_pago'] ?? '';
+        $terminacionAnticipada = $json['terminacion_anticipada'] ?? '';
+        $obligacionesEspeciales = $json['obligaciones_especiales'] ?? '';
+        $contextoAdicional = $json['contexto_adicional'] ?? '';
+        $textoActual = $json['texto_actual'] ?? '';
+        $modoRefinamiento = $json['modo_refinamiento'] ?? false;
+
+        // Obtener datos del cliente si se seleccionó
+        $infoCliente = '';
+        if ($idCliente) {
+            $client = $this->clientModel->find($idCliente);
+            if ($client) {
+                $infoCliente = "Datos del cliente: {$client['nombre_cliente']}, NIT: {$client['nit_cliente']}, " .
+                    "Actividad Económica: " . ($client['codigo_actividad_economica'] ?? 'No especificada') . ", " .
+                    "Ciudad: " . ($client['ciudad_cliente'] ?? 'No especificada') . ".";
+            }
+        }
+
+        // Construir el prompt según el modo
+        if ($modoRefinamiento && !empty($textoActual)) {
+            $prompt = "Eres un abogado experto en contratos de prestación de servicios en SST (Seguridad y Salud en el Trabajo) en Colombia.\n\n" .
+                "Tienes el siguiente texto de Cláusula Cuarta de un contrato:\n\n" .
+                "--- TEXTO ACTUAL ---\n{$textoActual}\n--- FIN TEXTO ---\n\n" .
+                "El usuario quiere que apliques las siguientes modificaciones o mejoras:\n{$contextoAdicional}\n\n" .
+                ($infoCliente ? $infoCliente . "\n\n" : "") .
+                "Reescribe la cláusula completa aplicando los cambios solicitados. Mantén el formato legal formal. " .
+                "Responde SOLO con el texto de la cláusula, sin explicaciones ni comentarios adicionales.";
+        } else {
+            $acuerdos = [];
+            if ($plazoEjecucion) $acuerdos[] = "Plazo de ejecución: {$plazoEjecucion}";
+            if ($duracionContrato) $acuerdos[] = "Duración del contrato: {$duracionContrato}";
+            if ($porcentajeAnticipo) $acuerdos[] = "Porcentaje de anticipo: {$porcentajeAnticipo}";
+            if ($condicionesPago) $acuerdos[] = "Condiciones de pago: {$condicionesPago}";
+            if ($terminacionAnticipada) $acuerdos[] = "Condiciones de terminación anticipada: {$terminacionAnticipada}";
+            if ($obligacionesEspeciales) $acuerdos[] = "Obligaciones especiales: {$obligacionesEspeciales}";
+            if ($contextoAdicional) $acuerdos[] = "Contexto adicional: {$contextoAdicional}";
+
+            $acuerdosTexto = implode("\n", $acuerdos);
+
+            $prompt = "Eres un abogado experto en contratos de prestación de servicios en SST (Seguridad y Salud en el Trabajo) en Colombia.\n\n" .
+                "Genera la CLÁUSULA CUARTA (Duración y Plazo de Ejecución) de un contrato de prestación de servicios con los siguientes acuerdos contractuales:\n\n" .
+                ($infoCliente ? $infoCliente . "\n\n" : "") .
+                $acuerdosTexto . "\n\n" .
+                "La cláusula debe incluir:\n" .
+                "1. CUARTA-PLAZO DE EJECUCIÓN: con el plazo en días calendario y condiciones de inicio\n" .
+                "2. CUARTA-DURACIÓN: con la duración del contrato y fechas si aplica\n" .
+                "3. PARÁGRAFO PRIMERO: sobre terminación anticipada y reconocimiento de honorarios causados\n" .
+                "4. PARÁGRAFO SEGUNDO: indicando que NO opera prórroga automática\n" .
+                "5. Parágrafos adicionales según las obligaciones especiales acordadas\n\n" .
+                "Usa lenguaje jurídico formal colombiano. Responde SOLO con el texto de la cláusula, sin explicaciones ni comentarios adicionales.";
+        }
+
+        try {
+            $iaService = new \App\Services\IADocumentacionService();
+            $textoGenerado = $iaService->generarContenido($prompt, 1500);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'texto' => trim($textoGenerado)
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error generando cláusula con IA: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar con IA: ' . $e->getMessage()
+            ])->setStatusCode(500);
         }
     }
 

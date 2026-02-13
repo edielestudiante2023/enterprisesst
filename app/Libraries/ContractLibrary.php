@@ -115,7 +115,9 @@ class ContractLibrary
                                              tbl_clientes.nit_cliente,
                                              tbl_clientes.correo_cliente,
                                              tbl_clientes.telefono_1_cliente,
-                                             tbl_consultor.nombre_consultor')
+                                             tbl_clientes.firma_representante_legal,
+                                             tbl_consultor.nombre_consultor,
+                                             tbl_consultor.firma_consultor')
                                    ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_contratos.id_cliente')
                                    ->join('tbl_consultor', 'tbl_consultor.id_consultor = tbl_contratos.id_consultor_responsable', 'left')
                                    ->where('tbl_contratos.id_contrato', $idContrato)
