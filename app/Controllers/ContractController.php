@@ -599,10 +599,6 @@ class ContractController extends Controller
      */
     public function generarClausulaIA()
     {
-        if ($this->request->getMethod() !== 'post') {
-            return $this->response->setJSON(['success' => false, 'message' => 'Método no permitido'])->setStatusCode(405);
-        }
-
         $json = $this->request->getJSON(true);
 
         $idCliente = $json['id_cliente'] ?? null;
