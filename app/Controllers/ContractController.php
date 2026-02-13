@@ -912,4 +912,293 @@ class ContractController extends Controller
 
         return $this->response->setJSON($diagnostico);
     }
+
+    // =========================================================================
+    // FIRMA DIGITAL DE CONTRATOS (Sistema independiente)
+    // =========================================================================
+
+    /**
+     * Envía solicitud de firma digital al representante legal del cliente
+     */
+    public function enviarFirma()
+    {
+        $idContrato = $this->request->getPost('id_contrato');
+
+        $contract = $this->contractLibrary->getContractWithClient($idContrato);
+        if (!$contract) {
+            return redirect()->to('/contracts')->with('error', 'Contrato no encontrado');
+        }
+
+        // Validar que tenga PDF generado
+        if (empty($contract['contrato_generado'])) {
+            return redirect()->to('/contracts/view/' . $idContrato)
+                ->with('error', 'Debe generar el PDF del contrato antes de enviarlo a firmar');
+        }
+
+        // Validar que no esté ya firmado
+        if (($contract['estado_firma'] ?? '') === 'firmado') {
+            return redirect()->to('/contracts/view/' . $idContrato)
+                ->with('error', 'Este contrato ya fue firmado');
+        }
+
+        // Validar email del cliente
+        $emailCliente = $contract['email_cliente'] ?? '';
+        if (empty($emailCliente)) {
+            return redirect()->to('/contracts/view/' . $idContrato)
+                ->with('error', 'El contrato no tiene email del representante legal del cliente');
+        }
+
+        // Generar token
+        $token = bin2hex(random_bytes(32));
+        $expiracion = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+        // Actualizar contrato
+        $this->contractModel->update($idContrato, [
+            'token_firma' => $token,
+            'token_firma_expiracion' => $expiracion,
+            'estado_firma' => 'pendiente_firma'
+        ]);
+
+        // URL de firma
+        $urlFirma = base_url("contrato/firmar/{$token}");
+        $nombreFirmante = $contract['nombre_rep_legal_cliente'] ?? 'Representante Legal';
+
+        // Enviar email principal al representante legal del cliente
+        $enviado = $this->enviarEmailFirmaContrato(
+            $emailCliente,
+            $nombreFirmante,
+            $contract,
+            $urlFirma,
+            'Se requiere su firma digital para el contrato de prestacion de servicios SST.',
+            false
+        );
+
+        if (!$enviado) {
+            // Revertir si falla el envío
+            $this->contractModel->update($idContrato, [
+                'token_firma' => null,
+                'token_firma_expiracion' => null,
+                'estado_firma' => 'sin_enviar'
+            ]);
+            return redirect()->to('/contracts/view/' . $idContrato)
+                ->with('error', 'Error al enviar el correo. Verifique la configuracion de SendGrid.');
+        }
+
+        // Enviar copia informativa al responsable SG-SST si tiene email
+        $emailResponsable = $contract['email_responsable_sgsst'] ?? '';
+        if (!empty($emailResponsable) && $emailResponsable !== $emailCliente) {
+            $this->enviarEmailFirmaContrato(
+                $emailResponsable,
+                $contract['nombre_responsable_sgsst'] ?? 'Responsable SST',
+                $contract,
+                $urlFirma,
+                'El Representante Legal debe firmar este contrato. Se le envia copia informativa.',
+                true
+            );
+        }
+
+        return redirect()->to('/contracts/view/' . $idContrato)
+            ->with('success', 'Solicitud de firma enviada correctamente a ' . $emailCliente);
+    }
+
+    /**
+     * Página pública de firma del contrato (sin auth)
+     */
+    public function paginaFirmaContrato($token)
+    {
+        $db = \Config\Database::connect();
+
+        $contrato = $db->table('tbl_contratos')
+            ->select('tbl_contratos.*, tbl_clientes.nombre_cliente, tbl_clientes.nit_cliente')
+            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_contratos.id_cliente')
+            ->where('tbl_contratos.token_firma', $token)
+            ->get()->getRowArray();
+
+        if (!$contrato) {
+            return view('contracts/firma_error_contrato', [
+                'mensaje' => 'El enlace de firma no es valido o ya fue utilizado.'
+            ]);
+        }
+
+        // Verificar estado
+        $estadoFirma = $contrato['estado_firma'] ?? '';
+        if ($estadoFirma === 'firmado') {
+            return view('contracts/firma_error_contrato', [
+                'mensaje' => 'Este contrato ya fue firmado anteriormente.'
+            ]);
+        }
+
+        if ($estadoFirma !== 'pendiente_firma') {
+            return view('contracts/firma_error_contrato', [
+                'mensaje' => 'Este contrato no esta disponible para firma.'
+            ]);
+        }
+
+        // Verificar expiración
+        if (!empty($contrato['token_firma_expiracion']) && strtotime($contrato['token_firma_expiracion']) < time()) {
+            return view('contracts/firma_error_contrato', [
+                'mensaje' => 'El enlace de firma ha expirado. Solicite un nuevo enlace.'
+            ]);
+        }
+
+        return view('contracts/contrato_firma', [
+            'contrato' => $contrato,
+            'token' => $token
+        ]);
+    }
+
+    /**
+     * Procesar firma digital del contrato (público, sin auth)
+     */
+    public function procesarFirmaContrato()
+    {
+        $token = $this->request->getPost('token');
+        $firmaNombre = $this->request->getPost('firma_nombre');
+        $firmaCedula = $this->request->getPost('firma_cedula');
+        $firmaImagen = $this->request->getPost('firma_imagen');
+
+        $db = \Config\Database::connect();
+
+        // Validar token
+        $contrato = $db->table('tbl_contratos')
+            ->where('token_firma', $token)
+            ->where('estado_firma', 'pendiente_firma')
+            ->get()->getRowArray();
+
+        if (!$contrato) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Token no valido']);
+        }
+
+        // Verificar expiración
+        if (!empty($contrato['token_firma_expiracion']) && strtotime($contrato['token_firma_expiracion']) < time()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'El enlace ha expirado']);
+        }
+
+        // Guardar imagen de firma
+        $rutaFirma = null;
+        if ($firmaImagen) {
+            $firmaData = explode(',', $firmaImagen);
+            $firmaDecoded = base64_decode(end($firmaData));
+            $nombreArchivo = 'firma_contrato_' . $contrato['id_contrato'] . '_' . time() . '.png';
+            $rutaFirma = 'uploads/firmas/' . $nombreArchivo;
+
+            if (!is_dir(FCPATH . 'uploads/firmas')) {
+                mkdir(FCPATH . 'uploads/firmas', 0755, true);
+            }
+
+            file_put_contents(FCPATH . $rutaFirma, $firmaDecoded);
+        }
+
+        // Actualizar contrato
+        $db->table('tbl_contratos')
+            ->where('id_contrato', $contrato['id_contrato'])
+            ->update([
+                'estado_firma' => 'firmado',
+                'firma_cliente_nombre' => $firmaNombre,
+                'firma_cliente_cedula' => $firmaCedula,
+                'firma_cliente_imagen' => $rutaFirma,
+                'firma_cliente_ip' => $this->request->getIPAddress(),
+                'firma_cliente_fecha' => date('Y-m-d H:i:s'),
+                'token_firma' => null,
+                'token_firma_expiracion' => null
+            ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Contrato firmado correctamente'
+        ]);
+    }
+
+    /**
+     * Consultar estado de firma de un contrato (autenticado)
+     */
+    public function estadoFirma($idContrato)
+    {
+        $contract = $this->contractModel->find($idContrato);
+
+        if (!$contract) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Contrato no encontrado']);
+        }
+
+        $data = [
+            'success' => true,
+            'estado_firma' => $contract['estado_firma'] ?? 'sin_enviar',
+        ];
+
+        if (($contract['estado_firma'] ?? '') === 'firmado') {
+            $data['firma'] = [
+                'nombre' => $contract['firma_cliente_nombre'],
+                'cedula' => $contract['firma_cliente_cedula'],
+                'fecha' => $contract['firma_cliente_fecha'],
+                'ip' => $contract['firma_cliente_ip'],
+            ];
+        }
+
+        return $this->response->setJSON($data);
+    }
+
+    /**
+     * Envía email de solicitud de firma de contrato via SendGrid
+     */
+    private function enviarEmailFirmaContrato($email, $nombreFirmante, $contrato, $urlFirma, $mensaje, $esCopia = false)
+    {
+        $apiKey = env('SENDGRID_API_KEY');
+        if (empty($apiKey)) {
+            log_message('error', 'SENDGRID_API_KEY no configurada');
+            return false;
+        }
+
+        // Renderizar template de email
+        $htmlEmail = view('contracts/email_contrato_firma', [
+            'nombreFirmante' => $nombreFirmante,
+            'contrato' => $contrato,
+            'urlFirma' => $urlFirma,
+            'mensaje' => $mensaje,
+            'esCopia' => $esCopia
+        ]);
+
+        $subject = $esCopia
+            ? "[Copia] Solicitud de Firma: Contrato SST - {$contrato['nombre_cliente']}"
+            : "Solicitud de Firma: Contrato SST - {$contrato['nombre_cliente']}";
+
+        $fromEmail = env('SENDGRID_FROM_EMAIL', 'notificacion.cycloidtalent@cycloidtalent.com');
+        $fromName = env('SENDGRID_FROM_NAME', 'Enterprise SST');
+
+        $data = [
+            'personalizations' => [
+                [
+                    'to' => [['email' => $email, 'name' => $nombreFirmante]],
+                    'subject' => $subject
+                ]
+            ],
+            'from' => [
+                'email' => $fromEmail,
+                'name' => $fromName
+            ],
+            'content' => [
+                ['type' => 'text/html', 'value' => $htmlEmail]
+            ]
+        ];
+
+        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            log_message('error', "SendGrid Error (contrato firma) - HTTP {$httpCode}: {$response} | cURL: {$curlError}");
+        }
+
+        return $httpCode >= 200 && $httpCode < 300;
+    }
 }

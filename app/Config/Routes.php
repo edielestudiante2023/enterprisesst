@@ -639,6 +639,12 @@ $routes->post('/contracts/save-and-generate/(:num)', 'ContractController::saveAn
 $routes->get('/contracts/download-pdf/(:num)', 'ContractController::downloadPDF/$1');
 $routes->get('/contracts/diagnostico-firmas/(:num)', 'ContractController::diagnosticoFirmas/$1'); // TEMPORAL - eliminar
 
+// Firma digital de contratos (sistema independiente)
+$routes->post('/contracts/enviar-firma', 'ContractController::enviarFirma');
+$routes->get('/contracts/estado-firma/(:num)', 'ContractController::estadoFirma/$1');
+$routes->get('/contrato/firmar/(:segment)', 'ContractController::paginaFirmaContrato/$1');
+$routes->post('/contrato/procesar-firma', 'ContractController::procesarFirmaContrato');
+
 // Documentación por contrato
 $routes->get('/contracts/documentacion/(:num)', 'DocumentacionContratoController::previsualizarDocumentacion/$1');
 $routes->get('/contracts/descargar-documentacion/(:num)', 'DocumentacionContratoController::descargarDocumentacion/$1');

@@ -291,6 +291,27 @@
                                 <i class="fas fa-check-circle text-success"></i>
                                 Generado: <?= isset($contract['fecha_generacion_contrato']) ? date('d/m/Y H:i', strtotime($contract['fecha_generacion_contrato'])) : 'N/A' ?>
                             </small>
+
+                            <!-- Firma Digital del Contrato -->
+                            <?php $estadoFirma = $contract['estado_firma'] ?? 'sin_enviar'; ?>
+
+                            <?php if ($estadoFirma === 'firmado'): ?>
+                                <div class="alert alert-success py-2 mb-2">
+                                    <i class="fas fa-check-circle"></i> Contrato firmado por <?= esc($contract['firma_cliente_nombre']) ?>
+                                    <br><small><?= date('d/m/Y H:i', strtotime($contract['firma_cliente_fecha'])) ?></small>
+                                </div>
+                            <?php elseif ($estadoFirma === 'pendiente_firma'): ?>
+                                <div class="alert alert-warning py-2 mb-2">
+                                    <i class="fas fa-clock"></i> Pendiente de firma del cliente
+                                </div>
+                                <button onclick="reenviarFirma()" class="btn btn-outline-warning w-100 mb-2">
+                                    <i class="fas fa-redo"></i> Reenviar Solicitud de Firma
+                                </button>
+                            <?php else: ?>
+                                <button onclick="enviarAFirmar()" class="btn btn-success w-100 mb-2">
+                                    <i class="fas fa-pen-nib"></i> Enviar a Firmar Digitalmente
+                                </button>
+                            <?php endif; ?>
                         <?php endif; ?>
 
                         <?php if ($contract['estado'] === 'activo'): ?>
@@ -375,5 +396,72 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    function enviarAFirmar() {
+        const emailCliente = '<?= esc($contract['email_cliente'] ?? '') ?>';
+        const nombreCliente = '<?= esc($contract['nombre_rep_legal_cliente'] ?? '') ?>';
+
+        if (!emailCliente) {
+            Swal.fire('Error', 'El contrato no tiene email del representante legal. Edite los datos del contrato primero.', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Enviar a Firmar Digitalmente',
+            html: `<p>Se enviara un enlace de firma digital a:</p>
+                   <p><strong>${nombreCliente}</strong><br>${emailCliente}</p>
+                   <p class="text-muted small">El enlace sera valido por 7 dias.</p>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            confirmButtonText: '<i class="fas fa-paper-plane"></i> Enviar Solicitud',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Crear form y enviar
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '<?= base_url("/contracts/enviar-firma") ?>';
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'id_contrato';
+                input.value = '<?= $contract['id_contrato'] ?>';
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    function reenviarFirma() {
+        const emailCliente = '<?= esc($contract['email_cliente'] ?? '') ?>';
+
+        Swal.fire({
+            title: 'Reenviar Solicitud de Firma',
+            html: `<p>Se generara un nuevo enlace y se enviara a:</p>
+                   <p><strong>${emailCliente}</strong></p>
+                   <p class="text-muted small">El enlace anterior quedara invalidado.</p>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            confirmButtonText: '<i class="fas fa-redo"></i> Reenviar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '<?= base_url("/contracts/enviar-firma") ?>';
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'id_contrato';
+                input.value = '<?= $contract['id_contrato'] ?>';
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+    </script>
 </body>
 </html>

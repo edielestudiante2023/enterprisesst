@@ -46,7 +46,16 @@ class ContractModel extends Model
         'ruta_pdf_contrato',
         'contrato_enviado',
         'fecha_envio_contrato',
-        'email_envio_contrato'
+        'email_envio_contrato',
+        // Campos para firma digital del contrato
+        'token_firma',
+        'token_firma_expiracion',
+        'estado_firma',
+        'firma_cliente_nombre',
+        'firma_cliente_cedula',
+        'firma_cliente_imagen',
+        'firma_cliente_ip',
+        'firma_cliente_fecha'
     ];
 
     protected $useTimestamps = true;

@@ -399,8 +399,11 @@ class ContractPDFGenerator
         $firmaContratista = $this->getSignatureImage(FCPATH . 'img/FIRMA_DIANITA.jpg');
 
         // Firma del representante legal del cliente
+        // Primero intentar firma digital (del sistema de firma electrónica de contratos)
         $firmaCliente = '';
-        if (!empty($data['firma_representante_legal'])) {
+        if (!empty($data['firma_cliente_imagen']) && file_exists(FCPATH . $data['firma_cliente_imagen'])) {
+            $firmaCliente = $this->getSignatureImage(FCPATH . $data['firma_cliente_imagen']);
+        } elseif (!empty($data['firma_representante_legal'])) {
             $firmaCliente = $this->getSignatureImage($data['firma_representante_legal']);
         }
 
