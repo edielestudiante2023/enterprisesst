@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agregar Cliente</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
 <body class="bg-light">
@@ -84,7 +85,12 @@
 
                     <div class="mb-3">
                         <label class="form-label">Password:</label>
-                        <input type="password" name="password" class="form-control" required>
+                        <div class="input-group">
+                            <input type="password" name="password" id="passwordField" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="bi bi-eye-slash" id="toggleIcon"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -229,6 +235,19 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const field = document.getElementById('passwordField');
+            const icon = document.getElementById('toggleIcon');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            } else {
+                field.type = 'password';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            }
+        });
+    </script>
 </body>
 
 </html>
