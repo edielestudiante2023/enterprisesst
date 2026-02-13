@@ -153,7 +153,9 @@ class ResponsablesSSTController extends BaseController
         }
 
         // Verificar si se debe crear usuario
-        $crearUsuario = $this->request->getPost('crear_usuario');
+        $crearUsuario = $this->request->getPost('crear_usuario') ?? $this->request->getVar('crear_usuario');
+
+        log_message('info', "ResponsablesSST::guardar - crear_usuario={$crearUsuario}, email={$datos['email']}, id_responsable=" . ($idResponsable ?? 'NULL'));
 
         try {
             if ($idResponsable) {
@@ -187,22 +189,18 @@ class ResponsablesSSTController extends BaseController
                         'estado' => 'activo'
                     ];
 
+                    log_message('info', "ResponsablesSST: Intentando crear usuario para {$datos['email']}");
                     $idUsuario = $userModel->createUser($datosUsuario);
 
                     if ($idUsuario) {
-                        // Actualizar responsable con id_usuario (si existe el campo)
-                        try {
-                            $this->responsableModel->update($nuevoIdResponsable, ['id_usuario' => $idUsuario]);
-                        } catch (\Exception $e) {
-                            // El campo id_usuario puede no existir, ignorar
-                        }
+                        log_message('info', "ResponsablesSST: Usuario creado con ID {$idUsuario}");
 
                         // Enviar credenciales por email
                         $emailEnviado = $this->enviarCredencialesEmail(
                             $datos['email'],
                             $datos['nombre_completo'],
                             $passwordTemp,
-                            $cliente['nombre_cliente']
+                            $cliente['nombre_cliente'] ?? $cliente['razon_social'] ?? 'Empresa'
                         );
 
                         if ($emailEnviado) {
@@ -210,6 +208,11 @@ class ResponsablesSSTController extends BaseController
                         } else {
                             $mensaje .= '. Usuario creado pero error al enviar email. Password temporal: ' . $passwordTemp;
                         }
+                    } else {
+                        $erroresUsuario = $userModel->errors();
+                        $errorMsg = !empty($erroresUsuario) ? implode(', ', $erroresUsuario) : 'Error desconocido';
+                        log_message('error', "ResponsablesSST: Error al crear usuario para {$datos['email']}: {$errorMsg}");
+                        $mensaje .= '. Error al crear usuario: ' . $errorMsg;
                     }
                 } else {
                     $mensaje .= '. Ya existe un usuario con ese email.';
@@ -395,57 +398,28 @@ class ResponsablesSSTController extends BaseController
      */
     private function enviarCredencialesEmail(string $email, string $nombre, string $password, string $nombreEmpresa): bool
     {
-        $sendgridApiKey = getenv('SENDGRID_API_KEY') ?: '';
+        $loginUrl = base_url('/login');
+        $fromEmail = env('SENDGRID_FROM_EMAIL', 'notificacion.cycloidtalent@cycloidtalent.com');
+        $fromName = env('SENDGRID_FROM_NAME', 'Enterprise SST');
 
-        if (empty($sendgridApiKey) || $sendgridApiKey === 'SG.xxxxxx') {
-            log_message('error', 'SendGrid API Key no configurada');
+        try {
+            $emailObj = new \SendGrid\Mail\Mail();
+            $emailObj->setFrom($fromEmail, $fromName);
+            $emailObj->setSubject('Bienvenido a Enterprise SST - Credenciales de Acceso');
+            $emailObj->addTo($email, $nombre);
+            $emailObj->addContent('text/html', $this->getEmailTemplateBienvenida($nombre, $email, $password, $nombreEmpresa, $loginUrl));
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($emailObj);
+
+            $statusCode = $response->statusCode();
+            log_message('info', "ResponsablesSST: Email bienvenida enviado a {$email} - Status: {$statusCode}");
+
+            return $statusCode >= 200 && $statusCode < 300;
+        } catch (\Exception $e) {
+            log_message('error', "ResponsablesSST: Error enviando email a {$email}: " . $e->getMessage());
             return false;
         }
-
-        $loginUrl = base_url('/login');
-
-        $emailData = [
-            'personalizations' => [
-                [
-                    'to' => [
-                        ['email' => $email, 'name' => $nombre]
-                    ],
-                    'subject' => 'Bienvenido a Enterprise SST - Credenciales de Acceso'
-                ]
-            ],
-            'from' => [
-                'email' => 'no-reply@cycloidtalent.com',
-                'name' => 'Enterprise SST'
-            ],
-            'content' => [
-                [
-                    'type' => 'text/html',
-                    'value' => $this->getEmailTemplateBienvenida($nombre, $email, $password, $nombreEmpresa, $loginUrl)
-                ]
-            ]
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, 'https://api.sendgrid.com/v3/mail/send');
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($emailData));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $sendgridApiKey,
-            'Content-Type: application/json'
-        ]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode >= 200 && $httpCode < 300) {
-            log_message('info', "Email de bienvenida enviado a: {$email}");
-            return true;
-        }
-
-        log_message('error', "Error enviando email a {$email}. HTTP Code: {$httpCode}, Response: {$response}");
-        return false;
     }
 
     /**
