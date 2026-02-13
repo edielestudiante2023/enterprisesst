@@ -117,83 +117,111 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
 ]) ?>
 
 <!-- Tabla de Listados de Trabajadores Adjuntados -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-warning text-dark">
-        <h6 class="mb-0">
-            <i class="bi bi-people-fill me-2"></i>Listados de Trabajadores de Alto Riesgo
-        </h6>
+<?php if (!defined('TABLA_SOPORTES_STYLES_LOADED')): ?>
+    <?php define('TABLA_SOPORTES_STYLES_LOADED', true); ?>
+    <?= view('documentacion/_components/tabla_soportes_styles') ?>
+<?php endif; ?>
+
+<div class="card border-0 shadow-lg mb-4 tabla-soportes-card">
+    <div class="card-header header-soportes-warning">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 d-flex align-items-center">
+                <div class="icon-wrapper me-3">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div>
+                    <span class="header-title">Listados de Trabajadores de Alto Riesgo</span>
+                    <small class="d-block header-subtitle">Trabajadores identificados con actividades de alto riesgo</small>
+                </div>
+            </h6>
+            <div class="header-stats">
+                <span class="stat-badge">
+                    <i class="bi bi-people me-1"></i>
+                    <span><?= count($listadosTrabajadores) ?></span> listado<?= count($listadosTrabajadores) !== 1 ? 's' : '' ?>
+                </span>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
+
+    <div class="card-body p-0">
         <?php if (!empty($listadosTrabajadores)): ?>
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                <table class="table table-hover mb-0 tabla-soportes-moderna" style="width:100%">
+                    <thead>
                         <tr>
-                            <th style="width: 120px;">Código</th>
-                            <th>Descripción</th>
-                            <th style="width: 80px;">Año</th>
-                            <th style="width: 100px;">Fecha</th>
-                            <th style="width: 100px;">Tipo</th>
-                            <th style="width: 150px;">Acciones</th>
+                            <th style="width:120px">Codigo</th>
+                            <th>Descripcion</th>
+                            <th style="width:80px">Ano</th>
+                            <th style="width:100px">Fecha</th>
+                            <th style="width:100px">Tipo</th>
+                            <th style="width:160px">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($listadosTrabajadores as $listado): ?>
-                            <?php
+                        <?php foreach ($listadosTrabajadores as $listado):
                             $esEnlace = !empty($listado['url_externa']);
                             $urlArchivo = $esEnlace ? $listado['url_externa'] : ($listado['archivo_pdf'] ?? '#');
-                            ?>
-                            <tr>
-                                <td><code><?= esc($listado['codigo'] ?? 'LST-AR') ?></code></td>
-                                <td>
-                                    <strong><?= esc($listado['titulo']) ?></strong>
-                                    <?php if (!empty($listado['observaciones'])): ?>
-                                        <br><small class="text-muted"><?= esc($listado['observaciones']) ?></small>
-                                    <?php endif; ?>
-                                </td>
-                                <td><span class="badge bg-secondary"><?= esc($listado['anio']) ?></span></td>
-                                <td>
-                                    <small><?= date('d/m/Y', strtotime($listado['created_at'] ?? $listado['fecha_aprobacion'] ?? 'now')) ?></small>
-                                </td>
-                                <td>
+                        ?>
+                        <tr>
+                            <td>
+                                <span class="codigo-badge"><?= esc($listado['codigo'] ?? 'LST-AR') ?></span>
+                            </td>
+                            <td>
+                                <div class="nombre-soporte"><?= esc($listado['titulo']) ?></div>
+                                <?php if (!empty($listado['observaciones'])): ?>
+                                    <div class="obs-soporte"><?= esc($listado['observaciones']) ?></div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <span class="anio-badge"><?= esc($listado['anio']) ?></span>
+                            </td>
+                            <td>
+                                <span class="fecha-cell"><?= date('d/m/Y', strtotime($listado['created_at'] ?? $listado['fecha_aprobacion'] ?? 'now')) ?></span>
+                            </td>
+                            <td>
+                                <?php if ($esEnlace): ?>
+                                    <span class="tipo-badge-enlace">
+                                        <i class="bi bi-link-45deg me-1"></i>Enlace
+                                    </span>
+                                <?php else: ?>
+                                    <span class="tipo-badge-archivo">
+                                        <i class="bi bi-file-earmark me-1"></i>Archivo
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="acciones-cell">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Ver">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     <?php if ($esEnlace): ?>
-                                        <span class="badge bg-primary"><i class="bi bi-link-45deg me-1"></i>Enlace</span>
+                                    <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-info" target="_blank" title="Abrir enlace externo">
+                                        <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
                                     <?php else: ?>
-                                        <span class="badge bg-secondary"><i class="bi bi-file-earmark me-1"></i>Archivo</span>
+                                    <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-danger" download title="Descargar">
+                                        <i class="bi bi-download"></i>
+                                    </a>
                                     <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Ver/Descargar">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <?php if ($esEnlace): ?>
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-info" target="_blank" title="Abrir enlace externo">
-                                            <i class="bi bi-box-arrow-up-right"></i>
-                                        </a>
-                                        <?php else: ?>
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-danger" download title="Descargar">
-                                            <i class="bi bi-download"></i>
-                                        </a>
-                                        <?php endif; ?>
-                                        <!-- Botón publicar en reportList -->
-                                        <a href="<?= base_url('documentos-sst/publicar-pdf/' . $listado['id_documento']) ?>"
-                                           class="btn btn-outline-dark" title="Publicar en Reportes"
-                                           onclick="return confirm('¿Publicar este listado en Reportes?')">
-                                            <i class="bi bi-cloud-upload"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
+                                    <a href="<?= base_url('documentos-sst/publicar-pdf/' . $listado['id_documento']) ?>"
+                                       class="btn btn-outline-dark" title="Publicar en Reportes"
+                                       onclick="return confirm('¿Publicar este listado en Reportes?')">
+                                        <i class="bi bi-cloud-upload"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
         <?php else: ?>
-            <div class="text-center py-4">
-                <i class="bi bi-people text-muted" style="font-size: 2.5rem;"></i>
-                <p class="text-muted mt-2 mb-0">No hay listados de trabajadores adjuntados aún.</p>
-                <small class="text-muted">Use el botón "Adjuntar Listado" para agregar soportes de trabajadores identificados.</small>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h5>No hay listados de trabajadores adjuntados aun.</h5>
+                <p>Use el boton "Adjuntar Listado" para agregar soportes de trabajadores identificados.</p>
             </div>
         <?php endif; ?>
     </div>

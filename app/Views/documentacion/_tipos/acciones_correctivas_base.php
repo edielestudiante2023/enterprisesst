@@ -117,27 +117,45 @@ $tieneAlerta = $accionesVencidas > 0;
     </div>
 </div>
 
+<?php if (!defined('TABLA_SOPORTES_STYLES_LOADED')): ?>
+    <?php define('TABLA_SOPORTES_STYLES_LOADED', true); ?>
+    <?= view('documentacion/_components/tabla_soportes_styles') ?>
+<?php endif; ?>
+
 <?php if (!empty($acciones)): ?>
 <!-- Tabla de Acciones del Numeral -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
-            <i class="bi bi-list-task me-2"></i>Acciones del Numeral <?= esc($numeral) ?>
-        </h6>
-        <span class="badge bg-secondary"><?= count($acciones) ?> accion<?= count($acciones) > 1 ? 'es' : '' ?></span>
+<div class="card border-0 shadow-lg mb-4 tabla-soportes-card">
+    <div class="card-header header-soportes-primary">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 d-flex align-items-center">
+                <div class="icon-wrapper me-3">
+                    <i class="bi bi-list-task"></i>
+                </div>
+                <div>
+                    <span class="header-title">Acciones del Numeral <?= esc($numeral) ?></span>
+                    <small class="d-block header-subtitle">Acciones correctivas, preventivas y de mejora</small>
+                </div>
+            </h6>
+            <div class="header-stats">
+                <span class="stat-badge">
+                    <i class="bi bi-lightning me-1"></i>
+                    <span><?= count($acciones) ?></span> accion<?= count($acciones) > 1 ? 'es' : '' ?>
+                </span>
+            </div>
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="table table-hover mb-0 tabla-soportes-moderna" style="width:100%">
+                <thead>
                     <tr>
                         <th>Hallazgo</th>
-                        <th>Acción</th>
-                        <th>Tipo</th>
+                        <th>Accion</th>
+                        <th style="width:100px">Tipo</th>
                         <th>Responsable</th>
-                        <th>Fecha Compromiso</th>
-                        <th>Estado</th>
-                        <th class="text-center">Ver</th>
+                        <th style="width:130px">Fecha Compromiso</th>
+                        <th style="width:120px">Estado</th>
+                        <th style="width:80px" class="text-center">Ver</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -162,10 +180,10 @@ $tieneAlerta = $accionesVencidas > 0;
                         $estadoTexto = match($accion['estado']) {
                             'borrador' => 'Borrador',
                             'asignada' => 'Asignada',
-                            'en_ejecucion' => 'En Ejecución',
-                            'en_revision' => 'En Revisión',
+                            'en_ejecucion' => 'En Ejecucion',
+                            'en_revision' => 'En Revision',
                             'en_verificacion' => 'Verificando',
-                            'cerrada_efectiva' => 'Cerrada ✓',
+                            'cerrada_efectiva' => 'Cerrada',
                             'cerrada_no_efectiva' => 'No Efectiva',
                             'reabierta' => 'Reabierta',
                             'cancelada' => 'Cancelada',
@@ -181,14 +199,14 @@ $tieneAlerta = $accionesVencidas > 0;
                     ?>
                     <tr class="<?= $estaVencida ? 'table-danger' : '' ?>">
                         <td>
-                            <small class="text-truncate d-block" style="max-width: 200px;" title="<?= esc($accion['hallazgo_titulo'] ?? '') ?>">
+                            <div class="nombre-soporte text-truncate" style="max-width: 200px;" title="<?= esc($accion['hallazgo_titulo'] ?? '') ?>">
                                 <?= esc($accion['hallazgo_titulo'] ?? 'Sin hallazgo') ?>
-                            </small>
+                            </div>
                         </td>
                         <td>
-                            <small class="text-truncate d-block" style="max-width: 200px;" title="<?= esc($accion['descripcion_accion']) ?>">
+                            <div class="text-truncate" style="max-width: 200px;" title="<?= esc($accion['descripcion_accion']) ?>">
                                 <?= esc(substr($accion['descripcion_accion'], 0, 50)) ?><?= strlen($accion['descripcion_accion']) > 50 ? '...' : '' ?>
-                            </small>
+                            </div>
                         </td>
                         <td>
                             <span class="badge bg-<?= $tipoClase ?>">
@@ -196,24 +214,24 @@ $tieneAlerta = $accionesVencidas > 0;
                             </span>
                         </td>
                         <td>
-                            <small><?= esc($accion['responsable_usuario_nombre'] ?? $accion['responsable_nombre'] ?? '-') ?></small>
+                            <span class="fecha-cell"><?= esc($accion['responsable_usuario_nombre'] ?? $accion['responsable_nombre'] ?? '-') ?></span>
                         </td>
                         <td>
                             <?php if (!empty($accion['fecha_compromiso'])): ?>
-                                <small class="<?= $estaVencida ? 'text-danger fw-bold' : '' ?>">
+                                <span class="fecha-cell <?= $estaVencida ? 'text-danger fw-bold' : '' ?>">
                                     <?= date('d/m/Y', strtotime($accion['fecha_compromiso'])) ?>
                                     <?php if ($estaVencida): ?>
                                         <i class="bi bi-exclamation-triangle-fill ms-1"></i>
                                     <?php endif; ?>
-                                </small>
+                                </span>
                             <?php else: ?>
-                                <small class="text-muted">-</small>
+                                <span class="text-muted">-</span>
                             <?php endif; ?>
                         </td>
                         <td>
                             <span class="badge bg-<?= $estadoClase ?>"><?= $estadoTexto ?></span>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center acciones-cell">
                             <a href="<?= base_url("acciones-correctivas/{$idCliente}/accion/{$accion['id_accion']}") ?>"
                                class="btn btn-sm btn-outline-primary" title="Ver detalle">
                                 <i class="bi bi-eye"></i>
@@ -227,18 +245,34 @@ $tieneAlerta = $accionesVencidas > 0;
     </div>
 </div>
 <?php else: ?>
-<!-- Estado vacío -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-clipboard-check display-1 text-muted mb-3"></i>
-        <h5 class="text-muted">No hay acciones registradas</h5>
-        <p class="text-muted mb-4">
-            Aún no se han registrado hallazgos ni acciones para este numeral.
-        </p>
-        <a href="<?= base_url("acciones-correctivas/{$idCliente}/hallazgo/crear/{$numeral}") ?>"
-           class="btn btn-success">
-            <i class="bi bi-plus-circle me-1"></i>Registrar Primer Hallazgo
-        </a>
+<!-- Estado vacio -->
+<div class="card border-0 shadow-lg mb-4 tabla-soportes-card">
+    <div class="card-header header-soportes-primary">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 d-flex align-items-center">
+                <div class="icon-wrapper me-3">
+                    <i class="bi bi-list-task"></i>
+                </div>
+                <div>
+                    <span class="header-title">Acciones del Numeral <?= esc($numeral) ?></span>
+                    <small class="d-block header-subtitle">Acciones correctivas, preventivas y de mejora</small>
+                </div>
+            </h6>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="bi bi-clipboard-check"></i>
+            </div>
+            <h5>No hay acciones registradas</h5>
+            <p>
+                <a href="<?= base_url("acciones-correctivas/{$idCliente}/hallazgo/crear/{$numeral}") ?>"
+                   class="btn btn-outline-success btn-sm mt-2">
+                    <i class="bi bi-plus-circle me-1"></i>Registrar Primer Hallazgo
+                </a>
+            </p>
+        </div>
     </div>
 </div>
 <?php endif; ?>
