@@ -178,12 +178,49 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Firma Digital * <small class="text-muted">(dibuje su firma)</small></label>
-                            <canvas id="canvasFirma" class="firma-canvas w-100" height="150"></canvas>
-                            <div class="mt-2">
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnLimpiarFirma">
-                                    <i class="bi bi-eraser me-1"></i>Limpiar
-                                </button>
+                            <label class="form-label">Firma Digital *</label>
+
+                            <!-- Tabs: Dibujar / Subir imagen -->
+                            <ul class="nav nav-tabs nav-fill mb-2" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="tab-dibujar" data-bs-toggle="tab" data-bs-target="#panelDibujar" type="button" role="tab">
+                                        <i class="bi bi-pencil me-1"></i>Dibujar firma
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="tab-subir" data-bs-toggle="tab" data-bs-target="#panelSubir" type="button" role="tab">
+                                        <i class="bi bi-upload me-1"></i>Subir imagen
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content">
+                                <!-- Panel Dibujar -->
+                                <div class="tab-pane fade show active" id="panelDibujar" role="tabpanel">
+                                    <canvas id="canvasFirma" class="firma-canvas w-100" height="150"></canvas>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnLimpiarFirma">
+                                            <i class="bi bi-eraser me-1"></i>Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Panel Subir -->
+                                <div class="tab-pane fade" id="panelSubir" role="tabpanel">
+                                    <div class="border rounded p-3 text-center" style="background: #fafafa; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                        <div id="previewSubida" style="display:none;" class="mb-2">
+                                            <img id="imgPreview" src="" alt="Vista previa" style="max-height: 120px; max-width: 100%;">
+                                        </div>
+                                        <div id="placeholderSubida">
+                                            <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                                            <p class="text-muted small mb-2">Suba una imagen de su firma (PNG, JPG)</p>
+                                        </div>
+                                        <input type="file" id="inputFirmaArchivo" accept="image/png,image/jpeg,image/jpg" class="form-control form-control-sm" style="max-width: 300px;">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnLimpiarSubida" style="display:none;">
+                                            <i class="bi bi-x-circle me-1"></i>Quitar imagen
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -244,23 +281,20 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Canvas de firma
+        // === CANVAS DE FIRMA ===
         const canvas = document.getElementById('canvasFirma');
         const ctx = canvas.getContext('2d');
         let dibujando = false;
-        let tieneContenido = false;
+        let tieneContenidoCanvas = false;
 
-        // Ajustar tamano real del canvas
         canvas.width = canvas.offsetWidth;
         canvas.height = 150;
 
-        // Configurar estilo de dibujo
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // Funciones de dibujo
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX || e.touches[0].clientX) - rect.left;
@@ -281,7 +315,7 @@
             const pos = getPos(e);
             ctx.lineTo(pos.x, pos.y);
             ctx.stroke();
-            tieneContenido = true;
+            tieneContenidoCanvas = true;
             e.preventDefault();
         }
 
@@ -289,29 +323,81 @@
             dibujando = false;
         }
 
-        // Eventos mouse
         canvas.addEventListener('mousedown', iniciarDibujo);
         canvas.addEventListener('mousemove', dibujar);
         canvas.addEventListener('mouseup', terminarDibujo);
         canvas.addEventListener('mouseleave', terminarDibujo);
-
-        // Eventos touch
         canvas.addEventListener('touchstart', iniciarDibujo);
         canvas.addEventListener('touchmove', dibujar);
         canvas.addEventListener('touchend', terminarDibujo);
 
-        // Limpiar firma
         document.getElementById('btnLimpiarFirma').addEventListener('click', function() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            tieneContenido = false;
+            tieneContenidoCanvas = false;
         });
 
-        // Firmar contrato
+        // === SUBIR IMAGEN DE FIRMA ===
+        let imagenSubidaBase64 = null;
+        const inputArchivo = document.getElementById('inputFirmaArchivo');
+        const imgPreview = document.getElementById('imgPreview');
+        const previewSubida = document.getElementById('previewSubida');
+        const placeholderSubida = document.getElementById('placeholderSubida');
+        const btnLimpiarSubida = document.getElementById('btnLimpiarSubida');
+
+        inputArchivo.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.match('image/(png|jpeg|jpg)')) {
+                alert('Solo se permiten imagenes PNG o JPG');
+                this.value = '';
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                alert('La imagen no debe superar 2MB');
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                imagenSubidaBase64 = ev.target.result;
+                imgPreview.src = imagenSubidaBase64;
+                previewSubida.style.display = 'block';
+                placeholderSubida.style.display = 'none';
+                btnLimpiarSubida.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        btnLimpiarSubida.addEventListener('click', function() {
+            imagenSubidaBase64 = null;
+            inputArchivo.value = '';
+            imgPreview.src = '';
+            previewSubida.style.display = 'none';
+            placeholderSubida.style.display = 'block';
+            btnLimpiarSubida.style.display = 'none';
+        });
+
+        // === DETECTAR TAB ACTIVO ===
+        function getMetodoActivo() {
+            return document.getElementById('tab-subir').classList.contains('active') ? 'subir' : 'dibujar';
+        }
+
+        function obtenerFirmaImagen() {
+            if (getMetodoActivo() === 'subir') {
+                return imagenSubidaBase64;
+            } else {
+                return tieneContenidoCanvas ? canvas.toDataURL('image/png') : null;
+            }
+        }
+
+        // === FIRMAR CONTRATO ===
         document.getElementById('btnFirmarContrato').addEventListener('click', function() {
             const nombre = document.getElementById('firmaNombre').value.trim();
             const cedula = document.getElementById('firmaCedula').value.trim();
 
-            // Validaciones
             if (!nombre) {
                 alert('Debe ingresar su nombre completo');
                 document.getElementById('firmaNombre').focus();
@@ -324,12 +410,13 @@
                 return;
             }
 
-            if (!tieneContenido) {
-                alert('Debe dibujar su firma en el recuadro');
+            const firmaImagen = obtenerFirmaImagen();
+            if (!firmaImagen) {
+                const metodo = getMetodoActivo();
+                alert(metodo === 'subir' ? 'Debe subir una imagen de su firma' : 'Debe dibujar su firma en el recuadro');
                 return;
             }
 
-            // Confirmar
             if (!confirm('¿Esta seguro de firmar este contrato?\n\nEsta accion no se puede deshacer.')) {
                 return;
             }
@@ -337,9 +424,6 @@
             const btn = this;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
-
-            // Obtener imagen del canvas
-            const firmaImagen = canvas.toDataURL('image/png');
 
             const data = new FormData();
             data.append('token', '<?= $token ?>');
@@ -354,7 +438,6 @@
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    // Mostrar modal de exito
                     const modal = new bootstrap.Modal(document.getElementById('modalExito'));
                     modal.show();
                 } else {

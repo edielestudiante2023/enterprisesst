@@ -786,6 +786,13 @@ class DocumentacionController extends Controller
             return 'afiliacion_srl';
         }
 
+        // 1.1.5. Identificación de trabajadores de alto riesgo y cotización de pensión especial
+        if ($codigo === '1.1.5' ||
+            strpos($nombre, 'alto riesgo') !== false ||
+            strpos($nombre, 'pension especial') !== false) {
+            return 'identificacion_alto_riesgo';
+        }
+
         // 2.5.1. Archivo o retención documental del SG-SST
         // Muestra tabla con TODOS los documentos generados del cliente
         if ($codigo === '2.5.1' ||

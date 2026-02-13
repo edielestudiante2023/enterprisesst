@@ -2,7 +2,11 @@
 /**
  * Componente: Lista de Documentos para Carpetas Genericas (Estilo Moderno)
  * Variables: $documentos, $cliente, $carpeta
+ * No se muestra si no hay documentos (evita empty state innecesario)
  */
+if (empty($documentos)) {
+    return;
+}
 ?>
 
 <!-- Estilos soportes (reutilizamos los tokens visuales) -->
@@ -25,32 +29,16 @@
                         <small class="d-block header-subtitle">Archivos de la carpeta</small>
                     </div>
                 </h6>
-                <?php if (!empty($documentos)): ?>
                 <div class="header-stats">
                     <span class="stat-badge">
                         <i class="bi bi-files me-1"></i>
                         <span><?= count($documentos) ?></span> documento<?= count($documentos) !== 1 ? 's' : '' ?>
                     </span>
                 </div>
-                <?php endif; ?>
             </div>
         </div>
 
         <div class="card-body p-0">
-            <?php if (empty($documentos)): ?>
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="bi bi-file-earmark-x"></i>
-                    </div>
-                    <h5>No hay documentos en esta carpeta</h5>
-                    <p>
-                        <a href="<?= base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta']) ?>"
-                           class="btn btn-outline-primary btn-sm mt-2">
-                            <i class="bi bi-plus-lg me-1"></i>Crear documento
-                        </a>
-                    </p>
-                </div>
-            <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0 tabla-soportes-moderna" style="width:100%">
                         <thead>
@@ -154,7 +142,6 @@
                     <span class="badge estado-ia-aprobado me-2"><i class="bi bi-check-circle-fill me-1"></i>Aprobado</span>
                     <small class="text-muted">Todas las secciones aprobadas</small>
                 </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>

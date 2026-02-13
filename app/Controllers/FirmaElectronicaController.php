@@ -642,9 +642,17 @@ class FirmaElectronicaController extends Controller
 
         $documento = $this->getDocumentoSST($solicitud['id_documento']);
 
+        // Decodificar contenido JSON para vista previa del documento
+        $contenido = json_decode($documento['contenido'] ?? '{}', true);
+
+        // Obtener datos del cliente para encabezado del documento
+        $cliente = $this->clienteModel->find($documento['id_cliente']);
+
         return view('firma/firmar', [
             'solicitud' => $solicitud,
             'documento' => $documento,
+            'contenido' => $contenido,
+            'cliente'   => $cliente,
             'token' => $token
         ]);
     }

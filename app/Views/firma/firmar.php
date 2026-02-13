@@ -98,6 +98,48 @@
                     </div>
                 </div>
 
+                <!-- Vista previa del documento -->
+                <?php if (!empty($contenido['secciones'])): ?>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-eye me-2"></i>Contenido del Documento</h5>
+                        <span class="badge bg-info"><?= count($contenido['secciones']) ?> secciones</span>
+                    </div>
+                    <div class="card-body" style="max-height: 600px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 0 0 8px 8px;">
+                        <?php if (!empty($cliente['nombre_cliente'])): ?>
+                        <div class="text-center mb-3 pb-3 border-bottom">
+                            <h6 class="text-primary mb-1"><?= esc($cliente['nombre_cliente']) ?></h6>
+                            <?php if (!empty($cliente['nit_cliente'])): ?>
+                            <small class="text-muted">NIT: <?= esc($cliente['nit_cliente']) ?></small>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php $parsedown = new \Parsedown(); ?>
+                        <?php foreach ($contenido['secciones'] as $seccion): ?>
+                        <div class="mb-3">
+                            <h6 style="color: #1e3a5f; border-bottom: 2px solid #1e3a5f; padding-bottom: 4px;">
+                                <?= esc($seccion['titulo'] ?? '') ?>
+                            </h6>
+                            <div style="text-align: justify; line-height: 1.7; font-size: 0.9rem;">
+                                <?= $parsedown->text($seccion['contenido'] ?? '') ?>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php elseif (!empty($documento['contenido'])): ?>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-eye me-2"></i>Contenido del Documento</h5>
+                    </div>
+                    <div class="card-body text-center text-muted py-4">
+                        <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">El documento tiene contenido guardado. Revise con su consultor SST si necesita verlo antes de firmar.</p>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- Formulario de firma -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white">

@@ -304,11 +304,21 @@
                                 <div class="alert alert-warning py-2 mb-2">
                                     <i class="fas fa-clock"></i> Pendiente de firma del cliente
                                 </div>
+                                <?php $linkFirma = base_url('contrato/firmar/' . ($contract['token_firma'] ?? '')); ?>
+                                <div class="btn-group w-100 mb-2">
+                                    <button onclick="copiarLinkFirma()" class="btn btn-outline-info" title="Copiar enlace">
+                                        <i class="fas fa-copy"></i> Copiar Link
+                                    </button>
+                                    <a href="https://wa.me/?text=<?= urlencode('Firme el contrato SST: ' . $linkFirma) ?>"
+                                       target="_blank" class="btn btn-success" title="Enviar por WhatsApp">
+                                        <i class="fab fa-whatsapp"></i> WhatsApp
+                                    </a>
+                                </div>
                                 <button onclick="reenviarFirma()" class="btn btn-outline-warning w-100 mb-2">
-                                    <i class="fas fa-redo"></i> Reenviar Solicitud de Firma
+                                    <i class="fas fa-redo"></i> Reenviar por Email
                                 </button>
                             <?php else: ?>
-                                <button onclick="enviarAFirmar()" class="btn btn-success w-100 mb-2">
+                                <button onclick="enviarAFirmar()" class="btn w-100 mb-2 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                     <i class="fas fa-pen-nib"></i> Enviar a Firmar Digitalmente
                                 </button>
                             <?php endif; ?>
@@ -431,6 +441,33 @@
                 document.body.appendChild(form);
                 form.submit();
             }
+        });
+    }
+
+    function copiarLinkFirma() {
+        const link = '<?= base_url("contrato/firmar/" . ($contract["token_firma"] ?? "")) ?>';
+        navigator.clipboard.writeText(link).then(() => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Link copiado',
+                text: 'El enlace de firma se copio al portapapeles',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }).catch(() => {
+            // Fallback para navegadores sin clipboard API
+            const tmp = document.createElement('textarea');
+            tmp.value = link;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+            Swal.fire({
+                icon: 'success',
+                title: 'Link copiado',
+                timer: 2000,
+                showConfirmButton: false
+            });
         });
     }
 
