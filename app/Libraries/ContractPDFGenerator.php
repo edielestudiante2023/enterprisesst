@@ -135,7 +135,7 @@ class ContractPDFGenerator
 
         // Título
         $html .= '<h1>CONTRATO DE PRESTACIÓN DE SERVICIOS</h1>';
-        $html .= '<h2>ENTRE ' . strtoupper($data['nombre_cliente']) . ' - PROPIEDAD HORIZONTAL Y CYCLOID TALENT S.A.S.</h2>';
+        $html .= '<h2>ENTRE ' . strtoupper($data['nombre_cliente']) . ' Y CYCLOID TALENT S.A.S.</h2>';
 
         // Introducción
         $html .= '<div class="content">' . $this->buildIntroduction($data) . '</div>';
@@ -185,7 +185,7 @@ class ContractPDFGenerator
         $intro .= "<b>" . strtoupper($data['nombre_rep_legal_cliente']) . "</b>, mayor de edad, identificada con cédula de ciudadanía número ";
         $intro .= "<b>" . $data['cedula_rep_legal_cliente'] . "</b>, en adelante y para los efectos del presente contrato se denominará <b>EL CONTRATANTE</b> de una parte, ";
         $intro .= "y de la otra <b>CYCLOID TALENT S.A.S</b>, NIT. <b>901.653.912-2</b>; entidad legalmente existente y constituida, ";
-        $intro .= "con domicilio principal en la ciudad de Soacha Cundinamarca, Cl 13 No. 31 - 106, representada por ";
+        $intro .= "con domicilio principal en la ciudad de Bogota D.C., Carrera 78 K 65 F 10 Sur, representada por ";
         $intro .= "<b>" . strtoupper($data['nombre_rep_legal_contratista']) . "</b>, mayor de edad, identificada con cédula de ciudadanía número ";
         $intro .= "<b>" . $data['cedula_rep_legal_contratista'] . "</b>, en adelante y para los efectos del presente contrato se denominará <b>EL CONTRATISTA</b>, ";
         $intro .= "han acordado celebrar un contrato de prestación de servicios el cual se regirá por las siguientes:";

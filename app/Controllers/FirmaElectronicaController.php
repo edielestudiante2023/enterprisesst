@@ -788,6 +788,47 @@ class FirmaElectronicaController extends Controller
     }
 
     /**
+     * Dashboard centralizado de todas las firmas
+     */
+    public function dashboard()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        // Si es consultor, filtrar por sus clientes
+        $idConsultor = null;
+        if (session()->get('role') === 'consultant') {
+            $idConsultor = session()->get('user_id');
+        }
+
+        $documentos = $this->firmaModel->getDashboardFirmas($idConsultor);
+
+        // Calcular totales para tarjetas resumen
+        $totales = [
+            'total'      => count($documentos),
+            'pendientes' => 0,
+            'firmados'   => 0,
+            'expirados'  => 0
+        ];
+
+        foreach ($documentos as $doc) {
+            if ($doc['expirados'] > 0) {
+                $totales['expirados']++;
+            } elseif ((int)$doc['firmados'] === (int)$doc['total_firmantes']) {
+                $totales['firmados']++;
+            } else {
+                $totales['pendientes']++;
+            }
+        }
+
+        return view('firma/dashboard', [
+            'documentos' => $documentos,
+            'totales' => $totales
+        ]);
+    }
+
+    /**
      * Estado de firmas de un documento
      */
     public function estado($idDocumento)

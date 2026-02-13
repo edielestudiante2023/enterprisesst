@@ -745,6 +745,31 @@
             </div>
         </div>
 
+        <!-- Modulo de Firmas Electronicas -->
+        <div class="mb-5">
+            <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
+                <i class="fas fa-file-signature me-2"></i>Firmas Electronicas
+            </h4>
+            <div class="row justify-content-center">
+                <div class="col-lg-5 col-md-6 mb-3">
+                    <a href="<?= base_url('firma/dashboard') ?>" target="_blank" class="text-decoration-none">
+                        <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-body p-4 text-center" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);">
+                                <i class="fas fa-pen-nib" style="font-size: 2.5rem; color: white;"></i>
+                                <h5 class="text-white mt-3 mb-2">Gestion de Firmas</h5>
+                                <p class="mb-0 small" style="color: rgba(255,255,255,0.7);">
+                                    Ver estado de todas las solicitudes de firma de sus clientes
+                                </p>
+                                <button type="button" class="btn btn-light w-100 py-2 fw-bold mt-3" style="border-radius: 10px;">
+                                    <i class="fas fa-pen-nib me-2"></i>Ir al Dashboard de Firmas
+                                </button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Tabla a pantalla completa -->
         <div class="table-container-custom">
             <div class="table-responsive">

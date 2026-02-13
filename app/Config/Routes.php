@@ -713,6 +713,7 @@ $routes->get('/responsables-sst/(:num)/verificar', 'ResponsablesSSTController::a
 $routes->post('/responsables-sst/(:num)/migrar', 'ResponsablesSSTController::migrar/$1');
 
 // Firma electrónica
+$routes->get('/firma/dashboard', 'FirmaElectronicaController::dashboard');
 $routes->get('/firma/solicitar/(:num)', 'FirmaElectronicaController::solicitar/$1');
 $routes->post('/firma/crear-solicitud', 'FirmaElectronicaController::crearSolicitud');
 $routes->get('/firma/firmar/(:any)', 'FirmaElectronicaController::firmar/$1');
