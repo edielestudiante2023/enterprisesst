@@ -335,21 +335,45 @@ class ContractPDFGenerator
     }
 
     /**
-     * Genera una etiqueta <img> con la firma en base64 si el archivo existe
+     * Genera una etiqueta <img> con la firma en base64 si el archivo existe.
+     * Acepta ruta completa o nombre de archivo (busca en uploads/).
      */
     private function getSignatureImage($filePath, $height = 60)
     {
-        log_message('debug', '[ContractPDF] Buscando firma en: ' . ($filePath ?: '(vacío)'));
+        log_message('info', '[ContractPDF] getSignatureImage() input: ' . ($filePath ?: '(vacío)'));
 
-        if (!empty($filePath) && file_exists($filePath)) {
-            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-            $mime = ($ext === 'png') ? 'image/png' : 'image/jpeg';
-            $base64 = base64_encode(file_get_contents($filePath));
-            log_message('debug', '[ContractPDF] Firma encontrada: ' . basename($filePath) . ' (' . strlen($base64) . ' bytes b64)');
-            return '<img src="data:' . $mime . ';base64,' . $base64 . '" height="' . $height . '">';
+        if (empty($filePath)) {
+            log_message('warning', '[ContractPDF] Firma vacía, retornando cadena vacía');
+            return '';
         }
 
-        log_message('warning', '[ContractPDF] Firma NO encontrada: ' . ($filePath ?: '(vacío)'));
+        // Construir lista de rutas candidatas
+        $candidates = [$filePath];
+        $basename = basename($filePath);
+        if ($basename !== $filePath) {
+            // Si es ruta completa, también probar alternativas
+            $candidates[] = FCPATH . 'uploads/' . $basename;
+            $candidates[] = ROOTPATH . 'public/uploads/' . $basename;
+        } else {
+            // Si solo es nombre de archivo, buscar en ubicaciones comunes
+            $candidates = [
+                FCPATH . 'uploads/' . $filePath,
+                ROOTPATH . 'public/uploads/' . $filePath,
+            ];
+        }
+
+        foreach ($candidates as $path) {
+            log_message('info', '[ContractPDF] Probando: ' . $path . ' → exists=' . (file_exists($path) ? 'SI' : 'NO'));
+            if (file_exists($path) && is_file($path)) {
+                $firmaData = file_get_contents($path);
+                $firmaMime = mime_content_type($path);
+                $base64 = base64_encode($firmaData);
+                log_message('info', '[ContractPDF] Firma OK: ' . $path . ' (' . strlen($firmaData) . ' bytes, mime=' . $firmaMime . ')');
+                return '<img src="data:' . $firmaMime . ';base64,' . $base64 . '" height="' . $height . '">';
+            }
+        }
+
+        log_message('error', '[ContractPDF] Firma NO encontrada en ninguna ruta para: ' . $filePath);
         return '';
     }
 
@@ -366,18 +390,18 @@ class ContractPDFGenerator
         log_message('info', '[ContractPDF] firma_consultor = ' . ($data['firma_consultor'] ?? 'NULL'));
 
         // Firma del representante legal de Cycloid (FIRMA_DIANITA.jpg)
-        $firmaContratista = $this->getSignatureImage(FCPATH . 'img' . DIRECTORY_SEPARATOR . 'FIRMA_DIANITA.jpg');
+        $firmaContratista = $this->getSignatureImage(FCPATH . 'img/FIRMA_DIANITA.jpg');
 
         // Firma del representante legal del cliente
         $firmaCliente = '';
         if (!empty($data['firma_representante_legal'])) {
-            $firmaCliente = $this->getSignatureImage(FCPATH . 'uploads' . DIRECTORY_SEPARATOR . $data['firma_representante_legal']);
+            $firmaCliente = $this->getSignatureImage($data['firma_representante_legal']);
         }
 
         // Firma del consultor (responsable SG-SST)
         $firmaConsultor = '';
         if (!empty($data['firma_consultor'])) {
-            $firmaConsultor = $this->getSignatureImage(FCPATH . 'uploads' . DIRECTORY_SEPARATOR . $data['firma_consultor']);
+            $firmaConsultor = $this->getSignatureImage($data['firma_consultor']);
         }
 
         log_message('info', '[ContractPDF] Resultados: contratista=' . ($firmaContratista ? 'SI' : 'NO') .

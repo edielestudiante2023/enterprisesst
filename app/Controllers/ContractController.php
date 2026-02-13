@@ -712,4 +712,42 @@ class ContractController extends Controller
         // Descargar el archivo
         return $this->response->download($filePath, null)->setFileName(basename($filePath));
     }
+
+    /**
+     * Diagnóstico temporal de firmas para contrato (ELIMINAR después de verificar)
+     */
+    public function diagnosticoFirmas($idContrato)
+    {
+        $contract = $this->contractLibrary->getContractWithClient($idContrato);
+
+        if (!$contract) {
+            return $this->response->setJSON(['error' => 'Contrato no encontrado']);
+        }
+
+        $firmaRepLegal = $contract['firma_representante_legal'] ?? null;
+        $firmaConsultor = $contract['firma_consultor'] ?? null;
+
+        $diagnostico = [
+            'fcpath' => FCPATH,
+            'rootpath' => ROOTPATH,
+            'id_contrato' => $idContrato,
+            'firma_representante_legal_db' => $firmaRepLegal ?: '(VACIO)',
+            'firma_consultor_db' => $firmaConsultor ?: '(VACIO)',
+            'firma_dianita' => [
+                'ruta' => FCPATH . 'img/FIRMA_DIANITA.jpg',
+                'existe' => file_exists(FCPATH . 'img/FIRMA_DIANITA.jpg'),
+            ],
+            'firma_rep_legal' => [
+                'ruta_uploads' => $firmaRepLegal ? FCPATH . 'uploads/' . $firmaRepLegal : '(n/a)',
+                'existe_uploads' => $firmaRepLegal ? file_exists(FCPATH . 'uploads/' . $firmaRepLegal) : false,
+            ],
+            'firma_consultor' => [
+                'ruta_uploads' => $firmaConsultor ? FCPATH . 'uploads/' . $firmaConsultor : '(n/a)',
+                'existe_uploads' => $firmaConsultor ? file_exists(FCPATH . 'uploads/' . $firmaConsultor) : false,
+            ],
+            'uploads_dir_exists' => is_dir(FCPATH . 'uploads'),
+        ];
+
+        return $this->response->setJSON($diagnostico);
+    }
 }

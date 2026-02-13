@@ -636,6 +636,7 @@ $routes->post('/contracts/generar-clausula-ia', 'ContractController::generarClau
 $routes->get('/contracts/edit-contract-data/(:num)', 'ContractController::editContractData/$1');
 $routes->post('/contracts/save-and-generate/(:num)', 'ContractController::saveAndGeneratePDF/$1');
 $routes->get('/contracts/download-pdf/(:num)', 'ContractController::downloadPDF/$1');
+$routes->get('/contracts/diagnostico-firmas/(:num)', 'ContractController::diagnosticoFirmas/$1'); // TEMPORAL - eliminar
 
 // Documentación por contrato
 $routes->get('/contracts/documentacion/(:num)', 'DocumentacionContratoController::previsualizarDocumentacion/$1');
