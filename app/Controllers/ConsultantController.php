@@ -108,6 +108,7 @@ class ConsultantController extends Controller
         if ($clientModel->save($data)) {
             // Obtener el ID del cliente recién creado
             $clientId = $clientModel->getInsertID();
+            $nombreCliente = $this->request->getVar('nombre_cliente');
 
             // Recuperar el NIT del cliente recién guardado
             $nitCliente = $this->request->getVar('nit_cliente');
@@ -121,6 +122,9 @@ class ConsultantController extends Controller
 
             // Los documentos SST se consumen directamente desde DocumentLibrary (app/Libraries/DocumentLibrary.php)
             // No se insertan registros en BD, todos los clientes leen de la misma librería estática
+
+            // Resumen de auto-generación
+            $resumen = [];
 
             // Generar automáticamente el Plan de Trabajo Año 1
             try {
@@ -142,6 +146,7 @@ class ConsultantController extends Controller
                     }
 
                     log_message('info', "Plan de Trabajo generado automáticamente para cliente ID {$clientId}: {$insertedCount} actividades insertadas");
+                    $resumen['plan_trabajo'] = $insertedCount;
                 }
             } catch (\Exception $e) {
                 // Log del error pero no interrumpir el flujo
@@ -168,6 +173,7 @@ class ConsultantController extends Controller
                     }
 
                     log_message('info', "Cronograma de Capacitaciones generado automáticamente para cliente ID {$clientId}: {$insertedCount} capacitaciones insertadas");
+                    $resumen['capacitaciones'] = $insertedCount;
                 }
             } catch (\Exception $e) {
                 // Log del error pero no interrumpir el flujo
@@ -193,6 +199,7 @@ class ConsultantController extends Controller
                     }
 
                     log_message('info', "Estándares Mínimos generados automáticamente para cliente ID {$clientId}: {$insertedCount} estándares insertados");
+                    $resumen['estandares'] = $insertedCount;
                 }
             } catch (\Exception $e) {
                 // Log del error pero no interrumpir el flujo
@@ -205,11 +212,17 @@ class ConsultantController extends Controller
                 $indicadorModel = new IndicadorSSTModel();
                 $resultado = $indicadorModel->crearIndicadoresLegales($clientId);
                 log_message('info', "Indicadores Legales generados para cliente ID {$clientId}: {$resultado['creados']} creados, {$resultado['corregidos']} corregidos");
+                $resumen['indicadores'] = $resultado['creados'];
             } catch (\Exception $e) {
                 log_message('error', 'Error al generar Indicadores Legales: ' . $e->getMessage());
             }
 
             session()->setFlashdata('msg', 'Cliente agregado exitosamente.');
+            session()->setFlashdata('cliente_creado', [
+                'id'      => $clientId,
+                'nombre'  => $nombreCliente,
+                'resumen' => $resumen,
+            ]);
 
             return redirect()->to('/addClient');
         } else {

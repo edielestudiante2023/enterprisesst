@@ -189,21 +189,23 @@
                             </div>
 
                             <!-- Acceso al Sistema -->
-                            <div class="card bg-light border-0 mb-4">
+                            <div class="card border-primary mb-4" id="cardCrearUsuario">
                                 <div class="card-body py-3">
-                                    <div class="form-check">
+                                    <div class="form-check form-switch">
+                                        <input type="hidden" name="crear_usuario" value="0">
                                         <input type="checkbox" name="crear_usuario" value="1" class="form-check-input"
-                                               id="checkCrearUsuario" <?= !empty($responsable['id_usuario']) ? 'checked disabled' : '' ?>>
-                                        <label class="form-check-label" for="checkCrearUsuario">
-                                            <strong><i class="bi bi-person-badge me-1"></i>Crear acceso al sistema</strong>
+                                               role="switch" id="checkCrearUsuario"
+                                               <?= !empty($responsable['id_usuario']) ? 'checked disabled' : '' ?>
+                                               style="transform: scale(1.3);">
+                                        <label class="form-check-label fw-bold fs-6 ms-2" for="checkCrearUsuario">
+                                            <i class="bi bi-person-badge me-1"></i>Crear acceso al sistema
                                         </label>
                                     </div>
-                                    <div class="form-text ms-4">
+                                    <div class="form-text ms-5">
                                         <?php if (!empty($responsable['id_usuario'])): ?>
                                             <span class="text-success"><i class="bi bi-check-circle me-1"></i>Este responsable ya tiene acceso al sistema</span>
                                         <?php else: ?>
-                                            Si marca esta opcion, se creara un usuario con el email como nombre de usuario.
-                                            El responsable podra iniciar sesion y gestionar sus actas/compromisos.
+                                            <span id="msgCrearUsuario">Active esta opcion para crear un usuario con el email como nombre de usuario.</span>
                                             <br><small class="text-muted">Requiere que el campo Email este diligenciado.</small>
                                         <?php endif; ?>
                                     </div>
@@ -242,6 +244,30 @@
 
         tipoRol.addEventListener('change', toggleCamposSST);
         toggleCamposSST(); // Ejecutar al cargar
+
+        // Visual feedback para el switch de crear usuario
+        const checkCrear = document.getElementById('checkCrearUsuario');
+        const cardCrear = document.getElementById('cardCrearUsuario');
+        const msgCrear = document.getElementById('msgCrearUsuario');
+
+        function toggleCardCrear() {
+            if (checkCrear && cardCrear) {
+                if (checkCrear.checked) {
+                    cardCrear.classList.remove('border-primary', 'bg-light');
+                    cardCrear.classList.add('border-success', 'bg-success', 'bg-opacity-10');
+                    if (msgCrear) msgCrear.innerHTML = '<strong class="text-success"><i class="bi bi-check-circle me-1"></i>Se creara usuario al guardar</strong>';
+                } else {
+                    cardCrear.classList.remove('border-success', 'bg-success', 'bg-opacity-10');
+                    cardCrear.classList.add('border-primary');
+                    if (msgCrear) msgCrear.innerHTML = 'Active esta opcion para crear un usuario con el email como nombre de usuario.';
+                }
+            }
+        }
+
+        if (checkCrear) {
+            checkCrear.addEventListener('change', toggleCardCrear);
+            toggleCardCrear();
+        }
     });
     </script>
 </body>

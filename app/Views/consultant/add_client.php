@@ -227,6 +227,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.getElementById('togglePassword').addEventListener('click', function () {
         const field = document.getElementById('passwordField');
@@ -239,5 +240,44 @@
             icon.classList.replace('bi-eye', 'bi-eye-slash');
         }
     });
+
+    <?php $clienteCreado = session()->getFlashdata('cliente_creado'); ?>
+    <?php if ($clienteCreado): ?>
+    (function() {
+        const datos = <?= json_encode($clienteCreado) ?>;
+        const r = datos.resumen || {};
+
+        let items = '';
+        if (r.plan_trabajo)    items += `<tr><td><i class="bi bi-calendar-check text-primary me-2"></i>Plan de Trabajo Anual</td><td class="text-end fw-bold">${r.plan_trabajo} actividades</td></tr>`;
+        if (r.capacitaciones)  items += `<tr><td><i class="bi bi-mortarboard text-success me-2"></i>Cronograma de Capacitaciones</td><td class="text-end fw-bold">${r.capacitaciones} capacitaciones</td></tr>`;
+        if (r.estandares)      items += `<tr><td><i class="bi bi-clipboard-check text-warning me-2"></i>Est&aacute;ndares M&iacute;nimos (Res. 0312)</td><td class="text-end fw-bold">${r.estandares} est&aacute;ndares</td></tr>`;
+        if (r.indicadores)     items += `<tr><td><i class="bi bi-graph-up text-info me-2"></i>Indicadores Legales (Dec. 1072)</td><td class="text-end fw-bold">${r.indicadores} indicadores</td></tr>`;
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Cliente creado exitosamente',
+            html: `
+                <p class="mb-2">Se ha registrado <strong>${datos.nombre}</strong> y se generaron autom&aacute;ticamente los siguientes recursos iniciales del SG-SST:</p>
+                <table class="table table-sm table-borderless text-start mb-2" style="font-size: 0.9rem;">
+                    <tbody>${items}</tbody>
+                </table>
+                <div class="alert alert-light border text-start py-2 px-3 mb-0" style="font-size: 0.82rem;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Estos datos son la base normativa inicial. Puede personalizarlos desde cada m&oacute;dulo del cliente.
+                </div>
+            `,
+            confirmButtonText: '<i class="bi bi-eye me-1"></i> Ver Cliente',
+            showCancelButton: true,
+            cancelButtonText: 'Crear otro cliente',
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            width: 580,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '<?= base_url('/editClient/') ?>' + datos.id;
+            }
+        });
+    })();
+    <?php endif; ?>
 </script>
 <?= $this->endSection() ?>

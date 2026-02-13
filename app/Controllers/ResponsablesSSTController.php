@@ -115,12 +115,19 @@ class ResponsablesSSTController extends BaseController
      */
     public function guardar(int $idCliente)
     {
+        log_message('critical', '========== RESPONSABLES_SST::GUARDAR INICIO ==========');
+        log_message('critical', 'PASO 0: idCliente=' . $idCliente);
+        log_message('critical', 'PASO 0: POST completo = ' . json_encode($this->request->getPost()));
+
         $cliente = $this->clienteModel->find($idCliente);
         if (!$cliente) {
+            log_message('critical', 'PASO 1: CLIENTE NO ENCONTRADO - ABORTANDO');
             return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
         }
+        log_message('critical', 'PASO 1: Cliente OK = ' . ($cliente['nombre_cliente'] ?? $cliente['razon_social'] ?? 'SIN NOMBRE'));
 
         $idResponsable = $this->request->getPost('id_responsable');
+        log_message('critical', 'PASO 2: id_responsable = ' . var_export($idResponsable, true));
 
         $datos = [
             'id_cliente' => $idCliente,
@@ -141,8 +148,11 @@ class ResponsablesSSTController extends BaseController
             'activo' => $this->request->getPost('activo') ?? 1
         ];
 
+        log_message('critical', 'PASO 3: datos email = ' . var_export($datos['email'], true));
+
         // Validación básica
         if (empty($datos['nombre_completo']) || empty($datos['numero_documento']) || empty($datos['tipo_rol'])) {
+            log_message('critical', 'PASO 4: VALIDACION BASICA FALLO - ABORTANDO');
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON([
                     'success' => false,
@@ -151,34 +161,49 @@ class ResponsablesSSTController extends BaseController
             }
             return redirect()->back()->withInput()->with('error', 'Nombre, documento y tipo de rol son obligatorios');
         }
+        log_message('critical', 'PASO 4: Validacion basica OK');
 
         // Verificar si se debe crear usuario
-        $crearUsuario = $this->request->getPost('crear_usuario') ?? $this->request->getVar('crear_usuario');
+        $crearUsuarioPost = $this->request->getPost('crear_usuario');
+        $crearUsuarioVar = $this->request->getVar('crear_usuario');
+        $crearUsuario = $crearUsuarioPost ?? $crearUsuarioVar;
 
-        log_message('info', "ResponsablesSST::guardar - crear_usuario={$crearUsuario}, email={$datos['email']}, id_responsable=" . ($idResponsable ?? 'NULL'));
+        log_message('critical', 'PASO 5: crear_usuario POST = ' . var_export($crearUsuarioPost, true));
+        log_message('critical', 'PASO 5: crear_usuario VAR  = ' . var_export($crearUsuarioVar, true));
+        log_message('critical', 'PASO 5: crear_usuario FINAL = ' . var_export($crearUsuario, true));
+
+        // Evaluar condiciones del IF por separado
+        $condCrear = (bool)$crearUsuario;
+        $condEmail = !empty($datos['email']);
+        $condNuevo = !$idResponsable;
+        log_message('critical', "PASO 6: CONDICIONES - crearUsuario={$condCrear}, emailNoVacio={$condEmail}, esNuevo={$condNuevo}");
+        log_message('critical', "PASO 6: IF COMPLETO = " . var_export($condCrear && $condEmail && $condNuevo, true));
 
         try {
             if ($idResponsable) {
-                // Actualizar
                 $this->responsableModel->update($idResponsable, $datos);
                 $mensaje = 'Responsable actualizado correctamente';
                 $nuevoIdResponsable = $idResponsable;
+                log_message('critical', "PASO 7: ACTUALIZADO responsable ID {$idResponsable}");
             } else {
-                // Crear responsable
                 $nuevoIdResponsable = $this->responsableModel->insert($datos);
                 $mensaje = 'Responsable agregado correctamente';
+                log_message('critical', "PASO 7: CREADO responsable ID {$nuevoIdResponsable}");
             }
 
             // Crear usuario si se marcó la opción y hay email
             if ($crearUsuario && !empty($datos['email']) && !$idResponsable) {
-                $userModel = new UserModel();
+                log_message('critical', 'PASO 8: >>> ENTRO AL BLOQUE DE CREAR USUARIO <<<');
 
-                // Verificar si ya existe un usuario con ese email
+                $userModel = new UserModel();
                 $existeUsuario = $userModel->findByEmail($datos['email']);
+                log_message('critical', 'PASO 9: findByEmail resultado = ' . var_export($existeUsuario, true));
 
                 if (!$existeUsuario) {
-                    // Generar password aleatorio seguro
+                    log_message('critical', 'PASO 10: Email NO existe, procediendo a crear usuario');
+
                     $passwordTemp = $this->generarPasswordSeguro();
+                    log_message('critical', 'PASO 11: Password generado = ' . $passwordTemp);
 
                     $datosUsuario = [
                         'email' => $datos['email'],
@@ -188,36 +213,46 @@ class ResponsablesSSTController extends BaseController
                         'id_entidad' => $idCliente,
                         'estado' => 'activo'
                     ];
+                    log_message('critical', 'PASO 12: datosUsuario = ' . json_encode(array_diff_key($datosUsuario, ['password' => ''])));
 
-                    log_message('info', "ResponsablesSST: Intentando crear usuario para {$datos['email']}");
+                    log_message('critical', 'PASO 13: >>> LLAMANDO createUser() <<<');
                     $idUsuario = $userModel->createUser($datosUsuario);
+                    log_message('critical', 'PASO 14: createUser() retorno = ' . var_export($idUsuario, true));
 
                     if ($idUsuario) {
-                        log_message('info', "ResponsablesSST: Usuario creado con ID {$idUsuario}");
+                        log_message('critical', "PASO 15: USUARIO CREADO EXITOSAMENTE ID={$idUsuario}");
 
                         // Enviar credenciales por email
+                        log_message('critical', 'PASO 16: Intentando enviar email...');
                         $emailEnviado = $this->enviarCredencialesEmail(
                             $datos['email'],
                             $datos['nombre_completo'],
                             $passwordTemp,
                             $cliente['nombre_cliente'] ?? $cliente['razon_social'] ?? 'Empresa'
                         );
+                        log_message('critical', 'PASO 17: enviarCredencialesEmail resultado = ' . var_export($emailEnviado, true));
 
                         if ($emailEnviado) {
-                            $mensaje .= '. Usuario creado y credenciales enviadas al email.';
+                            $mensaje .= '. Usuario creado y credenciales enviadas al email: ' . $datos['email'];
                         } else {
                             $mensaje .= '. Usuario creado pero error al enviar email. Password temporal: ' . $passwordTemp;
                         }
                     } else {
                         $erroresUsuario = $userModel->errors();
                         $errorMsg = !empty($erroresUsuario) ? implode(', ', $erroresUsuario) : 'Error desconocido';
-                        log_message('error', "ResponsablesSST: Error al crear usuario para {$datos['email']}: {$errorMsg}");
+                        log_message('critical', "PASO 15: FALLO createUser - errores: " . json_encode($erroresUsuario));
                         $mensaje .= '. Error al crear usuario: ' . $errorMsg;
                     }
                 } else {
+                    log_message('critical', 'PASO 10: EMAIL YA EXISTE en tbl_usuarios');
                     $mensaje .= '. Ya existe un usuario con ese email.';
                 }
+            } else {
+                log_message('critical', 'PASO 8: >>> NO ENTRO AL BLOQUE - CONDICION FALSA <<<');
             }
+
+            log_message('critical', 'PASO FINAL: mensaje = ' . $mensaje);
+            log_message('critical', '========== RESPONSABLES_SST::GUARDAR FIN ==========');
 
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON(['success' => true, 'message' => $mensaje]);
@@ -225,7 +260,10 @@ class ResponsablesSSTController extends BaseController
 
             return redirect()->to("responsables-sst/{$idCliente}")->with('success', $mensaje);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            log_message('critical', 'PASO CATCH: EXCEPCION ' . get_class($e) . ': ' . $e->getMessage());
+            log_message('critical', 'PASO CATCH: Archivo: ' . $e->getFile() . ':' . $e->getLine());
+            log_message('critical', 'PASO CATCH: Trace: ' . $e->getTraceAsString());
             $error = 'Error al guardar: ' . $e->getMessage();
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON(['success' => false, 'message' => $error]);

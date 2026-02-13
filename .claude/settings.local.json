@@ -9,7 +9,21 @@
       "Bash(c:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe:*)",
       "Bash(\"c:\\\\xampp\\\\php\\\\php.exe\":*)",
       "Bash(grep:*)",
-      "Bash(c:xamppphpphp.exe -r \"header\\(''Content-Type: text/plain''\\); $db = new mysqli\\(''localhost'', ''root'', '''', ''empresas_sst''\\); $r = $db->query\\(''SELECT id_documento, tipo_documento, estado, version, motivo_version FROM tbl_documentos_sst WHERE id_cliente=18 AND tipo_documento LIKE chr\\(37\\).chr\\(102\\).chr\\(105\\).chr\\(99\\).chr\\(104\\).chr\\(97\\).chr\\(37\\) LIMIT 5''\\); echo $r ? ''OK'' : ''FAIL'';\")"
+      "Bash(c:xamppphpphp.exe -r \"header\\(''Content-Type: text/plain''\\); $db = new mysqli\\(''localhost'', ''root'', '''', ''empresas_sst''\\); $r = $db->query\\(''SELECT id_documento, tipo_documento, estado, version, motivo_version FROM tbl_documentos_sst WHERE id_cliente=18 AND tipo_documento LIKE chr\\(37\\).chr\\(102\\).chr\\(105\\).chr\\(99\\).chr\\(104\\).chr\\(97\\).chr\\(37\\) LIMIT 5''\\); echo $r ? ''OK'' : ''FAIL'';\")",
+      "Bash(git push:*)",
+      "Bash(git stash pop:*)",
+      "Bash(git stash drop:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: mejorar UX de vistas crear/editar cliente con layout base, cards y 2 columnas\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: generación IA de cláusula cuarta en contratos y firmas en PDF\n\n- Agregar botón \"Generar con IA\" en contracts/create con SweetAlert para\n  capturar acuerdos contractuales \\(plazo, anticipo, pago, terminación\\)\n- Endpoint POST /contracts/generar-clausula-ia usando IADocumentacionService\n- Toolbar post-generación: Regenerar todo, Refinar con contexto, Limpiar\n- Embeber firmas en PDF de contrato: FIRMA_DIANITA.jpg \\(Cycloid\\),\n  firma_representante_legal \\(cliente\\), firma_consultor \\(responsable SST\\)\n- Ordenar clientes alfabéticamente en Select2 de contratos\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(findstr:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: mejorar compatibilidad DOMPDF para firmas y agregar logging\n\n- Usar atributo HTML height en vez de CSS object-fit \\(no soportado por DOMPDF\\)\n- Agregar logging detallado de rutas de firma para debug en producción\n- Usar DIRECTORY_SEPARATOR para compatibilidad cross-platform\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: robustecer búsqueda de firmas en PDF con fallback y diagnóstico\n\n- getSignatureImage\\(\\) ahora prueba múltiples rutas \\(FCPATH + ROOTPATH\\)\n- Usa mime_content_type\\(\\) como FirmaElectronicaController \\(patrón exitoso\\)\n- Logging detallado de cada ruta probada para debug en producción\n- Endpoint temporal /contracts/diagnostico-firmas/:id para verificar\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: agregar generación IA de Cláusula Cuarta en vista edición de contrato\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: mejorar error handling JS en generación IA para mostrar error real\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: eliminar verificación redundante de método HTTP en generarClausulaIA\n\ngetMethod\\(\\) retorna ''POST'' \\(mayúsculas\\) en CI4 v4.4+, causando 405.\nLa ruta $routes->post\\(\\) ya restringe el método correctamente.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ]
   }
 }
