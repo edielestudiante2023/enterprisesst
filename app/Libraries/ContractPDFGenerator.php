@@ -198,6 +198,12 @@ class ContractPDFGenerator
      */
     private function buildClausulaObjeto($data)
     {
+        // Si hay texto personalizado (generado con IA o escrito manualmente), usarlo
+        if (!empty($data['clausula_primera_objeto'])) {
+            return nl2br($data['clausula_primera_objeto']);
+        }
+
+        // Fallback: texto hardcodeado
         $texto = "<b>EL CONTRATISTA</b> se compromete a proporcionar servicios de consultoría para la gestión del Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST) a favor de <b>EL CONTRATANTE</b> mediante la plataforma <b>EnterpriseSST</b>. ";
         $texto .= "Además, se asignará al profesional SG-SST <b>" . $data['nombre_responsable_sgsst'] . "</b>, identificado con cédula de ciudadanía <b>" . $data['cedula_responsable_sgsst'] . "</b> y licencia ocupacional número <b>" . $data['licencia_responsable_sgsst'] . "</b>, para garantizar el cumplimiento de los estándares mínimos de la <b>Resolución 0312 de 2019</b>.";
 

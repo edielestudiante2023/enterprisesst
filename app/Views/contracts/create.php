@@ -165,6 +165,43 @@
                               placeholder="Notas adicionales sobre el contrato..."></textarea>
                 </div>
 
+                <!-- SECCIÓN: CLÁUSULA PRIMERA - OBJETO DEL CONTRATO -->
+                <div class="section-header">
+                    <h5 class="mb-0"><i class="fas fa-bullseye"></i> Cláusula Primera - Objeto del Contrato</h5>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <button type="button" class="btn btn-outline-primary" id="btnGenerarIAClausula1" onclick="abrirSweetAlertIAClausula1()">
+                        <i class="fas fa-robot me-1"></i> Generar con IA
+                    </button>
+                    <small class="text-muted">
+                        Ingrese el contexto del servicio y la IA redactará la cláusula por usted
+                    </small>
+                </div>
+
+                <div class="gap-2 mb-2" id="toolbarIAClausula1" style="display: none;">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="abrirSweetAlertIAClausula1(true)" title="Regenerar con datos modificados">
+                        <i class="fas fa-sync-alt me-1"></i> Regenerar todo
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="abrirRefinarClausula1()" title="Agregar instrucciones para refinar el texto">
+                        <i class="fas fa-magic me-1"></i> Refinar con contexto
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="limpiarClausula1()" title="Vaciar el textarea">
+                        <i class="fas fa-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <label for="clausula_primera_objeto" class="form-label">
+                        <i class="fas fa-file-contract"></i> Texto de la Cláusula Primera
+                    </label>
+                    <textarea class="form-control" id="clausula_primera_objeto" name="clausula_primera_objeto" rows="12"
+                              placeholder="Escriba manualmente o use el botón 'Generar con IA' para redactar esta cláusula automáticamente..."></textarea>
+                    <small class="text-muted">
+                        Este texto aparecerá en el PDF del contrato como la CLÁUSULA PRIMERA (Objeto). Puede editarlo libremente después de generarlo.
+                    </small>
+                </div>
+
                 <!-- SECCIÓN: CLÁUSULA CUARTA - DURACIÓN -->
                 <div class="section-header">
                     <h5 class="mb-0"><i class="fas fa-clock"></i> Cláusula Cuarta - Duración y Plazo de Ejecución</h5>
@@ -555,6 +592,255 @@
                 if (result.isConfirmed) {
                     document.getElementById('clausula_cuarta_duracion').value = '';
                     document.getElementById('toolbarIA').style.display = 'none';
+                }
+            });
+        }
+
+        // ============================================================
+        // GENERACIÓN DE CLÁUSULA PRIMERA (OBJETO) CON IA
+        // ============================================================
+
+        let ultimosDatosClausula1 = {};
+
+        function abrirSweetAlertIAClausula1(precargar = false) {
+            const idCliente = document.getElementById('id_cliente').value;
+            if (!idCliente) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Seleccione un cliente',
+                    text: 'Debe seleccionar un cliente antes de generar la cláusula con IA.',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '<i class="fas fa-robot"></i> Cláusula Primera - Objeto del Contrato',
+                html: `
+                    <div class="text-start" style="font-size: 14px;">
+                        <p class="text-muted mb-3">Defina el servicio y el tipo de consultor. La IA redactará la cláusula con lenguaje jurídico formal.</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Descripción del servicio</label>
+                            <textarea id="swal_c1_descripcion" class="form-control" rows="2"
+                                      placeholder="Ej: Diseño e implementación del SG-SST">${precargar ? (ultimosDatosClausula1.descripcion_servicio || 'Diseño e implementación del Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST)') : 'Diseño e implementación del Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST)'}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de consultor</label>
+                            <div class="d-flex gap-3 mt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="swal_c1_tipo" id="swal_c1_externo" value="externo"
+                                           ${(!precargar || ultimosDatosClausula1.tipo_consultor !== 'interno') ? 'checked' : ''}>
+                                    <label class="form-check-label" for="swal_c1_externo">
+                                        <i class="fas fa-building me-1"></i> Externo
+                                        <small class="text-muted d-block">Incluye cláusula de delegación de visitas</small>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="swal_c1_tipo" id="swal_c1_interno" value="interno"
+                                           ${precargar && ultimosDatosClausula1.tipo_consultor === 'interno' ? 'checked' : ''}>
+                                    <label class="form-check-label" for="swal_c1_interno">
+                                        <i class="fas fa-user-tie me-1"></i> Interno
+                                        <small class="text-muted d-block">Sin delegación de visitas</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <p class="fw-bold mb-2"><i class="fas fa-user-shield me-1"></i> Coordinador SST</p>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre completo</label>
+                                <input type="text" id="swal_c1_nombre" class="form-control"
+                                       value="${precargar ? (ultimosDatosClausula1.nombre_coordinador || '') : ''}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Cédula</label>
+                                <input type="text" id="swal_c1_cedula" class="form-control"
+                                       value="${precargar ? (ultimosDatosClausula1.cedula_coordinador || '') : ''}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Licencia SST</label>
+                            <input type="text" id="swal_c1_licencia" class="form-control"
+                                   value="${precargar ? (ultimosDatosClausula1.licencia_coordinador || '') : ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contexto adicional <small class="text-muted">(opcional)</small></label>
+                            <textarea id="swal_c1_contexto" class="form-control" rows="2"
+                                      placeholder="Cualquier otra información relevante...">${precargar ? (ultimosDatosClausula1.contexto_adicional || '') : ''}</textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-robot me-1"></i> Generar Cláusula',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#667eea',
+                cancelButtonColor: '#6c757d',
+                width: '700px',
+                customClass: { popup: 'text-start' },
+                preConfirm: () => {
+                    const datos = {
+                        id_cliente: idCliente,
+                        descripcion_servicio: document.getElementById('swal_c1_descripcion').value,
+                        tipo_consultor: document.querySelector('input[name="swal_c1_tipo"]:checked').value,
+                        nombre_coordinador: document.getElementById('swal_c1_nombre').value,
+                        cedula_coordinador: document.getElementById('swal_c1_cedula').value,
+                        licencia_coordinador: document.getElementById('swal_c1_licencia').value,
+                        contexto_adicional: document.getElementById('swal_c1_contexto').value
+                    };
+
+                    if (!datos.nombre_coordinador.trim()) {
+                        Swal.showValidationMessage('El nombre del coordinador SST es obligatorio');
+                        return false;
+                    }
+
+                    ultimosDatosClausula1 = { ...datos };
+                    return datos;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    generarClausula1ConIA(result.value, false);
+                }
+            });
+        }
+
+        function abrirRefinarClausula1() {
+            const textoActual = document.getElementById('clausula_primera_objeto').value;
+            if (!textoActual.trim()) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin texto para refinar',
+                    text: 'Primero genere o escriba un texto de cláusula para poder refinarlo.',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '<i class="fas fa-magic"></i> Refinar Cláusula Primera',
+                html: `
+                    <div class="text-start" style="font-size: 14px;">
+                        <p class="text-muted mb-3">Indique qué cambios desea aplicar al texto actual de la cláusula.</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Instrucciones de refinamiento</label>
+                            <textarea id="swal_c1_refinar" class="form-control" rows="4"
+                                      placeholder="Ej: Agrega más detalle sobre los servicios de capacitación, incluye mención a la matriz de riesgos..."></textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-magic me-1"></i> Refinar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#17a2b8',
+                cancelButtonColor: '#6c757d',
+                width: '600px',
+                preConfirm: () => {
+                    const instrucciones = document.getElementById('swal_c1_refinar').value.trim();
+                    if (!instrucciones) {
+                        Swal.showValidationMessage('Escriba las instrucciones de refinamiento');
+                        return false;
+                    }
+                    return instrucciones;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const payload = {
+                        id_cliente: document.getElementById('id_cliente').value,
+                        contexto_adicional: result.value,
+                        texto_actual: textoActual,
+                        modo_refinamiento: true
+                    };
+                    generarClausula1ConIA(payload, true);
+                }
+            });
+        }
+
+        function generarClausula1ConIA(datos, esRefinamiento) {
+            Swal.fire({
+                title: esRefinamiento ? 'Refinando cláusula...' : 'Generando cláusula...',
+                html: '<div class="d-flex align-items-center justify-content-center gap-2"><div class="spinner-border text-primary" role="status"></div><span>La IA está redactando el objeto del contrato...</span></div>',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false
+            });
+
+            const url = '<?= base_url("/contracts/generar-clausula1-ia") ?>';
+            console.log('[IA-C1] Enviando a:', url, datos);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(datos)
+            })
+            .then(async resp => {
+                const text = await resp.text();
+                console.log('[IA-C1] Status:', resp.status, 'Body:', text.substring(0, 500));
+                if (!resp.ok) {
+                    let errorMsg = 'Error del servidor (HTTP ' + resp.status + ')';
+                    try {
+                        const errJson = JSON.parse(text);
+                        errorMsg = errJson.message || errorMsg;
+                    } catch(e) {
+                        errorMsg += ': ' + text.substring(0, 200);
+                    }
+                    throw new Error(errorMsg);
+                }
+                try {
+                    return JSON.parse(text);
+                } catch(e) {
+                    throw new Error('Respuesta no es JSON: ' + text.substring(0, 200));
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('clausula_primera_objeto').value = data.texto;
+                    document.getElementById('toolbarIAClausula1').style.display = 'flex';
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: esRefinamiento ? 'Cláusula refinada' : 'Cláusula generada',
+                        text: 'El texto ha sido insertado. Puede editarlo libremente antes de guardar.',
+                        confirmButtonColor: '#667eea',
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'No se pudo generar la cláusula.',
+                        confirmButtonColor: '#667eea'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('[IA-C1] Error completo:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo conectar con el servidor.',
+                    confirmButtonColor: '#667eea'
+                });
+            });
+        }
+
+        function limpiarClausula1() {
+            Swal.fire({
+                title: 'Limpiar cláusula',
+                text: '¿Está seguro de vaciar el texto de la Cláusula Primera?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, limpiar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('clausula_primera_objeto').value = '';
+                    document.getElementById('toolbarIAClausula1').style.display = 'none';
                 }
             });
         }
