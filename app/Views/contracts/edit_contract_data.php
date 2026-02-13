@@ -6,6 +6,7 @@
     <title>Editar Datos del Contrato</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
     <style>
         body { background-color: #f8f9fa; }
         .form-section {
@@ -298,9 +299,31 @@
                     negociadas con el cliente. Incluya información sobre plazos, anticipos, duración, y condiciones de terminación.
                 </div>
 
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <button type="button" class="btn btn-outline-primary" id="btnGenerarIA" onclick="abrirSweetAlertIA()">
+                        <i class="fas fa-robot me-1"></i> Generar con IA
+                    </button>
+                    <small class="text-muted">
+                        Ingrese los acuerdos contractuales y la IA redactará la cláusula por usted
+                    </small>
+                </div>
+
+                <!-- Barra de herramientas post-generación (oculta hasta que se genere) -->
+                <div class="gap-2 mb-2" id="toolbarIA" style="display: <?= !empty($contract['clausula_cuarta_duracion']) ? 'flex' : 'none' ?>;">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="abrirSweetAlertIA(true)" title="Regenerar con acuerdos modificados">
+                        <i class="fas fa-sync-alt me-1"></i> Regenerar todo
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="abrirRefinar()" title="Agregar instrucciones para refinar el texto">
+                        <i class="fas fa-magic me-1"></i> Refinar con contexto
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="limpiarClausula()" title="Vaciar el textarea">
+                        <i class="fas fa-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+
                 <div class="mb-3">
                     <label class="form-label"><i class="fas fa-file-contract"></i> Texto de la Cláusula Cuarta</label>
-                    <textarea name="clausula_cuarta_duracion" class="form-control" rows="12"
+                    <textarea name="clausula_cuarta_duracion" id="clausula_cuarta_duracion" class="form-control" rows="12"
                               placeholder="Ejemplo:&#10;&#10;CUARTA-PLAZO DE EJECUCIÓN: El plazo para la ejecución será de 30 días calendario contados a partir de la firma del presente acuerdo y del pago inicial del anticipo del 50%, para la entrega del Diseño Documental, para la gestión del auto reporte se realizará en los tiempos estipulados por el Ministerio de protección Social.&#10;&#10;CUARTA-DURACIÓN: La duración de este contrato es de 6 meses contados a partir de la fecha de la firma y con finalización 30 de abril 2026. No obstante, el contrato podrá ser terminado de forma anticipada por parte de EL CONTRATANTE, en cualquier momento previa comunicación escrita con 30 días calendario de anticipación.&#10;&#10;PARÁGRAFO PRIMERO: En caso de terminación anticipada de este contrato, solo se reconocerán los honorarios causados por actividades ejecutadas hasta dicho momento, y para el pago respectivo EL CONTRATISTA deberá entregar todos los desarrollos, documentos físicos y digitales y demás resultados producto de la ejecución contractual realizados.&#10;&#10;PARÁGRAFO SEGUNDO: Sobre el presente contrato no opera la prórroga automática. Por lo anterior, la intención de prórroga deberá ser discutida entre las partes al finalizar el plazo inicialmente aquí pactado y deberá constar por escrito."><?= esc($contract['clausula_cuarta_duracion'] ?? '') ?></textarea>
                     <small class="text-muted">
                         Este texto aparecerá en el PDF del contrato como la CLÁUSULA CUARTA. Personalícelo según las condiciones del contrato.
@@ -331,6 +354,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Calcular valor mensual automáticamente
         function calcularValorMensual() {
@@ -349,6 +373,234 @@
 
         // Calcular al cargar la página
         calcularValorMensual();
+
+        // ============================================================
+        // GENERACIÓN DE CLÁUSULA CUARTA CON IA
+        // ============================================================
+
+        let ultimosAcuerdos = {};
+
+        function calcularDuracionDesdeFormulario() {
+            const fi = document.querySelector('input[name="fecha_inicio"]').value;
+            const ff = document.querySelector('input[name="fecha_fin"]').value;
+            if (fi && ff) {
+                const inicio = new Date(fi);
+                const fin = new Date(ff);
+                const meses = (fin.getFullYear() - inicio.getFullYear()) * 12 + (fin.getMonth() - inicio.getMonth());
+                if (meses > 0) return meses + ' meses';
+            }
+            return '';
+        }
+
+        function abrirSweetAlertIA(precargar = false) {
+            const duracionAuto = calcularDuracionDesdeFormulario();
+
+            Swal.fire({
+                title: '<i class="fas fa-robot"></i> Acuerdos Contractuales',
+                html: `
+                    <div class="text-start" style="font-size: 14px;">
+                        <p class="text-muted mb-3">Ingrese los acuerdos negociados con el cliente. La IA redactará la cláusula con lenguaje jurídico formal.</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Plazo de ejecución</label>
+                            <input type="text" id="swal_plazo" class="form-control"
+                                   placeholder="Ej: 30 días calendario"
+                                   value="${precargar ? (ultimosAcuerdos.plazo_ejecucion || '') : ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Duración del contrato</label>
+                            <input type="text" id="swal_duracion" class="form-control"
+                                   placeholder="Ej: 6 meses"
+                                   value="${precargar ? (ultimosAcuerdos.duracion_contrato || duracionAuto) : duracionAuto}">
+                            <small class="text-muted">${duracionAuto ? 'Calculado de las fechas: ' + duracionAuto : 'Complete las fechas del contrato para auto-calcular'}</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Porcentaje de anticipo</label>
+                            <input type="text" id="swal_anticipo" class="form-control"
+                                   placeholder="Ej: 50%"
+                                   value="${precargar ? (ultimosAcuerdos.porcentaje_anticipo || '') : ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Condiciones de pago</label>
+                            <textarea id="swal_pago" class="form-control" rows="2"
+                                      placeholder="Ej: 50% anticipo, 50% contra entrega del diseño documental">${precargar ? (ultimosAcuerdos.condiciones_pago || '') : ''}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Terminación anticipada</label>
+                            <textarea id="swal_terminacion" class="form-control" rows="2"
+                                      placeholder="Ej: Solo se reconocen honorarios causados por actividades ejecutadas">${precargar ? (ultimosAcuerdos.terminacion_anticipada || '') : ''}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Obligaciones especiales</label>
+                            <textarea id="swal_obligaciones" class="form-control" rows="2"
+                                      placeholder="Ej: Entrega de diseño documental, gestión ante MinTrabajo...">${precargar ? (ultimosAcuerdos.obligaciones_especiales || '') : ''}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Contexto adicional <small class="text-muted">(opcional)</small></label>
+                            <textarea id="swal_contexto" class="form-control" rows="2"
+                                      placeholder="Cualquier otra información relevante para la cláusula...">${precargar ? (ultimosAcuerdos.contexto_adicional || '') : ''}</textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-robot me-1"></i> Generar Cláusula',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#667eea',
+                cancelButtonColor: '#6c757d',
+                width: '700px',
+                customClass: { popup: 'text-start' },
+                preConfirm: () => {
+                    const acuerdos = {
+                        id_cliente: '<?= $contract['id_cliente'] ?>',
+                        plazo_ejecucion: document.getElementById('swal_plazo').value,
+                        duracion_contrato: document.getElementById('swal_duracion').value,
+                        porcentaje_anticipo: document.getElementById('swal_anticipo').value,
+                        condiciones_pago: document.getElementById('swal_pago').value,
+                        terminacion_anticipada: document.getElementById('swal_terminacion').value,
+                        obligaciones_especiales: document.getElementById('swal_obligaciones').value,
+                        contexto_adicional: document.getElementById('swal_contexto').value
+                    };
+
+                    const tieneAlgo = Object.entries(acuerdos)
+                        .filter(([k]) => k !== 'id_cliente')
+                        .some(([, v]) => v.trim() !== '');
+
+                    if (!tieneAlgo) {
+                        Swal.showValidationMessage('Ingrese al menos un acuerdo contractual');
+                        return false;
+                    }
+
+                    ultimosAcuerdos = { ...acuerdos };
+                    return acuerdos;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    generarClausulaConIA(result.value, false);
+                }
+            });
+        }
+
+        function abrirRefinar() {
+            const textoActual = document.getElementById('clausula_cuarta_duracion').value;
+            if (!textoActual.trim()) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin texto para refinar',
+                    text: 'Primero genere o escriba un texto de cláusula para poder refinarlo.',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '<i class="fas fa-magic"></i> Refinar Cláusula',
+                html: `
+                    <div class="text-start" style="font-size: 14px;">
+                        <p class="text-muted mb-3">Indique qué cambios desea aplicar al texto actual de la cláusula.</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Instrucciones de refinamiento</label>
+                            <textarea id="swal_refinar" class="form-control" rows="4"
+                                      placeholder="Ej: Hazlo más formal, agrega un parágrafo sobre renovación automática, cambia el anticipo a 30%..."></textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-magic me-1"></i> Refinar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#17a2b8',
+                cancelButtonColor: '#6c757d',
+                width: '600px',
+                preConfirm: () => {
+                    const instrucciones = document.getElementById('swal_refinar').value.trim();
+                    if (!instrucciones) {
+                        Swal.showValidationMessage('Escriba las instrucciones de refinamiento');
+                        return false;
+                    }
+                    return instrucciones;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const payload = {
+                        id_cliente: '<?= $contract['id_cliente'] ?>',
+                        contexto_adicional: result.value,
+                        texto_actual: textoActual,
+                        modo_refinamiento: true
+                    };
+                    generarClausulaConIA(payload, true);
+                }
+            });
+        }
+
+        function generarClausulaConIA(datos, esRefinamiento) {
+            Swal.fire({
+                title: esRefinamiento ? 'Refinando cláusula...' : 'Generando cláusula...',
+                html: '<div class="d-flex align-items-center justify-content-center gap-2"><div class="spinner-border text-primary" role="status"></div><span>La IA está redactando el texto legal...</span></div>',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false
+            });
+
+            fetch('<?= base_url("/contracts/generar-clausula-ia") ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(datos)
+            })
+            .then(resp => {
+                if (!resp.ok) throw new Error('Error del servidor: ' + resp.status);
+                return resp.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('clausula_cuarta_duracion').value = data.texto;
+                    document.getElementById('toolbarIA').style.display = 'flex';
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: esRefinamiento ? 'Cláusula refinada' : 'Cláusula generada',
+                        text: 'El texto ha sido insertado. Puede editarlo libremente antes de guardar.',
+                        confirmButtonColor: '#667eea',
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'No se pudo generar la cláusula.',
+                        confirmButtonColor: '#667eea'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor. Intente nuevamente.',
+                    confirmButtonColor: '#667eea'
+                });
+                console.error('Error:', error);
+            });
+        }
+
+        function limpiarClausula() {
+            Swal.fire({
+                title: 'Limpiar cláusula',
+                text: '¿Está seguro de vaciar el texto de la cláusula?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, limpiar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('clausula_cuarta_duracion').value = '';
+                    document.getElementById('toolbarIA').style.display = 'none';
+                }
+            });
+        }
     </script>
 </body>
 </html>
