@@ -200,7 +200,7 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                         <i class="bi bi-plus-circle me-1"></i>Agregar Firmantes
                     </a>
                 <?php else: ?>
-                    <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/firmas') ?>" class="btn btn-success btn-sm">
+                    <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/firmas') ?>" class="btn btn-success btn-sm" target="_blank">
                         <i class="bi bi-pen me-1"></i>Solicitar Firmas
                     </a>
                 <?php endif; ?>

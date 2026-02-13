@@ -188,7 +188,7 @@
                             <div class="text-center text-muted py-5">
                                 <i class="bi bi-inbox" style="font-size: 3rem;"></i>
                                 <p class="mt-2">No hay solicitudes de firma para este documento.</p>
-                                <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-primary">
+                                <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-primary" target="_blank">
                                     <i class="bi bi-send me-1"></i>Solicitar Firmas
                                 </a>
                             </div>

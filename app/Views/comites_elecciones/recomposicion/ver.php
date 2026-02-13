@@ -341,7 +341,7 @@ $cargoEntrante = $entrante
                     <div class="d-grid gap-2">
                         <?php if ($recomposicion['estado'] === 'borrador'): ?>
                         <a href="<?= base_url("comites-elecciones/proceso/{$proceso['id_proceso']}/recomposicion/{$recomposicion['id_recomposicion']}/firmas") ?>"
-                           class="btn btn-primary">
+                           class="btn btn-primary" target="_blank">
                             <i class="fas fa-signature me-1"></i> Solicitar Firmas
                         </a>
                         <?php elseif ($recomposicion['estado'] === 'pendiente_firmas'): ?>

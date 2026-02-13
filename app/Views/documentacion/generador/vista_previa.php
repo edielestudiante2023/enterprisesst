@@ -240,7 +240,7 @@
                                 <?php endif; ?>
                             <?php elseif (($documento['estado'] ?? '') === 'en_revision'): ?>
                                 <hr>
-                                <a href="/firma/solicitar/<?= $documento['id_documento'] ?>" class="btn btn-info w-100">
+                                <a href="/firma/solicitar/<?= $documento['id_documento'] ?>" class="btn btn-info w-100" target="_blank">
                                     <i class="bi bi-pen me-1"></i>Solicitar Firmas
                                 </a>
                             <?php endif; ?>
