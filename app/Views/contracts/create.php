@@ -474,7 +474,10 @@
                 showConfirmButton: false
             });
 
-            fetch('<?= base_url("/contracts/generar-clausula-ia") ?>', {
+            const url = '<?= base_url("/contracts/generar-clausula-ia") ?>';
+            console.log('[IA] Enviando a:', url, datos);
+
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -482,9 +485,24 @@
                 },
                 body: JSON.stringify(datos)
             })
-            .then(resp => {
-                if (!resp.ok) throw new Error('Error del servidor: ' + resp.status);
-                return resp.json();
+            .then(async resp => {
+                const text = await resp.text();
+                console.log('[IA] Status:', resp.status, 'Body:', text.substring(0, 500));
+                if (!resp.ok) {
+                    let errorMsg = 'Error del servidor (HTTP ' + resp.status + ')';
+                    try {
+                        const errJson = JSON.parse(text);
+                        errorMsg = errJson.message || errorMsg;
+                    } catch(e) {
+                        errorMsg += ': ' + text.substring(0, 200);
+                    }
+                    throw new Error(errorMsg);
+                }
+                try {
+                    return JSON.parse(text);
+                } catch(e) {
+                    throw new Error('Respuesta no es JSON: ' + text.substring(0, 200));
+                }
             })
             .then(data => {
                 if (data.success) {
@@ -509,13 +527,13 @@
                 }
             })
             .catch(error => {
+                console.error('[IA] Error completo:', error);
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error de conexión',
-                    text: 'No se pudo conectar con el servidor. Intente nuevamente.',
+                    title: 'Error',
+                    text: error.message || 'No se pudo conectar con el servidor.',
                     confirmButtonColor: '#667eea'
                 });
-                console.error('Error:', error);
             });
         }
 
