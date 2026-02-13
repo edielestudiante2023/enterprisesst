@@ -604,6 +604,8 @@ class ContractController extends Controller
         $idCliente = $json['id_cliente'] ?? null;
         $plazoEjecucion = $json['plazo_ejecucion'] ?? '';
         $duracionContrato = $json['duracion_contrato'] ?? '';
+        $fechaInicio = $json['fecha_inicio'] ?? '';
+        $fechaFin = $json['fecha_fin'] ?? '';
         $porcentajeAnticipo = $json['porcentaje_anticipo'] ?? '';
         $condicionesPago = $json['condiciones_pago'] ?? '';
         $terminacionAnticipada = $json['terminacion_anticipada'] ?? '';
@@ -612,30 +614,55 @@ class ContractController extends Controller
         $textoActual = $json['texto_actual'] ?? '';
         $modoRefinamiento = $json['modo_refinamiento'] ?? false;
 
+        // Formatear fechas a formato largo español (ej: "1 de marzo de 2025")
+        $fechaInicioFormateada = '';
+        $fechaFinFormateada = '';
+        if ($fechaInicio) {
+            $fechaInicioFormateada = $this->formatearFechaLarga($fechaInicio);
+        }
+        if ($fechaFin) {
+            $fechaFinFormateada = $this->formatearFechaLarga($fechaFin);
+        }
+
         // Obtener datos del cliente si se seleccionó
         $infoCliente = '';
         if ($idCliente) {
             $client = $this->clientModel->find($idCliente);
             if ($client) {
-                $infoCliente = "Datos del cliente: {$client['nombre_cliente']}, NIT: {$client['nit_cliente']}, " .
+                $infoCliente = "Datos del cliente (EL CONTRATANTE): {$client['nombre_cliente']}, NIT: {$client['nit_cliente']}, " .
                     "Actividad Económica: " . ($client['codigo_actividad_economica'] ?? 'No especificada') . ", " .
                     "Ciudad: " . ($client['ciudad_cliente'] ?? 'No especificada') . ".";
             }
         }
 
+        // Fechas para el prompt
+        $infoFechas = '';
+        if ($fechaInicioFormateada && $fechaFinFormateada) {
+            $infoFechas = "Fecha de inicio del contrato: {$fechaInicioFormateada}\nFecha de finalización del contrato: {$fechaFinFormateada}";
+        } elseif ($fechaInicioFormateada) {
+            $infoFechas = "Fecha de inicio del contrato: {$fechaInicioFormateada}";
+        }
+
         // Construir el prompt según el modo
         if ($modoRefinamiento && !empty($textoActual)) {
-            $prompt = "Eres un abogado experto en contratos de prestación de servicios en SST (Seguridad y Salud en el Trabajo) en Colombia.\n\n" .
+            $prompt = "Eres un abogado experto en contratos de prestación de servicios de diseño e implementación del Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST) en Colombia.\n\n" .
                 "Tienes el siguiente texto de Cláusula Cuarta de un contrato:\n\n" .
                 "--- TEXTO ACTUAL ---\n{$textoActual}\n--- FIN TEXTO ---\n\n" .
                 "El usuario quiere que apliques las siguientes modificaciones o mejoras:\n{$contextoAdicional}\n\n" .
                 ($infoCliente ? $infoCliente . "\n\n" : "") .
+                ($infoFechas ? $infoFechas . "\n\n" : "") .
+                "REGLAS OBLIGATORIAS:\n" .
+                "- Las partes SIEMPRE en mayúsculas sostenidas: EL CONTRATANTE y EL CONTRATISTA\n" .
+                "- Usar las fechas reales proporcionadas en formato largo (ej: 1 de marzo de 2025). NUNCA placeholders como [FECHA]\n" .
+                "- Referenciar que el objeto del contrato es la prestación de servicios de SST\n\n" .
                 "Reescribe la cláusula completa aplicando los cambios solicitados. Mantén el formato legal formal. " .
                 "Responde SOLO con el texto de la cláusula, sin explicaciones ni comentarios adicionales.";
         } else {
             $acuerdos = [];
             if ($plazoEjecucion) $acuerdos[] = "Plazo de ejecución: {$plazoEjecucion}";
             if ($duracionContrato) $acuerdos[] = "Duración del contrato: {$duracionContrato}";
+            if ($fechaInicioFormateada) $acuerdos[] = "Fecha de inicio: {$fechaInicioFormateada}";
+            if ($fechaFinFormateada) $acuerdos[] = "Fecha de finalización: {$fechaFinFormateada}";
             if ($porcentajeAnticipo) $acuerdos[] = "Porcentaje de anticipo: {$porcentajeAnticipo}";
             if ($condicionesPago) $acuerdos[] = "Condiciones de pago: {$condicionesPago}";
             if ($terminacionAnticipada) $acuerdos[] = "Condiciones de terminación anticipada: {$terminacionAnticipada}";
@@ -644,16 +671,22 @@ class ContractController extends Controller
 
             $acuerdosTexto = implode("\n", $acuerdos);
 
-            $prompt = "Eres un abogado experto en contratos de prestación de servicios en SST (Seguridad y Salud en el Trabajo) en Colombia.\n\n" .
-                "Genera la CLÁUSULA CUARTA (Duración y Plazo de Ejecución) de un contrato de prestación de servicios con los siguientes acuerdos contractuales:\n\n" .
+            $prompt = "Eres un abogado experto en contratos de prestación de servicios de diseño e implementación del Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST) en Colombia.\n\n" .
+                "Genera la CLÁUSULA CUARTA (Duración y Plazo de Ejecución) de un contrato de prestación de servicios SST con los siguientes acuerdos contractuales:\n\n" .
                 ($infoCliente ? $infoCliente . "\n\n" : "") .
                 $acuerdosTexto . "\n\n" .
+                "REGLAS OBLIGATORIAS:\n" .
+                "- Las partes SIEMPRE en mayúsculas sostenidas: EL CONTRATANTE y EL CONTRATISTA\n" .
+                "- Usar las fechas reales proporcionadas en formato largo español (ej: 1 de marzo de 2025). NUNCA usar placeholders como [FECHA DE INICIO] o [FECHA]\n" .
+                "- La duración debe ser coherente con las fechas de inicio y fin proporcionadas\n" .
+                "- Mencionar que el objeto es la prestación de servicios de diseño e implementación del SG-SST\n" .
+                "- Si hay anticipo, incluir un parágrafo sobre las condiciones del anticipo\n\n" .
                 "La cláusula debe incluir:\n" .
-                "1. CUARTA-PLAZO DE EJECUCIÓN: con el plazo en días calendario y condiciones de inicio\n" .
-                "2. CUARTA-DURACIÓN: con la duración del contrato y fechas si aplica\n" .
-                "3. PARÁGRAFO PRIMERO: sobre terminación anticipada y reconocimiento de honorarios causados\n" .
-                "4. PARÁGRAFO SEGUNDO: indicando que NO opera prórroga automática\n" .
-                "5. Parágrafos adicionales según las obligaciones especiales acordadas\n\n" .
+                "1. CUARTA-PLAZO DE EJECUCIÓN: EL CONTRATISTA ejecutará en [plazo] días calendario, contados a partir de [fecha inicio real]\n" .
+                "2. CUARTA-DURACIÓN: El contrato tendrá duración de [duración], desde [fecha inicio real] hasta [fecha fin real]\n" .
+                "3. PARÁGRAFO PRIMERO: Terminación anticipada, solo se reconocen honorarios causados por actividades ejecutadas\n" .
+                "4. PARÁGRAFO SEGUNDO: NO opera prórroga automática, requiere acuerdo escrito entre las partes\n" .
+                "5. Parágrafos adicionales según las obligaciones especiales y anticipo acordados\n\n" .
                 "Usa lenguaje jurídico formal colombiano. Responde SOLO con el texto de la cláusula, sin explicaciones ni comentarios adicionales.";
         }
 
@@ -672,6 +705,27 @@ class ContractController extends Controller
                 'message' => 'Error al generar con IA: ' . $e->getMessage()
             ])->setStatusCode(500);
         }
+    }
+
+    /**
+     * Formatea una fecha ISO (YYYY-MM-DD) a formato largo español (ej: "1 de marzo de 2025")
+     */
+    private function formatearFechaLarga(string $fecha): string
+    {
+        $meses = [
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
+        ];
+
+        $timestamp = strtotime($fecha);
+        if (!$timestamp) return $fecha;
+
+        $dia = (int) date('j', $timestamp);
+        $mes = (int) date('n', $timestamp);
+        $anio = date('Y', $timestamp);
+
+        return "{$dia} de {$meses[$mes]} de {$anio}";
     }
 
     /**

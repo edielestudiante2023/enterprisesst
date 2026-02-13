@@ -386,6 +386,8 @@
                         id_cliente: idCliente,
                         plazo_ejecucion: document.getElementById('swal_plazo').value,
                         duracion_contrato: document.getElementById('swal_duracion').value,
+                        fecha_inicio: document.getElementById('fecha_inicio').value,
+                        fecha_fin: document.getElementById('fecha_fin').value,
                         porcentaje_anticipo: document.getElementById('swal_anticipo').value,
                         condiciones_pago: document.getElementById('swal_pago').value,
                         terminacion_anticipada: document.getElementById('swal_terminacion').value,
@@ -395,7 +397,7 @@
 
                     // Verificar que al menos un campo tenga datos
                     const tieneAlgo = Object.entries(acuerdos)
-                        .filter(([k]) => k !== 'id_cliente')
+                        .filter(([k]) => !['id_cliente', 'fecha_inicio', 'fecha_fin'].includes(k))
                         .some(([, v]) => v.trim() !== '');
 
                     if (!tieneAlgo) {
@@ -455,6 +457,8 @@
                 if (result.isConfirmed) {
                     const payload = {
                         id_cliente: document.getElementById('id_cliente').value,
+                        fecha_inicio: document.getElementById('fecha_inicio').value,
+                        fecha_fin: document.getElementById('fecha_fin').value,
                         contexto_adicional: result.value,
                         texto_actual: textoActual,
                         modo_refinamiento: true
