@@ -154,60 +154,17 @@ $puedeGenerarDocumento = isset($fasesInfo) && $fasesInfo && $fasesInfo['puede_ge
 </div>
 
 <!-- Tabla de Soportes Adjuntados -->
-<?php $soportes = $soportesAdicionales ?? []; ?>
-<?php if (!empty($soportes)): ?>
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-secondary text-white">
-        <h6 class="mb-0"><i class="bi bi-paperclip me-2"></i>Soportes Adjuntados</h6>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 100px;">Codigo</th>
-                        <th>Descripcion</th>
-                        <th style="width: 100px;">Fecha</th>
-                        <th style="width: 90px;">Tipo</th>
-                        <th style="width: 120px;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($soportes as $s): $esEnlace = !empty($s['url_externa']); $url = $esEnlace ? $s['url_externa'] : ($s['archivo_pdf'] ?? '#'); ?>
-                    <tr>
-                        <td><code><?= esc($s['codigo'] ?? 'SOP-EMO') ?></code></td>
-                        <td>
-                            <strong><?= esc($s['titulo']) ?></strong>
-                            <?php if (!empty($s['observaciones'])): ?>
-                                <br><small class="text-muted"><?= esc($s['observaciones']) ?></small>
-                            <?php endif; ?>
-                        </td>
-                        <td><small><?= date('d/m/Y', strtotime($s['created_at'] ?? 'now')) ?></small></td>
-                        <td>
-                            <?= $esEnlace
-                                ? '<span class="badge bg-info"><i class="bi bi-link-45deg"></i> Enlace</span>'
-                                : '<span class="badge bg-dark"><i class="bi bi-file-earmark"></i> Archivo</span>'
-                            ?>
-                        </td>
-                        <td>
-                            <a href="<?= esc($url) ?>"
-                               class="btn btn-sm btn-outline-primary" target="_blank" title="Ver/Descargar">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-<?php else: ?>
-<div class="alert alert-light border text-center">
-    <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
-    <p class="text-muted mb-0 mt-2">No hay soportes adjuntados aun.</p>
-</div>
-<?php endif; ?>
+<?= view('documentacion/_components/tabla_soportes', [
+    'soportes' => $soportesAdicionales ?? [],
+    'titulo' => 'Soportes Evaluaciones Medicas',
+    'subtitulo' => 'Evaluaciones medicas ocupacionales',
+    'icono' => 'bi-clipboard2-pulse',
+    'colorHeader' => 'secondary',
+    'codigoDefault' => 'SOP-EMO',
+    'emptyIcon' => 'bi-clipboard2-pulse',
+    'emptyMessage' => 'No hay soportes adjuntados aun.',
+    'emptyHint' => 'Use el boton "Adjuntar Soporte" para agregar evidencias.'
+]) ?>
 
 <!-- Modal Adjuntar Soporte -->
 <div class="modal fade" id="modalAdjuntarEMO" tabindex="-1">

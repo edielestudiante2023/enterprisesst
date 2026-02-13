@@ -10,11 +10,11 @@
         @media print {
             .no-print { display: none !important; }
             .documento-contenido { padding: 20px !important; box-shadow: none !important; }
-            body { background: white; }
+            body { background: white; font-size: 11pt; }
         }
         .documento-contenido {
             background: white;
-            padding: 40px 50px;
+            padding: 40px;
             max-width: 900px;
             margin: 0 auto;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -29,14 +29,14 @@
             vertical-align: middle;
         }
         .encabezado-logo {
-            width: 120px;
+            width: 150px;
             padding: 10px;
             text-align: center;
             background-color: #ffffff;
         }
         .encabezado-logo img {
-            max-width: 100px;
-            max-height: 60px;
+            max-width: 130px;
+            max-height: 70px;
             object-fit: contain;
         }
         .encabezado-titulo-central {
@@ -44,10 +44,9 @@
             padding: 0;
         }
         .encabezado-titulo-central .sistema {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: bold;
-            color: #fff;
-            background-color: #1a5f7a;
+            color: #333;
             padding: 8px 15px;
             border-bottom: 1px solid #333;
         }
@@ -55,11 +54,10 @@
             font-size: 0.85rem;
             font-weight: bold;
             color: #333;
-            padding: 10px 15px;
-            background-color: #f8f9fa;
+            padding: 8px 15px;
         }
         .encabezado-info {
-            width: 160px;
+            width: 170px;
             padding: 0;
         }
         .encabezado-info-table {
@@ -90,12 +88,13 @@
             font-size: 0.9rem;
         }
         .seccion-titulo {
-            background-color: #1a5f7a;
-            color: white;
-            padding: 10px 15px;
-            margin: 25px 0 15px 0;
+            font-size: 1.1rem;
             font-weight: bold;
-            font-size: 1rem;
+            color: #0d6efd;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            margin-top: 25px;
         }
         .items-table {
             width: 100%;
@@ -127,13 +126,8 @@
         .resumen-valor { font-family: 'Courier New', monospace; font-weight: bold; }
         .resumen-total { margin-top: 15px; padding-top: 15px; border-top: 2px solid #1a5f7a; border-bottom: none; font-size: 1.1rem; }
         .resumen-total .resumen-valor { color: #1a5f7a; }
-        .firmas-container { margin-top: 40px; }
-        .firmas-titulo { text-align: center; font-weight: bold; margin-bottom: 25px; font-size: 1rem; color: #1a5f7a; }
-        .firma-box { border: 1px solid #dee2e6; padding: 20px; min-height: 100px; margin-bottom: 10px; background-color: #fafafa; text-align: center; }
-        .firma-box img { max-height: 60px; max-width: 150px; }
-        .firma-linea { border-top: 1px solid #000; padding-top: 10px; font-weight: bold; font-size: 0.85rem; }
-        .firma-nombre { font-size: 0.85rem; color: #666; margin-top: 5px; }
-        .panel-estado { background: linear-gradient(135deg, #1a5f7a 0%, #2c3e50 100%); border-radius: 12px; padding: 20px; margin-bottom: 25px; color: white; }
+        .firma-section { margin-top: 40px; page-break-inside: avoid; }
+        .panel-estado { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 20px; margin-bottom: 25px; color: white; }
         .estado-badge { display: inline-block; padding: 6px 14px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
         .estado-aprobado { background-color: #28a745; color: white; }
         .estado-pendiente { background-color: #ffc107; color: #333; }
@@ -314,69 +308,11 @@
                 </div>
             </div>
 
-            <div class="firmas-container">
-                <div class="firmas-titulo">FIRMAS DE APROBACION DEL PRESUPUESTO</div>
-                <div class="row">
-                    <?php
-                    // Firmas electrónicas del sistema unificado
-                    $firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
-                    $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
-                    $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
-                    // Datos del consultor
-                    $consultorNombre = $consultor['nombre_consultor'] ?? '';
-                    $consultorLicencia = $consultor['numero_licencia'] ?? '';
-                    // Firma física del consultor (del perfil)
-                    $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
-                    ?>
-                    <!-- ELABORÓ: Consultor SST -->
-                    <div class="col-md-4">
-                        <div class="firma-box">
-                            <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
-                                <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 60px; max-width: 130px;">
-                            <?php elseif (!empty($firmaConsultorFisica)): ?>
-                                <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 60px; max-width: 130px;">
-                            <?php endif; ?>
-                        </div>
-                        <div class="firma-linea text-center">ELABORÓ</div>
-                        <div class="firma-nombre text-center"><?= esc($consultorNombre) ?></div>
-                        <?php if (!empty($consultorLicencia)): ?>
-                        <div class="text-center" style="font-size: 0.75rem; color: #666;">Lic. SST: <?= esc($consultorLicencia) ?></div>
-                        <?php endif; ?>
-                    </div>
-                    <!-- APROBÓ: Representante Legal -->
-                    <div class="col-md-4">
-                        <div class="firma-box">
-                            <?php if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])): ?>
-                                <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 60px; max-width: 130px;">
-                            <?php elseif (!empty($presupuesto['firma_imagen'])): ?>
-                                <img src="<?= base_url('uploads/' . $presupuesto['firma_imagen']) ?>" alt="Firma">
-                            <?php endif; ?>
-                        </div>
-                        <div class="firma-linea text-center">APROBÓ</div>
-                        <div class="firma-nombre text-center"><?= esc($contexto['representante_legal_nombre'] ?? '') ?></div>
-                        <div class="text-center" style="font-size: 0.75rem; color: #666;">Representante Legal</div>
-                    </div>
-                    <!-- REVISÓ: Responsable SG-SST -->
-                    <div class="col-md-4">
-                        <div class="firma-box">
-                            <?php if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])): ?>
-                                <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 60px; max-width: 130px;">
-                            <?php elseif (!empty($presupuesto['firma_delegado_imagen'])): ?>
-                                <img src="<?= base_url('uploads/' . $presupuesto['firma_delegado_imagen']) ?>" alt="Firma">
-                            <?php endif; ?>
-                        </div>
-                        <div class="firma-linea text-center">REVISÓ</div>
-                        <div class="firma-nombre text-center"><?= esc($contexto['responsable_sst_nombre'] ?? $contexto['delegado_sst_nombre'] ?? '') ?></div>
-                        <div class="text-center" style="font-size: 0.75rem; color: #666;">Responsable SG-SST</div>
-                    </div>
-                </div>
-            </div>
-
             <!-- ============================================== -->
             <!-- SECCION: CONTROL DE CAMBIOS -->
             <!-- ============================================== -->
             <div class="seccion" style="page-break-inside: avoid; margin-top: 40px;">
-                <div class="seccion-titulo" style="background: linear-gradient(90deg, #0d6efd, #6610f2); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
+                <div style="background: linear-gradient(90deg, #0d6efd, #6610f2); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none; font-weight: bold; font-size: 1rem;">
                     <i class="bi bi-journal-text me-2"></i>CONTROL DE CAMBIOS
                 </div>
                 <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
@@ -413,6 +349,118 @@
                         <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
+
+            <?php
+            // Firmas electrónicas del sistema unificado
+            $firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+            $firmaRepLegal = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
+            $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? ($firmasElectronicas ?? [])['vigia_sst'] ?? null;
+            // Datos del consultor
+            $consultorNombre = $consultor['nombre_consultor'] ?? '';
+            $consultorLicencia = $consultor['numero_licencia'] ?? '';
+            $consultorCargo = $consultor['cargo_consultor'] ?? 'Consultor SST';
+            // Firma física del consultor (del perfil)
+            $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
+            // Datos rep legal
+            $repLegalNombre = $contexto['representante_legal_nombre'] ?? '';
+            $repLegalCargo = $contexto['representante_legal_cargo'] ?? 'Representante Legal';
+            $repLegalCedula = $contexto['representante_legal_cedula'] ?? '';
+            // Datos delegado/responsable SST
+            $delegadoNombre = $contexto['responsable_sst_nombre'] ?? $contexto['delegado_sst_nombre'] ?? '';
+            $delegadoCargo = $contexto['responsable_sst_cargo'] ?? $contexto['delegado_sst_cargo'] ?? 'Responsable SG-SST';
+            ?>
+            <div class="firma-section" style="margin-top: 40px; page-break-inside: avoid;">
+                <div style="background: linear-gradient(90deg, #198754, #20c997); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none; font-weight: bold; font-size: 1rem;">
+                    <i class="bi bi-pen me-2"></i>FIRMAS DE APROBACION
+                </div>
+
+                <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
+                    <tr>
+                        <th style="width: 33.33%; background-color: #e9ecef; color: #495057; text-align: center; font-weight: 600; border-top: none;">Elaboro / Consultor SST</th>
+                        <th style="width: 33.33%; background-color: #e9ecef; color: #495057; text-align: center; font-weight: 600; border-top: none;">Aprobo / Representante Legal</th>
+                        <th style="width: 33.34%; background-color: #e9ecef; color: #495057; text-align: center; font-weight: 600; border-top: none;">Reviso / Responsable SG-SST</th>
+                    </tr>
+                    <tr>
+                        <!-- CONSULTOR SST -->
+                        <td style="vertical-align: top; padding: 25px; height: 200px; position: relative;">
+                            <div style="margin-bottom: 10px;">
+                                <strong style="color: #495057;">Nombre:</strong>
+                                <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;"><?= esc($consultorNombre) ?></span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong style="color: #495057;">Cargo:</strong>
+                                <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;"><?= esc($consultorCargo) ?></span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong style="color: #495057;">Licencia SST:</strong>
+                                <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 150px;"><?= esc($consultorLicencia) ?></span>
+                            </div>
+                            <div style="text-align: center; margin-top: 30px;">
+                                <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                    <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 70px; max-width: 200px;">
+                                <?php elseif (!empty($firmaConsultorFisica)): ?>
+                                    <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 70px; max-width: 200px;">
+                                <?php endif; ?>
+                                <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
+                                    <small style="color: #666;">Firma</small>
+                                </div>
+                            </div>
+                        </td>
+                        <!-- REPRESENTANTE LEGAL -->
+                        <td style="vertical-align: top; padding: 25px; height: 200px; position: relative;">
+                            <div style="margin-bottom: 10px;">
+                                <strong style="color: #495057;">Nombre:</strong>
+                                <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;"><?= esc($repLegalNombre) ?></span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong style="color: #495057;">Cargo:</strong>
+                                <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;"><?= esc($repLegalCargo) ?></span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong style="color: #495057;">Documento:</strong>
+                                <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 150px;"><?= esc($repLegalCedula) ?></span>
+                            </div>
+                            <div style="text-align: center; margin-top: 30px;">
+                                <?php if ($firmaRepLegal && !empty($firmaRepLegal['evidencia']['firma_imagen'])): ?>
+                                    <img src="<?= $firmaRepLegal['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 70px; max-width: 200px;">
+                                <?php elseif (!empty($presupuesto['firma_imagen'])): ?>
+                                    <img src="<?= base_url('uploads/' . $presupuesto['firma_imagen']) ?>" alt="Firma" style="max-height: 70px; max-width: 200px;">
+                                <?php endif; ?>
+                                <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
+                                    <small style="color: #666;">Firma</small>
+                                </div>
+                            </div>
+                        </td>
+                        <!-- RESPONSABLE SG-SST / DELEGADO -->
+                        <td style="vertical-align: top; padding: 25px; height: 200px; position: relative;">
+                            <div style="margin-bottom: 10px;">
+                                <strong style="color: #495057;">Nombre:</strong>
+                                <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;"><?= esc($delegadoNombre) ?></span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong style="color: #495057;">Cargo:</strong>
+                                <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 200px;"><?= esc($delegadoCargo) ?></span>
+                            </div>
+                            <div style="text-align: center; margin-top: 30px;">
+                                <?php if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])): ?>
+                                    <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 70px; max-width: 200px;">
+                                <?php elseif (!empty($presupuesto['firma_delegado_imagen'])): ?>
+                                    <img src="<?= base_url('uploads/' . $presupuesto['firma_delegado_imagen']) ?>" alt="Firma" style="max-height: 70px; max-width: 200px;">
+                                <?php endif; ?>
+                                <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
+                                    <small style="color: #666;">Firma</small>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Pie de documento -->
+            <div class="text-center text-muted mt-4 pt-3 border-top" style="font-size: 0.75rem;">
+                <p class="mb-1">Documento generado el <?= date('d/m/Y') ?> - Sistema de Gestion SST</p>
+                <p class="mb-0"><?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente'] ?? '') ?></p>
             </div>
         </div>
     </div>

@@ -29,32 +29,17 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-info text-white"><h6 class="mb-0"><i class="bi bi-person-badge me-2"></i>Soportes Informacion Perfiles de Cargo</h6></div>
-    <div class="card-body">
-        <?php if (!empty($documentosSSTAprobados)): ?>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light"><tr><th style="width:120px">Codigo</th><th>Descripcion</th><th style="width:80px">Ano</th><th style="width:100px">Fecha</th><th style="width:100px">Tipo</th><th style="width:150px">Acciones</th></tr></thead>
-                    <tbody>
-                        <?php foreach ($documentosSSTAprobados as $s): $esEnlace = !empty($s['url_externa']); $url = $esEnlace ? $s['url_externa'] : ($s['archivo_pdf'] ?? '#'); ?>
-                        <tr>
-                            <td><code><?= esc($s['codigo'] ?? 'SOP-IMP') ?></code></td>
-                            <td><strong><?= esc($s['titulo']) ?></strong><?php if (!empty($s['observaciones'])): ?><br><small class="text-muted"><?= esc($s['observaciones']) ?></small><?php endif; ?></td>
-                            <td><span class="badge bg-secondary"><?= esc($s['anio']) ?></span></td>
-                            <td><small><?= date('d/m/Y', strtotime($s['created_at'] ?? 'now')) ?></small></td>
-                            <td><?= $esEnlace ? '<span class="badge bg-primary"><i class="bi bi-link-45deg me-1"></i>Enlace</span>' : '<span class="badge bg-secondary"><i class="bi bi-file-earmark me-1"></i>Archivo</span>' ?></td>
-                            <td><div class="btn-group btn-group-sm"><a href="<?= esc($url) ?>" class="btn btn-outline-primary" target="_blank"><i class="bi bi-eye"></i></a><?php if (!$esEnlace): ?><a href="<?= esc($url) ?>" class="btn btn-danger" download><i class="bi bi-download"></i></a><?php endif; ?></div></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
-            <div class="text-center py-4"><i class="bi bi-person-badge text-muted" style="font-size:2.5rem"></i><p class="text-muted mt-2 mb-0">No hay soportes adjuntados aun.</p></div>
-        <?php endif; ?>
-    </div>
-</div>
+<?= view('documentacion/_components/tabla_soportes', [
+    'soportes' => $documentosSSTAprobados ?? [],
+    'titulo' => 'Soportes Informacion Medico Perfiles',
+    'subtitulo' => 'Perfiles de cargo y profesiogramas',
+    'icono' => 'bi-person-badge',
+    'colorHeader' => 'info',
+    'codigoDefault' => 'SOP-MED',
+    'emptyIcon' => 'bi-person-badge',
+    'emptyMessage' => 'No hay soportes adjuntados aun.',
+    'emptyHint' => 'Use el boton "Adjuntar Soporte" para agregar documentos.'
+]) ?>
 
 <div class="row"><?= view('documentacion/_components/lista_subcarpetas', ['subcarpetas' => $subcarpetas ?? []]) ?></div>
 

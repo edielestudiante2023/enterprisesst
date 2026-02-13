@@ -121,87 +121,23 @@ $composicion = $numTrabajadores <= 19 ? '1 principal + 1 suplente' : '2 principa
 </div>
 
 <!-- Tabla de Soportes Adjuntados -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-success text-white">
-        <h6 class="mb-0">
-            <i class="bi bi-heart-pulse me-2"></i>Soportes Comité de Convivencia
-        </h6>
-    </div>
-    <div class="card-body">
-        <?php
-        // Filtrar documentos que NO son el manual de convivencia (los soportes adjuntados)
-        $soportes = array_filter($documentosSSTAprobados ?? [], function($doc) {
-            return ($doc['tipo_documento'] ?? '') !== 'manual_convivencia_laboral';
-        });
-        ?>
-        <?php if (!empty($soportes)): ?>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 120px;">Código</th>
-                            <th>Descripción</th>
-                            <th style="width: 80px;">Año</th>
-                            <th style="width: 100px;">Fecha</th>
-                            <th style="width: 100px;">Tipo</th>
-                            <th style="width: 150px;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($soportes as $soporte): ?>
-                            <?php
-                            $esEnlace = !empty($soporte['url_externa']);
-                            $urlArchivo = $esEnlace ? $soporte['url_externa'] : ($soporte['archivo_pdf'] ?? '#');
-                            ?>
-                            <tr>
-                                <td><code><?= esc($soporte['codigo'] ?? 'SOP-CONV') ?></code></td>
-                                <td>
-                                    <strong><?= esc($soporte['titulo']) ?></strong>
-                                    <?php if (!empty($soporte['observaciones'])): ?>
-                                        <br><small class="text-muted"><?= esc($soporte['observaciones']) ?></small>
-                                    <?php endif; ?>
-                                </td>
-                                <td><span class="badge bg-secondary"><?= esc($soporte['anio']) ?></span></td>
-                                <td>
-                                    <small><?= date('d/m/Y', strtotime($soporte['created_at'] ?? $soporte['fecha_aprobacion'] ?? 'now')) ?></small>
-                                </td>
-                                <td>
-                                    <?php if ($esEnlace): ?>
-                                        <span class="badge bg-info"><i class="bi bi-link-45deg me-1"></i>Enlace</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-secondary"><i class="bi bi-file-earmark me-1"></i>Archivo</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Ver/Descargar">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <?php if ($esEnlace): ?>
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-info" target="_blank" title="Abrir enlace externo">
-                                            <i class="bi bi-box-arrow-up-right"></i>
-                                        </a>
-                                        <?php else: ?>
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-danger" download title="Descargar">
-                                            <i class="bi bi-download"></i>
-                                        </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
-            <div class="text-center py-4">
-                <i class="bi bi-heart-pulse text-muted" style="font-size: 2.5rem;"></i>
-                <p class="text-muted mt-2 mb-0">No hay soportes del Comité de Convivencia adjuntados aún.</p>
-                <small class="text-muted">Use el botón "Adjuntar Soporte" para agregar documentos.</small>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
+<?php
+// Filtrar documentos que NO son el manual de convivencia (los soportes adjuntados)
+$soportesConvivencia = array_filter($documentosSSTAprobados ?? [], function($doc) {
+    return ($doc['tipo_documento'] ?? '') !== 'manual_convivencia_laboral';
+});
+?>
+<?= view('documentacion/_components/tabla_soportes', [
+    'soportes' => $soportesConvivencia,
+    'titulo' => 'Soportes Comite de Convivencia',
+    'subtitulo' => 'Documentos adicionales',
+    'icono' => 'bi-heart-pulse',
+    'colorHeader' => 'success',
+    'codigoDefault' => 'SOP-CONV',
+    'emptyIcon' => 'bi-heart-pulse',
+    'emptyMessage' => 'No hay soportes del Comite de Convivencia adjuntados aun.',
+    'emptyHint' => 'Use el boton "Adjuntar Soporte" para agregar documentos.'
+]) ?>
 
 <!-- Subcarpetas (si las hay) -->
 <div class="row">

@@ -46,81 +46,17 @@
 </div>
 
 <!-- Tabla de Soportes Adjuntados -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-info text-white">
-        <h6 class="mb-0">
-            <i class="bi bi-calendar-check me-2"></i>Soportes de Auditoria
-        </h6>
-    </div>
-    <div class="card-body">
-        <?php if (!empty($documentosSSTAprobados)): ?>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 120px;">Codigo</th>
-                            <th>Descripcion</th>
-                            <th style="width: 80px;">Ano</th>
-                            <th style="width: 100px;">Fecha</th>
-                            <th style="width: 100px;">Tipo</th>
-                            <th style="width: 150px;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($documentosSSTAprobados as $soporte): ?>
-                            <?php
-                            $esEnlace = !empty($soporte['url_externa']);
-                            $urlArchivo = $esEnlace ? $soporte['url_externa'] : ($soporte['archivo_pdf'] ?? '#');
-                            ?>
-                            <tr>
-                                <td><code><?= esc($soporte['codigo'] ?? 'SOP-AUD') ?></code></td>
-                                <td>
-                                    <strong><?= esc($soporte['titulo']) ?></strong>
-                                    <?php if (!empty($soporte['observaciones'])): ?>
-                                        <br><small class="text-muted"><?= esc($soporte['observaciones']) ?></small>
-                                    <?php endif; ?>
-                                </td>
-                                <td><span class="badge bg-secondary"><?= esc($soporte['anio']) ?></span></td>
-                                <td>
-                                    <small><?= date('d/m/Y', strtotime($soporte['created_at'] ?? $soporte['fecha_aprobacion'] ?? 'now')) ?></small>
-                                </td>
-                                <td>
-                                    <?php if ($esEnlace): ?>
-                                        <span class="badge bg-primary"><i class="bi bi-link-45deg me-1"></i>Enlace</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-secondary"><i class="bi bi-file-earmark me-1"></i>Archivo</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Ver/Descargar">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <?php if ($esEnlace): ?>
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-info" target="_blank" title="Abrir enlace externo">
-                                            <i class="bi bi-box-arrow-up-right"></i>
-                                        </a>
-                                        <?php else: ?>
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-danger" download title="Descargar">
-                                            <i class="bi bi-download"></i>
-                                        </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
-            <div class="text-center py-4">
-                <i class="bi bi-calendar-x text-muted" style="font-size: 2.5rem;"></i>
-                <p class="text-muted mt-2 mb-0">No hay soportes de auditoria adjuntados aun.</p>
-                <small class="text-muted">Use el boton "Adjuntar Soporte" para agregar documentos.</small>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
+<?= view('documentacion/_components/tabla_soportes', [
+    'soportes' => $documentosSSTAprobados ?? [],
+    'titulo' => 'Soportes Planificacion Auditorias',
+    'subtitulo' => 'Auditorias con el COPASST',
+    'icono' => 'bi-clipboard-check',
+    'colorHeader' => 'primary',
+    'codigoDefault' => 'SOP-AUD',
+    'emptyIcon' => 'bi-clipboard-check',
+    'emptyMessage' => 'No hay soportes adjuntados aun.',
+    'emptyHint' => 'Use el boton "Adjuntar Soporte" para agregar documentos.'
+]) ?>
 
 <!-- Subcarpetas (si las hay) -->
 <div class="row">

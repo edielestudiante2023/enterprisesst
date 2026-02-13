@@ -46,79 +46,17 @@
 </div>
 
 <!-- Tabla de Planillas Adjuntadas -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-success text-white">
-        <h6 class="mb-0">
-            <i class="bi bi-file-earmark-check me-2"></i>Planillas Adjuntadas
-        </h6>
-    </div>
-    <div class="card-body">
-        <?php if (!empty($documentosSSTAprobados)): ?>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 120px;">Código</th>
-                            <th>Descripción</th>
-                            <th style="width: 100px;">Fecha</th>
-                            <th style="width: 100px;">Tipo</th>
-                            <th style="width: 150px;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($documentosSSTAprobados as $planilla): ?>
-                            <?php
-                            $esEnlace = !empty($planilla['url_externa']);
-                            $urlArchivo = $esEnlace ? $planilla['url_externa'] : ($planilla['archivo_pdf'] ?? '#');
-                            ?>
-                            <tr>
-                                <td><code><?= esc($planilla['codigo'] ?? 'PLA-SRL') ?></code></td>
-                                <td>
-                                    <strong><?= esc($planilla['titulo']) ?></strong>
-                                    <?php if (!empty($planilla['observaciones'])): ?>
-                                        <br><small class="text-muted"><?= esc($planilla['observaciones']) ?></small>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <small><?= date('d/m/Y', strtotime($planilla['created_at'] ?? $planilla['fecha_aprobacion'] ?? 'now')) ?></small>
-                                </td>
-                                <td>
-                                    <?php if ($esEnlace): ?>
-                                        <span class="badge bg-primary"><i class="bi bi-link-45deg me-1"></i>Enlace</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-secondary"><i class="bi bi-file-earmark me-1"></i>Archivo</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Ver/Descargar">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <?php if ($esEnlace): ?>
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-info" target="_blank" title="Abrir enlace externo">
-                                            <i class="bi bi-box-arrow-up-right"></i>
-                                        </a>
-                                        <?php else: ?>
-                                        <a href="<?= esc($urlArchivo) ?>" class="btn btn-danger" download title="Descargar">
-                                            <i class="bi bi-download"></i>
-                                        </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
-            <div class="text-center py-4">
-                <i class="bi bi-file-earmark-x text-muted" style="font-size: 2.5rem;"></i>
-                <p class="text-muted mt-2 mb-0">No hay planillas adjuntadas aún.</p>
-                <small class="text-muted">Use el botón "Adjuntar Planilla" para agregar soportes.</small>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
+<?= view('documentacion/_components/tabla_soportes', [
+    'soportes' => $documentosSSTAprobados ?? [],
+    'titulo' => 'Planillas Adjuntadas',
+    'subtitulo' => 'Afiliacion al Sistema General de Riesgos Laborales',
+    'icono' => 'bi-file-earmark-check',
+    'colorHeader' => 'success',
+    'codigoDefault' => 'PLA-SRL',
+    'emptyIcon' => 'bi-file-earmark-x',
+    'emptyMessage' => 'No hay planillas adjuntadas aun.',
+    'emptyHint' => 'Use el boton "Adjuntar Planilla" para agregar soportes.'
+]) ?>
 
 <!-- Subcarpetas (si las hay) -->
 <div class="row">

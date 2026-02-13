@@ -629,12 +629,12 @@ if (!function_exists('renderizarTablaPdf')) {
     <!-- Tabla de firmas para trabajadores -->
     <table class="tabla-contenido" style="width: 100%; border-collapse: collapse; font-size: 8pt;">
         <tr>
-            <th style="width: 30px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">No.</th>
-            <th style="width: 70px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Fecha</th>
-            <th style="background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Nombre Completo</th>
-            <th style="width: 80px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Cedula</th>
-            <th style="width: 100px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Cargo / Area</th>
-            <th style="width: 90px; background-color: #f8f9fa; border: 1px solid #333; padding: 5px; text-align: center;">Firma</th>
+            <th style="width: 30px; background-color: #f8f9fa; color: #333; border: 1px solid #333; padding: 5px; text-align: center;">No.</th>
+            <th style="width: 70px; background-color: #f8f9fa; color: #333; border: 1px solid #333; padding: 5px; text-align: center;">Fecha</th>
+            <th style="background-color: #f8f9fa; color: #333; border: 1px solid #333; padding: 5px; text-align: center;">Nombre Completo</th>
+            <th style="width: 80px; background-color: #f8f9fa; color: #333; border: 1px solid #333; padding: 5px; text-align: center;">Cedula</th>
+            <th style="width: 100px; background-color: #f8f9fa; color: #333; border: 1px solid #333; padding: 5px; text-align: center;">Cargo / Area</th>
+            <th style="width: 90px; background-color: #f8f9fa; color: #333; border: 1px solid #333; padding: 5px; text-align: center;">Firma</th>
         </tr>
         <?php
         $filasFirma = $contenido['filas_firma'] ?? 15;

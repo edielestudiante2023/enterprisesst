@@ -128,7 +128,7 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
+                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" target="_blank" class="btn btn-outline-light btn-sm">
                         <i class="bi bi-arrow-left me-1"></i>Volver
                     </a>
                     <span class="ms-3"><?= esc($cliente['nombre_cliente']) ?> - Presupuesto SST <?= $anio ?></span>
@@ -143,7 +143,8 @@
                             <?php foreach ($anios_disponibles as $a): ?>
                                 <li>
                                     <a class="dropdown-item <?= $a == $anio ? 'active' : '' ?>"
-                                       href="<?= base_url('documentos-sst/presupuesto/' . $cliente['id_cliente'] . '/' . $a) ?>">
+                                       href="<?= base_url('documentos-sst/presupuesto/' . $cliente['id_cliente'] . '/' . $a) ?>"
+                                       target="_blank">
                                         <?= $a ?>
                                     </a>
                                 </li>
@@ -153,13 +154,13 @@
 
                     <!-- Ver Preview (formato documento para firmas) -->
                     <a href="<?= base_url('documentos-sst/presupuesto/preview/' . $cliente['id_cliente'] . '/' . $anio) ?>"
-                       class="btn btn-info btn-sm me-2">
+                       target="_blank" class="btn btn-info btn-sm me-2">
                         <i class="bi bi-eye me-1"></i>Ver Preview
                     </a>
 
                     <!-- Exportar Excel -->
                     <a href="<?= base_url('documentos-sst/presupuesto/excel/' . $cliente['id_cliente'] . '/' . $anio) ?>"
-                       class="btn btn-outline-light btn-sm me-2">
+                       target="_blank" class="btn btn-outline-light btn-sm me-2">
                         <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
                     </a>
 
@@ -192,8 +193,8 @@
                 <div class="col-md-8">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-2" style="--bs-breadcrumb-divider-color: rgba(255,255,255,0.5);">
-                            <li class="breadcrumb-item"><a href="<?= base_url('clientes') ?>" class="text-white-50">Clientes</a></li>
-                            <li class="breadcrumb-item"><a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="text-white-50"><?= esc($cliente['nombre_cliente']) ?></a></li>
+                            <li class="breadcrumb-item"><a href="<?= base_url('clientes') ?>" target="_blank" class="text-white-50">Clientes</a></li>
+                            <li class="breadcrumb-item"><a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" target="_blank" class="text-white-50"><?= esc($cliente['nombre_cliente']) ?></a></li>
                             <li class="breadcrumb-item active text-white">Presupuesto SST</li>
                         </ol>
                     </nav>
@@ -702,7 +703,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <a href="<?= base_url('documentos-sst/presupuesto/estado/' . $presupuesto['id_presupuesto'] . '/pendiente_firma') ?>"
-                       class="btn btn-warning"
+                       target="_blank" class="btn btn-warning"
                        onclick="return confirm('¿Confirma que desea cambiar el estado a Pendiente de Firma? El presupuesto no podra ser editado hasta que sea aprobado.');">
                         <i class="bi bi-send me-1"></i>Cambiar a Pendiente de Firma
                     </a>
@@ -926,57 +927,16 @@
         // MODAL AGREGAR ITEM - Actividades predefinidas
         // ========================================
         const actividadesPorCategoria = {
-            '1': [ // Talento Humano de SST
+            '1': [ // Talento Humano SST
                 'Honorarios Responsable SST',
                 'Honorarios Consultor SST externo',
                 'Salario Coordinador SST',
                 'Apoyo administrativo SST',
                 'Asesorias especializadas SST',
+                'Auditoria interna SG-SST',
                 'Auditoria externa SG-SST'
             ],
-            '2': [ // Medicina del Trabajo
-                'Examenes medicos ocupacionales ingreso',
-                'Examenes medicos periodicos',
-                'Examenes medicos de egreso',
-                'Examenes complementarios (audiometria, espirometria)',
-                'Vacunacion ocupacional',
-                'Valoraciones medicas especiales',
-                'Diagnostico condiciones de salud',
-                'Programa de vigilancia epidemiologica'
-            ],
-            '3': [ // Promocion y Prevencion
-                'Pausas activas y gimnasia laboral',
-                'Campanas de salud (cardiovascular, visual)',
-                'Semana de la salud ocupacional',
-                'Material educativo SST',
-                'Senalizacion de seguridad',
-                'Mediciones ambientales (ruido, iluminacion)',
-                'Estudios de puestos de trabajo',
-                'Programa de estilos de vida saludable'
-            ],
-            '4': [ // Elementos de Proteccion Personal
-                'EPP proteccion respiratoria',
-                'EPP proteccion visual',
-                'EPP proteccion auditiva',
-                'EPP proteccion manos (guantes)',
-                'EPP proteccion pies (calzado)',
-                'EPP proteccion corporal',
-                'EPP trabajo en alturas',
-                'Dotacion de trabajo',
-                'Reposicion de EPP'
-            ],
-            '5': [ // Gestion de Emergencias
-                'Extintores y recarga',
-                'Botiquines y reposicion',
-                'Camillas y equipos de rescate',
-                'Senalizacion de emergencias',
-                'Simulacros de evacuacion',
-                'Capacitacion brigadas de emergencia',
-                'Plan de emergencias',
-                'Kit de derrames',
-                'Alarmas y sistemas de alerta'
-            ],
-            '6': [ // Capacitacion
+            '2': [ // Capacitacion y Formacion
                 'Induccion y reinduccion SST',
                 'Capacitacion COPASST/Vigia',
                 'Capacitacion trabajo en alturas',
@@ -988,7 +948,57 @@
                 'Capacitacion ergonomia',
                 'Capacitacion prevencion incendios',
                 'Capacitacion manejo defensivo',
+                'Capacitacion brigadas de emergencia',
                 'Curso virtual 50 horas SG-SST'
+            ],
+            '3': [ // Medicina Preventiva y del Trabajo
+                'Examenes medicos ocupacionales ingreso',
+                'Examenes medicos periodicos',
+                'Examenes medicos de egreso',
+                'Examenes complementarios (audiometria, espirometria)',
+                'Vacunacion ocupacional',
+                'Valoraciones medicas especiales',
+                'Diagnostico condiciones de salud',
+                'Programa de vigilancia epidemiologica'
+            ],
+            '4': [ // Promocion y Prevencion
+                'Pausas activas y gimnasia laboral',
+                'Campanas de salud (cardiovascular, visual)',
+                'Semana de la salud ocupacional',
+                'Programa de estilos de vida saludable',
+                'Material educativo SST'
+            ],
+            '5': [ // Seguridad Industrial e Higiene
+                'EPP proteccion respiratoria',
+                'EPP proteccion visual',
+                'EPP proteccion auditiva',
+                'EPP proteccion manos (guantes)',
+                'EPP proteccion pies (calzado)',
+                'EPP proteccion corporal',
+                'EPP trabajo en alturas',
+                'Dotacion de trabajo',
+                'Reposicion de EPP',
+                'Senalizacion de seguridad',
+                'Mediciones ambientales (ruido, iluminacion)',
+                'Estudios de puestos de trabajo',
+                'Inspecciones de seguridad',
+                'Investigacion de accidentes e incidentes'
+            ],
+            '6': [ // Gestion de Emergencias
+                'Extintores y recarga',
+                'Botiquines y reposicion',
+                'Camillas y equipos de rescate',
+                'Senalizacion de emergencias',
+                'Simulacros de evacuacion',
+                'Plan de emergencias',
+                'Kit de derrames',
+                'Alarmas y sistemas de alerta'
+            ],
+            '7': [ // Otros Gastos SST
+                'Software y licencias SG-SST',
+                'Papeleria y materiales SST',
+                'Mantenimiento de equipos de seguridad',
+                'Imprevistos SST'
             ]
         };
 

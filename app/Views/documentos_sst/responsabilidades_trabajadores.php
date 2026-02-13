@@ -9,8 +9,8 @@
     <style>
         @media print {
             .no-print { display: none !important; }
-            .documento-contenido { padding: 15px !important; box-shadow: none !important; }
-            body { font-size: 10pt; }
+            .documento-contenido { padding: 20px !important; }
+            body { font-size: 11pt; }
             .page-break { page-break-before: always; }
             .tabla-firmas { font-size: 9pt; }
             .tabla-firmas td, .tabla-firmas th { padding: 8px 5px !important; }
@@ -91,7 +91,7 @@
         }
 
         .panel-aprobacion {
-            background: linear-gradient(135deg, #fd7e14 0%, #dc3545 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
@@ -99,11 +99,10 @@
         }
 
         .info-documento {
-            background-color: #fff3cd;
+            background-color: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border: 1px solid #ffc107;
         }
 
         .tabla-firmas {
@@ -144,9 +143,9 @@
                     <span class="ms-3"><?= esc($cliente['nombre_cliente']) ?> - Responsabilidades Trabajadores <?= $anio ?></span>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-outline-light btn-sm me-2" onclick="window.print()">
-                        <i class="bi bi-printer me-1"></i>Imprimir
-                    </button>
+                    <a href="<?= base_url('documentos-sst/historial/' . $documento['id_documento']) ?>" class="btn btn-outline-light btn-sm me-2">
+                        <i class="bi bi-clock-history me-1"></i>Historial
+                    </a>
                     <a href="<?= base_url('documentos-sst/exportar-pdf/' . $documento['id_documento']) ?>" class="btn btn-danger btn-sm me-2">
                         <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                     </a>
@@ -170,30 +169,31 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <div class="d-flex align-items-center gap-3 mb-2">
-                            <span class="badge bg-dark estado-badge"><?= esc($documento['codigo'] ?? 'Sin codigo') ?></span>
-                            <span class="badge bg-light text-dark estado-badge">v<?= $documento['version'] ?>.0</span>
-                            <span class="badge bg-warning text-dark estado-badge">
-                                <i class="bi bi-printer me-1"></i>
-                                Formato Imprimible
+                            <span class="badge bg-dark"><?= esc($documento['codigo'] ?? 'Sin codigo') ?></span>
+                            <span class="badge bg-light text-dark">v<?= $documento['version'] ?>.0</span>
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle me-1"></i>Aprobado
                             </span>
                         </div>
-                        <small class="opacity-75">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Este documento se imprime y se firma fisicamente durante la induccion
-                        </small>
+                        <small class="opacity-75">Documento firmado por el Consultor SST</small>
                     </div>
                 </div>
             </div>
 
             <!-- Info del documento -->
             <div class="info-documento no-print">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
-                        <strong>Formato para Induccion:</strong> Este documento debe imprimirse y firmarse fisicamente por cada trabajador durante el proceso de induccion en SST.
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="text-muted">Tipo de documento:</small>
+                        <span class="fw-bold">Responsabilidades</span>
                     </div>
-                    <div class="col-md-4 text-end">
-                        <span class="badge bg-secondary"><?= $contenido['filas_firma'] ?? 15 ?> filas de firma</span>
+                    <div class="col-md-4">
+                        <small class="text-muted">Version:</small>
+                        <span class="fw-bold"><?= $documento['version'] ?>.0</span>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Fecha:</small>
+                        <span class="fw-bold"><?= date('d/m/Y') ?></span>
                     </div>
                 </div>
             </div>
@@ -239,18 +239,19 @@
 
             <!-- Contenido del documento -->
             <?php if (!empty($contenido['secciones'])): ?>
+                <?php $parsedown = new \Parsedown(); ?>
                 <?php foreach ($contenido['secciones'] as $seccion): ?>
                     <div class="seccion">
                         <div class="seccion-titulo"><?= esc($seccion['titulo']) ?></div>
                         <div class="seccion-contenido">
-                            <?= $seccion['contenido'] ?>
+                            <?= $parsedown->text($seccion['contenido'] ?? '') ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
 
             <!-- Control de Cambios -->
-            <div class="seccion" style="page-break-inside: avoid; margin-top: 30px;">
+            <div class="seccion" style="page-break-inside: avoid; margin-top: 40px;">
                 <div class="seccion-titulo" style="background: linear-gradient(90deg, #0d6efd, #6610f2); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
                     <i class="bi bi-journal-text me-2"></i>CONTROL DE CAMBIOS
                 </div>
@@ -290,6 +291,13 @@
 
             <!-- PAGINA DE FIRMAS (Separada para impresion) -->
             <div class="page-break"></div>
+
+            <!-- Titulo seccion firmas -->
+            <div class="firma-section" style="margin-top: 40px; page-break-inside: avoid;">
+                <div class="seccion-titulo" style="background: linear-gradient(90deg, #198754, #20c997); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
+                    <i class="bi bi-pen me-2"></i>FIRMA DE ACEPTACION
+                </div>
+            </div>
 
             <!-- Encabezado repetido para pagina de firmas -->
             <table class="encabezado-formal" style="margin-top: 20px;">

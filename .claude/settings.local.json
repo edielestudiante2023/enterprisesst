@@ -29,7 +29,9 @@
       "Bash(powershell:*)",
       "Bash(/tmp/check_missing.ps1:*)",
       "Bash(/tmp/verify_windowopen.ps1 << 'PSEOF'\n$f = \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\Views\\\\documentos_sst\\\\presupuesto_preview.php\"\n$content = Get-Content $f -Raw\n$lines = $content -split \"`n\"\nfor \\($i = 0; $i -lt $lines.Count; $i++\\) {\n    if \\($lines[$i] -match \"window\\\\.\\(open|location\\)\" -and $lines[$i] -match \"firma\"\\) {\n        Write-Host \"L$\\($i+1\\): $\\($lines[$i].Trim\\(\\)\\)\"\n    }\n}\nPSEOF)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "WebFetch(domain:dashboard.cycloidtalent.com)",
+      "Bash(ls -la \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\Views\\\\documentacion\\\\_components\"\" 2>nul | grep \".php \")"
     ]
   }
 }

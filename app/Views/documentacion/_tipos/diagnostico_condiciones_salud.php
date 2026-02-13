@@ -137,65 +137,17 @@ if (!empty($documentosSSTAprobados)) {
 </div>
 
 <!-- Tabla de Soportes Adjuntados -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-secondary text-white">
-        <h6 class="mb-0"><i class="bi bi-paperclip me-2"></i>Soportes Adjuntados</h6>
-    </div>
-    <div class="card-body">
-        <?php $soportes = $soportesAdicionales ?? []; ?>
-        <?php if (!empty($soportes)): ?>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width:120px">Codigo</th>
-                            <th>Descripcion</th>
-                            <th style="width:80px">Ano</th>
-                            <th style="width:100px">Fecha</th>
-                            <th style="width:100px">Tipo</th>
-                            <th style="width:150px">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($soportes as $s): $esEnlace = !empty($s['url_externa']); $url = $esEnlace ? $s['url_externa'] : ($s['archivo_pdf'] ?? '#'); ?>
-                        <tr>
-                            <td><code><?= esc($s['codigo'] ?? 'SOP-DCS') ?></code></td>
-                            <td>
-                                <strong><?= esc($s['titulo']) ?></strong>
-                                <?php if (!empty($s['observaciones'])): ?>
-                                    <br><small class="text-muted"><?= esc($s['observaciones']) ?></small>
-                                <?php endif; ?>
-                            </td>
-                            <td><span class="badge bg-secondary"><?= esc($s['anio']) ?></span></td>
-                            <td><small><?= date('d/m/Y', strtotime($s['created_at'] ?? 'now')) ?></small></td>
-                            <td>
-                                <?= $esEnlace
-                                    ? '<span class="badge bg-primary"><i class="bi bi-link-45deg me-1"></i>Enlace</span>'
-                                    : '<span class="badge bg-secondary"><i class="bi bi-file-earmark me-1"></i>Archivo</span>'
-                                ?>
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="<?= esc($url) ?>" class="btn btn-outline-primary" target="_blank"><i class="bi bi-eye"></i></a>
-                                    <?php if (!$esEnlace): ?>
-                                    <a href="<?= esc($url) ?>" class="btn btn-outline-danger" download><i class="bi bi-download"></i></a>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
-            <div class="text-center py-4">
-                <i class="bi bi-inbox text-muted" style="font-size:2rem"></i>
-                <p class="text-muted mt-2 mb-0">No hay soportes adjuntados aun.</p>
-                <small class="text-muted">Use el boton "Adjuntar Soporte" para agregar evidencias.</small>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
+<?= view('documentacion/_components/tabla_soportes', [
+    'soportes' => $soportesAdicionales ?? [],
+    'titulo' => 'Soportes Adjuntados',
+    'subtitulo' => 'Diagnostico de condiciones de salud',
+    'icono' => 'bi-paperclip',
+    'colorHeader' => 'secondary',
+    'codigoDefault' => 'SOP-DCS',
+    'emptyIcon' => 'bi-inbox',
+    'emptyMessage' => 'No hay soportes adjuntados aun.',
+    'emptyHint' => 'Use el boton "Adjuntar Soporte" para agregar evidencias.'
+]) ?>
 
 <!-- Modal Adjuntar Soporte -->
 <div class="modal fade" id="modalAdjuntarDCS" tabindex="-1">
