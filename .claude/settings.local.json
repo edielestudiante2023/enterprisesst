@@ -24,7 +24,12 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: mejorar error handling JS en generación IA para mostrar error real\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: eliminar verificación redundante de método HTTP en generarClausulaIA\n\ngetMethod\\(\\) retorna ''POST'' \\(mayúsculas\\) en CI4 v4.4+, causando 405.\nLa ruta $routes->post\\(\\) ya restringe el método correctamente.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit:*)",
-      "Bash(powershell -ExecutionPolicy Bypass -File /tmp/update_firma.ps1:*)"
+      "Bash(powershell -ExecutionPolicy Bypass -File /tmp/update_firma.ps1:*)",
+      "Bash(/tmp/verify_firma.ps1 << 'PSEOF'\nWrite-Host \"=== Verification: Files with 'Solicitar Firma' that have target=_blank ===\"\n$allFiles = Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\Views\" -Recurse -Filter \"*.php\"\n$firmaFiles = @\\(\\)\n$missingTarget = @\\(\\)\n\nforeach \\($f in $allFiles\\) {\n    $content = Get-Content $f.FullName -Raw -ErrorAction SilentlyContinue\n    if \\($content -match \"Solicitar Firma\"\\) {\n        $firmaFiles += $f.FullName\n        if \\($content -match 'target=\"_blank\"' -or $content -match \"target='_blank'\"\\) {\n            Write-Host \"[OK] $\\($f.FullName\\)\"\n        } else {\n            Write-Host \"[MISSING] $\\($f.FullName\\)\"\n            $missingTarget += $f.FullName\n        }\n    }\n}\n\nWrite-Host \"\"\nWrite-Host \"Total files with 'Solicitar Firma': $\\($firmaFiles.Count\\)\"\nWrite-Host \"Files missing target=_blank: $\\($missingTarget.Count\\)\"\nif \\($missingTarget.Count -gt 0\\) {\n    foreach \\($m in $missingTarget\\) {\n        Write-Host \"  - $m\"\n    }\n}\nPSEOF)",
+      "Bash(powershell:*)",
+      "Bash(/tmp/check_missing.ps1:*)",
+      "Bash(/tmp/verify_windowopen.ps1 << 'PSEOF'\n$f = \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\Views\\\\documentos_sst\\\\presupuesto_preview.php\"\n$content = Get-Content $f -Raw\n$lines = $content -split \"`n\"\nfor \\($i = 0; $i -lt $lines.Count; $i++\\) {\n    if \\($lines[$i] -match \"window\\\\.\\(open|location\\)\" -and $lines[$i] -match \"firma\"\\) {\n        Write-Host \"L$\\($i+1\\): $\\($lines[$i].Trim\\(\\)\\)\"\n    }\n}\nPSEOF)",
+      "Bash(git restore:*)"
     ]
   }
 }

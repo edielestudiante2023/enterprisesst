@@ -166,7 +166,8 @@ class ContractController extends Controller
             'tipo_contrato' => $this->request->getPost('tipo_contrato'),
             'estado' => $this->request->getPost('estado') ?: 'activo',
             'observaciones' => $this->request->getPost('observaciones'),
-            'clausula_cuarta_duracion' => $this->request->getPost('clausula_cuarta_duracion')
+            'clausula_cuarta_duracion' => $this->request->getPost('clausula_cuarta_duracion'),
+            'clausula_primera_objeto' => $this->request->getPost('clausula_primera_objeto')
         ];
 
         // Validar que no se superpongan fechas
@@ -450,7 +451,8 @@ class ContractController extends Controller
             'banco' => $this->request->getPost('banco'),
             'tipo_cuenta' => $this->request->getPost('tipo_cuenta'),
             'cuenta_bancaria' => $this->request->getPost('cuenta_bancaria'),
-            'clausula_cuarta_duracion' => $this->request->getPost('clausula_cuarta_duracion')
+            'clausula_cuarta_duracion' => $this->request->getPost('clausula_cuarta_duracion'),
+            'clausula_primera_objeto' => $this->request->getPost('clausula_primera_objeto')
         ];
 
         // Actualizar el contrato con los nuevos datos
@@ -700,6 +702,116 @@ class ContractController extends Controller
             ]);
         } catch (\Exception $e) {
             log_message('error', 'Error generando cláusula con IA: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar con IA: ' . $e->getMessage()
+            ])->setStatusCode(500);
+        }
+    }
+
+    /**
+     * Genera la Cláusula Primera (Objeto del Contrato) con IA
+     */
+    public function generarClausula1IA()
+    {
+        $json = $this->request->getJSON(true);
+
+        $idCliente = $json['id_cliente'] ?? null;
+        $descripcionServicio = $json['descripcion_servicio'] ?? 'Diseño e implementación del SG-SST';
+        $tipoConsultor = $json['tipo_consultor'] ?? 'externo'; // interno | externo
+        $nombreCoordinador = $json['nombre_coordinador'] ?? '';
+        $cedulaCoordinador = $json['cedula_coordinador'] ?? '';
+        $licenciaCoordinador = $json['licencia_coordinador'] ?? '';
+        $contextoAdicional = $json['contexto_adicional'] ?? '';
+        $textoActual = $json['texto_actual'] ?? '';
+        $modoRefinamiento = $json['modo_refinamiento'] ?? false;
+
+        // Obtener datos del cliente
+        $infoCliente = '';
+        if ($idCliente) {
+            $client = $this->clientModel->find($idCliente);
+            if ($client) {
+                $infoCliente = "Datos del cliente (EL CONTRATANTE): {$client['nombre_cliente']}, NIT: {$client['nit_cliente']}, " .
+                    "Actividad Económica: " . ($client['codigo_actividad_economica'] ?? $client['actividad_economica_principal'] ?? 'No especificada') . ", " .
+                    "Ciudad: " . ($client['ciudad_cliente'] ?? 'No especificada') . ", " .
+                    "Nivel de riesgo ARL: " . ($client['nivel_riesgo_arl'] ?? 'No especificado') . ".";
+            }
+        }
+
+        // Info del coordinador SST
+        $infoCoordinador = '';
+        if ($nombreCoordinador) {
+            $infoCoordinador = "Profesional SST asignado: {$nombreCoordinador}";
+            if ($cedulaCoordinador) $infoCoordinador .= ", cédula {$cedulaCoordinador}";
+            if ($licenciaCoordinador) $infoCoordinador .= ", licencia SST N° {$licenciaCoordinador}";
+            $infoCoordinador .= ".";
+        }
+
+        // Construir prompt
+        if ($modoRefinamiento && !empty($textoActual)) {
+            $prompt = "Eres un abogado experto en contratos de prestación de servicios de diseño e implementación del Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST) en Colombia.\n\n" .
+                "Tienes el siguiente texto de Cláusula Primera (Objeto del Contrato):\n\n" .
+                "--- TEXTO ACTUAL ---\n{$textoActual}\n--- FIN TEXTO ---\n\n" .
+                "El usuario quiere que apliques las siguientes modificaciones o mejoras:\n{$contextoAdicional}\n\n" .
+                ($infoCliente ? $infoCliente . "\n\n" : "") .
+                ($infoCoordinador ? $infoCoordinador . "\n\n" : "") .
+                "REGLAS OBLIGATORIAS:\n" .
+                "- Las partes SIEMPRE en mayúsculas sostenidas: EL CONTRATANTE y EL CONTRATISTA\n" .
+                "- El profesional SST debe nombrarse como responsable técnico y coordinador del servicio\n" .
+                "- Mencionar la plataforma EnterpriseSST como herramienta de gestión\n" .
+                "- Referenciar la Resolución 0312 de 2019 y estándares mínimos del SG-SST\n\n" .
+                "Reescribe la cláusula completa aplicando los cambios solicitados. Mantén el formato legal formal. " .
+                "Responde SOLO con el texto de la cláusula, sin explicaciones ni comentarios adicionales.";
+        } else {
+            $datosContexto = [];
+            $datosContexto[] = "Descripción del servicio: {$descripcionServicio}";
+            $datosContexto[] = "Tipo de consultor: {$tipoConsultor}";
+            if ($infoCoordinador) $datosContexto[] = $infoCoordinador;
+            if ($contextoAdicional) $datosContexto[] = "Contexto adicional: {$contextoAdicional}";
+
+            $contextoTexto = implode("\n", $datosContexto);
+
+            // Sección condicional para consultor externo
+            $seccionExterna = '';
+            if ($tipoConsultor === 'externo') {
+                $seccionExterna = "\n\nIMPORTANTE - CONSULTOR EXTERNO:\n" .
+                    "Como el consultor es EXTERNO, la cláusula DEBE incluir:\n" .
+                    "- Un párrafo explícito de DELEGACIÓN DE VISITAS: las visitas presenciales podrán ser realizadas por otros profesionales del equipo de EL CONTRATISTA, siempre bajo la coordinación y responsabilidad del profesional SST asignado.\n" .
+                    "- Indicar que el profesional SST asignado actúa como responsable técnico y coordinador del servicio, supervisando todas las actividades.\n" .
+                    "- Que EL CONTRATISTA garantiza que los profesionales delegados cuentan con la formación y licencia requerida en SST.";
+            }
+
+            $prompt = "Eres un abogado experto en contratos de prestación de servicios de diseño e implementación del Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST) en Colombia.\n\n" .
+                "Genera la CLÁUSULA PRIMERA (Objeto del Contrato) de un contrato de prestación de servicios SST con los siguientes datos:\n\n" .
+                ($infoCliente ? $infoCliente . "\n\n" : "") .
+                $contextoTexto . "\n\n" .
+                $seccionExterna .
+                "\n\nREGLAS OBLIGATORIAS:\n" .
+                "- Las partes SIEMPRE en mayúsculas sostenidas: EL CONTRATANTE y EL CONTRATISTA\n" .
+                "- Nombrar al profesional SST como 'responsable técnico y coordinador del servicio' con nombre completo, cédula y licencia\n" .
+                "- Mencionar la plataforma EnterpriseSST como herramienta principal de gestión documental y seguimiento del SG-SST\n" .
+                "- Referenciar la Resolución 0312 de 2019 y los estándares mínimos del SG-SST\n" .
+                "- Incluir servicios detallados: diseño documental, implementación, supervisión, capacitación, medidas preventivas y correctivas\n" .
+                "- NUNCA usar placeholders como [NOMBRE] o [FECHA]. Usar los datos reales proporcionados\n\n" .
+                "ESTRUCTURA ESPERADA:\n" .
+                "1. PRIMERA-OBJETO DEL CONTRATO: descripción general del servicio de consultoría SST\n" .
+                "2. Descripción de la plataforma EnterpriseSST y su rol en la gestión\n" .
+                "3. Asignación del profesional SST como responsable técnico\n" .
+                "4. Detalle de los servicios incluidos (supervisión, capacitación, documentación, etc.)\n" .
+                ($tipoConsultor === 'externo' ? "5. Párrafo de delegación de visitas presenciales\n" : "") .
+                "\nUsa lenguaje jurídico formal colombiano. Responde SOLO con el texto de la cláusula, sin explicaciones ni comentarios adicionales.";
+        }
+
+        try {
+            $iaService = new \App\Services\IADocumentacionService();
+            $textoGenerado = $iaService->generarContenido($prompt, 1500);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'texto' => trim($textoGenerado)
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error generando Cláusula Primera con IA: ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Error al generar con IA: ' . $e->getMessage()
