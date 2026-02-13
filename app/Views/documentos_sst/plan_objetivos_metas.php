@@ -208,7 +208,7 @@
                     <?php endif; ?>
                     <!-- Solicitar Firmas (incluye borrador según 1_A_TROUBLESHOOTING_GENERACION_IA.md) -->
                     <?php if (in_array($documento['estado'] ?? '', ['borrador', 'generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
-                        <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2">
+                        <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2" target="_blank">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
                         </a>
                     <?php endif; ?>

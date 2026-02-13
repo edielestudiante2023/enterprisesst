@@ -180,7 +180,7 @@
                     $estadoDoc = $documento['estado'] ?? 'aprobado';
                     ?>
                     <?php if (in_array($estadoDoc, ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
-                        <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm">
+                        <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm" target="_blank">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
                         </a>
                     <?php endif; ?>
@@ -493,7 +493,7 @@
                 // Mostrar mensaje de exito
                 alert('Nueva version ' + data.nueva_version + ' creada exitosamente.\n\nEl documento ahora esta pendiente de firma.');
                 // Redirigir a solicitar firmas
-                window.location.href = '<?= base_url('firma/solicitar/') ?>' + data.id_documento;
+                window.open('<?= base_url('firma/solicitar/') ?>' + data.id_documento, '_blank');
             } else {
                 alert('Error: ' + data.message);
                 btn.disabled = false;

@@ -272,7 +272,7 @@ $firmaRepLegalElectronica = ($firmasElectronicas ?? [])['representante_legal'] ?
                 $estadoDoc = $documento['estado'] ?? 'generado';
                 ?>
                 <?php if ($idDocumento && in_array($estadoDoc, ['borrador', 'generado', 'aprobado', 'en_revision'])): ?>
-                    <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-success btn-sm me-2">
+                    <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-success btn-sm me-2" target="_blank">
                         <i class="bi bi-pen me-1"></i>Solicitar Firmas
                     </a>
                 <?php endif; ?>
