@@ -339,12 +339,17 @@ class ContractPDFGenerator
      */
     private function getSignatureImage($filePath, $height = 60)
     {
+        log_message('debug', '[ContractPDF] Buscando firma en: ' . ($filePath ?: '(vacío)'));
+
         if (!empty($filePath) && file_exists($filePath)) {
             $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
             $mime = ($ext === 'png') ? 'image/png' : 'image/jpeg';
             $base64 = base64_encode(file_get_contents($filePath));
-            return '<img src="data:' . $mime . ';base64,' . $base64 . '" style="height: ' . $height . 'px; max-width: 180px; object-fit: contain;">';
+            log_message('debug', '[ContractPDF] Firma encontrada: ' . basename($filePath) . ' (' . strlen($base64) . ' bytes b64)');
+            return '<img src="data:' . $mime . ';base64,' . $base64 . '" height="' . $height . '">';
         }
+
+        log_message('warning', '[ContractPDF] Firma NO encontrada: ' . ($filePath ?: '(vacío)'));
         return '';
     }
 
@@ -355,20 +360,29 @@ class ContractPDFGenerator
     {
         $fechaHoy = new \DateTime();
 
+        log_message('info', '[ContractPDF] === GENERANDO FIRMAS ===');
+        log_message('info', '[ContractPDF] FCPATH = ' . FCPATH);
+        log_message('info', '[ContractPDF] firma_representante_legal = ' . ($data['firma_representante_legal'] ?? 'NULL'));
+        log_message('info', '[ContractPDF] firma_consultor = ' . ($data['firma_consultor'] ?? 'NULL'));
+
         // Firma del representante legal de Cycloid (FIRMA_DIANITA.jpg)
-        $firmaContratista = $this->getSignatureImage(FCPATH . 'img/FIRMA_DIANITA.jpg');
+        $firmaContratista = $this->getSignatureImage(FCPATH . 'img' . DIRECTORY_SEPARATOR . 'FIRMA_DIANITA.jpg');
 
         // Firma del representante legal del cliente
         $firmaCliente = '';
         if (!empty($data['firma_representante_legal'])) {
-            $firmaCliente = $this->getSignatureImage(FCPATH . 'uploads/' . $data['firma_representante_legal']);
+            $firmaCliente = $this->getSignatureImage(FCPATH . 'uploads' . DIRECTORY_SEPARATOR . $data['firma_representante_legal']);
         }
 
         // Firma del consultor (responsable SG-SST)
         $firmaConsultor = '';
         if (!empty($data['firma_consultor'])) {
-            $firmaConsultor = $this->getSignatureImage(FCPATH . 'uploads/' . $data['firma_consultor']);
+            $firmaConsultor = $this->getSignatureImage(FCPATH . 'uploads' . DIRECTORY_SEPARATOR . $data['firma_consultor']);
         }
+
+        log_message('info', '[ContractPDF] Resultados: contratista=' . ($firmaContratista ? 'SI' : 'NO') .
+            ', cliente=' . ($firmaCliente ? 'SI' : 'NO') .
+            ', consultor=' . ($firmaConsultor ? 'SI' : 'NO'));
 
         $html = '<div style="margin-top: 30px;">';
         $html .= '<p>Las partes firman el presente documento el día ' . $fechaHoy->format('d/m/Y') . '.</p>';
