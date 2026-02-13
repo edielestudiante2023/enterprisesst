@@ -754,6 +754,7 @@ $routes->get('/indicadores-sst/(:num)/api/dashboard', 'IndicadoresSSTController:
 
 // Fichas Técnicas de Indicadores (ZZ_99)
 $routes->get('/indicadores-sst/(:num)/ficha-tecnica/(:num)', 'IndicadoresSSTController::fichaTecnica/$1/$2');
+$routes->post('/indicadores-sst/(:num)/ficha-tecnica/(:num)/actualizar-campo', 'IndicadoresSSTController::actualizarCampoFicha/$1/$2');
 $routes->get('/indicadores-sst/(:num)/ficha-tecnica/(:num)/pdf', 'IndicadoresSSTController::fichaTecnicaPDF/$1/$2');
 $routes->get('/indicadores-sst/(:num)/ficha-tecnica/(:num)/word', 'IndicadoresSSTController::fichaTecnicaWord/$1/$2');
 $routes->get('/indicadores-sst/(:num)/matriz-objetivos-metas', 'IndicadoresSSTController::matrizObjetivosMetas/$1');

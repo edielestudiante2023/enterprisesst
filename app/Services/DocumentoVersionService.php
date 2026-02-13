@@ -665,8 +665,15 @@ class DocumentoVersionService
             'plan_objetivos_metas' => "generador-ia/{$idCliente}/objetivos-sgsst",
         ];
 
-        $ruta = $rutas[$tipo] ?? "documentos-sst/{$idCliente}";
-        return base_url($ruta);
+        $ruta = $rutas[$tipo] ?? null;
+
+        // Fichas técnicas de indicadores: tipo = ficha_tecnica_ind_XX
+        if (!$ruta && str_starts_with($tipo, 'ficha_tecnica_ind_')) {
+            $idIndicador = str_replace('ficha_tecnica_ind_', '', $tipo);
+            $ruta = "indicadores-sst/{$idCliente}/ficha-tecnica/{$idIndicador}?anio={$anio}";
+        }
+
+        return base_url($ruta ?? "documentos-sst/{$idCliente}");
     }
 
     /**

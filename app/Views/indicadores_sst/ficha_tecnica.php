@@ -58,8 +58,15 @@ $consultorLicencia = $consultor['numero_licencia'] ?? $consultor['licencia_sst']
 $delegadoNombre = $contexto['delegado_sst_nombre'] ?? '';
 $delegadoCargo  = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
 
-// Firma consultor: prioridad electronica > fisica
+// Firma consultor: prioridad electronica > fisica (Instructivo 2_AA_WEB seccion 16)
+$firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
 $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
+
+// Firma delegado/vigia: electronica delegado > electronica vigia > fisica (Instructivo 3_AA_PDF_FIRMAS seccion 17)
+$firmaDelegadoElectronica = ($firmasElectronicas ?? [])['delegado_sst'] ?? ($firmasElectronicas ?? [])['vigia_sst'] ?? null;
+
+// Firma representante legal: electronica (Instructivo 3_AA_PDF_FIRMAS seccion 18)
+$firmaRepLegalElectronica = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -149,6 +156,10 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
             padding-bottom: 8px;
             margin-bottom: 15px;
         }
+        .seccion-contenido {
+            text-align: justify;
+            line-height: 1.7;
+        }
 
         /* Data table */
         .ficha-table {
@@ -199,6 +210,15 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
         .celda-roja  { background-color: #dc3545 !important; color: #fff; font-weight: bold; }
         .celda-gris  { background-color: #e9ecef; color: #6c757d; }
 
+        /* Panel aprobacion - Instructivo 2_AA_WEB seccion 5 */
+        .panel-aprobacion {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
         /* Info documento */
         .info-documento {
             background-color: #f8f9fa;
@@ -247,6 +267,25 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
                    class="btn btn-primary btn-sm me-2">
                     <i class="bi bi-file-earmark-word me-1"></i>Word
                 </a>
+                <?php
+                $idDocumento = $documento['id_documento'] ?? null;
+                $estadoDoc = $documento['estado'] ?? 'generado';
+                ?>
+                <?php if ($idDocumento && in_array($estadoDoc, ['borrador', 'generado', 'aprobado', 'en_revision'])): ?>
+                    <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-success btn-sm me-2">
+                        <i class="bi bi-pen me-1"></i>Solicitar Firmas
+                    </a>
+                <?php endif; ?>
+                <?php if ($idDocumento && $estadoDoc === 'firmado'): ?>
+                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-outline-success btn-sm me-2">
+                        <i class="bi bi-patch-check me-1"></i>Ver Firmas
+                    </a>
+                <?php endif; ?>
+                <?php if ($idDocumento && $estadoDoc === 'pendiente_firma'): ?>
+                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-outline-warning btn-sm me-2">
+                        <i class="bi bi-clock-history me-1"></i>Estado Firmas
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -257,6 +296,64 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
 <!-- ========================================== -->
 <div class="container my-4">
     <div class="bg-white shadow documento-contenido" style="padding: 40px; max-width: 900px; margin: 0 auto;">
+
+        <!-- Panel Aprobacion - Instructivo 2_AA_WEB seccion 5 -->
+        <?php if ($idDocumento): ?>
+        <div class="panel-aprobacion no-print">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <span class="badge bg-dark"><?= esc($codigo) ?></span>
+                        <span class="badge bg-light text-dark">v<?= esc(($versionVigente['version_texto'] ?? null) ?: (($documento['version'] ?? 1) . '.0')) ?></span>
+                        <?php
+                        $badgeEstado = match($estadoDoc) {
+                            'firmado' => 'bg-success',
+                            'pendiente_firma' => 'bg-warning text-dark',
+                            'aprobado' => 'bg-info',
+                            'en_revision' => 'bg-secondary',
+                            default => 'bg-light text-dark',
+                        };
+                        $textoEstado = match($estadoDoc) {
+                            'firmado' => 'Firmado',
+                            'pendiente_firma' => 'Pendiente Firma',
+                            'aprobado' => 'Aprobado',
+                            'en_revision' => 'En Revision',
+                            'generado' => 'Generado',
+                            default => ucfirst($estadoDoc),
+                        };
+                        $iconoEstado = match($estadoDoc) {
+                            'firmado' => 'bi-patch-check-fill',
+                            'pendiente_firma' => 'bi-pen',
+                            'aprobado' => 'bi-check-circle',
+                            default => 'bi-file-earmark-text',
+                        };
+                        ?>
+                        <span class="badge <?= $badgeEstado ?>">
+                            <i class="bi <?= $iconoEstado ?> me-1"></i><?= $textoEstado ?>
+                        </span>
+                    </div>
+                    <small class="opacity-75">Ficha Tecnica - <?= esc($indicador['nombre_indicador'] ?? '') ?></small>
+                </div>
+                <div class="col-md-4 text-end">
+                    <?php if ($estadoDoc === 'borrador'): ?>
+                        <button type="button" class="btn btn-sm btn-warning me-1" id="btnCancelarEdicion" title="Cancelar edicion y volver al estado anterior">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar Edicion
+                        </button>
+                    <?php endif; ?>
+                    <?php if ($estadoDoc === 'aprobado' || $estadoDoc === 'firmado'): ?>
+                        <button type="button" class="btn btn-sm btn-outline-light me-1" data-bs-toggle="modal" data-bs-target="#modalNuevaVersion" title="Crear nueva version">
+                            <i class="bi bi-plus-circle me-1"></i>Nueva Version
+                        </button>
+                    <?php endif; ?>
+                    <?php if (!empty($versiones)): ?>
+                        <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#modalHistorialVersiones" title="Ver historial">
+                            <i class="bi bi-clock-history me-1"></i>Historial
+                        </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Info documento (no imprimible) -->
         <div class="info-documento no-print">
@@ -529,66 +626,184 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
             <div class="p-3 border" style="background: #fff;">
                 <canvas id="chartIndicador" height="100"></canvas>
             </div>
+            <?php
+            // Auto-generar resumen de tendencia desde periodos
+            $totalMedidos = 0;
+            $totalDesviados = 0;
+            $resultadosArr = [];
+            foreach ($periodos as $p) {
+                if ($p['resultado'] !== null) {
+                    $totalMedidos++;
+                    $resultadosArr[] = (float)$p['resultado'];
+                    if ($p['cumple_meta'] !== null && (int)$p['cumple_meta'] === 0) {
+                        $totalDesviados++;
+                    }
+                }
+            }
+            if ($totalMedidos > 0):
+                $tendencia = 'estable';
+                if (count($resultadosArr) >= 2) {
+                    $ultimo = end($resultadosArr);
+                    $penultimo = prev($resultadosArr);
+                    if ($ultimo > $penultimo) $tendencia = 'ascendente';
+                    elseif ($ultimo < $penultimo) $tendencia = 'descendente';
+                }
+                $iconoTendencia = match($tendencia) {
+                    'ascendente' => '<i class="bi bi-arrow-up-right text-success"></i>',
+                    'descendente' => '<i class="bi bi-arrow-down-right text-danger"></i>',
+                    default => '<i class="bi bi-arrow-right text-secondary"></i>',
+                };
+            ?>
+            <div class="mt-2 p-2 border rounded" style="background: #f8f9fa; font-size: 0.85rem;">
+                <?= $iconoTendencia ?>
+                <strong>Resumen:</strong>
+                <?= $totalMedidos ?> de <?= count($periodos) ?> periodos medidos.
+                <?php if ($totalDesviados > 0): ?>
+                    <span class="text-danger"><?= $totalDesviados ?> con desviacion de la meta.</span>
+                <?php else: ?>
+                    <span class="text-success">Todos cumplen la meta.</span>
+                <?php endif; ?>
+                Tendencia: <strong><?= $tendencia ?></strong>.
+                Promedio: <strong><?= round(array_sum($resultadosArr) / count($resultadosArr), 2) ?></strong><?= esc($indicador['unidad_medida'] ?? '') ?>.
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- ============================== -->
-        <!-- SECCION 4: ANALISIS DE DATOS -->
+        <!-- SECCION 4: ANALISIS DE DATOS (editable inline) -->
         <!-- ============================== -->
         <div class="seccion">
-            <div class="seccion-titulo">4. ANALISIS DE DATOS</div>
-            <div style="min-height: 60px;">
+            <div class="seccion-titulo d-flex justify-content-between align-items-center">
+                <span>4. ANALISIS DE DATOS</span>
+                <button class="btn btn-sm btn-outline-primary d-print-none" onclick="activarEdicion('analisis_datos')" title="Editar">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+            </div>
+            <div style="min-height: 60px;" id="display-analisis_datos" onclick="activarEdicion('analisis_datos')" style="cursor:pointer;">
                 <?php if (!empty($indicador['analisis_datos'])): ?>
                     <p class="mb-0"><?= nl2br(esc($indicador['analisis_datos'])) ?></p>
                 <?php else: ?>
-                    <p class="mb-0 text-muted fst-italic">Pendiente de analisis</p>
+                    <p class="mb-0 text-muted fst-italic">Haz clic para agregar analisis de datos...</p>
                 <?php endif; ?>
+            </div>
+            <div id="edit-analisis_datos" class="d-none p-2">
+                <textarea class="form-control" id="input-analisis_datos" rows="4" placeholder="Escriba el analisis de datos del indicador..."><?= esc($indicador['analisis_datos'] ?? '') ?></textarea>
+                <div class="mt-2 d-flex gap-2">
+                    <button class="btn btn-sm btn-success" onclick="guardarCampo('analisis_datos')"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="cancelarEdicion('analisis_datos')">Cancelar</button>
+                    <span id="status-analisis_datos" class="ms-2 align-self-center"></span>
+                </div>
             </div>
         </div>
 
         <!-- ============================== -->
-        <!-- SECCION 5: SEGUIMIENTO / PLAN DE ACCION -->
+        <!-- SECCION 5: SEGUIMIENTO Y ALERTAS DE DESVIACION -->
         <!-- ============================== -->
+        <?php
+        // Computar datos de desviacion desde periodos
+        $alerta = $indicador['requiere_plan_accion'] ?? null;
+        $periodosDesviados = [];
+        $metaValorNum = (float)($indicador['meta'] ?? 0);
+        foreach ($periodos as $p) {
+            if ($p['cumple_meta'] !== null && (int)$p['cumple_meta'] === 0) {
+                $periodosDesviados[] = [
+                    'label' => $p['label'] ?? '',
+                    'resultado' => $p['resultado'],
+                    'desviacion' => $metaValorNum > 0 ? round(abs((float)$p['resultado'] - $metaValorNum), 2) : null,
+                ];
+            }
+        }
+        ?>
         <div class="seccion">
-            <div class="seccion-titulo">5. SEGUIMIENTO / PLAN DE ACCION</div>
+            <div class="seccion-titulo">5. SEGUIMIENTO Y ALERTAS DE DESVIACION</div>
             <table class="ficha-table">
+                <!-- Estado de Alerta (AUTO-COMPUTADO) -->
                 <tr>
-                    <td class="label-cell">Requiere Plan de Accion</td>
+                    <td class="label-cell">Estado de Alerta</td>
                     <td>
-                        <?php
-                        $requiere = $indicador['requiere_plan_accion'] ?? null;
-                        if ($requiere !== null && (int)$requiere === 1): ?>
-                            <span class="badge bg-danger">SI</span>
-                        <?php elseif ($requiere !== null && (int)$requiere === 0): ?>
-                            <span class="badge bg-success">NO</span>
+                        <?php if ($alerta !== null && (int)$alerta === 1): ?>
+                            <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>DESVIACION DETECTADA</span>
+                        <?php elseif ($alerta !== null && (int)$alerta === 0): ?>
+                            <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>SIN DESVIACION</span>
                         <?php else: ?>
-                            <span class="badge bg-secondary">N/A</span>
+                            <span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>PENDIENTE DE MEDICION</span>
                         <?php endif; ?>
                     </td>
                 </tr>
-                <?php if (!empty($indicador['numero_accion'])): ?>
+                <!-- Codigo de Alerta (AUTO, visible solo si hay desviacion) -->
+                <?php if ($alerta !== null && (int)$alerta === 1): ?>
                 <tr>
-                    <td class="label-cell">Numero de Accion</td>
-                    <td><?= esc($indicador['numero_accion']) ?></td>
+                    <td class="label-cell">Codigo de Alerta</td>
+                    <td>
+                        <span class="badge bg-warning text-dark" style="font-size:0.85rem;"><?= esc($indicador['numero_accion'] ?? '') ?></span>
+                    </td>
+                </tr>
+                <!-- Periodos con desviacion (AUTO-COMPUTADO) -->
+                <?php if (!empty($periodosDesviados)): ?>
+                <tr>
+                    <td class="label-cell">Periodos Desviados</td>
+                    <td>
+                        <?php foreach ($periodosDesviados as $pd): ?>
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger me-1 mb-1" style="font-size:0.8rem;">
+                                <?= esc($pd['label']) ?>: <?= $pd['resultado'] ?><?= esc($indicador['unidad_medida'] ?? '') ?>
+                                <?php if ($pd['desviacion'] !== null): ?>
+                                    <small>(desvio: <?= $pd['desviacion'] ?>)</small>
+                                <?php endif; ?>
+                            </span>
+                        <?php endforeach; ?>
+                        <div class="mt-1">
+                            <small class="text-muted">Meta: <?= $metaValorNum ?><?= esc($indicador['unidad_medida'] ?? '') ?></small>
+                        </div>
+                    </td>
                 </tr>
                 <?php endif; ?>
+                <?php endif; ?>
+                <!-- Acciones de Ajuste (editable inline) -->
                 <tr>
-                    <td class="label-cell">Acciones de Mejora</td>
+                    <td class="label-cell">
+                        Acciones de Ajuste
+                        <button class="btn btn-sm btn-outline-primary d-print-none ms-1" onclick="activarEdicion('acciones_mejora')" title="Editar" style="padding:0 4px;"><i class="bi bi-pencil-square" style="font-size:0.7rem;"></i></button>
+                    </td>
                     <td>
-                        <?php if (!empty($indicador['acciones_mejora'])): ?>
-                            <?= nl2br(esc($indicador['acciones_mejora'])) ?>
-                        <?php else: ?>
-                            <span class="text-muted fst-italic">Sin acciones registradas</span>
-                        <?php endif; ?>
+                        <div id="display-acciones_mejora" onclick="activarEdicion('acciones_mejora')" style="cursor:pointer;">
+                            <?php if (!empty($indicador['acciones_mejora'])): ?>
+                                <?= nl2br(esc($indicador['acciones_mejora'])) ?>
+                            <?php else: ?>
+                                <span class="text-muted fst-italic">Clic para registrar acciones de ajuste...</span>
+                            <?php endif; ?>
+                        </div>
+                        <div id="edit-acciones_mejora" class="d-none mt-1">
+                            <textarea class="form-control form-control-sm" id="input-acciones_mejora" rows="3" placeholder="Describa las acciones de ajuste operativo..."><?= esc($indicador['acciones_mejora'] ?? '') ?></textarea>
+                            <div class="mt-1 d-flex gap-1">
+                                <button class="btn btn-sm btn-success" onclick="guardarCampo('acciones_mejora')"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="cancelarEdicion('acciones_mejora')">Cancelar</button>
+                                <span id="status-acciones_mejora" class="ms-2 align-self-center"></span>
+                            </div>
+                        </div>
                     </td>
                 </tr>
+                <!-- Observaciones (editable inline) -->
                 <tr>
-                    <td class="label-cell">Observaciones</td>
+                    <td class="label-cell">
+                        Observaciones
+                        <button class="btn btn-sm btn-outline-primary d-print-none ms-1" onclick="activarEdicion('observaciones')" title="Editar" style="padding:0 4px;"><i class="bi bi-pencil-square" style="font-size:0.7rem;"></i></button>
+                    </td>
                     <td>
-                        <?php if (!empty($indicador['observaciones'])): ?>
-                            <?= nl2br(esc($indicador['observaciones'])) ?>
-                        <?php else: ?>
-                            <span class="text-muted fst-italic">Sin observaciones</span>
-                        <?php endif; ?>
+                        <div id="display-observaciones" onclick="activarEdicion('observaciones')" style="cursor:pointer;">
+                            <?php if (!empty($indicador['observaciones'])): ?>
+                                <?= nl2br(esc($indicador['observaciones'])) ?>
+                            <?php else: ?>
+                                <span class="text-muted fst-italic">Clic para agregar observaciones...</span>
+                            <?php endif; ?>
+                        </div>
+                        <div id="edit-observaciones" class="d-none mt-1">
+                            <textarea class="form-control form-control-sm" id="input-observaciones" rows="3" placeholder="Observaciones adicionales..."><?= esc($indicador['observaciones'] ?? '') ?></textarea>
+                            <div class="mt-1 d-flex gap-1">
+                                <button class="btn btn-sm btn-success" onclick="guardarCampo('observaciones')"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="cancelarEdicion('observaciones')">Cancelar</button>
+                                <span id="status-observaciones" class="ms-2 align-self-center"></span>
+                            </div>
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -643,7 +858,7 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
                 <i class="bi bi-pen me-2"></i>FIRMAS DE APROBACION
             </div>
 
-            <?php if ($requiereDelegado): ?>
+            <?php if (!$esSoloDosFirmantes): ?>
             <!-- 3 firmantes: Consultor + Delegado SST + Rep. Legal -->
             <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
                 <thead>
@@ -674,7 +889,9 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
                             </div>
                             <?php endif; ?>
                             <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
-                                <?php if (!empty($firmaConsultorFisica)): ?>
+                                <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                    <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                <?php elseif (!empty($firmaConsultorFisica)): ?>
                                     <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
                                 <?php endif; ?>
                                 <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
@@ -695,6 +912,9 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
                                 <span style="font-size: 0.85rem;"><?= esc($delegadoCargo) ?></span>
                             </div>
                             <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
+                                <?php if ($firmaDelegadoElectronica && !empty($firmaDelegadoElectronica['evidencia']['firma_imagen'])): ?>
+                                    <img src="<?= $firmaDelegadoElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Delegado" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                <?php endif; ?>
                                 <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                     <small style="color: #666; font-size: 0.7rem;">Firma</small>
                                 </div>
@@ -713,6 +933,9 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
                                 <span style="font-size: 0.85rem;">Representante Legal</span>
                             </div>
                             <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
+                                <?php if ($firmaRepLegalElectronica && !empty($firmaRepLegalElectronica['evidencia']['firma_imagen'])): ?>
+                                    <img src="<?= $firmaRepLegalElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                <?php endif; ?>
                                 <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                     <small style="color: #666; font-size: 0.7rem;">Firma</small>
                                 </div>
@@ -752,7 +975,9 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
                             </div>
                             <?php endif; ?>
                             <div style="position: absolute; bottom: 15px; left: 25px; right: 25px; text-align: center;">
-                                <?php if (!empty($firmaConsultorFisica)): ?>
+                                <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                                    <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 70px; max-width: 200px; margin-bottom: 3px;">
+                                <?php elseif (!empty($firmaConsultorFisica)): ?>
                                     <img src="<?= base_url('uploads/' . $firmaConsultorFisica) ?>" alt="Firma Consultor" style="max-height: 70px; max-width: 200px; margin-bottom: 3px;">
                                 <?php endif; ?>
                                 <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
@@ -773,6 +998,9 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
                                 <span>Representante Legal</span>
                             </div>
                             <div style="position: absolute; bottom: 15px; left: 25px; right: 25px; text-align: center;">
+                                <?php if ($firmaRepLegalElectronica && !empty($firmaRepLegalElectronica['evidencia']['firma_imagen'])): ?>
+                                    <img src="<?= $firmaRepLegalElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 70px; max-width: 200px; margin-bottom: 3px;">
+                                <?php endif; ?>
                                 <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px;">
                                     <small style="color: #666;">Firma</small>
                                 </div>
@@ -797,13 +1025,24 @@ $firmaConsultorFisica = $consultor['firma_consultor'] ?? '';
 <!-- SCRIPTS -->
 <!-- ========================================== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const labels = <?= json_encode(array_map(function($p) { return $p['label'] ?? ''; }, $periodos)) ?>;
     const resultados = <?= json_encode(array_map(function($p) { return $p['resultado'] !== null ? (float)$p['resultado'] : null; }, $periodos)) ?>;
+    const cumpleMeta = <?= json_encode(array_map(function($p) { return $p['cumple_meta'] !== null ? (int)$p['cumple_meta'] : null; }, $periodos)) ?>;
     const metaValor = <?= json_encode((float)($indicador['meta'] ?? 0)) ?>;
     const metaLine = labels.map(() => metaValor);
+
+    // Semaforo: color de cada punto segun cumplimiento de meta
+    const puntosColor = cumpleMeta.map((c, i) => {
+        if (resultados[i] === null) return '#adb5bd'; // gris - sin datos
+        if (c === 1) return '#198754'; // verde - cumple
+        if (c === 0) return '#dc3545'; // rojo - no cumple
+        return '#0d6efd'; // azul - sin evaluar
+    });
+    const puntosBorde = puntosColor.map(c => c);
 
     const ctx = document.getElementById('chartIndicador').getContext('2d');
     new Chart(ctx, {
@@ -817,9 +1056,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     borderColor: '#0d6efd',
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
                     borderWidth: 2,
-                    pointBackgroundColor: '#0d6efd',
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
+                    pointBackgroundColor: puntosColor,
+                    pointBorderColor: puntosBorde,
+                    pointRadius: 7,
+                    pointHoverRadius: 9,
                     fill: true,
                     tension: 0.3,
                     spanGaps: false
@@ -869,6 +1109,153 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// ============================
+// INLINE EDITING - Ficha Tecnica
+// ============================
+const urlActualizarCampo = '<?= base_url("indicadores-sst/{$idCliente}/ficha-tecnica/{$idIndicador}/actualizar-campo") ?>';
+
+function activarEdicion(campo) {
+    document.getElementById('display-' + campo)?.classList.add('d-none');
+    document.getElementById('edit-' + campo)?.classList.remove('d-none');
+    const input = document.getElementById('input-' + campo);
+    if (input) input.focus();
+}
+
+function cancelarEdicion(campo) {
+    document.getElementById('edit-' + campo)?.classList.add('d-none');
+    document.getElementById('display-' + campo)?.classList.remove('d-none');
+    const statusEl = document.getElementById('status-' + campo);
+    if (statusEl) statusEl.innerHTML = '';
+}
+
+function guardarCampo(campo) {
+    const input = document.getElementById('input-' + campo);
+    if (!input) return;
+
+    const valor = input.value;
+    const statusEl = document.getElementById('status-' + campo);
+    if (statusEl) statusEl.innerHTML = '<span class="text-info"><i class="bi bi-arrow-repeat spin-icon"></i> Guardando...</span>';
+
+    fetch(urlActualizarCampo, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ campo: campo, valor: valor })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (statusEl) statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Guardado</span>';
+            actualizarDisplay(campo, valor);
+            setTimeout(() => cancelarEdicion(campo), 1200);
+        } else {
+            if (statusEl) statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ' + (data.message || 'Error') + '</span>';
+        }
+    })
+    .catch(err => {
+        if (statusEl) statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> Error de conexion</span>';
+    });
+}
+
+function actualizarDisplay(campo, valor) {
+    const displayEl = document.getElementById('display-' + campo);
+    if (!displayEl) return;
+
+    if (campo === 'requiere_plan_accion') {
+        let badge = '';
+        if (valor === '1') badge = '<span class="badge bg-danger">SI</span>';
+        else if (valor === '0') badge = '<span class="badge bg-success">NO</span>';
+        else badge = '<span class="badge bg-secondary">N/A</span>';
+        displayEl.innerHTML = badge + ' <i class="bi bi-pencil text-muted ms-1 d-print-none" style="font-size:0.7rem;"></i>';
+    } else if (campo === 'numero_accion') {
+        displayEl.innerHTML = (valor ? escHtml(valor) : '<span class="text-muted fst-italic">Clic para agregar...</span>')
+            + ' <i class="bi bi-pencil text-muted ms-1 d-print-none" style="font-size:0.7rem;"></i>';
+    } else {
+        // textarea fields: analisis_datos, acciones_mejora, observaciones
+        if (valor && valor.trim()) {
+            displayEl.innerHTML = '<p class="mb-0">' + escHtml(valor).replace(/\n/g, '<br>') + '</p>';
+        } else {
+            const placeholders = {
+                'analisis_datos': 'Haz clic para agregar analisis de datos...',
+                'acciones_mejora': 'Clic para agregar acciones de mejora...',
+                'observaciones': 'Clic para agregar observaciones...'
+            };
+            displayEl.innerHTML = '<span class="text-muted fst-italic">' + (placeholders[campo] || 'Clic para editar...') + '</span>';
+        }
+    }
+}
+
+function escHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 </script>
+<style>
+    .spin-icon { animation: spin 1s linear infinite; display: inline-block; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @media print { .d-print-none { display: none !important; } }
+</style>
+
+<?php if ($estadoDoc === 'borrador' && $idDocumento): ?>
+<script>
+document.getElementById('btnCancelarEdicion')?.addEventListener('click', async function() {
+    const confirmacion = await Swal.fire({
+        icon: 'question',
+        title: 'Cancelar edicion?',
+        text: 'El documento volvera al estado anterior (aprobado). Los cambios no guardados se perderan.',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Si, cancelar edicion',
+        cancelButtonText: 'No, continuar editando'
+    });
+    if (!confirmacion.isConfirmed) return;
+
+    this.disabled = true;
+    this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Cancelando...';
+
+    try {
+        const formData = new FormData();
+        formData.append('id_documento', '<?= (int)$idDocumento ?>');
+        const response = await fetch('<?= base_url('documentos-sst/cancelar-nueva-version') ?>', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        if (result.success) {
+            await Swal.fire({ icon: 'success', title: 'Edicion cancelada', text: result.message, confirmButtonText: 'Continuar' });
+            window.location.reload();
+        } else {
+            throw new Error(result.message || 'Error al cancelar');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-x-circle me-1"></i>Cancelar Edicion';
+    }
+});
+</script>
+<?php endif; ?>
+
+<?php
+// Modales estandar de versionamiento (Instructivo 1_AA_VERSIONAMIENTO)
+if ($idDocumento):
+?>
+<?= view('documentos_sst/_components/modal_nueva_version', [
+    'id_documento' => $idDocumento,
+    'version_actual' => ($versionVigente['version_texto'] ?? null) ?: (($documento['version'] ?? 1) . '.0'),
+    'tipo_documento' => $documento['tipo_documento'] ?? 'ficha_tecnica_indicador'
+]) ?>
+<?= view('documentos_sst/_components/modal_historial_versiones', [
+    'id_documento' => $idDocumento,
+    'versiones' => $versiones ?? []
+]) ?>
+<?php endif; ?>
+
 </body>
 </html>

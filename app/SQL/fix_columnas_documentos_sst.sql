@@ -17,6 +17,9 @@ ADD COLUMN IF NOT EXISTS `aprobado_por` INT(11) NULL AFTER `fecha_aprobacion`;
 ALTER TABLE `tbl_documentos_sst`
 ADD COLUMN IF NOT EXISTS `motivo_version` VARCHAR(255) NULL AFTER `aprobado_por`;
 
+ALTER TABLE `tbl_documentos_sst`
+ADD COLUMN IF NOT EXISTS `tipo_cambio_pendiente` ENUM('mayor', 'menor') NULL AFTER `motivo_version`;
+
 -- Verificar que la tabla de versiones exista
 CREATE TABLE IF NOT EXISTS `tbl_doc_versiones_sst` (
     `id_version` INT(11) NOT NULL AUTO_INCREMENT,

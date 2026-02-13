@@ -5,7 +5,11 @@
       "Bash(dir /b /o-d \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\writable\\\\logs\"\" 2>nul | findstr /i \"log \")",
       "Bash(php -r:*)",
       "Bash(php:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(c:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe:*)",
+      "Bash(\"c:\\\\xampp\\\\php\\\\php.exe\":*)",
+      "Bash(grep:*)",
+      "Bash(c:xamppphpphp.exe -r \"header\\(''Content-Type: text/plain''\\); $db = new mysqli\\(''localhost'', ''root'', '''', ''empresas_sst''\\); $r = $db->query\\(''SELECT id_documento, tipo_documento, estado, version, motivo_version FROM tbl_documentos_sst WHERE id_cliente=18 AND tipo_documento LIKE chr\\(37\\).chr\\(102\\).chr\\(105\\).chr\\(99\\).chr\\(104\\).chr\\(97\\).chr\\(37\\) LIMIT 5''\\); echo $r ? ''OK'' : ''FAIL'';\")"
     ]
   }
 }

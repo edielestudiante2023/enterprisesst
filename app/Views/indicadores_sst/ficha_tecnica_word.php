@@ -79,6 +79,7 @@ $consultorLicencia = $consultor['numero_licencia'] ?? $consultor['licencia_sst']
 // Firmantes dinamicos segun contexto
 $estandares = $contexto['estandares_aplicables'] ?? 60;
 $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
+$esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
 $delegadoNombre = $contexto['delegado_sst_nombre'] ?? '';
 $delegadoCargo = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
 ?>
@@ -425,7 +426,7 @@ $delegadoCargo = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
             FIRMAS DE APROBACION
         </div>
         <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
-            <?php if ($requiereDelegado): ?>
+            <?php if (!$esSoloDosFirmantes): ?>
             <!-- 3 firmantes -->
             <tr>
                 <th width="33%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Elaboro / Consultor SST</th>
@@ -452,17 +453,17 @@ $delegadoCargo = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
             <tr>
                 <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
                     <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
-                        <span style="color: #666; font-size: 7pt;">Firma</span>
+                        <span style="color: #666; font-size: 6pt;">Firma</span>
                     </div>
                 </td>
                 <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
                     <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
-                        <span style="color: #666; font-size: 7pt;">Firma</span>
+                        <span style="color: #666; font-size: 6pt;">Firma</span>
                     </div>
                 </td>
                 <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
                     <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
-                        <span style="color: #666; font-size: 7pt;">Firma</span>
+                        <span style="color: #666; font-size: 6pt;">Firma</span>
                     </div>
                 </td>
             </tr>
@@ -486,13 +487,13 @@ $delegadoCargo = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
                 </td>
             </tr>
             <tr>
-                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
-                    <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
+                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
                         <span style="color: #666; font-size: 7pt;">Firma</span>
                     </div>
                 </td>
-                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
-                    <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
+                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
                         <span style="color: #666; font-size: 7pt;">Firma</span>
                     </div>
                 </td>

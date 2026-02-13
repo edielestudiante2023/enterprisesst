@@ -30,6 +30,14 @@ class IndicadorSSTModel extends Model
     protected $updatedField = 'updated_at';
 
     /**
+     * Retorna los campos permitidos del modelo (para validación dinámica)
+     */
+    public function getEditableFields(): array
+    {
+        return $this->allowedFields;
+    }
+
+    /**
      * Tipos de indicador según Res. 0312/2019
      */
     public const TIPOS_INDICADOR = [

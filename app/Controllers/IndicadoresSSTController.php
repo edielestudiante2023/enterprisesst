@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\IndicadorSSTModel;
 use App\Models\ClientModel;
 use App\Models\ClienteContextoSstModel;
+use App\Services\DocumentoVersionService;
 
 /**
  * Controlador para gestionar indicadores del SG-SST
@@ -13,11 +14,13 @@ class IndicadoresSSTController extends BaseController
 {
     protected IndicadorSSTModel $indicadorModel;
     protected ClientModel $clienteModel;
+    protected DocumentoVersionService $versionService;
 
     public function __construct()
     {
         $this->indicadorModel = new IndicadorSSTModel();
         $this->clienteModel = new ClientModel();
+        $this->versionService = new DocumentoVersionService();
     }
 
     /**
@@ -408,6 +411,64 @@ class IndicadoresSSTController extends BaseController
     // ─────────────────────────────────────────────────────────
 
     /**
+     * Obtener o crear el registro de documento en tbl_documentos_sst
+     * para una ficha técnica de indicador (necesario para firma electrónica)
+     */
+    private function obtenerOCrearDocumentoFicha(int $idCliente, int $idIndicador, int $anio, string $nombreIndicador, string $codigo): array
+    {
+        $db = \Config\Database::connect();
+        $tipoDoc = 'ficha_tecnica_ind_' . $idIndicador;
+
+        $documento = $db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', $tipoDoc)
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            $db->table('tbl_documentos_sst')->insert([
+                'id_cliente'     => $idCliente,
+                'tipo_documento' => $tipoDoc,
+                'codigo'         => $codigo,
+                'titulo'         => 'Ficha Tecnica - ' . $nombreIndicador,
+                'anio'           => $anio,
+                'contenido'      => json_encode(['id_indicador' => $idIndicador], JSON_UNESCAPED_UNICODE),
+                'version'        => 1,
+                'estado'         => 'generado',
+                'created_at'     => date('Y-m-d H:i:s'),
+                'updated_at'     => date('Y-m-d H:i:s'),
+            ]);
+
+            $documento = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $idCliente)
+                ->where('tipo_documento', $tipoDoc)
+                ->where('anio', $anio)
+                ->get()
+                ->getRowArray();
+
+            // Crear version inicial usando el servicio centralizado (Instructivo 1_AA_VERSIONAMIENTO)
+            if ($documento) {
+                $session = session();
+                $this->versionService->crearVersionInicial(
+                    (int)$documento['id_documento'],
+                    (int)($session->get('user_id') ?? 0),
+                    $session->get('nombre_usuario') ?? 'Sistema',
+                    'Elaboracion inicial de la ficha tecnica del indicador'
+                );
+
+                // Re-obtener documento actualizado (version service cambia estado a 'aprobado')
+                $documento = $db->table('tbl_documentos_sst')
+                    ->where('id_documento', $documento['id_documento'])
+                    ->get()
+                    ->getRowArray();
+            }
+        }
+
+        return $documento ?: [];
+    }
+
+    /**
      * Vista web de la Ficha Técnica de un indicador
      */
     public function fichaTecnica(int $idCliente, int $idIndicador)
@@ -443,19 +504,125 @@ class IndicadoresSSTController extends BaseController
             }
         }
 
+        $codigo = 'FT-IND-' . str_pad($consecutivo, 3, '0', STR_PAD_LEFT);
+
         // Representante legal nombre (fallback chain)
         $repLegalNombre = $contexto['representante_legal_nombre']
             ?? $cliente['nombre_rep_legal']
             ?? $cliente['representante_legal']
             ?? '';
 
+        // Auto-computar alerta de desviacion desde mediciones de periodos
+        $tieneMediciones = false;
+        $incumpleAlguno = false;
+        foreach ($datosFicha['periodos'] as $p) {
+            if ($p['cumple_meta'] !== null) {
+                $tieneMediciones = true;
+                if ((int)$p['cumple_meta'] === 0) {
+                    $incumpleAlguno = true;
+                    break;
+                }
+            }
+        }
+        $alertaDesviacion = $tieneMediciones ? ($incumpleAlguno ? 1 : 0) : null;
+
+        // Auto-generar codigo de alerta si hay desviacion y aun no tiene
+        $updateData = [];
+        if ($datosFicha['indicador']['requiere_plan_accion'] != $alertaDesviacion) {
+            $updateData['requiere_plan_accion'] = $alertaDesviacion;
+            $datosFicha['indicador']['requiere_plan_accion'] = $alertaDesviacion;
+        }
+
+        if ($alertaDesviacion === 1 && empty($datosFicha['indicador']['numero_accion'])) {
+            // Consecutivo: contar indicadores del cliente que ya tienen codigo de alerta
+            $countExistentes = $this->indicadorModel
+                ->where('id_cliente', $idCliente)
+                ->where('numero_accion IS NOT NULL')
+                ->where('numero_accion !=', '')
+                ->countAllResults();
+            $codigoAlerta = 'AD-' . str_pad($countExistentes + 1, 3, '0', STR_PAD_LEFT);
+            $updateData['numero_accion'] = $codigoAlerta;
+            $datosFicha['indicador']['numero_accion'] = $codigoAlerta;
+        } elseif ($alertaDesviacion !== 1 && !empty($datosFicha['indicador']['numero_accion'])) {
+            // Ya no hay desviacion → limpiar codigo de alerta
+            $updateData['numero_accion'] = null;
+            $datosFicha['indicador']['numero_accion'] = null;
+        }
+
+        if (!empty($updateData)) {
+            $this->indicadorModel->update($idIndicador, $updateData);
+        }
+
+        // Auto-registrar documento en tbl_documentos_sst (para firma electrónica)
+        $documento = $this->obtenerOCrearDocumentoFicha(
+            $idCliente, $idIndicador, $anio,
+            $datosFicha['indicador']['nombre_indicador'] ?? 'Indicador',
+            $codigo
+        );
+
+        // Obtener historial de versiones desde tbl_doc_versiones_sst (Instructivo 1_AA_VERSIONAMIENTO)
+        $idDocumento = $documento['id_documento'] ?? null;
+        $versiones = $idDocumento ? $this->versionService->obtenerHistorial((int)$idDocumento) : [];
+        $versionVigente = $idDocumento ? $this->versionService->obtenerVersionVigente((int)$idDocumento) : null;
+
+        // Firmas electrónicas del documento (Instructivo 3_AA_PDF_FIRMAS sección 16-17)
+        $firmasElectronicas = $idDocumento ? $this->obtenerFirmasElectronicas((int)$idDocumento) : [];
+
         return view('indicadores_sst/ficha_tecnica', array_merge($datosFicha, [
-            'cliente'          => $cliente,
-            'contexto'         => $contexto,
-            'consultor'        => $consultor,
-            'consecutivo'      => $consecutivo,
-            'repLegalNombre'   => $repLegalNombre,
+            'cliente'             => $cliente,
+            'contexto'            => $contexto,
+            'consultor'           => $consultor,
+            'consecutivo'         => $consecutivo,
+            'repLegalNombre'      => $repLegalNombre,
+            'documento'           => $documento,
+            'versiones'           => $versiones,
+            'versionVigente'      => $versionVigente,
+            'firmasElectronicas'  => $firmasElectronicas,
         ]));
+    }
+
+    /**
+     * Actualizar un campo de la ficha técnica vía AJAX (inline editing)
+     * Valida dinámicamente contra allowedFields del modelo
+     */
+    public function actualizarCampoFicha(int $idCliente, int $idIndicador)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Solicitud no válida']);
+        }
+
+        $indicador = $this->indicadorModel->find($idIndicador);
+        if (!$indicador || (int)$indicador['id_cliente'] !== $idCliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Indicador no encontrado']);
+        }
+
+        $data = $this->request->getJSON(true);
+        $campo = $data['campo'] ?? '';
+        $valor = $data['valor'] ?? '';
+
+        // Validar campo contra allowedFields del modelo (dinámico, no hardcodeado)
+        $camposPermitidos = $this->indicadorModel->getEditableFields();
+        if (!in_array($campo, $camposPermitidos, true)) {
+            return $this->response->setJSON(['success' => false, 'message' => "Campo '{$campo}' no permitido"]);
+        }
+
+        // Campos de solo lectura que no deben editarse desde ficha técnica
+        $camposProtegidos = ['id_cliente', 'created_by', 'activo'];
+        if (in_array($campo, $camposProtegidos, true)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Campo protegido']);
+        }
+
+        try {
+            $this->indicadorModel->update($idIndicador, [$campo => $valor]);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Campo actualizado',
+                'campo'   => $campo,
+                'valor'   => $valor
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al guardar: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -525,6 +692,62 @@ class IndicadoresSSTController extends BaseController
             ?? $cliente['representante_legal']
             ?? '';
 
+        // Auto-computar alerta de desviacion (mismo calculo que vista web)
+        $tieneMedicionesPdf = false;
+        $incumpleAlgunoPdf = false;
+        $periodosDesviadosPdf = [];
+        $metaNum = (float)($datosFicha['indicador']['meta'] ?? 0);
+        foreach ($datosFicha['periodos'] as $p) {
+            if ($p['cumple_meta'] !== null) {
+                $tieneMedicionesPdf = true;
+                if ((int)$p['cumple_meta'] === 0) {
+                    $incumpleAlgunoPdf = true;
+                    $periodosDesviadosPdf[] = [
+                        'label' => $p['label'] ?? '',
+                        'resultado' => $p['resultado'],
+                        'desviacion' => $metaNum > 0 ? round(abs((float)$p['resultado'] - $metaNum), 2) : null,
+                    ];
+                }
+            }
+        }
+        $alertaPdf = $tieneMedicionesPdf ? ($incumpleAlgunoPdf ? 1 : 0) : null;
+
+        // Resumen de tendencia para PDF
+        $resultadosPdf = array_filter(array_column($datosFicha['periodos'], 'resultado'), fn($v) => $v !== null);
+        $resultadosPdf = array_values(array_map('floatval', $resultadosPdf));
+        $tendenciaPdf = 'estable';
+        if (count($resultadosPdf) >= 2) {
+            $ultimoPdf = end($resultadosPdf);
+            $penultimoPdf = prev($resultadosPdf);
+            if ($ultimoPdf > $penultimoPdf) $tendenciaPdf = 'ascendente';
+            elseif ($ultimoPdf < $penultimoPdf) $tendenciaPdf = 'descendente';
+        }
+
+        // Documento y versiones (Instructivo 1_AA_VERSIONAMIENTO)
+        $codigo = 'FT-IND-' . str_pad($consecutivo, 3, '0', STR_PAD_LEFT);
+        $documento = $this->obtenerOCrearDocumentoFicha(
+            $idCliente, $idIndicador, $anio,
+            $datosFicha['indicador']['nombre_indicador'] ?? 'Indicador',
+            $codigo
+        );
+        $idDocumento = $documento['id_documento'] ?? null;
+        $versiones = $idDocumento ? $this->versionService->obtenerHistorial((int)$idDocumento) : [];
+
+        // Firmas electrónicas del documento (Instructivo 3_AA_PDF_FIRMAS sección 16-17)
+        $firmasElectronicas = $idDocumento ? $this->obtenerFirmasElectronicas((int)$idDocumento) : [];
+
+        // Firma física del vigía SST para fallback en PDF (Instructivo 3_AA_PDF_FIRMAS sección 17)
+        $firmaVigiaBase64 = '';
+        $vigiaModel = new \App\Models\VigiaModel();
+        $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
+        if ($vigia && !empty($vigia['firma_vigia'])) {
+            $vigiaFirmaPath = FCPATH . 'uploads/' . $vigia['firma_vigia'];
+            if (file_exists($vigiaFirmaPath)) {
+                $vigiaFirmaMime = mime_content_type($vigiaFirmaPath);
+                $firmaVigiaBase64 = 'data:' . $vigiaFirmaMime . ';base64,' . base64_encode(file_get_contents($vigiaFirmaPath));
+            }
+        }
+
         $html = view('indicadores_sst/ficha_tecnica_pdf', array_merge($datosFicha, [
             'cliente'              => $cliente,
             'contexto'             => $contexto,
@@ -532,9 +755,19 @@ class IndicadoresSSTController extends BaseController
             'consecutivo'          => $consecutivo,
             'logoBase64'           => $logoBase64,
             'firmaConsultorBase64' => $firmaConsultorBase64,
+            'firmaVigiaBase64'     => $firmaVigiaBase64,
             'orientacion'          => $orientacion,
             'chartBase64'          => $chartBase64,
             'repLegalNombre'       => $repLegalNombre,
+            'alertaDesviacion'     => $alertaPdf,
+            'periodosDesviados'    => $periodosDesviadosPdf,
+            'tendencia'            => $tendenciaPdf,
+            'promedioResultados'   => count($resultadosPdf) > 0 ? round(array_sum($resultadosPdf) / count($resultadosPdf), 2) : null,
+            'totalMedidos'         => count($resultadosPdf),
+            'totalDesviados'       => count($periodosDesviadosPdf),
+            'documento'            => $documento,
+            'versiones'            => $versiones,
+            'firmasElectronicas'   => $firmasElectronicas,
         ]));
 
         // Generar PDF con DomPDF
@@ -600,6 +833,16 @@ class IndicadoresSSTController extends BaseController
             ?? $cliente['representante_legal']
             ?? '';
 
+        // Documento y versiones (Instructivo 1_AA_VERSIONAMIENTO)
+        $codigo = 'FT-IND-' . str_pad($consecutivo, 3, '0', STR_PAD_LEFT);
+        $documento = $this->obtenerOCrearDocumentoFicha(
+            $idCliente, $idIndicador, $anio,
+            $datosFicha['indicador']['nombre_indicador'] ?? 'Indicador',
+            $codigo
+        );
+        $idDocumentoWord = $documento['id_documento'] ?? null;
+        $versiones = $idDocumentoWord ? $this->versionService->obtenerHistorial((int)$idDocumentoWord) : [];
+
         $html = view('indicadores_sst/ficha_tecnica_word', array_merge($datosFicha, [
             'cliente'          => $cliente,
             'contexto'         => $contexto,
@@ -607,9 +850,9 @@ class IndicadoresSSTController extends BaseController
             'consecutivo'      => $consecutivo,
             'logoBase64'       => $logoBase64,
             'repLegalNombre'   => $repLegalNombre,
+            'documento'        => $documento,
+            'versiones'        => $versiones,
         ]));
-
-        $codigo = 'FT-IND-' . str_pad($consecutivo, 3, '0', STR_PAD_LEFT);
         $filename = $codigo . '_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $datosFicha['indicador']['nombre_indicador']) . '.doc';
 
         return $this->response
@@ -980,6 +1223,36 @@ class IndicadoresSSTController extends BaseController
     // ─────────────────────────────────────────────────────────
     // HELPERS PRIVADOS
     // ─────────────────────────────────────────────────────────
+
+    /**
+     * Obtiene firmas electrónicas de un documento desde tbl_doc_firma_solicitudes/evidencias
+     * (Instructivo 3_AA_PDF_FIRMAS sección 16-17)
+     */
+    private function obtenerFirmasElectronicas(int $idDocumento): array
+    {
+        $firmasElectronicas = [];
+        $db = \Config\Database::connect();
+
+        $solicitudes = $db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $idDocumento)
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudes as $sol) {
+            $evidencia = $db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        return $firmasElectronicas;
+    }
 
     /**
      * Safety net: verifica y siembra indicadores legales si faltan.

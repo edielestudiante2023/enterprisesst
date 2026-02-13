@@ -35,8 +35,18 @@ $repLegalNombre = $repLegalNombre
 // Firmantes dinamicos segun contexto
 $estandares = $contexto['estandares_aplicables'] ?? 60;
 $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
+$esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
 $delegadoNombre = $contexto['delegado_sst_nombre'] ?? '';
 $delegadoCargo = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
+
+// Firma consultor: prioridad electronica > fisica (Instructivo 3_AA_PDF_FIRMAS seccion 16)
+$firmaConsultorElectronica = ($firmasElectronicas ?? [])['consultor_sst'] ?? null;
+
+// Firma delegado/vigia: electronica delegado > electronica vigia > fisica (Instructivo 3_AA_PDF_FIRMAS seccion 17)
+$firmaDelegadoElectronica = ($firmasElectronicas ?? [])['delegado_sst'] ?? ($firmasElectronicas ?? [])['vigia_sst'] ?? null;
+
+// Firma representante legal: electronica (Instructivo 3_AA_PDF_FIRMAS seccion 18)
+$firmaRepLegalElectronica = ($firmasElectronicas ?? [])['representante_legal'] ?? null;
 
 // Codigo del documento
 $codigoDoc = 'FT-IND-' . str_pad($consecutivo ?? 1, 3, '0', STR_PAD_LEFT);
@@ -421,31 +431,68 @@ $phvaLabel = $fasesPhva[$indicador['phva'] ?? ''] ?? ($indicador['phva'] ?? 'N/A
     </div>
 
     <!-- ============================================== -->
-    <!-- SECCION 5: SEGUIMIENTO                         -->
+    <!-- SECCION 5: SEGUIMIENTO Y ALERTAS DE DESVIACION -->
     <!-- ============================================== -->
-    <div class="seccion-barra">5. SEGUIMIENTO</div>
+    <div class="seccion-barra">5. SEGUIMIENTO Y ALERTAS DE DESVIACION</div>
     <table class="tabla-info" style="margin-top: 0;">
         <tr>
-            <th style="width: 30%;">Requiere Plan de Accion</th>
+            <th style="width: 30%;">Estado de Alerta</th>
             <td>
                 <?php
-                $requierePlan = $indicador['requiere_plan_accion'] ?? null;
-                if ($requierePlan === null || $requierePlan === '') {
-                    echo 'N/A';
-                } elseif ($requierePlan == 1) {
-                    echo '<strong style="color: #dc3545;">SI</strong>';
+                $alertaVal = $alertaDesviacion ?? ($indicador['requiere_plan_accion'] ?? null);
+                if ($alertaVal !== null && (int)$alertaVal === 1) {
+                    echo '<strong style="color: #dc3545;">&#9888; DESVIACION DETECTADA</strong>';
+                } elseif ($alertaVal !== null && (int)$alertaVal === 0) {
+                    echo '<strong style="color: #198754;">&#10004; SIN DESVIACION</strong>';
                 } else {
-                    echo '<strong style="color: #198754;">NO</strong>';
+                    echo '<span style="color: #6c757d;">PENDIENTE DE MEDICION</span>';
                 }
                 ?>
             </td>
         </tr>
+        <?php if ($alertaVal !== null && (int)$alertaVal === 1): ?>
         <tr>
-            <th>Numero de Accion</th>
-            <td><?= esc($indicador['numero_accion'] ?? 'N/A') ?></td>
+            <th>Codigo de Alerta</th>
+            <td><strong><?= esc($indicador['numero_accion'] ?? '') ?></strong></td>
         </tr>
+        <?php if (!empty($periodosDesviados)): ?>
         <tr>
-            <th>Acciones de Mejora</th>
+            <th>Periodos Desviados</th>
+            <td>
+                <?php foreach ($periodosDesviados as $pd): ?>
+                    <span style="display: inline-block; background: #f8d7da; color: #842029; padding: 2px 6px; border-radius: 3px; margin: 1px; font-size: 8pt;">
+                        <?= esc($pd['label']) ?>: <?= $pd['resultado'] ?><?= esc($indicador['unidad_medida'] ?? '') ?>
+                        <?php if ($pd['desviacion'] !== null): ?>
+                            (desvio: <?= $pd['desviacion'] ?>)
+                        <?php endif; ?>
+                    </span>
+                <?php endforeach; ?>
+                <div style="margin-top: 3px; font-size: 8pt; color: #6c757d;">
+                    Meta: <?= (float)($indicador['meta'] ?? 0) ?><?= esc($indicador['unidad_medida'] ?? '') ?>
+                </div>
+            </td>
+        </tr>
+        <?php endif; ?>
+        <?php endif; ?>
+        <?php if (isset($tendencia) && ($totalMedidos ?? 0) > 0): ?>
+        <tr>
+            <th>Resumen de Tendencia</th>
+            <td>
+                <?= $totalMedidos ?> de <?= count($periodos) ?> periodos medidos.
+                <?php if (($totalDesviados ?? 0) > 0): ?>
+                    <strong style="color: #dc3545;"><?= $totalDesviados ?> con desviacion.</strong>
+                <?php else: ?>
+                    <strong style="color: #198754;">Todos cumplen la meta.</strong>
+                <?php endif; ?>
+                Tendencia: <strong><?= $tendencia ?></strong>.
+                <?php if ($promedioResultados !== null): ?>
+                    Promedio: <strong><?= $promedioResultados ?></strong><?= esc($indicador['unidad_medida'] ?? '') ?>.
+                <?php endif; ?>
+            </td>
+        </tr>
+        <?php endif; ?>
+        <tr>
+            <th>Acciones de Ajuste</th>
             <td><?= !empty($indicador['acciones_mejora']) ? esc($indicador['acciones_mejora']) : 'N/A' ?></td>
         </tr>
         <tr>
@@ -462,7 +509,7 @@ $phvaLabel = $fasesPhva[$indicador['phva'] ?? ''] ?? ($indicador['phva'] ?? 'N/A
             FIRMAS DE APROBACION
         </div>
         <table class="tabla-contenido" style="width: 100%; margin-top: 0;">
-            <?php if ($requiereDelegado): ?>
+            <?php if (!$esSoloDosFirmantes): ?>
             <!-- 3 firmantes -->
             <tr>
                 <th style="width: 33.33%; background-color: #e9ecef; color: #333;">Elaboro / Consultor SST</th>
@@ -470,39 +517,49 @@ $phvaLabel = $fasesPhva[$indicador['phva'] ?? ''] ?? ($indicador['phva'] ?? 'N/A
                 <th style="width: 33.33%; background-color: #e9ecef; color: #333;">Aprobo / Representante Legal</th>
             </tr>
             <tr>
-                <td style="vertical-align: top; padding: 12px; height: 100px;">
+                <td style="vertical-align: top; padding: 10px; height: 70px;">
                     <div style="margin-bottom: 5px; font-size: 9pt;"><strong>Nombre:</strong> <?= !empty($consultorNombre) ? esc($consultorNombre) : '________________________' ?></div>
                     <div style="margin-bottom: 5px; font-size: 9pt;"><strong>Cargo:</strong> <?= esc($consultorCargo) ?></div>
                     <?php if (!empty($consultorLicencia)): ?>
                         <div style="margin-bottom: 5px; font-size: 9pt;"><strong>Licencia SST:</strong> <?= esc($consultorLicencia) ?></div>
                     <?php endif; ?>
                 </td>
-                <td style="vertical-align: top; padding: 12px; height: 100px;">
+                <td style="vertical-align: top; padding: 10px; height: 70px;">
                     <div style="margin-bottom: 5px; font-size: 9pt;"><strong>Nombre:</strong> <?= !empty($delegadoNombre) ? esc($delegadoNombre) : '________________________' ?></div>
                     <div style="margin-bottom: 5px; font-size: 9pt;"><strong>Cargo:</strong> <?= esc($delegadoCargo) ?></div>
                 </td>
-                <td style="vertical-align: top; padding: 12px; height: 100px;">
+                <td style="vertical-align: top; padding: 10px; height: 70px;">
                     <div style="margin-bottom: 5px; font-size: 9pt;"><strong>Nombre:</strong> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '________________________' ?></div>
                     <div style="margin-bottom: 5px; font-size: 9pt;"><strong>Cargo:</strong> Representante Legal</div>
                 </td>
             </tr>
             <tr>
-                <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
-                    <?php if (!empty($firmaConsultorBase64)): ?>
-                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px;"><br>
+                <td style="padding: 10px; text-align: center; vertical-align: bottom;">
+                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 49px; max-width: 140px;"><br>
+                    <?php elseif (!empty($firmaConsultorBase64)): ?>
+                        <img src="<?= $firmaConsultorBase64 ?>" alt="Firma Consultor" style="max-height: 49px; max-width: 140px;"><br>
                     <?php endif; ?>
-                    <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
-                        <small style="color: #666;">Firma</small>
+                    <div style="border-top: 1px solid #333; width: 85%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666; font-size: 7pt;">Firma</small>
                     </div>
                 </td>
-                <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
-                    <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
-                        <small style="color: #666;">Firma</small>
+                <td style="padding: 10px; text-align: center; vertical-align: bottom;">
+                    <?php if ($firmaDelegadoElectronica && !empty($firmaDelegadoElectronica['evidencia']['firma_imagen'])): ?>
+                        <img src="<?= $firmaDelegadoElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Delegado" style="max-height: 49px; max-width: 140px;"><br>
+                    <?php elseif (!empty($firmaVigiaBase64 ?? '')): ?>
+                        <img src="<?= $firmaVigiaBase64 ?>" alt="Firma Vigia" style="max-height: 49px; max-width: 140px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 85%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666; font-size: 7pt;">Firma</small>
                     </div>
                 </td>
-                <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
-                    <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
-                        <small style="color: #666;">Firma</small>
+                <td style="padding: 10px; text-align: center; vertical-align: bottom;">
+                    <?php if ($firmaRepLegalElectronica && !empty($firmaRepLegalElectronica['evidencia']['firma_imagen'])): ?>
+                        <img src="<?= $firmaRepLegalElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 49px; max-width: 140px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 85%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666; font-size: 7pt;">Firma</small>
                     </div>
                 </td>
             </tr>
@@ -530,7 +587,9 @@ $phvaLabel = $fasesPhva[$indicador['phva'] ?? ''] ?? ($indicador['phva'] ?? 'N/A
             </tr>
             <tr>
                 <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
-                    <?php if (!empty($firmaConsultorBase64)): ?>
+                    <?php if ($firmaConsultorElectronica && !empty($firmaConsultorElectronica['evidencia']['firma_imagen'])): ?>
+                        <img src="<?= $firmaConsultorElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px;"><br>
+                    <?php elseif (!empty($firmaConsultorBase64)): ?>
                         <img src="<?= $firmaConsultorBase64 ?>" alt="Firma Consultor" style="max-height: 56px; max-width: 168px;"><br>
                     <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
@@ -538,6 +597,9 @@ $phvaLabel = $fasesPhva[$indicador['phva'] ?? ''] ?? ($indicador['phva'] ?? 'N/A
                     </div>
                 </td>
                 <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
+                    <?php if ($firmaRepLegalElectronica && !empty($firmaRepLegalElectronica['evidencia']['firma_imagen'])): ?>
+                        <img src="<?= $firmaRepLegalElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Rep. Legal" style="max-height: 56px; max-width: 168px;"><br>
+                    <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666;">Firma</small>
                     </div>
