@@ -182,8 +182,8 @@ if (!function_exists('renderizarTablaPdf')) {
         }
 
         .encabezado-logo img {
-            max-width: 100px;
-            max-height: 60px;
+            max-width: 80px;
+            max-height: 50px;
             background-color: #ffffff;
         }
 
@@ -312,7 +312,7 @@ if (!function_exists('renderizarTablaPdf')) {
             <!-- Logo del cliente -->
             <td class="encabezado-logo" rowspan="2" style="width:100px;" valign="middle" align="center">
                 <?php if (!empty($logoBase64)): ?>
-                    <img src="<?= $logoBase64 ?>" alt="Logo" style="max-width:100px;max-height:60px;">
+                    <img src="<?= $logoBase64 ?>" alt="Logo" style="max-width:80px;max-height:50px;">
                 <?php else: ?>
                     <div style="font-size: 8pt;">
                         <strong><?= esc($cliente['nombre_cliente']) ?></strong>
@@ -597,7 +597,7 @@ if (!function_exists('renderizarTablaPdf')) {
         <tr>
             <td class="encabezado-logo" rowspan="2" style="width:100px; border: 1px solid #333;" valign="middle" align="center">
                 <?php if (!empty($logoBase64)): ?>
-                    <img src="<?= $logoBase64 ?>" alt="Logo" style="max-width:100px;max-height:60px;">
+                    <img src="<?= $logoBase64 ?>" alt="Logo" style="max-width:80px;max-height:50px;">
                 <?php else: ?>
                     <div style="font-size: 8pt;"><strong><?= esc($cliente['nombre_cliente']) ?></strong></div>
                 <?php endif; ?>

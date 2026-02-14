@@ -1992,6 +1992,18 @@ Se debe generar acta que registre:
             }
         }
 
+        // Preparar firma física del vigía SST como base64 para PDF (fallback si no hay electrónica)
+        $firmaVigiaBase64 = '';
+        $vigiaModel = new \App\Models\VigiaModel();
+        $vigia = $vigiaModel->where('id_cliente', $documento['id_cliente'])->first();
+        if ($vigia && !empty($vigia['firma_vigia'])) {
+            $vigiaFirmaPath = FCPATH . 'uploads/' . $vigia['firma_vigia'];
+            if (file_exists($vigiaFirmaPath)) {
+                $vigiaFirmaMime = mime_content_type($vigiaFirmaPath);
+                $firmaVigiaBase64 = 'data:' . $vigiaFirmaMime . ';base64,' . base64_encode(file_get_contents($vigiaFirmaPath));
+            }
+        }
+
         // Obtener firmas electrónicas del documento para el PDF
         $firmasElectronicas = [];
         $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
@@ -2056,6 +2068,7 @@ Se debe generar acta que registre:
             'contexto' => $contexto,
             'consultor' => $consultor,
             'firmaConsultorBase64' => $firmaConsultorBase64,
+            'firmaVigiaBase64' => $firmaVigiaBase64,
             'firmasElectronicas' => $firmasElectronicas,
             // Datos dinámicos para secciones especiales
             'listadoMaestro' => $listadoMaestro,
@@ -2145,6 +2158,18 @@ Se debe generar acta que registre:
             }
         }
 
+        // Firma física del vigía SST como base64 para PDF (fallback si no hay electrónica)
+        $firmaVigiaBase64 = '';
+        $vigiaModelPub = new \App\Models\VigiaModel();
+        $vigiaPub = $vigiaModelPub->where('id_cliente', $documento['id_cliente'])->first();
+        if ($vigiaPub && !empty($vigiaPub['firma_vigia'])) {
+            $vigiaFirmaPathPub = FCPATH . 'uploads/' . $vigiaPub['firma_vigia'];
+            if (file_exists($vigiaFirmaPathPub)) {
+                $vigiaFirmaMimePub = mime_content_type($vigiaFirmaPathPub);
+                $firmaVigiaBase64 = 'data:' . $vigiaFirmaMimePub . ';base64,' . base64_encode(file_get_contents($vigiaFirmaPathPub));
+            }
+        }
+
         // Firmas electrónicas
         $firmasElectronicas = [];
         $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
@@ -2206,6 +2231,7 @@ Se debe generar acta que registre:
             'contexto' => $contexto,
             'consultor' => $consultor,
             'firmaConsultorBase64' => $firmaConsultorBase64,
+            'firmaVigiaBase64' => $firmaVigiaBase64,
             'firmasElectronicas' => $firmasElectronicas,
             // Datos dinámicos para secciones especiales
             'listadoMaestro' => $listadoMaestro,
@@ -3432,23 +3458,12 @@ Se debe generar acta que registre:
         $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($documento['id_cliente']);
 
-        // Obtener datos del consultor asignado
+        // Obtener datos del consultor asignado (Word NO usa imagenes de firma, solo datos textuales)
         $consultor = null;
-        $firmaConsultorBase64 = '';
         $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
         if ($idConsultor) {
             $consultorModel = new \App\Models\ConsultantModel();
             $consultor = $consultorModel->find($idConsultor);
-
-            // Preparar firma del consultor como base64 para Word
-            if (!empty($consultor['firma_consultor'])) {
-                $firmaPath = FCPATH . 'uploads/' . $consultor['firma_consultor'];
-                if (file_exists($firmaPath)) {
-                    $firmaData = file_get_contents($firmaPath);
-                    $firmaMime = mime_content_type($firmaPath);
-                    $firmaConsultorBase64 = 'data:' . $firmaMime . ';base64,' . base64_encode($firmaData);
-                }
-            }
         }
 
         $data = [
@@ -3461,7 +3476,6 @@ Se debe generar acta que registre:
             'versiones' => $versiones,
             'contexto' => $contexto,
             'consultor' => $consultor,
-            'firmaConsultorBase64' => $firmaConsultorBase64,
             // Firmantes desde servicio (arquitectura escalable) - igual que PDF
             'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento'])
         ];
@@ -4408,7 +4422,8 @@ Se debe generar acta que registre:
             'contexto' => $contexto,
             'consultor' => $consultor,
             'firmasElectronicas' => $firmasElectronicas,
-            'tipoDocumento' => 'manual_convivencia_laboral'
+            'tipoDocumento' => 'manual_convivencia_laboral',
+            'firmantesDefinidos' => ['responsable_sst', 'representante_legal']
         ];
 
         return view('documentos_sst/documento_generico', $data);

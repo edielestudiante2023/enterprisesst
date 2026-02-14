@@ -443,7 +443,7 @@ if (!function_exists('renderizarTablaHtml')) {
 
         <?php if ($soloFirmaConsultor): ?>
         <!-- DOCUMENTO CON SOLO FIRMA DEL CONSULTOR -->
-        <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
+        <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
             <tr>
                 <td width="100%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 9pt;">RESPONSABLE DEL SG-SST</td>
             </tr>
@@ -522,7 +522,7 @@ if (!function_exists('renderizarTablaHtml')) {
             </tr>
             <tr>
                 <!-- CONSULTOR SST (ELABORÓ) -->
-                <td style="vertical-align: top; padding: 8px; border: 1px solid #999; font-size: 8pt;">
+                <td style="vertical-align: top; padding: 5px; border: 1px solid #999; font-size: 8pt;">
                     <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($consultorNombre) ? esc($consultorNombre) : '____________' ?></p>
                     <p style="margin: 2px 0;"><b>Cargo:</b> Consultor SST</p>
                     <?php if (!empty($consultorLicencia)): ?>
@@ -530,7 +530,7 @@ if (!function_exists('renderizarTablaHtml')) {
                     <?php endif; ?>
                 </td>
                 <!-- REPRESENTANTE LEGAL (APROBÓ) -->
-                <td style="vertical-align: top; padding: 8px; border: 1px solid #999; font-size: 8pt;">
+                <td style="vertical-align: top; padding: 5px; border: 1px solid #999; font-size: 8pt;">
                     <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($repLegalNombre) ? esc($repLegalNombre) : '____________' ?></p>
                     <?php if (!empty($repLegalCedulaWord2)): ?>
                     <p style="margin: 2px 0;"><b>Documento:</b> <?= esc($repLegalCedulaWord2) ?></p>
@@ -538,7 +538,7 @@ if (!function_exists('renderizarTablaHtml')) {
                     <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($repLegalCargo) ?></p>
                 </td>
                 <!-- VIGIA/DELEGADO SST (REVISÓ) -->
-                <td style="vertical-align: top; padding: 8px; border: 1px solid #999; font-size: 8pt;">
+                <td style="vertical-align: top; padding: 5px; border: 1px solid #999; font-size: 8pt;">
                     <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($segundoNombre) ? esc($segundoNombre) : '____________' ?></p>
                     <?php if (!empty($segundoCedula)): ?>
                     <p style="margin: 2px 0;"><b>Documento:</b> <?= esc($segundoCedula) ?></p>
@@ -548,18 +548,18 @@ if (!function_exists('renderizarTablaHtml')) {
             </tr>
             <tr>
                 <!-- Fila de firmas alineadas -->
-                <td style="padding: 8px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
-                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
                         <span style="color: #666; font-size: 6pt;">Firma</span>
                     </div>
                 </td>
-                <td style="padding: 8px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
-                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
                         <span style="color: #666; font-size: 6pt;">Firma</span>
                     </div>
                 </td>
-                <td style="padding: 8px; text-align: center; border: 1px solid #999; height: 50px; vertical-align: bottom;">
-                    <div style="border-top: 1px solid #333; width: 70%; margin: 3px auto 0;">
+                <td style="padding: 5px; text-align: center; border: 1px solid #999; height: 45px; vertical-align: bottom;">
+                    <div style="border-top: 1px solid #333; width: 65%; margin: 3px auto 0;">
                         <span style="color: #666; font-size: 6pt;">Firma</span>
                     </div>
                 </td>

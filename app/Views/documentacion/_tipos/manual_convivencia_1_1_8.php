@@ -121,14 +121,8 @@ $composicion = $numTrabajadores <= 19 ? '1 principal + 1 suplente' : '2 principa
 </div>
 
 <!-- Tabla de Soportes Adjuntados -->
-<?php
-// Filtrar documentos que NO son el manual de convivencia (los soportes adjuntados)
-$soportesConvivencia = array_filter($documentosSSTAprobados ?? [], function($doc) {
-    return ($doc['tipo_documento'] ?? '') !== 'manual_convivencia_laboral';
-});
-?>
 <?= view('documentacion/_components/tabla_soportes', [
-    'soportes' => $soportesConvivencia,
+    'soportes' => $soportesAdicionales ?? [],
     'titulo' => 'Soportes Comite de Convivencia',
     'subtitulo' => 'Documentos adicionales',
     'icono' => 'bi-heart-pulse',

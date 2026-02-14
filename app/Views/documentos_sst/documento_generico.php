@@ -281,13 +281,18 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalHistorialVersiones">
                         <i class="bi bi-clock-history me-1"></i>Historial
                     </button>
+                    <?php if (in_array($documento['estado'] ?? '', ['aprobado', 'firmado'])): ?>
+                    <button type="button" class="btn btn-outline-info btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalNuevaVersion">
+                        <i class="bi bi-plus-circle me-1"></i>Nueva Versión
+                    </button>
+                    <?php endif; ?>
                     <a href="<?= base_url('documentos-sst/exportar-pdf/' . $documento['id_documento']) ?>" class="btn btn-danger btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                     </a>
                     <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-word me-1"></i>Word
                     </a>
-                    <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                    <?php if (in_array($documento['estado'] ?? '', ['borrador', 'generado', 'aprobado', 'en_revision'])): ?>
                         <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2" target="_blank">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
                         </a>
@@ -481,9 +486,15 @@ if (!function_exists('convertirMarkdownAHtml')) {
             <?php
             $estandares = $contexto['estandares_aplicables'] ?? 60;
             $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
+            $firmantesDefinidos = $firmantesDefinidos ?? [];
 
-            // Determinar si son solo 2 firmantes (7 estándares SIN delegado)
-            $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
+            // Árbol de decisión firmantes (firmas-sistema.md):
+            // 1. requiere_delegado_sst = true → 3 firmantes (siempre gana)
+            // 2. firmantesDefinidos tiene valores → usar array definido por tipo doc
+            // 3. estandares <= 10 && !delegado → 2 firmantes
+            // 4. Default (>10 estandares) → 3 firmantes
+            $esDosFirmantesPorDefinicion = !empty($firmantesDefinidos) && count($firmantesDefinidos) <= 2 && !$requiereDelegado;
+            $esSoloDosFirmantes = $esDosFirmantesPorDefinicion || (($estandares <= 10) && !$requiereDelegado);
 
             // Datos del Consultor desde tbl_consultor
             $consultorNombre = $consultor['nombre_consultor'] ?? '';
@@ -706,124 +717,20 @@ if (!function_exists('convertirMarkdownAHtml')) {
         </div>
     </div>
 
-    <!-- Modal Historial de Versiones -->
-    <div class="modal fade" id="modalHistorialVersiones" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i>Historial de Versiones</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="contenedorHistorial">
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status"></div>
-                            <p class="mt-2 text-muted">Cargando historial...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Modal Historial de Versiones (componente reutilizable) -->
+    <?= view('documentos_sst/_components/modal_historial_versiones', [
+        'id_documento' => $documento['id_documento'],
+        'versiones' => $versiones ?? []
+    ]) ?>
 
+    <!-- Modal Nueva Versión (componente reutilizable) -->
+    <?= view('documentos_sst/_components/modal_nueva_version', [
+        'id_documento' => $documento['id_documento'],
+        'version_actual' => ($documento['version'] ?? 1) . '.0',
+        'tipo_documento' => $documento['tipo_documento'] ?? ($tipoDocumento ?? '')
+    ]) ?>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const idDocumento = <?= $documento['id_documento'] ?>;
-
-        // Cargar historial cuando se abre el modal
-        document.getElementById('modalHistorialVersiones')?.addEventListener('show.bs.modal', function() {
-            const contenedor = document.getElementById('contenedorHistorial');
-
-            fetch('<?= base_url('documentos-sst/historial-versiones/') ?>' + idDocumento)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.versiones.length > 0) {
-                    let html = '<div class="table-responsive"><table class="table table-hover">';
-                    html += '<thead><tr><th>Versión</th><th>Tipo</th><th>Descripción</th><th>Fecha</th><th>Autorizado por</th><th>Acciones</th></tr></thead><tbody>';
-
-                    data.versiones.forEach(v => {
-                        const fecha = new Date(v.fecha_autorizacion).toLocaleDateString('es-CO', {
-                            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                        });
-                        const estadoBadge = v.estado === 'vigente'
-                            ? '<span class="badge bg-success">Vigente</span>'
-                            : '<span class="badge bg-secondary">Obsoleto</span>';
-                        const tipoBadge = v.tipo_cambio === 'mayor'
-                            ? '<span class="badge bg-danger">Mayor</span>'
-                            : '<span class="badge bg-info">Menor</span>';
-
-                        html += `<tr class="${v.estado === 'obsoleto' ? 'table-secondary' : ''}">
-                            <td><strong>v${v.version_texto}</strong> ${estadoBadge}</td>
-                            <td>${tipoBadge}</td>
-                            <td>${v.descripcion_cambio}</td>
-                            <td><small>${fecha}</small></td>
-                            <td>${v.autorizado_por || 'N/A'}</td>
-                            <td>
-                                <a href="<?= base_url('documentos-sst/descargar-version-pdf/') ?>${v.id_version}"
-                                   class="btn btn-sm btn-outline-danger" title="Descargar PDF de esta versión">
-                                    <i class="bi bi-file-pdf"></i>
-                                </a>
-                                ${v.estado === 'obsoleto' ? `
-                                <button type="button" class="btn btn-sm btn-outline-warning btn-restaurar"
-                                        data-id="${v.id_version}" title="Restaurar esta versión">
-                                    <i class="bi bi-arrow-counterclockwise"></i>
-                                </button>` : ''}
-                            </td>
-                        </tr>`;
-                    });
-
-                    html += '</tbody></table></div>';
-                    contenedor.innerHTML = html;
-
-                    // Agregar eventos a botones de restaurar
-                    contenedor.querySelectorAll('.btn-restaurar').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            if (confirm('¿Restaurar esta versión? El documento actual pasará a estado borrador.')) {
-                                restaurarVersion(this.dataset.id);
-                            }
-                        });
-                    });
-                } else {
-                    contenedor.innerHTML = `
-                        <div class="text-center py-4">
-                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-                            <p class="mt-2 text-muted">No hay versiones registradas aún.<br>
-                            Apruebe el documento para crear la primera versión.</p>
-                        </div>`;
-                }
-            })
-            .catch(error => {
-                contenedor.innerHTML = '<div class="alert alert-danger">Error al cargar historial</div>';
-            });
-        });
-
-        // Función para restaurar versión
-        function restaurarVersion(idVersion) {
-            const formData = new FormData();
-            formData.append('id_version', idVersion);
-
-            fetch('<?= base_url('documentos-sst/restaurar-version') ?>', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                alert('Error de conexión');
-            });
-        }
-    });
-    </script>
 </body>
 </html>

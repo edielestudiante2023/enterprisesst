@@ -242,57 +242,71 @@
                                 $idDocumento = $documento['id_documento'] ?? null;
                                 ?>
 
-                                <?php if ($estadoDoc === 'firmado'): ?>
-                                    <!-- Documento ya firmado y aprobado automaticamente -->
+                                <!-- S3 #2: Aprobar Documento -->
+                                <?php if (in_array($estadoDoc, ['borrador', 'generado', 'en_revision']) && $idDocumento): ?>
+                                    <button type="button" class="btn btn-success btn-sm w-100 disabled" id="btnAprobarDocumento" disabled>
+                                        <i class="bi bi-check-circle me-1"></i>Aprobar Documento
+                                        <small class="d-block" style="font-size: 0.6rem;">Guarda y aprueba todas las secciones</small>
+                                    </button>
+                                <?php endif; ?>
+
+                                <!-- Alertas de estado -->
+                                <?php if ($estadoDoc === 'firmado' && $idDocumento): ?>
                                     <div class="alert alert-success mb-2 py-2 px-3">
                                         <i class="bi bi-patch-check-fill me-1"></i>
                                         <small>Documento firmado y aprobado</small>
                                     </div>
-                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-outline-success btn-sm w-100" target="_blank">
-                                        <i class="bi bi-eye me-1"></i>Ver Firmas
-                                    </a>
-                                <?php elseif ($estadoDoc === 'pendiente_firma'): ?>
-                                    <!-- Esperando firmas -->
-                                    <div class="alert alert-warning mb-2 py-2 px-3">
-                                        <i class="bi bi-clock-history me-1"></i>
-                                        <small>Pendiente de firmas</small>
-                                    </div>
-                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-warning btn-sm w-100" target="_blank">
-                                        <i class="bi bi-pen me-1"></i>Estado Firmas
-                                    </a>
-                                <?php elseif (in_array($estadoDoc, ['borrador', 'generado', 'en_revision']) && $idDocumento): ?>
-                                    <!-- Aprobar Documento (cambia estado en BD) -->
-                                    <button type="button" class="btn btn-success btn-sm w-100 mb-2 disabled" id="btnAprobarDocumento" disabled>
-                                        <i class="bi bi-check-circle me-1"></i>Aprobar Documento
-                                        <small class="d-block" style="font-size: 0.6rem;">Guarda y aprueba todas las secciones</small>
-                                    </button>
-                                    <!-- Enviar a Firmas -->
-                                    <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-outline-primary btn-sm w-100" target="_blank">
-                                        <i class="bi bi-pen me-1"></i>Enviar a Firmas
-                                        <small class="d-block" style="font-size: 0.6rem;">El cliente revisara y firmara</small>
-                                    </a>
                                 <?php elseif ($estadoDoc === 'aprobado' && $idDocumento): ?>
-                                    <!-- Documento ya aprobado -->
                                     <div class="alert alert-info mb-2 py-2 px-3">
                                         <i class="bi bi-check-circle-fill me-1"></i>
                                         <small>Documento aprobado</small>
                                     </div>
+                                <?php elseif ($estadoDoc === 'pendiente_firma' && $idDocumento): ?>
+                                    <div class="alert alert-warning mb-2 py-2 px-3">
+                                        <i class="bi bi-clock-history me-1"></i>
+                                        <small>Pendiente de firmas</small>
+                                    </div>
+                                <?php endif; ?>
+
+                                <!-- S3 #3: Firmas (S2 condiciones identicas al toolbar) -->
+                                <!-- Enviar a Firmas: 4 estados -->
+                                <?php if (in_array($estadoDoc, ['generado', 'aprobado', 'en_revision', 'pendiente_firma']) && $idDocumento): ?>
                                     <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-success btn-sm w-100" target="_blank">
                                         <i class="bi bi-pen me-1"></i>Enviar a Firmas
-                                        <small class="d-block" style="font-size: 0.6rem;">El cliente revisara y firmara</small>
                                     </a>
-                                <?php elseif ($idDocumento): ?>
-                                    <!-- Documento existe pero estado no permite firmas -->
-                                    <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
-                                        <i class="bi bi-pen me-1"></i>Enviar a Firmas
-                                        <small class="d-block" style="font-size: 0.6rem;">Estado: <?= esc($estadoDoc) ?></small>
-                                    </button>
-                                <?php else: ?>
-                                    <!-- Documento no existe aún -->
+                                <?php elseif (!$idDocumento): ?>
                                     <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
                                         <i class="bi bi-pen me-1"></i>Enviar a Firmas
                                         <small class="d-block" style="font-size: 0.6rem;">Primero guarda el documento</small>
                                     </button>
+                                <?php endif; ?>
+
+                                <!-- Ver Firmas: solo firmado -->
+                                <?php if ($estadoDoc === 'firmado' && $idDocumento): ?>
+                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-outline-success btn-sm w-100" target="_blank">
+                                        <i class="bi bi-patch-check me-1"></i>Ver Firmas
+                                    </a>
+                                <?php endif; ?>
+
+                                <!-- Estado Firmas: 4 estados -->
+                                <?php if (in_array($estadoDoc, ['generado', 'aprobado', 'en_revision', 'pendiente_firma']) && $idDocumento): ?>
+                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-outline-warning btn-sm w-100" target="_blank">
+                                        <i class="bi bi-clock-history me-1"></i>Estado Firmas
+                                    </a>
+                                <?php endif; ?>
+
+                                <!-- S3 #4: PDF -->
+                                <?php if ($idDocumento): ?>
+                                    <a href="<?= base_url('documentos-sst/exportar-pdf/' . $idDocumento) ?>" class="btn btn-danger btn-sm w-100" target="_blank">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                                    </a>
+                                <?php endif; ?>
+
+                                <!-- S3 #5: Word -->
+                                <?php if ($idDocumento): ?>
+                                    <a href="<?= base_url('documentos-sst/exportar-word/' . $idDocumento) ?>" class="btn btn-primary btn-sm w-100" target="_blank">
+                                        <i class="bi bi-file-earmark-word me-1"></i>Word
+                                    </a>
                                 <?php endif; ?>
 
                                 <!-- Versionamiento (solo si documento existe) -->
@@ -673,23 +687,55 @@
 
             idDocumentoActual = idDocumento;
 
-            // Buscar el contenedor del boton de firmas
             const contenedorAcciones = document.querySelector('.sidebar .d-grid.gap-2');
             if (!contenedorAcciones) return;
 
-            // Buscar el boton deshabilitado de firmas
+            // Buscar el boton deshabilitado de firmas y actualizarlo
             const btnFirmasDeshabilitado = contenedorAcciones.querySelector('button.btn-secondary[disabled]');
             if (btnFirmasDeshabilitado && btnFirmasDeshabilitado.innerHTML.includes('Enviar a Firmas')) {
-                // Reemplazar con enlace activo
-                const nuevoBtn = document.createElement('a');
-                nuevoBtn.href = '<?= base_url('firma/solicitar/') ?>' + idDocumento;
-                nuevoBtn.className = 'btn btn-success btn-sm w-100';
-                nuevoBtn.innerHTML = '<i class="bi bi-pen me-1"></i>Enviar a Firmas<small class="d-block" style="font-size: 0.6rem;">El cliente revisara y firmara</small>';
-
-                btnFirmasDeshabilitado.replaceWith(nuevoBtn);
-
-                mostrarToast('info', 'Documento Creado', 'El documento fue guardado. Ahora puedes enviarlo a firmas.');
+                // Documento recien creado (borrador): no puede enviar a firmas aun
+                const small = btnFirmasDeshabilitado.querySelector('small');
+                if (small) small.textContent = 'Aprueba el documento primero';
             }
+
+            // Agregar Aprobar Documento si no existe
+            if (!document.getElementById('btnAprobarDocumento')) {
+                const hrSeparador = contenedorAcciones.querySelector('hr.my-3');
+                if (hrSeparador) {
+                    const btnAprobar = document.createElement('button');
+                    btnAprobar.type = 'button';
+                    btnAprobar.className = 'btn btn-success btn-sm w-100 disabled';
+                    btnAprobar.id = 'btnAprobarDocumento';
+                    btnAprobar.disabled = true;
+                    btnAprobar.innerHTML = '<i class="bi bi-check-circle me-1"></i>Aprobar Documento<small class="d-block" style="font-size: 0.6rem;">Guarda y aprueba todas las secciones</small>';
+                    hrSeparador.after(btnAprobar);
+                }
+            }
+
+            // Agregar PDF si no existe
+            const versionHr = contenedorAcciones.querySelector('hr.my-2');
+            const refNode = versionHr || contenedorAcciones.lastElementChild;
+
+            if (!contenedorAcciones.querySelector('a.btn-danger') && refNode) {
+                const pdfLink = document.createElement('a');
+                pdfLink.href = '<?= base_url('documentos-sst/exportar-pdf/') ?>' + idDocumento;
+                pdfLink.className = 'btn btn-danger btn-sm w-100';
+                pdfLink.target = '_blank';
+                pdfLink.innerHTML = '<i class="bi bi-file-earmark-pdf me-1"></i>PDF';
+                refNode.before(pdfLink);
+            }
+
+            // Agregar Word si no existe
+            if (!contenedorAcciones.querySelector('a.btn-primary') && refNode) {
+                const wordLink = document.createElement('a');
+                wordLink.href = '<?= base_url('documentos-sst/exportar-word/') ?>' + idDocumento;
+                wordLink.className = 'btn btn-primary btn-sm w-100';
+                wordLink.target = '_blank';
+                wordLink.innerHTML = '<i class="bi bi-file-earmark-word me-1"></i>Word';
+                refNode.before(wordLink);
+            }
+
+            mostrarToast('info', 'Documento Creado', 'El documento fue guardado. Aprueba todas las secciones para habilitar firmas.');
         }
 
         // ==========================================

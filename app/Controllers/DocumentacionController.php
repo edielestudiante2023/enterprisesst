@@ -689,6 +689,15 @@ class DocumentacionController extends Controller
                 ->orderBy('created_at', 'DESC')
                 ->get()
                 ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'manual_convivencia_1_1_8') {
+            // 1.1.8 Conformación Comité de Convivencia - Soportes adjuntos
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_comite_convivencia')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
         }
 
         // Determinar qué vista de tipo cargar
