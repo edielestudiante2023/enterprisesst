@@ -335,89 +335,101 @@ class DocumentosSSTController extends BaseController
             return $this->response->setJSON(['ok' => false, 'message' => 'Tipo de documento no válido']);
         }
 
+        // Detectar flujo del documento (secciones_ia = 1 parte, programa_con_pta = 3 partes)
+        $configService = new DocumentoConfigService();
+        $configDoc = $configService->obtenerTipoDocumento($tipoDocumento);
+        $flujo = $configDoc['flujo'] ?? 'secciones_ia';
+
         $db = \Config\Database::connect();
 
         // ═══════════════════════════════════════════════════════════
         // ACTIVIDADES DEL PLAN DE TRABAJO (Fase 1)
+        // Solo para documentos de 3 partes (programa_con_pta)
+        // Documentos de 1 parte (secciones_ia) usan solo contexto
         // ═══════════════════════════════════════════════════════════
         $actividades = [];
-        try {
-            $query = $db->table('tbl_pta_cliente')
-                ->select('actividad_plandetrabajo, tipo_servicio, fecha_propuesta, estado_actividad')
-                ->where('id_cliente', $idCliente)
-                ->where('YEAR(fecha_propuesta)', $anio);
+        if ($flujo !== 'secciones_ia') {
+            try {
+                $query = $db->table('tbl_pta_cliente')
+                    ->select('actividad_plandetrabajo, tipo_servicio, fecha_propuesta, estado_actividad')
+                    ->where('id_cliente', $idCliente)
+                    ->where('YEAR(fecha_propuesta)', $anio);
 
-            // Filtrar según el tipo de documento
-            $filtroServicio = $this->getFiltroServicioPTA($tipoDocumento);
-            if (!empty($filtroServicio)) {
-                $query->groupStart();
-                foreach ($filtroServicio as $i => $filtro) {
-                    if ($i === 0) {
-                        if ($filtro['type'] === 'exact') {
-                            $query->where('tipo_servicio', $filtro['value']);
+                // Filtrar según el tipo de documento
+                $filtroServicio = $this->getFiltroServicioPTA($tipoDocumento);
+                if (!empty($filtroServicio)) {
+                    $query->groupStart();
+                    foreach ($filtroServicio as $i => $filtro) {
+                        if ($i === 0) {
+                            if ($filtro['type'] === 'exact') {
+                                $query->where('tipo_servicio', $filtro['value']);
+                            } else {
+                                $query->like('tipo_servicio', $filtro['value'], 'both');
+                            }
                         } else {
-                            $query->like('tipo_servicio', $filtro['value'], 'both');
-                        }
-                    } else {
-                        if ($filtro['type'] === 'exact') {
-                            $query->orWhere('tipo_servicio', $filtro['value']);
-                        } else {
-                            $query->orLike($filtro['field'] ?? 'tipo_servicio', $filtro['value'], 'both');
+                            if ($filtro['type'] === 'exact') {
+                                $query->orWhere('tipo_servicio', $filtro['value']);
+                            } else {
+                                $query->orLike($filtro['field'] ?? 'tipo_servicio', $filtro['value'], 'both');
+                            }
                         }
                     }
+                    $query->groupEnd();
                 }
-                $query->groupEnd();
-            }
 
-            $rows = $query->orderBy('fecha_propuesta', 'ASC')->get()->getResultArray();
+                $rows = $query->orderBy('fecha_propuesta', 'ASC')->get()->getResultArray();
 
-            foreach ($rows as $row) {
-                $fecha = $row['fecha_propuesta'] ?? '';
-                $actividades[] = [
-                    'nombre' => $row['actividad_plandetrabajo'] ?? 'Sin nombre',
-                    'mes'    => $fecha ? date('M Y', strtotime($fecha)) : 'No programada',
-                    'estado' => $row['estado_actividad'] ?? 'ABIERTA',
-                ];
+                foreach ($rows as $row) {
+                    $fecha = $row['fecha_propuesta'] ?? '';
+                    $actividades[] = [
+                        'nombre' => $row['actividad_plandetrabajo'] ?? 'Sin nombre',
+                        'mes'    => $fecha ? date('M Y', strtotime($fecha)) : 'No programada',
+                        'estado' => $row['estado_actividad'] ?? 'ABIERTA',
+                    ];
+                }
+            } catch (\Exception $e) {
+                log_message('error', "Error previsualizando actividades: " . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            log_message('error', "Error previsualizando actividades: " . $e->getMessage());
         }
 
         // ═══════════════════════════════════════════════════════════
         // INDICADORES (Fase 2)
+        // Solo para documentos de 3 partes (programa_con_pta)
         // ═══════════════════════════════════════════════════════════
         $indicadores = [];
-        try {
-            $categoriaIndicador = $this->getCategoriaIndicador($tipoDocumento);
+        if ($flujo !== 'secciones_ia') {
+            try {
+                $categoriaIndicador = $this->getCategoriaIndicador($tipoDocumento);
 
-            $queryInd = $db->table('tbl_indicadores_sst')
-                ->select('nombre_indicador, tipo_indicador, meta, periodicidad')
-                ->where('id_cliente', $idCliente)
-                ->where('activo', 1);
+                $queryInd = $db->table('tbl_indicadores_sst')
+                    ->select('nombre_indicador, tipo_indicador, meta, periodicidad')
+                    ->where('id_cliente', $idCliente)
+                    ->where('activo', 1);
 
-            if (!empty($categoriaIndicador)) {
-                $queryInd->groupStart();
-                foreach ($categoriaIndicador as $i => $cat) {
-                    if ($i === 0) {
-                        $queryInd->where('categoria', $cat);
-                    } else {
-                        $queryInd->orWhere('categoria', $cat);
+                if (!empty($categoriaIndicador)) {
+                    $queryInd->groupStart();
+                    foreach ($categoriaIndicador as $i => $cat) {
+                        if ($i === 0) {
+                            $queryInd->where('categoria', $cat);
+                        } else {
+                            $queryInd->orWhere('categoria', $cat);
+                        }
                     }
+                    $queryInd->groupEnd();
                 }
-                $queryInd->groupEnd();
-            }
 
-            $rowsInd = $queryInd->get()->getResultArray();
+                $rowsInd = $queryInd->get()->getResultArray();
 
-            foreach ($rowsInd as $row) {
-                $indicadores[] = [
-                    'nombre' => $row['nombre_indicador'] ?? 'Sin nombre',
-                    'tipo'   => $row['tipo_indicador'] ?? 'proceso',
-                    'meta'   => $row['meta'] ?? 'No definida',
-                ];
+                foreach ($rowsInd as $row) {
+                    $indicadores[] = [
+                        'nombre' => $row['nombre_indicador'] ?? 'Sin nombre',
+                        'tipo'   => $row['tipo_indicador'] ?? 'proceso',
+                        'meta'   => $row['meta'] ?? 'No definida',
+                    ];
+                }
+            } catch (\Exception $e) {
+                log_message('error', "Error previsualizando indicadores: " . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            log_message('error', "Error previsualizando indicadores: " . $e->getMessage());
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -426,6 +438,7 @@ class DocumentosSSTController extends BaseController
         return $this->response->setJSON([
             'ok'          => true,
             'tipo'        => $handler->getNombre(),
+            'flujo'       => $flujo,
             'actividades' => $actividades,
             'indicadores' => $indicadores,
             'contexto'    => [
@@ -5431,6 +5444,89 @@ Se debe generar acta que registre:
             'firmasElectronicas' => $firmasElectronicas,
             'firmantesDefinidos' => $this->configService->obtenerFirmantes('identificacion_sustancias_cancerigenas'),
             'tipoDocumento' => 'identificacion_sustancias_cancerigenas'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * 1.1.5 - Vista web de Identificacion de Trabajadores de Alto Riesgo
+     */
+    public function identificacionAltoRiesgo(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'identificacion_alto_riesgo')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/identificacion_alto_riesgo/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Identificacion de Trabajadores de Alto Riesgo.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'identificacion_alto_riesgo');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Identificacion de Trabajadores de Alto Riesgo - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('identificacion_alto_riesgo'),
+            'tipoDocumento' => 'identificacion_alto_riesgo'
         ];
 
         return view('documentos_sst/documento_generico', $data);

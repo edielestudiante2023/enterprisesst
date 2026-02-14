@@ -714,6 +714,7 @@ $routes->post('/responsables-sst/(:num)/migrar', 'ResponsablesSSTController::mig
 
 // Firma electrónica
 $routes->get('/firma/dashboard', 'FirmaElectronicaController::dashboard');
+$routes->get('/firma/dashboard/(:num)', 'FirmaElectronicaController::dashboard/$1');
 $routes->get('/firma/solicitar/(:num)', 'FirmaElectronicaController::solicitar/$1');
 $routes->post('/firma/crear-solicitud', 'FirmaElectronicaController::crearSolicitud');
 $routes->get('/firma/firmar/(:any)', 'FirmaElectronicaController::firmar/$1');
@@ -975,6 +976,9 @@ $routes->post('/documentos-sst/adjuntar-soporte-pve-psicosocial', 'DocumentosSST
 
 // 4.2.5 Programa de Mantenimiento Periodico de Instalaciones, Equipos, Maquinas, Herramientas
 $routes->get('/documentos-sst/(:num)/programa-mantenimiento-periodico/(:num)', 'DocumentosSSTController::programaMantenimientoPeriodico/$1/$2');
+
+// 1.1.5 Identificacion de Trabajadores de Alto Riesgo y Cotizacion de Pension Especial
+$routes->get('/documentos-sst/(:num)/identificacion-alto-riesgo/(:num)', 'DocumentosSSTController::identificacionAltoRiesgo/$1/$2');
 
 // Asignacion de Responsable SG-SST (Patron B - controlador independiente)
 $routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'PzasignacionresponsableSstController::crear/$1');

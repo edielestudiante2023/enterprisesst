@@ -541,7 +541,7 @@
             // Mostrar loading mientras consulta
             Swal.fire({
                 title: 'Consultando datos...',
-                text: 'Verificando Plan de Trabajo e Indicadores',
+                text: 'Verificando datos del documento',
                 allowOutsideClick: false,
                 didOpen: () => Swal.showLoading()
             });
@@ -565,31 +565,38 @@
 
             // Construir HTML del resumen
             let html = '<div style="text-align: left; max-height: 400px; overflow-y: auto;">';
+            const esDocDirecto = (data.flujo === 'secciones_ia');
 
-            // Plan de Trabajo
-            const totalAct = data.actividades.length;
-            html += '<h6 style="margin-bottom: 8px;"><strong>' + (totalAct > 0 ? '&#9989;' : '&#9888;&#65039;') + ' Plan de Trabajo (' + totalAct + ' actividades):</strong></h6>';
-            if (totalAct > 0) {
-                html += '<ul style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">';
-                data.actividades.forEach(function(a) {
-                    html += '<li>' + a.nombre + ' <small style="color: #6c757d;">(' + a.mes + ')</small></li>';
-                });
-                html += '</ul>';
-            } else {
-                html += '<p style="color: #856404; font-size: 0.85rem; padding-left: 20px; margin-bottom: 15px;">No hay actividades registradas en el Plan de Trabajo para este modulo.</p>';
-            }
+            // Plan de Trabajo y indicadores solo para documentos de 3 partes
+            if (!esDocDirecto) {
+                // Plan de Trabajo
+                const totalAct = data.actividades.length;
+                html += '<h6 style="margin-bottom: 8px;"><strong>' + (totalAct > 0 ? '&#9989;' : '&#9888;&#65039;') + ' Plan de Trabajo (' + totalAct + ' actividades):</strong></h6>';
+                if (totalAct > 0) {
+                    html += '<ul style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">';
+                    data.actividades.forEach(function(a) {
+                        html += '<li>' + a.nombre + ' <small style="color: #6c757d;">(' + a.mes + ')</small></li>';
+                    });
+                    html += '</ul>';
+                } else {
+                    html += '<p style="color: #856404; font-size: 0.85rem; padding-left: 20px; margin-bottom: 15px;">No hay actividades registradas en el Plan de Trabajo para este modulo.</p>';
+                }
 
-            // Indicadores
-            const totalInd = data.indicadores.length;
-            html += '<h6 style="margin-bottom: 8px;"><strong>' + (totalInd > 0 ? '&#9989;' : '&#9888;&#65039;') + ' Indicadores (' + totalInd + ' configurados):</strong></h6>';
-            if (totalInd > 0) {
-                html += '<ul style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">';
-                data.indicadores.forEach(function(i) {
-                    html += '<li>' + i.nombre + ' <small style="color: #6c757d;">(Meta: ' + i.meta + ')</small></li>';
-                });
-                html += '</ul>';
+                // Indicadores
+                const totalInd = data.indicadores.length;
+                html += '<h6 style="margin-bottom: 8px;"><strong>' + (totalInd > 0 ? '&#9989;' : '&#9888;&#65039;') + ' Indicadores (' + totalInd + ' configurados):</strong></h6>';
+                if (totalInd > 0) {
+                    html += '<ul style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">';
+                    data.indicadores.forEach(function(i) {
+                        html += '<li>' + i.nombre + ' <small style="color: #6c757d;">(Meta: ' + i.meta + ')</small></li>';
+                    });
+                    html += '</ul>';
+                } else {
+                    html += '<p style="color: #856404; font-size: 0.85rem; padding-left: 20px; margin-bottom: 15px;">No hay indicadores configurados para este modulo.</p>';
+                }
             } else {
-                html += '<p style="color: #856404; font-size: 0.85rem; padding-left: 20px; margin-bottom: 15px;">No hay indicadores configurados para este modulo.</p>';
+                // Documento directo (1 parte): nota informativa
+                html += '<p style="color: #155724; font-size: 0.85rem; background: #d4edda; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px;"><strong>&#128196; Documento directo:</strong> Este documento se genera usando el contexto de la empresa. No requiere actividades del Plan de Trabajo ni indicadores.</p>';
             }
 
             // Contexto del cliente

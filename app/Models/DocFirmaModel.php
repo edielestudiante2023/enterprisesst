@@ -342,7 +342,7 @@ class DocFirmaModel extends Model
      * Dashboard: Obtiene todos los documentos con solicitudes de firma
      * Agrupados por documento con contadores de estado
      */
-    public function getDashboardFirmas(?int $idConsultor = null): array
+    public function getDashboardFirmas(?int $idConsultor = null, ?int $idCliente = null): array
     {
         $builder = $this->db->table('tbl_doc_firma_solicitudes s')
             ->select('
@@ -369,7 +369,9 @@ class DocFirmaModel extends Model
             ->groupBy('s.id_documento')
             ->orderBy('fecha_solicitud', 'DESC');
 
-        if ($idConsultor) {
+        if ($idCliente) {
+            $builder->where('c.id_cliente', $idCliente);
+        } elseif ($idConsultor) {
             $builder->where('c.id_consultor', $idConsultor);
         }
 

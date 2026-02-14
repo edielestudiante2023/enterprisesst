@@ -68,6 +68,8 @@ class DocumentoSSTFactory
         'pve_riesgo_psicosocial' => PveRiesgoPsicosocial::class,
         // 4.2.5 Mantenimiento Periodico de Instalaciones, Equipos, Maquinas, Herramientas
         'programa_mantenimiento_periodico' => ProgramaMantenimientoPeriodico::class,
+        // 1.1.5 Identificacion de Trabajadores de Alto Riesgo y Cotizacion de Pension Especial
+        'identificacion_alto_riesgo' => IdentificacionAltoRiesgo::class,
     ];
 
     /**

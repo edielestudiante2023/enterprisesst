@@ -790,7 +790,7 @@ class FirmaElectronicaController extends Controller
     /**
      * Dashboard centralizado de todas las firmas
      */
-    public function dashboard()
+    public function dashboard($idCliente = null)
     {
         if (!session()->get('isLoggedIn')) {
             return redirect()->to('/login');
@@ -802,7 +802,7 @@ class FirmaElectronicaController extends Controller
             $idConsultor = session()->get('user_id');
         }
 
-        $documentos = $this->firmaModel->getDashboardFirmas($idConsultor);
+        $documentos = $this->firmaModel->getDashboardFirmas($idConsultor, $idCliente);
 
         // Calcular totales para tarjetas resumen
         $totales = [

@@ -571,6 +571,8 @@ Ver `app/Libraries/DocumentosSSTTypes/ProcedimientoMatrizLegal.php` como ejemplo
 | 2026-02-04 | Error "Unknown column 'numeral'" | Corregido a `numeral_resolucion` |
 | 2026-02-04 | Error "Unknown column 'unidad'" | Corregido a `unidad_medida` |
 | 2026-02-04 | "[Seccion no definida]" en procedimiento_matriz_legal | Creada clase `ProcedimientoMatrizLegal.php` y registrada en Factory |
+| 2026-02-13 | "[Seccion no definida]" + SweetAlert colgado en identificacion_alto_riesgo | Faltaba clase PHP. Creada `IdentificacionAltoRiesgo.php` y registrada en Factory. Causa raiz: SQL y vista existian pero la clase PHP no se creo (checklist de ZZ_96 tenia la clase como ultimo paso) |
+| 2026-02-13 | SweetAlert mostraba 19 actividades PTA y 17 indicadores no relacionados en doc Tipo A | `previsualizarDatos()` no diferenciaba flujo `secciones_ia` vs `programa_con_pta`. Fix: backend detecta flujo y salta queries PTA/indicadores para Tipo A. Frontend solo muestra contexto. Ver [1_A_REPARAR_IA_TIPO_A_UNA_PARTE.md](./1_A_REPARAR_IA_TIPO_A_UNA_PARTE.md) |
 
 ---
 

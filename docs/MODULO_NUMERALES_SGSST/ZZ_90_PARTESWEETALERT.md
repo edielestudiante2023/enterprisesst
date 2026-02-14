@@ -25,10 +25,16 @@ Usuario da clic en "Generar con IA"
   AJAX GET /documentos/previsualizar-datos/{tipo}/{id_cliente}
          |
          v
-  Backend consulta 3 fuentes:
-  - tbl_pta_cliente (Actividades)
-  - tbl_indicadores_sst (Indicadores)
-  - tbl_cliente_contexto_sst (Contexto)
+  Backend detecta flujo del documento:
+  - Si flujo = programa_con_pta (3 partes):
+    consulta 3 fuentes:
+    - tbl_pta_cliente (Actividades)
+    - tbl_indicadores_sst (Indicadores)
+    - tbl_cliente_contexto_sst (Contexto)
+  - Si flujo = secciones_ia (1 parte):
+    consulta 1 fuente:
+    - tbl_cliente_contexto_sst (Contexto)
+    (NO consulta PTA ni Indicadores)
          |
          v
   SweetAlert muestra resumen:

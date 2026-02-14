@@ -744,24 +744,41 @@ $estado = $documento['estado'] ?? 'pendiente';
 
 ## RESUMEN DE CHECKLIST
 
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ⚠️  ORDEN OBLIGATORIO: Clase PHP PRIMERO, SQL DESPUÉS                     │
+│                                                                             │
+│  Sin la clase PHP + registro en Factory, el documento mostrará             │
+│  "[Seccion no definida]" y el SweetAlert de verificación se colgará.       │
+│                                                                             │
+│  Caso real: identificacion_alto_riesgo (2026-02-13) se creó el SQL,        │
+│  la vista y las rutas, pero se olvidó la clase PHP → documento roto.       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ### Antes de Empezar
 - [ ] Definir el nombre del tipo de documento (snake_case)
 - [ ] Identificar el estándar de la Resolución 0312/2019
 - [ ] Listar las secciones del documento
 - [ ] Definir quiénes firman el documento
 
-### Archivos a Crear
-- [ ] `app/Libraries/DocumentosSSTTypes/[TuClase].php`
-- [ ] `app/SQL/agregar_[tu_tipo].php`
+### Paso 1 (OBLIGATORIO PRIMERO): Clase PHP + Factory
+- [ ] **CREAR** `app/Libraries/DocumentosSSTTypes/[TuClase].php` (extender AbstractDocumentoSST)
+- [ ] **REGISTRAR** en `app/Libraries/DocumentosSSTTypes/DocumentoSSTFactory.php`
+- [ ] Verificar que la clase tiene: `getTipoDocumento()`, `getSecciones()`, `getPromptParaSeccion()`
+
+### Paso 2: Base de Datos
+- [ ] **CREAR** `app/SQL/agregar_[tu_tipo].php`
+- [ ] **EJECUTAR** el script SQL: `php app/SQL/agregar_[tu_tipo].php`
+
+### Paso 3 (Opcional): Vista personalizada
 - [ ] (Opcional) `app/Views/documentacion/_tipos/[tu_tipo].php`
 
-### Archivo a Modificar
-- [ ] `app/Libraries/DocumentosSSTTypes/DocumentoSSTFactory.php`
-
-### Después de Crear
-- [ ] Ejecutar el script SQL: `php app/SQL/agregar_[tu_tipo].php`
+### Paso 4: Verificación
 - [ ] Probar la URL: `/documentos/generar/[tu_tipo]/18`
-- [ ] Verificar generación de cada sección
+- [ ] Verificar que NO aparece `[Seccion no definida]`
+- [ ] Verificar que el SweetAlert "Consultando datos" NO se queda colgado
+- [ ] Verificar generación de cada sección con IA
 - [ ] Verificar guardado y aprobación
 - [ ] Verificar vista previa
 
