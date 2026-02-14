@@ -589,7 +589,7 @@ FORMATO DE RESPUESTA (JSON):
             $existe = $this->cronogramaModel
                 ->where('id_cliente', $idCliente)
                 ->where('YEAR(fecha_programada)', $anio)
-                ->where('id_capacitacion IN (SELECT id_capacitacion FROM capacitaciones_sst WHERE capacitacion LIKE "%' . substr($cap['nombre'], 0, 30) . '%")', null, false)
+                ->where("id_capacitacion IN (SELECT id_capacitacion FROM capacitaciones_sst WHERE capacitacion LIKE '%" . $db->escapeLikeString(substr($cap['nombre'], 0, 30)) . "%')", null, false)
                 ->countAllResults();
 
             if ($existe > 0) {

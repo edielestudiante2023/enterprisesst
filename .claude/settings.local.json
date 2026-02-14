@@ -13,7 +13,15 @@
       "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" diff)",
       "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" log --oneline -5)",
       "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" add .)",
-      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" commit -m \"$\\(cat <<''EOF''\nfix: corregir flujo programa_capacitacion \\(Tipo B\\) y estandarizar vista web + sidebar\n\n- Cambiar flujo de secciones_ia a programa_con_pta en BD, migración y legacy config\n- Sidebar: corregir condición Enviar a Firmas \\(agregar borrador, quitar pendiente_firma\\)\n- Vista web: border-bottom 2px, gradientes Control Cambios y Firmas, Parsedown, R1/R2/R5\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" commit -m \"$\\(cat <<''EOF''\nfix: corregir flujo programa_capacitacion \\(Tipo B\\) y estandarizar vista web + sidebar\n\n- Cambiar flujo de secciones_ia a programa_con_pta en BD, migración y legacy config\n- Sidebar: corregir condición Enviar a Firmas \\(agregar borrador, quitar pendiente_firma\\)\n- Vista web: border-bottom 2px, gradientes Control Cambios y Firmas, Parsedown, R1/R2/R5\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" checkout main)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" merge cycloid)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" push origin main)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" checkout cycloid)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" stash)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" stash pop)",
+      "Bash(php:*)",
+      "Bash(git add:*)"
     ]
   }
 }
