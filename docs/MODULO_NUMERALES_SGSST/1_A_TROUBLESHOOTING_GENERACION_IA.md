@@ -655,6 +655,60 @@ Ver también: [2_AA_ WEB.md](./2_AA_ WEB.md) - Sección 19: Conversión Markdown
 
 ---
 
+## Problema: Documento queda en "borrador" después de aprobar todas las secciones
+
+### Síntoma
+
+El usuario aprueba las 10 secciones del documento. Los toasts muestran "Aprobación Completa" y "Documento Listo". Sin embargo, al revisar la tabla de documentos, el documento sigue en estado **borrador**.
+
+### Causa
+
+**Aprobar secciones ≠ Aprobar documento.** Son 2 acciones distintas:
+
+| Acción | Qué hace | Dónde cambia |
+|--------|----------|--------------|
+| "Aprobar Todo" (secciones) | Marca cada sección como `aprobado: true` | Campo `contenido` (JSON) |
+| "Aprobar Documento" | Cambia estado del documento + crea versión | Campo `estado` en BD |
+
+El botón `#btnAprobarDocumento` en el sidebar de `generar_con_ia.php` **no existía en el HTML**, aunque el JavaScript (línea ~1355) y el modal `#modalAprobarDocumento` (línea ~432) sí existían. El JS hacía `getElementById('btnAprobarDocumento')` y retornaba silenciosamente al no encontrarlo.
+
+### Solución (2026-02-14)
+
+Se agregó el botón en el sidebar de `app/Views/documentos_sst/generar_con_ia.php`, entre "Aprobar Todo" y "Enviar a Firmas":
+
+```php
+<?php elseif (in_array($estadoDoc, ['borrador', 'generado', 'en_revision']) && $idDocumento): ?>
+    <!-- Aprobar Documento (cambia estado en BD) -->
+    <button type="button" class="btn btn-success btn-sm w-100 mb-2 disabled"
+            id="btnAprobarDocumento" disabled>
+        <i class="bi bi-check-circle me-1"></i>Aprobar Documento
+        <small class="d-block" style="font-size: 0.6rem;">Guarda y aprueba todas las secciones</small>
+    </button>
+    <!-- Enviar a Firmas -->
+    <a href="..." class="btn btn-outline-primary btn-sm w-100" target="_blank">
+        <i class="bi bi-pen me-1"></i>Enviar a Firmas
+    </a>
+<?php elseif ($estadoDoc === 'aprobado' && $idDocumento): ?>
+    <!-- Documento ya aprobado -->
+    <div class="alert alert-info mb-2 py-2 px-3">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        <small>Documento aprobado</small>
+    </div>
+    <a href="..." class="btn btn-success btn-sm w-100" target="_blank">
+        <i class="bi bi-pen me-1"></i>Enviar a Firmas
+    </a>
+```
+
+### Flujo correcto del sidebar
+
+```
+Aprobar Todo (secciones JSON) → Aprobar Documento (estado BD) → Enviar a Firmas
+```
+
+El botón "Aprobar Documento" se habilita automáticamente por JavaScript (`habilitarAprobacionDocumento()`) cuando todas las secciones tienen clase `.aprobada`.
+
+---
+
 ## Referencias
 
 - [PROMPT_NUEVO_DOCUMENTO_SST.md](../../PROMPT_NUEVO_DOCUMENTO_SST.md) - Guía completa para crear documentos

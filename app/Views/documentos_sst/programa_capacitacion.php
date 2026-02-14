@@ -243,24 +243,24 @@
                     <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalHistorialVersiones">
                         <i class="bi bi-clock-history me-1"></i>Historial
                     </button>
-                    <a href="<?= base_url('documentos-sst/exportar-pdf/' . $documento['id_documento']) ?>" class="btn btn-danger btn-sm me-2">
+                    <a href="<?= base_url('documentos-sst/exportar-pdf/' . $documento['id_documento']) ?>" class="btn btn-danger btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                     </a>
-                    <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2">
+                    <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-word me-1"></i>Word
                     </a>
-                    <?php if (in_array($documento['estado'] ?? '', ['borrador', 'generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                    <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
                         <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2" target="_blank">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
                         </a>
                     <?php endif; ?>
                     <?php if (($documento['estado'] ?? '') === 'firmado'): ?>
-                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-success btn-sm me-2">
+                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-success btn-sm me-2" target="_blank">
                             <i class="bi bi-patch-check me-1"></i>Ver Firmas
                         </a>
                     <?php endif; ?>
-                    <?php if (($documento['estado'] ?? '') === 'pendiente_firma'): ?>
-                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-warning btn-sm me-2">
+                    <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-warning btn-sm me-2" target="_blank">
                             <i class="bi bi-clock-history me-1"></i>Estado Firmas
                         </a>
                     <?php endif; ?>

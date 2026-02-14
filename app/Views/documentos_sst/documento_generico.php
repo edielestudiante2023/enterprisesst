@@ -28,182 +28,30 @@ $categoria = $tipoDocConfig['categoria'] ?? 'documento';
 $icono = $tipoDocConfig['icono'] ?? 'bi-file-text';
 
 /**
- * Función mejorada para convertir Markdown a HTML
- * Soporta: tablas, negritas, cursivas, listas, encabezados
+ * Conversión Markdown→HTML usando Parsedown (estándar del proyecto)
+ * Pre-procesa normalización de pipes para tablas Markdown generadas por IA
  */
 if (!function_exists('convertirMarkdownAHtml')) {
     function convertirMarkdownAHtml($texto) {
         if (empty($texto)) return '';
 
-        // 1. Primero convertir tablas Markdown
-        $texto = convertirTablasMarkdown($texto);
-
-        // 2. Dividir en partes HTML (tablas) y texto normal
-        $partes = preg_split('/(<div class="table-responsive[^>]*>.*?<\/div>)/s', $texto, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-        $resultado = '';
-        foreach ($partes as $parte) {
-            if (strpos($parte, '<div class="table-responsive') === 0) {
-                // Es una tabla HTML, no modificar
-                $resultado .= $parte;
-            } else {
-                // Es texto, convertir markdown
-                $resultado .= convertirTextoMarkdown($parte);
-            }
-        }
-
-        return $resultado;
-    }
-
-    function convertirTablasMarkdown($texto) {
+        // Pre-procesar: normalizar pipes de tablas Markdown
+        // IA genera "Col1 | Col2 | Col3" sin pipes al inicio/final
         $lineas = explode("\n", $texto);
-        $enTabla = false;
-        $resultado = [];
-        $tablaHtml = '';
-        $esEncabezado = true;
-
-        foreach ($lineas as $linea) {
+        foreach ($lineas as &$linea) {
             $lineaTrim = trim($linea);
-
-            // Normalizar tablas Markdown sin pipes al inicio/final
-            // "Col1 | Col2 | Col3" → "| Col1 | Col2 | Col3 |"
             if (strpos($lineaTrim, '|') !== false && substr($lineaTrim, 0, 1) !== '|') {
-                $lineaTrim = '| ' . $lineaTrim . ' |';
-            }
-
-            // Detectar linea de tabla (empieza con |)
-            if (preg_match('/^\|(.+)\|$/', $lineaTrim)) {
-                // Ignorar linea separadora (|---|---|)
-                if (preg_match('/^\|[\s\-\:\|]+\|$/', $lineaTrim)) {
-                    $esEncabezado = false;
-                    continue;
-                }
-
-                if (!$enTabla) {
-                    $enTabla = true;
-                    $tablaHtml = '<div class="table-responsive mt-3 mb-3"><table class="table table-bordered table-sm" style="font-size: 0.85rem;">';
-                }
-
-                // Extraer celdas
-                $celdas = array_map('trim', explode('|', trim($lineaTrim, '|')));
-                $tag = $esEncabezado ? 'th' : 'td';
-                $estilo = $esEncabezado ? ' style="background-color: #0d6efd; color: white; font-weight: 600;"' : '';
-
-                $tablaHtml .= '<tr>';
-                foreach ($celdas as $celda) {
-                    // Convertir negritas dentro de celdas
-                    $celdaHtml = htmlspecialchars($celda);
-                    $celdaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $celdaHtml);
-                    $celdaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $celdaHtml);
-                    $tablaHtml .= "<{$tag}{$estilo}>" . $celdaHtml . "</{$tag}>";
-                }
-                $tablaHtml .= '</tr>';
-            } else {
-                // Si estábamos en una tabla, cerrarla
-                if ($enTabla) {
-                    $tablaHtml .= '</table></div>';
-                    $resultado[] = $tablaHtml;
-                    $tablaHtml = '';
-                    $enTabla = false;
-                    $esEncabezado = true;
-                }
-                $resultado[] = $linea;
+                $linea = '| ' . $lineaTrim . ' |';
             }
         }
+        $texto = implode("\n", $lineas);
 
-        // Cerrar tabla si terminó en una
-        if ($enTabla) {
-            $tablaHtml .= '</table></div>';
-            $resultado[] = $tablaHtml;
+        // Usar Parsedown (instancia estática para eficiencia)
+        static $parsedown = null;
+        if ($parsedown === null) {
+            $parsedown = new \Parsedown();
         }
-
-        return implode("\n", $resultado);
-    }
-
-    function convertirTextoMarkdown($texto) {
-        // Escapar HTML primero (pero preservar saltos de linea)
-        $lineas = explode("\n", $texto);
-        $resultado = [];
-        $enLista = false;
-        $listaHtml = '';
-
-        foreach ($lineas as $linea) {
-            $lineaTrim = trim($linea);
-
-            // Detectar items de lista (- item o * item o numero. item)
-            if (preg_match('/^[\-\*]\s+(.+)$/', $lineaTrim, $matches) ||
-                preg_match('/^\d+\.\s+(.+)$/', $lineaTrim, $matches)) {
-
-                if (!$enLista) {
-                    $enLista = true;
-                    $listaHtml = '<ul class="mb-3">';
-                }
-
-                $itemTexto = htmlspecialchars($matches[1]);
-                // Convertir negritas y cursivas en el item
-                $itemTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $itemTexto);
-                $itemTexto = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $itemTexto);
-                $listaHtml .= '<li>' . $itemTexto . '</li>';
-
-            } else {
-                // Si estábamos en lista, cerrarla
-                if ($enLista) {
-                    $listaHtml .= '</ul>';
-                    $resultado[] = $listaHtml;
-                    $listaHtml = '';
-                    $enLista = false;
-                }
-
-                // Línea normal
-                if (!empty($lineaTrim)) {
-                    $lineaHtml = htmlspecialchars($linea);
-
-                    // Convertir encabezados markdown (## Titulo)
-                    if (preg_match('/^#{1,6}\s+(.+)$/', $lineaTrim, $matches)) {
-                        $nivel = strlen(preg_replace('/[^#]/', '', $lineaTrim));
-                        $tituloTexto = htmlspecialchars(trim($matches[1]));
-                        $tituloTexto = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $tituloTexto);
-                        $resultado[] = "<h{$nivel} class='mt-3 mb-2'>{$tituloTexto}</h{$nivel}>";
-                        continue;
-                    }
-
-                    // Convertir **negrita** y *cursiva*
-                    $lineaHtml = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $lineaHtml);
-                    $lineaHtml = preg_replace('/\*([^*]+)\*/', '<em>$1</em>', $lineaHtml);
-
-                    $resultado[] = $lineaHtml;
-                } else {
-                    $resultado[] = '<br>';
-                }
-            }
-        }
-
-        // Cerrar lista si terminó en una
-        if ($enLista) {
-            $listaHtml .= '</ul>';
-            $resultado[] = $listaHtml;
-        }
-
-        // Unir con saltos de línea HTML
-        $html = '';
-        foreach ($resultado as $i => $item) {
-            if (strpos($item, '<ul') === 0 || strpos($item, '<h') === 0 ||
-                strpos($item, '<div') === 0 || strpos($item, '<br') === 0) {
-                $html .= $item;
-            } else {
-                // Es texto normal, agregar <br> si no es el último
-                $html .= $item;
-                if ($i < count($resultado) - 1 && !empty(trim($item))) {
-                    $nextItem = $resultado[$i + 1] ?? '';
-                    if (strpos($nextItem, '<ul') !== 0 && strpos($nextItem, '<h') !== 0 &&
-                        strpos($nextItem, '<div') !== 0 && strpos($nextItem, '<br') !== 0) {
-                        $html .= '<br>';
-                    }
-                }
-            }
-        }
-
-        return $html;
+        return $parsedown->text($texto);
     }
 }
 ?>
@@ -421,7 +269,7 @@ if (!function_exists('convertirMarkdownAHtml')) {
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm">
+                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-light btn-sm" target="_blank">
                         <i class="bi bi-arrow-left me-1"></i>Volver
                     </a>
                     <span class="ms-3">
@@ -433,10 +281,10 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalHistorialVersiones">
                         <i class="bi bi-clock-history me-1"></i>Historial
                     </button>
-                    <a href="<?= base_url('documentos-sst/exportar-pdf/' . $documento['id_documento']) ?>" class="btn btn-danger btn-sm me-2">
+                    <a href="<?= base_url('documentos-sst/exportar-pdf/' . $documento['id_documento']) ?>" class="btn btn-danger btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                     </a>
-                    <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2">
+                    <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-word me-1"></i>Word
                     </a>
                     <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
@@ -445,12 +293,12 @@ if (!function_exists('convertirMarkdownAHtml')) {
                         </a>
                     <?php endif; ?>
                     <?php if (($documento['estado'] ?? '') === 'firmado'): ?>
-                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-success btn-sm me-2">
+                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-success btn-sm me-2" target="_blank">
                             <i class="bi bi-patch-check me-1"></i>Ver Firmas
                         </a>
                     <?php endif; ?>
-                    <?php if (($documento['estado'] ?? '') === 'pendiente_firma'): ?>
-                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-warning btn-sm me-2">
+                    <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                        <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-warning btn-sm me-2" target="_blank">
                             <i class="bi bi-clock-history me-1"></i>Estado Firmas
                         </a>
                     <?php endif; ?>

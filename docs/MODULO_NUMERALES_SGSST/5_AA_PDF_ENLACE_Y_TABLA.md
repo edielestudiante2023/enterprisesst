@@ -5,14 +5,15 @@ Esta guía documenta cómo implementar la funcionalidad de "Adjuntar Archivo/Enl
 
 ---
 
-## 1. Archivos a Modificar
+## 1. Archivos a Modificar (5 archivos)
 
-| Archivo | Propósito |
-|---------|-----------|
-| `app/Controllers/DocumentacionController.php` | Agregar tipo de carpeta en `determinarTipoCarpetaFases()` y en query de documentos |
-| `app/Controllers/DocumentosSSTController.php` | Crear método `adjuntarSoporte{Nombre}()` |
-| `app/Config/Routes.php` | Registrar ruta POST |
-| `app/Views/documentacion/_tipos/{nombre}.php` | Crear vista con modal y tabla |
+| # | Archivo | Propósito |
+|---|---------|-----------|
+| 1 | `app/Controllers/DocumentacionController.php` | Agregar tipo de carpeta en `determinarTipoCarpetaFases()` y en query de documentos |
+| 2 | `app/Controllers/DocumentosSSTController.php` | Crear método `adjuntarSoporte{Nombre}()` |
+| 3 | `app/Config/Routes.php` | Registrar ruta POST |
+| 4 | `app/Views/documentacion/_tipos/{nombre}.php` | Crear vista con modal y tabla |
+| 5 | `app/Views/documentacion/_components/tabla_documentos_sst.php` | **Agregar tipo al whitelist `$tiposConTabla`** |
 
 ---
 
@@ -119,6 +120,28 @@ Crear archivo con:
 5. **JavaScript para toggle**
 
 Ver plantilla completa en sección 4.
+
+---
+
+### 2.5. tabla_documentos_sst.php - Whitelist `$tiposConTabla` (CRÍTICO)
+
+**Archivo:** `app/Views/documentacion/_components/tabla_documentos_sst.php` (línea 7)
+
+Este componente tiene un **whitelist interno** que controla si la tabla se renderiza. Sin agregar el tipo aquí, la tabla de documentos **NO aparece** aunque los datos existan en BD.
+
+```php
+$tiposConTabla = [
+    'capacitacion_sst',
+    // ... otros tipos existentes ...
+    'capacitacion_copasst',  // AGREGAR
+];
+```
+
+> **⚠️ IMPORTANTE:** Existen **2 whitelists independientes** que necesitan el tipo:
+> - `DocumentacionController.php` → `in_array()` → controla si se **consultan** los datos de BD
+> - `tabla_documentos_sst.php` → `$tiposConTabla` → controla si se **muestra** la tabla HTML
+>
+> Sin el segundo, los datos se consultan pero nunca se muestran al usuario.
 
 ---
 
@@ -370,20 +393,25 @@ El método `adjuntarSoporteGenerico()` ya incluye:
 **Causa:** El archivo de vista no existe o tiene nombre incorrecto
 **Solución:** El nombre debe coincidir con el valor retornado por `determinarTipoCarpetaFases()`
 
+### Error: Tabla de documentos no aparece
+**Causa:** El tipo no está en el array `$tiposConTabla` de `tabla_documentos_sst.php`
+**Solución:** Agregar el tipo al whitelist en línea 7 del componente (ver Paso 2.5)
+
 ---
 
 ## 7. Checklist de Implementación
 
 - [ ] Modificar `determinarTipoCarpetaFases()` - retornar el tipo correcto
-- [ ] Agregar tipo al array de carpetas con tabla
+- [ ] Agregar tipo al `in_array()` de DocumentacionController (consulta datos)
 - [ ] Agregar `elseif` para filtrar documentos por tipo
 - [ ] Agregar bloque para cargar `$soportesAdicionales`
 - [ ] Crear método en `DocumentosSSTController`
 - [ ] Registrar ruta POST en `Routes.php`
 - [ ] Crear archivo de vista en `_tipos/`
+- [ ] **Agregar tipo a `$tiposConTabla` en `tabla_documentos_sst.php`** (muestra tabla)
 - [ ] Probar adjuntar archivo
 - [ ] Probar adjuntar enlace
-- [ ] Verificar que aparece en la tabla
+- [ ] Verificar que tabla de documentos aparece visible
 
 ---
 

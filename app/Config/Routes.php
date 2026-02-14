@@ -979,6 +979,7 @@ $routes->get('/documentos-sst/(:num)/programa-mantenimiento-periodico/(:num)', '
 
 // 1.1.5 Identificacion de Trabajadores de Alto Riesgo y Cotizacion de Pension Especial
 $routes->get('/documentos-sst/(:num)/identificacion-alto-riesgo/(:num)', 'DocumentosSSTController::identificacionAltoRiesgo/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-alto-riesgo', 'DocumentosSSTController::adjuntarSoporteAltoRiesgo');
 
 // Asignacion de Responsable SG-SST (Patron B - controlador independiente)
 $routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'PzasignacionresponsableSstController::crear/$1');

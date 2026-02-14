@@ -5546,6 +5546,20 @@ Se debe generar acta que registre:
         );
     }
 
+    /**
+     * 1.1.5 - Adjuntar soporte de Identificación de Trabajadores de Alto Riesgo
+     */
+    public function adjuntarSoporteAltoRiesgo()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_identificacion_alto_riesgo',
+            'SOP-AR',
+            'soporte_alto_riesgo_',
+            'Soporte de Identificación Alto Riesgo',
+            'Soporte de identificación de alto riesgo adjuntado exitosamente.'
+        );
+    }
+
     // =========================================================================
     // 4.2.3 PVE RIESGO BIOMECÁNICO Y PSICOSOCIAL
     // =========================================================================

@@ -146,10 +146,10 @@
                     <a href="<?= base_url('documentos-sst/historial/' . $documento['id_documento']) ?>" class="btn btn-outline-light btn-sm me-2">
                         <i class="bi bi-clock-history me-1"></i>Historial
                     </a>
-                    <a href="<?= base_url('documentos-sst/exportar-pdf/' . $documento['id_documento']) ?>" class="btn btn-danger btn-sm me-2">
+                    <a href="<?= base_url('documentos-sst/exportar-pdf/' . $documento['id_documento']) ?>" class="btn btn-danger btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                     </a>
-                    <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2">
+                    <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-word me-1"></i>Word
                     </a>
                     <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegenerarDocumento">

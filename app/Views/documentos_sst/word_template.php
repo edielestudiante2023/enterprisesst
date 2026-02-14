@@ -113,7 +113,7 @@ if (!function_exists('convertirMarkdownAHtml')) {
 
         // Agrupar listas
         $html = implode("\n", $resultado);
-        $html = preg_replace('/(<li>.*?<\/li>\s*)+/s', '<ul style="margin: 3px 0 3px 15px; padding-left: 0;">$0</ul>', $html);
+        $html = preg_replace('/(<li>.*?<\/li>\s*)+/s', '<ul style="margin: 2px 0 2px 15px; padding-left: 0; line-height: 1.0;">$0</ul>', $html);
 
         return $html;
     }
@@ -123,7 +123,7 @@ if (!function_exists('renderizarTablaHtml')) {
     function renderizarTablaHtml($filas, $esWord = true) {
         if (empty($filas)) return '';
 
-        $html = '<table class="tabla-contenido" style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9pt;">';
+        $html = '<table class="tabla-contenido" style="width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 9pt;">';
 
         foreach ($filas as $idx => $celdas) {
             $html .= '<tr>';

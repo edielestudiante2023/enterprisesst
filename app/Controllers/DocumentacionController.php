@@ -320,7 +320,7 @@ class DocumentacionController extends Controller
 
         // Obtener documentos SST aprobados para mostrar en tabla
         $documentosSSTAprobados = [];
-        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'manual_convivencia_1_1_8', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal', 'capacitacion_copasst', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'adquisiciones_sst', 'evaluacion_proveedores', 'evaluacion_impacto_cambios', 'estilos_vida_saludable', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'procedimientos_seguridad', 'mantenimiento_periodico', 'identificacion_sustancias_cancerigenas', 'metodologia_identificacion_peligros'])) {
+        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'manual_convivencia_1_1_8', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal', 'capacitacion_copasst', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'adquisiciones_sst', 'evaluacion_proveedores', 'evaluacion_impacto_cambios', 'estilos_vida_saludable', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'procedimientos_seguridad', 'mantenimiento_periodico', 'identificacion_sustancias_cancerigenas', 'metodologia_identificacion_peligros', 'identificacion_alto_riesgo'])) {
             $db = \Config\Database::connect();
             $queryDocs = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
@@ -480,6 +480,9 @@ class DocumentacionController extends Controller
             } elseif ($tipoCarpetaFases === 'mantenimiento_periodico') {
                 // 4.2.5: Mantenimiento Periodico
                 $queryDocs->where('tipo_documento', 'programa_mantenimiento_periodico');
+            } elseif ($tipoCarpetaFases === 'identificacion_alto_riesgo') {
+                // 1.1.5: Identificación de trabajadores de alto riesgo
+                $queryDocs->where('tipo_documento', 'identificacion_alto_riesgo');
             } elseif (isset($tipoDocBuscar)) {
                 $queryDocs->where('tipo_documento', $tipoDocBuscar);
             }
@@ -674,6 +677,15 @@ class DocumentacionController extends Controller
             $soportesAdicionales = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
                 ->where('tipo_documento', 'soporte_mantenimiento_periodico')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'identificacion_alto_riesgo') {
+            // 1.1.5 Identificación de trabajadores de alto riesgo
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_identificacion_alto_riesgo')
                 ->orderBy('created_at', 'DESC')
                 ->get()
                 ->getResultArray();

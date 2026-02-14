@@ -1,29 +1,20 @@
 <?php
 /**
- * Vista de Tipo: 1.1.5 Identificación de Trabajadores de Alto Riesgo
- * Carpeta con dropdown para documentos de alto riesgo y pensión especial
- * + Funcionalidad de carga de listados de trabajadores (archivos/enlaces)
- * Variables: $carpeta, $cliente, $fasesInfo, $documentosSSTAprobados, $contextoCliente
+ * Vista de Tipo: 1.1.5 Identificacion de Trabajadores de Alto Riesgo
+ * Carpeta con dropdown para documentos de alto riesgo y pension especial
+ * + Funcionalidad de adjuntar soportes (archivos/enlaces)
+ * Variables: $carpeta, $cliente, $fasesInfo, $documentosSSTAprobados, $soportesAdicionales, $contextoCliente
  */
 
-// Separar documentos por tipo
-$procedimientos = [];
-$listadosTrabajadores = [];
+// Detectar documentos existentes del ano actual para el dropdown
 $docsExistentesTipos = [];
-
 if (!empty($documentosSSTAprobados)) {
     foreach ($documentosSSTAprobados as $d) {
-        if ($d['tipo_documento'] === 'listado_trabajadores_alto_riesgo') {
-            $listadosTrabajadores[] = $d;
-        } else {
-            $procedimientos[] = $d;
-        }
         if ($d['anio'] == date('Y')) {
             $docsExistentesTipos[$d['tipo_documento']] = true;
         }
     }
 }
-$totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
 ?>
 
 <!-- Card de Carpeta con Dropdown de Documentos -->
@@ -43,9 +34,9 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
                 <?php endif; ?>
             </div>
             <div class="col-md-6 text-end">
-                <!-- Botón Adjuntar Listado -->
-                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalAdjuntarListado">
-                    <i class="bi bi-cloud-upload me-1"></i>Adjuntar Listado
+                <!-- Boton Adjuntar Soporte -->
+                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalAdjuntarAltoRiesgo">
+                    <i class="bi bi-cloud-upload me-1"></i>Adjuntar Soporte
                 </button>
 
                 <!-- Dropdown Nuevo Procedimiento -->
@@ -62,7 +53,7 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
                             <?php if (!isset($docsExistentesTipos['identificacion_alto_riesgo'])): ?>
                             <li>
                                 <a href="<?= base_url('documentos/generar/identificacion_alto_riesgo/' . $cliente['id_cliente']) ?>" class="dropdown-item">
-                                    <i class="bi bi-exclamation-diamond me-2 text-warning"></i>Procedimiento Identificación Alto Riesgo
+                                    <i class="bi bi-exclamation-diamond me-2 text-warning"></i>Procedimiento Identificacion Alto Riesgo
                                 </a>
                             </li>
                             <?php endif; ?>
@@ -86,15 +77,15 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
         <ul class="list-unstyled mb-0">
             <li class="mb-2">
                 <i class="bi bi-check-circle text-success me-2"></i>
-                <strong>Decreto 2090 de 2003:</strong> Define actividades de alto riesgo para pensión especial
+                <strong>Decreto 2090 de 2003:</strong> Define actividades de alto riesgo para pension especial
             </li>
             <li class="mb-2">
                 <i class="bi bi-check-circle text-success me-2"></i>
-                <strong>Resolución 0312 de 2019:</strong> Estándares Mínimos del SG-SST (Estándar 1.1.5)
+                <strong>Resolucion 0312 de 2019:</strong> Estandares Minimos del SG-SST (Estandar 1.1.5)
             </li>
             <li>
                 <i class="bi bi-check-circle text-success me-2"></i>
-                <strong>Decreto 1072 de 2015:</strong> Decreto Único Reglamentario del Sector Trabajo
+                <strong>Decreto 1072 de 2015:</strong> Decreto Unico Reglamentario del Sector Trabajo
             </li>
         </ul>
     </div>
@@ -112,120 +103,22 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
 <!-- Tabla de Procedimientos SST (documentos generados) -->
 <?= view('documentacion/_components/tabla_documentos_sst', [
     'tipoCarpetaFases' => 'identificacion_alto_riesgo',
-    'documentosSSTAprobados' => $procedimientos ?? [],
+    'documentosSSTAprobados' => $documentosSSTAprobados ?? [],
     'cliente' => $cliente
 ]) ?>
 
-<!-- Tabla de Listados de Trabajadores Adjuntados -->
-<?php if (!defined('TABLA_SOPORTES_STYLES_LOADED')): ?>
-    <?php define('TABLA_SOPORTES_STYLES_LOADED', true); ?>
-    <?= view('documentacion/_components/tabla_soportes_styles') ?>
-<?php endif; ?>
-
-<div class="card border-0 shadow-lg mb-4 tabla-soportes-card">
-    <div class="card-header header-soportes-warning">
-        <div class="d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 d-flex align-items-center">
-                <div class="icon-wrapper me-3">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-                <div>
-                    <span class="header-title">Listados de Trabajadores de Alto Riesgo</span>
-                    <small class="d-block header-subtitle">Trabajadores identificados con actividades de alto riesgo</small>
-                </div>
-            </h6>
-            <div class="header-stats">
-                <span class="stat-badge">
-                    <i class="bi bi-people me-1"></i>
-                    <span><?= count($listadosTrabajadores) ?></span> listado<?= count($listadosTrabajadores) !== 1 ? 's' : '' ?>
-                </span>
-            </div>
-        </div>
-    </div>
-
-    <div class="card-body p-0">
-        <?php if (!empty($listadosTrabajadores)): ?>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0 tabla-soportes-moderna" style="width:100%">
-                    <thead>
-                        <tr>
-                            <th style="width:120px">Codigo</th>
-                            <th>Descripcion</th>
-                            <th style="width:80px">Ano</th>
-                            <th style="width:100px">Fecha</th>
-                            <th style="width:100px">Tipo</th>
-                            <th style="width:160px">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($listadosTrabajadores as $listado):
-                            $esEnlace = !empty($listado['url_externa']);
-                            $urlArchivo = $esEnlace ? $listado['url_externa'] : ($listado['archivo_pdf'] ?? '#');
-                        ?>
-                        <tr>
-                            <td>
-                                <span class="codigo-badge"><?= esc($listado['codigo'] ?? 'LST-AR') ?></span>
-                            </td>
-                            <td>
-                                <div class="nombre-soporte"><?= esc($listado['titulo']) ?></div>
-                                <?php if (!empty($listado['observaciones'])): ?>
-                                    <div class="obs-soporte"><?= esc($listado['observaciones']) ?></div>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <span class="anio-badge"><?= esc($listado['anio']) ?></span>
-                            </td>
-                            <td>
-                                <span class="fecha-cell"><?= date('d/m/Y', strtotime($listado['created_at'] ?? $listado['fecha_aprobacion'] ?? 'now')) ?></span>
-                            </td>
-                            <td>
-                                <?php if ($esEnlace): ?>
-                                    <span class="tipo-badge-enlace">
-                                        <i class="bi bi-link-45deg me-1"></i>Enlace
-                                    </span>
-                                <?php else: ?>
-                                    <span class="tipo-badge-archivo">
-                                        <i class="bi bi-file-earmark me-1"></i>Archivo
-                                    </span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="acciones-cell">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Ver">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <?php if ($esEnlace): ?>
-                                    <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-info" target="_blank" title="Abrir enlace externo">
-                                        <i class="bi bi-box-arrow-up-right"></i>
-                                    </a>
-                                    <?php else: ?>
-                                    <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-danger" download title="Descargar">
-                                        <i class="bi bi-download"></i>
-                                    </a>
-                                    <?php endif; ?>
-                                    <a href="<?= base_url('documentos-sst/publicar-pdf/' . $listado['id_documento']) ?>"
-                                       class="btn btn-outline-dark" title="Publicar en Reportes"
-                                       onclick="return confirm('¿Publicar este listado en Reportes?')">
-                                        <i class="bi bi-cloud-upload"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="bi bi-people"></i>
-                </div>
-                <h5>No hay listados de trabajadores adjuntados aun.</h5>
-                <p>Use el boton "Adjuntar Listado" para agregar soportes de trabajadores identificados.</p>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
+<!-- Tabla de Soportes Adjuntados -->
+<?= view('documentacion/_components/tabla_soportes', [
+    'soportes' => $soportesAdicionales ?? [],
+    'titulo' => 'Soportes de Identificacion Alto Riesgo',
+    'subtitulo' => 'Listados de trabajadores y documentos adjuntos',
+    'icono' => 'bi-exclamation-triangle',
+    'colorHeader' => 'warning',
+    'codigoDefault' => 'SOP-AR',
+    'emptyIcon' => 'bi-people',
+    'emptyMessage' => 'No hay soportes adjuntados aun.',
+    'emptyHint' => 'Use el boton "Adjuntar Soporte" para agregar listados de trabajadores u otros documentos.'
+]) ?>
 
 <!-- Subcarpetas -->
 <div class="row">
@@ -234,26 +127,27 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
     ]) ?>
 </div>
 
-<!-- Modal para Adjuntar Listado de Trabajadores -->
-<div class="modal fade" id="modalAdjuntarListado" tabindex="-1" aria-labelledby="modalAdjuntarListadoLabel" aria-hidden="true">
+<!-- Modal para Adjuntar Soporte Alto Riesgo -->
+<div class="modal fade" id="modalAdjuntarAltoRiesgo" tabindex="-1" aria-labelledby="modalAdjuntarAltoRiesgoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="modalAdjuntarListadoLabel">
-                    <i class="bi bi-cloud-upload me-2"></i>Adjuntar Listado de Trabajadores Alto Riesgo
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalAdjuntarAltoRiesgoLabel">
+                    <i class="bi bi-cloud-upload me-2"></i>Adjuntar Soporte Alto Riesgo
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="formAdjuntarListado" action="<?= base_url('documentos-sst/adjuntar-listado-alto-riesgo') ?>" method="post" enctype="multipart/form-data">
+            <form id="formAdjuntarAltoRiesgo" action="<?= base_url('documentos-sst/adjuntar-soporte-alto-riesgo') ?>" method="post" enctype="multipart/form-data">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <input type="hidden" name="id_cliente" value="<?= $cliente['id_cliente'] ?>">
                     <input type="hidden" name="id_carpeta" value="<?= $carpeta['id_carpeta'] ?>">
 
-                    <!-- Información -->
+                    <!-- Informacion -->
                     <div class="alert alert-info mb-3">
                         <small>
                             <i class="bi bi-info-circle me-1"></i>
-                            Adjunte el listado de trabajadores identificados con actividades de alto riesgo según Decreto 2090 de 2003.
+                            Adjunte el listado de trabajadores identificados con actividades de alto riesgo segun Decreto 2090 de 2003.
                             Puede subir archivos Excel, PDF o pegar enlaces de Google Drive.
                         </small>
                     </div>
@@ -263,11 +157,11 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
                         <label class="form-label fw-bold">Tipo de carga</label>
                         <div class="btn-group w-100" role="group">
                             <input type="radio" class="btn-check" name="tipo_carga" id="tipoCargaArchivoAR" value="archivo" checked>
-                            <label class="btn btn-outline-warning" for="tipoCargaArchivoAR">
+                            <label class="btn btn-outline-primary" for="tipoCargaArchivoAR">
                                 <i class="bi bi-file-earmark-arrow-up me-1"></i>Subir Archivo
                             </label>
                             <input type="radio" class="btn-check" name="tipo_carga" id="tipoCargaEnlaceAR" value="enlace">
-                            <label class="btn btn-outline-warning" for="tipoCargaEnlaceAR">
+                            <label class="btn btn-outline-primary" for="tipoCargaEnlaceAR">
                                 <i class="bi bi-link-45deg me-1"></i>Pegar Enlace
                             </label>
                         </div>
@@ -275,12 +169,12 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
 
                     <!-- Campo para archivo -->
                     <div class="mb-3" id="campoArchivoAR">
-                        <label for="archivo_listado" class="form-label">
-                            <i class="bi bi-file-earmark-spreadsheet me-1"></i>Archivo (Excel, PDF, Imagen)
+                        <label for="archivo_soporte_ar" class="form-label">
+                            <i class="bi bi-file-earmark-pdf me-1"></i>Archivo (PDF, Excel, Imagen, Word)
                         </label>
-                        <input type="file" class="form-control" id="archivo_listado" name="archivo_listado"
-                               accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx">
-                        <div class="form-text">Formatos: PDF, JPG, PNG, Excel. Máximo: 10MB</div>
+                        <input type="file" class="form-control" id="archivo_soporte_ar" name="archivo_soporte"
+                               accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx,.doc,.docx">
+                        <div class="form-text">Formatos: PDF, JPG, PNG, Excel, Word. Maximo: 10MB</div>
                     </div>
 
                     <!-- Campo para enlace -->
@@ -293,18 +187,18 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
                         <div class="form-text">Pegue el enlace compartido del archivo en la nube</div>
                     </div>
 
-                    <!-- Descripción -->
+                    <!-- Descripcion -->
                     <div class="mb-3">
-                        <label for="descripcion_listado" class="form-label">Descripción</label>
-                        <input type="text" class="form-control" id="descripcion_listado" name="descripcion" required
-                               placeholder="Ej: Listado trabajadores alto riesgo 2026, Matriz identificación...">
+                        <label for="descripcion_ar" class="form-label">Descripcion <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="descripcion_ar" name="descripcion" required
+                               placeholder="Ej: Listado trabajadores alto riesgo 2026, Certificado pension especial...">
                     </div>
 
-                    <!-- Año -->
+                    <!-- Ano -->
                     <div class="mb-3">
-                        <label for="anio_listado" class="form-label">Año</label>
-                        <select class="form-select" id="anio_listado" name="anio" required>
-                            <?php for ($y = 2026; $y <= 2030; $y++): ?>
+                        <label for="anio_ar" class="form-label">Ano</label>
+                        <select class="form-select" id="anio_ar" name="anio">
+                            <?php for ($y = date('Y'); $y >= 2020; $y--): ?>
                                 <option value="<?= $y ?>" <?= $y == date('Y') ? 'selected' : '' ?>><?= $y ?></option>
                             <?php endfor; ?>
                         </select>
@@ -312,15 +206,15 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
 
                     <!-- Observaciones -->
                     <div class="mb-3">
-                        <label for="observaciones_listado" class="form-label">Observaciones (opcional)</label>
-                        <textarea class="form-control" id="observaciones_listado" name="observaciones" rows="2"
+                        <label for="observaciones_ar" class="form-label">Observaciones (opcional)</label>
+                        <textarea class="form-control" id="observaciones_ar" name="observaciones" rows="2"
                                   placeholder="Notas adicionales: cantidad de trabajadores, actividades identificadas..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-warning" id="btnAdjuntarListado">
-                        <i class="bi bi-cloud-upload me-1"></i>Adjuntar y Publicar
+                    <button type="submit" class="btn btn-success" id="btnAdjuntarAR">
+                        <i class="bi bi-cloud-upload me-1"></i>Adjuntar
                     </button>
                 </div>
             </form>
@@ -330,32 +224,21 @@ $totalEsperado = 1; // Solo 1 procedimiento para esta carpeta
 
 <script>
 // Toggle entre archivo y enlace para el modal de alto riesgo
-document.querySelectorAll('input[name="tipo_carga"]').forEach(radio => {
+document.querySelectorAll('#modalAdjuntarAltoRiesgo input[name="tipo_carga"]').forEach(radio => {
     radio.addEventListener('change', function() {
         const isArchivo = this.value === 'archivo';
-        const campoArchivo = document.getElementById('campoArchivoAR');
-        const campoEnlace = document.getElementById('campoEnlaceAR');
-        const inputArchivo = document.getElementById('archivo_listado');
-        const inputEnlace = document.getElementById('url_externa_ar');
-
-        if (isArchivo) {
-            campoArchivo.classList.remove('d-none');
-            campoEnlace.classList.add('d-none');
-            inputArchivo.required = true;
-            inputEnlace.required = false;
-            inputEnlace.value = '';
-        } else {
-            campoArchivo.classList.add('d-none');
-            campoEnlace.classList.remove('d-none');
-            inputArchivo.required = false;
-            inputEnlace.required = true;
-        }
+        document.getElementById('campoArchivoAR').classList.toggle('d-none', !isArchivo);
+        document.getElementById('campoEnlaceAR').classList.toggle('d-none', isArchivo);
+        document.getElementById('archivo_soporte_ar').required = isArchivo;
+        document.getElementById('url_externa_ar').required = !isArchivo;
+        if (!isArchivo) document.getElementById('archivo_soporte_ar').value = '';
+        if (isArchivo) document.getElementById('url_externa_ar').value = '';
     });
 });
 
-// Manejar envío del formulario
-document.getElementById('formAdjuntarListado')?.addEventListener('submit', function(e) {
-    const btn = document.getElementById('btnAdjuntarListado');
+// Manejar envio del formulario
+document.getElementById('formAdjuntarAltoRiesgo')?.addEventListener('submit', function(e) {
+    const btn = document.getElementById('btnAdjuntarAR');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Subiendo...';
 });

@@ -248,7 +248,7 @@
                                         <i class="bi bi-patch-check-fill me-1"></i>
                                         <small>Documento firmado y aprobado</small>
                                     </div>
-                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-outline-success btn-sm w-100">
+                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-outline-success btn-sm w-100" target="_blank">
                                         <i class="bi bi-eye me-1"></i>Ver Firmas
                                     </a>
                                 <?php elseif ($estadoDoc === 'pendiente_firma'): ?>
@@ -257,12 +257,27 @@
                                         <i class="bi bi-clock-history me-1"></i>
                                         <small>Pendiente de firmas</small>
                                     </div>
-                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-warning btn-sm w-100">
+                                    <a href="<?= base_url('firma/estado/' . $idDocumento) ?>" class="btn btn-warning btn-sm w-100" target="_blank">
                                         <i class="bi bi-pen me-1"></i>Estado Firmas
                                     </a>
-                                <?php elseif (in_array($estadoDoc, ['borrador', 'generado', 'aprobado', 'en_revision']) && $idDocumento): ?>
-                                    <!-- Listo para enviar a firmas (documento existe y estado válido) -->
-                                    <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-success btn-sm w-100">
+                                <?php elseif (in_array($estadoDoc, ['borrador', 'generado', 'en_revision']) && $idDocumento): ?>
+                                    <!-- Aprobar Documento (cambia estado en BD) -->
+                                    <button type="button" class="btn btn-success btn-sm w-100 mb-2 disabled" id="btnAprobarDocumento" disabled>
+                                        <i class="bi bi-check-circle me-1"></i>Aprobar Documento
+                                        <small class="d-block" style="font-size: 0.6rem;">Guarda y aprueba todas las secciones</small>
+                                    </button>
+                                    <!-- Enviar a Firmas -->
+                                    <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-outline-primary btn-sm w-100" target="_blank">
+                                        <i class="bi bi-pen me-1"></i>Enviar a Firmas
+                                        <small class="d-block" style="font-size: 0.6rem;">El cliente revisara y firmara</small>
+                                    </a>
+                                <?php elseif ($estadoDoc === 'aprobado' && $idDocumento): ?>
+                                    <!-- Documento ya aprobado -->
+                                    <div class="alert alert-info mb-2 py-2 px-3">
+                                        <i class="bi bi-check-circle-fill me-1"></i>
+                                        <small>Documento aprobado</small>
+                                    </div>
+                                    <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-success btn-sm w-100" target="_blank">
                                         <i class="bi bi-pen me-1"></i>Enviar a Firmas
                                         <small class="d-block" style="font-size: 0.6rem;">El cliente revisara y firmara</small>
                                     </a>
