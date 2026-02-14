@@ -152,7 +152,7 @@ function insertarDatos($pdo, $nombre) {
     // Tipos de documento
     $tipos = [
         ['procedimiento_control_documental', 'Procedimiento de Control Documental del SG-SST', 'Establece las directrices para control documental', '2.5.1', 'secciones_ia', 'procedimientos', 'bi-folder-check', 1],
-        ['programa_capacitacion', 'Programa de Capacitación en SST', 'Documento formal del programa de capacitación', '3.1.1', 'secciones_ia', 'programas', 'bi-mortarboard', 2],
+        ['programa_capacitacion', 'Programa de Capacitación en SST', 'Documento formal del programa de capacitación', '3.1.1', 'programa_con_pta', 'programas', 'bi-mortarboard', 2],
         ['politica_sst', 'Política de Seguridad y Salud en el Trabajo', 'Declaración de la alta dirección sobre SST', '1.1.1', 'secciones_ia', 'politicas', 'bi-shield-check', 3],
         ['matriz_requisitos_legales', 'Matriz de Requisitos Legales', 'Identificación de requisitos legales aplicables', '1.2.1', 'formulario', 'matrices', 'bi-list-check', 4],
         ['plan_emergencias', 'Plan de Prevención, Preparación y Respuesta ante Emergencias', 'Procedimientos para atención de emergencias', '5.1.1', 'secciones_ia', 'planes', 'bi-exclamation-triangle', 5],

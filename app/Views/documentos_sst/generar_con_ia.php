@@ -270,7 +270,7 @@
 
                                 <!-- S3 #3: Firmas (S2 condiciones identicas al toolbar) -->
                                 <!-- Enviar a Firmas: 4 estados -->
-                                <?php if (in_array($estadoDoc, ['generado', 'aprobado', 'en_revision', 'pendiente_firma']) && $idDocumento): ?>
+                                <?php if (in_array($estadoDoc, ['borrador', 'generado', 'aprobado', 'en_revision']) && $idDocumento): ?>
                                     <a href="<?= base_url('firma/solicitar/' . $idDocumento) ?>" class="btn btn-success btn-sm w-100" target="_blank">
                                         <i class="bi bi-pen me-1"></i>Enviar a Firmas
                                     </a>

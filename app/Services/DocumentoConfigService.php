@@ -267,7 +267,7 @@ class DocumentoConfigService
             'programa_capacitacion' => [
                 'nombre' => 'Programa de Capacitación en SST',
                 'descripcion' => 'Define las actividades de capacitación',
-                'flujo' => 'secciones_ia',
+                'flujo' => 'programa_con_pta',
                 'estandar' => '3.1.1',
                 'firmantes' => ['representante_legal', 'responsable_sst', 'delegado_sst'],
                 'secciones' => [
