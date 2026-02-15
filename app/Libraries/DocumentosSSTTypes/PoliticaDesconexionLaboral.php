@@ -144,25 +144,57 @@ IMPORTANTE:
 - No pueden ser la norma habitual
 - Deben pactarse previamente en el contrato o mediante acuerdo escrito",
 
-            'marco_legal' => "Genera el marco normativo completo aplicable a la Politica de Desconexion Laboral.
-OBLIGATORIO incluir TODAS las siguientes normas con su descripcion:
+            'marco_legal' => "Genera el marco normativo completo aplicable a la Politica de Desconexion Laboral para {$nombreEmpresa}.
 
-1. Ley 2191 de 2022 - Derecho a la Desconexion Laboral: Regula el derecho de los trabajadores a desconectarse de las actividades laborales fuera del horario establecido
+═══════════════════════════════════════════════════════════════
+NORMAS BASE OBLIGATORIAS (incluir con certeza):
+═══════════════════════════════════════════════════════════════
 
-2. Decreto 1072 de 2015 - Decreto Unico Reglamentario del Sector Trabajo: Establece las obligaciones del empleador en materia de Seguridad y Salud en el Trabajo, incluyendo la prevencion de riesgos psicosociales
+1. Ley 2191 de 2022 - Derecho a la Desconexion Laboral
+   Regula el derecho de los trabajadores a desconectarse de las actividades laborales fuera del horario establecido
 
-3. Resolucion 0312 de 2019 - Estandares Minimos del SG-SST: Define los estandares minimos del Sistema de Gestion de Seguridad y Salud en el Trabajo
+2. Decreto 1072 de 2015 - Decreto Unico Reglamentario del Sector Trabajo
+   Establece las obligaciones del empleador en materia de Seguridad y Salud en el Trabajo, incluyendo la prevencion de riesgos psicosociales
 
-4. Codigo Sustantivo del Trabajo: Regula las jornadas laborales, descansos obligatorios y derechos fundamentales de los trabajadores
+3. Resolucion 0312 de 2019 - Estandares Minimos del SG-SST
+   Define los estandares minimos del Sistema de Gestion de Seguridad y Salud en el Trabajo
 
-5. Ley 1221 de 2008 - Teletrabajo: Normas para promover el teletrabajo como instrumento de generacion de empleo
+4. Codigo Sustantivo del Trabajo
+   Regula las jornadas laborales, descansos obligatorios y derechos fundamentales de los trabajadores
 
-6. Ley 2088 de 2021 - Trabajo en Casa: Regula el trabajo en casa como una habilitacion temporal del empleador al trabajador
+5. Ley 1221 de 2008 - Teletrabajo
+   Normas para promover el teletrabajo como instrumento de generacion de empleo
 
-7. Constitucion Politica de Colombia: Art. 53 sobre principios minimos fundamentales del trabajo, dignidad humana y derecho al descanso
+6. Ley 2088 de 2021 - Trabajo en Casa
+   Regula el trabajo en casa como una habilitacion temporal del empleador al trabajador
 
-IMPORTANTE: NO omitir ninguna norma. El marco normativo DEBE incluir normatividad SST (Decreto 1072, Resolucion 0312).
-FORMATO: Lista con vinetas descriptivas, NO usar tablas.",
+7. Constitucion Politica de Colombia - Art. 53
+   Principios minimos fundamentales del trabajo, dignidad humana y derecho al descanso
+
+═══════════════════════════════════════════════════════════════
+NORMAS COMPLEMENTARIAS (buscar e incluir si aplican):
+═══════════════════════════════════════════════════════════════
+
+Busca e incluye normatividad adicional relevante vigente a {$anio}:
+- Resolucion 2646 de 2008 sobre factores de riesgo psicosocial
+- Circular 064 de 2020 del Ministerio del Trabajo sobre trabajo remoto
+- Decretos o resoluciones posteriores a 2022 que complementen la Ley 2191
+- Sentencias de la Corte Constitucional sobre derecho al descanso y desconexion
+- Convenios OIT ratificados por Colombia sobre jornadas laborales
+- Circulares del Ministerio del Trabajo vigentes sobre modalidades de trabajo
+
+═══════════════════════════════════════════════════════════════
+INSTRUCCIONES FINALES:
+═══════════════════════════════════════════════════════════════
+
+1. OBLIGATORIO: Incluir TODAS las 7 normas base listadas arriba
+2. Complementar con normatividad adicional vigente a {$anio}
+3. Cada norma debe incluir una descripcion clara de su aplicacion
+4. Priorizar normatividad SST (Decreto 1072, Resolucion 0312 son ESENCIALES)
+5. FORMATO: Lista con vinetas descriptivas, orden cronologico
+6. NO usar tablas, usar lista numerada con descripciones
+
+Contexto: Empresa con {$estandares} estandares aplicables del SG-SST.",
 
             'comunicacion' => "Define como se comunicara y divulgara la politica.
 INCLUIR:
