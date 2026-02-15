@@ -144,16 +144,25 @@ IMPORTANTE:
 - No pueden ser la norma habitual
 - Deben pactarse previamente en el contrato o mediante acuerdo escrito",
 
-            'marco_legal' => "Lista el marco normativo aplicable a la Desconexion Laboral.
-NORMATIVA ESENCIAL:
-- Ley 2191 de 2022: Regula el derecho a la desconexion laboral
-- Codigo Sustantivo del Trabajo: Jornadas laborales y descansos
-- Decreto 1072 de 2015: Obligaciones del empleador en SST
-- Resolucion 0312 de 2019: Estandares Minimos del SG-SST
-- Ley 1221 de 2008: Teletrabajo
-- Ley 2088 de 2021: Trabajo en casa
-- Constitucion Politica de Colombia: Art. 53 (Principios minimos fundamentales del trabajo)
-FORMATO: Lista con vinetas, NO usar tablas.",
+            'marco_legal' => "Genera el marco normativo completo aplicable a la Politica de Desconexion Laboral.
+OBLIGATORIO incluir TODAS las siguientes normas con su descripcion:
+
+1. Ley 2191 de 2022 - Derecho a la Desconexion Laboral: Regula el derecho de los trabajadores a desconectarse de las actividades laborales fuera del horario establecido
+
+2. Decreto 1072 de 2015 - Decreto Unico Reglamentario del Sector Trabajo: Establece las obligaciones del empleador en materia de Seguridad y Salud en el Trabajo, incluyendo la prevencion de riesgos psicosociales
+
+3. Resolucion 0312 de 2019 - Estandares Minimos del SG-SST: Define los estandares minimos del Sistema de Gestion de Seguridad y Salud en el Trabajo
+
+4. Codigo Sustantivo del Trabajo: Regula las jornadas laborales, descansos obligatorios y derechos fundamentales de los trabajadores
+
+5. Ley 1221 de 2008 - Teletrabajo: Normas para promover el teletrabajo como instrumento de generacion de empleo
+
+6. Ley 2088 de 2021 - Trabajo en Casa: Regula el trabajo en casa como una habilitacion temporal del empleador al trabajador
+
+7. Constitucion Politica de Colombia: Art. 53 sobre principios minimos fundamentales del trabajo, dignidad humana y derecho al descanso
+
+IMPORTANTE: NO omitir ninguna norma. El marco normativo DEBE incluir normatividad SST (Decreto 1072, Resolucion 0312).
+FORMATO: Lista con vinetas descriptivas, NO usar tablas.",
 
             'comunicacion' => "Define como se comunicara y divulgara la politica.
 INCLUIR:
