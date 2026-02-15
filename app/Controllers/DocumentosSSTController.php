@@ -13,6 +13,7 @@ use App\Services\IADocumentacionService;
 use App\Services\DocumentoConfigService;
 use App\Services\DocumentoVersionService;
 use App\Services\FirmanteService;
+use App\Services\MarcoNormativoService;
 use App\Libraries\DocumentosSSTTypes\DocumentoSSTFactory;
 use Config\Database;
 
@@ -433,6 +434,38 @@ class DocumentosSSTController extends BaseController
         }
 
         // ═══════════════════════════════════════════════════════════
+        // INSUMOS IA - PREGENERACION (Marco Normativo)
+        // ═══════════════════════════════════════════════════════════
+        $marcoNormativoInfo = [
+            'existe' => false,
+            'vigente' => false,
+            'texto_preview' => '',
+            'texto_completo' => '',
+            'fecha' => '',
+            'dias' => 0,
+            'metodo' => '',
+        ];
+
+        try {
+            $marcoService = new \App\Services\MarcoNormativoService();
+            $infoMarco = $marcoService->obtenerInfo($tipoDocumento);
+
+            if ($infoMarco['existe']) {
+                $marcoNormativoInfo = [
+                    'existe' => true,
+                    'vigente' => $infoMarco['vigente'],
+                    'texto_preview' => mb_substr($infoMarco['texto'], 0, 200) . '...',
+                    'texto_completo' => $infoMarco['texto'], // TEXTO COMPLETO para SweetAlert
+                    'fecha' => $infoMarco['fecha'],
+                    'dias' => $infoMarco['dias'],
+                    'metodo' => $infoMarco['metodo'],
+                ];
+            }
+        } catch (\Exception $e) {
+            log_message('error', "Error consultando marco normativo: " . $e->getMessage());
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // RESPUESTA
         // ═══════════════════════════════════════════════════════════
         return $this->response->setJSON([
@@ -456,7 +489,8 @@ class DocumentosSSTController extends BaseController
                 'tiene_comite_convivencia' => (bool)($contexto['tiene_comite_convivencia'] ?? false),
                 'tiene_brigada'        => (bool)($contexto['tiene_brigada_emergencias'] ?? false),
                 'observaciones'        => $contexto['observaciones_contexto'] ?? '',
-            ]
+            ],
+            'marco_normativo' => $marcoNormativoInfo
         ]);
     }
 
@@ -627,6 +661,10 @@ class DocumentosSSTController extends BaseController
             // Obtener contexto base del documento
             $contextoBase = $documentoHandler->getContextoBase($cliente, $contexto);
 
+            // INSUMOS IA - Pregeneración: obtener marco normativo desde BD
+            $marcoService = new MarcoNormativoService();
+            $marcoNormativo = $marcoService->obtenerMarcoNormativo($tipoDocumento);
+
             // Preparar datos para el servicio de IA
             $datosIA = [
                 'seccion' => [
@@ -642,7 +680,8 @@ class DocumentosSSTController extends BaseController
                 'contexto' => $contexto,
                 'prompt_base' => $promptBase,
                 'contexto_adicional' => $contextoAdicional,
-                'contexto_base' => $contextoBase
+                'contexto_base' => $contextoBase,
+                'marco_normativo' => $marcoNormativo ?? ''
             ];
 
             // Llamar al servicio de IA
@@ -5769,5 +5808,531 @@ Se debe generar acta que registre:
             'Soporte de PVE Riesgo Psicosocial',
             'Soporte de PVE riesgo psicosocial adjuntado exitosamente.'
         );
+    }
+
+    // =========================================================================
+    // INSUMOS IA - PREGENERACIÓN: Marco Normativo
+    // =========================================================================
+
+    /**
+     * Obtener marco normativo para un tipo de documento (AJAX)
+     */
+    public function getMarcoNormativo(string $tipo)
+    {
+        $service = new MarcoNormativoService();
+        $info = $service->obtenerInfo($tipo);
+
+        return $this->response->setJSON($info);
+    }
+
+    /**
+     * Guardar marco normativo editado manualmente por el consultor (opción 4)
+     */
+    public function guardarMarcoNormativo()
+    {
+        $tipo = $this->request->getPost('tipo_documento');
+        $texto = $this->request->getPost('marco_normativo_texto');
+
+        if (empty($tipo) || empty($texto)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Tipo de documento y texto son requeridos'
+            ]);
+        }
+
+        $service = new MarcoNormativoService();
+        $resultado = $service->guardarDesdeEdicion($tipo, $texto);
+
+        return $this->response->setJSON([
+            'success' => $resultado,
+            'message' => $resultado ? 'Marco normativo guardado correctamente' : 'Error al guardar'
+        ]);
+    }
+
+    /**
+     * Consultar marco normativo con IA usando Responses API + web_search (opciones 1, 2, 3)
+     */
+    public function consultarMarcoNormativoIA()
+    {
+        $tipo = $this->request->getPost('tipo_documento');
+        $metodo = $this->request->getPost('metodo') ?? 'boton';
+
+        if (empty($tipo)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Tipo de documento es requerido'
+            ]);
+        }
+
+        $service = new MarcoNormativoService();
+        $resultado = $service->consultarConIA($tipo, $metodo);
+
+        return $this->response->setJSON($resultado);
+    }
+
+    /**
+     * Dashboard consolidado de marcos normativos
+     * Muestra todos los tipos de documentos con su marco normativo
+     */
+    public function marcoNormativoDashboard()
+    {
+        $service = new MarcoNormativoService();
+        $marcoNormativoModel = new \App\Models\MarcoNormativoModel();
+
+        // Obtener todos los tipos con marco normativo
+        $tiposConMarco = $marcoNormativoModel->getTiposConMarco();
+
+        // Enriquecer con información completa
+        $marcos = [];
+        foreach ($tiposConMarco as $item) {
+            $tipo = $item['tipo_documento'];
+            $info = $service->obtenerInfo($tipo);
+
+            if ($info['existe']) {
+                $marcos[] = [
+                    'tipo' => $tipo,
+                    'nombre' => $this->getNombreDocumentoLegible($tipo),
+                    'texto_preview' => mb_substr($info['texto'], 0, 150) . '...',
+                    'fecha' => $info['fecha'],
+                    'dias' => $info['dias'],
+                    'vigente' => $info['vigente'],
+                    'metodo' => $info['metodo'],
+                    'actualizado_por' => $info['actualizado_por'],
+                    'vigencia_dias' => $info['vigencia_dias']
+                ];
+            }
+        }
+
+        $data = [
+            'marcos' => $marcos,
+            'total' => count($marcos)
+        ];
+
+        return view('documentos_sst/marco_normativo_dashboard', $data);
+    }
+
+    /**
+     * Convertir tipo_documento snake_case a nombre legible
+     */
+    private function getNombreDocumentoLegible(string $tipo): string
+    {
+        $nombres = [
+            'politica_sst_general'              => 'Política de Seguridad y Salud en el Trabajo',
+            'programa_capacitacion'              => 'Programa de Capacitación en SST',
+            'procedimiento_control_documental'   => 'Procedimiento de Control Documental del SG-SST',
+            'identificacion_alto_riesgo'         => 'Identificación de Trabajadores de Alto Riesgo',
+            'plan_emergencias'                   => 'Plan de Emergencias y Contingencias',
+            'programa_vigilancia_epidemiologica' => 'Programa de Vigilancia Epidemiológica',
+            'programa_riesgo_psicosocial'        => 'Programa de Riesgo Psicosocial',
+            'programa_orden_aseo'                => 'Programa de Orden y Aseo',
+            'programa_estilos_vida_saludable'    => 'Programa de Estilos de Vida Saludable',
+            'politica_prevencion_acoso'          => 'Política de Prevención del Acoso Sexual',
+        ];
+
+        return $nombres[$tipo] ?? ucfirst(str_replace('_', ' ', $tipo));
+    }
+
+    /**
+     * Dashboard de lista de documentos SST por cliente
+     * Muestra todos los documentos disponibles y su estado de generación
+     */
+    public function listaDocumentos(int $idCliente)
+    {
+        // Verificar que el cliente existe
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        // Obtener metadata completa de todos los documentos
+        $documentosMetadata = $this->getDocumentosMetadata();
+
+        // Para cada documento, verificar si existe versión para este cliente
+        $documentos = [];
+        $generados = 0;
+        $noGenerados = 0;
+
+        foreach ($documentosMetadata as $metadata) {
+            $tipo = $metadata['tipo'];
+
+            // Verificar si existe en la BD
+            $documento = $this->db->table('tbl_documentos_sst')
+                ->select('version, updated_at, estado, id_documento')
+                ->where('tipo_documento', $tipo)
+                ->where('id_cliente', $idCliente)
+                ->whereIn('estado', ['borrador', 'generado', 'aprobado'])
+                ->orderBy('updated_at', 'DESC')
+                ->get()
+                ->getRow();
+
+            $existe = ($documento !== null);
+
+            // Preparar datos del documento
+            $doc = $metadata;
+            $doc['existe'] = $existe;
+            $doc['version'] = $documento ? $documento->version : null;
+            $doc['fecha_modificacion'] = $documento ? $documento->updated_at : null;
+            $doc['estado_doc'] = $documento ? $documento->estado : 'no_generado';
+
+            // URLs dinámicas
+            try {
+                $instancia = DocumentoSSTFactory::crear($tipo);
+                $doc['url_generar'] = $instancia->getUrlEditor($idCliente);
+                $doc['url_ver'] = $existe ? $instancia->getUrlVistaPrevia($idCliente, date('Y')) : null;
+            } catch (\Exception $e) {
+                log_message('error', "Error al crear instancia de documento {$tipo}: " . $e->getMessage());
+                $doc['url_generar'] = base_url("documentos/generar/{$tipo}/{$idCliente}");
+                $doc['url_ver'] = null;
+            }
+
+            $documentos[] = $doc;
+
+            // Contadores
+            if ($existe) {
+                $generados++;
+            } else {
+                $noGenerados++;
+            }
+        }
+
+        // Calcular métricas
+        $total = count($documentos);
+        $porcentaje = $total > 0 ? round(($generados / $total) * 100, 1) : 0;
+
+        $data = [
+            'cliente' => $cliente,
+            'documentos' => $documentos,
+            'total' => $total,
+            'generados' => $generados,
+            'no_generados' => $noGenerados,
+            'porcentaje' => $porcentaje
+        ];
+
+        return view('documentos_sst/lista_documentos_cliente', $data);
+    }
+
+    /**
+     * Obtiene la metadata completa de todos los documentos disponibles
+     * Incluye: numeral, categoría, nombre, tipo de flujo, etc.
+     */
+    private function getDocumentosMetadata(): array
+    {
+        return [
+            // 1.1 - Requisitos Legales y Básicos
+            [
+                'tipo' => 'identificacion_alto_riesgo',
+                'numeral' => '1.1.5',
+                'categoria' => 'Requisitos Legales y Básicos',
+                'nombre' => 'Identificación de Trabajadores de Alto Riesgo',
+                'flujo' => 'Tipo A',
+                'orden' => 1
+            ],
+
+            // 2.1 - Políticas de SST
+            [
+                'tipo' => 'politica_sst_general',
+                'numeral' => '2.1.1',
+                'categoria' => 'Políticas de SST',
+                'nombre' => 'Política de Seguridad y Salud en el Trabajo',
+                'flujo' => 'Tipo A',
+                'orden' => 2
+            ],
+            [
+                'tipo' => 'politica_alcohol_drogas',
+                'numeral' => '2.1.2',
+                'categoria' => 'Políticas de SST',
+                'nombre' => 'Política de Prevención del Consumo de Alcohol y Drogas',
+                'flujo' => 'Tipo A',
+                'orden' => 3
+            ],
+            [
+                'tipo' => 'politica_acoso_laboral',
+                'numeral' => '2.1.3',
+                'categoria' => 'Políticas de SST',
+                'nombre' => 'Política de Prevención del Acoso Laboral',
+                'flujo' => 'Tipo A',
+                'orden' => 4
+            ],
+            [
+                'tipo' => 'politica_violencias_genero',
+                'numeral' => '2.1.4',
+                'categoria' => 'Políticas de SST',
+                'nombre' => 'Política de Prevención de Violencias de Género',
+                'flujo' => 'Tipo A',
+                'orden' => 5
+            ],
+            [
+                'tipo' => 'politica_discriminacion',
+                'numeral' => '2.1.5',
+                'categoria' => 'Políticas de SST',
+                'nombre' => 'Política de No Discriminación',
+                'flujo' => 'Tipo A',
+                'orden' => 6
+            ],
+            [
+                'tipo' => 'politica_prevencion_emergencias',
+                'numeral' => '2.1.6',
+                'categoria' => 'Políticas de SST',
+                'nombre' => 'Política de Prevención y Preparación ante Emergencias',
+                'flujo' => 'Tipo A',
+                'orden' => 7
+            ],
+
+            // 2.2 - Planificación
+            [
+                'tipo' => 'plan_objetivos_metas',
+                'numeral' => '2.2.1',
+                'categoria' => 'Planificación',
+                'nombre' => 'Plan de Objetivos y Metas del SG-SST',
+                'flujo' => 'Tipo A',
+                'orden' => 8
+            ],
+            [
+                'tipo' => 'programa_capacitacion',
+                'numeral' => '2.2.2',
+                'categoria' => 'Planificación',
+                'nombre' => 'Programa de Capacitación en SST',
+                'flujo' => 'Tipo B',
+                'orden' => 9
+            ],
+
+            // 2.8 - Comunicación
+            [
+                'tipo' => 'mecanismos_comunicacion_sgsst',
+                'numeral' => '2.8.1',
+                'categoria' => 'Comunicación',
+                'nombre' => 'Mecanismos de Comunicación del SG-SST',
+                'flujo' => 'Tipo A',
+                'orden' => 10
+            ],
+
+            // 2.9 - Adquisiciones
+            [
+                'tipo' => 'procedimiento_adquisiciones',
+                'numeral' => '2.9.1',
+                'categoria' => 'Adquisiciones',
+                'nombre' => 'Procedimiento de Adquisiciones en SST',
+                'flujo' => 'Tipo A',
+                'orden' => 11
+            ],
+            [
+                'tipo' => 'procedimiento_evaluacion_proveedores',
+                'numeral' => '2.10.1',
+                'categoria' => 'Adquisiciones',
+                'nombre' => 'Procedimiento de Evaluación de Proveedores',
+                'flujo' => 'Tipo A',
+                'orden' => 12
+            ],
+
+            // 2.11 - Gestión del Cambio
+            [
+                'tipo' => 'procedimiento_gestion_cambio',
+                'numeral' => '2.11.1',
+                'categoria' => 'Gestión del Cambio',
+                'nombre' => 'Procedimiento de Gestión del Cambio',
+                'flujo' => 'Tipo A',
+                'orden' => 13
+            ],
+
+            // 2.5 - Control Documental
+            [
+                'tipo' => 'procedimiento_control_documental',
+                'numeral' => '2.5.1',
+                'categoria' => 'Control Documental',
+                'nombre' => 'Procedimiento de Control Documental del SG-SST',
+                'flujo' => 'Tipo A',
+                'orden' => 14
+            ],
+            [
+                'tipo' => 'procedimiento_matriz_legal',
+                'numeral' => '2.5.2',
+                'categoria' => 'Control Documental',
+                'nombre' => 'Procedimiento de Matriz Legal',
+                'flujo' => 'Tipo A',
+                'orden' => 15
+            ],
+
+            // 3.1 - Promoción y Prevención
+            [
+                'tipo' => 'programa_promocion_prevencion_salud',
+                'numeral' => '3.1.1',
+                'categoria' => 'Promoción y Prevención',
+                'nombre' => 'Programa de Promoción y Prevención de la Salud',
+                'flujo' => 'Tipo A',
+                'orden' => 16
+            ],
+            [
+                'tipo' => 'programa_induccion_reinduccion',
+                'numeral' => '3.1.2',
+                'categoria' => 'Promoción y Prevención',
+                'nombre' => 'Programa de Inducción y Reinducción en SST',
+                'flujo' => 'Tipo A',
+                'orden' => 17
+            ],
+            [
+                'tipo' => 'procedimiento_evaluaciones_medicas',
+                'numeral' => '3.1.3',
+                'categoria' => 'Promoción y Prevención',
+                'nombre' => 'Procedimiento de Evaluaciones Médicas Ocupacionales',
+                'flujo' => 'Tipo A',
+                'orden' => 18
+            ],
+            [
+                'tipo' => 'programa_evaluaciones_medicas_ocupacionales',
+                'numeral' => '3.1.4',
+                'categoria' => 'Promoción y Prevención',
+                'nombre' => 'Programa de Evaluaciones Médicas Ocupacionales',
+                'flujo' => 'Tipo A',
+                'orden' => 19
+            ],
+            [
+                'tipo' => 'programa_estilos_vida_saludable',
+                'numeral' => '3.1.7',
+                'categoria' => 'Promoción y Prevención',
+                'nombre' => 'Programa de Estilos de Vida Saludable',
+                'flujo' => 'Tipo A',
+                'orden' => 20
+            ],
+
+            // 3.2 - Investigación de Incidentes
+            [
+                'tipo' => 'procedimiento_investigacion_accidentes',
+                'numeral' => '3.2.1',
+                'categoria' => 'Investigación de Incidentes',
+                'nombre' => 'Procedimiento de Investigación de Accidentes de Trabajo',
+                'flujo' => 'Tipo A',
+                'orden' => 21
+            ],
+            [
+                'tipo' => 'procedimiento_investigacion_incidentes',
+                'numeral' => '3.2.2',
+                'categoria' => 'Investigación de Incidentes',
+                'nombre' => 'Procedimiento de Investigación de Incidentes',
+                'flujo' => 'Tipo A',
+                'orden' => 22
+            ],
+
+            // 4.1 - Identificación de Peligros
+            [
+                'tipo' => 'metodologia_identificacion_peligros',
+                'numeral' => '4.1.1',
+                'categoria' => 'Identificación de Peligros',
+                'nombre' => 'Metodología de Identificación de Peligros',
+                'flujo' => 'Tipo A',
+                'orden' => 23
+            ],
+            [
+                'tipo' => 'identificacion_sustancias_cancerigenas',
+                'numeral' => '4.1.3',
+                'categoria' => 'Identificación de Peligros',
+                'nombre' => 'Identificación de Sustancias Cancerígenas',
+                'flujo' => 'Tipo A',
+                'orden' => 24
+            ],
+
+            // 4.2 - Programas de Vigilancia
+            [
+                'tipo' => 'pve_riesgo_biomecanico',
+                'numeral' => '4.2.3',
+                'categoria' => 'Programas de Vigilancia',
+                'nombre' => 'PVE Riesgo Biomecánico',
+                'flujo' => 'Tipo A',
+                'orden' => 25
+            ],
+            [
+                'tipo' => 'pve_riesgo_psicosocial',
+                'numeral' => '4.2.4',
+                'categoria' => 'Programas de Vigilancia',
+                'nombre' => 'PVE Riesgo Psicosocial',
+                'flujo' => 'Tipo A',
+                'orden' => 26
+            ],
+            [
+                'tipo' => 'programa_mantenimiento_periodico',
+                'numeral' => '4.2.5',
+                'categoria' => 'Programas de Vigilancia',
+                'nombre' => 'Programa de Mantenimiento Periódico',
+                'flujo' => 'Tipo A',
+                'orden' => 27
+            ],
+
+            // 1.1.8 - Comités
+            [
+                'tipo' => 'manual_convivencia_laboral',
+                'numeral' => '1.1.8',
+                'categoria' => 'Comités y Brigadas',
+                'nombre' => 'Manual de Convivencia Laboral',
+                'flujo' => 'Tipo A',
+                'orden' => 28
+            ],
+
+            // Actas de Constitución
+            [
+                'tipo' => 'acta_constitucion_copasst',
+                'numeral' => '1.1.1',
+                'categoria' => 'Actas de Constitución',
+                'nombre' => 'Acta de Constitución COPASST',
+                'flujo' => 'Electoral',
+                'orden' => 29
+            ],
+            [
+                'tipo' => 'acta_constitucion_cocolab',
+                'numeral' => '1.1.8',
+                'categoria' => 'Actas de Constitución',
+                'nombre' => 'Acta de Constitución COCOLAB',
+                'flujo' => 'Electoral',
+                'orden' => 30
+            ],
+            [
+                'tipo' => 'acta_constitucion_brigada',
+                'numeral' => '1.1.2',
+                'categoria' => 'Actas de Constitución',
+                'nombre' => 'Acta de Constitución Brigada de Emergencia',
+                'flujo' => 'Electoral',
+                'orden' => 31
+            ],
+            [
+                'tipo' => 'acta_constitucion_vigia',
+                'numeral' => '1.1.1',
+                'categoria' => 'Actas de Constitución',
+                'nombre' => 'Acta de Constitución Vigía SST',
+                'flujo' => 'Electoral',
+                'orden' => 32
+            ],
+
+            // Actas de Recomposición
+            [
+                'tipo' => 'acta_recomposicion_copasst',
+                'numeral' => '1.1.1',
+                'categoria' => 'Actas de Recomposición',
+                'nombre' => 'Acta de Recomposición COPASST',
+                'flujo' => 'Electoral',
+                'orden' => 33
+            ],
+            [
+                'tipo' => 'acta_recomposicion_cocolab',
+                'numeral' => '1.1.8',
+                'categoria' => 'Actas de Recomposición',
+                'nombre' => 'Acta de Recomposición COCOLAB',
+                'flujo' => 'Electoral',
+                'orden' => 34
+            ],
+            [
+                'tipo' => 'acta_recomposicion_brigada',
+                'numeral' => '1.1.2',
+                'categoria' => 'Actas de Recomposición',
+                'nombre' => 'Acta de Recomposición Brigada de Emergencia',
+                'flujo' => 'Electoral',
+                'orden' => 35
+            ],
+            [
+                'tipo' => 'acta_recomposicion_vigia',
+                'numeral' => '1.1.1',
+                'categoria' => 'Actas de Recomposición',
+                'nombre' => 'Acta de Recomposición Vigía SST',
+                'flujo' => 'Electoral',
+                'orden' => 36
+            ],
+        ];
     }
 }

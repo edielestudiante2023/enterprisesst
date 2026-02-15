@@ -225,6 +225,14 @@ ADVERTENCIAS:
             $userPrompt .= "\n" . $contextoBase . "\n";
         }
 
+        // INSUMOS IA - Pregeneración: Marco normativo desde BD
+        $marcoNormativo = $datos['marco_normativo'] ?? '';
+        if (!empty($marcoNormativo)) {
+            $userPrompt .= "\nMARCO NORMATIVO VIGENTE APLICABLE (fuente verificada con busqueda web, usar EXCLUSIVAMENTE este marco):\n";
+            $userPrompt .= $marcoNormativo . "\n";
+            $userPrompt .= "IMPORTANTE: Usa SOLO las normas listadas arriba. NO inventes ni agregues normas adicionales.\n";
+        }
+
         $userPrompt .= "\nDOCUMENTO A GENERAR:\n";
         $userPrompt .= "- Tipo: " . ($documento['tipo_nombre'] ?? 'Documento') . "\n";
         $userPrompt .= "- Nombre: " . ($documento['nombre'] ?? '') . "\n";

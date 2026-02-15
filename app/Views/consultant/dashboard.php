@@ -519,8 +519,13 @@
                 </button>
             </a>
             <a href="<?= base_url('/admin/usage') ?>" target="_blank" rel="noopener noreferrer">
-                <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;">
+                <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;">
                     <i class="fas fa-chart-line me-2"></i>Consumo de Plataforma
+                </button>
+            </a>
+            <a href="<?= base_url('/documentos/marco-normativo-dashboard') ?>" target="_blank" rel="noopener noreferrer">
+                <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #f093fb, #f5576c); border: none;" title="Gestión centralizada de marcos normativos para generación IA">
+                    <i class="fas fa-book-open me-2"></i>Marcos Normativos IA
                 </button>
             </a>
         </div>
@@ -745,17 +750,52 @@
             </div>
         </div>
 
-        <!-- Modulo de Firmas Electronicas -->
+        <!-- Módulos de Documentos SST y Firmas Electrónicas -->
         <div class="mb-5">
             <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
-                <i class="fas fa-file-signature me-2"></i>Firmas Electronicas
+                <i class="fas fa-file-alt me-2"></i>Gestión de Documentos y Firmas
             </h4>
-            <div class="row justify-content-center">
-                <div class="col-lg-5 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+            <div class="row">
+                <!-- Generación de Documentos SST -->
+                <div class="col-lg-6 mb-3">
+                    <div class="card shadow-sm border-0 h-100" style="border-radius: 15px; overflow: hidden;">
+                        <div class="card-body p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <h5 class="text-white text-center mb-3">
+                                <i class="fas fa-clipboard-check me-2"></i>Documentos SST por Cliente
+                            </h5>
+                            <div class="row align-items-center">
+                                <div class="col-12 mb-3">
+                                    <label class="text-white fw-bold mb-2">
+                                        <i class="fas fa-building me-2"></i>Seleccione un Cliente
+                                    </label>
+                                    <select id="selectClienteDocumentos" class="form-select" style="width: 100%;">
+                                        <option value="">-- Buscar cliente --</option>
+                                        <?php foreach ($clientes ?? [] as $cliente): ?>
+                                            <option value="<?= esc($cliente['id_cliente']) ?>">
+                                                <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <button type="button" id="btnIrDocumentos" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
+                                        <i class="fas fa-file-alt me-2"></i>Ir a Gestión de Documentos
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-white-50 d-block text-center mt-2">
+                                36 documentos del SG-SST - Políticas, Programas, Procedimientos
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Firmas Electrónicas -->
+                <div class="col-lg-6 mb-3">
+                    <div class="card shadow-sm border-0 h-100" style="border-radius: 15px; overflow: hidden;">
                         <div class="card-body p-4" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);">
                             <h5 class="text-white text-center mb-3">
-                                <i class="fas fa-pen-nib me-2"></i>Gestion de Firmas
+                                <i class="fas fa-pen-nib me-2"></i>Gestión de Firmas
                             </h5>
                             <div class="row align-items-center">
                                 <div class="col-12 mb-3">
@@ -1013,6 +1053,26 @@
                 var clienteId = $('#selectClienteIndicadores').val();
                 if (clienteId) {
                     window.open('<?= base_url('indicadores-sst/') ?>' + clienteId, '_blank');
+                }
+            });
+
+            // === SELECTOR DE DOCUMENTOS SST ===
+            $('#selectClienteDocumentos').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Buscar cliente por nombre o NIT --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            $('#selectClienteDocumentos').on('change', function() {
+                var clienteId = $(this).val();
+                $('#btnIrDocumentos').prop('disabled', !clienteId);
+            });
+
+            $('#btnIrDocumentos').on('click', function() {
+                var clienteId = $('#selectClienteDocumentos').val();
+                if (clienteId) {
+                    window.open('<?= base_url('documentos-sst/lista/') ?>' + clienteId, '_blank');
                 }
             });
 

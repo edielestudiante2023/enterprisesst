@@ -187,6 +187,39 @@
                         </div>
                     </div>
 
+                    <!-- Insumos IA - Pregeneración: Marco Normativo -->
+                    <?php if ($usaIA ?? true): ?>
+                    <div class="card border-0 shadow-sm mb-3" id="panelMarcoNormativo">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                            <h6 class="mb-0 small"><i class="bi bi-book me-1"></i>Marco Normativo</h6>
+                            <span class="badge bg-secondary" id="badgeMarcoEstado">Cargando...</span>
+                        </div>
+                        <div class="card-body py-2 px-3">
+                            <div id="marcoNormativoInfo">
+                                <small class="text-muted">Verificando marco normativo...</small>
+                            </div>
+                            <div class="d-flex gap-1 mt-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm flex-fill" id="btnConsultarIAMarco" title="Consultar marco normativo vigente con IA (GPT-4o + busqueda web)">
+                                    <i class="bi bi-globe me-1"></i>Consultar IA
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" id="btnVerEditarMarco" title="Ver o editar el marco normativo actual">
+                                    <i class="bi bi-pencil-square me-1"></i>Ver/Editar
+                                </button>
+                            </div>
+                            <div class="mt-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="chkAutoActualizar" checked>
+                                    <label class="form-check-label small" for="chkAutoActualizar">Auto si &gt;90 dias</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="chkPreguntarGenerar" checked>
+                                    <label class="form-check-label small" for="chkPreguntarGenerar">Preguntar al generar</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white">
                             <h6 class="mb-0">Secciones</h6>
@@ -508,6 +541,51 @@
         ]) ?>
     <?php endif; ?>
 
+    <!-- Modal Ver/Editar Marco Normativo -->
+    <div class="modal fade" id="modalMarcoNormativo" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-book me-2"></i>Marco Normativo - Insumos IA</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <small>Este marco normativo se inyecta como contexto al generar cada seccion con IA. Puedes editarlo manualmente o consultarlo con IA (GPT-4o + busqueda web).</small>
+                    </div>
+
+                    <!-- Contexto adicional para la IA -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold mb-1">
+                            <i class="bi bi-robot me-1"></i>Contexto adicional para la IA (opcional):
+                        </label>
+                        <textarea class="form-control" id="marcoContextoIA" rows="2"
+                            placeholder="Ej: 'Enfocarse en acoso laboral', 'Incluir legislación reciente <?= date('Y') ?>', 'Priorizar resoluciones del Ministerio de Trabajo'..."
+                            style="font-size: 0.9rem;"></textarea>
+                        <small class="text-muted">Este contexto personaliza la búsqueda web de GPT-4o.</small>
+                    </div>
+
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <small class="text-muted" id="marcoModalMeta"></small>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnConsultarIAModal">
+                            <i class="bi bi-globe me-1"></i>Consultar con IA
+                        </button>
+                    </div>
+
+                    <label class="form-label small fw-bold mb-1">Marco Normativo:</label>
+                    <textarea class="form-control" id="marcoNormativoTexto" rows="12" placeholder="El marco normativo aparecera aqui. Usa el boton 'Consultar con IA' para obtenerlo automaticamente, o pegalo manualmente desde ChatGPT, Gemini, Claude, etc."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btnGuardarMarco">
+                        <i class="bi bi-save me-1"></i>Guardar Marco Normativo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -577,6 +655,32 @@
 
             const data = await obtenerDatosPreview();
 
+            // DEBUG: Verificar si marco_normativo está en la respuesta
+            console.log('🔍 Datos recibidos del endpoint:', data);
+            console.log('📋 Marco Normativo:', data?.marco_normativo);
+
+            // ==========================================
+            // MENSAJE INDEPENDIENTE PARA PROBAR MARCO NORMATIVO
+            // ==========================================
+            if (data && data.marco_normativo) {
+                let mensajeMarco = '📋 MARCO NORMATIVO - TEST\n\n';
+                mensajeMarco += 'Existe: ' + (data.marco_normativo.existe ? 'SÍ' : 'NO') + '\n';
+
+                if (data.marco_normativo.existe) {
+                    mensajeMarco += 'Vigente: ' + (data.marco_normativo.vigente ? 'SÍ' : 'NO') + '\n';
+                    mensajeMarco += 'Días: ' + data.marco_normativo.dias + '\n';
+                    mensajeMarco += 'Fecha: ' + data.marco_normativo.fecha + '\n';
+                    mensajeMarco += 'Método: ' + data.marco_normativo.metodo + '\n';
+                    mensajeMarco += 'Preview: ' + data.marco_normativo.texto_preview.substring(0, 100) + '...';
+                } else {
+                    mensajeMarco += '\nNo hay marco normativo registrado.';
+                }
+
+                alert(mensajeMarco);
+            } else {
+                alert('⚠️ No se recibieron datos de marco normativo del endpoint');
+            }
+
             // Si falla la consulta, mostrar error y dar opcion de continuar
             if (!data) {
                 const errorResult = await Swal.fire({
@@ -627,6 +731,28 @@
                 // Documento directo (1 parte): nota informativa
                 html += '<p style="color: #155724; font-size: 0.85rem; background: #d4edda; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px;"><strong>&#128196; Documento directo:</strong> Este documento se genera usando el contexto de la empresa. No requiere actividades del Plan de Trabajo ni indicadores.</p>';
             }
+
+            // Marco Normativo (Insumos IA - Pregeneracion)
+            console.log('🔧 DEBUG: Verificando marco normativo...', data.marco_normativo);
+
+            // SIEMPRE mostrar la seccion (para debug)
+            html += '<h6 style="margin-bottom: 8px;"><strong>📋 Marco Normativo (DEBUG):</strong></h6>';
+            html += '<div style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">';
+
+            if (data.marco_normativo && data.marco_normativo.existe) {
+                const esVigente = data.marco_normativo.vigente;
+                const icono = esVigente ? '✅' : '⚠️';
+                const estado = esVigente ? '<span style="color: #28a745;">Vigente</span>' : '<span style="color: #dc3545;">Vencido</span>';
+
+                html += '<p style="margin-bottom: 4px;"><strong>Estado:</strong> ' + estado + ' ' + icono + '</p>';
+                html += '<p style="margin-bottom: 4px;"><strong>Actualizado:</strong> hace ' + data.marco_normativo.dias + ' días (' + data.marco_normativo.fecha + ')</p>';
+                html += '<p style="margin-bottom: 4px;"><strong>Método:</strong> ' + (data.marco_normativo.metodo || 'N/A') + '</p>';
+                html += '<p style="margin-bottom: 0; color: #6c757d; font-size: 0.85rem;"><em>' + (data.marco_normativo.texto_preview || 'Sin preview') + '</em></p>';
+            } else {
+                html += '<p style="color: #856404; font-size: 0.85rem; margin-bottom: 0;">❌ No hay marco normativo registrado. La IA usará su conocimiento base (puede estar desactualizado).</p>';
+            }
+
+            html += '</div>';
 
             // Contexto del cliente
             html += '<h6 style="margin-bottom: 8px;"><strong>&#127970; Contexto de la empresa:</strong></h6>';
@@ -902,7 +1028,7 @@
                 e.preventDefault();
                 const seccion = this.dataset.seccion;
                 console.log('Click en boton generar, seccion:', seccion);
-                mostrarVerificacionDatos(() => generarSeccion(seccion));
+                mostrarVerificacionDatos(() => verificarMarcoAnteDeGenerar(() => generarSeccion(seccion)));
             });
         });
 
@@ -1108,6 +1234,55 @@
 
             const data = await obtenerDatosPreview();
 
+            // ==========================================
+            // SWEETALERT 1: MARCO NORMATIVO COMPLETO
+            // ==========================================
+            if (data && data.marco_normativo) {
+                let htmlMarco = '<div style="text-align: left; max-height: 500px; overflow-y: auto;">';
+
+                if (data.marco_normativo.existe) {
+                    const esVigente = data.marco_normativo.vigente;
+                    const colorEstado = esVigente ? '#28a745' : '#dc3545';
+                    const textoEstado = esVigente ? 'Vigente ✅' : 'Vencido ⚠️';
+
+                    htmlMarco += '<div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px;">';
+                    htmlMarco += '<p style="margin-bottom: 8px;"><strong>Estado:</strong> <span style="color: ' + colorEstado + '; font-weight: bold;">' + textoEstado + '</span></p>';
+                    htmlMarco += '<p style="margin-bottom: 8px;"><strong>Actualizado hace:</strong> ' + data.marco_normativo.dias + ' días</p>';
+                    htmlMarco += '<p style="margin-bottom: 8px;"><strong>Fecha:</strong> ' + data.marco_normativo.fecha + '</p>';
+                    htmlMarco += '<p style="margin-bottom: 0;"><strong>Método:</strong> ' + data.marco_normativo.metodo + '</p>';
+                    htmlMarco += '</div>';
+
+                    htmlMarco += '<h6 style="margin-bottom: 10px; color: #495057;"><strong>📄 Texto completo del marco normativo:</strong></h6>';
+                    htmlMarco += '<div style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px; font-size: 0.9rem; line-height: 1.6; color: #212529; white-space: pre-wrap;">';
+                    htmlMarco += data.marco_normativo.texto_completo || 'Sin contenido';
+                    htmlMarco += '</div>';
+                } else {
+                    htmlMarco += '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 15px; color: #856404;">';
+                    htmlMarco += '<p style="margin-bottom: 0; font-weight: 500;">⚠️ No hay marco normativo registrado para este tipo de documento.</p>';
+                    htmlMarco += '<p style="margin-top: 8px; margin-bottom: 0; font-size: 0.9rem;">La IA usará su conocimiento base, que puede estar desactualizado.</p>';
+                    htmlMarco += '</div>';
+                }
+
+                htmlMarco += '</div>';
+
+                await Swal.fire({
+                    title: '📋 Marco Normativo Vigente',
+                    html: htmlMarco,
+                    icon: data.marco_normativo.existe ? 'info' : 'warning',
+                    iconColor: data.marco_normativo.existe ? (data.marco_normativo.vigente ? '#28a745' : '#dc3545') : '#ffc107',
+                    confirmButtonText: 'Continuar',
+                    confirmButtonColor: '#667eea',
+                    width: '700px'
+                });
+            } else {
+                await Swal.fire({
+                    title: 'Error',
+                    text: 'No se recibieron datos de marco normativo del endpoint',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+
             if (data) {
                 const totalAct = data.actividades.length;
                 const totalInd = data.indicadores.length;
@@ -1137,6 +1312,26 @@
                     htmlResumen += '</ul>';
                 } else {
                     htmlResumen += '<p style="color: #856404; font-size: 0.85rem; margin-bottom: 12px;">No hay indicadores configurados.</p>';
+                }
+
+                // Marco Normativo (Insumos IA - Pregeneración)
+                if (data.marco_normativo && data.marco_normativo.existe) {
+                    const esVigente = data.marco_normativo.vigente;
+                    const icono = esVigente ? '✅' : '⚠️';
+                    const estado = esVigente ? '<span style="color: #28a745; font-weight: bold;">Vigente</span>' : '<span style="color: #dc3545; font-weight: bold;">Vencido</span>';
+
+                    htmlResumen += '<h6 style="margin-bottom: 6px;"><strong>' + icono + ' Marco Normativo:</strong></h6>';
+                    htmlResumen += '<div style="font-size: 0.85rem; padding-left: 20px; margin-bottom: 12px; background: #f8f9fa; padding: 8px; border-radius: 4px;">';
+                    htmlResumen += '<p style="margin-bottom: 4px;"><strong>Estado:</strong> ' + estado + '</p>';
+                    htmlResumen += '<p style="margin-bottom: 4px;"><strong>Actualizado:</strong> hace ' + data.marco_normativo.dias + ' días (' + data.marco_normativo.fecha + ')</p>';
+                    htmlResumen += '<p style="margin-bottom: 4px;"><strong>Método:</strong> ' + (data.marco_normativo.metodo || 'N/A') + '</p>';
+                    htmlResumen += '<p style="margin-bottom: 0; color: #6c757d; font-size: 0.8rem; font-style: italic;">' + (data.marco_normativo.texto_preview || 'Sin preview') + '</p>';
+                    htmlResumen += '</div>';
+                } else {
+                    htmlResumen += '<h6 style="margin-bottom: 6px;"><strong>⚠️ Marco Normativo:</strong></h6>';
+                    htmlResumen += '<div style="font-size: 0.85rem; padding-left: 20px; margin-bottom: 12px;">';
+                    htmlResumen += '<p style="color: #856404; font-size: 0.85rem; margin-bottom: 0; background: #fff3cd; padding: 8px; border-radius: 4px;">❌ No hay marco normativo registrado. La IA usará su conocimiento base (puede estar desactualizado).</p>';
+                    htmlResumen += '</div>';
                 }
 
                 // Contexto
@@ -1185,6 +1380,15 @@
                 verificacionConfirmada = true; // No volver a mostrar
             }
             } // cierre del else (verificacionConfirmada)
+
+            // Opcion 3: Verificar marco normativo antes de generar todo
+            const marcoOk = await new Promise(resolve => {
+                verificarMarcoAnteDeGenerar(() => resolve(true));
+                // Si el usuario cancela en el SweetAlert, resolve nunca se llama
+                // Usar timeout de seguridad
+                setTimeout(() => resolve(false), 300000);
+            });
+            if (!marcoOk) return;
 
             modalProgreso.show();
             modoBatch = true;
@@ -1436,9 +1640,287 @@
             habilitarAprobacionDocumento();
         };
 
+        // ==========================================
+        // INSUMOS IA - PREGENERACIÓN: MARCO NORMATIVO
+        // ==========================================
+        let marcoNormativoCache = null;
+        const modalMarco = document.getElementById('modalMarcoNormativo')
+            ? new bootstrap.Modal(document.getElementById('modalMarcoNormativo')) : null;
+
+        async function cargarMarcoNormativo() {
+            try {
+                const resp = await fetch(`<?= base_url('documentos/marco-normativo') ?>/${tipo}`);
+                const data = await resp.json();
+                marcoNormativoCache = data;
+                actualizarPanelMarco(data);
+
+                // Opcion 1: Auto-actualizar si >90 dias y checkbox activo
+                if (document.getElementById('chkAutoActualizar')?.checked) {
+                    if (!data.existe || (data.dias !== null && !data.vigente)) {
+                        console.log('Marco normativo vencido o inexistente, auto-consultando IA...');
+                        await consultarMarcoIA('automatico');
+                    }
+                }
+            } catch (e) {
+                console.error('Error cargando marco normativo:', e);
+                document.getElementById('marcoNormativoInfo').innerHTML =
+                    '<small class="text-danger">Error al consultar marco normativo</small>';
+            }
+        }
+
+        function actualizarPanelMarco(data) {
+            const badge = document.getElementById('badgeMarcoEstado');
+            const info = document.getElementById('marcoNormativoInfo');
+
+            if (!data.existe) {
+                badge.className = 'badge bg-warning text-dark';
+                badge.textContent = 'Sin datos';
+                info.innerHTML = '<small class="text-warning">No hay marco normativo almacenado.</small>';
+            } else if (data.vigente) {
+                badge.className = 'badge bg-success';
+                badge.textContent = 'Vigente';
+                info.innerHTML = `<small class="text-success">Actualizado hace ${data.dias} dia(s) - ${data.fecha}</small><br>`
+                    + `<small class="text-muted">Metodo: ${data.metodo} | Por: ${data.actualizado_por}</small>`;
+            } else {
+                badge.className = 'badge bg-danger';
+                badge.textContent = 'Vencido';
+                info.innerHTML = `<small class="text-danger">Vencido hace ${data.dias} dias - ${data.fecha}</small><br>`
+                    + `<small class="text-muted">Ultima act: ${data.fecha} | Vigencia: ${data.vigencia_dias} dias</small>`;
+            }
+        }
+
+        async function consultarMarcoIA(metodo) {
+            const btnSidebar = document.getElementById('btnConsultarIAMarco');
+            const btnModal = document.getElementById('btnConsultarIAModal');
+            const textoOriginalSidebar = btnSidebar?.innerHTML;
+            const textoOriginalModal = btnModal?.innerHTML;
+
+            // Deshabilitar ambos botones
+            if (btnSidebar) { btnSidebar.disabled = true; btnSidebar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Consultando...'; }
+            if (btnModal) { btnModal.disabled = true; btnModal.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Consultando...'; }
+
+            const toastProgreso = mostrarToast('progress', 'Marco Normativo', 'Consultando marco normativo vigente con IA (GPT-4o + busqueda web)... Esto puede tardar hasta 90 segundos.');
+
+            try {
+                const resp = await fetch('<?= base_url('documentos/marco-normativo/consultar-ia') ?>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: `tipo_documento=${tipo}&metodo=${metodo}`
+                });
+                const data = await resp.json();
+                cerrarToast(toastProgreso);
+
+                if (data.success) {
+                    mostrarToast('success', 'Marco Normativo Actualizado', 'Consulta exitosa con GPT-4o + búsqueda web. <strong>Revísalo en "Ver/Editar" antes de generar.</strong>');
+                    // Actualizar textarea del modal si esta abierto
+                    const textarea = document.getElementById('marcoNormativoTexto');
+                    if (textarea) textarea.value = data.texto;
+                    // Recargar info del panel
+                    await cargarMarcoNormativo();
+                } else {
+                    mostrarToast('error', 'Error Marco Normativo', data.error || 'No se pudo consultar el marco normativo.');
+                }
+            } catch (e) {
+                cerrarToast(toastProgreso);
+                mostrarToast('error', 'Error de Conexion', 'No se pudo conectar: ' + e.message);
+            }
+
+            // Restaurar botones
+            if (btnSidebar) { btnSidebar.disabled = false; btnSidebar.innerHTML = textoOriginalSidebar; }
+            if (btnModal) { btnModal.disabled = false; btnModal.innerHTML = textoOriginalModal; }
+        }
+
+        // Boton sidebar: Consultar IA (opcion 2) - con SweetAlert educativo
+        document.getElementById('btnConsultarIAMarco')?.addEventListener('click', async () => {
+            const result = await Swal.fire({
+                title: 'Marco Normativo - Insumos IA',
+                html: `
+                    <div style="text-align: left;">
+                        <p class="mb-3"><strong>Esta función consulta el marco normativo vigente usando IA con búsqueda web en tiempo real.</strong></p>
+
+                        <h6 class="mb-2" style="color: #0d6efd;">📋 4 Opciones de Actualización:</h6>
+                        <ol style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">
+                            <li><strong>Auto si &gt;90 días:</strong> El sistema actualiza automáticamente al cargar la página si el marco tiene más de 90 días.</li>
+                            <li><strong>Botón "Consultar IA":</strong> Actualizas manualmente cuando lo necesites (esta opción).</li>
+                            <li><strong>Preguntar al generar:</strong> Antes de generar el documento, el sistema te pregunta si quieres actualizar.</li>
+                            <li><strong>Edición manual:</strong> Puedes editar directamente el marco usando ChatGPT, Gemini, Claude o fuentes oficiales.</li>
+                        </ol>
+
+                        <div class="alert alert-warning py-2 mb-3" style="font-size: 0.85rem;">
+                            <strong>⚠️ IMPORTANTE:</strong> Después de que la IA consulte el marco normativo:
+                            <ul class="mb-0 mt-1">
+                                <li>Haz clic en <strong>"Ver/Editar"</strong> para revisar el resultado</li>
+                                <li>Valida con fuentes oficiales (Ministerio de Trabajo, Diario Oficial)</li>
+                                <li>Puedes contrastar con ChatGPT, Gemini o Claude</li>
+                                <li><strong>NO generes documentos sin revisar primero</strong></li>
+                            </ul>
+                        </div>
+
+                        <p class="mb-0 small text-muted">Modelo: GPT-4o con búsqueda web | Tiempo estimado: 30-90 segundos</p>
+                    </div>
+                `,
+                icon: 'info',
+                iconColor: '#0d6efd',
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-globe me-1"></i>Consultar Ahora',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d',
+                width: '700px',
+                customClass: {
+                    popup: 'text-start'
+                }
+            });
+
+            if (result.isConfirmed) {
+                await consultarMarcoIA('boton');
+            }
+        });
+
+        // Boton sidebar: Ver/Editar (opcion 4)
+        document.getElementById('btnVerEditarMarco')?.addEventListener('click', async function() {
+            const textarea = document.getElementById('marcoNormativoTexto');
+            const meta = document.getElementById('marcoModalMeta');
+
+            if (marcoNormativoCache?.existe) {
+                textarea.value = marcoNormativoCache.texto || '';
+                meta.textContent = `Actualizado: ${marcoNormativoCache.fecha} | Metodo: ${marcoNormativoCache.metodo}`;
+            } else {
+                textarea.value = '';
+                meta.textContent = 'Sin marco normativo almacenado';
+            }
+            modalMarco?.show();
+        });
+
+        // Boton modal: Consultar con IA - con SweetAlert educativo
+        document.getElementById('btnConsultarIAModal')?.addEventListener('click', async () => {
+            const result = await Swal.fire({
+                title: 'Marco Normativo - Insumos IA',
+                html: `
+                    <div style="text-align: left;">
+                        <p class="mb-3"><strong>Esta función consulta el marco normativo vigente usando IA con búsqueda web en tiempo real.</strong></p>
+
+                        <h6 class="mb-2" style="color: #0d6efd;">📋 4 Opciones de Actualización:</h6>
+                        <ol style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">
+                            <li><strong>Auto si &gt;90 días:</strong> El sistema actualiza automáticamente al cargar la página si el marco tiene más de 90 días.</li>
+                            <li><strong>Botón "Consultar IA":</strong> Actualizas manualmente cuando lo necesites (esta opción).</li>
+                            <li><strong>Preguntar al generar:</strong> Antes de generar el documento, el sistema te pregunta si quieres actualizar.</li>
+                            <li><strong>Edición manual:</strong> Puedes editar directamente el marco usando ChatGPT, Gemini, Claude o fuentes oficiales.</li>
+                        </ol>
+
+                        <div class="alert alert-warning py-2 mb-3" style="font-size: 0.85rem;">
+                            <strong>⚠️ IMPORTANTE:</strong> Después de que la IA consulte el marco normativo:
+                            <ul class="mb-0 mt-1">
+                                <li>Revisa el resultado en el textarea de abajo</li>
+                                <li>Valida con fuentes oficiales (Ministerio de Trabajo, Diario Oficial)</li>
+                                <li>Puedes contrastar con ChatGPT, Gemini o Claude</li>
+                                <li><strong>NO generes documentos sin revisar primero</strong></li>
+                            </ul>
+                        </div>
+
+                        <p class="mb-0 small text-muted">Modelo: GPT-4o con búsqueda web | Tiempo estimado: 30-90 segundos</p>
+                    </div>
+                `,
+                icon: 'info',
+                iconColor: '#0d6efd',
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-globe me-1"></i>Consultar Ahora',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d',
+                width: '700px',
+                customClass: {
+                    popup: 'text-start'
+                }
+            });
+
+            if (result.isConfirmed) {
+                await consultarMarcoIA('boton');
+            }
+        });
+
+        // Boton modal: Guardar (opcion 4 - edicion manual)
+        document.getElementById('btnGuardarMarco')?.addEventListener('click', async function() {
+            const textarea = document.getElementById('marcoNormativoTexto');
+            const texto = textarea.value.trim();
+            if (!texto) {
+                mostrarToast('warning', 'Vacio', 'Escribe o pega el marco normativo antes de guardar.');
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Guardando...';
+
+            try {
+                const resp = await fetch('<?= base_url('documentos/marco-normativo/guardar') ?>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: `tipo_documento=${tipo}&marco_normativo_texto=${encodeURIComponent(texto)}`
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    mostrarToast('success', 'Guardado', 'Marco normativo guardado correctamente.');
+                    modalMarco?.hide();
+                    await cargarMarcoNormativo();
+                } else {
+                    mostrarToast('error', 'Error', data.message || 'No se pudo guardar.');
+                }
+            } catch (e) {
+                mostrarToast('error', 'Error', 'Error de conexion: ' + e.message);
+            }
+
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-save me-1"></i>Guardar Marco Normativo';
+        });
+
+        // Opcion 3: Verificar marco normativo antes de generar (una sola vez por sesion)
+        let marcoNormativoVerificado = false;
+
+        async function verificarMarcoAnteDeGenerar(callback) {
+            // Si ya se verifico en esta sesion, pasar directo
+            if (marcoNormativoVerificado) { callback(); return; }
+            // Si el checkbox no esta activo, pasar directo
+            if (!document.getElementById('chkPreguntarGenerar')?.checked) { marcoNormativoVerificado = true; callback(); return; }
+            // Si el marco esta vigente, pasar directo
+            if (marcoNormativoCache?.existe && marcoNormativoCache?.vigente) { marcoNormativoVerificado = true; callback(); return; }
+
+            // Marco inexistente o vencido: preguntar al usuario
+            const diasTexto = marcoNormativoCache?.existe
+                ? `El marco normativo tiene ${marcoNormativoCache.dias} dias (vencido).`
+                : 'No hay marco normativo almacenado para este documento.';
+
+            const result = await Swal.fire({
+                title: 'Marco Normativo',
+                html: `<p>${diasTexto}</p><p>Deseas actualizar el marco normativo con IA antes de generar?</p><p class="text-muted small">Esto mejora la precision de las normas citadas en el documento.</p>`,
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Actualizar y generar',
+                denyButtonText: 'Generar sin actualizar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#0d6efd',
+                denyButtonColor: '#6c757d'
+            });
+
+            marcoNormativoVerificado = true;
+
+            if (result.isConfirmed) {
+                await consultarMarcoIA('confirmacion');
+                callback();
+            } else if (result.isDenied) {
+                callback();
+            }
+            // Si cancelo, no hacer nada
+        }
+
+        // Cargar marco normativo al iniciar
+        cargarMarcoNormativo();
+
         // Inicializar progreso
         actualizarProgreso();
     });
     </script>
 </body>
 </html>
+

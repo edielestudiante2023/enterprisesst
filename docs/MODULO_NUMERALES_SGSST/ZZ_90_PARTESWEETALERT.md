@@ -35,6 +35,8 @@ Usuario da clic en "Generar con IA"
     consulta 1 fuente:
     - tbl_cliente_contexto_sst (Contexto)
     (NO consulta PTA ni Indicadores)
+  + SIEMPRE consulta marco normativo:
+    - tbl_marco_normativo (Insumos IA - Pregeneracion)
          |
          v
   SweetAlert muestra resumen:
@@ -47,6 +49,11 @@ Usuario da clic en "Generar con IA"
   | Indicadores (3 configurados):         |
   |   - Cobertura (Meta: 90%)            |
   |   - Cumplimiento (Meta: 100%)        |
+  |                                       |
+  | Marco Normativo:                      |
+  |   Estado: Vigente (21 dias - 2026-01)|
+  |   Metodo: boton                      |
+  |   Resolucion 312 de 2019, Ley 1562...|
   |                                       |
   | Contexto:                             |
   |   Empresa: ACME S.A.S                |
@@ -96,6 +103,56 @@ Usuario da clic en "Generar con IA"
 
 ---
 
+## Marco Normativo (Insumos IA - Pregeneración)
+
+### Por Qué se Incluye en el SweetAlert
+
+El marco normativo es **crítico** para generar documentos con legislación actualizada. Mostrar su estado en el SweetAlert permite al consultor:
+
+1. **Verificar vigencia:** Saber si la IA usará normativa actualizada o conocimiento base (puede estar desactualizado)
+2. **Decidir actualizar:** Si el marco está vencido, puede ir al panel de "Insumos IA" y actualizarlo antes de generar
+3. **Tener confianza:** Ver que el documento se generará con las normas correctas
+
+### Información que se Muestra
+
+| Campo | Descripción |
+|-------|-------------|
+| Estado | **Vigente** (verde) si tiene menos de `vigencia_dias`, **Vencido** (rojo) si superó el límite |
+| Fecha actualización | Cuándo fue la última actualización del marco normativo |
+| Días transcurridos | Cuántos días han pasado desde la última actualización |
+| Método | Cómo se actualizó: `automatico`, `boton`, `confirmacion`, `manual` |
+| Preview del texto | Primeros 200 caracteres del marco normativo |
+
+### Casos Posibles
+
+#### ✅ Marco Normativo Vigente
+```
+Marco Normativo:
+  Estado: Vigente (Actualizado hace 21 días - 2026-01-25)
+  Método: boton
+  Resolución 312 de 2019, Ley 1562 de 2012, Decreto 1072 de 2015...
+```
+
+#### ⚠️ Marco Normativo Vencido
+```
+Marco Normativo:
+  Estado: Vencido (Actualizado hace 95 días - 2025-11-10)
+  Método: automatico
+  Resolución 0312 de 2019, Ley 1562 de 2012...
+```
+
+**Recomendación:** Ir al panel "Insumos IA - Pregeneración" y actualizar antes de generar.
+
+#### ⚠️ Sin Marco Normativo
+```
+Marco Normativo:
+  No hay marco normativo registrado. La IA usará su conocimiento base (puede estar desactualizado).
+```
+
+**Recomendación:** Consultar marco normativo con IA antes de generar el documento.
+
+---
+
 ## Endpoint Backend
 
 ### Ruta
@@ -122,15 +179,48 @@ public function previsualizarDatos(string $tipoDocumento, int $idCliente)
 
     // ══════════════════════════════════════════════
     // ACTIVIDADES DEL PLAN DE TRABAJO (Fase 1)
+    // Solo para documentos de 3 partes (programa_con_pta)
     // ══════════════════════════════════════════════
     // Consulta tbl_pta_cliente filtrando por tipo_servicio
     // segun getFiltroServicioPTA($tipoDocumento)
 
     // ══════════════════════════════════════════════
     // INDICADORES (Fase 2)
+    // Solo para documentos de 3 partes (programa_con_pta)
     // ══════════════════════════════════════════════
     // Consulta tbl_indicadores_sst filtrando por categoria
     // segun getCategoriaIndicador($tipoDocumento)
+
+    // ══════════════════════════════════════════════
+    // INSUMOS IA - PREGENERACION (Marco Normativo)
+    // SIEMPRE se consulta (todos los flujos)
+    // ══════════════════════════════════════════════
+    $marcoNormativoInfo = [
+        'existe' => false,
+        'vigente' => false,
+        'texto_preview' => '',
+        'fecha' => '',
+        'dias' => 0,
+        'metodo' => '',
+    ];
+
+    try {
+        $marcoService = new \App\Services\MarcoNormativoService();
+        $infoMarco = $marcoService->obtenerInfo($tipoDocumento);
+
+        if ($infoMarco['existe']) {
+            $marcoNormativoInfo = [
+                'existe' => true,
+                'vigente' => $infoMarco['vigente'],
+                'texto_preview' => mb_substr($infoMarco['texto'], 0, 200) . '...',
+                'fecha' => $infoMarco['fecha'],
+                'dias' => $infoMarco['dias'],
+                'metodo' => $infoMarco['metodo'],
+            ];
+        }
+    } catch (\Exception $e) {
+        log_message('error', "Error consultando marco normativo: " . $e->getMessage());
+    }
 
     // ══════════════════════════════════════════════
     // RESPUESTA JSON
@@ -138,6 +228,7 @@ public function previsualizarDatos(string $tipoDocumento, int $idCliente)
     return $this->response->setJSON([
         'ok'          => true,
         'tipo'        => $handler->getNombre(),
+        'flujo'       => $flujo,
         'actividades' => $actividades,    // [{nombre, mes, estado}]
         'indicadores' => $indicadores,    // [{nombre, tipo, meta}]
         'contexto'    => [
@@ -155,7 +246,8 @@ public function previsualizarDatos(string $tipoDocumento, int $idCliente)
             'tiene_comite_convivencia' => (bool)($contexto['tiene_comite_convivencia'] ?? false),
             'tiene_brigada'        => (bool)($contexto['tiene_brigada_emergencias'] ?? false),
             'observaciones'        => $contexto['observaciones_contexto'] ?? '',
-        ]
+        ],
+        'marco_normativo' => $marcoNormativoInfo
     ]);
 }
 ```
@@ -264,6 +356,27 @@ async function mostrarVerificacionDatos(callback) {
         html += '<li>' + i.nombre + ' (Meta: ' + i.meta + ')</li>';
     });
     html += '</ul>';
+
+    // --- Marco Normativo ---
+    if (data.marco_normativo && data.marco_normativo.existe) {
+        const esVigente = data.marco_normativo.vigente;
+        const icono = esVigente ? '&#9989;' : '&#9888;&#65039;';
+        const estado = esVigente
+            ? '<span style="color: #28a745;">Vigente</span>'
+            : '<span style="color: #dc3545;">Vencido</span>';
+
+        html += '<h6><strong>' + icono + ' Marco Normativo:</strong></h6>';
+        html += '<div style="padding-left: 20px;">';
+        html += '<p><strong>Estado:</strong> ' + estado + ' (Actualizado hace '
+              + data.marco_normativo.dias + ' días - ' + data.marco_normativo.fecha + ')</p>';
+        html += '<p><strong>Método:</strong> ' + (data.marco_normativo.metodo || 'N/A') + '</p>';
+        html += '<p style="color: #6c757d;"><em>' + data.marco_normativo.texto_preview + '</em></p>';
+        html += '</div>';
+    } else {
+        html += '<h6><strong>&#9888;&#65039; Marco Normativo:</strong></h6>';
+        html += '<p style="color: #856404; padding-left: 20px;">No hay marco normativo registrado. '
+              + 'La IA usará su conocimiento base (puede estar desactualizado).</p>';
+    }
 
     // --- Contexto ---
     html += '<h6>Contexto:</h6>';
@@ -423,3 +536,12 @@ Al agregar un nuevo tipo de documento al sistema, asegurar:
 | `ZZ_81_PARTE2.md` | Los indicadores que se muestran vienen de Parte 2 |
 | `ZZ_95_PARTE3.md` | El SweetAlert aparece ANTES de que la Parte 3 genere el documento |
 | `ZZ_77_PREPARACION.md` | El contexto del cliente se configura en la preparacion |
+| `INSUMOS_IA_PREGENERACION.md` | El marco normativo mostrado viene del módulo de Insumos IA |
+
+---
+
+## Historial de Cambios
+
+| Fecha | Cambio |
+|-------|--------|
+| 2026-02-15 | **✅ Agregada sección de Marco Normativo** - El SweetAlert ahora muestra información de "Insumos IA - Pregeneración" (marco normativo vigente) para que el consultor verifique si la IA usará legislación actualizada antes de generar el documento |

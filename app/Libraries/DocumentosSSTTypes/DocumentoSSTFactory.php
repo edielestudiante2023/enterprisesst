@@ -70,6 +70,16 @@ class DocumentoSSTFactory
         'programa_mantenimiento_periodico' => ProgramaMantenimientoPeriodico::class,
         // 1.1.5 Identificacion de Trabajadores de Alto Riesgo y Cotizacion de Pension Especial
         'identificacion_alto_riesgo' => IdentificacionAltoRiesgo::class,
+        // Actas de Constitucion - Comites Electorales
+        'acta_constitucion_copasst' => ActaConstitucionCopasst::class,
+        'acta_constitucion_cocolab' => ActaConstitucionCocolab::class,
+        'acta_constitucion_brigada' => ActaConstitucionBrigada::class,
+        'acta_constitucion_vigia' => ActaConstitucionVigia::class,
+        // Actas de Recomposicion - Comites Electorales
+        'acta_recomposicion_copasst' => ActaRecomposicionCopasst::class,
+        'acta_recomposicion_cocolab' => ActaRecomposicionCocolab::class,
+        'acta_recomposicion_brigada' => ActaRecomposicionBrigada::class,
+        'acta_recomposicion_vigia' => ActaRecomposicionVigia::class,
     ];
 
     /**

@@ -21,7 +21,31 @@
       "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" stash)",
       "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\" stash pop)",
       "Bash(php:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: corregir SQL LIKE con comillas dobles en CapacitacionSSTService y agregar script migracion flujo\n\n- CapacitacionSSTService.php: cambiar comillas dobles a simples en LIKE clause \\(MySQL interpreta \"\" como identificador de columna\\)\n- Agregar escapeLikeString\\(\\) para prevenir SQL injection\n- Agregar script PHP CLI fix_flujo_programa_capacitacion.php \\(ya ejecutado en local y produccion\\)\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git stash:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(findstr:*)",
+      "Bash(C:xamppphpphp.exe -m)",
+      "Bash(\"C:/xampp/php/php.exe\" -m)",
+      "Bash(powershell -ExecutionPolicy Bypass -Command \"Move-Item -Path ''C:\\\\XboxGames'' -Destination ''D:\\\\XboxGames'' -Force; Write-Host ''Movido OK''\")",
+      "Bash(powershell -ExecutionPolicy Bypass -Command \"Remove-Item -Path ''C:\\\\XboxGames'' -Recurse -Force -ErrorAction SilentlyContinue; \\(Get-ChildItem ''C:\\\\XboxGames'' -Recurse -File -ErrorAction SilentlyContinue\\).Count\")",
+      "Bash(powershell:*)",
+      "Bash(del \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\app\\\\SQL\\\\_temp_describe.php\")",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(ping:*)",
+      "Bash(del \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\test_openai_curl.php\")",
+      "Bash(./mysql.exe:*)",
+      "Bash(net stop:*)",
+      "Bash(net start:*)",
+      "Bash(tasklist:*)",
+      "Bash(test:*)",
+      "Bash(mysql.exe:*)",
+      "Bash(ls:*)"
     ]
   }
 }

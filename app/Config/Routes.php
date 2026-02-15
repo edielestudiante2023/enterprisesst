@@ -981,6 +981,27 @@ $routes->get('/documentos-sst/(:num)/programa-mantenimiento-periodico/(:num)', '
 $routes->get('/documentos-sst/(:num)/identificacion-alto-riesgo/(:num)', 'DocumentosSSTController::identificacionAltoRiesgo/$1/$2');
 $routes->post('/documentos-sst/adjuntar-soporte-alto-riesgo', 'DocumentosSSTController::adjuntarSoporteAltoRiesgo');
 
+// 2.1 Políticas de SST (adicionales)
+$routes->get('/documentos-sst/(:num)/politica-alcohol-drogas/(:num)', 'DocumentosSSTController::politicaAlcoholDrogas/$1/$2');
+$routes->get('/documentos-sst/(:num)/politica-acoso-laboral/(:num)', 'DocumentosSSTController::politicaAcosoLaboral/$1/$2');
+$routes->get('/documentos-sst/(:num)/politica-violencias-genero/(:num)', 'DocumentosSSTController::politicaViolenciasGenero/$1/$2');
+$routes->get('/documentos-sst/(:num)/politica-discriminacion/(:num)', 'DocumentosSSTController::politicaDiscriminacion/$1/$2');
+
+// 2.8 Comunicación del SG-SST
+$routes->get('/documentos-sst/(:num)/mecanismos-comunicacion-sgsst/(:num)', 'DocumentosSSTController::mecanismosComunicacionSgsst/$1/$2');
+
+// 1.1 Actas de Constitución de Comités y Brigadas
+$routes->get('/documentos-sst/(:num)/acta-constitucion-copasst/(:num)', 'DocumentosSSTController::actaConstitucionCopasst/$1/$2');
+$routes->get('/documentos-sst/(:num)/acta-constitucion-cocolab/(:num)', 'DocumentosSSTController::actaConstitucionCocolab/$1/$2');
+$routes->get('/documentos-sst/(:num)/acta-constitucion-brigada/(:num)', 'DocumentosSSTController::actaConstitucionBrigada/$1/$2');
+$routes->get('/documentos-sst/(:num)/acta-constitucion-vigia/(:num)', 'DocumentosSSTController::actaConstitucionVigia/$1/$2');
+
+// 1.1 Actas de Recomposición de Comités y Brigadas
+$routes->get('/documentos-sst/(:num)/acta-recomposicion-copasst/(:num)', 'DocumentosSSTController::actaRecomposicionCopasst/$1/$2');
+$routes->get('/documentos-sst/(:num)/acta-recomposicion-cocolab/(:num)', 'DocumentosSSTController::actaRecomposicionCocolab/$1/$2');
+$routes->get('/documentos-sst/(:num)/acta-recomposicion-brigada/(:num)', 'DocumentosSSTController::actaRecomposicionBrigada/$1/$2');
+$routes->get('/documentos-sst/(:num)/acta-recomposicion-vigia/(:num)', 'DocumentosSSTController::actaRecomposicionVigia/$1/$2');
+
 // Asignacion de Responsable SG-SST (Patron B - controlador independiente)
 $routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'PzasignacionresponsableSstController::crear/$1');
 $routes->get('/documentos-sst/(:num)/asignacion-responsable-sst/(:num)', 'PzasignacionresponsableSstController::ver/$1/$2');
@@ -1006,6 +1027,15 @@ $routes->post('/documentos-sst/(:num)/regenerar-responsabilidades-trabajadores/(
 $routes->post('/documentos-sst/(:num)/crear-responsabilidades-vigia-sst', 'PzresponsabilidadesVigiaSstController::crear/$1');
 $routes->get('/documentos-sst/(:num)/responsabilidades-vigia-sst/(:num)', 'PzresponsabilidadesVigiaSstController::ver/$1/$2');
 $routes->post('/documentos-sst/(:num)/regenerar-responsabilidades-vigia-sst/(:num)', 'PzresponsabilidadesVigiaSstController::regenerar/$1/$2');
+
+// Insumos IA - Pregeneración: Marco Normativo
+$routes->get('/documentos/marco-normativo-dashboard', 'DocumentosSSTController::marcoNormativoDashboard');
+$routes->get('/documentos/marco-normativo/(:segment)', 'DocumentosSSTController::getMarcoNormativo/$1');
+$routes->post('/documentos/marco-normativo/guardar', 'DocumentosSSTController::guardarMarcoNormativo');
+$routes->post('/documentos/marco-normativo/consultar-ia', 'DocumentosSSTController::consultarMarcoNormativoIA');
+
+// Dashboard de gestión de documentos SST por cliente
+$routes->get('/documentos-sst/lista/(:num)', 'DocumentosSSTController::listaDocumentos/$1');
 
 // Generador de documentos por secciones con IA
 $routes->get('/documentos/generar/(:segment)/(:num)', 'DocumentosSSTController::generarConIA/$1/$2');

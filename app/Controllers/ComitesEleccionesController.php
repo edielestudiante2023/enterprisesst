@@ -2386,7 +2386,7 @@ class ComitesEleccionesController extends BaseController
         }
 
         // Buscar o crear el documento en tbl_documentos_sst
-        $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente']);
+        $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente'], $data);
         $data['documento'] = $documento;
 
         // Obtener firmas electrónicas si existen
@@ -2426,7 +2426,7 @@ class ComitesEleccionesController extends BaseController
     /**
      * Obtener o crear registro del Acta de Constitución en tbl_documentos_sst
      */
-    private function obtenerOCrearDocumentoActa(array $proceso, array $cliente): array
+    private function obtenerOCrearDocumentoActa(array $proceso, array $cliente, ?array $datosActa = null): array
     {
         $tipoDocumento = 'acta_constitucion_' . strtolower($proceso['tipo_comite']);
         $anio = $proceso['anio'];
@@ -2444,6 +2444,17 @@ class ComitesEleccionesController extends BaseController
             return $documento;
         }
 
+        // Generar snapshot de contenido via Factory
+        $contenidoJson = null;
+        try {
+            $tipoDocObj = \App\Libraries\DocumentosSSTTypes\DocumentoSSTFactory::crear($tipoDocumento);
+            if ($datosActa && method_exists($tipoDocObj, 'buildContenidoSnapshot')) {
+                $contenidoJson = $tipoDocObj->buildContenidoSnapshot($datosActa);
+            }
+        } catch (\Exception $e) {
+            log_message('warning', "No se pudo generar snapshot para {$tipoDocumento}: " . $e->getMessage());
+        }
+
         // Crear nuevo documento
         $titulo = 'Acta de Constitucion ' . $proceso['tipo_comite'] . ' ' . $anio;
         $codigo = 'FT-SST-013';
@@ -2454,6 +2465,7 @@ class ComitesEleccionesController extends BaseController
             'titulo' => $titulo,
             'codigo' => $codigo,
             'anio' => $anio,
+            'contenido' => $contenidoJson,
             'version' => 1,
             'estado' => 'generado',
             'observaciones' => 'Generado automaticamente desde proceso electoral ID: ' . $proceso['id_proceso'],
@@ -2463,6 +2475,21 @@ class ComitesEleccionesController extends BaseController
 
         $this->db->table('tbl_documentos_sst')->insert($nuevoDocumento);
         $nuevoDocumento['id_documento'] = $this->db->insertID();
+
+        // Crear version inicial 1.0 en el sistema de versionamiento
+        try {
+            $versionService = new \App\Services\DocumentoVersionService();
+            $usuarioId = (int)(session()->get('id_usuario') ?? session()->get('id_consultor') ?? 0);
+            $usuarioNombre = session()->get('nombre') ?? 'Sistema';
+            $versionService->crearVersionInicial(
+                $nuevoDocumento['id_documento'],
+                $usuarioId,
+                $usuarioNombre,
+                'Generacion automatica desde proceso electoral ID: ' . $proceso['id_proceso']
+            );
+        } catch (\Exception $e) {
+            log_message('error', "Error creando version inicial para {$tipoDocumento}: " . $e->getMessage());
+        }
 
         return $nuevoDocumento;
     }
@@ -2742,7 +2769,7 @@ class ComitesEleccionesController extends BaseController
         }
 
         // Obtener o crear documento del acta en tbl_documentos_sst
-        $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente']);
+        $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente'], $data);
 
         // Obtener solicitudes de firma existentes
         $solicitudesExistentes = $this->db->table('tbl_doc_firma_solicitudes')
@@ -2902,7 +2929,7 @@ class ComitesEleccionesController extends BaseController
         }
 
         // Obtener documento
-        $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente']);
+        $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente'], $data);
         $idDocumento = $documento['id_documento'];
 
         // Preparar mapa de firmantes con sus datos
@@ -3178,7 +3205,7 @@ class ComitesEleccionesController extends BaseController
             return redirect()->back()->with('error', 'Proceso no encontrado');
         }
 
-        $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente']);
+        $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente'], $data);
 
         $solicitudes = $this->db->table('tbl_doc_firma_solicitudes')
             ->where('id_documento', $documento['id_documento'])
@@ -3857,7 +3884,7 @@ class ComitesEleccionesController extends BaseController
         $idCliente = $data['cliente']['id_cliente'];
         $idRecomposicion = $data['recomposicion']['id_recomposicion'];
 
-        // Buscar documento existente
+        // Buscar documento existente por titulo especifico de esta recomposicion
         $documento = $this->db->table('tbl_documentos_sst')
             ->where('id_cliente', $idCliente)
             ->where('tipo_documento', $tipoDocumento)
@@ -3867,6 +3894,17 @@ class ComitesEleccionesController extends BaseController
 
         if ($documento) {
             return $documento;
+        }
+
+        // Generar snapshot de contenido via Factory
+        $contenidoJson = null;
+        try {
+            $tipoDocObj = \App\Libraries\DocumentosSSTTypes\DocumentoSSTFactory::crear($tipoDocumento);
+            if (method_exists($tipoDocObj, 'buildContenidoSnapshot')) {
+                $contenidoJson = $tipoDocObj->buildContenidoSnapshot($data);
+            }
+        } catch (\Exception $e) {
+            log_message('warning', "No se pudo generar snapshot para {$tipoDocumento}: " . $e->getMessage());
         }
 
         // Crear nuevo documento
@@ -3885,6 +3923,8 @@ class ComitesEleccionesController extends BaseController
             'tipo_documento' => $tipoDocumento,
             'titulo' => $titulo,
             'codigo' => $codigo,
+            'anio' => $data['proceso']['anio'],
+            'contenido' => $contenidoJson,
             'version' => 1,
             'estado' => 'borrador',
             'created_at' => date('Y-m-d H:i:s'),
@@ -3898,6 +3938,21 @@ class ComitesEleccionesController extends BaseController
         $this->db->table('tbl_recomposiciones_comite')
             ->where('id_recomposicion', $idRecomposicion)
             ->update(['id_documento' => $nuevoDocumento['id_documento']]);
+
+        // Crear version inicial 1.0 en el sistema de versionamiento
+        try {
+            $versionService = new \App\Services\DocumentoVersionService();
+            $usuarioId = (int)(session()->get('id_usuario') ?? session()->get('id_consultor') ?? 0);
+            $usuarioNombre = session()->get('nombre') ?? 'Sistema';
+            $versionService->crearVersionInicial(
+                $nuevoDocumento['id_documento'],
+                $usuarioId,
+                $usuarioNombre,
+                'Recomposicion #' . $data['recomposicion']['numero_recomposicion'] . ' - Proceso electoral ID: ' . $data['proceso']['id_proceso']
+            );
+        } catch (\Exception $e) {
+            log_message('error', "Error creando version inicial para {$tipoDocumento}: " . $e->getMessage());
+        }
 
         return $nuevoDocumento;
     }
