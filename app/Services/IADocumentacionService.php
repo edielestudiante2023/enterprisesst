@@ -285,6 +285,16 @@ ADVERTENCIAS:
             'max_tokens' => $maxTokens
         ];
 
+        // DEBUG TEMPORAL: Loguear prompt cuando es Marco Legal
+        if (strpos($seccionLower, 'marco') !== false && strpos($seccionLower, 'legal') !== false) {
+            log_message('debug', "=== MARCO LEGAL DEBUG ===");
+            log_message('debug', "Sección: {$nombreSeccion}");
+            log_message('debug', "Max Tokens: {$maxTokens}");
+            log_message('debug', "SYSTEM PROMPT:\n" . $prompts['system']);
+            log_message('debug', "USER PROMPT:\n" . $prompts['user']);
+            log_message('debug', "=== FIN DEBUG ===");
+        }
+
         $ch = curl_init($this->apiUrl);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
