@@ -45,7 +45,9 @@
       "Bash(tasklist:*)",
       "Bash(test:*)",
       "Bash(mysql.exe:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:dashboard.cycloidtalent.com)"
     ]
   }
 }

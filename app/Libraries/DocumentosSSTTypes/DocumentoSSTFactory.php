@@ -37,6 +37,7 @@ class DocumentoSSTFactory
         'politica_violencias_genero' => PoliticaViolenciasGenero::class,
         'politica_discriminacion' => PoliticaDiscriminacion::class,
         'politica_prevencion_emergencias' => PoliticaPrevencionEmergencias::class,
+        'politica_desconexion_laboral' => PoliticaDesconexionLaboral::class,
         // 1.1.8 Conformacion Comite de Convivencia
         'manual_convivencia_laboral' => ManualConvivenciaLaboral::class,
         // 2.2.1 Objetivos y Metas del SG-SST

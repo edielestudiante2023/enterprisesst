@@ -986,6 +986,7 @@ $routes->get('/documentos-sst/(:num)/politica-alcohol-drogas/(:num)', 'Documento
 $routes->get('/documentos-sst/(:num)/politica-acoso-laboral/(:num)', 'DocumentosSSTController::politicaAcosoLaboral/$1/$2');
 $routes->get('/documentos-sst/(:num)/politica-violencias-genero/(:num)', 'DocumentosSSTController::politicaViolenciasGenero/$1/$2');
 $routes->get('/documentos-sst/(:num)/politica-discriminacion/(:num)', 'DocumentosSSTController::politicaDiscriminacion/$1/$2');
+$routes->get('/documentos-sst/(:num)/politica-desconexion-laboral/(:num)', 'DocumentosSSTController::politicaDesconexionLaboral/$1/$2');
 
 // 2.8 Comunicación del SG-SST
 $routes->get('/documentos-sst/(:num)/mecanismos-comunicacion-sgsst/(:num)', 'DocumentosSSTController::mecanismosComunicacionSgsst/$1/$2');
