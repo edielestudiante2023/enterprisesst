@@ -680,8 +680,13 @@ class DocumentosSSTController extends BaseController
             $contextoBase = $documentoHandler->getContextoBase($cliente, $contexto);
 
             // INSUMOS IA - Pregeneración: obtener marco normativo desde BD
-            $marcoService = new MarcoNormativoService();
-            $marcoNormativo = $marcoService->obtenerMarcoNormativo($tipoDocumento);
+            // EXCEPTO para marco_legal (que ES el marco que se está generando)
+            // Fix: Evitar conflicto de instrucciones IA (ver TROUBLESHOOTING_MARCO_LEGAL_IA.md)
+            $marcoNormativo = null;
+            if ($seccion !== 'marco_legal') {
+                $marcoService = new MarcoNormativoService();
+                $marcoNormativo = $marcoService->obtenerMarcoNormativo($tipoDocumento);
+            }
 
             // Preparar datos para el servicio de IA
             $datosIA = [
