@@ -23,6 +23,7 @@
 
 // Obtener configuración si no viene pasada
 $tipoDocConfig = $tipoDocConfig ?? null;
+$vigia = $vigia ?? null;
 $estandar = $tipoDocConfig['estandar'] ?? $documento['estandar'] ?? '';
 $categoria = $tipoDocConfig['categoria'] ?? 'documento';
 $icono = $tipoDocConfig['icono'] ?? 'bi-file-text';
@@ -281,17 +282,17 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalHistorialVersiones">
                         <i class="bi bi-clock-history me-1"></i>Historial
                     </button>
-                    <?php if (in_array($documento['estado'] ?? '', ['aprobado', 'firmado'])): ?>
-                    <button type="button" class="btn btn-outline-info btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalNuevaVersion">
-                        <i class="bi bi-plus-circle me-1"></i>Nueva Versión
-                    </button>
-                    <?php endif; ?>
                     <a href="<?= base_url('documentos-sst/exportar-pdf/' . $documento['id_documento']) ?>" class="btn btn-danger btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                     </a>
                     <a href="<?= base_url('documentos-sst/exportar-word/' . $documento['id_documento']) ?>" class="btn btn-primary btn-sm me-2" target="_blank">
                         <i class="bi bi-file-earmark-word me-1"></i>Word
                     </a>
+                    <?php if (in_array($documento['estado'] ?? '', ['aprobado', 'firmado'])): ?>
+                    <button type="button" class="btn btn-outline-info btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalNuevaVersion">
+                        <i class="bi bi-plus-circle me-1"></i>Nueva Versión
+                    </button>
+                    <?php endif; ?>
                     <?php if (in_array($documento['estado'] ?? '', ['borrador', 'generado', 'aprobado', 'en_revision'])): ?>
                         <a href="<?= base_url('firma/solicitar/' . $documento['id_documento']) ?>" class="btn btn-success btn-sm me-2" target="_blank">
                             <i class="bi bi-pen me-1"></i>Solicitar Firmas
@@ -644,13 +645,15 @@ if (!function_exists('convertirMarkdownAHtml')) {
                                     </div>
                                 </div>
                             </td>
-                            <!-- DELEGADO SST o COPASST / REVISÓ -->
+                            <!-- DELEGADO SST o VIGÍA/COPASST / REVISÓ -->
                             <td style="vertical-align: top; padding: 15px; height: 160px; position: relative;">
                                 <div style="margin-bottom: 6px;">
                                     <strong style="color: #495057; font-size: 0.8rem;">Nombre:</strong>
                                     <span style="border-bottom: 1px dotted #999; display: inline-block; min-width: 120px; padding-bottom: 2px; font-size: 0.85rem;">
                                         <?php if ($requiereDelegado): ?>
                                             <?= !empty($delegadoNombre) ? esc($delegadoNombre) : '' ?>
+                                        <?php else: ?>
+                                            <?= !empty($vigia['nombre_vigia'] ?? '') ? esc($vigia['nombre_vigia']) : '' ?>
                                         <?php endif; ?>
                                     </span>
                                 </div>
@@ -664,13 +667,15 @@ if (!function_exists('convertirMarkdownAHtml')) {
                                         <?php endif; ?>
                                     </span>
                                 </div>
-                                <!-- Firma posicionada al fondo -->
+                                <!-- Firma posicionada al fondo (prioridad: electrónica delegado > electrónica vigía > física vigía) -->
                                 <div style="position: absolute; bottom: 12px; left: 15px; right: 15px; text-align: center;">
                                     <?php
-                                    $firmaDelegado = ($firmasElectronicas ?? [])['delegado_sst'] ?? null;
-                                    if ($firmaDelegado && !empty($firmaDelegado['evidencia']['firma_imagen'])):
+                                    $firmaVigiaElectronica = ($firmasElectronicas ?? [])['delegado_sst'] ?? ($firmasElectronicas ?? [])['vigia_sst'] ?? null;
+                                    if ($firmaVigiaElectronica && !empty($firmaVigiaElectronica['evidencia']['firma_imagen'])):
                                     ?>
-                                        <img src="<?= $firmaDelegado['evidencia']['firma_imagen'] ?>" alt="Firma Delegado SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                        <img src="<?= $firmaVigiaElectronica['evidencia']['firma_imagen'] ?>" alt="Firma Vigía SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
+                                    <?php elseif (!empty($vigia['firma_vigia'] ?? '')): ?>
+                                        <img src="<?= base_url('uploads/' . $vigia['firma_vigia']) ?>" alt="Firma Vigía SST" style="max-height: 56px; max-width: 168px; margin-bottom: 3px;">
                                     <?php endif; ?>
                                     <div style="border-top: 1px solid #333; width: 85%; margin: 0 auto; padding-top: 4px;">
                                         <small style="color: #666; font-size: 0.7rem;">Firma</small>

@@ -4244,12 +4244,8 @@ Se debe generar acta que registre:
             $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_sst_general');
         }
 
-        // Obtener historial de versiones para la tabla de Control de Cambios
-        $versiones = $this->db->table('tbl_doc_versiones_sst')
-            ->where('id_documento', $documento['id_documento'])
-            ->orderBy('fecha_autorizacion', 'ASC')
-            ->get()
-            ->getResultArray();
+        // Obtener historial de versiones usando servicio centralizado
+        $versiones = array_reverse($this->versionService->obtenerHistorial($documento['id_documento']));
 
         // Obtener responsables del cliente para las firmas
         $responsableModel = new ResponsableSSTModel();
@@ -4266,6 +4262,11 @@ Se debe generar acta que registre:
             $consultorModel = new \App\Models\ConsultantModel();
             $consultor = $consultorModel->find($idConsultor);
         }
+
+        // Obtener datos del vigía SST para firma física
+        $vigia = null;
+        $vigiaModel = new \App\Models\VigiaModel();
+        $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
         // Obtener firmas electrónicas del documento
         $firmasElectronicas = [];
@@ -4296,6 +4297,7 @@ Se debe generar acta que registre:
             'responsables' => $responsables,
             'contexto' => $contexto,
             'consultor' => $consultor,
+            'vigia' => $vigia,
             'firmasElectronicas' => $firmasElectronicas,
             'tipoDocumento' => 'politica_sst_general'
         ];
@@ -4462,6 +4464,334 @@ Se debe generar acta que registre:
             'consultor' => $consultor,
             'firmasElectronicas' => $firmasElectronicas,
             'tipoDocumento' => 'politica_desconexion_laboral'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista previa de la Política de Prevención del Consumo de Alcohol, Tabaco y SPA (2.1.1)
+     */
+    public function politicaAlcoholDrogas(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'politica_alcohol_drogas')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/politica_alcohol_drogas/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Política de Prevención del Consumo de Alcohol, Tabaco y SPA.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_alcohol_drogas');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Política de Prevención del Consumo de Alcohol, Tabaco y SPA - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'politica_alcohol_drogas'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista previa de la Política de Prevención del Acoso Laboral (2.1.1)
+     */
+    public function politicaAcosoLaboral(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'politica_acoso_laboral')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/politica_acoso_laboral/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Política de Prevención del Acoso Laboral.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_acoso_laboral');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Política de Prevención del Acoso Laboral - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'politica_acoso_laboral'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista previa de la Política de Prevención del Acoso Sexual y Violencias de Género (2.1.1)
+     */
+    public function politicaViolenciasGenero(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'politica_violencias_genero')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/politica_violencias_genero/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Política de Prevención del Acoso Sexual y Violencias de Género.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_violencias_genero');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Política de Prevención del Acoso Sexual y Violencias de Género - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'politica_violencias_genero'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista previa de la Política de Prevención de la Discriminación, Maltrato y Violencia (2.1.1)
+     */
+    public function politicaDiscriminacion(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'politica_discriminacion')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/politica_discriminacion/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Política de Prevención de la Discriminación, Maltrato y Violencia.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_discriminacion');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Política de Prevención de la Discriminación, Maltrato y Violencia - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'politica_discriminacion'
         ];
 
         return view('documentos_sst/documento_generico', $data);
