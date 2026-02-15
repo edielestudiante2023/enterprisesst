@@ -437,9 +437,16 @@ if (!function_exists('renderizarTablaHtml')) {
 
     <?php else: ?>
     <!-- ========== FIRMAS ESTÁNDAR ========== -->
+    <?php
+    // Determinar titulo segun numero REAL de firmantes que se renderizara
+    // 1-2 firmantes: "FIRMA DE ACEPTACIÓN" | 3 firmantes: "FIRMAS DE APROBACIÓN"
+    $esMaxDosFirmantes = ($soloFirmaConsultor && !$requiereDelegado)
+        || $soloFirmaRepLegal
+        || (!$firmasRepLegalYSegundo && !$requiereDelegado && ($esDosFirmantesPorDefinicion || $esSoloDosFirmantes));
+    ?>
     <div style="margin-top: 20px;">
         <div class="seccion-titulo" style="background-color: #198754; color: white; padding: 5px 8px; border: none;">
-            <?= ($soloFirmaConsultor || $soloFirmaRepLegal) ? 'FIRMA DE ACEPTACION' : ($firmasRepLegalYSegundo ? 'FIRMAS DE ACEPTACION' : 'FIRMAS DE APROBACION') ?>
+            <?= $esMaxDosFirmantes ? 'FIRMA DE ACEPTACIÓN' : 'FIRMAS DE APROBACIÓN' ?>
         </div>
 
         <?php if ($soloFirmaConsultor): ?>

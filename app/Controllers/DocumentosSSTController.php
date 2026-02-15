@@ -126,12 +126,30 @@ class DocumentosSSTController extends BaseController
      */
     protected function generarCodigoDocumento(int $idCliente, string $tipoDocumento): string
     {
-        // Obtener código base desde BD (NO hardcodeado)
-        $codigoBase = $this->obtenerCodigoPlantilla($tipoDocumento);
+        $codigoBase = null;
 
+        // PRIORIDAD 1: Intentar obtener desde Factory (nueva arquitectura)
+        try {
+            $handler = DocumentoSSTFactory::crear($tipoDocumento);
+            if ($handler && method_exists($handler, 'getCodigoDocumento')) {
+                $codigoBase = $handler->getCodigoDocumento();
+                log_message('info', "Código obtenido desde Factory para '$tipoDocumento': $codigoBase");
+            }
+        } catch (\Exception $e) {
+            log_message('info', "Factory no disponible para '$tipoDocumento': " . $e->getMessage());
+        }
+
+        // PRIORIDAD 2: Fallback a tabla legacy (compatibilidad)
         if (!$codigoBase) {
-            // Si no existe en BD, registrar error y usar fallback genérico
-            log_message('error', "Tipo de documento '$tipoDocumento' no tiene plantilla configurada en tbl_doc_plantillas");
+            $codigoBase = $this->obtenerCodigoPlantilla($tipoDocumento);
+            if ($codigoBase) {
+                log_message('info', "Código obtenido desde tbl_doc_plantillas para '$tipoDocumento': $codigoBase");
+            }
+        }
+
+        // PRIORIDAD 3: Fallback genérico (última opción)
+        if (!$codigoBase) {
+            log_message('error', "Tipo de documento '$tipoDocumento' sin código en Factory ni tbl_doc_plantillas");
             $codigoBase = 'DOC-GEN';
         }
 

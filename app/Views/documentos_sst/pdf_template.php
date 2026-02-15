@@ -653,9 +653,16 @@ if (!function_exists('renderizarTablaPdf')) {
 
     <?php else: ?>
     <!-- ========== FIRMAS ESTÁNDAR ========== -->
+    <?php
+    // Determinar titulo segun numero REAL de firmantes que se renderizara
+    // 1-2 firmantes: "FIRMA DE ACEPTACIÓN" | 3 firmantes: "FIRMAS DE APROBACIÓN"
+    $esMaxDosFirmantes = ($soloFirmaConsultor && !$requiereDelegado)
+        || $soloFirmaRepLegal
+        || (!$firmasRepLegalYSegundo && !$requiereDelegado && ($esDosFirmantesPorDefinicion || $esSoloDosFirmantes));
+    ?>
     <div style="margin-top: 25px;">
         <div style="background-color: #198754; color: white; padding: 8px 12px; font-weight: bold; font-size: 10pt;">
-            <?= ($soloFirmaConsultor || $soloFirmaRepLegal) ? 'FIRMA DE ACEPTACION' : ($firmasRepLegalYSegundo ? 'FIRMAS DE ACEPTACION' : 'FIRMAS DE APROBACIÓN') ?>
+            <?= $esMaxDosFirmantes ? 'FIRMA DE ACEPTACIÓN' : 'FIRMAS DE APROBACIÓN' ?>
         </div>
 
         <?php if ($soloFirmaConsultor): ?>
