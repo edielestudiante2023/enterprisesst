@@ -348,10 +348,10 @@ if (!function_exists('renderizarTablaHtml')) {
     $firmantesDefinidosArr = (isset($firmantesDefinidos) && is_array($firmantesDefinidos)) ? $firmantesDefinidos : [];
     $usaFirmantesDefinidos = !empty($firmantesDefinidosArr);
 
-    // Si tiene firmantes definidos ['representante_legal', 'responsable_sst'], son solo 2 firmantes
+    // Si tiene firmantes definidos ['representante_legal', 'responsable_sst'|'consultor_sst'], son solo 2 firmantes
     $esDosFirmantesPorDefinicion = $usaFirmantesDefinidos
         && in_array('representante_legal', $firmantesDefinidosArr)
-        && in_array('responsable_sst', $firmantesDefinidosArr)
+        && (in_array('responsable_sst', $firmantesDefinidosArr) || in_array('consultor_sst', $firmantesDefinidosArr))
         && !in_array('delegado_sst', $firmantesDefinidosArr)
         && !in_array('vigia_sst', $firmantesDefinidosArr)
         && !in_array('copasst', $firmantesDefinidosArr);
@@ -612,16 +612,22 @@ if (!function_exists('renderizarTablaHtml')) {
         </table>
 
         <?php elseif ($esDosFirmantesPorDefinicion): ?>
-        <!-- 2 FIRMANTES POR DEFINICIÓN: Responsable SST + Rep Legal (solo si NO hay delegado) -->
+        <!-- 2 FIRMANTES POR DEFINICIÓN: Consultor/Responsable SST + Rep Legal (solo si NO hay delegado) -->
+        <!-- Usado para documentos que definen firmantes específicos (ej: politica_desconexion_laboral, procedimiento_control_documental) -->
+        <?php
+        $esConsultorDef = in_array('consultor_sst', $firmantesDefinidosArr ?? []);
+        $headerElabora = $esConsultorDef ? 'Elaboro / Consultor SST' : 'Elaboro / Responsable del SG-SST';
+        $cargoElabora = $esConsultorDef ? 'Consultor SST' : 'Responsable del SG-SST';
+        ?>
         <table border="1" cellpadding="0" cellspacing="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #999; margin-top: 0;">
             <tr>
-                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Elaboro / Responsable del SG-SST</td>
+                <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;"><?= $headerElabora ?></td>
                 <td width="50%" style="background-color: #e9ecef; color: #333; font-weight: bold; text-align: center; padding: 4px; border: 1px solid #999; font-size: 8pt;">Aprobo / Representante Legal</td>
             </tr>
             <tr>
                 <td style="vertical-align: top; padding: 6px; border: 1px solid #999; font-size: 8pt;">
                     <p style="margin: 2px 0;"><b>Nombre:</b> <?= !empty($consultorNombre) ? esc($consultorNombre) : '_________________' ?></p>
-                    <p style="margin: 2px 0;"><b>Cargo:</b> Responsable del SG-SST</p>
+                    <p style="margin: 2px 0;"><b>Cargo:</b> <?= esc($cargoElabora) ?></p>
                     <?php if (!empty($consultorLicencia)): ?>
                     <p style="margin: 2px 0;"><b>Licencia SST:</b> <?= esc($consultorLicencia) ?></p>
                     <?php endif; ?>

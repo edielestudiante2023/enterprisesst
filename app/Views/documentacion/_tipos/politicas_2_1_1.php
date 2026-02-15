@@ -19,7 +19,7 @@ if (!empty($documentosSSTAprobados)) {
         }
     }
 }
-$totalEsperado = 6; // 6 políticas
+$totalEsperado = 7; // 7 políticas (incluye Desconexión Laboral - Ley 2191/2022)
 ?>
 
 <!-- Card de Carpeta con Dropdown de Políticas -->
@@ -58,6 +58,7 @@ $totalEsperado = 6; // 6 políticas
                                 'politica_acoso_laboral'          => ['icono' => 'bi-person-x',            'color' => 'text-danger',  'nombre' => 'Política Acoso Laboral'],
                                 'politica_violencias_genero'      => ['icono' => 'bi-gender-ambiguous',    'color' => 'text-purple',  'nombre' => 'Política Violencias de Género'],
                                 'politica_discriminacion'         => ['icono' => 'bi-people',              'color' => 'text-info',    'nombre' => 'Política Discriminación'],
+                                'politica_desconexion_laboral'    => ['icono' => 'bi-power',               'color' => 'text-success', 'nombre' => 'Política Desconexión Laboral'],
                                 'politica_prevencion_emergencias' => ['icono' => 'bi-exclamation-triangle','color' => 'text-danger',  'nombre' => 'Política Emergencias'],
                             ];
                             foreach ($politicas as $tipo => $info):
@@ -103,6 +104,7 @@ $totalEsperado = 6; // 6 políticas
                 <li>Política de Prevención del Acoso Laboral</li>
                 <li>Política de Prevención del Acoso Sexual y Violencias de Género</li>
                 <li>Política de Prevención de la Discriminación, Maltrato y Violencia</li>
+                <li>Política de Desconexión Laboral (Ley 2191/2022)</li>
                 <li>Política de Prevención y Respuesta ante Emergencias</li>
             </ol>
         </div>
