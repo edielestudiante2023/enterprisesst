@@ -4826,6 +4826,7 @@ Se debe generar acta que registre:
             'contexto' => $contexto,
             'consultor' => $consultor,
             'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento']),
             'tipoDocumento' => 'politica_discriminacion'
         ];
 

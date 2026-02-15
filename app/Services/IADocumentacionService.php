@@ -32,7 +32,10 @@ class IADocumentacionService
     {
         $prompt = $this->construirPrompt($datos);
 
-        $response = $this->llamarAPI($prompt);
+        // Extraer nombre de sección para ajustar max_tokens dinámicamente
+        $nombreSeccion = $datos['seccion']['nombre_seccion'] ?? '';
+
+        $response = $this->llamarAPI($prompt, $nombreSeccion);
 
         if ($response['success']) {
             return [
@@ -259,9 +262,18 @@ ADVERTENCIAS:
     /**
      * Llama a la API de OpenAI
      */
-    protected function llamarAPI(string $promptJson): array
+    protected function llamarAPI(string $promptJson, string $nombreSeccion = ''): array
     {
         $prompts = json_decode($promptJson, true);
+
+        // Ajustar max_tokens según tipo de sección
+        // Marco Legal/Normativo requiere más tokens para listar todas las normas
+        $maxTokens = 2000; // Default
+        $seccionLower = strtolower($nombreSeccion);
+        if (strpos($seccionLower, 'marco') !== false &&
+            (strpos($seccionLower, 'legal') !== false || strpos($seccionLower, 'normativ') !== false)) {
+            $maxTokens = 3500; // Más tokens para marco legal/normativo
+        }
 
         $data = [
             'model' => $this->model,
@@ -270,7 +282,7 @@ ADVERTENCIAS:
                 ['role' => 'user', 'content' => $prompts['user']]
             ],
             'temperature' => $this->temperature,
-            'max_tokens' => 2000
+            'max_tokens' => $maxTokens
         ];
 
         $ch = curl_init($this->apiUrl);

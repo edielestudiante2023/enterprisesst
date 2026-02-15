@@ -10,6 +10,11 @@ if (!function_exists('convertirMarkdownAHtml')) {
         // Si el contenido ya tiene tags HTML de estructura, devolverlo directamente
         // El contenido ya viene formateado con estilos desde el controlador
         if (preg_match('/<(p|ol|ul|li|div|table|br)\b[^>]*>/i', $texto)) {
+            // Word requiere <b>/<i> en vez de <strong>/<em>
+            if ($esWord) {
+                $texto = str_replace(['<strong>', '</strong>'], ['<b>', '</b>'], $texto);
+                $texto = str_replace(['<em>', '</em>'], ['<i>', '</i>'], $texto);
+            }
             return $texto;
         }
 
