@@ -259,6 +259,11 @@ if (!function_exists('renderizarTablaPdf')) {
             padding-left: 0;
         }
 
+        .seccion-contenido ol {
+            margin: 3px 0 3px 15px;
+            padding-left: 15px;
+        }
+
         .seccion-contenido li {
             margin-bottom: 2px;
         }

@@ -144,33 +144,22 @@ IMPORTANTE:
 - No pueden ser la norma habitual
 - Deben pactarse previamente en el contrato o mediante acuerdo escrito",
 
-            'marco_legal' => "Genera el marco normativo de la Politica de Desconexion Laboral para {$nombreEmpresa}.
+            'marco_legal' => "Lista el marco normativo aplicable a la Politica de Desconexion Laboral.
+NORMATIVA ESENCIAL:
+- Constitucion Politica de Colombia Art. 53: Principios fundamentales del trabajo, dignidad humana y derecho al descanso
+- Codigo Sustantivo del Trabajo: Jornadas laborales, descansos obligatorios y derechos fundamentales
+- Ley 1221 de 2008: Teletrabajo en Colombia
+- Decreto 1072 de 2015: Obligaciones del empleador en SST, prevencion de riesgos psicosociales (Libro 2, Parte 2, Titulo 4, Capitulo 6)
+- Resolucion 2646 de 2008: Factores de riesgo psicosocial en el trabajo
+- Resolucion 0312 de 2019: Estandares Minimos del SG-SST
+- Ley 2088 de 2021: Trabajo en casa como modalidad temporal
+- Ley 2191 de 2022: Derecho a la desconexion laboral en Colombia
 
-DEBES incluir OBLIGATORIAMENTE estas 7 normas (no omitir ninguna):
-
-1. Decreto 1072 de 2015 - Decreto Unico Reglamentario del Sector Trabajo: Obligaciones del empleador en SST, prevencion de riesgos psicosociales.
-
-2. Resolucion 0312 de 2019 - Estandares Minimos del SG-SST: Define estandares minimos del Sistema de Gestion de SST.
-
-3. Ley 2191 de 2022 - Derecho a la Desconexion Laboral: Regula el derecho de los trabajadores a desconectarse fuera del horario laboral.
-
-4. Codigo Sustantivo del Trabajo: Jornadas laborales, descansos obligatorios y derechos fundamentales.
-
-5. Ley 1221 de 2008 - Teletrabajo: Normas para promover el teletrabajo.
-
-6. Ley 2088 de 2021 - Trabajo en Casa: Regula el trabajo en casa como modalidad temporal.
-
-7. Constitucion Politica de Colombia Art. 53: Principios fundamentales del trabajo, dignidad humana y derecho al descanso.
-
-ADICIONALMENTE busca e incluye (si existen y son relevantes):
-- Resolucion 2646/2008 (riesgos psicosociales)
-- Circular 064/2020 (trabajo remoto)
-- Decretos posteriores a 2022 que complementen Ley 2191
-- Sentencias Corte Constitucional sobre desconexion laboral
-- Convenios OIT sobre jornadas
-
-FORMATO: Lista con vinetas. Cada norma con descripcion breve de aplicacion. Orden cronologico.
-IMPORTANTE: Las 7 normas base SON OBLIGATORIAS. No omitas ninguna.",
+CANTIDAD segun estandares:
+- 7 estandares: MAXIMO 6 normas
+- 21 estandares: MAXIMO 8 normas
+- 60 estandares: Hasta 10 normas
+FORMATO: Lista con vinetas, NO usar tablas.",
 
             'comunicacion' => "Define como se comunicara y divulgara la politica.
 INCLUIR:
