@@ -86,7 +86,7 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     $lineaProcesada = str_replace(['{{HTML_ITALIC_START}}', '{{HTML_ITALIC_END}}'], ['<i>', '</i>'], $lineaProcesada);
                     // Restaurar tags de estructura
                     $lineaProcesada = str_replace(['{{HTML_P_START}}', '{{HTML_P_END}}'], ['<p style="margin: 2px 0;">', '</p>'], $lineaProcesada);
-                    $lineaProcesada = str_replace(['{{HTML_OL_START}}', '{{HTML_OL_END}}'], ['<ol style="margin: 2px 0 2px 15px; padding-left: 15px;">', '</ol>'], $lineaProcesada);
+                    $lineaProcesada = str_replace(['{{HTML_OL_START}}', '{{HTML_OL_END}}'], ['<ol style="margin: 2px 0 2px 15px; padding-left: 15px; line-height: 1.0;">', '</ol>'], $lineaProcesada);
                     $lineaProcesada = str_replace(['{{HTML_UL_START}}', '{{HTML_UL_END}}'], ['<ul style="margin: 2px 0 2px 15px; padding-left: 0;">', '</ul>'], $lineaProcesada);
                     $lineaProcesada = str_replace(['{{HTML_LI_START}}', '{{HTML_LI_END}}'], ['<li>', '</li>'], $lineaProcesada);
                     $lineaProcesada = str_replace('{{HTML_BR}}', '<br>', $lineaProcesada);
@@ -204,6 +204,7 @@ if (!function_exists('renderizarTablaHtml')) {
             padding: 3px 5px;
         }
         ul { margin: 2px 0 2px 15px; padding-left: 0; line-height: 1.0; }
+        ol { margin: 2px 0 2px 15px; padding-left: 15px; line-height: 1.0; }
         li { margin-bottom: 1px; line-height: 1.0; }
     </style>
 </head>
