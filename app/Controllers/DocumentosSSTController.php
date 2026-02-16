@@ -4438,11 +4438,8 @@ Se debe generar acta que registre:
             $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_desconexion_laboral');
         }
 
-        $versiones = $this->db->table('tbl_doc_versiones_sst')
-            ->where('id_documento', $documento['id_documento'])
-            ->orderBy('fecha_autorizacion', 'ASC')
-            ->get()
-            ->getResultArray();
+        // Obtener historial de versiones usando servicio centralizado
+        $versiones = array_reverse($this->versionService->obtenerHistorial($documento['id_documento']));
 
         $responsableModel = new ResponsableSSTModel();
         $responsables = $responsableModel->getByCliente($idCliente);
@@ -4456,6 +4453,11 @@ Se debe generar acta que registre:
             $consultorModel = new \App\Models\ConsultantModel();
             $consultor = $consultorModel->find($idConsultor);
         }
+
+        // Obtener datos del vigía SST para firma física
+        $vigia = null;
+        $vigiaModel = new \App\Models\VigiaModel();
+        $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
         $firmasElectronicas = [];
         $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
@@ -4485,7 +4487,9 @@ Se debe generar acta que registre:
             'responsables' => $responsables,
             'contexto' => $contexto,
             'consultor' => $consultor,
+            'vigia' => $vigia,
             'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento']),
             'tipoDocumento' => 'politica_desconexion_laboral'
         ];
 

@@ -1063,7 +1063,7 @@ Modal que muestre todas las versiones de un documento al hacer click en "Versió
 
 ## Documentación Relacionada
 
-- [ACCESO_MODULO_ACTAS.md](./ACCESO_MODULO_ACTAS.md) - Patrón similar para módulo de actas
+- [ACCESO_MODULO_ACTAS.md](../10_DOCUMENTOS_ESPECIFICOS/ACCESO_MODULO_ACTAS.md) - Patrón similar para módulo de actas
 - [vista-web-estandar.md](../../.claude/projects/c--xampp-htdocs-enterprisesst/memory/vista-web-estandar.md) - Estilos estándar de vistas web
 - [versionamiento.md](../../.claude/projects/c--xampp-htdocs-enterprisesst/memory/versionamiento.md) - Sistema de versiones de documentos
 - [toolbar-documentos.md](../../.claude/projects/c--xampp-htdocs-enterprisesst/memory/toolbar-documentos.md) - Estándares de botones y toolbars

@@ -275,7 +275,7 @@ if ($existe === 0) {
 ## Referencias
 
 - [PROMPT_NUEVO_DOCUMENTO_SST.md](../../PROMPT_NUEVO_DOCUMENTO_SST.md) - Guía para crear documentos
-- [TROUBLESHOOTING_GENERACION_IA.md](./TROUBLESHOOTING_GENERACION_IA.md) - Solución de problemas
+- [TROUBLESHOOTING_GENERACION_IA.md](../02_GENERACION_IA/1_A_TROUBLESHOOTING_GENERACION_IA.md) - Solución de problemas
 - Resolución 0312 de 2019
 - Decreto 1072 de 2015
 

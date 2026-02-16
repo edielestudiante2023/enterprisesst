@@ -47,7 +47,8 @@
       "Bash(mysql.exe:*)",
       "Bash(ls:*)",
       "Bash(git commit:*)",
-      "WebFetch(domain:dashboard.cycloidtalent.com)"
+      "WebFetch(domain:dashboard.cycloidtalent.com)",
+      "Bash(git mv:*)"
     ]
   }
 }
