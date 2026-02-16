@@ -81,25 +81,16 @@ class MarcoNormativoService
 
         $nombreDocumento = $this->getNombreDocumento($tipo);
 
-        $prompt = "Eres un experto en legislación colombiana de Seguridad y Salud en el Trabajo (SST).
+        $prompt = "¿Qué leyes, decretos, resoluciones y normas vigentes en Colombia debo considerar para elaborar una {$nombreDocumento}?
 
-Necesito el marco normativo vigente en Colombia aplicable a: {$nombreDocumento}.
+Necesito un listado completo y detallado. Incluye al menos 8 normas aplicables, cubriendo:
+- La norma principal que obliga o regula este tipo de documento
+- Normas complementarias del Sistema de Gestión de SST
+- Resoluciones y decretos reglamentarios aplicables
+- Cualquier norma relacionada indirectamente (protección de datos, acoso laboral, jornadas, modalidades de trabajo, etc.)
 
-INSTRUCCIONES:
-1. Busca las normas, decretos, resoluciones y leyes VIGENTES a la fecha actual
-2. Incluye SOLO normativa que esté vigente (no derogada)
-3. Para cada norma indica: nombre completo, año, y qué regula específicamente para este tipo de documento
-4. Ordena de mayor a menor relevancia
-
-FORMATO de respuesta (usar exactamente este formato):
-**[Nombre de la norma]**
-[Qué regula o establece en relación con este documento]
-
-Ejemplo:
-**Decreto 1072 de 2015 - Decreto Único Reglamentario del Sector Trabajo**
-Libro 2, Parte 2, Título 4, Capítulo 6: Establece la obligación de implementar el SG-SST y define los requisitos de la política de SST.
-
-NO incluyas explicaciones adicionales, solo la lista de normas con su descripción.";
+Para cada norma indica: nombre completo, año y qué regula específicamente para este tipo de documento.
+Formato: lista con viñetas, agrupada por categoría de mayor a menor relevancia.";
 
         $data = [
             'model' => 'gpt-4o',
@@ -201,15 +192,46 @@ NO incluyas explicaciones adicionales, solo la lista de normas con su descripci�
     protected function getNombreDocumento(string $tipo): string
     {
         $nombres = [
-            'politica_sst_general'              => 'Política de Seguridad y Salud en el Trabajo',
-            'programa_capacitacion'              => 'Programa de Capacitación en SST',
-            'procedimiento_control_documental'   => 'Procedimiento de Control Documental del SG-SST',
-            'identificacion_alto_riesgo'         => 'Identificación de Trabajadores de Alto Riesgo',
-            'plan_emergencias'                   => 'Plan de Emergencias y Contingencias',
-            'programa_vigilancia_epidemiologica' => 'Programa de Vigilancia Epidemiológica',
-            'programa_riesgo_psicosocial'        => 'Programa de Riesgo Psicosocial',
-            'programa_orden_aseo'                => 'Programa de Orden y Aseo',
-            'programa_estilos_vida_saludable'    => 'Programa de Estilos de Vida Saludable',
+            // Políticas
+            'politica_sst_general'                  => 'Política de Seguridad y Salud en el Trabajo',
+            'politica_desconexion_laboral'           => 'Política de Desconexión Laboral',
+            'politica_acoso_laboral'                 => 'Política de Prevención del Acoso Laboral',
+            'politica_alcohol_drogas'                => 'Política de Prevención del Consumo de Alcohol, Tabaco y Sustancias Psicoactivas',
+            'politica_discriminacion'                => 'Política de Prevención de la Discriminación, Maltrato y Violencia',
+            'politica_prevencion_emergencias'        => 'Política de Prevención y Respuesta ante Emergencias',
+            'politica_violencias_genero'             => 'Política de Prevención del Acoso Sexual y Violencias de Género',
+            // Programas
+            'programa_capacitacion'                  => 'Programa de Capacitación en SST',
+            'programa_induccion_reinduccion'         => 'Programa de Inducción y Reinducción en SG-SST',
+            'programa_promocion_prevencion_salud'    => 'Programa de Promoción y Prevención en Salud',
+            'programa_estilos_vida_saludable'        => 'Programa de Estilos de Vida Saludable y Entornos Saludables',
+            'programa_evaluaciones_medicas_ocupacionales' => 'Programa de Evaluaciones Médicas Ocupacionales',
+            'programa_mantenimiento_periodico'       => 'Programa de Mantenimiento Periódico de Instalaciones, Equipos y Herramientas',
+            'programa_vigilancia_epidemiologica'     => 'Programa de Vigilancia Epidemiológica',
+            'programa_riesgo_psicosocial'            => 'Programa de Riesgo Psicosocial',
+            'programa_orden_aseo'                    => 'Programa de Orden y Aseo',
+            // PVE
+            'pve_riesgo_biomecanico'                 => 'Programa de Vigilancia Epidemiológica de Riesgo Biomecánico',
+            'pve_riesgo_psicosocial'                 => 'Programa de Vigilancia Epidemiológica de Riesgo Psicosocial',
+            // Planes
+            'plan_emergencias'                       => 'Plan de Emergencias y Contingencias',
+            'plan_objetivos_metas'                   => 'Plan de Objetivos y Metas del SG-SST',
+            // Procedimientos
+            'procedimiento_control_documental'       => 'Procedimiento de Control Documental del SG-SST',
+            'procedimiento_matriz_legal'             => 'Procedimiento de Identificación de Requisitos Legales',
+            'procedimiento_adquisiciones'            => 'Procedimiento de Adquisiciones y Contratación en SST',
+            'procedimiento_evaluaciones_medicas'     => 'Procedimiento de Evaluaciones Médicas Ocupacionales',
+            'procedimiento_evaluacion_proveedores'   => 'Procedimiento de Evaluación y Selección de Proveedores en SST',
+            'procedimiento_gestion_cambio'           => 'Procedimiento de Gestión del Cambio en SST',
+            'procedimiento_investigacion_accidentes' => 'Procedimiento de Investigación de Accidentes de Trabajo y Enfermedades Laborales',
+            'procedimiento_investigacion_incidentes' => 'Procedimiento de Investigación de Incidentes de Trabajo',
+            // Identificaciones y metodologías
+            'identificacion_alto_riesgo'             => 'Identificación de Trabajadores de Alto Riesgo y Cotización de Pensión Especial',
+            'identificacion_sustancias_cancerigenas' => 'Identificación de Sustancias Cancerígenas y Agentes Causantes de Enfermedad Laboral',
+            'metodologia_identificacion_peligros'    => 'Metodología de Identificación de Peligros y Valoración de Riesgos',
+            // Otros
+            'mecanismos_comunicacion_sgsst'          => 'Mecanismos de Comunicación y Auto Reporte en SG-SST',
+            'manual_convivencia_laboral'             => 'Manual de Convivencia Laboral',
         ];
 
         if (isset($nombres[$tipo])) {

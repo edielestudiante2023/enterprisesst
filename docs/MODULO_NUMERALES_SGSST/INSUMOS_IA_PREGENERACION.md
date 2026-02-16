@@ -168,7 +168,7 @@ Retorna: `{ "success": true, "texto": "..." }`
 // Endpoint: https://api.openai.com/v1/responses
 $data = [
     'model' => 'gpt-4o',
-    'input' => $prompt,  // Prompt pidiendo marco normativo vigente en Colombia
+    'input' => $prompt,  // Prompt natural pidiendo marco normativo
     'tools' => [
         ['type' => 'web_search_preview']  // Busqueda web en tiempo real
     ],
@@ -180,6 +180,28 @@ $data = [
 
 La respuesta de Responses API tiene estructura: `output[] -> content[] -> text`
 El metodo `extraerTextoRespuesta()` en MarcoNormativoService parsea esta estructura.
+
+### Prompt de consulta IA (v2 - 2026-02-15)
+
+```php
+$prompt = "¿Qué leyes, decretos, resoluciones y normas vigentes en Colombia
+debo considerar para elaborar una {$nombreDocumento}?
+
+Necesito un listado completo y detallado. Incluye al menos 8 normas aplicables, cubriendo:
+- La norma principal que obliga o regula este tipo de documento
+- Normas complementarias del Sistema de Gestión de SST
+- Resoluciones y decretos reglamentarios aplicables
+- Cualquier norma relacionada indirectamente (protección de datos, acoso laboral, jornadas, modalidades de trabajo, etc.)
+
+Para cada norma indica: nombre completo, año y qué regula específicamente para este tipo de documento.
+Formato: lista con viñetas, agrupada por categoría de mayor a menor relevancia.";
+```
+
+**Principio clave:** Prompts naturales y conversacionales generan mejores queries de web search que prompts sobre-ingeniados con roles/formato/ejemplos. Ver sección "Fix crítico del prompt" más abajo.
+
+### Array de nombres completos (v2 - 2026-02-15)
+
+`getNombreDocumento()` ahora tiene 35 tipos mapeados (antes solo 9). Esto es crítico porque el nombre del documento es la parte más importante del prompt para web search. Un nombre genérico como "Politica desconexion laboral" (fallback) produce peores búsquedas que "Política de Desconexión Laboral" (nombre completo con tildes).
 
 ## Inyeccion en el prompt
 
@@ -299,6 +321,65 @@ $datosIA = [
 
 ---
 
+## Fix crítico del prompt web search (2026-02-15)
+
+### Problema
+
+El prompt original de `consultarConIA()` traía solo 1-2 normas en vez de 8+. Una pregunta simple en ChatGPT con la misma herramienta (web search) traía 10 normas con fuentes oficiales.
+
+### Causa raíz
+
+El prompt estaba **sobre-ingeniado**: 800+ caracteres de instrucciones de formato, role-play, ejemplos y restricciones, con solo ~100 caracteres de pregunta real. La herramienta `web_search_preview` genera queries de búsqueda internos a partir del prompt — un prompt lleno de reglas de formato genera queries sobre formato, no sobre legislación.
+
+### Prompt v1 (antes - ineficaz)
+
+```
+"Eres un experto en legislación colombiana de SST.
+Necesito el marco normativo vigente en Colombia aplicable a: {nombre}.
+INSTRUCCIONES: 1. Busca... 2. Incluye SOLO... 3. Para cada norma indica...
+FORMATO de respuesta (usar exactamente este formato):
+**[Nombre de la norma]** [Qué regula...]
+Ejemplo: **Decreto 1072 de 2015...** Libro 2, Parte 2...
+NO incluyas explicaciones adicionales..."
+```
+
+**Resultado:** 1-2 normas, sin fuentes, sin categorización.
+
+### Prompt v2 (después - efectivo)
+
+```
+"¿Qué leyes, decretos, resoluciones y normas vigentes en Colombia
+debo considerar para elaborar una {nombre}?
+
+Incluye al menos 8 normas. Categorías sugeridas + formato mínimo."
+```
+
+**Resultado:** 9+ normas con fuentes oficiales, categorizado, con contexto rico por norma.
+
+### Comparación de resultados (Política de Desconexión Laboral)
+
+| Norma | Prompt v1 | Prompt v2 | ChatGPT directo |
+|-------|-----------|-----------|-----------------|
+| Ley 2191/2022 (Desconexión) | ✅ | ✅ con desglose | ✅ con desglose |
+| Decreto 1072/2015 (SG-SST) | Tal vez | ✅ | No (otro ángulo) |
+| Resolución 0312/2019 (Estándares) | No | ✅ | No |
+| Ley 2088/2021 (Trabajo en casa) | No | ✅ | ✅ |
+| Ley 2121/2021 (Trabajo remoto) | No | ✅ | ✅ |
+| Ley 2101/2021 (Reducción jornada) | No | ✅ | ✅ |
+| Ley 1010/2006 (Acoso laboral) | No | ✅ | ✅ |
+| Ley 1581/2012 (Datos personales) | No | ✅ | ✅ |
+| Ley 1221/2008 (Teletrabajo) | No | ✅ | ✅ |
+
+### Lección aprendida
+
+**Para herramientas de web search:** Prompts naturales y conversacionales (como hablarías con un colega) generan mejores queries de búsqueda que prompts con roles, formatos estrictos y ejemplos. La instrucción de formato debe ser mínima y al final.
+
+### Segundo fix: Array $nombres
+
+`getNombreDocumento()` pasó de 9 a 35 tipos mapeados. Antes, `politica_desconexion_laboral` caía al fallback genérico "Politica desconexion laboral" (sin tildes, sin artículos). Ahora resuelve a "Política de Desconexión Laboral" — un nombre completo que genera mejores queries de web search.
+
+---
+
 ## Historial de cambios del documento
 
 | Fecha | Cambio |
@@ -309,6 +390,7 @@ $datosIA = [
 | 2026-02-15 | UX: Orden de botones, SweetAlert educativo, toast mejorado, contexto IA personalizable |
 | 2026-02-15 | Corregido placeholder hardcodeado "2023-2024" → dinámico `<?= date('Y') ?>` |
 | 2026-02-15 | Documentación completa de valores hardcodeados identificados |
+| 2026-02-15 | **FIX PROMPT:** Reescritura completa del prompt web search (v1→v2). De 1-2 normas a 9+ normas. Array $nombres ampliado de 9 a 35 tipos |
 
 ---
 

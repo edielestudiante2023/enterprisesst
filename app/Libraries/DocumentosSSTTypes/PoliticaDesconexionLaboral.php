@@ -149,17 +149,13 @@ NORMATIVA ESENCIAL:
 - Constitucion Politica de Colombia Art. 53: Principios fundamentales del trabajo, dignidad humana y derecho al descanso
 - Codigo Sustantivo del Trabajo: Jornadas laborales, descansos obligatorios y derechos fundamentales
 - Ley 1221 de 2008: Teletrabajo en Colombia
-- Decreto 1072 de 2015: Obligaciones del empleador en SST, prevencion de riesgos psicosociales (Libro 2, Parte 2, Titulo 4, Capitulo 6)
+- Decreto 1072 de 2015: Obligaciones del empleador en SST, prevencion de riesgos psicosociales
 - Resolucion 2646 de 2008: Factores de riesgo psicosocial en el trabajo
 - Resolucion 0312 de 2019: Estandares Minimos del SG-SST
 - Ley 2088 de 2021: Trabajo en casa como modalidad temporal
 - Ley 2191 de 2022: Derecho a la desconexion laboral en Colombia
 
-CANTIDAD segun estandares:
-- 7 estandares: MAXIMO 6 normas
-- 21 estandares: MAXIMO 8 normas
-- 60 estandares: Hasta 10 normas
-FORMATO: Lista con vinetas, NO usar tablas.",
+FORMATO: Lista con vinetas.",
 
             'comunicacion' => "Define como se comunicara y divulgara la politica.
 INCLUIR:
