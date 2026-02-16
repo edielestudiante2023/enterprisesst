@@ -1240,7 +1240,7 @@
           } else if (field === 'perfil_de_asistentes') {
             options = ['TODOS', 'DIRECTIVOS_ALTA_GERENCIA', 'JEFES_Y_SUPERVISORES', 'VIGIA_SST', 'BRIGADA_EMERGENCIAS', 'COMITE_SEGURIDAD_VIAL', 'MIEMBROS_COPASST', 'MIEMBROS_COMITE_CONVIVENCIA', 'TRABAJADORES_RIESGOS_CRITICOS', 'PERSONAL_ASEO_MANTENIMIENTO', 'BRIGADA'];
           } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
-            options = ['SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ'];
+            options = ['SIN CALIFICAR', 'SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ'];
           }
           var select = $('<select>', {
             class: 'form-select form-select-sm'

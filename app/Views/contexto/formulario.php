@@ -45,13 +45,13 @@
                 <strong><?= esc($cliente['nombre_cliente']) ?></strong>
             </span>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="<?= base_url('responsables-sst/' . $cliente['id_cliente']) ?>">
+                <a class="nav-link" href="<?= base_url('responsables-sst/' . $cliente['id_cliente']) ?>" target="_blank">
                     <i class="bi bi-people-fill me-1"></i>Responsables SST
                 </a>
-                <a class="nav-link" href="<?= base_url('indicadores-sst/' . $cliente['id_cliente']) ?>">
+                <a class="nav-link" href="<?= base_url('indicadores-sst/' . $cliente['id_cliente']) ?>" target="_blank">
                     <i class="bi bi-graph-up me-1"></i>Indicadores SST
                 </a>
-                <a class="nav-link" href="<?= base_url('contexto') ?>">
+                <a class="nav-link" href="<?= base_url('contexto') ?>" target="_blank">
                     <i class="bi bi-arrow-left me-1"></i>Volver
                 </a>
             </div>
@@ -599,7 +599,7 @@
 
                     <!-- Boton Guardar -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
-                        <a href="<?= base_url('contexto') ?>" class="btn btn-outline-secondary btn-lg">
+                        <a href="<?= base_url('contexto') ?>" class="btn btn-outline-secondary btn-lg" target="_blank">
                             <i class="bi bi-x-circle me-2"></i>Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary btn-lg">
@@ -720,16 +720,16 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-grid gap-2">
-                                    <a href="<?= base_url('responsables-sst/' . $cliente['id_cliente']) ?>" class="btn btn-outline-primary btn-sm">
+                                    <a href="<?= base_url('responsables-sst/' . $cliente['id_cliente']) ?>" class="btn btn-outline-primary btn-sm" target="_blank">
                                         <i class="bi bi-people-fill me-2"></i>Responsables SST
                                     </a>
-                                    <a href="<?= base_url('indicadores-sst/' . $cliente['id_cliente']) ?>" class="btn btn-outline-info btn-sm">
+                                    <a href="<?= base_url('indicadores-sst/' . $cliente['id_cliente']) ?>" class="btn btn-outline-info btn-sm" target="_blank">
                                         <i class="bi bi-graph-up me-2"></i>Indicadores SST
                                     </a>
-                                    <a href="<?= base_url('estandares/' . $cliente['id_cliente']) ?>" class="btn btn-outline-success btn-sm">
+                                    <a href="<?= base_url('estandares/' . $cliente['id_cliente']) ?>" class="btn btn-outline-success btn-sm" target="_blank">
                                         <i class="bi bi-check2-square me-2"></i>Estandares
                                     </a>
-                                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-secondary btn-sm">
+                                    <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="btn btn-outline-secondary btn-sm" target="_blank">
                                         <i class="bi bi-folder me-2"></i>Documentacion
                                     </a>
                                 </div>

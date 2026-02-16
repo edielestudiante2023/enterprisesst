@@ -48,7 +48,11 @@
       "Bash(ls:*)",
       "Bash(git commit:*)",
       "WebFetch(domain:dashboard.cycloidtalent.com)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(wc -l:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(sc query:*)",
+      "Bash(/c/xampp/php/php.exe:*)"
     ]
   }
 }

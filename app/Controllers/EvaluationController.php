@@ -92,6 +92,37 @@ class EvaluationController extends Controller
             return $this->response->setJSON(['success' => false, 'message' => 'Error al actualizar el registro']);
         }
     }
+
+    /**
+     * Resetea puntaje_cuantitativo a 0 y evaluacion_inicial a NULL
+     * para todas las evaluaciones de un cliente
+     */
+    public function resetCalificacion()
+    {
+        $idCliente = $this->request->getPost('id_cliente');
+
+        if (!$idCliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ID de cliente no proporcionado']);
+        }
+
+        $model = new EvaluationModel();
+        $registros = $model->where('id_cliente', $idCliente)->countAllResults(false);
+
+        if ($registros === 0) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No se encontraron evaluaciones para este cliente']);
+        }
+
+        $model->where('id_cliente', $idCliente)
+              ->set(['puntaje_cuantitativo' => 0, 'evaluacion_inicial' => null])
+              ->update();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Calificaciones reseteadas correctamente',
+            'registros_actualizados' => $registros
+        ]);
+    }
+
     // Listar las evaluaciones
     public function listEvaluaciones()
     {

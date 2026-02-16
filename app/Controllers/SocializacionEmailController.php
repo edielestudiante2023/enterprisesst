@@ -8,6 +8,7 @@ use App\Models\ConsultantModel;
 use App\Models\ContractModel;
 use App\Models\PtaClienteNuevaModel;
 use App\Models\EvaluationModel;
+use App\Models\ResponsableSSTModel;
 
 class SocializacionEmailController extends BaseController
 {
@@ -345,14 +346,25 @@ class SocializacionEmailController extends BaseController
             // Calcular indicadores
             $indicadores = $this->calcularIndicadoresEvaluacion($evaluaciones);
 
-            if (empty($cliente['correo_cliente']) || !filter_var($cliente['correo_cliente'], FILTER_VALIDATE_EMAIL)) {
-                return $this->response->setJSON(['success' => false, 'message' => 'El cliente no tiene email válido']);
+            // Obtener destinatarios desde tbl_cliente_responsables_sst
+            $responsableModel = new ResponsableSSTModel();
+            $repLegal = $responsableModel->getRepresentanteLegal($idCliente);
+            $respSGSST = $responsableModel->getResponsableSGSST($idCliente);
+
+            $destinatarios = [];
+            $emailsEnviados = [];
+
+            if ($repLegal && !empty($repLegal['email']) && filter_var($repLegal['email'], FILTER_VALIDATE_EMAIL)) {
+                $destinatarios[] = $repLegal['email'];
+                $emailsEnviados[] = $repLegal['email'] . ' (Representante Legal)';
             }
 
-            $htmlContent = $this->buildEvaluacionEmailContent($cliente, $consultor, $contrato, $evaluaciones, $indicadores, $anioActual);
-
-            $destinatarios = [$cliente['correo_cliente']];
-            $emailsEnviados = [$cliente['correo_cliente'] . ' (Cliente)'];
+            if ($respSGSST && !empty($respSGSST['email']) && filter_var($respSGSST['email'], FILTER_VALIDATE_EMAIL)) {
+                if (!in_array($respSGSST['email'], $destinatarios)) {
+                    $destinatarios[] = $respSGSST['email'];
+                    $emailsEnviados[] = $respSGSST['email'] . ' (Responsable SG-SST)';
+                }
+            }
 
             if ($consultor && !empty($consultor['correo_consultor']) && filter_var($consultor['correo_consultor'], FILTER_VALIDATE_EMAIL)) {
                 if (!in_array($consultor['correo_consultor'], $destinatarios)) {
@@ -360,6 +372,15 @@ class SocializacionEmailController extends BaseController
                     $emailsEnviados[] = $consultor['correo_consultor'] . ' (Consultor)';
                 }
             }
+
+            if (empty($destinatarios)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'No se encontraron emails válidos en Responsables SST. Registre el email del Representante Legal o del Responsable SG-SST en el módulo Responsables SST.'
+                ]);
+            }
+
+            $htmlContent = $this->buildEvaluacionEmailContent($cliente, $consultor, $contrato, $evaluaciones, $indicadores, $anioActual);
 
             // Preparar email con SendGrid
             $email = new \SendGrid\Mail\Mail();

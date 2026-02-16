@@ -128,6 +128,11 @@
           <i class="fas fa-envelope"></i> Socializar Evaluación
         </button>
       </div>
+      <div class="col-md-3 align-self-end">
+        <button id="btnResetCalificacion" class="btn btn-warning" title="Resetear Calificación y Evaluación Inicial a cero">
+          <i class="fas fa-undo"></i> Reset Calificación
+        </button>
+      </div>
     </div>
 
     <!-- Tarjetas de indicadores compactas -->
@@ -196,7 +201,7 @@
             <th>Item del Estándar</th>
             <th>*Evaluación Inicial</th>
             <th>Valor</th>
-            <th>Puntaje Cuantitativo</th>
+            <th>Calificación</th>
             <th>Item</th>
             <th>Criterio</th>
             <th>Modo de Verificación</th>
@@ -711,7 +716,7 @@ columns: [{
           return;
         }
 
-        if (!confirm('¿Desea enviar la Evaluación de Estándares Mínimos por email al cliente y consultor asignado?')) {
+        if (!confirm('¿Desea enviar la Evaluación de Estándares Mínimos por email al Representante Legal y Responsable SG-SST?')) {
           return;
         }
 
@@ -742,6 +747,47 @@ columns: [{
           },
           complete: function() {
             $btn.prop('disabled', false).html('<i class="fas fa-envelope"></i> Socializar Evaluación');
+          }
+        });
+      });
+
+      // Botón Reset Calificación
+      $('#btnResetCalificacion').on('click', function() {
+        var clienteId = $('#clientSelect').val();
+
+        if (!clienteId) {
+          alert('Debe seleccionar un cliente primero.');
+          return;
+        }
+
+        if (!confirm('¿Está seguro? Esto pondrá en 0 la Calificación y limpiará la Evaluación Inicial de TODOS los estándares del cliente seleccionado.')) {
+          return;
+        }
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Reseteando...');
+
+        $.ajax({
+          url: '<?= base_url('/api/resetCalificacionEvaluaciones') ?>',
+          method: 'POST',
+          data: {
+            id_cliente: clienteId,
+            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+          },
+          dataType: 'json',
+          success: function(response) {
+            if (response.success) {
+              alert('Reset exitoso. ' + response.registros_actualizados + ' registros actualizados.');
+              table.ajax.reload(null, false);
+            } else {
+              alert('Error: ' + response.message);
+            }
+          },
+          error: function(xhr, status, error) {
+            alert('Error al comunicarse con el servidor: ' + error);
+          },
+          complete: function() {
+            $btn.prop('disabled', false).html('<i class="fas fa-undo"></i> Reset Calificación');
           }
         });
       });
