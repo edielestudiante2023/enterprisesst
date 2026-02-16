@@ -8,6 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/rowgroup/1.4.0/css/rowGroup.bootstrap5.min.css" rel="stylesheet">
     <style>
         .categoria-card {
             cursor: pointer;
@@ -110,6 +112,14 @@
         /* Tabla */
         #tablaIndicadores_wrapper .dataTables_filter {
             margin-bottom: 1rem;
+        }
+        .dtrg-group td {
+            background-color: #e8f4fd !important;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #0d6efd;
+            padding: 0.6rem 1rem !important;
+            border-left: 4px solid #0d6efd;
         }
         .estado-badge {
             min-width: 80px;
@@ -639,11 +649,20 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Indicador</th>
+                                    <th>Tipo</th>
                                     <th>Categoria</th>
+                                    <th>Definicion</th>
+                                    <th>Formula</th>
+                                    <th>Interpretacion</th>
                                     <th>Meta</th>
+                                    <th>Numerador</th>
+                                    <th>Denominador</th>
                                     <th>Resultado</th>
                                     <th>Estado</th>
                                     <th>Periodicidad</th>
+                                    <th>PHVA</th>
+                                    <th>Fuente de Datos</th>
+                                    <th>Numeral</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
@@ -653,20 +672,23 @@
                                     $estadoClass = $ind['cumple_meta'] === null ? 'secondary' : ($ind['cumple_meta'] == 1 ? 'success' : 'danger');
                                     $estadoTexto = $ind['cumple_meta'] === null ? 'Sin medir' : ($ind['cumple_meta'] == 1 ? 'Cumple' : 'No cumple');
                                     $estadoFiltro = $ind['cumple_meta'] === null ? 'sin_medir' : ($ind['cumple_meta'] == 1 ? 'cumple' : 'no_cumple');
+                                    $tipoNombre = $tiposIndicador[$ind['tipo_indicador']] ?? ucfirst($ind['tipo_indicador'] ?? '-');
+                                    $phvaNombre = $fasesPhva[$ind['phva']] ?? strtoupper($ind['phva'] ?? '-');
                                     ?>
                                     <tr class="fila-indicador" data-estado="<?= $estadoFiltro ?>">
-                                        <td>
-                                            <strong><?= esc($ind['nombre_indicador']) ?></strong>
-                                            <?php if (!empty($ind['formula'])): ?>
-                                                <br><small class="text-muted"><?= esc(substr($ind['formula'], 0, 50)) ?>...</small>
-                                            <?php endif; ?>
-                                        </td>
+                                        <td><?= esc($ind['nombre_indicador']) ?></td>
+                                        <td><?= esc($tipoNombre) ?></td>
                                         <td>
                                             <span class="badge bg-<?= $ind['categoria_color'] ?>">
                                                 <?= esc($ind['categoria_nombre']) ?>
                                             </span>
                                         </td>
+                                        <td><?= esc($ind['definicion'] ?? '-') ?></td>
+                                        <td><?= esc($ind['formula'] ?? '-') ?></td>
+                                        <td><?= esc($ind['interpretacion'] ?? '-') ?></td>
                                         <td><?= $ind['meta'] !== null ? $ind['meta'] . esc($ind['unidad_medida']) : '-' ?></td>
+                                        <td><?= $ind['valor_numerador'] !== null ? number_format($ind['valor_numerador'], 2) : '-' ?></td>
+                                        <td><?= $ind['valor_denominador'] !== null ? number_format($ind['valor_denominador'], 2) : '-' ?></td>
                                         <td>
                                             <?php if ($ind['valor_resultado'] !== null): ?>
                                                 <?= number_format($ind['valor_resultado'], 1) ?><?= esc($ind['unidad_medida']) ?>
@@ -678,6 +700,9 @@
                                             <span class="badge bg-<?= $estadoClass ?> estado-badge"><?= $estadoTexto ?></span>
                                         </td>
                                         <td><?= $periodicidades[$ind['periodicidad']] ?? ucfirst($ind['periodicidad'] ?? '-') ?></td>
+                                        <td><?= esc($phvaNombre) ?></td>
+                                        <td><?= esc($ind['origen_datos'] ?? '-') ?></td>
+                                        <td><?= esc($ind['numeral_resolucion'] ?? '-') ?></td>
                                         <td class="text-center">
                                             <div class="btn-group btn-group-sm">
                                                 <button type="button" class="btn btn-outline-success btn-medir"
@@ -861,14 +886,36 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/rowgroup/1.4.0/js/dataTables.rowGroup.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         let indicadorActual = null;
         let filtroActual = 'todos';
 
         // Inicializar DataTables
+        // Columnas: 0=Indicador, 1=Tipo, 2=Categoria, 3=Definicion, 4=Formula, 5=Interpretacion,
+        //           6=Meta, 7=Numerador, 8=Denominador, 9=Resultado, 10=Estado, 11=Periodicidad,
+        //           12=PHVA, 13=Fuente, 14=Numeral, 15=Acciones
         const tabla = $('#tablaIndicadores').DataTable({
             responsive: true,
+            dom: "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4 text-center'B><'col-sm-12 col-md-4'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="bi bi-file-earmark-excel me-1"></i>Descargar Excel',
+                    className: 'btn btn-success btn-sm',
+                    title: 'Indicadores SST - <?= esc($cliente['nombre_cliente']) ?>',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] // Todas menos Acciones
+                    }
+                }
+            ],
             language: {
                 url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
                 search: "Buscar:",
@@ -883,13 +930,28 @@
                     previous: "Anterior"
                 }
             },
-            pageLength: 10,
-            lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "Todos"]],
-            order: [[4, 'asc']], // Ordenar por estado
+            pageLength: -1,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+            order: [[1, 'asc'], [0, 'asc']], // Primero por tipo, luego por nombre
+            rowGroup: {
+                dataSrc: 1 // Agrupar por columna Tipo
+            },
             columnDefs: [
-                { orderable: false, targets: [6] } // No ordenar columna acciones
-            ]
+                { visible: false, targets: [1, 3, 4, 5, 7, 8, 12, 13, 14] }, // Tipo se usa para agrupar; resto ocultas en web
+                { orderable: false, targets: [15] } // No ordenar columna acciones
+            ],
+            createdRow: function(row, data) {
+                // Orden personalizado: Estructura=1, Proceso=2, Resultado=3
+                const orden = {'Indicador de Estructura': 1, 'Indicador de Proceso': 2, 'Indicador de Resultado': 3};
+                $(row).attr('data-tipo-orden', orden[data[1]] || 99);
+            }
         });
+
+        // Orden personalizado para la columna Tipo
+        $.fn.dataTable.ext.type.order['tipo-indicador-pre'] = function(d) {
+            const orden = {'Indicador de Estructura': 1, 'Indicador de Proceso': 2, 'Indicador de Resultado': 3};
+            return orden[d] || 99;
+        };
 
         // Filtros por estado
         document.querySelectorAll('.filtro-estado').forEach(filtro => {
@@ -919,7 +981,7 @@
             } else {
                 const textoFiltro = filtro === 'cumple' ? 'Cumple' :
                                    filtro === 'no_cumple' ? 'No cumple' : 'Sin medir';
-                tabla.column(4).search('^' + textoFiltro + '$', true, false).draw();
+                tabla.column(10).search('^' + textoFiltro + '$', true, false).draw();
             }
         }
 
