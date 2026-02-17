@@ -244,7 +244,8 @@ INSTRUCCIONES DE GENERACIÓN:
 
             // 3. Consultar indicadores (solo del numeral 1.2.2 para evitar duplicados)
             $indicadores = $db->table('tbl_indicadores_sst')
-                ->select('DISTINCT nombre_indicador')
+                ->distinct()
+                ->select('nombre_indicador')
                 ->where('id_cliente', $idCliente)
                 ->where('numeral_resolucion', '1.2.2')
                 ->where('activo', 1)
