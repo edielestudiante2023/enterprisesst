@@ -146,16 +146,17 @@ REGLAS OBLIGATORIAS:
 5. Incluye UNA sola induccion en SST al inicio del ano (para TODOS). NO incluyas reinduccion
 6. Las demas capacitaciones deben responder a los riesgos reales y al contexto operativo
 7. Los objetivos deben ser especificos para el contexto de la empresa, no genericos
-8. Distribuye las capacitaciones en los 12 meses de forma logica
-9. Si hay instrucciones adicionales del consultor, aplicalas con prioridad
-10. Responde SOLO en formato JSON valido
+8. La duracion por defecto de cada capacitacion es 1 hora. Solo usa mas horas si el tema realmente lo justifica
+9. Distribuye las capacitaciones en los 12 meses de forma logica
+10. Si hay instrucciones adicionales del consultor, aplicalas con prioridad
+11. Responde SOLO en formato JSON valido
 
 FORMATO DE RESPUESTA (JSON):
 {
   \"capacitaciones\": [
-    {\"mes\": 1, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 2, \"perfil_asistentes\": \"TODOS\"},
-    {\"mes\": 3, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 2, \"perfil_asistentes\": \"COPASST_VIGIA\"},
-    {\"mes\": 5, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 2, \"perfil_asistentes\": \"BRIGADA_EMERGENCIAS\"}
+    {\"mes\": 1, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 1, \"perfil_asistentes\": \"TODOS\"},
+    {\"mes\": 3, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 1, \"perfil_asistentes\": \"COPASST_VIGIA\"},
+    {\"mes\": 5, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 1, \"perfil_asistentes\": \"BRIGADA_EMERGENCIAS\"}
   ],
   \"explicacion\": \"Explicacion de como se diseno el programa y la distribucion entre actores\"
 }";
