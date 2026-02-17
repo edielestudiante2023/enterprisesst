@@ -1330,13 +1330,20 @@ Mejora la capacitacion segun las instrucciones. Responde SOLO con el JSON.";
         $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
 
-        $service = new \App\Services\IndicadoresCapacitacionService();
-        $preview = $service->previewIndicadores($idCliente, (int)$anio, $contexto, $instrucciones);
+        try {
+            $service = new \App\Services\IndicadoresCapacitacionService();
+            $preview = $service->previewIndicadores($idCliente, (int)$anio, $contexto, $instrucciones);
 
-        return $this->response->setJSON([
-            'success' => true,
-            'data' => $preview
-        ]);
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $preview
+            ]);
+        } catch (\RuntimeException $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     /**

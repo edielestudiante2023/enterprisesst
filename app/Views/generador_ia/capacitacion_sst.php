@@ -462,6 +462,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
     const idCliente = <?= $cliente['id_cliente'] ?>;
     const anio = <?= $anio ?>;
@@ -871,6 +872,8 @@
 
     let indicadoresData = [];
     let explicacionIndicadoresIA = '';
+    let limiteIndicadores = 0;
+    let totalCapacitaciones = 0;
 
     const tiposIndicador = {
         'proceso': { color: 'primary', label: 'Proceso' },
@@ -901,6 +904,8 @@
                     }
                     indicadoresData = data.data.indicadores;
                     explicacionIndicadoresIA = data.data.explicacion_ia || '';
+                    limiteIndicadores = data.data.limite || Math.ceil(indicadoresData.length / 2);
+                    totalCapacitaciones = data.data.total_capacitaciones || indicadoresData.length;
                     renderIndicadoresCards();
                 } else {
                     document.getElementById('previewIndicadoresContent').innerHTML =
@@ -929,24 +934,31 @@
         let html = `
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <strong>Total: ${indicadoresData.length} indicadores sugeridos</strong>
+                    <strong>${indicadoresData.length} indicadores</strong> (1 por capacitacion)
+                    <span class="text-muted ms-2">|</span>
+                    <span class="ms-2 text-primary fw-bold">Recomendado: max ${limiteIndicadores}</span>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="seleccionarTodosIndicadores(true)">
-                        <i class="bi bi-check-all me-1"></i>Seleccionar Todos
+                    <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="seleccionarRecomendados()">
+                        <i class="bi bi-star me-1"></i>Solo Recomendados
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning me-1" onclick="seleccionarTodosIndicadores(true)">
+                        <i class="bi bi-check-all me-1"></i>Todos
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="seleccionarTodosIndicadores(false)">
-                        <i class="bi bi-x-lg me-1"></i>Deseleccionar
+                        <i class="bi bi-x-lg me-1"></i>Ninguno
                     </button>
                 </div>
             </div>
             ${explicacionHtml}
             <div class="alert alert-light small mb-3 border">
                 <i class="bi bi-info-circle me-1"></i>
-                Seleccione los indicadores, <strong>edite los campos</strong> si es necesario, y use <strong>"Mejorar con IA"</strong> para regenerar individualmente.
+                La IA genero 1 indicador por cada capacitacion, <strong>rankeados por criticidad</strong>.
+                Se recomienda seleccionar maximo <strong>${limiteIndicadores}</strong> (la mitad) para evitar monitoreo excesivo.
                 <div class="mt-2">
                     <span class="badge bg-primary me-1">Proceso</span> Miden ejecucion de actividades
                     <span class="badge bg-success ms-2 me-1">Resultado</span> Miden impacto en SST
+                    <span class="badge bg-warning text-dark ms-2 me-1"><i class="bi bi-star-fill"></i></span> Recomendado por criticidad
                 </div>
             </div>
             <div style="max-height: 60vh; overflow-y: auto;">`;
@@ -956,6 +968,8 @@
             const tipoInfo = tiposIndicador[tipo] || tiposIndicador.proceso;
 
             const yaExiste = ind.ya_existe ? '<span class="badge bg-secondary ms-2">Ya existe</span>' : '';
+            const recomendado = ind.recomendado ? '<span class="badge bg-warning text-dark ms-2"><i class="bi bi-star-fill me-1"></i>Recomendado</span>' : '';
+            const capAsociada = ind.capacitacion_asociada ? `<small class="text-muted d-block mt-1"><i class="bi bi-link-45deg me-1"></i>${escapeHtml(ind.capacitacion_asociada)}</small>` : '';
             const checked = ind.seleccionado !== false && !ind.ya_existe ? 'checked' : '';
             const disabled = ind.ya_existe ? 'disabled' : '';
 
@@ -988,8 +1002,11 @@
                                        data-idx="${idx}" value="${escapeHtml(ind.nombre)}"
                                        placeholder="Nombre del indicador" style="flex:1; margin-right:8px;" ${disabled}>
                                 <span class="badge bg-${tipoInfo.color}">${tipoInfo.label}</span>
+                                ${recomendado}
                                 ${yaExiste}
                             </div>
+
+                                            ${capAsociada}
 
                             <!-- FILA 2: Formula editable -->
                             <div class="mb-2">
@@ -1151,7 +1168,57 @@
         });
     }
 
+    function seleccionarRecomendados() {
+        document.querySelectorAll('.indicador-check:not(:disabled)').forEach(cb => {
+            const idx = parseInt(cb.dataset.idx);
+            cb.checked = indicadoresData[idx]?.recomendado === true;
+        });
+        actualizarContadorIndicadores();
+    }
+
     function seleccionarTodosIndicadores(seleccionar) {
+        if (seleccionar) {
+            // Doble confirmacion SweetAlert para seleccionar todos
+            const totalDisponibles = document.querySelectorAll('.indicador-check:not(:disabled)').length;
+            if (totalDisponibles > limiteIndicadores) {
+                Swal.fire({
+                    title: 'Seleccionar todos los indicadores?',
+                    html: `<p>Se recomienda maximo <strong>${limiteIndicadores} indicadores</strong> (la mitad de las capacitaciones).</p>
+                           <p class="text-danger"><strong>Seleccionar ${totalDisponibles} indicadores puede generar:</strong></p>
+                           <ul class="text-start">
+                               <li>Monitoreo excesivo y desgaste operativo</li>
+                               <li>Dificultad para dar seguimiento real a cada indicador</li>
+                               <li>Perdida de foco en lo realmente critico</li>
+                           </ul>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Entiendo, seleccionar todos',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#dc3545'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Segunda confirmacion
+                        Swal.fire({
+                            title: 'Esta seguro?',
+                            text: 'Confirme que entiende el riesgo de monitoreo excesivo y desea continuar con todos los indicadores.',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Si, seleccionar todos',
+                            cancelButtonText: 'No, solo los recomendados',
+                            confirmButtonColor: '#dc3545'
+                        }).then((result2) => {
+                            if (result2.isConfirmed) {
+                                document.querySelectorAll('.indicador-check:not(:disabled)').forEach(cb => cb.checked = true);
+                                actualizarContadorIndicadores();
+                            } else if (result2.dismiss === Swal.DismissReason.cancel) {
+                                seleccionarRecomendados();
+                            }
+                        });
+                    }
+                });
+                return;
+            }
+        }
         document.querySelectorAll('.indicador-check:not(:disabled)').forEach(cb => {
             cb.checked = seleccionar;
         });
@@ -1160,7 +1227,15 @@
 
     function actualizarContadorIndicadores() {
         const total = document.querySelectorAll('.indicador-check:checked').length;
-        document.getElementById('contadorIndicadores').textContent = `${total} indicadores seleccionados`;
+        const excedeLimite = total > limiteIndicadores;
+
+        let textoContador = `${total} indicadores seleccionados`;
+        if (excedeLimite) {
+            textoContador += ` (recomendado max ${limiteIndicadores})`;
+        }
+        const contadorEl = document.getElementById('contadorIndicadores');
+        contadorEl.textContent = textoContador;
+        contadorEl.className = excedeLimite ? 'text-warning fw-bold' : 'text-muted';
 
         const btnGenerar = document.getElementById('btnGenerarIndicadores');
         if (total === 0) {
@@ -1177,10 +1252,7 @@
 
         document.querySelectorAll('.indicador-check:checked').forEach(cb => {
             const idx = parseInt(cb.dataset.idx);
-
-            // Leer valores editados de los campos
             const indEditado = getIndicadorData(idx);
-
             seleccionados.push({
                 ...indicadoresData[idx],
                 ...indEditado
@@ -1188,12 +1260,57 @@
         });
 
         if (seleccionados.length === 0) {
-            showAlert('warning', 'Seleccione al menos un indicador');
+            showToast('warning', 'Atencion', 'Seleccione al menos un indicador');
             return;
         }
 
-        if (!confirm(`¿Generar ${seleccionados.length} indicadores?`)) return;
+        // Si excede el limite, doble confirmacion
+        if (seleccionados.length > limiteIndicadores) {
+            Swal.fire({
+                title: 'Excede el limite recomendado',
+                html: `<p>Selecciono <strong>${seleccionados.length}</strong> indicadores pero el maximo recomendado es <strong>${limiteIndicadores}</strong>.</p>
+                       <p class="text-danger">El monitoreo excesivo puede generar desgaste operativo.</p>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Generar todos',
+                cancelButtonText: 'Volver a seleccionar',
+                confirmButtonColor: '#dc3545'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Confirmacion final',
+                        text: 'Confirmo que entiendo el riesgo de monitoreo excesivo y deseo generar todos los indicadores seleccionados.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Confirmar y generar',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#dc3545'
+                    }).then((result2) => {
+                        if (result2.isConfirmed) {
+                            ejecutarGeneracionIndicadores(seleccionados);
+                        }
+                    });
+                }
+            });
+            return;
+        }
 
+        // Dentro del limite, confirmacion simple
+        Swal.fire({
+            title: `Generar ${seleccionados.length} indicadores?`,
+            text: 'Se crearan los indicadores seleccionados para medir el programa de capacitacion.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Generar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                ejecutarGeneracionIndicadores(seleccionados);
+            }
+        });
+    }
+
+    function ejecutarGeneracionIndicadores(seleccionados) {
         const btn = document.getElementById('btnGenerarIndicadores');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generando...';
