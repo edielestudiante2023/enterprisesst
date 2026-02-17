@@ -678,19 +678,19 @@ class DocumentosSSTController extends BaseController
             // Obtener el prompt específico para este tipo de documento y sección
             $promptBase = $documentoHandler->getPromptParaSeccion($seccion, $estandares);
 
-            // MODO REGENERAR: ligero, sin queries BD pesadas, prioriza instrucciones del usuario
-            // MODO COMPLETO: pipeline completo con getContextoBase + marco normativo
-            if ($modo === 'regenerar') {
-                $contextoBase = '';
-                $marcoNormativo = '';
-            } else {
-                $contextoBase = $documentoHandler->getContextoBase($cliente, $contexto);
-                $marcoNormativo = '';
-                if ($seccion !== 'marco_legal') {
-                    $marcoService = new MarcoNormativoService();
-                    $marcoNormativo = $marcoService->obtenerMarcoNormativo($tipoDocumento) ?? '';
-                }
+            // Contexto base del documento (PTA, indicadores, etapas) - SIEMPRE
+            $contextoBase = $documentoHandler->getContextoBase($cliente, $contexto);
+
+            // Marco normativo - SIEMPRE (excepto para la sección marco_legal)
+            $marcoNormativo = '';
+            if ($seccion !== 'marco_legal') {
+                $marcoService = new MarcoNormativoService();
+                $marcoNormativo = $marcoService->obtenerMarcoNormativo($tipoDocumento) ?? '';
             }
+
+            // MODO REGENERAR: mismos datos BD, SIN prompt estático (usuario manda)
+            // MODO COMPLETO: pipeline completo con prompt estático de la sección
+            $promptParaIA = ($modo === 'regenerar') ? '' : $promptBase;
 
             // Preparar datos para el servicio de IA
             $datosIA = [
@@ -705,7 +705,7 @@ class DocumentosSSTController extends BaseController
                 ],
                 'cliente' => $cliente,
                 'contexto' => $contexto,
-                'prompt_base' => $promptBase,
+                'prompt_base' => $promptParaIA,
                 'contexto_adicional' => $contextoAdicional,
                 'contexto_base' => $contextoBase,
                 'marco_normativo' => $marcoNormativo,
