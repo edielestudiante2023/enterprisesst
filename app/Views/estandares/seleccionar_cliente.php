@@ -133,7 +133,7 @@
                         </a>
                     </div>
                     <div class="col-md-4">
-                        <a href="<?= base_url('documentacion/seleccionar-cliente') ?>" class="card quick-access-card border-0 shadow-sm text-decoration-none h-100">
+                        <a href="<?= base_url('documentacion') ?>" class="card quick-access-card border-0 shadow-sm text-decoration-none h-100">
                             <div class="card-body text-center py-4">
                                 <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
                                     <i class="bi bi-folder text-warning fs-4"></i>

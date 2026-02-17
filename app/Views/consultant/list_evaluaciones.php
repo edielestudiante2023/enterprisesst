@@ -556,15 +556,15 @@ columns: [{
         var currentValue = cell.text().trim();
 
         if (field === 'evaluacion_inicial') {
-          var options = ['CUMPLE TOTALMENTE', 'NO CUMPLE', 'NO APLICA'];
+          var options = ['', 'CUMPLE TOTALMENTE', 'NO CUMPLE', 'NO APLICA'];
           var select = $('<select>', {
             class: 'form-select form-select-sm'
           });
           options.forEach(function (option) {
             select.append($('<option>', {
               value: option,
-              text: option,
-              selected: option === currentValue
+              text: option === '' ? '- Sin selección -' : option,
+              selected: option === currentValue || (option === '' && (currentValue === '-' || currentValue === ''))
             }));
           });
           cell.html(select);
