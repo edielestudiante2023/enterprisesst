@@ -1,36 +1,42 @@
 # Continuacion del Chat - 2026-02-17
 
-## Estado: CHECKLIST COMPLETADO
+## Estado: MODO REGENERAR IMPLEMENTADO - Listo para deploy
 
 ### Que se hizo
-1. **CHECKLIST_ITEMS reescrito** en `app/Services/InduccionEtapasService.php` (lineas 27-60):
-   - Eliminado item 2 (redundante con paso 1 de modalidad)
-   - Item 5 (PVM) → separado en 4 (P: reservar lugar) + 5 (V: plataforma virtual)
-   - Item 6 (PVM) → separado en 6 (P: pieza impresa+digital) + 7 (V: pieza digital)
-   - Item 14 (PVM) → separado en 15 (P: formato fisico asistencia) + 16 (V: formulario digital asistencia)
-   - Item 15 (PVM) → separado en 17 (P: quiz papel) + 18 (V: formulario online)
-   - Item 18 (PVM) → separado en 21 (P: fotos evento) + 22 (V: capturas/grabacion)
-   - Items de logistica limpiados (quitado prefijo "Si es presencial/virtual:")
-   - Renumerado de 1-25 a 1-29 (4 items nuevos netos)
+Separar la naturaleza de los dos botones de generacion IA:
 
-2. **Contador actualizado** en `app/Views/induccion_etapas/checklist_pta.php` (linea 182):
-   - Cambiado "de 25" hardcodeado a `<?= count($checklistItems) ?>` dinamico
+1. **"Generar con IA" / "Regenerar" (individual)** → `modo=regenerar`
+   - NO consulta getContextoBase() (sin queries PTA, indicadores, etapas)
+   - NO consulta MarcoNormativoService
+   - NO muestra SweetAlerts de verificacion previos
+   - NO muestra toast de metadata BD
+   - SI envia contenido actual del textarea como referencia
+   - SI envia instrucciones del usuario como PRIORIDAD MAXIMA
+   - SI mantiene prompt estructural de seccion (como guia, no obligatorio)
+   - SI mantiene contexto basico empresa (nombre, NIT, riesgo, trabajadores)
 
-### Que NO se toco (todo sigue funcionando)
-- JS de filtrado en checklist_pta.php (ya maneja P/V/M/PVM correctamente)
-- Tarjetas de modalidad (radio buttons)
-- `buildChecklistTexto()` en InduccionEtapasService.php (lee CHECKLIST_ITEMS por ID, funciona con los nuevos IDs)
-- `itemAplicaModalidad()` (filtra por modalidad, sin cambios)
-- Controller, Routes, generar_pta.php
+2. **"Generar Todo con IA"** → `modo=completo`
+   - Pipeline completo sin cambios (getContextoBase + marco + metadata + SweetAlerts)
 
-### Archivos pendientes de commit (mismo feature)
-- `app/Config/Routes.php`
-- `app/Controllers/InduccionEtapasController.php`
-- `app/Services/FasesDocumentoService.php`
-- `app/Services/InduccionEtapasService.php` ← CHECKLIST_ITEMS modificado aqui
-- `app/Views/induccion_etapas/generar_pta.php`
-- `app/Views/induccion_etapas/index.php`
-- `app/Views/induccion_etapas/checklist_pta.php` ← nuevo archivo + contador arreglado
+### Archivos modificados (3)
+1. **`app/Views/documentos_sst/generar_con_ia.php`** (JS):
+   - `generarSeccion(seccionKey, modo='completo')` → acepta parametro modo
+   - Botones individuales llaman con `'regenerar'`, batch con `'completo'`
+   - Envia `contenido_actual` al backend en modo regenerar
+   - Sin SweetAlerts previos en modo individual (disparo directo)
+
+2. **`app/Controllers/DocumentosSSTController.php`**:
+   - `generarSeccionIA()`: lee `modo` y `contenido_actual` del POST
+   - `generarConIAReal()`: acepta `$modo` y `$contenidoActual`, salta queries pesadas en regenerar
+   - Metadata BD solo se consulta en modo completo
+
+3. **`app/Services/IADocumentacionService.php`**:
+   - `construirPrompt()`: bifurca segun modo
+   - Modo regenerar: contenido actual como referencia + instrucciones usuario PRIORIDAD MAXIMA
+   - Modo completo: pipeline original sin cambios
+
+### Tambien se fixeo
+- `select('DISTINCT nombre_indicador')` → `->distinct()->select('nombre_indicador')` en ProgramaInduccionReinduccion.php (fix del toast error metadata BD)
 
 ### Git flow
 `git add .` → `git commit` → `git checkout main` → `git merge cycloid` → `git push origin main` → `git checkout cycloid`

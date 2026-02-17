@@ -1022,24 +1022,25 @@
             document.getElementById('seccionesCompletas').textContent = completas;
         }
 
-        // Generar seccion individual - con verificacion SweetAlert
+        // Generar seccion individual - modo regenerar (ligero, prioriza instrucciones del usuario)
         document.querySelectorAll('.btn-generar, .btn-regenerar').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const seccion = this.dataset.seccion;
-                console.log('Click en boton generar, seccion:', seccion);
-                mostrarVerificacionDatos(() => verificarMarcoAnteDeGenerar(() => generarSeccion(seccion)));
+                console.log('Click en boton generar individual, seccion:', seccion, 'modo: regenerar');
+                generarSeccion(seccion, 'regenerar');
             });
         });
 
         console.log('Event listeners agregados a', document.querySelectorAll('.btn-generar').length, 'botones');
 
-        async function generarSeccion(seccionKey) {
+        async function generarSeccion(seccionKey, modo = 'completo') {
             const btn = document.querySelector(`.btn-generar[data-seccion="${seccionKey}"]`);
             const textarea = document.getElementById('contenido-' + seccionKey);
             const card = document.getElementById('seccion-' + seccionKey);
             const contextoInput = document.getElementById('contexto-input-' + seccionKey);
             const contextoAdicional = contextoInput ? contextoInput.value.trim() : '';
+            const contenidoActual = textarea ? textarea.value.trim() : '';
 
             if (!btn) {
                 console.error('Boton no encontrado para seccion:', seccionKey);
@@ -1052,16 +1053,20 @@
             // Toast de progreso (solo en generacion individual, no en batch)
             let toastProgreso = null;
             if (!modoBatch) {
-                toastProgreso = mostrarToast('progress', 'Generando...', 'Seccion "' + getNombreSeccion(seccionKey) + '" siendo redactada por la IA...');
+                const modoLabel = modo === 'regenerar' ? ' (modo ligero)' : ' (modo completo)';
+                toastProgreso = mostrarToast('progress', 'Generando...', 'Seccion "' + getNombreSeccion(seccionKey) + '"' + modoLabel);
             }
 
             try {
-                let body = `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccionKey}&anio=${anio}`;
+                let body = `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccionKey}&anio=${anio}&modo=${modo}`;
                 if (contextoAdicional) {
                     body += `&contexto_adicional=${encodeURIComponent(contextoAdicional)}`;
                 }
+                if (modo === 'regenerar' && contenidoActual) {
+                    body += `&contenido_actual=${encodeURIComponent(contenidoActual)}`;
+                }
 
-                console.log('Enviando solicitud para seccion:', seccionKey, 'con contexto:', contextoAdicional);
+                console.log('Enviando solicitud para seccion:', seccionKey, 'modo:', modo, 'contexto:', contextoAdicional);
 
                 const response = await fetch('<?= base_url('documentos/generar-seccion') ?>', {
                     method: 'POST',
@@ -1413,7 +1418,7 @@
                 document.getElementById('progresoDetalle').textContent = '(' + (i + 1) + ' de ' + ordenGeneracion.length + ' secciones)';
 
                 try {
-                    await generarSeccion(seccionKey);
+                    await generarSeccion(seccionKey, 'completo');
                     exitosas++;
                 } catch (e) {
                     errores++;

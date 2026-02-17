@@ -221,36 +221,84 @@ ADVERTENCIAS:
             $userPrompt .= "(Usa esta información para hacer el documento más relevante y específico)\n";
         }
 
-        // CRÍTICO: Agregar contexto base del documento (actividades, indicadores, etc.)
-        // Este contexto viene del método getContextoBase() de cada tipo de documento
-        $contextoBase = $datos['contexto_base'] ?? '';
-        if (!empty($contextoBase)) {
-            $userPrompt .= "\n" . $contextoBase . "\n";
-        }
+        // Detectar modo de generación
+        $modo = $datos['modo'] ?? 'completo';
+        $contenidoActual = $datos['contenido_actual'] ?? '';
 
-        // INSUMOS IA - Pregeneración: Marco normativo desde BD
-        $marcoNormativo = $datos['marco_normativo'] ?? '';
-        if (!empty($marcoNormativo)) {
-            $userPrompt .= "\nMARCO NORMATIVO VIGENTE APLICABLE (fuente verificada con busqueda web, usar EXCLUSIVAMENTE este marco):\n";
-            $userPrompt .= $marcoNormativo . "\n";
-            $userPrompt .= "IMPORTANTE: Usa SOLO las normas listadas arriba. NO inventes ni agregues normas adicionales.\n";
-        }
+        if ($modo === 'regenerar') {
+            // ══════════════════════════════════════════════════════════
+            // MODO REGENERAR: ligero, sin BD pesada, prioriza usuario
+            // ══════════════════════════════════════════════════════════
 
-        $userPrompt .= "\nDOCUMENTO A GENERAR:\n";
-        $userPrompt .= "- Tipo: " . ($documento['tipo_nombre'] ?? 'Documento') . "\n";
-        $userPrompt .= "- Nombre: " . ($documento['nombre'] ?? '') . "\n";
-        $userPrompt .= "- Sección actual: " . ($seccion['numero_seccion'] ?? '') . ". " . ($seccion['nombre_seccion'] ?? '') . "\n";
+            $userPrompt .= "\nDOCUMENTO A GENERAR:\n";
+            $userPrompt .= "- Tipo: " . ($documento['tipo_nombre'] ?? 'Documento') . "\n";
+            $userPrompt .= "- Sección actual: " . ($seccion['numero_seccion'] ?? '') . ". " . ($seccion['nombre_seccion'] ?? '') . "\n";
 
-        if ($contextoAdicional) {
-            $userPrompt .= "\nCONTEXTO ADICIONAL DEL USUARIO:\n{$contextoAdicional}\n";
-        }
+            // Contenido actual como referencia (si existe)
+            if (!empty($contenidoActual)) {
+                $userPrompt .= "\nCONTENIDO ACTUAL DE LA SECCIÓN (usa como referencia para mejorar o reescribir):\n";
+                $userPrompt .= $contenidoActual . "\n";
+            }
 
-        $userPrompt .= "\nINSTRUCCIÓN:\n";
-        if ($promptBase) {
-            $userPrompt .= $promptBase;
+            // Guía estructural de la sección (prioridad baja)
+            if ($promptBase) {
+                $userPrompt .= "\nGUÍA ESTRUCTURAL DE LA SECCIÓN (referencia, NO es obligatoria):\n";
+                $userPrompt .= $promptBase . "\n";
+            }
+
+            // Instrucciones del usuario como directiva principal
+            if ($contextoAdicional) {
+                $userPrompt .= "\n═══════════════════════════════════════════\n";
+                $userPrompt .= "INSTRUCCIÓN PRINCIPAL DEL USUARIO (PRIORIDAD MÁXIMA):\n";
+                $userPrompt .= $contextoAdicional . "\n";
+                $userPrompt .= "═══════════════════════════════════════════\n";
+                $userPrompt .= "IMPORTANTE: Sigue estas instrucciones del usuario por encima de cualquier otra guía.\n";
+            } else {
+                // Sin instrucciones del usuario: regenerar mejorando el contenido actual
+                $userPrompt .= "\nINSTRUCCIÓN:\n";
+                if (!empty($contenidoActual)) {
+                    $userPrompt .= "Reescribe y mejora el contenido actual de esta sección para {$razonSocial}. Mantén la misma estructura pero mejora la redacción y precisión.";
+                } else {
+                    $userPrompt .= "Genera el contenido para la sección \"{$seccion['nombre_seccion']}\" del documento \"{$documento['nombre']}\".";
+                    $userPrompt .= " El texto debe ser específico para {$razonSocial}, usando sus datos reales.";
+                }
+            }
+
         } else {
-            $userPrompt .= "Genera el contenido para la sección \"{$seccion['nombre_seccion']}\" del documento \"{$documento['nombre']}\".";
-            $userPrompt .= " El texto debe ser específico para {$razonSocial}, usando sus datos reales.";
+            // ══════════════════════════════════════════════════════════
+            // MODO COMPLETO: pipeline con BD, marco normativo, todo
+            // ══════════════════════════════════════════════════════════
+
+            // Contexto base del documento (actividades, indicadores, etc.)
+            $contextoBase = $datos['contexto_base'] ?? '';
+            if (!empty($contextoBase)) {
+                $userPrompt .= "\n" . $contextoBase . "\n";
+            }
+
+            // Marco normativo desde BD
+            $marcoNormativo = $datos['marco_normativo'] ?? '';
+            if (!empty($marcoNormativo)) {
+                $userPrompt .= "\nMARCO NORMATIVO VIGENTE APLICABLE (fuente verificada con busqueda web, usar EXCLUSIVAMENTE este marco):\n";
+                $userPrompt .= $marcoNormativo . "\n";
+                $userPrompt .= "IMPORTANTE: Usa SOLO las normas listadas arriba. NO inventes ni agregues normas adicionales.\n";
+            }
+
+            $userPrompt .= "\nDOCUMENTO A GENERAR:\n";
+            $userPrompt .= "- Tipo: " . ($documento['tipo_nombre'] ?? 'Documento') . "\n";
+            $userPrompt .= "- Nombre: " . ($documento['nombre'] ?? '') . "\n";
+            $userPrompt .= "- Sección actual: " . ($seccion['numero_seccion'] ?? '') . ". " . ($seccion['nombre_seccion'] ?? '') . "\n";
+
+            if ($contextoAdicional) {
+                $userPrompt .= "\nCONTEXTO ADICIONAL DEL USUARIO:\n{$contextoAdicional}\n";
+            }
+
+            $userPrompt .= "\nINSTRUCCIÓN:\n";
+            if ($promptBase) {
+                $userPrompt .= $promptBase;
+            } else {
+                $userPrompt .= "Genera el contenido para la sección \"{$seccion['nombre_seccion']}\" del documento \"{$documento['nombre']}\".";
+                $userPrompt .= " El texto debe ser específico para {$razonSocial}, usando sus datos reales.";
+            }
         }
 
         return json_encode([

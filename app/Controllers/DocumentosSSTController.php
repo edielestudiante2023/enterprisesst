@@ -618,6 +618,8 @@ class DocumentosSSTController extends BaseController
         $seccionKey = $this->request->getPost('seccion');
         $anio = $this->request->getPost('anio') ?? (int)date('Y');
         $contextoAdicional = $this->request->getPost('contexto_adicional') ?? '';
+        $modo = $this->request->getPost('modo') ?? 'completo';
+        $contenidoActual = $this->request->getPost('contenido_actual') ?? '';
 
         $cliente = $this->clienteModel->find($idCliente);
         if (!$cliente) {
@@ -629,26 +631,27 @@ class DocumentosSSTController extends BaseController
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
-        // SIEMPRE usar el servicio de IA real (OpenAI) cuando se presiona "Generar con IA"
-        // El contexto base del documento (actividades, indicadores) ya está incluido en la clase del documento
-        $contenido = $this->generarConIAReal($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional, $tipo);
+        // Generar contenido según el modo
+        $contenido = $this->generarConIAReal($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional, $tipo, $modo, $contenidoActual);
 
-        // Obtener metadata de las consultas a BD para mostrar al usuario
+        // Metadata de BD solo en modo completo (en regenerar no se consultan tablas adicionales)
         $metadataBD = null;
-        try {
-            $documentoHandler = DocumentoSSTFactory::crear($tipo);
-            if (method_exists($documentoHandler, 'getMetadataConsultas')) {
-                $metadataBD = $documentoHandler->getMetadataConsultas($cliente, $contexto);
+        if ($modo === 'completo') {
+            try {
+                $documentoHandler = DocumentoSSTFactory::crear($tipo);
+                if (method_exists($documentoHandler, 'getMetadataConsultas')) {
+                    $metadataBD = $documentoHandler->getMetadataConsultas($cliente, $contexto);
+                }
+            } catch (\Exception $e) {
+                log_message('debug', "No se pudo obtener metadata de consultas: " . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            // Si falla, no es crítico - solo no mostramos la metadata
-            log_message('debug', "No se pudo obtener metadata de consultas: " . $e->getMessage());
         }
 
         return $this->response->setJSON([
             'success' => true,
             'contenido' => $contenido,
-            'metadata_bd' => $metadataBD
+            'metadata_bd' => $metadataBD,
+            'modo' => $modo
         ]);
     }
 
@@ -663,10 +666,9 @@ class DocumentosSSTController extends BaseController
      * @param string $contextoAdicional Instrucciones adicionales del usuario
      * @param string $tipoDocumento Tipo de documento (usa Factory para obtener la clase correcta)
      */
-    protected function generarConIAReal(string $seccion, array $cliente, ?array $contexto, int $estandares, int $anio, string $contextoAdicional, string $tipoDocumento = 'programa_capacitacion'): string
+    protected function generarConIAReal(string $seccion, array $cliente, ?array $contexto, int $estandares, int $anio, string $contextoAdicional, string $tipoDocumento = 'programa_capacitacion', string $modo = 'completo', string $contenidoActual = ''): string
     {
         try {
-            // NUEVO: Usar el Factory para obtener la clase del tipo de documento
             $documentoHandler = DocumentoSSTFactory::crear($tipoDocumento);
 
             // Obtener datos de la sección desde la clase específica del documento
@@ -676,16 +678,18 @@ class DocumentosSSTController extends BaseController
             // Obtener el prompt específico para este tipo de documento y sección
             $promptBase = $documentoHandler->getPromptParaSeccion($seccion, $estandares);
 
-            // Obtener contexto base del documento
-            $contextoBase = $documentoHandler->getContextoBase($cliente, $contexto);
-
-            // INSUMOS IA - Pregeneración: obtener marco normativo desde BD
-            // EXCEPTO para marco_legal (que ES el marco que se está generando)
-            // Fix: Evitar conflicto de instrucciones IA (ver TROUBLESHOOTING_MARCO_LEGAL_IA.md)
-            $marcoNormativo = null;
-            if ($seccion !== 'marco_legal') {
-                $marcoService = new MarcoNormativoService();
-                $marcoNormativo = $marcoService->obtenerMarcoNormativo($tipoDocumento);
+            // MODO REGENERAR: ligero, sin queries BD pesadas, prioriza instrucciones del usuario
+            // MODO COMPLETO: pipeline completo con getContextoBase + marco normativo
+            if ($modo === 'regenerar') {
+                $contextoBase = '';
+                $marcoNormativo = '';
+            } else {
+                $contextoBase = $documentoHandler->getContextoBase($cliente, $contexto);
+                $marcoNormativo = '';
+                if ($seccion !== 'marco_legal') {
+                    $marcoService = new MarcoNormativoService();
+                    $marcoNormativo = $marcoService->obtenerMarcoNormativo($tipoDocumento) ?? '';
+                }
             }
 
             // Preparar datos para el servicio de IA
@@ -704,7 +708,9 @@ class DocumentosSSTController extends BaseController
                 'prompt_base' => $promptBase,
                 'contexto_adicional' => $contextoAdicional,
                 'contexto_base' => $contextoBase,
-                'marco_normativo' => $marcoNormativo ?? ''
+                'marco_normativo' => $marcoNormativo,
+                'modo' => $modo,
+                'contenido_actual' => $contenidoActual
             ];
 
             // Llamar al servicio de IA
