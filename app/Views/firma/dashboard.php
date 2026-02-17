@@ -59,6 +59,19 @@
             color: white;
             opacity: 0.85;
         }
+        .btn-solicitar-firma {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            transition: opacity 0.2s;
+        }
+        .btn-solicitar-firma:hover {
+            color: white;
+            opacity: 0.85;
+        }
         .filter-btn {
             border-radius: 20px;
             padding: 0.3rem 1rem;
@@ -93,25 +106,31 @@
     <div class="container-fluid px-4 py-4">
         <!-- Tarjetas resumen -->
         <div class="row mb-4 g-3">
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-lg">
                 <div class="card stat-card shadow-sm text-center p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <div class="stat-number"><?= $totales['total'] ?></div>
                     <div class="stat-label">Total Documentos</div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-lg">
+                <div class="card stat-card shadow-sm text-center p-3" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white;">
+                    <div class="stat-number"><?= $totales['sin_solicitud'] ?></div>
+                    <div class="stat-label">Sin Solicitud</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg">
                 <div class="card stat-card shadow-sm text-center p-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
                     <div class="stat-number"><?= $totales['pendientes'] ?></div>
                     <div class="stat-label">Con Pendientes</div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-lg">
                 <div class="card stat-card shadow-sm text-center p-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
                     <div class="stat-number"><?= $totales['firmados'] ?></div>
                     <div class="stat-label">Completados</div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-lg">
                 <div class="card stat-card shadow-sm text-center p-3" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
                     <div class="stat-number"><?= $totales['expirados'] ?></div>
                     <div class="stat-label">Con Expirados</div>
@@ -122,6 +141,7 @@
         <!-- Filtros rapidos -->
         <div class="mb-3 d-flex flex-wrap gap-2">
             <button class="filter-btn active" data-filter="todos">Todos</button>
+            <button class="filter-btn" data-filter="sin_solicitud">Sin Solicitud</button>
             <button class="filter-btn" data-filter="pendiente">Con Pendientes</button>
             <button class="filter-btn" data-filter="completado">Completados</button>
             <button class="filter-btn" data-filter="expirado">Con Expirados</button>
@@ -138,17 +158,23 @@
                                 <th>Documento</th>
                                 <th>Tipo</th>
                                 <th>Version</th>
+                                <th>Estado Doc.</th>
                                 <th>Firmantes</th>
                                 <th>Progreso</th>
-                                <th>Estado</th>
-                                <th>Ultimo Evento</th>
+                                <th>Estado Firma</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($documentos as $doc):
-                                // Determinar estado resumen
-                                if ($doc['expirados'] > 0) {
+                                $sinSolicitud = (int)$doc['total_firmantes'] === 0;
+
+                                // Determinar estado resumen de firma
+                                if ($sinSolicitud) {
+                                    $estadoLabel = 'Sin solicitud';
+                                    $estadoClass = 'bg-secondary';
+                                    $estadoFiltro = 'sin_solicitud';
+                                } elseif ($doc['expirados'] > 0) {
                                     $estadoLabel = 'Con expirados';
                                     $estadoClass = 'bg-danger';
                                     $estadoFiltro = 'expirado';
@@ -178,6 +204,18 @@
                                     ? round(((int)$doc['firmados'] / (int)$doc['total_firmantes']) * 100)
                                     : 0;
 
+                                // Badge del estado del documento
+                                $estadoDocMap = [
+                                    'borrador' => ['Borrador', 'bg-light text-dark'],
+                                    'generado' => ['Generado', 'bg-info'],
+                                    'aprobado' => ['Aprobado', 'bg-primary'],
+                                    'en_revision' => ['En revision', 'bg-warning text-dark'],
+                                    'pendiente_firma' => ['Pendiente firma', 'bg-warning'],
+                                    'firmado' => ['Firmado', 'bg-success'],
+                                    'publicado' => ['Publicado', 'bg-success'],
+                                ];
+                                $edBadge = $estadoDocMap[$doc['estado_documento']] ?? [ucfirst($doc['estado_documento']), 'bg-secondary'];
+
                                 $ultimoEvento = $doc['ultima_firma'] ?? $doc['fecha_solicitud'] ?? '';
                                 if ($ultimoEvento) {
                                     $ultimoEvento = date('d/m/Y H:i', strtotime($ultimoEvento));
@@ -194,8 +232,15 @@
                                 </td>
                                 <td><small><?= esc(str_replace('_', ' ', ucfirst($doc['tipo_documento']))) ?></small></td>
                                 <td class="text-center"><?= esc($doc['version']) ?></td>
+                                <td>
+                                    <span class="badge badge-estado <?= $edBadge[1] ?>"><?= $edBadge[0] ?></span>
+                                </td>
                                 <td class="text-center">
-                                    <span class="fw-bold"><?= $doc['firmados'] ?>/<?= $doc['total_firmantes'] ?></span>
+                                    <?php if ($sinSolicitud): ?>
+                                        <span class="text-muted">-</span>
+                                    <?php else: ?>
+                                        <span class="fw-bold"><?= $doc['firmados'] ?>/<?= $doc['total_firmantes'] ?></span>
+                                    <?php endif; ?>
                                 </td>
                                 <td style="min-width: 100px;">
                                     <div class="progress progress-firmantes">
@@ -206,13 +251,22 @@
                                 <td>
                                     <span class="badge badge-estado <?= $estadoClass ?>"><?= $estadoLabel ?></span>
                                 </td>
-                                <td><small><?= $ultimoEvento ?></small></td>
                                 <td class="text-center">
-                                    <a href="<?= base_url('firma/estado/' . $doc['id_documento']) ?>"
-                                       class="btn btn-ver-estado" target="_blank"
-                                       title="Ver estado de firmas">
-                                        <i class="bi bi-eye me-1"></i>Ver
-                                    </a>
+                                    <div class="btn-group btn-group-sm">
+                                        <?php if ($sinSolicitud): ?>
+                                        <a href="<?= base_url('firma/solicitar/' . $doc['id_documento']) ?>"
+                                           class="btn btn-solicitar-firma" target="_blank"
+                                           title="Solicitar firmas para este documento">
+                                            <i class="bi bi-pen me-1"></i>Solicitar
+                                        </a>
+                                        <?php else: ?>
+                                        <a href="<?= base_url('firma/estado/' . $doc['id_documento']) ?>"
+                                           class="btn btn-ver-estado" target="_blank"
+                                           title="Ver estado de firmas">
+                                            <i class="bi bi-eye me-1"></i>Ver
+                                        </a>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -233,7 +287,7 @@
             language: {
                 url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
             },
-            order: [[7, 'desc']],
+            order: [[1, 'asc']],
             pageLength: 25,
             responsive: true,
             dom: '<"row"<"col-md-6"l><"col-md-6"f>>rtip'
@@ -247,11 +301,9 @@
             var filtro = $(this).data('filter');
 
             if (filtro === 'todos') {
-                // Mostrar todas las filas
                 tabla.rows().nodes().to$().show();
                 tabla.search('').draw();
             } else {
-                // Filtrar por data-estado
                 tabla.rows().nodes().to$().each(function() {
                     var estado = $(this).data('estado');
                     if (estado === filtro) {

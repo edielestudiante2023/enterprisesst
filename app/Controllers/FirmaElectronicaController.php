@@ -806,14 +806,17 @@ class FirmaElectronicaController extends Controller
 
         // Calcular totales para tarjetas resumen
         $totales = [
-            'total'      => count($documentos),
-            'pendientes' => 0,
-            'firmados'   => 0,
-            'expirados'  => 0
+            'total'         => count($documentos),
+            'pendientes'    => 0,
+            'firmados'      => 0,
+            'expirados'     => 0,
+            'sin_solicitud' => 0
         ];
 
         foreach ($documentos as $doc) {
-            if ($doc['expirados'] > 0) {
+            if ((int)$doc['total_firmantes'] === 0) {
+                $totales['sin_solicitud']++;
+            } elseif ($doc['expirados'] > 0) {
                 $totales['expirados']++;
             } elseif ((int)$doc['firmados'] === (int)$doc['total_firmantes']) {
                 $totales['firmados']++;

@@ -339,14 +339,14 @@ class DocFirmaModel extends Model
     }
 
     /**
-     * Dashboard: Obtiene todos los documentos con solicitudes de firma
-     * Agrupados por documento con contadores de estado
+     * Dashboard: Obtiene TODOS los documentos SST del cliente
+     * con LEFT JOIN a solicitudes de firma para mostrar progreso
      */
     public function getDashboardFirmas(?int $idConsultor = null, ?int $idCliente = null): array
     {
-        $builder = $this->db->table('tbl_doc_firma_solicitudes s')
+        $builder = $this->db->table('tbl_documentos_sst d')
             ->select("
-                s.id_documento,
+                d.id_documento,
                 d.codigo,
                 d.titulo,
                 d.version,
@@ -362,12 +362,12 @@ class DocFirmaModel extends Model
                 SUM(CASE WHEN s.estado = 'expirado' THEN 1 ELSE 0 END) as expirados,
                 SUM(CASE WHEN s.estado = 'cancelado' THEN 1 ELSE 0 END) as cancelados,
                 MAX(s.fecha_firma) as ultima_firma,
-                MAX(s.created_at) as fecha_solicitud
+                COALESCE(MAX(s.created_at), d.updated_at) as fecha_solicitud
             ")
-            ->join('tbl_documentos_sst d', 'd.id_documento = s.id_documento')
+            ->join('tbl_doc_firma_solicitudes s', 's.id_documento = d.id_documento', 'left')
             ->join('tbl_clientes c', 'c.id_cliente = d.id_cliente')
-            ->groupBy('s.id_documento')
-            ->orderBy('fecha_solicitud', 'DESC');
+            ->groupBy('d.id_documento')
+            ->orderBy('d.codigo', 'ASC');
 
         if ($idCliente) {
             $builder->where('c.id_cliente', $idCliente);
