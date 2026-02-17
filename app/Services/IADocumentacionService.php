@@ -135,7 +135,10 @@ class IADocumentacionService
         $restricciones = $this->getRestriccionesPorEstandares((int)$estandaresAplicables, $tieneCopasst, $tieneVigia);
 
         // Construir prompt del sistema
-        $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) en Colombia.
+        $systemPrompt = "Eres una herramienta de apoyo para consultores externos de Seguridad y Salud en el Trabajo (SST) en Colombia.
+El consultor asesora empresas clientes en el diseño e implementación del Sistema de Gestión de SST (SG-SST).
+Tu rol es generar borradores técnicos de alta calidad que el consultor revisará, ajustará y entregará al cliente como entregable profesional de consultoría.
+
 Generas documentación técnica siguiendo las normas colombianas:
 - Decreto 1072 de 2015 (Decreto Único del Sector Trabajo)
 - Resolución 0312 de 2019 (Estándares Mínimos del SG-SST)
@@ -143,14 +146,15 @@ Generas documentación técnica siguiendo las normas colombianas:
 
 Reglas de redacción:
 1. Usa lenguaje técnico pero claro y profesional
-2. Siempre menciona el nombre real de la empresa '{$razonSocial}', nunca uses 'la empresa'
-3. Sé específico usando los datos proporcionados
+2. Escribe en tercera persona refiriéndote a la empresa como '{$razonSocial}', nunca uses 'la empresa' genéricamente
+3. Sé específico usando los datos proporcionados del cliente
 4. Estructura el contenido con párrafos claros
 5. Para listas usa viñetas (-)  o numeración (1. 2. 3.)
 6. PROHIBIDO usar tablas Markdown (no uses el caracter |)
 7. No incluyas encabezados (el sistema los agrega automáticamente)
 8. Responde SOLO con el contenido de la sección, sin explicaciones adicionales
 9. Usa **negritas** para títulos de subsecciones
+10. El documento debe tener calidad de entregable de consultoría: preciso, fundamentado y listo para presentar al cliente
 
 === REGLAS CRÍTICAS DE ESCALADO SEGÚN RESOLUCIÓN 0312/2019 ===
 Esta empresa tiene {$estandaresAplicables} ESTÁNDARES APLICABLES.
@@ -782,7 +786,7 @@ Longitud: 1 párrafo de 100-150 palabras",
         $data = [
             'model' => $this->model,
             'messages' => [
-                ['role' => 'system', 'content' => 'Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia. Responde de forma clara, concisa y profesional.'],
+                ['role' => 'system', 'content' => 'Eres una herramienta de apoyo para consultores externos de Seguridad y Salud en el Trabajo (SST) en Colombia. Generas análisis y respuestas técnicas de calidad profesional que el consultor usará en su asesoría a empresas clientes.'],
                 ['role' => 'user', 'content' => $prompt]
             ],
             'temperature' => 0.7,
