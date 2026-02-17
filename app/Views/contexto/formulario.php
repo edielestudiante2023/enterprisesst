@@ -450,6 +450,20 @@
                                 </ul>
                             </div>
 
+                            <div class="alert alert-info border mb-3">
+                                <h6 class="mb-2"><i class="bi bi-mortarboard me-2"></i>Temas clave para el programa de capacitacion:</h6>
+                                <p class="small mb-2 text-muted">Esta informacion permite que la IA proponga capacitaciones relevantes para la empresa, no genericas.</p>
+                                <ul class="mb-0 small">
+                                    <li><strong>Procesos operativos criticos:</strong> Que hace la gente dia a dia en su trabajo</li>
+                                    <li><strong>Tareas de alto riesgo:</strong> Actividades especificas de la operacion que implican mayor peligro</li>
+                                    <li><strong>Equipos y sustancias:</strong> Herramientas, maquinaria o sustancias quimicas que manejan</li>
+                                    <li><strong>Certificaciones requeridas:</strong> Competencias o certificaciones que necesita el personal</li>
+                                    <li><strong>Normatividad sectorial:</strong> Regulaciones especificas del sector que aplican a la empresa</li>
+                                    <li><strong>Incidentes recurrentes:</strong> Accidentes o situaciones que se quieren prevenir con capacitacion</li>
+                                    <li><strong>Temas de capacitacion deseados:</strong> Temas especificos que la empresa desea sean tenidos en cuenta para capacitar</li>
+                                </ul>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Observaciones y Contexto de la Empresa</label>
                                 <textarea name="observaciones_contexto" class="form-control" rows="8"

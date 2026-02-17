@@ -1115,13 +1115,20 @@ Responde en formato JSON con esta estructura exacta:
         $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
 
-        $service = new \App\Services\CapacitacionSSTService();
-        $preview = $service->previewCapacitaciones($idCliente, (int)$anio, $contexto, $instrucciones);
+        try {
+            $service = new \App\Services\CapacitacionSSTService();
+            $preview = $service->previewCapacitaciones($idCliente, (int)$anio, $contexto, $instrucciones);
 
-        return $this->response->setJSON([
-            'success' => true,
-            'data' => $preview
-        ]);
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $preview
+            ]);
+        } catch (\RuntimeException $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     /**

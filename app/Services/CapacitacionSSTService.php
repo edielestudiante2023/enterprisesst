@@ -266,46 +266,49 @@ class CapacitacionSSTService
 
         $explicacionIA = '';
 
-        // 3. Procesar instrucciones con IA (si hay instrucciones)
-        if (!empty($instrucciones)) {
-            $resultadoIA = $this->interpretarInstruccionesConIA($instrucciones, $capacitaciones, $contexto, $anio);
+        // 3. SIEMPRE personalizar con IA usando el contexto completo
+        $resultadoIA = $this->personalizarConIA($capacitaciones, $contexto, $anio, $instrucciones);
 
-            // Aplicar exclusiones
-            if (!empty($resultadoIA['excluir'])) {
-                foreach ($resultadoIA['excluir'] as $indiceExcluir) {
-                    if (isset($capacitaciones[$indiceExcluir])) {
-                        $capacitaciones[$indiceExcluir]['excluida'] = true;
-                    }
+        // Aplicar exclusiones
+        if (!empty($resultadoIA['excluir'])) {
+            foreach ($resultadoIA['excluir'] as $indiceExcluir) {
+                if (isset($capacitaciones[$indiceExcluir])) {
+                    $capacitaciones[$indiceExcluir]['excluida'] = true;
                 }
-                $capacitaciones = array_filter($capacitaciones, fn($c) => !isset($c['excluida']));
             }
+            $capacitaciones = array_filter($capacitaciones, fn($c) => !isset($c['excluida']));
+        }
 
-            // Aplicar modificaciones de mes
-            if (!empty($resultadoIA['modificar'])) {
-                foreach ($resultadoIA['modificar'] as $mod) {
-                    $indice = $mod['indice'] ?? -1;
-                    if (isset($capacitaciones[$indice]) && isset($mod['nuevo_mes'])) {
+        // Aplicar modificaciones (mes y/o objetivo)
+        if (!empty($resultadoIA['modificar'])) {
+            foreach ($resultadoIA['modificar'] as $mod) {
+                $indice = $mod['indice'] ?? -1;
+                if (isset($capacitaciones[$indice])) {
+                    if (isset($mod['nuevo_mes'])) {
                         $nuevoMes = (int)$mod['nuevo_mes'];
                         $capacitaciones[$indice]['mes'] = $meses[$nuevoMes] ?? $capacitaciones[$indice]['mes'];
                         $capacitaciones[$indice]['mes_num'] = $nuevoMes;
                         $capacitaciones[$indice]['fecha_programada'] = "{$anio}-" . str_pad($nuevoMes, 2, '0', STR_PAD_LEFT) . "-15";
-                        $capacitaciones[$indice]['modificada_por_ia'] = true;
-                        if (!empty($mod['razon'])) {
-                            $capacitaciones[$indice]['razon_modificacion'] = $mod['razon'];
-                        }
+                    }
+                    if (!empty($mod['nuevo_objetivo'])) {
+                        $capacitaciones[$indice]['objetivo'] = $mod['nuevo_objetivo'];
+                    }
+                    $capacitaciones[$indice]['modificada_por_ia'] = true;
+                    if (!empty($mod['razon'])) {
+                        $capacitaciones[$indice]['razon_modificacion'] = $mod['razon'];
                     }
                 }
             }
-
-            // Agregar nuevas capacitaciones sugeridas por IA
-            if (!empty($resultadoIA['agregar'])) {
-                foreach ($resultadoIA['agregar'] as $nueva) {
-                    $capacitaciones[] = $nueva;
-                }
-            }
-
-            $explicacionIA = $resultadoIA['explicacion'] ?? '';
         }
+
+        // Agregar nuevas capacitaciones sugeridas por IA
+        if (!empty($resultadoIA['agregar'])) {
+            foreach ($resultadoIA['agregar'] as $nueva) {
+                $capacitaciones[] = $nueva;
+            }
+        }
+
+        $explicacionIA = $resultadoIA['explicacion'] ?? '';
 
         // Reindexar y ordenar por mes
         $capacitaciones = array_values($capacitaciones);
@@ -359,13 +362,24 @@ class CapacitacionSSTService
     }
 
     /**
-     * Interpreta instrucciones del usuario usando IA
+     * Personaliza las capacitaciones usando IA con el contexto completo del cliente.
+     * Se invoca SIEMPRE para adaptar la propuesta al sector, actividad y realidad de la empresa.
      */
-    protected function interpretarInstruccionesConIA(string $instrucciones, array $capacitacionesBase, ?array $contexto, int $anio): array
+    protected function personalizarConIA(array $capacitacionesBase, ?array $contexto, int $anio, string $instrucciones = ''): array
     {
         $apiKey = env('OPENAI_API_KEY', '');
         if (empty($apiKey)) {
-            return $this->interpretarInstruccionesSimple($instrucciones, $anio);
+            throw new \RuntimeException('OPENAI_API_KEY no configurada. La generacion de capacitaciones requiere la API de OpenAI.');
+        }
+
+        // Determinar limite maximo segun estandares
+        $estandares = (int)($contexto['estandares_aplicables'] ?? 60);
+        if ($estandares <= 7) {
+            $maxCapacitaciones = 4;
+        } elseif ($estandares <= 21) {
+            $maxCapacitaciones = 8;
+        } else {
+            $maxCapacitaciones = 12;
         }
 
         // Preparar lista de capacitaciones para la IA
@@ -374,47 +388,68 @@ class CapacitacionSSTService
             $capacitacionesTexto .= "{$idx}. [{$cap['mes']}] {$cap['nombre']} - {$cap['objetivo']}\n";
         }
 
-        // Contexto de la empresa
+        // Contexto completo de la empresa
         $contextoTexto = "";
         if ($contexto) {
             $contextoTexto = "CONTEXTO DE LA EMPRESA:\n";
             $contextoTexto .= "- Actividad economica: " . ($contexto['actividad_economica_principal'] ?? 'No especificada') . "\n";
+            $contextoTexto .= "- Sector economico: " . ($contexto['sector_economico'] ?? 'No especificado') . "\n";
             $contextoTexto .= "- Nivel de riesgo ARL: " . ($contexto['nivel_riesgo_arl'] ?? 'No especificado') . "\n";
-            $contextoTexto .= "- Trabajadores: " . ($contexto['total_trabajadores'] ?? 'No especificado') . "\n";
+            $contextoTexto .= "- Total trabajadores: " . ($contexto['total_trabajadores'] ?? 'No especificado') . "\n";
+            $contextoTexto .= "- Estandares aplicables: {$estandares}\n";
             if (!empty($contexto['peligros_identificados'])) {
                 $peligros = json_decode($contexto['peligros_identificados'], true) ?? [];
                 $contextoTexto .= "- Peligros identificados: " . implode(', ', $peligros) . "\n";
             }
+            if (!empty($contexto['observaciones_contexto'])) {
+                $contextoTexto .= "\nOBSERVACIONES Y CONTEXTO REAL DE LA EMPRESA:\n";
+                $contextoTexto .= $contexto['observaciones_contexto'] . "\n";
+            }
         }
 
-        $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia.
-Tu tarea es personalizar el cronograma de capacitaciones segun las instrucciones del usuario.
+        $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia, especializado en disenar programas de capacitacion pertinentes segun la Resolucion 0312 de 2019.
 
-REGLAS:
-1. Si el usuario dice que NO incluya algo (ej: 'no incluir trabajo en alturas'), debes EXCLUIR esas capacitaciones
-2. Si menciona agregar algo especifico, sugiere capacitaciones nuevas
-3. Si menciona cambiar fechas, modifica el mes correspondiente
-4. Responde SOLO en formato JSON valido
+Tu tarea es analizar el contexto REAL de la empresa y personalizar el cronograma de capacitaciones para que sea RELEVANTE y PERTINENTE, no generico.
+
+REGLAS OBLIGATORIAS:
+1. El resultado final debe tener MAXIMO {$maxCapacitaciones} capacitaciones ({$estandares} estandares aplicables)
+2. Analiza la actividad economica, el sector, los peligros y las observaciones del consultor para determinar que capacitaciones son realmente necesarias para ESTA empresa
+3. EXCLUYE capacitaciones que no apliquen al contexto real de la empresa (ej: si no manejan quimicos, no capacitar en quimicos)
+4. SUGIERE capacitaciones especificas del sector o actividad que no esten en la lista base pero sean necesarias
+5. Adapta los OBJETIVOS de las capacitaciones base al contexto especifico de la empresa
+6. Distribuye las capacitaciones en los meses de forma logica (ej: induccion al inicio, simulacro antes de temporada de riesgos)
+7. Si hay instrucciones adicionales del consultor, aplicalas con prioridad
+8. Responde SOLO en formato JSON valido
+
+VALORES PERMITIDOS PARA perfil_asistentes:
+TODOS, MIEMBROS_COPASST, TRABAJADORES_RIESGOS_CRITICOS, BRIGADA_EMERGENCIAS, ADMINISTRATIVOS, OPERATIVOS
 
 FORMATO DE RESPUESTA (JSON):
 {
   \"excluir\": [0, 3, 5],
-  \"modificar\": [{\"indice\": 2, \"nuevo_mes\": 6, \"razon\": \"...\"}],
-  \"agregar\": [{\"mes\": 4, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 2, \"perfil_asistentes\": \"TODOS\"}],
-  \"explicacion\": \"Breve explicacion de los cambios\"
+  \"modificar\": [
+    {\"indice\": 2, \"nuevo_mes\": 6, \"nuevo_objetivo\": \"Objetivo adaptado al contexto\", \"razon\": \"...\"}
+  ],
+  \"agregar\": [
+    {\"mes\": 4, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 2, \"perfil_asistentes\": \"TODOS\"}
+  ],
+  \"explicacion\": \"Explicacion de como se adapto el programa al contexto de la empresa\"
 }";
 
-        $userPrompt = "ANO DEL CRONOGRAMA: {$anio}\n\n";
+        $userPrompt = "ANO DEL CRONOGRAMA: {$anio}\n";
+        $userPrompt .= "MAXIMO DE CAPACITACIONES PERMITIDAS: {$maxCapacitaciones}\n\n";
         $userPrompt .= $contextoTexto . "\n";
         $userPrompt .= "CAPACITACIONES BASE DISPONIBLES:\n{$capacitacionesTexto}\n";
-        $userPrompt .= "INSTRUCCIONES DEL USUARIO:\n\"{$instrucciones}\"\n\n";
-        $userPrompt .= "Analiza las instrucciones y genera el JSON de respuesta.";
+        if (!empty($instrucciones)) {
+            $userPrompt .= "INSTRUCCIONES ADICIONALES DEL CONSULTOR:\n\"{$instrucciones}\"\n\n";
+        }
+        $userPrompt .= "Analiza el contexto de la empresa y personaliza las capacitaciones. Recuerda: maximo {$maxCapacitaciones} capacitaciones en el resultado final (sumando las que se mantienen + las nuevas - las excluidas).";
 
         $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey);
 
         if (!$response['success']) {
             log_message('error', 'Error en IA Capacitaciones: ' . ($response['error'] ?? 'desconocido'));
-            return $this->interpretarInstruccionesSimple($instrucciones, $anio);
+            return ['excluir' => [], 'modificar' => [], 'agregar' => [], 'explicacion' => 'Error al consultar la IA. Se muestran las capacitaciones base.'];
         }
 
         return $this->procesarRespuestaIA($response['contenido'], $capacitacionesBase, $anio);
@@ -426,13 +461,13 @@ FORMATO DE RESPUESTA (JSON):
     protected function llamarOpenAI(string $systemPrompt, string $userPrompt, string $apiKey): array
     {
         $data = [
-            'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+            'model' => env('OPENAI_MODEL', 'gpt-4o'),
             'messages' => [
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $userPrompt]
             ],
             'temperature' => 0.3,
-            'max_tokens' => 1500
+            'max_tokens' => 2500
         ];
 
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
@@ -520,46 +555,6 @@ FORMATO DE RESPUESTA (JSON):
         }
 
         return $resultado;
-    }
-
-    /**
-     * Fallback: Interpretacion simple sin IA
-     */
-    protected function interpretarInstruccionesSimple(string $instrucciones, int $anio): array
-    {
-        $meses = [
-            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
-            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
-            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
-        ];
-
-        $agregar = [];
-        $instrLower = strtolower($instrucciones);
-
-        $keywords = [
-            'alturas' => ['nombre' => 'Trabajo seguro en alturas', 'objetivo' => 'Certificar competencias para trabajo en alturas segun Res. 4272/2021', 'horas' => 8, 'mes' => 4],
-            'quimicos' => ['nombre' => 'Manejo seguro de sustancias quimicas', 'objetivo' => 'Prevenir exposicion a sustancias peligrosas', 'horas' => 2, 'mes' => 5],
-            'electrico' => ['nombre' => 'Prevencion de riesgo electrico', 'objetivo' => 'Identificar peligros electricos y medidas de control', 'horas' => 2, 'mes' => 6],
-            'primeros auxilios' => ['nombre' => 'Primeros auxilios basicos', 'objetivo' => 'Brindar atencion inicial en emergencias medicas', 'horas' => 4, 'mes' => 3],
-            'brigada' => ['nombre' => 'Formacion de brigada de emergencias', 'objetivo' => 'Capacitar brigadistas para respuesta a emergencias', 'horas' => 8, 'mes' => 5],
-        ];
-
-        foreach ($keywords as $keyword => $config) {
-            if (strpos($instrLower, $keyword) !== false) {
-                $agregar[] = [
-                    'mes' => $meses[$config['mes']],
-                    'mes_num' => $config['mes'],
-                    'nombre' => $config['nombre'],
-                    'objetivo' => $config['objetivo'],
-                    'perfil_asistentes' => 'TODOS',
-                    'horas' => $config['horas'],
-                    'fecha_programada' => "{$anio}-" . str_pad($config['mes'], 2, '0', STR_PAD_LEFT) . "-15",
-                    'origen' => 'instruccion'
-                ];
-            }
-        }
-
-        return ['agregar' => $agregar, 'excluir' => [], 'modificar' => [], 'explicacion' => ''];
     }
 
     /**
