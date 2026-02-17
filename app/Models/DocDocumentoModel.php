@@ -238,11 +238,11 @@ class DocDocumentoModel extends Model
         $db = \Config\Database::connect();
 
         $result = $db->table('tbl_doc_secciones')
-            ->select('
+            ->select("
                 COUNT(*) as total,
-                SUM(CASE WHEN contenido IS NOT NULL AND contenido != "" THEN 1 ELSE 0 END) as con_contenido,
+                SUM(CASE WHEN contenido IS NOT NULL AND contenido != '' THEN 1 ELSE 0 END) as con_contenido,
                 SUM(CASE WHEN aprobado = 1 THEN 1 ELSE 0 END) as aprobadas
-            ')
+            ")
             ->where('id_documento', $idDocumento)
             ->get()
             ->getRowArray();

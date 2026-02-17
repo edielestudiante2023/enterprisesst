@@ -345,7 +345,7 @@ class DocFirmaModel extends Model
     public function getDashboardFirmas(?int $idConsultor = null, ?int $idCliente = null): array
     {
         $builder = $this->db->table('tbl_doc_firma_solicitudes s')
-            ->select('
+            ->select("
                 s.id_documento,
                 d.codigo,
                 d.titulo,
@@ -356,14 +356,14 @@ class DocFirmaModel extends Model
                 c.nombre_cliente,
                 c.nit_cliente,
                 COUNT(s.id_solicitud) as total_firmantes,
-                SUM(CASE WHEN s.estado = "firmado" THEN 1 ELSE 0 END) as firmados,
-                SUM(CASE WHEN s.estado = "pendiente" THEN 1 ELSE 0 END) as pendientes,
-                SUM(CASE WHEN s.estado = "esperando" THEN 1 ELSE 0 END) as esperando,
-                SUM(CASE WHEN s.estado = "expirado" THEN 1 ELSE 0 END) as expirados,
-                SUM(CASE WHEN s.estado = "cancelado" THEN 1 ELSE 0 END) as cancelados,
+                SUM(CASE WHEN s.estado = 'firmado' THEN 1 ELSE 0 END) as firmados,
+                SUM(CASE WHEN s.estado = 'pendiente' THEN 1 ELSE 0 END) as pendientes,
+                SUM(CASE WHEN s.estado = 'esperando' THEN 1 ELSE 0 END) as esperando,
+                SUM(CASE WHEN s.estado = 'expirado' THEN 1 ELSE 0 END) as expirados,
+                SUM(CASE WHEN s.estado = 'cancelado' THEN 1 ELSE 0 END) as cancelados,
                 MAX(s.fecha_firma) as ultima_firma,
                 MAX(s.created_at) as fecha_solicitud
-            ')
+            ")
             ->join('tbl_documentos_sst d', 'd.id_documento = s.id_documento')
             ->join('tbl_clientes c', 'c.id_cliente = d.id_cliente')
             ->groupBy('s.id_documento')

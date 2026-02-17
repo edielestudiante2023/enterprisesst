@@ -187,7 +187,7 @@ VALUES
 ('listado_maestro',
  'Listado Maestro de Documentos',
  'Tabla con los documentos del cliente',
- 'SELECT codigo, titulo, version, estado, created_at FROM tbl_documentos_sst WHERE id_cliente = :id_cliente AND estado IN (\"aprobado\", \"firmado\", \"generado\") ORDER BY codigo',
+ 'SELECT codigo, titulo, version, estado, created_at FROM tbl_documentos_sst WHERE id_cliente = :id_cliente AND estado IN (\'aprobado\', \'firmado\', \'generado\') ORDER BY codigo',
  '[{"key": "codigo", "titulo": "Código", "ancho": "80px", "alineacion": "center"}, {"key": "titulo", "titulo": "Título", "ancho": "auto", "alineacion": "left"}, {"key": "version", "titulo": "Versión", "ancho": "50px", "alineacion": "center"}, {"key": "estado", "titulo": "Estado", "ancho": "70px", "alineacion": "center"}, {"key": "created_at", "titulo": "Fecha", "ancho": "75px", "alineacion": "center"}]',
  1, 'success')
 ON DUPLICATE KEY UPDATE query_base = VALUES(query_base), columnas = VALUES(columnas);
