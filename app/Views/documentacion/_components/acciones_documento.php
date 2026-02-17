@@ -181,10 +181,17 @@ if ($tipoDoc === 'programa_capacitacion') {
     </button>
     <?php else: ?>
     <!-- Documentos con firma electronica -->
+    <?php if (($docSST['firmas_total'] ?? 0) == 0 && in_array($docSST['estado'], ['borrador','generado','aprobado','en_revision','pendiente_firma'])): ?>
+    <a href="<?= base_url('firma/solicitar/' . $docSST['id_documento']) ?>"
+       class="btn btn-success" title="Solicitar Firmas" target="_blank">
+        <i class="bi bi-pen"></i>
+    </a>
+    <?php else: ?>
     <a href="<?= base_url('firma/estado/' . $docSST['id_documento']) ?>"
        class="btn btn-outline-success" title="Firmas y Audit Log" target="_blank">
         <i class="bi bi-pen"></i>
     </a>
+    <?php endif; ?>
     <a href="<?= base_url('documentos-sst/publicar-pdf/' . $docSST['id_documento']) ?>"
        class="btn btn-outline-dark" title="Publicar nueva versión en Reportes (se mantiene historial)"
        onclick="return confirm('¿Publicar nueva versión de este documento en Reportes?\n\nSe creará un nuevo registro manteniendo el historial de publicaciones anteriores.')">
