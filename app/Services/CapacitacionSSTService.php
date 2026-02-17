@@ -131,27 +131,33 @@ class CapacitacionSSTService
 
 Tu tarea es GENERAR la lista completa de capacitaciones para el cronograma anual de una empresa, basandote en su contexto real.
 
+ACTORES DEL SG-SST SUSCEPTIBLES DE CAPACITACION:
+- TODOS: Poblacion general de trabajadores. Las capacitaciones para TODOS deben centrarse en los riesgos reales identificados en el contexto de la empresa, no en temas genericos
+- COPASST_VIGIA: Miembros del COPASST o Vigia SST (funciones, investigacion AT, inspecciones)
+- COMITE_CONVIVENCIA: Miembros del Comite de Convivencia Laboral (acoso laboral, resolucion conflictos)
+- BRIGADA_EMERGENCIAS: Grupo de brigadistas (primeros auxilios, evacuacion, control incendios)
+- OPERATIVOS: Trabajadores expuestos a riesgos criticos segun la operacion de la empresa
+
 REGLAS OBLIGATORIAS:
 1. Genera EXACTAMENTE {$maxCapacitaciones} capacitaciones ({$estandares} estandares aplicables)
-2. Cada capacitacion debe ser RELEVANTE y PERTINENTE para esta empresa especifica, no generica
-3. Analiza la actividad economica, el sector, los peligros y las observaciones del consultor
-4. SIEMPRE incluye: Induccion SST (mes 1) y Reinduccion SST (mes 12) como primera y ultima
-5. Las demas capacitaciones deben responder a los riesgos reales y al contexto operativo de la empresa
-6. Los objetivos deben ser especificos para el contexto de la empresa, no genericos
-7. Distribuye las capacitaciones en los 12 meses de forma logica
-8. Si hay instrucciones adicionales del consultor, aplicalas con prioridad
-9. Responde SOLO en formato JSON valido
-
-VALORES PERMITIDOS PARA perfil_asistentes:
-TODOS, MIEMBROS_COPASST, TRABAJADORES_RIESGOS_CRITICOS, BRIGADA_EMERGENCIAS, ADMINISTRATIVOS, OPERATIVOS
+2. DISTRIBUCION BALANCEADA entre los actores: no todo puede ser para TODOS. El programa debe incluir capacitaciones especificas para COPASST_VIGIA, COMITE_CONVIVENCIA, BRIGADA_EMERGENCIAS y OPERATIVOS segun corresponda
+3. Cada capacitacion debe ser RELEVANTE y PERTINENTE para esta empresa especifica, no generica
+4. Analiza la actividad economica, el sector, los peligros y las observaciones del consultor
+5. SIEMPRE incluye: Induccion SST (mes 1) y Reinduccion SST (mes 12) como primera y ultima, ambas para TODOS
+6. Las demas capacitaciones deben responder a los riesgos reales y al contexto operativo
+7. Los objetivos deben ser especificos para el contexto de la empresa, no genericos
+8. Distribuye las capacitaciones en los 12 meses de forma logica
+9. Si hay instrucciones adicionales del consultor, aplicalas con prioridad
+10. Responde SOLO en formato JSON valido
 
 FORMATO DE RESPUESTA (JSON):
 {
   \"capacitaciones\": [
     {\"mes\": 1, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 2, \"perfil_asistentes\": \"TODOS\"},
-    {\"mes\": 3, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 2, \"perfil_asistentes\": \"OPERATIVOS\"}
+    {\"mes\": 3, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 2, \"perfil_asistentes\": \"COPASST_VIGIA\"},
+    {\"mes\": 5, \"nombre\": \"...\", \"objetivo\": \"...\", \"horas\": 2, \"perfil_asistentes\": \"BRIGADA_EMERGENCIAS\"}
   ],
-  \"explicacion\": \"Explicacion de como se diseno el programa para esta empresa\"
+  \"explicacion\": \"Explicacion de como se diseno el programa y la distribucion entre actores\"
 }";
 
         $userPrompt = "ANO DEL CRONOGRAMA: {$anio}\n";

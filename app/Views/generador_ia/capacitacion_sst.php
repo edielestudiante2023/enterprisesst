@@ -644,10 +644,9 @@
                                         <span class="input-group-text"><i class="bi bi-people"></i></span>
                                         <select class="form-select form-select-sm cap-perfil" data-idx="${idx}">
                                             <option value="TODOS" ${cap.perfil_asistentes === 'TODOS' ? 'selected' : ''}>TODOS</option>
-                                            <option value="MIEMBROS_COPASST" ${cap.perfil_asistentes === 'MIEMBROS_COPASST' ? 'selected' : ''}>MIEMBROS_COPASST</option>
-                                            <option value="TRABAJADORES_RIESGOS_CRITICOS" ${cap.perfil_asistentes === 'TRABAJADORES_RIESGOS_CRITICOS' ? 'selected' : ''}>RIESGOS_CRITICOS</option>
+                                            <option value="COPASST_VIGIA" ${cap.perfil_asistentes === 'COPASST_VIGIA' ? 'selected' : ''}>COPASST / VIGIA</option>
+                                            <option value="COMITE_CONVIVENCIA" ${cap.perfil_asistentes === 'COMITE_CONVIVENCIA' ? 'selected' : ''}>COMITE CONVIVENCIA</option>
                                             <option value="BRIGADA_EMERGENCIAS" ${cap.perfil_asistentes === 'BRIGADA_EMERGENCIAS' ? 'selected' : ''}>BRIGADA</option>
-                                            <option value="ADMINISTRATIVOS" ${cap.perfil_asistentes === 'ADMINISTRATIVOS' ? 'selected' : ''}>ADMINISTRATIVOS</option>
                                             <option value="OPERATIVOS" ${cap.perfil_asistentes === 'OPERATIVOS' ? 'selected' : ''}>OPERATIVOS</option>
                                         </select>
                                     </div>
