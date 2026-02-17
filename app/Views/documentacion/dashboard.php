@@ -278,7 +278,7 @@
                         </div>
                     </div>
                     <div class="ms-3">
-                        <a href="<?= base_url('responsables-sst/' . $cliente['id_cliente']) ?>" class="btn btn-outline-primary btn-sm">
+                        <a href="<?= base_url('responsables-sst/' . $cliente['id_cliente']) ?>" class="btn btn-outline-primary btn-sm" target="_blank">
                             <i class="bi bi-gear me-1"></i>Gestionar Roles
                         </a>
                     </div>
@@ -335,7 +335,7 @@
         <!-- Accesos rapidos -->
         <div class="row mt-3 g-2">
             <div class="col-6 col-md">
-                <a href="<?= base_url('indicadores-sst/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                <a href="<?= base_url('indicadores-sst/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100" target="_blank">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-graph-up-arrow text-danger fs-4"></i>
                         <h6 class="mt-2 mb-0 text-dark">Indicadores KPI</h6>
@@ -344,7 +344,7 @@
                 </a>
             </div>
             <div class="col-6 col-md">
-                <a href="<?= base_url('pta/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                <a href="<?= base_url('pta/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100" target="_blank">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-calendar-check text-info fs-4"></i>
                         <h6 class="mt-2 mb-0 text-dark">Plan de Trabajo</h6>
@@ -353,7 +353,7 @@
                 </a>
             </div>
             <div class="col-6 col-md">
-                <a href="<?= base_url('estandares/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                <a href="<?= base_url('estandares/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100" target="_blank">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-list-check text-primary fs-4"></i>
                         <h6 class="mt-2 mb-0 text-dark">Ver Estandares</h6>
@@ -362,7 +362,7 @@
                 </a>
             </div>
             <div class="col-6 col-md">
-                <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                <a href="<?= base_url('documentacion/' . $cliente['id_cliente']) ?>" class="card border-0 shadow-sm text-decoration-none h-100" target="_blank">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-robot text-purple fs-4" style="color: #6f42c1 !important;"></i>
                         <h6 class="mt-2 mb-0 text-dark">Generador IA</h6>
@@ -371,7 +371,7 @@
                 </a>
             </div>
             <div class="col-6 col-md">
-                <a href="<?= base_url('documentacion/instructivo') ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                <a href="<?= base_url('documentacion/instructivo') ?>" class="card border-0 shadow-sm text-decoration-none h-100" target="_blank">
                     <div class="card-body text-center py-3">
                         <i class="bi bi-question-circle text-warning fs-4"></i>
                         <h6 class="mt-2 mb-0 text-dark">Instructivo</h6>
@@ -594,7 +594,7 @@ function renderCarpetasJerarquicas($carpetas, $idCliente, $nivel = 0) {
                         default => 'estado-ia-pendiente'
                     };
 
-                    $html .= '<a href="' . base_url('documentacion/ver/' . $doc['id_documento']) . '" class="doc-card">';
+                    $html .= '<a href="' . base_url('documentacion/ver/' . $doc['id_documento']) . '" class="doc-card" target="_blank">';
                     $html .= '<span class="doc-estado-indicator ' . $estadoIA . '" title="' . $estadoIAText . '"></span>';
                     $html .= '<div class="doc-info">';
                     $html .= '<div class="doc-nombre">' . esc($doc['nombre']) . '</div>';
@@ -606,8 +606,8 @@ function renderCarpetasJerarquicas($carpetas, $idCliente, $nivel = 0) {
                     $html .= '</div>';
                     $html .= '<span class="badge ' . $estadoIAClass . ' doc-estado-badge">' . $estadoIAText . '</span>';
                     $html .= '<div class="doc-actions">';
-                    $html .= '<a href="' . base_url('documentacion/editar/' . $doc['id_documento']) . '" class="btn btn-sm btn-outline-secondary" title="Editar" onclick="event.stopPropagation();"><i class="bi bi-pencil"></i></a>';
-                    $html .= '<a href="' . base_url('exportar/pdf/' . $doc['id_documento']) . '" class="btn btn-sm btn-outline-danger" title="PDF" onclick="event.stopPropagation();"><i class="bi bi-file-pdf"></i></a>';
+                    $html .= '<a href="' . base_url('documentacion/editar/' . $doc['id_documento']) . '" class="btn btn-sm btn-outline-secondary" title="Editar" onclick="event.stopPropagation();" target="_blank"><i class="bi bi-pencil"></i></a>';
+                    $html .= '<a href="' . base_url('exportar/pdf/' . $doc['id_documento']) . '" class="btn btn-sm btn-outline-danger" title="PDF" onclick="event.stopPropagation();" target="_blank"><i class="bi bi-file-pdf"></i></a>';
                     $html .= '</div>';
                     $html .= '</a>';
                 }
