@@ -709,6 +709,82 @@ El botón "Aprobar Documento" se habilita automáticamente por JavaScript (`habi
 
 ---
 
+## Problema: Botón individual "Generar con IA" ignora instrucciones del usuario
+
+### Síntoma
+
+El consultor escribe instrucciones en el textarea de contexto (ej: "enfócate en riesgo psicosocial") y la IA genera exactamente lo mismo que sin instrucciones. El contenido siempre sigue la misma estructura hardcodeada.
+
+### Causa
+
+Los botones individuales "Generar con IA" y "Generar Todo con IA" ejecutaban el **mismo pipeline**. Ambos usaban el `promptBase` estático de `getPromptParaSeccion()`, que le dice a la IA exactamente qué temas cubrir:
+
+```
+"Genera el contenido de la Etapa 3 - Relaciones Laborales.
+Incluye: Reglamento Interno de Trabajo, Explicación de pago salarial,
+Horario laboral, Prestaciones legales y extralegales."
+```
+
+El `contexto_adicional` del usuario se agregaba al final del prompt como dato secundario, y la IA priorizaba el prompt estático (más extenso, más autoritativo) sobre las instrucciones del usuario (1-2 líneas al final).
+
+### Arquitectura del problema
+
+```
+ANTES (ambos botones):
+  [datos empresa] + [contexto BD] + [marco normativo]
+  + [promptBase estático] ← MANDA, la IA obedece esto
+  + [instrucciones usuario] ← ignoradas, quedan sepultadas
+
+DESPUÉS (dos modos distintos):
+  Generar Todo (modo=completo):
+    [datos empresa] + [contexto BD] + [marco normativo]
+    + [promptBase estático] ← receta para generación inicial desde cero
+
+  Generar con IA individual (modo=regenerar):
+    [datos empresa] + [contexto BD] + [marco normativo]
+    + [contenido actual] ← referencia de lo que ya tiene la sección
+    + [instrucciones usuario] ← PRIORIDAD MÁXIMA, sin prompt estático
+```
+
+### Fix (2026-02-17)
+
+**3 archivos modificados:**
+
+**1. `app/Views/documentos_sst/generar_con_ia.php` (JS):**
+- `generarSeccion(seccionKey, modo)` acepta parámetro `modo`
+- Botones individuales (`.btn-generar`, `.btn-regenerar`) → `modo='regenerar'`
+- Loop de "Generar Todo" → `modo='completo'`
+- En modo regenerar envía `contenido_actual` (valor del textarea de la sección)
+
+**2. `app/Controllers/DocumentosSSTController.php`:**
+- `generarSeccionIA()` lee parámetros `modo` y `contenido_actual` del POST
+- `generarConIAReal()` recibe `$modo` y `$contenidoActual`
+- Datos BD (getContextoBase, marco normativo) se consultan SIEMPRE en ambos modos
+- La diferencia: `$promptParaIA = ($modo === 'regenerar') ? '' : $promptBase`
+- Metadata BD solo se muestra en modo completo
+
+**3. `app/Services/IADocumentacionService.php`:**
+- `construirPrompt()` unifica contexto BD en ambos modos (PTA, indicadores, marco)
+- En modo `regenerar`: no incluye promptBase, usa `contexto_adicional` como "INSTRUCCIÓN DEL USUARIO (PRIORIDAD MÁXIMA)"
+- En modo `regenerar` con `contenido_actual`: lo incluye como referencia para mejorar
+- En modo `completo`: pipeline original sin cambios
+
+### Principio arquitectónico
+
+| | Generar Todo (completo) | Generar con IA (regenerar) |
+|--|--|--|
+| **Propósito** | Generación inicial desde cero | Afinar/reescribir con instrucciones del usuario |
+| **Datos BD** | SÍ (PTA, indicadores, marco) | SÍ (mismos datos) |
+| **Prompt estático** | SÍ (receta de qué cubrir) | NO (el usuario decide) |
+| **Instrucciones usuario** | No aplica (batch) | PRIORIDAD MÁXIMA |
+| **Contenido actual** | No aplica | Enviado como referencia |
+
+### Bug relacionado: `select('DISTINCT nombre_indicador')` en metadata
+
+En el mismo archivo `ProgramaInduccionReinduccion.php`, el método `getMetadataConsultas()` usaba `->select('DISTINCT nombre_indicador')` que CI4 v4.6 escapaba como `` `DISTINCT` `nombre_indicador` `` (SQL inválido). Fix: `->distinct()->select('nombre_indicador')`.
+
+---
+
 ## Referencias
 
 - [PROMPT_NUEVO_DOCUMENTO_SST.md](../../PROMPT_NUEVO_DOCUMENTO_SST.md) - Guía completa para crear documentos
