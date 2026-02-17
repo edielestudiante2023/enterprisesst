@@ -143,7 +143,7 @@ REGLAS OBLIGATORIAS:
 2. DISTRIBUCION BALANCEADA entre los actores: no todo puede ser para TODOS. El programa debe incluir capacitaciones especificas para COPASST_VIGIA, COMITE_CONVIVENCIA, BRIGADA_EMERGENCIAS y OPERATIVOS segun corresponda
 3. Cada capacitacion debe ser RELEVANTE y PERTINENTE para esta empresa especifica, no generica
 4. Analiza la actividad economica, el sector, los peligros y las observaciones del consultor
-5. SIEMPRE incluye: Induccion SST (mes 1) y Reinduccion SST (mes 12) como primera y ultima, ambas para TODOS
+5. Incluye UNA sola induccion en SST al inicio del ano (para TODOS). NO incluyas reinduccion
 6. Las demas capacitaciones deben responder a los riesgos reales y al contexto operativo
 7. Los objetivos deben ser especificos para el contexto de la empresa, no genericos
 8. Distribuye las capacitaciones en los 12 meses de forma logica
