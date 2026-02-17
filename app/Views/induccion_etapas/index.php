@@ -235,9 +235,9 @@
                 Las etapas están aprobadas. Ahora puede generar las actividades del Plan de Trabajo Anual
                 basadas en estas etapas.
             </p>
-            <a href="<?= base_url("induccion-etapas/{$cliente['id_cliente']}/generar-pta") ?>"
+            <a href="<?= base_url("induccion-etapas/{$cliente['id_cliente']}/checklist-pta") ?>"
                class="btn btn-success">
-                <i class="bi bi-calendar-check me-1"></i>Generar Actividades del PTA
+                <i class="bi bi-clipboard-check me-1"></i>Generar Actividades del PTA
             </a>
             <a href="<?= base_url("induccion-etapas/{$cliente['id_cliente']}/generar-indicadores") ?>"
                class="btn btn-outline-primary ms-2">

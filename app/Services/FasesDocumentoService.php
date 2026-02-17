@@ -100,7 +100,7 @@ class FasesDocumentoService
                 'nombre' => 'Plan de Trabajo',
                 'descripcion' => 'Actividades derivadas de las etapas de induccion',
                 'url_modulo' => '/pta-cliente-nueva/list',
-                'url_generar' => '/induccion-etapas/{cliente}/generar-pta',
+                'url_generar' => '/induccion-etapas/{cliente}/checklist-pta',
                 'orden' => 2,
                 'depende_de' => 'etapas_induccion'
             ],

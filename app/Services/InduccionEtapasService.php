@@ -20,6 +20,51 @@ use App\Models\IndicadorSSTModel;
  */
 class InduccionEtapasService
 {
+    /**
+     * Checklist de preparación de inducción SST (25 ítems)
+     * Cada ítem: texto, fase, modalidad (PVM=todas, P=presencial, V=virtual, M=mixta)
+     */
+    public const CHECKLIST_ITEMS = [
+        // --- Planificación ---
+        1  => ['texto' => 'Definir fecha y hora de la inducción (y fecha alternativa)', 'fase' => 'planificacion', 'modalidad' => 'PVM'],
+        2  => ['texto' => 'Definir población convocada (áreas/cargos) y listado final de asistentes esperados', 'fase' => 'planificacion', 'modalidad' => 'PVM'],
+        3  => ['texto' => 'Definir responsable líder (SST) y apoyos (TH / comunicaciones / líder de área)', 'fase' => 'planificacion', 'modalidad' => 'PVM'],
+        4  => ['texto' => 'Reservar lugar y confirmar disponibilidad del espacio', 'fase' => 'planificacion', 'modalidad' => 'P'],
+        5  => ['texto' => 'Definir plataforma virtual y confirmar enlace/permisos', 'fase' => 'planificacion', 'modalidad' => 'V'],
+        // --- Convocatoria ---
+        6  => ['texto' => 'Elaborar pieza gráfica de invitación (digital e impresa)', 'fase' => 'convocatoria', 'modalidad' => 'P'],
+        7  => ['texto' => 'Elaborar pieza gráfica de invitación (digital)', 'fase' => 'convocatoria', 'modalidad' => 'V'],
+        8  => ['texto' => 'Socializar/divulgar la invitación: correo + WhatsApp + carteleras (según aplique)', 'fase' => 'convocatoria', 'modalidad' => 'PVM'],
+        9  => ['texto' => 'Programar recordatorios (día anterior y el mismo día)', 'fase' => 'convocatoria', 'modalidad' => 'PVM'],
+        // --- Preparación de material ---
+        10 => ['texto' => 'Preparar diapositivas finales (PDF + editable) con agenda incluida', 'fase' => 'preparacion_material', 'modalidad' => 'PVM'],
+        11 => ['texto' => 'Preparar guion breve del facilitador (apertura, reglas, cierre)', 'fase' => 'preparacion_material', 'modalidad' => 'PVM'],
+        12 => ['texto' => 'Preparar material de apoyo para enviar/entregar (política SST, rutas de reporte, emergencias, etc.)', 'fase' => 'preparacion_material', 'modalidad' => 'PVM'],
+        13 => ['texto' => 'Preparar formato de asignación de responsabilidades SST para firma de los trabajadores', 'fase' => 'preparacion_material', 'modalidad' => 'PVM'],
+        14 => ['texto' => 'Definir dinámica corta de interacción (pregunta, caso, ejercicio)', 'fase' => 'preparacion_material', 'modalidad' => 'PVM'],
+        // --- Ejecución ---
+        15 => ['texto' => 'Definir cómo se tomará la asistencia (método y respaldo)', 'fase' => 'ejecucion', 'modalidad' => 'PVM'],
+        16 => ['texto' => 'Preparar formato físico de asistencia (lista de firma) y respaldo', 'fase' => 'ejecucion', 'modalidad' => 'P'],
+        17 => ['texto' => 'Preparar formulario digital de asistencia (QR / formulario online) y respaldo', 'fase' => 'ejecucion', 'modalidad' => 'V'],
+        // --- Evaluación ---
+        18 => ['texto' => 'Preparar evaluación en formato físico (quiz en papel)', 'fase' => 'evaluacion', 'modalidad' => 'P'],
+        19 => ['texto' => 'Preparar evaluación virtual (formulario online)', 'fase' => 'evaluacion', 'modalidad' => 'V'],
+        20 => ['texto' => 'Definir criterio de calificación (aprobación) y qué pasa si no aprueba (refuerzo/reinducción)', 'fase' => 'evaluacion', 'modalidad' => 'PVM'],
+        21 => ['texto' => 'Preparar formulario/quiz (preguntas, respuestas, configuración) y probarlo', 'fase' => 'evaluacion', 'modalidad' => 'PVM'],
+        // --- Evidencias ---
+        22 => ['texto' => 'Definir evidencias: fotos del evento presencial', 'fase' => 'evidencias', 'modalidad' => 'P'],
+        23 => ['texto' => 'Definir evidencias: capturas de pantalla y grabación de la sesión', 'fase' => 'evidencias', 'modalidad' => 'V'],
+        24 => ['texto' => 'Preparar carpeta de evidencias (cliente + fecha + "Inducción SST")', 'fase' => 'evidencias', 'modalidad' => 'PVM'],
+        // --- Logística por modalidad ---
+        25 => ['texto' => 'Asegurar con alta dirección el refrigerio (cantidad, hora, logística)', 'fase' => 'logistica', 'modalidad' => 'P'],
+        26 => ['texto' => 'Reservar salón y verificar equipos (proyector/TV, sonido, extensiones)', 'fase' => 'logistica', 'modalidad' => 'P'],
+        27 => ['texto' => 'Crear sala virtual (enlace, permisos, contraseña/sala de espera si aplica)', 'fase' => 'logistica', 'modalidad' => 'V'],
+        28 => ['texto' => 'Definir moderador/soporte y probar audio/cámara del salón', 'fase' => 'logistica', 'modalidad' => 'M'],
+        29 => ['texto' => 'Realizar prueba técnica antes de la sesión (pantalla, audio, video, internet)', 'fase' => 'logistica', 'modalidad' => 'PVM'],
+        // --- Cierre ---
+        30 => ['texto' => 'Al cierre: consolidar asistencia + evaluación + evidencias y guardar/emitir acta o informe corto', 'fase' => 'cierre', 'modalidad' => 'PVM'],
+    ];
+
     protected InduccionEtapasModel $etapasModel;
     protected ClienteContextoSstModel $contextoModel;
     protected PtaclienteModel $ptaModel;
@@ -445,9 +490,9 @@ class InduccionEtapasService
 
     /**
      * Prepara las actividades propuestas para el PTA (sin insertar)
-     * Usa IA para consolidar todos los temas en máximo 4 actividades prácticas
+     * Usa IA para generar actividades operativas basadas en el checklist del consultor
      */
-    public function prepararActividadesPTA(int $idCliente, ?int $anio = null): array
+    public function prepararActividadesPTA(int $idCliente, ?int $anio = null, ?array $checklistData = null): array
     {
         $anio = $anio ?? (int)date('Y');
 
@@ -484,8 +529,22 @@ class InduccionEtapasService
             }
         }
 
-        // Usar IA para consolidar en máximo 4 actividades
-        $actividades = $this->consolidarTemasConIA($todosTemas, $etapasInfo, $anio);
+        // Obtener contexto del cliente para enriquecer el prompt
+        $contexto = $this->contextoModel->where('id_cliente', $idCliente)->first();
+
+        // Obtener actividades existentes en PTA para evitar duplicados
+        $db = \Config\Database::connect();
+        $actividadesExistentes = $db->table('tbl_pta_cliente')
+            ->where('id_cliente', $idCliente)
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->where('tipo_servicio', 'Programa Induccion y Reinduccion')
+            ->where('estado_actividad', 'ABIERTA')
+            ->select('actividad_plandetrabajo')
+            ->get()->getResultArray();
+        $nombresExistentes = array_column($actividadesExistentes, 'actividad_plandetrabajo');
+
+        // Usar IA para generar actividades operativas de preparación
+        $actividades = $this->generarActividadesOperativasConIA($todosTemas, $etapasInfo, $anio, $contexto, $nombresExistentes, $checklistData);
 
         // Si la IA falla, usar método de fallback
         if (empty($actividades)) {
@@ -504,20 +563,21 @@ class InduccionEtapasService
     }
 
     /**
-     * Usa OpenAI para consolidar muchos temas en máximo 4 actividades prácticas
+     * Usa OpenAI para generar actividades OPERATIVAS/LOGÍSTICAS de preparación
+     * de la jornada de inducción (NO consolida temas temáticamente)
      */
-    protected function consolidarTemasConIA(array $temas, array $etapasInfo, int $anio): array
+    protected function generarActividadesOperativasConIA(array $temas, array $etapasInfo, int $anio, ?array $contexto, array $nombresExistentes, ?array $checklistData = null): array
     {
         $apiKey = env('OPENAI_API_KEY', '');
         if (empty($apiKey)) {
-            log_message('warning', 'No hay API key de OpenAI configurada para consolidar temas de inducción');
+            log_message('warning', 'No hay API key de OpenAI configurada para generar actividades de inducción');
             return [];
         }
 
-        // Preparar lista de temas para la IA
+        // Preparar lista de temas como CONTEXTO (qué se va a enseñar)
         $temasTexto = "";
         foreach ($temas as $idx => $tema) {
-            $temasTexto .= ($idx + 1) . ". [{$tema['nombre_etapa']}] {$tema['tema']}\n";
+            $temasTexto .= "- [{$tema['nombre_etapa']}] {$tema['tema']}\n";
         }
 
         // Obtener responsable más común
@@ -529,52 +589,208 @@ class InduccionEtapasService
             }
         }
 
-        $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia.
-Tu tarea es consolidar una lista de temas de un programa de inducción en MÁXIMO 4 ACTIVIDADES prácticas para el Plan de Trabajo Anual.
+        // Preparar contexto del cliente
+        $contextoTexto = "";
+        if ($contexto) {
+            $contextoTexto .= "CONTEXTO DE LA EMPRESA:\n";
+            if (!empty($contexto['actividad_economica_principal'])) {
+                $contextoTexto .= "- Actividad economica: {$contexto['actividad_economica_principal']}\n";
+            }
+            if (!empty($contexto['total_trabajadores'])) {
+                $contextoTexto .= "- Total trabajadores: {$contexto['total_trabajadores']}\n";
+            }
+            if (!empty($contexto['numero_sedes'])) {
+                $contextoTexto .= "- Numero de sedes: {$contexto['numero_sedes']}\n";
+            }
+            if (!empty($contexto['observaciones_contexto'])) {
+                $contextoTexto .= "- Observaciones del consultor: {$contexto['observaciones_contexto']}\n";
+            }
+        }
 
-REGLAS IMPORTANTES:
-1. Debes generar MÁXIMO 4 actividades (pueden ser 3 o 4, nunca más)
-2. Cada actividad debe CONSOLIDAR múltiples temas relacionados
-3. Las actividades deben ser prácticas y medibles
-4. Distribuir las fechas a lo largo del año {$anio}
-5. Responde SOLO en formato JSON válido
+        // Actividades existentes para evitar duplicados
+        $existentesTexto = "";
+        if (!empty($nombresExistentes)) {
+            $existentesTexto = "\nACTIVIDADES QUE YA EXISTEN EN EL PTA (NO las repitas):\n";
+            foreach ($nombresExistentes as $nombre) {
+                $existentesTexto .= "- {$nombre}\n";
+            }
+        }
+
+        // Construir contexto del checklist del consultor
+        $checklistTexto = $this->buildChecklistTexto($checklistData);
+        $totalFasesChecklist = $this->contarFasesChecklist($checklistData);
+
+        $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia.
+
+Tu tarea es generar ACTIVIDADES OPERATIVAS para una jornada de induccion en SST. Genera UNA actividad por cada FASE que el consultor haya seleccionado en su checklist.
+
+CHECKLIST DEL CONSULTOR:
+El consultor selecciono items especificos de un checklist, agrupados por fase. SOLO debes generar actividades para las fases que aparecen en el checklist. Si una fase no aparece, NO la incluyas.
+
+Cada item listado bajo una fase es una accion concreta que el consultor quiere incluir. Debes integrar TODOS los items de esa fase en la descripcion de la actividad correspondiente.
+
+REGLAS DE ESCRITURA:
+- La \"descripcion\" de cada actividad debe ser un TEXTO HILADO TIPO PROCESO: una narrativa fluida que describa paso a paso las acciones a realizar, integrando todos los items de esa fase en un parrafo coherente. NO usar vinetas ni listas.
+- Ejemplo de texto hilado: \"Coordinar con la alta direccion la fecha y hora de la jornada, definir una fecha alternativa en caso de imprevistos. Identificar la poblacion convocada incluyendo las areas y cargos que participaran, y elaborar el listado final de asistentes esperados. Designar al responsable lider de SST y los apoyos de Talento Humano y comunicaciones.\"
+- Las actividades deben ser OPERATIVAS (que hacer), no tematicas (que ensenar)
+- Adapta al contexto de la empresa (tamano, sedes, sector, modalidad)
+- NO inventes acciones que el consultor no selecciono. Cenite estrictamente a los items listados en cada fase.
+
+REGLAS OBLIGATORIAS:
+1. El array \"actividades\" del JSON debe tener EXACTAMENTE {$totalFasesChecklist} elementos. Uno por cada fase que aparece en el checklist. NO consolidar, NO omitir, NO inventar fases adicionales.
+2. El campo \"fase\" en el JSON debe coincidir EXACTAMENTE con el nombre de la fase del checklist (ej: PLANIFICACION, CONVOCATORIA, PREPARACION_MATERIAL, EJECUCION, EVALUACION, EVIDENCIAS, LOGISTICA, CIERRE)
+3. Distribuye las actividades en orden cronologico logico dentro del ano {$anio}
+4. Responde SOLO en formato JSON valido
 
 FORMATO DE RESPUESTA (JSON):
 {
   \"actividades\": [
     {
-      \"actividad\": \"Nombre de la actividad consolidada\",
-      \"descripcion\": \"Breve descripción que mencione los temas que incluye\",
+      \"actividad\": \"Nombre corto de la actividad\",
+      \"descripcion\": \"Texto hilado tipo proceso integrando los items seleccionados de esta fase...\",
       \"responsable\": \"Responsable sugerido\",
       \"mes\": 2,
-      \"temas_consolidados\": [1, 2, 3]
+      \"fase\": \"PLANIFICACION\"
     }
-  ],
-  \"explicacion\": \"Breve explicación de cómo se consolidaron los temas\"
-}
+  ]
+}";
 
-Ejemplo de consolidación:
-- En lugar de crear 10 actividades separadas para cada tema de SST, crea UNA actividad \"Jornada de Inducción en SG-SST\" que incluya: política SST, peligros y riesgos, controles, EPP, etc.";
+        $userPrompt = "ANO DEL PROGRAMA: {$anio}
 
-        $userPrompt = "AÑO DEL PROGRAMA: {$anio}
-TOTAL DE TEMAS: " . count($temas) . "
+{$contextoTexto}
+{$checklistTexto}
 
-LISTADO DE TEMAS A CONSOLIDAR:
+CONTENIDO DEL PROGRAMA DE INDUCCION ({$this->contarTemas($temas)} temas en " . count($etapasInfo) . " etapas):
 {$temasTexto}
 
 RESPONSABLE SUGERIDO: {$responsableDefault}
-
-Consolida estos " . count($temas) . " temas en MÁXIMO 4 ACTIVIDADES prácticas para el Plan de Trabajo Anual.
-Las actividades deben cubrir todos los temas de manera consolidada e inteligente.";
+{$existentesTexto}
+IMPORTANTE: El checklist tiene {$totalFasesChecklist} fases. Tu respuesta JSON DEBE contener exactamente {$totalFasesChecklist} actividades en el array. Ni mas ni menos.";
 
         $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey);
 
         if (!$response['success']) {
-            log_message('error', 'Error al consolidar temas con IA: ' . ($response['error'] ?? 'desconocido'));
+            log_message('error', 'Error al generar actividades operativas con IA: ' . ($response['error'] ?? 'desconocido'));
             return [];
         }
 
-        return $this->procesarRespuestaConsolidacion($response['contenido'], $temas, $responsableDefault, $anio);
+        return $this->procesarRespuestaOperativa($response['contenido'], $responsableDefault, $anio);
+    }
+
+    /**
+     * Cuenta el total de temas únicos
+     */
+    private function contarTemas(array $temas): int
+    {
+        return count($temas);
+    }
+
+    /**
+     * Cuenta las fases únicas seleccionadas en el checklist
+     */
+    private function contarFasesChecklist(?array $checklistData): int
+    {
+        if (empty($checklistData) || empty($checklistData['items_marcados'])) {
+            return 4; // fallback
+        }
+
+        $modalidad = $checklistData['modalidad'] ?? 'presencial';
+        $fases = [];
+        foreach ($checklistData['items_marcados'] as $itemId) {
+            $itemId = (int)$itemId;
+            if (isset(self::CHECKLIST_ITEMS[$itemId])) {
+                $item = self::CHECKLIST_ITEMS[$itemId];
+                if ($this->itemAplicaModalidad($item['modalidad'], $modalidad)) {
+                    $fases[$item['fase']] = true;
+                }
+            }
+        }
+
+        return count($fases) ?: 4;
+    }
+
+    /**
+     * Determina si un ítem del checklist aplica según la modalidad seleccionada
+     */
+    private function itemAplicaModalidad(string $itemModalidad, string $modalidadSeleccionada): bool
+    {
+        if ($itemModalidad === 'PVM') {
+            return true;
+        }
+
+        $modalidad = strtolower($modalidadSeleccionada);
+
+        // Mixta incluye TODOS los ítems
+        if ($modalidad === 'mixta') {
+            return true;
+        }
+
+        if ($modalidad === 'presencial' && $itemModalidad === 'P') {
+            return true;
+        }
+
+        if ($modalidad === 'virtual' && $itemModalidad === 'V') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Construye el texto del checklist agrupado por fase para inyectar en el prompt IA
+     */
+    private function buildChecklistTexto(?array $checklistData): string
+    {
+        if (empty($checklistData)) {
+            return '';
+        }
+
+        $modalidad = $checklistData['modalidad'] ?? 'presencial';
+        $itemsMarcados = $checklistData['items_marcados'] ?? [];
+        $notas = $checklistData['notas'] ?? '';
+
+        $faseLabels = [
+            'planificacion'       => 'PLANIFICACION',
+            'convocatoria'        => 'CONVOCATORIA',
+            'preparacion_material'=> 'PREPARACION_MATERIAL',
+            'ejecucion'           => 'EJECUCION',
+            'evaluacion'          => 'EVALUACION',
+            'evidencias'          => 'EVIDENCIAS',
+            'logistica'           => 'LOGISTICA',
+            'cierre'              => 'CIERRE',
+        ];
+
+        $texto = "\nMODALIDAD DEFINIDA POR EL CONSULTOR: " . strtoupper($modalidad) . "\n";
+
+        // Solo incluir ítems marcados (seleccionados por el consultor), agrupados por fase
+        $porFase = [];
+        foreach ($itemsMarcados as $itemId) {
+            $itemId = (int)$itemId;
+            if (isset(self::CHECKLIST_ITEMS[$itemId])) {
+                $item = self::CHECKLIST_ITEMS[$itemId];
+                if ($this->itemAplicaModalidad($item['modalidad'], $modalidad)) {
+                    $porFase[$item['fase']][] = $item['texto'];
+                }
+            }
+        }
+
+        $totalFases = count($porFase);
+        $texto .= "\nEl consultor selecciono {$totalFases} fases con acciones concretas. Genera EXACTAMENTE {$totalFases} actividades (1 por fase):\n";
+
+        foreach ($faseLabels as $faseKey => $faseLabel) {
+            if (isset($porFase[$faseKey])) {
+                $texto .= "\n--- FASE: {$faseLabel} ---\n";
+                foreach ($porFase[$faseKey] as $linea) {
+                    $texto .= "- {$linea}\n";
+                }
+            }
+        }
+
+        if (!empty($notas)) {
+            $texto .= "\nNOTAS ADICIONALES DEL CONSULTOR:\n{$notas}\n";
+        }
+
+        return $texto;
     }
 
     /**
@@ -583,13 +799,13 @@ Las actividades deben cubrir todos los temas de manera consolidada e inteligente
     protected function llamarOpenAI(string $systemPrompt, string $userPrompt, string $apiKey): array
     {
         $data = [
-            'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+            'model' => env('OPENAI_MODEL', 'gpt-4o'),
             'messages' => [
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $userPrompt]
             ],
             'temperature' => 0.3,
-            'max_tokens' => 1500
+            'max_tokens' => 4500
         ];
 
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
@@ -631,9 +847,9 @@ Las actividades deben cubrir todos los temas de manera consolidada e inteligente
     }
 
     /**
-     * Procesa la respuesta JSON de la IA para consolidación
+     * Procesa la respuesta JSON de la IA para actividades operativas
      */
-    protected function procesarRespuestaConsolidacion(string $contenidoIA, array $temasOriginales, string $responsableDefault, int $anio): array
+    protected function procesarRespuestaOperativa(string $contenidoIA, string $responsableDefault, int $anio): array
     {
         // Limpiar el JSON (puede venir con ```json ... ```)
         $contenidoIA = preg_replace('/```json\s*/', '', $contenidoIA);
@@ -641,80 +857,54 @@ Las actividades deben cubrir todos los temas de manera consolidada e inteligente
 
         $respuesta = json_decode($contenidoIA, true);
         if (!$respuesta || empty($respuesta['actividades'])) {
-            log_message('warning', 'No se pudo parsear respuesta IA consolidación: ' . $contenidoIA);
+            log_message('warning', 'No se pudo parsear respuesta IA actividades operativas: ' . $contenidoIA);
             return [];
         }
 
         $actividades = [];
-        $numeroEtapa = 1;
+        $numero = 1;
+
+        $phvaPorFase = [
+            'PLANIFICACION'        => 'PLANEAR',
+            'CONVOCATORIA'         => 'PLANEAR',
+            'PREPARACION_MATERIAL' => 'PLANEAR',
+            'EJECUCION'            => 'HACER',
+            'EVALUACION'           => 'VERIFICAR',
+            'EVIDENCIAS'           => 'VERIFICAR',
+            'LOGISTICA'            => 'HACER',
+            'CIERRE'               => 'ACTUAR',
+        ];
 
         foreach ($respuesta['actividades'] as $actIA) {
-            $mes = (int)($actIA['mes'] ?? ($numeroEtapa * 3)); // Distribuir trimestralmente si no hay mes
-            $mes = max(1, min(12, $mes)); // Asegurar mes válido
+            $mes = (int)($actIA['mes'] ?? ($numero * 3));
+            $mes = max(1, min(12, $mes));
 
             $fecha = date('Y-m-d', strtotime("{$anio}-{$mes}-15"));
-
-            // Construir descripción con temas consolidados
-            $descripcion = $actIA['descripcion'] ?? '';
-            if (!empty($actIA['temas_consolidados']) && is_array($actIA['temas_consolidados'])) {
-                $temasIncluidos = [];
-                foreach ($actIA['temas_consolidados'] as $idx) {
-                    if (isset($temasOriginales[$idx - 1])) {
-                        $temasIncluidos[] = $temasOriginales[$idx - 1]['tema'];
-                    }
-                }
-                if (!empty($temasIncluidos) && empty($descripcion)) {
-                    $descripcion = 'Incluye: ' . implode(', ', array_slice($temasIncluidos, 0, 5));
-                    if (count($temasIncluidos) > 5) {
-                        $descripcion .= ' y ' . (count($temasIncluidos) - 5) . ' temas más';
-                    }
-                }
-            }
+            $fase = $actIA['fase'] ?? '';
+            $phva = $phvaPorFase[$fase] ?? 'HACER';
 
             $actividades[] = [
-                'numero_etapa' => $numeroEtapa,
-                'actividad' => $actIA['actividad'] ?? "Actividad de Inducción {$numeroEtapa}",
-                'descripcion' => $descripcion,
+                'numero_etapa' => $numero,
+                'actividad' => $actIA['actividad'] ?? "Actividad Operativa {$numero}",
+                'descripcion' => $actIA['descripcion'] ?? '',
                 'responsable' => $actIA['responsable'] ?? $responsableDefault,
                 'fecha' => $fecha,
-                'phva' => 'HACER',
+                'phva' => $phva,
                 'generado_por_ia' => true,
-                'temas_consolidados' => $actIA['temas_consolidados'] ?? []
+                'fase' => $fase
             ];
 
-            $numeroEtapa++;
+            $numero++;
         }
 
         return $actividades;
     }
 
     /**
-     * Método de fallback: consolida temas sin IA en 4 actividades
+     * Método de fallback: genera actividades operativas sin IA
      */
     protected function consolidarTemasFallback(array $temas, array $etapasInfo, int $anio): array
     {
-        // Agrupar temas por tipo/etapa
-        $grupos = [
-            'empresa' => [],
-            'sst' => [],
-            'laboral' => [],
-            'practico' => []
-        ];
-
-        foreach ($temas as $tema) {
-            $etapa = $tema['etapa'];
-            if ($etapa == 1) {
-                $grupos['empresa'][] = $tema;
-            } elseif ($etapa == 2) {
-                $grupos['sst'][] = $tema;
-            } elseif ($etapa == 3) {
-                $grupos['laboral'][] = $tema;
-            } else {
-                $grupos['practico'][] = $tema;
-            }
-        }
-
-        // Obtener responsable
         $responsable = 'Responsable del SG-SST';
         foreach ($etapasInfo as $info) {
             if (!empty($info['responsable'])) {
@@ -723,51 +913,50 @@ Las actividades deben cubrir todos los temas de manera consolidada e inteligente
             }
         }
 
-        $actividades = [];
-        $actividadesConfig = [
-            'empresa' => [
-                'nombre' => 'Jornada de Inducción Corporativa',
-                'mes' => 2
-            ],
-            'sst' => [
-                'nombre' => 'Jornada de Inducción en Seguridad y Salud en el Trabajo',
-                'mes' => 3
-            ],
-            'laboral' => [
-                'nombre' => 'Inducción en Aspectos Laborales y Normativos',
-                'mes' => 4
-            ],
-            'practico' => [
-                'nombre' => 'Inducción Práctica y Entrenamiento en el Puesto',
-                'mes' => 5
-            ]
-        ];
+        $totalTemas = count($temas);
 
-        $numero = 1;
-        foreach ($grupos as $tipo => $temasGrupo) {
-            if (empty($temasGrupo)) continue;
-
-            $config = $actividadesConfig[$tipo];
-            $temasNombres = array_map(fn($t) => $t['tema'], $temasGrupo);
-            $descripcion = 'Incluye: ' . implode(', ', array_slice($temasNombres, 0, 4));
-            if (count($temasNombres) > 4) {
-                $descripcion .= ' y ' . (count($temasNombres) - 4) . ' temas más';
-            }
-
-            $actividades[] = [
-                'numero_etapa' => $numero,
-                'actividad' => $config['nombre'],
-                'descripcion' => $descripcion,
+        return [
+            [
+                'numero_etapa' => 1,
+                'actividad' => 'Planificación y logística de la jornada de inducción',
+                'descripcion' => "Definir fecha de la jornada, coordinar con la alta dirección los recursos necesarios (refrigerio si presencial, sala virtual si virtual), verificar disponibilidad de medios audiovisuales. Programa de {$totalTemas} temas a cubrir.",
                 'responsable' => $responsable,
-                'fecha' => date('Y-m-d', strtotime("{$anio}-{$config['mes']}-15")),
+                'fecha' => date('Y-m-d', strtotime("{$anio}-02-15")),
+                'phva' => 'PLANEAR',
+                'generado_por_ia' => false,
+                'fase' => 'PLANIFICACION'
+            ],
+            [
+                'numero_etapa' => 2,
+                'actividad' => 'Convocatoria y socialización de la invitación a la inducción',
+                'descripcion' => 'Elaborar pieza gráfica de invitación, socializar y divulgar por medios digitales (correo, WhatsApp), carteleras impresas o ambos según la empresa. Confirmar asistencia de los convocados.',
+                'responsable' => $responsable,
+                'fecha' => date('Y-m-d', strtotime("{$anio}-02-28")),
                 'phva' => 'HACER',
                 'generado_por_ia' => false,
-                'temas_consolidados' => array_keys($temasGrupo)
-            ];
-            $numero++;
-        }
-
-        return $actividades;
+                'fase' => 'CONVOCATORIA'
+            ],
+            [
+                'numero_etapa' => 3,
+                'actividad' => 'Ejecución de la jornada de inducción en SST',
+                'descripcion' => 'Tomar asistencia (formato físico si presencial, registro digital si virtual), desarrollar los contenidos del programa de inducción, asegurar el refrigerio y los medios audiovisuales.',
+                'responsable' => $responsable,
+                'fecha' => date('Y-m-d', strtotime("{$anio}-03-15")),
+                'phva' => 'HACER',
+                'generado_por_ia' => false,
+                'fase' => 'EJECUCION'
+            ],
+            [
+                'numero_etapa' => 4,
+                'actividad' => 'Evaluación, calificación y registros fotográficos de la inducción',
+                'descripcion' => 'Evaluar conocimientos adquiridos (cuestionario físico si presencial, formulario digital si virtual), calificar las evaluaciones, recopilar registros fotográficos como evidencia de la jornada.',
+                'responsable' => $responsable,
+                'fecha' => date('Y-m-d', strtotime("{$anio}-03-30")),
+                'phva' => 'VERIFICAR',
+                'generado_por_ia' => false,
+                'fase' => 'EVALUACION Y CIERRE'
+            ]
+        ];
     }
 
     /**

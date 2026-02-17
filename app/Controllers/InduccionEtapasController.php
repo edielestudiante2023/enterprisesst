@@ -18,7 +18,8 @@ use App\Models\ClienteContextoSstModel;
  * - GET  /induccion-etapas/{idCliente}/generar   → generar (generar etapas con IA)
  * - POST /induccion-etapas/{idCliente}/generar   → generarPost (ejecutar generación)
  * - POST /induccion-etapas/{idCliente}/aprobar   → aprobar (aprobar etapas)
- * - GET  /induccion-etapas/{idCliente}/generar-pta        → generarPTA
+ * - GET  /induccion-etapas/{idCliente}/checklist-pta       → checklistPTA
+ * - POST /induccion-etapas/{idCliente}/generar-pta        → generarPTA
  * - GET  /induccion-etapas/{idCliente}/generar-indicadores → generarIndicadores
  */
 class InduccionEtapasController extends BaseController
@@ -187,8 +188,33 @@ class InduccionEtapasController extends BaseController
     }
 
     /**
-     * Muestra la vista de propuestas de actividades del PTA
-     * GET /induccion-etapas/{idCliente}/generar-pta
+     * Muestra el checklist previo a la generación del PTA
+     * GET /induccion-etapas/{idCliente}/checklist-pta
+     */
+    public function checklistPTA(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int)date('Y');
+
+        if (!$this->etapasModel->todasAprobadas($idCliente, $anio)) {
+            return redirect()->to("induccion-etapas/{$idCliente}")
+                ->with('warning', 'Debe aprobar todas las etapas antes de generar el PTA');
+        }
+
+        return view('induccion_etapas/checklist_pta', [
+            'cliente' => $cliente,
+            'anio' => $anio,
+            'checklistItems' => InduccionEtapasService::CHECKLIST_ITEMS
+        ]);
+    }
+
+    /**
+     * Genera las actividades PTA usando el checklist como contexto
+     * POST /induccion-etapas/{idCliente}/generar-pta
      */
     public function generarPTA(int $idCliente)
     {
@@ -199,14 +225,20 @@ class InduccionEtapasController extends BaseController
 
         $anio = (int)date('Y');
 
-        // Verificar que hay etapas aprobadas
         if (!$this->etapasModel->todasAprobadas($idCliente, $anio)) {
             return redirect()->to("induccion-etapas/{$idCliente}")
                 ->with('warning', 'Debe aprobar todas las etapas antes de generar el PTA');
         }
 
-        // Preparar las actividades propuestas (sin insertar)
-        $preparacion = $this->service->prepararActividadesPTA($idCliente, $anio);
+        // Recoger datos del checklist desde POST
+        $checklistData = [
+            'modalidad'      => $this->request->getPost('modalidad') ?? 'presencial',
+            'items_marcados' => $this->request->getPost('checklist') ?? [],
+            'notas'          => $this->request->getPost('notas') ?? '',
+        ];
+
+        // Preparar las actividades propuestas con contexto del checklist
+        $preparacion = $this->service->prepararActividadesPTA($idCliente, $anio, $checklistData);
 
         if (!$preparacion['success']) {
             return redirect()->to("induccion-etapas/{$idCliente}")
