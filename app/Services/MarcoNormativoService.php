@@ -73,7 +73,7 @@ class MarcoNormativoService
      * Consultar marco normativo con IA (Responses API + web_search_preview)
      * Opciones 1, 2 y 3
      */
-    public function consultarConIA(string $tipo, string $metodo = 'boton'): array
+    public function consultarConIA(string $tipo, string $metodo = 'boton', string $contexto = ''): array
     {
         if (empty($this->apiKey)) {
             return ['success' => false, 'error' => 'OPENAI_API_KEY no configurada'];
@@ -91,6 +91,10 @@ Necesito un listado completo y detallado. Incluye al menos 8 normas aplicables, 
 
 Para cada norma indica: nombre completo, año y qué regula específicamente para este tipo de documento.
 Formato: lista con viñetas, agrupada por categoría de mayor a menor relevancia.";
+
+        if (!empty($contexto)) {
+            $prompt .= "\n\nContexto adicional a considerar en la búsqueda: {$contexto}";
+        }
 
         $data = [
             'model' => 'gpt-4o',

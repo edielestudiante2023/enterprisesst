@@ -6620,6 +6620,7 @@ Se debe generar acta que registre:
     {
         $tipo = $this->request->getPost('tipo_documento');
         $metodo = $this->request->getPost('metodo') ?? 'boton';
+        $contexto = $this->request->getPost('contexto') ?? '';
 
         if (empty($tipo)) {
             return $this->response->setJSON([
@@ -6629,7 +6630,7 @@ Se debe generar acta que registre:
         }
 
         $service = new MarcoNormativoService();
-        $resultado = $service->consultarConIA($tipo, $metodo);
+        $resultado = $service->consultarConIA($tipo, $metodo, $contexto);
 
         return $this->response->setJSON($resultado);
     }

@@ -568,8 +568,8 @@
 
                     <div class="mb-2 d-flex justify-content-between align-items-center">
                         <small class="text-muted" id="marcoModalMeta"></small>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnConsultarIAModal">
-                            <i class="bi bi-globe me-1"></i>Consultar con IA
+                        <button type="button" class="btn btn-primary btn-sm" id="btnConsultarIAModal">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Actualizar con IA
                         </button>
                     </div>
 
@@ -1769,13 +1769,17 @@
             if (btnSidebar) { btnSidebar.disabled = true; btnSidebar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Consultando...'; }
             if (btnModal) { btnModal.disabled = true; btnModal.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Consultando...'; }
 
-            const toastProgreso = mostrarToast('progress', 'Marco Normativo', 'Consultando marco normativo vigente con IA (GPT-4o + busqueda web)... Esto puede tardar hasta 90 segundos.');
+            const contextoIA = document.getElementById('marcoContextoIA')?.value?.trim() ?? '';
+            const toastMensaje = contextoIA
+                ? `Consultando con contexto: <em>"${contextoIA}"</em>... Esto puede tardar hasta 90 segundos.`
+                : 'Consultando marco normativo vigente con IA (GPT-4o + busqueda web)... Esto puede tardar hasta 90 segundos.';
+            const toastProgreso = mostrarToast('progress', 'Marco Normativo', toastMensaje);
 
             try {
                 const resp = await fetch('<?= base_url('documentos/marco-normativo/consultar-ia') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: `tipo_documento=${tipo}&metodo=${metodo}`
+                    body: `tipo_documento=${tipo}&metodo=${metodo}` + (contextoIA ? `&contexto=${encodeURIComponent(contextoIA)}` : '')
                 });
                 const data = await resp.json();
                 cerrarToast(toastProgreso);
@@ -1862,51 +1866,9 @@
             modalMarco?.show();
         });
 
-        // Boton modal: Consultar con IA - con SweetAlert educativo
+        // Boton modal: Actualizar con IA - directo, sin SweetAlert intermedio
         document.getElementById('btnConsultarIAModal')?.addEventListener('click', async () => {
-            const result = await Swal.fire({
-                title: 'Marco Normativo - Insumos IA',
-                html: `
-                    <div style="text-align: left;">
-                        <p class="mb-3"><strong>Esta función consulta el marco normativo vigente usando IA con búsqueda web en tiempo real.</strong></p>
-
-                        <h6 class="mb-2" style="color: #0d6efd;">📋 4 Opciones de Actualización:</h6>
-                        <ol style="font-size: 0.9rem; padding-left: 20px; margin-bottom: 15px;">
-                            <li><strong>Auto si &gt;90 días:</strong> El sistema actualiza automáticamente al cargar la página si el marco tiene más de 90 días.</li>
-                            <li><strong>Botón "Consultar IA":</strong> Actualizas manualmente cuando lo necesites (esta opción).</li>
-                            <li><strong>Preguntar al generar:</strong> Antes de generar el documento, el sistema te pregunta si quieres actualizar.</li>
-                            <li><strong>Edición manual:</strong> Puedes editar directamente el marco usando ChatGPT, Gemini, Claude o fuentes oficiales.</li>
-                        </ol>
-
-                        <div class="alert alert-warning py-2 mb-3" style="font-size: 0.85rem;">
-                            <strong>⚠️ IMPORTANTE:</strong> Después de que la IA consulte el marco normativo:
-                            <ul class="mb-0 mt-1">
-                                <li>Revisa el resultado en el textarea de abajo</li>
-                                <li>Valida con fuentes oficiales (Ministerio de Trabajo, Diario Oficial)</li>
-                                <li>Puedes contrastar con ChatGPT, Gemini o Claude</li>
-                                <li><strong>NO generes documentos sin revisar primero</strong></li>
-                            </ul>
-                        </div>
-
-                        <p class="mb-0 small text-muted">Modelo: GPT-4o con búsqueda web | Tiempo estimado: 30-90 segundos</p>
-                    </div>
-                `,
-                icon: 'info',
-                iconColor: '#0d6efd',
-                showCancelButton: true,
-                confirmButtonText: '<i class="bi bi-globe me-1"></i>Consultar Ahora',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#0d6efd',
-                cancelButtonColor: '#6c757d',
-                width: '700px',
-                customClass: {
-                    popup: 'text-start'
-                }
-            });
-
-            if (result.isConfirmed) {
-                await consultarMarcoIA('boton');
-            }
+            await consultarMarcoIA('boton');
         });
 
         // Boton modal: Guardar (opcion 4 - edicion manual)
