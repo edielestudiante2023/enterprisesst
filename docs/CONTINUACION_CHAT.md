@@ -1,42 +1,46 @@
 # Continuacion del Chat - 2026-02-17
 
-## Estado: MODO REGENERAR IMPLEMENTADO - Listo para deploy
+## Estado: SUB-CARPETA 2.5.1.1 DOCUMENTOS EXTERNOS - IMPLEMENTADA Y NIVELADA
 
 ### Que se hizo
-Separar la naturaleza de los dos botones de generacion IA:
+Crear la sub-carpeta 2.5.1.1 "Listado Maestro de Documentos Externos" dentro del estandar 2.5.1 del SG-SST, con funcionalidad completa de adjuntar soportes (archivos/enlaces).
 
-1. **"Generar con IA" / "Regenerar" (individual)** → `modo=regenerar`
-   - NO consulta getContextoBase() (sin queries PTA, indicadores, etapas)
-   - NO consulta MarcoNormativoService
-   - NO muestra SweetAlerts de verificacion previos
-   - NO muestra toast de metadata BD
-   - SI envia contenido actual del textarea como referencia
-   - SI envia instrucciones del usuario como PRIORIDAD MAXIMA
-   - SI mantiene prompt estructural de seccion (como guia, no obligatorio)
-   - SI mantiene contexto basico empresa (nombre, NIT, riesgo, trabajadores)
+### Archivos creados (3)
+1. **`app/SQL/agregar_subcarpeta_documentos_externos.sql`** - Script migracion: INSERT sub-carpetas 2.5.1.1 para clientes existentes
+2. **`app/Views/documentacion/_tipos/documentos_externos.php`** - Vista tipo con modal adjuntar (archivo/enlace), campo origen/entidad emisora, tabla soportes, color info/azul
+3. **`ejecutar_sql_documentos_externos.php`** + **`actualizar_sp_produccion.php`** - Scripts CLI para nivelar produccion (ejecutados exitosamente)
 
-2. **"Generar Todo con IA"** → `modo=completo`
-   - Pipeline completo sin cambios (getContextoBase + marco + metadata + SweetAlerts)
-
-### Archivos modificados (3)
-1. **`app/Views/documentos_sst/generar_con_ia.php`** (JS):
-   - `generarSeccion(seccionKey, modo='completo')` → acepta parametro modo
-   - Botones individuales llaman con `'regenerar'`, batch con `'completo'`
-   - Envia `contenido_actual` al backend en modo regenerar
-   - Sin SweetAlerts previos en modo individual (disparo directo)
+### Archivos modificados (4)
+1. **`app/Controllers/DocumentacionController.php`**:
+   - Punto A: `determinarTipoCarpetaFases()` → retorna `'documentos_externos'` si codigo='2.5.1.1' (ANTES de 2.5.1)
+   - Punto B: `in_array` de `$tipoCarpetaFases` incluye `'documentos_externos'`
+   - Punto C: `elseif ($tipoCarpetaFases === 'documentos_externos')` filtra `tipo_documento = 'soporte_documento_externo'`
+   - Punto D: Bloque soportes adicionales consulta `tbl_documentos_sst` con `tipo_documento = 'soporte_documento_externo'`
 
 2. **`app/Controllers/DocumentosSSTController.php`**:
-   - `generarSeccionIA()`: lee `modo` y `contenido_actual` del POST
-   - `generarConIAReal()`: acepta `$modo` y `$contenidoActual`, salta queries pesadas en regenerar
-   - Metadata BD solo se consulta en modo completo
+   - Metodo `adjuntarSoporteDocumentoExterno()` al final del archivo (~linea 6787)
+   - Guarda con `tipo_documento = 'soporte_documento_externo'`, acepta campo `origen`
 
-3. **`app/Services/IADocumentacionService.php`**:
-   - `construirPrompt()`: bifurca segun modo
-   - Modo regenerar: contenido actual como referencia + instrucciones usuario PRIORIDAD MAXIMA
-   - Modo completo: pipeline original sin cambios
+3. **`app/Config/Routes.php`**:
+   - `$routes->post('documentos-sst/adjuntar-soporte-documento-externo', ...)`
 
-### Tambien se fixeo
-- `select('DISTINCT nombre_indicador')` → `->distinct()->select('nombre_indicador')` en ProgramaInduccionReinduccion.php (fix del toast error metadata BD)
+4. **`app/Views/documentacion/_components/tabla_documentos_sst.php`**:
+   - `'documentos_externos'` agregado al array `$tiposConTabla`
+
+### SP actualizado
+- **`app/SQL/sp/sp_04_generar_carpetas_por_nivel.sql`** - Ya contenia 2.5.1.1 (lineas 154-156)
+- SP en PRODUCCION actualizado via `actualizar_sp_produccion.php`
+
+### BD nivelada
+| Ambiente | Carpetas 2.5.1 | Sub-carpetas 2.5.1.1 creadas |
+|----------|----------------|------------------------------|
+| LOCAL | 9 | 9 |
+| PRODUCCION | 4 | 4 |
+
+### Que falta (posible siguiente paso)
+- Probar en navegador: navegar a carpeta 2.5.1 de un cliente y verificar que aparece 2.5.1.1
+- Probar adjuntar un documento externo (archivo + enlace)
+- Commit y deploy a produccion
 
 ### Git flow
 `git add .` → `git commit` → `git checkout main` → `git merge cycloid` → `git push origin main` → `git checkout cycloid`

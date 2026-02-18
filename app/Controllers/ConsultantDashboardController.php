@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
+use App\Models\DashboardItemModel;
 use App\Models\ReporteModel;
 use CodeIgniter\Controller;
 
@@ -12,19 +13,14 @@ class ConsultantDashboardController extends Controller
     public function index()
     {
         $session = session();
-
-        // Obtener datos del usuario en sesión
         $userModel = new \App\Models\UserModel();
         $userData = null;
-
         if ($session->get('id_usuario')) {
             $userData = $userModel->find($session->get('id_usuario'));
         }
-
-        $data = [
-            'usuario' => $userData
-        ];
-
+        $model = new DashboardItemModel();
+        $data['items'] = $model->where('orden >=', 1)->where('orden <=', 5)->findAll();
+        $data['usuario'] = $userData;
         return view('consultant/dashboard', $data);
     }
 

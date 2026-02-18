@@ -178,6 +178,72 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+
+    /* ============ BANNER AÑADIR NUEVA CAPACITACIÓN ============ */
+    .banner-nueva-capacitacion {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      padding: 1rem 1.5rem;
+      margin-bottom: 0;
+      border-bottom: 3px solid #ff6a00;
+    }
+
+    .banner-icon {
+      font-size: 2rem;
+      color: #ff6a00;
+      margin-right: 1rem;
+    }
+
+    .btn-add-capacitacion {
+      background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 0.8rem 1.8rem;
+      box-shadow: 0 4px 15px rgba(238, 9, 121, 0.4);
+      animation: pulse-capacitacion 2s infinite;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-add-capacitacion:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 6px 20px rgba(238, 9, 121, 0.6);
+      color: #fff;
+    }
+
+    .btn-add-capacitacion:active {
+      transform: scale(0.98);
+    }
+
+    .btn-add-capacitacion i {
+      margin-right: 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    @keyframes pulse-capacitacion {
+      0% { box-shadow: 0 4px 15px rgba(238, 9, 121, 0.4); }
+      50% { box-shadow: 0 4px 25px rgba(238, 9, 121, 0.7); }
+      100% { box-shadow: 0 4px 15px rgba(238, 9, 121, 0.4); }
+    }
+
+    /* Botón compacto en el navbar */
+    .btn-add-capacitacion-nav {
+      background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);
+      color: #fff !important;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-add-capacitacion-nav:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(238, 9, 121, 0.4);
+      color: #fff !important;
+    }
   </style>
 </head>
 
@@ -214,8 +280,10 @@
           </button>
         </div>
         <div class="text-center">
-          <h6 class="mb-1" style="font-size: 16px;">Añadir Registro</h6>
-          <a href="<?= base_url('/addcronogCapacitacion') ?>" class="btn btn-success btn-sm" target="_blank">Añadir Registro</a>
+          <h6 class="mb-1" style="font-size: 16px;">Añadir</h6>
+          <a href="<?= base_url('/addcronogCapacitacion') ?>" class="btn btn-sm btn-add-capacitacion-nav" target="_blank">
+            <i class="fas fa-plus-circle"></i> Nueva
+          </a>
         </div>
       </div>
     </div>
@@ -223,6 +291,24 @@
 
   <!-- Espaciado para el navbar fijo -->
   <div style="height: 100px;"></div>
+
+  <!-- Banner destacado: Añadir Nueva Capacitación -->
+  <div class="banner-nueva-capacitacion">
+    <div class="container-fluid">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-graduation-cap banner-icon"></i>
+          <div>
+            <h5 class="mb-0 fw-bold text-white">Cronograma de Capacitaciones</h5>
+            <small class="text-white-50">Gestione las capacitaciones de sus clientes</small>
+          </div>
+        </div>
+        <a href="<?= base_url('/addcronogCapacitacion') ?>" class="btn btn-add-capacitacion" target="_blank">
+          <i class="fas fa-plus-circle"></i> Añadir Nueva Capacitación
+        </a>
+      </div>
+    </div>
+  </div>
 
   <div class="container-fluid px-2 mt-2">
     <h1 class="text-center mb-3">Lista de Cronogramas de Capacitación</h1>

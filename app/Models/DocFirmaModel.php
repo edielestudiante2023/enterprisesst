@@ -339,8 +339,8 @@ class DocFirmaModel extends Model
     }
 
     /**
-     * Dashboard: Obtiene TODOS los documentos SST del cliente
-     * con LEFT JOIN a solicitudes de firma para mostrar progreso
+     * Dashboard: Solo documentos que YA fueron enviados a firmar
+     * (tienen al menos una solicitud en tbl_doc_firma_solicitudes).
      */
     public function getDashboardFirmas(?int $idConsultor = null, ?int $idCliente = null): array
     {
@@ -362,9 +362,9 @@ class DocFirmaModel extends Model
                 SUM(CASE WHEN s.estado = 'expirado' THEN 1 ELSE 0 END) as expirados,
                 SUM(CASE WHEN s.estado = 'cancelado' THEN 1 ELSE 0 END) as cancelados,
                 MAX(s.fecha_firma) as ultima_firma,
-                COALESCE(MAX(s.created_at), d.updated_at) as fecha_solicitud
+                MAX(s.created_at) as fecha_solicitud
             ")
-            ->join('tbl_doc_firma_solicitudes s', 's.id_documento = d.id_documento', 'left')
+            ->join('tbl_doc_firma_solicitudes s', 's.id_documento = d.id_documento', 'inner')
             ->join('tbl_clientes c', 'c.id_cliente = d.id_cliente')
             ->groupBy('d.id_documento')
             ->orderBy('d.codigo', 'ASC');

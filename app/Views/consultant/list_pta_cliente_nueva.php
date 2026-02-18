@@ -259,6 +259,42 @@
             max-width: 200px;
         }
 
+        /* ============ BOTÓN ADICIONAR ACTIVIDAD ============ */
+        .btn-add-actividad {
+            background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 4px 15px rgba(238, 9, 121, 0.4);
+            animation: pulse-btn 2s infinite;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-add-actividad:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(238, 9, 121, 0.6);
+            color: #fff;
+        }
+
+        .btn-add-actividad:active {
+            transform: scale(0.98);
+        }
+
+        .btn-add-actividad i {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        @keyframes pulse-btn {
+            0% { box-shadow: 0 4px 15px rgba(238, 9, 121, 0.4); }
+            50% { box-shadow: 0 4px 25px rgba(238, 9, 121, 0.7); }
+            100% { box-shadow: 0 4px 15px rgba(238, 9, 121, 0.4); }
+        }
+
         /* ============ TOAST NOTIFICATIONS ============ */
         .toast-container { z-index: 9999; }
         .toast { min-width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,.15); margin-bottom: 8px; }
@@ -498,30 +534,30 @@
 
                 <!-- Botones de Acción -->
                 <div class="btn-group-filters">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <button type="submit" class="btn btn-primary me-2" id="btnBuscar">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary" id="btnBuscar">
                                 <i class="fas fa-search"></i> Buscar
                             </button>
-                            <button type="button" id="btnMostrarTodos" class="btn btn-success me-2">
+                            <button type="button" id="btnMostrarTodos" class="btn btn-success">
                                 <i class="fas fa-eye"></i> Ver Todos
                             </button>
-                            <button type="reset" id="resetFilters" class="btn btn-secondary me-2">
+                            <button type="reset" id="resetFilters" class="btn btn-secondary">
                                 <i class="fas fa-undo"></i> Limpiar
                             </button>
                         </div>
-                        <div class="col-md-4 text-end">
+                        <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-add-actividad">
+                            <i class="fas fa-plus-circle"></i> Adicionar Actividad a Plan de Trabajo
+                        </a>
+                        <div class="d-flex flex-wrap gap-2">
                             <?php if (!empty($filters['cliente'])): ?>
-                            <button type="button" id="btnSocializarPlanTrabajo" class="btn btn-success me-2">
+                            <button type="button" id="btnSocializarPlanTrabajo" class="btn btn-success">
                                 <i class="fas fa-envelope"></i> Socializar Plan
                             </button>
                             <?php endif; ?>
-                            <button type="button" id="btnCalificarCerradas" class="btn btn-warning me-2">
+                            <button type="button" id="btnCalificarCerradas" class="btn btn-warning">
                                 <i class="fas fa-check-double"></i> Calificar Cerradas
                             </button>
-                            <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-info">
-                                <i class="fas fa-plus"></i> Nuevo
-                            </a>
                         </div>
                     </div>
                 </div>

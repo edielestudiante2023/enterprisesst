@@ -22,6 +22,7 @@ BEGIN
     DECLARE v_id_hacer INT;
     DECLARE v_id_verificar INT;
     DECLARE v_id_actuar INT;
+    DECLARE v_id_251 INT;
 
     -- Validar cliente existe
     IF NOT EXISTS (SELECT 1 FROM tbl_clientes WHERE id_cliente = p_id_cliente) THEN
@@ -148,6 +149,11 @@ BEGIN
     -- 2.5.1 - Aplica: 7, 21, 60
     INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
     VALUES (p_id_cliente, v_id_planear, '2.5.1. Archivo o retencion documental del Sistema de Gestion en Seguridad y Salud en el Trabajo SG-SST', '2.5.1', 16, 'estandar', 'folder2');
+    SET v_id_251 = LAST_INSERT_ID();
+
+    -- 2.5.1.1 - Sub-carpeta: Listado Maestro de Documentos Externos (Aplica: 7, 21, 60)
+    INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
+    VALUES (p_id_cliente, v_id_251, '2.5.1.1. Listado Maestro de Documentos Externos', '2.5.1.1', 1, 'estandar', 'file-earmark-arrow-up');
 
     -- 2.6.1 - Aplica: 60
     IF p_nivel_estandares = 60 THEN

@@ -6793,4 +6793,135 @@ Se debe generar acta que registre:
             ],
         ];
     }
+
+    // =========================================================================
+    // 2.5.1.1 LISTADO MAESTRO DE DOCUMENTOS EXTERNOS
+    // =========================================================================
+
+    /**
+     * Adjuntar documento externo al Listado Maestro (2.5.1.1)
+     * Método custom (no usa adjuntarSoporteGenerico) porque necesita campo origen_fuente
+     */
+    public function adjuntarSoporteDocumentoExterno()
+    {
+        $idCliente = $this->request->getPost('id_cliente');
+        $idCarpeta = $this->request->getPost('id_carpeta');
+        $tipoCarga = $this->request->getPost('tipo_carga');
+        $descripcion = $this->request->getPost('descripcion');
+        $origenFuente = $this->request->getPost('origen_fuente') ?? 'Otro';
+        $anio = $this->request->getPost('anio') ?? date('Y');
+        $observaciones = $this->request->getPost('observaciones') ?? '';
+
+        if (!$idCliente || !$descripcion) {
+            return redirect()->back()->with('error', 'Cliente y descripción son requeridos.');
+        }
+
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado.');
+        }
+
+        $enlaceFinal = null;
+        $esEnlaceExterno = false;
+
+        if ($tipoCarga === 'enlace') {
+            $urlExterna = $this->request->getPost('url_externa');
+            if (empty($urlExterna) || !filter_var($urlExterna, FILTER_VALIDATE_URL)) {
+                return redirect()->back()->with('error', 'El enlace proporcionado no es válido.');
+            }
+            $enlaceFinal = $urlExterna;
+            $esEnlaceExterno = true;
+        } else {
+            $archivo = $this->request->getFile('archivo_soporte');
+            if (!$archivo || !$archivo->isValid()) {
+                return redirect()->back()->with('error', 'Error al subir el archivo.');
+            }
+
+            $tiposPermitidos = [
+                'application/pdf',
+                'image/jpeg', 'image/png', 'image/jpg',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            if (!in_array($archivo->getMimeType(), $tiposPermitidos)) {
+                return redirect()->back()->with('error', 'Tipo de archivo no permitido.');
+            }
+
+            if ($archivo->getSize() > 10 * 1024 * 1024) {
+                return redirect()->back()->with('error', 'El archivo excede 10MB.');
+            }
+
+            $carpetaNit = $cliente['nit_cliente'];
+            $uploadPath = FCPATH . 'uploads/' . $carpetaNit;
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            $extension = $archivo->getExtension();
+            $nombreArchivo = 'soporte_doc_externo_' . date('Ymd_His') . '.' . $extension;
+
+            if (!$archivo->move($uploadPath, $nombreArchivo)) {
+                return redirect()->back()->with('error', 'Error al guardar el archivo.');
+            }
+
+            $enlaceFinal = base_url('uploads/' . $carpetaNit . '/' . $nombreArchivo);
+        }
+
+        // Documentos externos NO llevan código interno - se usa el origen/entidad emisora
+        $codigo = !empty($origenFuente) && $origenFuente !== 'Otro' ? $origenFuente : 'Externo';
+
+        // Crear documento con origen_fuente en contenido JSON
+        $this->db->table('tbl_documentos_sst')->insert([
+            'id_cliente' => $idCliente,
+            'tipo_documento' => 'soporte_documento_externo',
+            'codigo' => $codigo,
+            'titulo' => $descripcion,
+            'anio' => $anio,
+            'version' => 1,
+            'estado' => 'aprobado',
+            'contenido' => json_encode([
+                'descripcion' => $descripcion,
+                'origen_fuente' => $origenFuente,
+                'observaciones' => $observaciones,
+                'es_enlace_externo' => $esEnlaceExterno
+            ]),
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'url_externa' => $esEnlaceExterno ? $enlaceFinal : null,
+            'observaciones' => $observaciones,
+            'fecha_aprobacion' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+        $idDocumento = $this->db->insertID();
+
+        // Crear versión
+        $this->db->table('tbl_doc_versiones_sst')->insert([
+            'id_documento' => $idDocumento,
+            'codigo' => $codigo,
+            'version_texto' => '1.0',
+            'tipo_cambio' => 'mayor',
+            'descripcion_cambio' => 'Carga inicial - Origen: ' . $origenFuente,
+            'estado' => 'vigente',
+            'archivo_pdf' => $esEnlaceExterno ? null : $enlaceFinal,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // Registrar en tbl_reporte
+        $this->db->table('tbl_reporte')->insert([
+            'titulo_reporte' => 'Documento Externo: ' . $descripcion,
+            'id_detailreport' => 1,
+            'id_report_type' => 1,
+            'id_cliente' => $idCliente,
+            'estado' => 'CERRADO',
+            'observaciones' => 'Origen: ' . $origenFuente . '. ' . $observaciones,
+            'enlace' => $enlaceFinal,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        return redirect()->to("/documentacion/carpeta/{$idCarpeta}")
+            ->with('success', 'Documento externo adjuntado exitosamente.');
+    }
 }

@@ -758,4 +758,182 @@ class CronogcapacitacionController extends Controller
         return $html;
     }
 
+    /**
+     * Genera una capacitación con IA y la agrega al cronograma
+     */
+    public function generarConIA()
+    {
+        $tema = trim($this->request->getPost('tema') ?? '');
+        $idCliente = $this->request->getPost('id_cliente');
+        $fechaProgramada = $this->request->getPost('fecha_programada');
+
+        if (empty($tema) || empty($idCliente) || empty($fechaProgramada)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Todos los campos son obligatorios: tema, cliente y fecha'
+            ]);
+        }
+
+        $apiKey = env('OPENAI_API_KEY', '');
+        if (empty($apiKey)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'API Key de OpenAI no configurada'
+            ]);
+        }
+
+        try {
+            $resultado = $this->llamarOpenAICapacitacion($tema, $apiKey);
+
+            if (!$resultado['success']) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => $resultado['error'] ?? 'Error al llamar a la IA'
+                ]);
+            }
+
+            $datos = json_decode($resultado['contenido'], true);
+            if (!$datos || empty($datos['capacitacion'])) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'La IA no generó datos válidos. Intenta con otro tema.'
+                ]);
+            }
+
+            $capacitacionModel = new CapacitacionModel();
+            $cronogModel = new CronogcapacitacionModel();
+
+            // Buscar si ya existe la capacitación
+            $existente = $capacitacionModel->like('capacitacion', $datos['capacitacion'], 'both')->first();
+
+            if ($existente) {
+                $capacitacionId = $existente['id_capacitacion'];
+            } else {
+                $capacitacionId = $capacitacionModel->insert([
+                    'capacitacion' => $datos['capacitacion'],
+                    'objetivo_capacitacion' => $datos['objetivo_capacitacion'] ?? 'Objetivo por definir',
+                    'observaciones' => 'Generada con IA'
+                ]);
+
+                if (!$capacitacionId) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Error al crear la capacitación en BD'
+                    ]);
+                }
+            }
+
+            // Crear cronograma
+            $cronogramaData = [
+                'id_capacitacion' => $capacitacionId,
+                'id_cliente' => $idCliente,
+                'fecha_programada' => $fechaProgramada,
+                'fecha_de_realizacion' => null,
+                'estado' => 'PROGRAMADA',
+                'perfil_de_asistentes' => $datos['perfil_de_asistentes'] ?? 'TODOS',
+                'nombre_del_capacitador' => 'CYCLOID TALENT',
+                'horas_de_duracion_de_la_capacitacion' => $datos['horas_sugeridas'] ?? 1,
+                'indicador_de_realizacion_de_la_capacitacion' => 'SIN CALIFICAR',
+                'numero_de_asistentes_a_capacitacion' => 0,
+                'numero_total_de_personas_programadas' => 0,
+                'porcentaje_cobertura' => '0%',
+                'numero_de_personas_evaluadas' => 0,
+                'promedio_de_calificaciones' => 0,
+                'observaciones' => ''
+            ];
+
+            if ($cronogModel->insert($cronogramaData)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Capacitación creada exitosamente con IA',
+                    'data' => [
+                        'capacitacion' => $datos['capacitacion'],
+                        'objetivo' => $datos['objetivo_capacitacion'] ?? '',
+                        'perfil' => $datos['perfil_de_asistentes'] ?? 'TODOS',
+                        'horas' => $datos['horas_sugeridas'] ?? 1,
+                        'nueva' => !$existente
+                    ]
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Error al crear el cronograma en BD'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error en generarConIA: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Llama a OpenAI para generar datos de capacitación SST
+     */
+    private function llamarOpenAICapacitacion(string $tema, string $apiKey): array
+    {
+        $systemPrompt = 'Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia. Genera una capacitación SST basada en el tema proporcionado. Responde SOLO en formato JSON válido sin markdown ni bloques de código.';
+
+        $userPrompt = "Genera una capacitación SST sobre el tema: \"{$tema}\".
+Responde con este JSON exacto:
+{
+  \"capacitacion\": \"nombre formal de la capacitación en SST\",
+  \"objetivo_capacitacion\": \"objetivo detallado de la capacitación (2-3 oraciones)\",
+  \"perfil_de_asistentes\": \"TODOS\",
+  \"horas_sugeridas\": 2
+}
+Para perfil_de_asistentes usa uno de: TODOS, BRIGADA, MIEMBROS_COPASST, RESPONSABLE_SST, SUPERVISORES, TRABAJADORES_RIESGOS_CRITICOS, CONTRATISTAS.";
+
+        $data = [
+            'model' => env('OPENAI_MODEL', 'gpt-4o'),
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt]
+            ],
+            'temperature' => 0.7,
+            'max_tokens' => 500
+        ];
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            log_message('error', 'CURL error en generarConIA: ' . $error);
+            return ['success' => false, 'error' => "Error de conexión: {$error}"];
+        }
+
+        $result = json_decode($response, true);
+
+        if ($httpCode !== 200) {
+            return ['success' => false, 'error' => $result['error']['message'] ?? 'Error HTTP ' . $httpCode];
+        }
+
+        if (isset($result['choices'][0]['message']['content'])) {
+            return [
+                'success' => true,
+                'contenido' => trim($result['choices'][0]['message']['content'])
+            ];
+        }
+
+        return ['success' => false, 'error' => 'Respuesta inesperada de OpenAI'];
+    }
+
 }

@@ -15,8 +15,9 @@
  *   $emptyIcon      string - Icono para estado vacio (default: "bi-inbox")
  *   $emptyMessage   string - Mensaje estado vacio (default: "No hay soportes adjuntados aun.")
  *   $emptyHint      string - Hint bajo mensaje vacio (default: 'Use el boton "Adjuntar Soporte" para agregar evidencias.')
- *   $codigoDefault  string - Codigo por defecto si el soporte no tiene (default: "SOP")
- *   $mostrarAnio    bool   - Mostrar columna Ano (default: true)
+ *   $codigoDefault       string - Codigo por defecto si el soporte no tiene (default: "SOP")
+ *   $mostrarAnio         bool   - Mostrar columna Ano (default: true)
+ *   $columnaCodigoLabel  string - Label de la primera columna (default: "Codigo"). Usar "Origen / Entidad" para docs externos
  */
 
 // Defaults
@@ -30,6 +31,7 @@ $emptyMessage  = $emptyMessage ?? 'No hay soportes adjuntados aun.';
 $emptyHint     = $emptyHint ?? 'Use el boton "Adjuntar Soporte" para agregar evidencias.';
 $codigoDefault = $codigoDefault ?? 'SOP';
 $mostrarAnio   = $mostrarAnio ?? true;
+$columnaCodigoLabel = $columnaCodigoLabel ?? 'Codigo';
 
 // Mapeo de color a clase CSS
 $headerClass = match($colorHeader) {
@@ -77,7 +79,7 @@ $headerClass = match($colorHeader) {
                 <table class="table table-hover mb-0 tabla-soportes-moderna" style="width:100%">
                     <thead>
                         <tr>
-                            <th style="width:120px">Codigo</th>
+                            <th style="width:120px"><?= esc($columnaCodigoLabel) ?></th>
                             <th>Descripcion</th>
                             <?php if ($mostrarAnio): ?>
                             <th style="width:80px">Ano</th>

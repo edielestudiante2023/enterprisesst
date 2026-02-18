@@ -320,7 +320,7 @@ class DocumentacionController extends Controller
 
         // Obtener documentos SST aprobados para mostrar en tabla
         $documentosSSTAprobados = [];
-        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'manual_convivencia_1_1_8', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal', 'capacitacion_copasst', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'adquisiciones_sst', 'evaluacion_proveedores', 'evaluacion_impacto_cambios', 'estilos_vida_saludable', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'procedimientos_seguridad', 'mantenimiento_periodico', 'identificacion_sustancias_cancerigenas', 'metodologia_identificacion_peligros', 'identificacion_alto_riesgo'])) {
+        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'manual_convivencia_1_1_8', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal', 'capacitacion_copasst', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'adquisiciones_sst', 'evaluacion_proveedores', 'evaluacion_impacto_cambios', 'estilos_vida_saludable', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'procedimientos_seguridad', 'mantenimiento_periodico', 'identificacion_sustancias_cancerigenas', 'metodologia_identificacion_peligros', 'identificacion_alto_riesgo', 'documentos_externos'])) {
             $db = \Config\Database::connect();
             $queryDocs = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
@@ -483,6 +483,9 @@ class DocumentacionController extends Controller
             } elseif ($tipoCarpetaFases === 'identificacion_alto_riesgo') {
                 // 1.1.5: Identificación de trabajadores de alto riesgo
                 $queryDocs->where('tipo_documento', 'identificacion_alto_riesgo');
+            } elseif ($tipoCarpetaFases === 'documentos_externos') {
+                // 2.5.1.1: Listado Maestro de Documentos Externos
+                $queryDocs->where('tipo_documento', 'soporte_documento_externo');
             } elseif (isset($tipoDocBuscar)) {
                 $queryDocs->where('tipo_documento', $tipoDocBuscar);
             }
@@ -698,6 +701,15 @@ class DocumentacionController extends Controller
                 ->orderBy('created_at', 'DESC')
                 ->get()
                 ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'documentos_externos') {
+            // 2.5.1.1 Listado Maestro de Documentos Externos
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_documento_externo')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
         }
 
         // Determinar qué vista de tipo cargar
@@ -737,6 +749,15 @@ class DocumentacionController extends Controller
     {
         $nombre = strtolower($carpeta['nombre'] ?? '');
         $codigo = strtolower($carpeta['codigo'] ?? '');
+
+        // ============================================
+        // 2.5.1.1. Listado Maestro de Documentos Externos
+        // Sub-carpeta de 2.5.1 para gestionar documentos externos del SG-SST
+        // DEBE ir ANTES de 2.5.1 para que el código específico se capture primero
+        // ============================================
+        if ($codigo === '2.5.1.1') {
+            return 'documentos_externos';
+        }
 
         // ============================================
         // 1.1.7. Capacitación COPASST - Adjuntar soportes de capacitación

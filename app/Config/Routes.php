@@ -342,6 +342,7 @@ $routes->post('/cronogCapacitacion/updateDateByMonth', 'CronogcapacitacionContro
 $routes->get('/cronogCapacitacion/getClients', 'CronogcapacitacionController::getClients');
 $routes->get('/cronogCapacitacion/getClientContract', 'CronogcapacitacionController::getClientContract');
 $routes->post('/cronogCapacitacion/socializarEmail', 'CronogcapacitacionController::socializarEmail');
+$routes->post('/cronogCapacitacion/generarConIA', 'CronogcapacitacionController::generarConIA');
 
 $routes->get('/listPlanDeTrabajoAnual', 'PlanDeTrabajoAnualController::listPlanDeTrabajoAnual');
 $routes->get('/addPlanDeTrabajoAnual', 'PlanDeTrabajoAnualController::addPlanDeTrabajoAnual');
@@ -543,6 +544,9 @@ $routes->post('/pta-cliente-nueva/updateCerradas', 'PtaClienteNuevaController::u
 
 // Gestión Rápida: asignar fecha_propuesta al último día del mes seleccionado
 $routes->post('/pta-cliente-nueva/updateDateByMonth', 'PtaClienteNuevaController::updateDateByMonth');
+
+// Asistente IA: completar campos de actividad PTA con IA
+$routes->post('/pta-cliente-nueva/completar-ia', 'PtaClienteNuevaController::completarConIA');
 
 // Ruta para socialización del Plan de Trabajo por email
 $routes->post('/socializacion/send-plan-trabajo', 'SocializacionEmailController::sendPlanTrabajo');
@@ -1079,6 +1083,8 @@ $routes->post('/documentos-sst/adjuntar-soporte-matriz-legal', 'DocumentosSSTCon
 $routes->post('/documentos-sst/adjuntar-soporte-mecanismos-comunicacion', 'DocumentosSSTController::adjuntarSoporteMecanismosComunicacion');
 $routes->post('/documentos-sst/adjuntar-soporte-evaluacion-proveedores', 'DocumentosSSTController::adjuntarSoporteEvaluacionProveedores');
 $routes->post('/documentos-sst/adjuntar-soporte-gestion-cambio', 'DocumentosSSTController::adjuntarSoporteGestionCambio');
+// 2.5.1.1 - Listado Maestro de Documentos Externos
+$routes->post('/documentos-sst/adjuntar-soporte-documento-externo', 'DocumentosSSTController::adjuntarSoporteDocumentoExterno');
 
 // Aprobacion y versionamiento de documentos SST
 $routes->post('/documentos-sst/aprobar-documento', 'DocumentosSSTController::aprobarDocumento');

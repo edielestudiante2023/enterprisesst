@@ -49,8 +49,9 @@ class ProcedimientoControlDocumental extends AbstractDocumentoSST
             ['numero' => 10, 'nombre' => 'Distribución y Acceso', 'key' => 'distribucion'],
             ['numero' => 11, 'nombre' => 'Control de Cambios', 'key' => 'control_cambios'],
             ['numero' => 12, 'nombre' => 'Conservación y Retención', 'key' => 'conservacion'],
-            ['numero' => 13, 'nombre' => 'Listado Maestro de Documentos', 'key' => 'listado_maestro'],
-            ['numero' => 14, 'nombre' => 'Disposición Final', 'key' => 'disposicion_final'],
+            ['numero' => 13, 'nombre' => 'Gestión de Documentos Externos', 'key' => 'documentos_externos'],
+            ['numero' => 14, 'nombre' => 'Listado Maestro de Documentos', 'key' => 'listado_maestro'],
+            ['numero' => 15, 'nombre' => 'Disposición Final', 'key' => 'disposicion_final'],
         ];
     }
 
@@ -243,6 +244,46 @@ Cada documento incluye tabla de control:
 **Archivo histórico:**
 - Documentos obsoletos pero dentro del periodo de retención",
 
+            'documentos_externos' => "Genera el contenido de la sección Gestión de Documentos Externos del SG-SST. Debe describir el flujo OPERATIVO REAL en el sistema de gestión documental de la empresa.
+
+**1. Definición de documento externo:**
+- Documentos generados por entidades ajenas a la empresa pero aplicables al SG-SST
+- Ejemplos: normativas legales (Leyes, Decretos, Resoluciones), guías técnicas del MinTrabajo, circulares de la ARL, documentos de EPS/AFP, normas técnicas colombianas (NTC, GTC)
+
+**2. Ubicación en el sistema documental:**
+- Los documentos externos se gestionan en la sub-carpeta **2.5.1.1 - Listado Maestro de Documentos Externos**, dentro del estándar 2.5.1 (Archivo y retención documental del SG-SST)
+- Esta carpeta es exclusiva para documentación de origen externo, separada de los documentos internos generados por la empresa
+
+**3. Procedimiento de registro (flujo operativo en el sistema):**
+Describir paso a paso cómo se registra un documento externo:
+a) El Responsable del SG-SST accede a la carpeta 2.5.1.1 en el módulo de documentación
+b) Hace clic en el botón 'Adjuntar Documento Externo'
+c) En el formulario de registro, selecciona el tipo de carga:
+   - **Subir Archivo:** Carga el documento digital directamente al sistema (formatos: PDF, Excel, Word, Imagen; máximo 10 MB)
+   - **Pegar Enlace:** Registra un enlace a la fuente oficial o repositorio en la nube (Google Drive, OneDrive, página web institucional)
+d) Completa los campos obligatorios:
+   - **Descripción:** Nombre o título del documento externo (ej: Resolución 0312 de 2019, Guía técnica ARL)
+   - **Origen / Entidad emisora:** Organización que emite el documento (ej: Ministerio de Trabajo, ARL Sura, Secretaría de Salud)
+   - **Año:** Año de expedición o vigencia del documento
+   - **Observaciones:** Notas adicionales sobre vigencia, aplicabilidad o requisitos específicos
+
+**4. Control y actualización:**
+- El Responsable del SG-SST verifica la vigencia de los documentos externos al menos una vez al año
+- Cuando una norma es derogada o modificada, se registra el nuevo documento y se marca la observación correspondiente en el anterior
+- Los cambios normativos relevantes se comunican al COPASST/Vigía y al personal involucrado
+
+**5. Tabla resumen - Campos del registro:**
+Incluir tabla Markdown con los campos:
+| Campo | Descripción | Obligatorio |
+|-------|-------------|-------------|
+| Descripción | Nombre del documento externo | Sí |
+| Origen/Entidad | Organización emisora | No |
+| Tipo de carga | Archivo digital o Enlace externo | Sí |
+| Año | Año de expedición/vigencia | Sí |
+| Observaciones | Notas adicionales | No |
+
+IMPORTANTE: Redactar en tono procedimental, describiendo el flujo como si fuera un manual de usuario del sistema. NO usar lenguaje genérico.",
+
             'listado_maestro' => "Esta sección contendrá el LISTADO MAESTRO DE DOCUMENTOS actualizado automáticamente.
 
 **Información incluida por cada documento:**
@@ -314,6 +355,8 @@ Se debe generar acta que registre:
             'control_cambios' => "**Tipos de cambio:**\n\n- **Cambio Mayor (versión X.0):** Modificaciones significativas en estructura, alcance o contenido principal del documento.\n- **Cambio Menor (versión X.Y):** Correcciones ortográficas, actualizaciones de datos, ajustes de formato.\n\n**Proceso de gestión de cambios:**\n1. Identificar la necesidad de modificación\n2. Elaborar propuesta de cambio documentada\n3. Revisar y aprobar el cambio según niveles\n4. Actualizar el número de versión\n5. Registrar en la tabla de control de cambios\n6. Comunicar a los usuarios afectados\n\n**Registro de cambios:**\nCada documento incluye tabla con el historial:\n\n| Versión | Fecha | Descripción del cambio | Aprobó |\n|---------|-------|------------------------|--------|\n\n**IMPORTANTE:** Todos los documentos del SG-SST deben conservarse por un mínimo de 20 años.",
 
             'conservacion' => "**Tiempos de retención documental:**\n\nSegún la Resolución 0312 de 2019 y normativa laboral colombiana:\n\n| Tipo de Documento | Tiempo Mínimo | Observación |\n|-------------------|---------------|-------------|\n| Historias clínicas ocupacionales | 20 años | Después de retiro del trabajador |\n| Exámenes médicos ocupacionales | 20 años | Desde fecha del examen |\n| Investigaciones de AT/EL | 20 años | Desde fecha del evento |\n| Programas y procedimientos | 20 años | Desde última versión vigente |\n| Actas del {$comite} | 20 años | Desde fecha del acta |\n| Registros de capacitación | 20 años | Desde fecha de la actividad |\n| Matrices de peligros | 20 años | Cada versión generada |\n\n**Condiciones de conservación:**\n- Almacenamiento digital con respaldos periódicos\n- Protección contra acceso no autorizado\n- Verificación de integridad (hash de documento)\n- Archivo histórico para documentos obsoletos dentro del periodo de retención",
+
+            'documentos_externos' => "**Definición de documento externo:**\n\nSe consideran documentos externos aquellos generados por entidades ajenas a {$nombreEmpresa} pero que son aplicables o necesarios para el funcionamiento del SG-SST. Incluyen:\n\n- Normativas legales vigentes (Leyes, Decretos, Resoluciones del Ministerio de Trabajo)\n- Guías técnicas y circulares de la ARL\n- Documentos de la EPS, AFP y entidades del Sistema General de Seguridad Social\n- Normas técnicas colombianas (NTC, GTC)\n- Estándares internacionales de referencia (ISO 45001)\n\n**Ubicación en el sistema documental:**\n\nLos documentos externos se gestionan en la sub-carpeta **2.5.1.1 - Listado Maestro de Documentos Externos**, ubicada dentro del estándar 2.5.1 (Archivo y retención documental del SG-SST). Esta carpeta es exclusiva para documentación de origen externo, separada de los documentos internos generados por {$nombreEmpresa}.\n\n**Procedimiento de registro:**\n\nPara registrar un documento externo en el sistema, el Responsable del SG-SST sigue estos pasos:\n\n1. Acceder a la carpeta **2.5.1.1 - Listado Maestro de Documentos Externos** en el módulo de documentación\n2. Hacer clic en el botón **\"Adjuntar Documento Externo\"**\n3. Seleccionar el tipo de carga:\n   - **Subir Archivo:** Cargar el documento digital directamente al sistema. Formatos aceptados: PDF, Excel, Word, Imagen (JPG, PNG). Tamaño máximo: 10 MB\n   - **Pegar Enlace:** Registrar un enlace a la fuente oficial o repositorio en la nube (Google Drive, OneDrive, página web institucional)\n4. Completar los campos del formulario:\n   - **Descripción del documento** (obligatorio): Nombre o título del documento externo\n   - **Origen / Entidad emisora:** Organización que emite el documento (ej: Ministerio de Trabajo, ARL, Secretaría de Salud)\n   - **Año** (obligatorio): Año de expedición o vigencia del documento\n   - **Observaciones:** Notas adicionales sobre vigencia, aplicabilidad o requisitos\n5. Confirmar el registro haciendo clic en **\"Adjuntar\"**\n\n**Campos del registro de documentos externos:**\n\n| Campo | Descripción | Obligatorio |\n|-------|-------------|-------------|\n| Descripción | Nombre o título del documento externo | Sí |\n| Origen / Entidad emisora | Organización que emite el documento | No |\n| Tipo de carga | Archivo digital (PDF, Excel, Word, Imagen) o Enlace externo | Sí |\n| Año | Año de expedición o vigencia | Sí |\n| Observaciones | Notas sobre vigencia, aplicabilidad, requisitos | No |\n\n**Control y actualización:**\n\n- El Responsable del SG-SST verifica la vigencia de los documentos externos **al menos una vez al año** o cuando se conozcan cambios normativos\n- Cuando una norma es derogada o modificada, se registra el nuevo documento y se agrega una observación en el registro anterior indicando la norma que lo reemplaza\n- Los cambios normativos relevantes se comunican al {$comite} y al personal involucrado\n\n**Conservación y acceso:**\n\n- Los documentos externos permanecen almacenados en la carpeta 2.5.1.1 del sistema de gestión documental\n- El sistema permite tanto la carga directa de archivos como el registro de enlaces a fuentes oficiales\n- Cada registro incluye la entidad emisora (origen) para garantizar la trazabilidad\n- El acceso está disponible para consulta de todo el personal autorizado del SG-SST",
 
             'listado_maestro' => "El Listado Maestro de Documentos del SG-SST de {$nombreEmpresa} se mantiene actualizado de forma automática en el sistema de gestión documental.\n\n**Información registrada por cada documento:**\n\n- Código único del documento\n- Nombre/Título del documento\n- Tipo de documento (Política, Programa, Procedimiento, etc.)\n- Versión vigente\n- Fecha de aprobación\n- Estado (Vigente/Obsoleto)\n- Responsable de elaboración\n- Ubicación en el sistema\n\n**Actualización:**\nEl listado se actualiza automáticamente cada vez que:\n- Se crea un nuevo documento\n- Se modifica una versión existente\n- Se declara obsoleto un documento\n- Cambia el estado de un documento\n\n**Nota:** La tabla completa del Listado Maestro se genera dinámicamente desde el sistema de gestión documental.",
 

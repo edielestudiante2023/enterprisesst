@@ -4,7 +4,9 @@ namespace App\Controllers;
 
 use App\Models\PtaClienteNuevaModel;
 use App\Models\ClientModel;
+use App\Models\ClienteContextoSstModel;
 use App\Services\PtaAuditService;
+use App\Services\PtaIAService;
 use CodeIgniter\Controller;
 
 class PtaClienteNuevaController extends Controller
@@ -377,6 +379,59 @@ class PtaClienteNuevaController extends Controller
             'message'   => 'Fecha actualizada correctamente',
             'newDate'   => $newDate,
             'formatted' => $lastDayDate->format('d/m/Y')
+        ]);
+    }
+
+    /**
+     * Completa campos de una actividad PTA usando IA.
+     * Recibe POST AJAX: id_cliente + descripcion
+     */
+    public function completarConIA()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Solicitud no válida']);
+        }
+
+        $idCliente = (int) $this->request->getPost('id_cliente');
+        $descripcion = trim($this->request->getPost('descripcion') ?? '');
+
+        if (!$idCliente || !$descripcion) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Cliente y descripción son requeridos']);
+        }
+
+        $clientModel = new ClientModel();
+        $cliente = $clientModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Cliente no encontrado']);
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente) ?? [];
+
+        $iaService = new PtaIAService();
+        $resultado = $iaService->completarActividad($descripcion, $cliente, $contexto);
+
+        if (!$resultado['success']) {
+            return $this->response->setJSON(['success' => false, 'error' => $resultado['error'] ?? 'Error al consultar IA']);
+        }
+
+        $campos = $resultado['campos'];
+
+        // Calcular fecha_propuesta como último día del mes sugerido
+        $mes = (int) ($campos['mes_sugerido'] ?? date('n'));
+        $anio = date('Y');
+        $fecha = new \DateTime("{$anio}-{$mes}-01");
+        $fecha->modify('last day of this month');
+
+        return $this->response->setJSON([
+            'success' => true,
+            'campos' => [
+                'phva_plandetrabajo' => $campos['phva'] ?? '',
+                'numeral_plandetrabajo' => $campos['numeral'] ?? '',
+                'actividad_plandetrabajo' => $campos['actividad'] ?? '',
+                'responsable_sugerido_plandetrabajo' => $campos['responsable_sugerido'] ?? '',
+                'fecha_propuesta' => $fecha->format('Y-m-d'),
+            ]
         ]);
     }
 

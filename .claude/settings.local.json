@@ -52,7 +52,13 @@
       "Bash(wc -l:*)",
       "WebFetch(domain:localhost)",
       "Bash(sc query:*)",
-      "Bash(/c/xampp/php/php.exe:*)"
+      "Bash(/c/xampp/php/php.exe:*)",
+      "Bash(c:/xampp/mysql/bin/mysql -u root empresas_sst -e \"SELECT id_carpeta, id_cliente, id_carpeta_padre, nombre, codigo FROM tbl_doc_carpetas WHERE codigo = ''2.5.1.1'' ORDER BY id_cliente;\")",
+      "Bash(c:/xampp/php/php.exe ejecutar_sql_documentos_externos.php)",
+      "Bash(c:/xampp/php/php.exe -r \"\n$pdo = new PDO\\(''mysql:host=db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com;port=25060;dbname=empresas_sst;charset=utf8mb4'', ''cycloid_userdb'', ''AVNS_iDypWizlpMRwHIORJGG'', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::MYSQL_ATTR_SSL_CA => true, PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false]\\);\n$stmt = $pdo->query\\(\"\"SHOW CREATE PROCEDURE sp_generar_carpetas_por_nivel\"\"\\);\n$row = $stmt->fetch\\(PDO::FETCH_ASSOC\\);\necho $row[''Create Procedure''];\n\")",
+      "Bash(c:/xampp/php/php.exe -r \"\n$pdo = new PDO\\(''mysql:host=db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com;port=25060;dbname=empresas_sst;charset=utf8mb4'', ''cycloid_userdb'', ''AVNS_iDypWizlpMRwHIORJGG'', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::MYSQL_ATTR_SSL_CA => true, PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false]\\);\n\n// Leer el archivo SP completo\n$sqlFile = file_get_contents\\(''app/SQL/sp/sp_04_generar_carpetas_por_nivel.sql''\\);\n\n// Quitar USE y DELIMITER, adaptar para PDO\n// Extraer solo el CREATE PROCEDURE\n$sqlFile = str_replace\\(''USE empresas_sst;'', '''', $sqlFile\\);\n\n// Drop primero\n$pdo->exec\\(''DROP PROCEDURE IF EXISTS sp_generar_carpetas_por_nivel''\\);\necho \"\"SP dropped OK\\\\n\"\";\n\n// Extraer el body del CREATE PROCEDURE sin DELIMITER\npreg_match\\(''/CREATE PROCEDURE.*?END/s'', $sqlFile, $matches\\);\nif \\(!empty\\($matches[0]\\)\\) {\n    $pdo->exec\\($matches[0]\\);\n    echo \"\"SP created OK\\\\n\"\";\n} else {\n    echo \"\"ERROR: No se pudo extraer CREATE PROCEDURE\\\\n\"\";\n}\n\n// Verificar\n$stmt = $pdo->query\\(\"\"SHOW CREATE PROCEDURE sp_generar_carpetas_por_nivel\"\"\\);\n$row = $stmt->fetch\\(PDO::FETCH_ASSOC\\);\n$body = $row[''Create Procedure''];\nif \\(strpos\\($body, ''2.5.1.1''\\) !== false\\) {\n    echo \"\"VERIFICADO: SP contiene 2.5.1.1\\\\n\"\";\n} else {\n    echo \"\"ALERTA: SP NO contiene 2.5.1.1\\\\n\"\";\n}\n\")",
+      "Bash(c:/xampp/php/php.exe:*)",
+      "Bash(c:/xampp/mysql/bin/mysql:*)"
     ]
   }
 }

@@ -4,7 +4,7 @@
  * Variables requeridas: $tipoCarpetaFases, $documentosSSTAprobados, $cliente
  * Características: Filtros por columna, Exportación Excel avanzada
  */
-$tiposConTabla = ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'induccion_reinduccion', 'promocion_prevencion_salud', 'matriz_legal', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'plan_objetivos_metas', 'adquisiciones_sst', 'evaluacion_proveedores', 'procedimiento_evaluaciones_medicas', 'estilos_vida_saludable', 'evaluacion_impacto_cambios', 'diagnostico_condiciones_salud', 'evaluaciones_medicas', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'metodologia_identificacion_peligros', 'identificacion_sustancias_cancerigenas', 'procedimientos_seguridad', 'mantenimiento_periodico', 'identificacion_alto_riesgo', 'manual_convivencia_1_1_8'];
+$tiposConTabla = ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'induccion_reinduccion', 'promocion_prevencion_salud', 'matriz_legal', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'plan_objetivos_metas', 'adquisiciones_sst', 'evaluacion_proveedores', 'procedimiento_evaluaciones_medicas', 'estilos_vida_saludable', 'evaluacion_impacto_cambios', 'diagnostico_condiciones_salud', 'evaluaciones_medicas', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'metodologia_identificacion_peligros', 'identificacion_sustancias_cancerigenas', 'procedimientos_seguridad', 'mantenimiento_periodico', 'identificacion_alto_riesgo', 'manual_convivencia_1_1_8', 'documentos_externos'];
 if (!isset($tipoCarpetaFases) || !in_array($tipoCarpetaFases, $tiposConTabla)) {
     return;
 }
