@@ -1,0 +1,76 @@
+Prompt corregido — Implementar vista previa del Reglamento de Higiene y Seguridad Industrial (1.2.4)
+
+Contexto del proyecto:
+Enterprise SST - CodeIgniter 4, PHP 8, MySQL. Branch: cycloid.
+Working directory: c:\xampp\htdocs\enterprisesst
+
+Lee PRIMERO estos archivos de memoria antes de hacer cualquier cosa:
+- C:\Users\elipt\.claude\projects\c--xampp-htdocs-enterprisesst\memory\MEMORY.md
+- C:\Users\elipt\.claude\projects\c--xampp-htdocs-enterprisesst\memory\checklist-nuevo-documento.md
+- C:\Users\elipt\.claude\projects\c--xampp-htdocs-enterprisesst\memory\toolbar-documentos.md
+
+====== ESTADO ACTUAL — YA IMPLEMENTADO ======
+
+Backend completo (PHP + BD + Factory):
+- Clase PHP: app/Libraries/DocumentosSSTTypes/ReglamentoHigieneSeguridadIndustrial.php
+  - getTipoDocumento() → 'reglamento_higiene_seguridad'
+  - 11 secciones, Tipo A (flujo: secciones_ia), estándar 1.2.4
+  - Firmantes: representante_legal + responsable_sst
+- Factory: registrado EXPLÍCITO en DocumentoSSTFactory.php
+  (auto-detección falla porque clase tiene 'Industrial' extra en nombre)
+- BD: tbl_doc_tipo_configuracion (estandar='1.2.4'), 11 secciones, 2 firmantes
+  — OK en LOCAL y PRODUCCIÓN
+- Carpeta 1.2.4 creada para todos los clientes en LOCAL y PRODUCCIÓN
+- tbl_doc_plantilla_carpeta: REG-HSI → 1.2.4
+
+====== QUÉ FALTA — Paso 0 + Paso 3 del checklist ======
+
+PASO 0 (SIEMPRE PRIMERO — documentacion-primero):
+Crear docs/MODULO_NUMERALES_SGSST/10_DOCUMENTOS_ESPECIFICOS/REGLAMENTO_HIGIENE_SEGURIDAD_INDUSTRIAL.md
+Documentar: decisión de carpeta 1.2.4, flujo Tipo A, secciones y sus prompts IA,
+firmantes, referencia normativa (CST arts. 349-352, Res. 1016/1989, Res. 0312/2019).
+
+PASO 3 (después del .md):
+1. app/Config/Routes.php — agregar junto al bloque de rutas documentos-sst (~línea 991):
+   $routes->get('/documentos-sst/(:num)/reglamento-higiene-seguridad/(:num)',
+       'DocumentosSSTController::reglamentoHigieneSeguridadIndustrial/$1/$2');
+
+2. app/Controllers/DocumentosSSTController.php — nuevo método:
+   reglamentoHigieneSeguridadIndustrial(int $idCliente, int $anio)
+   COPIAR EXACTAMENTE el patrón de identificacionAltoRiesgo() (línea 6113),
+   cambiando solo:
+   - tipo_documento: 'reglamento_higiene_seguridad'
+   - mensaje not found: 'Documento no encontrado. Genere primero el Reglamento de Higiene y Seguridad Industrial.'
+   - titulo: 'Reglamento de Higiene y Seguridad Industrial - ' . $cliente['nombre_cliente']
+   - firmantesDefinidos: $this->configService->obtenerFirmantes('reglamento_higiene_seguridad')
+   - tipoDocumento: 'reglamento_higiene_seguridad'
+   - view: 'documentos_sst/documento_generico'
+
+====== TAMBIÉN — PlanEmergencias (misma situación) ======
+
+PASO 0: Crear docs/MODULO_NUMERALES_SGSST/10_DOCUMENTOS_ESPECIFICOS/PLAN_EMERGENCIAS.md
+
+PASO 3:
+- Ruta: /documentos-sst/(:num)/plan-emergencias/(:num)
+  → DocumentosSSTController::planEmergencias/$1/$2
+- Método: planEmergencias(int $idCliente, int $anio)
+  - tipo_documento: 'plan_emergencias'
+  - mensaje: 'Documento no encontrado. Genere primero el Plan de Emergencias.'
+  - titulo: 'Plan de Prevención, Preparación y Respuesta ante Emergencias - ' . $cliente['nombre_cliente']
+
+====== VERIFICACIÓN ======
+- /documentos/generar/reglamento_higiene_seguridad/[id] → SweetAlert OK, genera secciones
+- /documentos-sst/[id]/reglamento-higiene-seguridad/2026 → vista previa carga
+- /documentos/generar/plan_emergencias/[id] → SweetAlert OK, genera secciones
+- /documentos-sst/[id]/plan-emergencias/2026 → vista previa carga
+
+====== GIT FLOW al terminar ======
+git add . → git commit → git checkout main → git merge cycloid
+→ git push origin main → git checkout cycloid
+
+====== REGLAS IMPORTANTES ======
+- NO usar getPromptParaSeccion() — fue eliminado, los prompts van en tbl_doc_secciones_config
+- NO usar DocumentoConfigService para prompts — eliminado
+- Prompts editables desde /listSeccionesConfig
+- Scripts BD: siempre PHP CLI, LOCAL primero, PRODUCCIÓN solo si LOCAL OK
+- No pedir autorización para ejecutar scripts BD

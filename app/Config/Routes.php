@@ -991,6 +991,12 @@ $routes->get('/documentos-sst/(:num)/programa-mantenimiento-periodico/(:num)', '
 $routes->get('/documentos-sst/(:num)/identificacion-alto-riesgo/(:num)', 'DocumentosSSTController::identificacionAltoRiesgo/$1/$2');
 $routes->post('/documentos-sst/adjuntar-soporte-alto-riesgo', 'DocumentosSSTController::adjuntarSoporteAltoRiesgo');
 
+// 1.2.4 Reglamento de Higiene y Seguridad Industrial
+$routes->get('/documentos-sst/(:num)/reglamento-higiene-seguridad/(:num)', 'DocumentosSSTController::reglamentoHigieneSeguridadIndustrial/$1/$2');
+
+// 5.1.1 Plan de Prevencion, Preparacion y Respuesta ante Emergencias
+$routes->get('/documentos-sst/(:num)/plan-emergencias/(:num)', 'DocumentosSSTController::planEmergencias/$1/$2');
+
 // 2.1 Políticas de SST (adicionales)
 $routes->get('/documentos-sst/(:num)/politica-alcohol-drogas/(:num)', 'DocumentosSSTController::politicaAlcoholDrogas/$1/$2');
 $routes->get('/documentos-sst/(:num)/politica-acoso-laboral/(:num)', 'DocumentosSSTController::politicaAcosoLaboral/$1/$2');

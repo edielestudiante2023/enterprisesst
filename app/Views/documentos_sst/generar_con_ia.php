@@ -599,6 +599,8 @@
         const totalSecciones = <?= $totalSecciones ?>;
         let seccionesAprobadasCount = <?= $seccionesAprobadas ?>;
         let idDocumentoActual = <?= isset($documento['id_documento']) ? $documento['id_documento'] : 'null' ?>;
+        // true = primera aprobacion (doc nuevo, sin versiones previas); false = nueva version de doc existente
+        const esNuevoDocumento = <?= (empty($documento['version']) && !$versionPendiente) ? 'true' : 'false' ?>;
 
         const modalProgreso = new bootstrap.Modal(document.getElementById('modalProgreso'));
 
@@ -1572,6 +1574,9 @@
         // ==========================================
         document.getElementById('btnConfirmarAprobacion')?.addEventListener('click', function() {
             const form = document.getElementById('formAprobarDocumento');
+            // Safety-net: poblar id_documento desde la variable JS (puede estar vacio si el doc
+            // se creo via AJAX despues del render inicial de la pagina)
+            document.getElementById('id_documento_aprobar').value = idDocumentoActual;
             const formData = new FormData(form);
 
             if (!formData.get('descripcion_cambio').trim()) {
@@ -1632,10 +1637,70 @@
             if (aprobadas >= totalSecciones && guardadas >= totalSecciones) {
                 btnAprobar.classList.remove('disabled');
                 btnAprobar.disabled = false;
-                btnAprobar.setAttribute('data-bs-toggle', 'modal');
-                btnAprobar.setAttribute('data-bs-target', '#modalAprobarDocumento');
                 btnAprobar.innerHTML = '<i class="bi bi-check-circle me-1"></i>Aprobar Documento<small class="d-block" style="font-size: 0.6rem;">Crear version oficial</small>';
+
+                if (esNuevoDocumento) {
+                    // Primera aprobacion: flujo directo sin modal
+                    btnAprobar.removeAttribute('data-bs-toggle');
+                    btnAprobar.removeAttribute('data-bs-target');
+                    btnAprobar.onclick = function() { aprobarDocumentoDirecto(); };
+                } else {
+                    // Nueva version de doc existente: abrir modal y poblar id
+                    btnAprobar.setAttribute('data-bs-toggle', 'modal');
+                    btnAprobar.setAttribute('data-bs-target', '#modalAprobarDocumento');
+                    btnAprobar.onclick = function() {
+                        document.getElementById('id_documento_aprobar').value = idDocumentoActual;
+                    };
+                }
             }
+        }
+
+        // Aprobacion directa para primera version (sin modal)
+        function aprobarDocumentoDirecto() {
+            if (!idDocumentoActual) {
+                alert('Error: el documento aun no ha sido guardado. Guarda al menos una seccion primero.');
+                return;
+            }
+
+            const btnAprobar = document.getElementById('btnAprobarDocumento');
+            btnAprobar.disabled = true;
+            btnAprobar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Aprobando...';
+
+            const formData = new FormData();
+            formData.append('id_documento', idDocumentoActual);
+            formData.append('tipo_cambio', 'menor');
+            formData.append('descripcion_cambio', 'Nuevo Documento Creado');
+
+            fetch('<?= base_url('documentos-sst/aprobar-documento') ?>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarToast('success', 'Documento Aprobado', 'Version ' + data.version + ' creada correctamente.');
+
+                    btnAprobar.classList.remove('btn-success');
+                    btnAprobar.classList.add('btn-outline-success');
+                    btnAprobar.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Aprobado v' + data.version;
+                    btnAprobar.disabled = true;
+
+                    setTimeout(() => {
+                        if (confirm('Documento aprobado exitosamente.\n\n¿Desea ver la Vista Previa del documento?')) {
+                            window.open('<?= esc($urlVistaPrevia) ?>', '_blank');
+                        }
+                    }, 500);
+                } else {
+                    alert('Error: ' + data.message);
+                    btnAprobar.disabled = false;
+                    btnAprobar.innerHTML = '<i class="bi bi-check-circle me-1"></i>Aprobar Documento<small class="d-block" style="font-size: 0.6rem;">Crear version oficial</small>';
+                }
+            })
+            .catch(error => {
+                alert('Error de conexion: ' + error.message);
+                btnAprobar.disabled = false;
+                btnAprobar.innerHTML = '<i class="bi bi-check-circle me-1"></i>Aprobar Documento<small class="d-block" style="font-size: 0.6rem;">Crear version oficial</small>';
+            });
         }
 
         // Llamar despues de aprobar todas las secciones
