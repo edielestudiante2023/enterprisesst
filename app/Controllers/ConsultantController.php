@@ -536,6 +536,194 @@ class ConsultantController extends Controller
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // Paz y Salvo por todo concepto
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Emite el paz y salvo: verifica que no haya ítems abiertos y envía email con SendGrid.
+     */
+    public function emitirPazYSalvo($id)
+    {
+        $db              = \Config\Database::connect();
+        $clientModel     = new ClientModel();
+        $consultantModel = new \App\Models\ConsultantModel();
+
+        $client = $clientModel->find($id);
+        if (!$client) {
+            return redirect()->to('/listClients')->with('error', 'Cliente no encontrado.');
+        }
+
+        // ── 1. Verificar ítems abiertos en las 3 tablas ──────────────────
+        $ptaAbiertas = $db->query(
+            "SELECT COUNT(*) AS total FROM tbl_pta_cliente
+             WHERE id_cliente = ? AND estado_actividad IN ('ABIERTA','GESTIONANDO')",
+            [$id]
+        )->getRow()->total;
+
+        $cronAbiertas = $db->query(
+            "SELECT COUNT(*) AS total FROM tbl_cronog_capacitacion
+             WHERE id_cliente = ? AND estado IN ('PROGRAMADA','REPROGRAMADA')",
+            [$id]
+        )->getRow()->total;
+
+        $pendAbiertas = $db->query(
+            "SELECT COUNT(*) AS total FROM tbl_pendientes
+             WHERE id_cliente = ? AND estado IN ('ABIERTA','SIN RESPUESTA DEL CLIENTE')",
+            [$id]
+        )->getRow()->total;
+
+        $totalAbiertos = $ptaAbiertas + $cronAbiertas + $pendAbiertas;
+
+        if ($totalAbiertos > 0) {
+            $detalle = [];
+            if ($ptaAbiertas  > 0) $detalle[] = "{$ptaAbiertas} actividad(es) abierta(s) en el PTA";
+            if ($cronAbiertas > 0) $detalle[] = "{$cronAbiertas} sesión(es) pendiente(s) en Cronograma";
+            if ($pendAbiertas > 0) $detalle[] = "{$pendAbiertas} pendiente(s) sin cerrar";
+
+            return redirect()->to('/editClient/' . $id)
+                ->with('error', 'No se puede emitir el Paz y Salvo: ' . implode('; ', $detalle) . '.');
+        }
+
+        // ── 2. Obtener consultor asignado ─────────────────────────────────
+        $consultor       = $consultantModel->find($client['id_consultor']);
+        $correoConsultor = $consultor['correo_consultor'] ?? '';
+        $nombreConsultor = $consultor['nombre_consultor'] ?? 'Consultor';
+
+        // ── 3. Preparar variables para el template ────────────────────────
+        $tzBogota = new \DateTimeZone('America/Bogota');
+        $ahora    = new \DateTime('now', $tzBogota);
+
+        $meses = ['enero','febrero','marzo','abril','mayo','junio',
+                  'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        $fechaEmisionCompleta = $ahora->format('d') . ' de ' . $meses[(int)$ahora->format('n') - 1]
+            . ' de ' . $ahora->format('Y') . ' a las ' . $ahora->format('H:i') . ' (UTC-5)';
+        $fechaEmisionCorta = $ahora->format('d/m/Y');
+        $fechaIngreso      = date('d/m/Y', strtotime($client['fecha_ingreso']));
+
+        $htmlBody = view('emails/paz_y_salvo', [
+            'nombre_cliente'         => $client['nombre_cliente'],
+            'nit_cliente'            => $client['nit_cliente'],
+            'ciudad_cliente'         => $client['ciudad_cliente'],
+            'fecha_ingreso'          => $fechaIngreso,
+            'fecha_emision_corta'    => $fechaEmisionCorta,
+            'fecha_emision_completa' => $fechaEmisionCompleta,
+            'nombre_consultor'       => $nombreConsultor,
+        ]);
+
+        // ── 4. Enviar con SendGrid ────────────────────────────────────────
+        $mail = new \SendGrid\Mail\Mail();
+        $mail->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'EnterpriseSST - Cycloid Talent');
+        $mail->setSubject('Paz y Salvo por Todo Concepto — ' . $client['nombre_cliente']);
+        $mail->addContent('text/html', $htmlBody);
+
+        // TO: correo del cliente
+        $mail->addTo($client['correo_cliente'], $client['nombre_cliente']);
+
+        // CC: consultor + correos fijos
+        $ccs = array_filter([
+            $correoConsultor,
+            'businesscycloidtalent@gmail.com',
+            'diana.cuestas@cycloidtalent.com',
+        ]);
+        foreach ($ccs as $cc) {
+            $mail->addCc($cc);
+        }
+
+        $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+        try {
+            $response = $sendgrid->send($mail);
+            if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
+                log_message('info', "Paz y Salvo enviado para cliente ID {$id} ({$client['nombre_cliente']})");
+                return redirect()->to('/editClient/' . $id)
+                    ->with('msg', 'Paz y Salvo emitido y enviado correctamente a ' . $client['correo_cliente'] . '.');
+            } else {
+                log_message('error', 'SendGrid Paz y Salvo error: ' . $response->body());
+                return redirect()->to('/editClient/' . $id)
+                    ->with('error', 'Error al enviar el email (código ' . $response->statusCode() . ').');
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'SendGrid excepción Paz y Salvo: ' . $e->getMessage());
+            return redirect()->to('/editClient/' . $id)
+                ->with('error', 'Error al enviar el email: ' . $e->getMessage());
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Acciones de estado del cliente
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Reactivar cliente: estado='activo' + borra registros en 3 tablas relacionadas.
+     * Conserva en tbl_clientes: nombre_cliente, nit_cliente, fecha_ingreso (y todo lo demás).
+     */
+    public function reactivarCliente($id)
+    {
+        $db = \Config\Database::connect();
+        $clientModel = new ClientModel();
+
+        $client = $clientModel->find($id);
+        if (!$client) {
+            return redirect()->to('/listClients')->with('error', 'Cliente no encontrado.');
+        }
+
+        // Borrar todos los registros relacionados de las 3 tablas
+        $db->query("DELETE FROM tbl_pta_cliente WHERE id_cliente = ?", [$id]);
+        $db->query("DELETE FROM tbl_cronog_capacitacion WHERE id_cliente = ?", [$id]);
+        $db->query("DELETE FROM tbl_pendientes WHERE id_cliente = ?", [$id]);
+
+        // Actualizar solo el estado del cliente
+        $clientModel->update($id, ['estado' => 'activo']);
+
+        return redirect()->to('/editClient/' . $id)
+            ->with('msg', 'Cliente reactivado. Historial de actividades borrado. El cliente puede comenzar desde cero.');
+    }
+
+    /**
+     * Retirar cliente: estado='inactivo' + marca todas sus actividades como CERRADA POR FIN CONTRATO.
+     */
+    public function retirarCliente($id)
+    {
+        $db = \Config\Database::connect();
+        $clientModel = new ClientModel();
+
+        $client = $clientModel->find($id);
+        if (!$client) {
+            return redirect()->to('/listClients')->with('error', 'Cliente no encontrado.');
+        }
+
+        // Cerrar todas las actividades en las 3 tablas relacionadas
+        $db->query("UPDATE tbl_pta_cliente SET estado_actividad = 'CERRADA POR FIN CONTRATO' WHERE id_cliente = ?", [$id]);
+        $db->query("UPDATE tbl_cronog_capacitacion SET estado = 'CERRADA POR FIN CONTRATO' WHERE id_cliente = ?", [$id]);
+        $db->query("UPDATE tbl_pendientes SET estado = 'CERRADA POR FIN CONTRATO' WHERE id_cliente = ?", [$id]);
+
+        // Marcar cliente como inactivo
+        $clientModel->update($id, ['estado' => 'inactivo']);
+
+        return redirect()->to('/editClient/' . $id)
+            ->with('msg', 'Cliente retirado. Todas sus actividades han sido cerradas por fin de contrato.');
+    }
+
+    /**
+     * Marcar cliente como pendiente: solo actualiza estado, no toca tablas relacionadas.
+     */
+    public function marcarPendiente($id)
+    {
+        $clientModel = new ClientModel();
+
+        $client = $clientModel->find($id);
+        if (!$client) {
+            return redirect()->to('/listClients')->with('error', 'Cliente no encontrado.');
+        }
+
+        $clientModel->update($id, ['estado' => 'pendiente']);
+
+        return redirect()->to('/editClient/' . $id)
+            ->with('msg', 'Cliente marcado como pendiente.');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+
     public function deleteClient($id)
     {
         $clientModel = new ClientModel();

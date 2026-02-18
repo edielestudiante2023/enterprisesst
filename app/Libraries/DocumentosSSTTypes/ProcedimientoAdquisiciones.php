@@ -120,20 +120,6 @@ class ProcedimientoAdquisiciones extends AbstractDocumentoSST
     }
 
     /**
-     * Obtiene el prompt para una seccion desde BD
-     */
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string
-    {
-        $promptBD = $this->getConfigService()->obtenerPromptSeccion($this->getTipoDocumento(), $seccionKey);
-
-        if (!empty($promptBD)) {
-            return $promptBD;
-        }
-
-        return $this->getPromptFallback($seccionKey, $estandares);
-    }
-
-    /**
      * Prompts de fallback si BD no tiene configuracion
      */
     protected function getPromptFallback(string $seccionKey, int $estandares): string

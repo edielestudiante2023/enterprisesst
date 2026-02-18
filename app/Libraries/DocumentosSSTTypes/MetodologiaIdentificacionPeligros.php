@@ -113,17 +113,6 @@ class MetodologiaIdentificacionPeligros extends AbstractDocumentoSST
         return ['consultor_sst', 'responsable_sst', 'representante_legal'];
     }
 
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string
-    {
-        $promptBD = $this->getConfigService()->obtenerPromptSeccion($this->getTipoDocumento(), $seccionKey);
-
-        if (!empty($promptBD)) {
-            return $promptBD;
-        }
-
-        return $this->getPromptFallback($seccionKey, $estandares);
-    }
-
     protected function getPromptFallback(string $seccionKey, int $estandares): string
     {
         $comite = $this->getTextoComite($estandares);

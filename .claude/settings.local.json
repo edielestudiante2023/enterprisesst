@@ -58,7 +58,26 @@
       "Bash(c:/xampp/php/php.exe -r \"\n$pdo = new PDO\\(''mysql:host=db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com;port=25060;dbname=empresas_sst;charset=utf8mb4'', ''cycloid_userdb'', ''AVNS_iDypWizlpMRwHIORJGG'', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::MYSQL_ATTR_SSL_CA => true, PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false]\\);\n$stmt = $pdo->query\\(\"\"SHOW CREATE PROCEDURE sp_generar_carpetas_por_nivel\"\"\\);\n$row = $stmt->fetch\\(PDO::FETCH_ASSOC\\);\necho $row[''Create Procedure''];\n\")",
       "Bash(c:/xampp/php/php.exe -r \"\n$pdo = new PDO\\(''mysql:host=db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com;port=25060;dbname=empresas_sst;charset=utf8mb4'', ''cycloid_userdb'', ''AVNS_iDypWizlpMRwHIORJGG'', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::MYSQL_ATTR_SSL_CA => true, PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false]\\);\n\n// Leer el archivo SP completo\n$sqlFile = file_get_contents\\(''app/SQL/sp/sp_04_generar_carpetas_por_nivel.sql''\\);\n\n// Quitar USE y DELIMITER, adaptar para PDO\n// Extraer solo el CREATE PROCEDURE\n$sqlFile = str_replace\\(''USE empresas_sst;'', '''', $sqlFile\\);\n\n// Drop primero\n$pdo->exec\\(''DROP PROCEDURE IF EXISTS sp_generar_carpetas_por_nivel''\\);\necho \"\"SP dropped OK\\\\n\"\";\n\n// Extraer el body del CREATE PROCEDURE sin DELIMITER\npreg_match\\(''/CREATE PROCEDURE.*?END/s'', $sqlFile, $matches\\);\nif \\(!empty\\($matches[0]\\)\\) {\n    $pdo->exec\\($matches[0]\\);\n    echo \"\"SP created OK\\\\n\"\";\n} else {\n    echo \"\"ERROR: No se pudo extraer CREATE PROCEDURE\\\\n\"\";\n}\n\n// Verificar\n$stmt = $pdo->query\\(\"\"SHOW CREATE PROCEDURE sp_generar_carpetas_por_nivel\"\"\\);\n$row = $stmt->fetch\\(PDO::FETCH_ASSOC\\);\n$body = $row[''Create Procedure''];\nif \\(strpos\\($body, ''2.5.1.1''\\) !== false\\) {\n    echo \"\"VERIFICADO: SP contiene 2.5.1.1\\\\n\"\";\n} else {\n    echo \"\"ALERTA: SP NO contiene 2.5.1.1\\\\n\"\";\n}\n\")",
       "Bash(c:/xampp/php/php.exe:*)",
-      "Bash(c:/xampp/mysql/bin/mysql:*)"
+      "Bash(c:/xampp/mysql/bin/mysql:*)",
+      "Bash(/c/xampp/mysql/bin/mysql:*)",
+      "WebFetch(domain:safetya.co)",
+      "WebFetch(domain:www.protegerips.com)",
+      "WebFetch(domain:www.ey.com)",
+      "WebFetch(domain:actualicese.com)",
+      "WebFetch(domain:www.alcaldiabogota.gov.co)",
+      "WebFetch(domain:acmineria.com.co)",
+      "WebFetch(domain:sstconecta.com)",
+      "WebFetch(domain:www.affirmalegal.com)",
+      "WebFetch(domain:www.jadelrio.com)",
+      "Bash(/c/xampp/mysql/bin/mysql.exe:*)",
+      "Bash(sort:*)",
+      "Bash(/c/xampp/htdocs/enterprisesst/remove_prompt_method.php:*)",
+      "Bash(xargs:*)",
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\":*)",
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root empresas_sst:*)",
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root empresas_sst -e \"\nSELECT dtc.tipo_documento, dtc.nombre, dtc.flujo, COUNT\\(dsc.id\\) as num_secciones\nFROM tbl_doc_tipo_configuracion dtc\nLEFT JOIN tbl_doc_secciones_config dsc ON dtc.tipo_documento = dsc.tipo_documento\nWHERE dtc.tipo_documento IN \\(''matriz_requisitos_legales'',''plan_emergencias'',''reglamento_higiene_seguridad'',''politica_sst''\\)\nGROUP BY dtc.tipo_documento, dtc.nombre, dtc.flujo;\")",
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root empresas_sst -e \"\nSELECT tipo_documento, nombre, descripcion, estandar, flujo, categoria, icono, orden\nFROM tbl_doc_tipo_configuracion\nWHERE tipo_documento IN \\(''plan_emergencias'',''reglamento_higiene_seguridad''\\);\")",
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root empresas_sst -e:*)"
     ]
   }
 }

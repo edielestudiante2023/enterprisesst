@@ -46,11 +46,6 @@ abstract class AbstractActaRecomposicion extends AbstractDocumentoSST
         ];
     }
 
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string
-    {
-        return '';
-    }
-
     public function getFirmantesRequeridos(int $estandares): array
     {
         return ['representante_legal', 'delegado_sst'];

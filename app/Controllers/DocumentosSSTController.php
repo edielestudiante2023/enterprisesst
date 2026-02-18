@@ -632,7 +632,12 @@ class DocumentosSSTController extends BaseController
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
         // Generar contenido según el modo
-        $contenido = $this->generarConIAReal($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional, $tipo, $modo, $contenidoActual);
+        try {
+            $contenido = $this->generarConIAReal($seccionKey, $cliente, $contexto, $estandares, $anio, $contextoAdicional, $tipo, $modo, $contenidoActual);
+        } catch (\RuntimeException $e) {
+            log_message('error', "generarSeccionIA falló: " . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => $e->getMessage()]);
+        }
 
         // Metadata de BD solo en modo completo (en regenerar no se consultan tablas adicionales)
         $metadataBD = null;
@@ -658,78 +663,133 @@ class DocumentosSSTController extends BaseController
     /**
      * Genera contenido usando el servicio de IA real (OpenAI)
      *
-     * @param string $seccion Clave de la sección a generar
-     * @param array $cliente Datos del cliente
-     * @param array|null $contexto Contexto SST del cliente
-     * @param int $estandares Nivel de estándares (7, 21, 60)
-     * @param int $anio Año del documento
-     * @param string $contextoAdicional Instrucciones adicionales del usuario
-     * @param string $tipoDocumento Tipo de documento (usa Factory para obtener la clase correcta)
+     * ARQUITECTURA: BD es la única fuente de verdad para prompts y secciones.
+     * Las clases PHP solo aportan getContextoBase() cuando el tipo es Tipo B.
+     * Ver: docs/MODULO_NUMERALES_SGSST/02_GENERACION_IA/ARQUITECTURA_GENERACION_IA_DOCUMENTOS.md
+     *
+     * @throws \RuntimeException Si la sección no está configurada en BD o no tiene prompt
      */
     protected function generarConIAReal(string $seccion, array $cliente, ?array $contexto, int $estandares, int $anio, string $contextoAdicional, string $tipoDocumento = 'programa_capacitacion', string $modo = 'completo', string $contenidoActual = ''): string
     {
+        // PASO 1: Sección y prompt desde BD (fuente única de verdad)
+        $tipoConfig = $this->configService->obtenerTipoDocumento($tipoDocumento);
+
+        if (!$tipoConfig) {
+            log_message('error', "generarConIAReal: '{$tipoDocumento}' no encontrado en tbl_doc_tipo_configuracion");
+            throw new \RuntimeException("Tipo '{$tipoDocumento}' no configurado en BD.");
+        }
+
+        $seccionConfig = null;
+        foreach ($tipoConfig['secciones'] as $s) {
+            if ($s['key'] === $seccion) {
+                $seccionConfig = $s;
+                break;
+            }
+        }
+
+        if (!$seccionConfig) {
+            log_message('error', "generarConIAReal: sección '{$seccion}' no encontrada en BD para '{$tipoDocumento}'");
+            throw new \RuntimeException("Sección '{$seccion}' no configurada para '{$tipoDocumento}'. Ir a /listSeccionesConfig");
+        }
+
+        $nombreSeccion = $seccionConfig['nombre'];
+        $numeroSeccion = (int) $seccionConfig['numero'];
+        $promptBase    = $seccionConfig['prompt_ia'] ?? '';
+
+        if ($modo === 'completo' && empty(trim($promptBase))) {
+            log_message('error', "generarConIAReal: sin prompt_ia para sección '{$seccion}' de '{$tipoDocumento}'");
+            throw new \RuntimeException("Sección '{$nombreSeccion}' sin prompt configurado. Ir a /listSeccionesConfig");
+        }
+
+        // PASO 2: Contexto base desde clase PHP (solo getContextoBase)
+        // Tipo B sobrescribe este método para incluir PTA e indicadores.
+        // Si el tipo no tiene clase PHP registrada en Factory, se usa el contexto base genérico.
+        $nombreDocumento = $tipoConfig['nombre'];
         try {
             $documentoHandler = DocumentoSSTFactory::crear($tipoDocumento);
-
-            // Obtener datos de la sección desde la clase específica del documento
-            $nombreSeccion = $documentoHandler->getNombreSeccion($seccion);
-            $numeroSeccion = $documentoHandler->getNumeroSeccion($seccion);
-
-            // Obtener el prompt específico para este tipo de documento y sección
-            $promptBase = $documentoHandler->getPromptParaSeccion($seccion, $estandares);
-
-            // Contexto base del documento (PTA, indicadores, etapas) - SIEMPRE
-            $contextoBase = $documentoHandler->getContextoBase($cliente, $contexto);
-
-            // Marco normativo - SIEMPRE (excepto para la sección marco_legal)
-            $marcoNormativo = '';
-            if ($seccion !== 'marco_legal') {
-                $marcoService = new MarcoNormativoService();
-                $marcoNormativo = $marcoService->obtenerMarcoNormativo($tipoDocumento) ?? '';
-            }
-
-            // MODO REGENERAR: mismos datos BD, SIN prompt estático (usuario manda)
-            // MODO COMPLETO: pipeline completo con prompt estático de la sección
-            $promptParaIA = ($modo === 'regenerar') ? '' : $promptBase;
-
-            // Preparar datos para el servicio de IA
-            $datosIA = [
-                'seccion' => [
-                    'numero_seccion' => $numeroSeccion,
-                    'nombre_seccion' => $nombreSeccion
-                ],
-                'documento' => [
-                    'tipo_nombre' => $documentoHandler->getNombre(),
-                    'nombre' => $documentoHandler->getNombre(),
-                    'tipo' => $tipoDocumento
-                ],
-                'cliente' => $cliente,
-                'contexto' => $contexto,
-                'prompt_base' => $promptParaIA,
-                'contexto_adicional' => $contextoAdicional,
-                'contexto_base' => $contextoBase,
-                'marco_normativo' => $marcoNormativo,
-                'modo' => $modo,
-                'contenido_actual' => $contenidoActual
-            ];
-
-            // Llamar al servicio de IA
-            $iaService = new IADocumentacionService();
-            $resultado = $iaService->generarSeccion($datosIA);
-
-            if ($resultado['success']) {
-                return $resultado['contenido'];
-            }
-
-            // Si falla la IA, caer en la plantilla estática del documento específico
-            log_message('warning', "IA falló para sección '{$seccion}' de '{$tipoDocumento}': " . ($resultado['error'] ?? 'Error desconocido'));
-            return $documentoHandler->getContenidoEstatico($seccion, $cliente, $contexto, $estandares, $anio);
-
+            $contextoBase    = $documentoHandler->getContextoBase($cliente, $contexto);
+            $nombreDocumento = $documentoHandler->getNombre();
         } catch (\InvalidArgumentException $e) {
-            // Si el tipo de documento no existe en el Factory, usar método legacy
-            log_message('warning', "Tipo de documento '{$tipoDocumento}' no encontrado en Factory, usando método legacy: " . $e->getMessage());
-            return $this->generarContenidoSeccionLegacy($seccion, $cliente, $contexto, $estandares, $anio, $tipoDocumento);
+            // Sin clase PHP específica → contexto base genérico (solo datos del cliente)
+            log_message('info', "'{$tipoDocumento}' sin clase PHP en Factory, usando contexto base genérico");
+            $contextoBase = $this->buildContextoBaseGenerico($cliente, $contexto, $estandares);
         }
+
+        // PASO 3: Marco normativo
+        $marcoNormativo = '';
+        if ($seccion !== 'marco_legal') {
+            $marcoService   = new MarcoNormativoService();
+            $marcoNormativo = $marcoService->obtenerMarcoNormativo($tipoDocumento) ?? '';
+        }
+
+        // MODO REGENERAR: sin prompt estático (el usuario instruye libremente)
+        // MODO COMPLETO: usa el prompt de BD
+        $promptParaIA = ($modo === 'regenerar') ? '' : $promptBase;
+
+        // PASO 4: Llamar a la IA
+        $datosIA = [
+            'seccion' => [
+                'numero_seccion' => $numeroSeccion,
+                'nombre_seccion' => $nombreSeccion
+            ],
+            'documento' => [
+                'tipo_nombre' => $nombreDocumento,
+                'nombre'      => $nombreDocumento,
+                'tipo'        => $tipoDocumento
+            ],
+            'cliente'           => $cliente,
+            'contexto'          => $contexto,
+            'prompt_base'       => $promptParaIA,
+            'contexto_adicional'=> $contextoAdicional,
+            'contexto_base'     => $contextoBase,
+            'marco_normativo'   => $marcoNormativo,
+            'modo'              => $modo,
+            'contenido_actual'  => $contenidoActual
+        ];
+
+        $iaService = new IADocumentacionService();
+        $resultado = $iaService->generarSeccion($datosIA);
+
+        if ($resultado['success']) {
+            return $resultado['contenido'];
+        }
+
+        log_message('error', "IA falló para '{$seccion}' de '{$tipoDocumento}': " . ($resultado['error'] ?? 'Error desconocido'));
+        throw new \RuntimeException("Error al generar '{$nombreSeccion}': " . ($resultado['error'] ?? 'Error en servicio IA'));
+    }
+
+    /**
+     * Contexto base genérico para tipos sin clase PHP en Factory.
+     * Equivale a AbstractDocumentoSST::getContextoBase() pero sin instanciar la clase abstracta.
+     */
+    protected function buildContextoBaseGenerico(array $cliente, ?array $contexto, int $estandares): string
+    {
+        $nombreEmpresa       = $cliente['nombre_cliente'] ?? 'la empresa';
+        $nit                 = $cliente['nit'] ?? '';
+        $actividadEconomica  = $contexto['actividad_economica_principal'] ?? $contexto['sector_economico'] ?? 'No especificada';
+        $nivelRiesgo         = $contexto['nivel_riesgo_arl'] ?? 'No especificado';
+        $numTrabajadores     = $contexto['total_trabajadores'] ?? 'No especificado';
+
+        $nivelTexto = match(true) {
+            $estandares <= 7  => 'básico (hasta 10 trabajadores, riesgo I, II o III)',
+            $estandares <= 21 => 'intermedio (11 a 50 trabajadores, riesgo I, II o III)',
+            default           => 'avanzado (más de 50 trabajadores o riesgo IV y V)'
+        };
+
+        return "CONTEXTO DE LA EMPRESA:
+- Nombre: {$nombreEmpresa}
+- NIT: {$nit}
+- Actividad económica: {$actividadEconomica}
+- Nivel de riesgo: {$nivelRiesgo}
+- Número de trabajadores: {$numTrabajadores}
+- Estándares aplicables: {$estandares} ({$nivelTexto})
+
+INSTRUCCIONES DE GENERACIÓN:
+- Personaliza el contenido para esta empresa específica
+- Ajusta la extensión y complejidad según el nivel de estándares
+- Usa terminología de la normativa colombiana (Resolución 0312/2019, Decreto 1072/2015)
+- NO uses tablas Markdown a menos que se indique específicamente
+- Mantén un tono profesional y técnico";
     }
 
     /**
@@ -4497,6 +4557,92 @@ Se debe generar acta que registre:
             'firmasElectronicas' => $firmasElectronicas,
             'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento']),
             'tipoDocumento' => 'politica_desconexion_laboral'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Vista previa de la Política de Gestión de Incapacidades y Licencias (2.1.1)
+     * Basada en Ley 2466 de 2025 (Reforma Laboral) + normativa complementaria
+     */
+    public function politicaIncapacidadesLicencias(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'politica_incapacidades_licencias')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/politica_incapacidades_licencias/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero la Política de Incapacidades y Licencias.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_incapacidades_licencias');
+        }
+
+        // Obtener historial de versiones usando servicio centralizado
+        $versiones = array_reverse($this->versionService->obtenerHistorial($documento['id_documento']));
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        // Obtener datos del vigía SST para firma física
+        $vigiaModel = new \App\Models\VigiaModel();
+        $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo'            => 'Política de Gestión de Incapacidades y Licencias - ' . $cliente['nombre_cliente'],
+            'cliente'           => $cliente,
+            'documento'         => $documento,
+            'contenido'         => $contenido,
+            'anio'              => $anio,
+            'versiones'         => $versiones,
+            'responsables'      => $responsables,
+            'contexto'          => $contexto,
+            'consultor'         => $consultor,
+            'vigia'             => $vigia,
+            'firmasElectronicas'=> $firmasElectronicas,
+            'firmantesDefinidos'=> $this->configService->obtenerFirmantes($documento['tipo_documento']),
+            'tipoDocumento'     => 'politica_incapacidades_licencias'
         ];
 
         return view('documentos_sst/documento_generico', $data);

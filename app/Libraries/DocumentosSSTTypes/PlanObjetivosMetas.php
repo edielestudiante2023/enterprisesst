@@ -272,21 +272,6 @@ INSTRUCCIONES DE GENERACIÓN:
     }
 
     /**
-     * Obtiene el prompt para una sección (BD primero, luego fallback estático)
-     */
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string
-    {
-        // Intentar obtener prompt desde BD
-        $promptBD = $this->getConfigService()->obtenerPromptSeccion($this->getTipoDocumento(), $seccionKey);
-        if (!empty($promptBD)) {
-            return str_replace('{ESTANDARES}', (string)$estandares, $promptBD);
-        }
-
-        // Fallback con prompts hardcodeados
-        return $this->getPromptEstatico($seccionKey, $estandares);
-    }
-
-    /**
      * Prompts estáticos de fallback
      */
     private function getPromptEstatico(string $seccionKey, int $estandares): string

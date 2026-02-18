@@ -2,8 +2,6 @@
 
 namespace App\Libraries\DocumentosSSTTypes;
 
-use App\Services\DocumentoConfigService;
-
 /**
  * Clase PveRiesgoBiomecanico
  *
@@ -16,8 +14,6 @@ use App\Services\DocumentoConfigService;
  */
 class PveRiesgoBiomecanico extends AbstractDocumentoSST
 {
-    private ?DocumentoConfigService $configService = null;
-
     public function getTipoDocumento(): string
     {
         return 'pve_riesgo_biomecanico';
@@ -219,112 +215,6 @@ INSTRUCCIONES DE GENERACIÓN:
             log_message('error', "Error obteniendo indicadores PVE Biomecánico: " . $e->getMessage());
             return "Error al obtener indicadores: " . $e->getMessage();
         }
-    }
-
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string
-    {
-        try {
-            if ($this->configService === null) {
-                $this->configService = new DocumentoConfigService();
-            }
-
-            $prompt = $this->configService->obtenerPromptSeccion(
-                $this->getTipoDocumento(),
-                $seccionKey
-            );
-
-            if (!empty($prompt)) {
-                return str_replace('{ESTANDARES}', (string)$estandares, $prompt);
-            }
-
-        } catch (\Exception $e) {
-            log_message('warning', "Error obteniendo prompt de BD para {$seccionKey}: " . $e->getMessage());
-        }
-
-        return $this->getPromptEstatico($seccionKey, $estandares);
-    }
-
-    private function getPromptEstatico(string $seccionKey, int $estandares): string
-    {
-        $prompts = [
-            'introduccion' => "Genera una introducción para el PVE de Riesgo Biomecánico.
-Usa el contexto de la empresa y menciona la importancia de la vigilancia epidemiológica para prevenir DME.
-Incluye referencia a la Resolución 0312/2019 estándar 4.2.3 y las GATISO de DME.
-Máximo 3 párrafos.",
-
-            'objetivo_general' => "Genera el objetivo general del PVE de Riesgo Biomecánico.
-Debe ser un objetivo SMART orientado a prevenir desórdenes músculo-esqueléticos.
-IMPORTANTE: El objetivo debe estar alineado con las ACTIVIDADES registradas en el Plan de Trabajo.",
-
-            'objetivos_especificos' => "Genera los objetivos específicos del PVE.
-IMPORTANTE: Los objetivos deben derivarse de las ACTIVIDADES del PVE listadas en el contexto.
-Incluir mínimo 5 objetivos que aborden: diagnóstico, intervención ergonómica, capacitación, seguimiento y evaluación.
-Presentar en formato de lista numerada.",
-
-            'alcance' => "Genera el alcance del PVE de Riesgo Biomecánico.
-Debe especificar:
-- A quiénes aplica (trabajadores expuestos a riesgo biomecánico)
-- Qué factores de riesgo cubre (posturas, movimientos repetitivos, manipulación de cargas)
-- Dónde aplica (puestos de trabajo con exposición)
-- Período de vigencia",
-
-            'marco_legal' => "Genera el marco legal del PVE de Riesgo Biomecánico.
-Incluir:
-- Resolución 0312 de 2019 (Estándar 4.2.3)
-- Decreto 1072 de 2015 (Decreto Único Reglamentario)
-- GATISO para DME (Guía de Atención Integral - Ministerio de Protección Social)
-- Resolución 2844 de 2007 (Guías de atención)
-- Resolución 2346 de 2007 (Evaluaciones médicas ocupacionales)
-- NTC 5723 (Ergonomía - Manipulación manual)
-- GTC 45 (Identificación de peligros)",
-
-            'definiciones' => "Genera las definiciones técnicas relevantes para el PVE de Riesgo Biomecánico.
-Incluir: DME, Riesgo biomecánico, Postura prolongada, Movimiento repetitivo, Manipulación manual de cargas, Ergonomía, Cuestionario Nórdico, Puesto de trabajo, Vigilancia epidemiológica, Pausas activas.",
-
-            'responsabilidades' => "Genera las responsabilidades para el PVE de Riesgo Biomecánico.
-Incluir responsabilidades de:
-- Representante Legal o Alta Dirección
-- Responsable del SG-SST
-- COPASST o Vigía de SST
-- Trabajadores expuestos a riesgo biomecánico
-Las responsabilidades deben estar alineadas con las actividades del Plan de Trabajo.",
-
-            'metodologia' => "Genera la metodología del PVE de Riesgo Biomecánico.
-IMPORTANTE: La metodología debe describir CÓMO se ejecutarán las ACTIVIDADES REALES listadas en el contexto.
-Estructura en fases:
-1. Diagnóstico: Cuestionario Nórdico, evaluación de puestos de trabajo (REBA/RULA/OWAS)
-2. Clasificación: Trabajadores según nivel de riesgo (sin riesgo, riesgo bajo, riesgo medio, riesgo alto)
-3. Intervención: Controles de ingeniería, administrativos y en el trabajador
-4. Seguimiento: Monitoreo de casos, aplicación periódica de encuestas
-5. Evaluación: Medición de indicadores y ajuste del programa",
-
-            'cronograma' => "Genera el cronograma de actividades del PVE de Riesgo Biomecánico.
-IMPORTANTE: Usa las ACTIVIDADES REALES del Plan de Trabajo listadas en el contexto.
-Presenta las actividades con sus meses programados en formato de tabla markdown.
-Columnas: Actividad | Responsable | Ene | Feb | Mar | Abr | May | Jun | Jul | Ago | Sep | Oct | Nov | Dic",
-
-            'indicadores' => "Define los indicadores del PVE de Riesgo Biomecánico.
-IMPORTANTE: Usa los INDICADORES CONFIGURADOS listados en el contexto.
-Presenta cada indicador con: nombre, tipo, fórmula, meta y periodicidad.",
-
-            'recursos' => "Genera la sección de recursos necesarios para el PVE.
-Basándote en las ACTIVIDADES del Plan de Trabajo, identifica:
-- Recursos humanos (ergónomo, fisioterapeuta, médico ocupacional)
-- Recursos físicos (equipos de evaluación ergonómica, mobiliario)
-- Recursos financieros
-- Recursos tecnológicos (software de evaluación ergonómica)",
-
-            'evaluacion_seguimiento' => "Genera la sección de Evaluación y Seguimiento del PVE.
-IMPORTANTE: Usa los INDICADORES listados en el contexto.
-Incluye:
-- Periodicidad de medición de cada indicador
-- Responsable de la medición
-- Seguimiento a casos individuales
-- Proceso de revisión y mejora continua
-- Reportes a generar y su frecuencia"
-        ];
-
-        return $prompts[$seccionKey] ?? "Genera el contenido para la sección '{$seccionKey}' del PVE de Riesgo Biomecánico.";
     }
 
     public function getContenidoEstatico(string $seccionKey, array $cliente, ?array $contexto, int $estandares, int $anio): string

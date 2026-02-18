@@ -246,37 +246,6 @@ INSTRUCCIONES DE GENERACIÓN:
     }
 
     /**
-     * Obtiene el prompt para una sección desde la BD
-     * Usa DocumentoConfigService para leer los prompts configurados
-     */
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string
-    {
-        try {
-            // Inicializar el servicio si no existe
-            if ($this->configService === null) {
-                $this->configService = new DocumentoConfigService();
-            }
-
-            // Obtener prompt desde la BD
-            $prompt = $this->configService->obtenerPromptSeccion(
-                $this->getTipoDocumento(),
-                $seccionKey
-            );
-
-            if (!empty($prompt)) {
-                // Reemplazar variables en el prompt
-                return str_replace('{ESTANDARES}', (string)$estandares, $prompt);
-            }
-
-        } catch (\Exception $e) {
-            log_message('warning', "Error obteniendo prompt de BD para {$seccionKey}: " . $e->getMessage());
-        }
-
-        // Fallback a prompts estáticos si no hay en BD
-        return $this->getPromptEstatico($seccionKey, $estandares);
-    }
-
-    /**
      * Prompts estáticos de fallback
      */
     private function getPromptEstatico(string $seccionKey, int $estandares): string

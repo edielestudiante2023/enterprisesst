@@ -1,294 +1,364 @@
-# Arquitectura de Generación IA para Documentos SST
+# Arquitectura de Generación IA — Reglas de Juego
 
-## Regla Fundamental
-
-⚠️ **TODOS los tipos de documento requieren una clase PHP en `DocumentosSSTTypes/` y registro en el Factory.**
-
-Esto aplica tanto a documentos simples (`secciones_ia`) como a documentos con fases (`programa_con_pta`).
-
-## Cuándo Aplica Este Documento
-
-Este documento detalla la arquitectura para documentos con flujo **`programa_con_pta`** que tienen fases previas:
-- Etapas/Configuración → PTA → Indicadores → Documento IA
-
-**Ejemplos:** 1.2.1 Capacitación, 1.2.2 Inducción, 3.1.2 PyP Salud
-
-Para documentos simples (flujo `secciones_ia`) sin fases, consulta [TROUBLESHOOTING_GENERACION_IA.md](./TROUBLESHOOTING_GENERACION_IA.md) - pero **igual necesitan clase PHP**.
+> Última actualización: 2026-02-18
+> Reemplaza la versión anterior que documentaba la arquitectura incorrecta (PHP como fuente de prompts).
 
 ---
 
-## Problema Identificado (2026-02-04)
+## Regla de Oro
 
-### Síntoma
-Al hacer clic en "Generar con IA" en el documento **1.2.2 Programa de Inducción y Reinducción**, las secciones mostraban `[Seccion no definida]` o contenido genérico que NO usaba los datos reales de:
-- Etapas de inducción (Fase 1)
-- Actividades del PTA (Fase 2)
-- Indicadores configurados (Fase 3)
-
-### Causa Raíz
-**Faltaba la clase `ProgramaInduccionReinduccion.php`** en el Factory de documentos.
-
-El flujo de generación usa un patrón Factory donde cada tipo de documento tiene su propia clase que define:
-1. Cómo obtener el contexto de la BD
-2. Qué prompts usar para cada sección
-3. Contenido estático de fallback
-
-Sin la clase, el sistema caía en el método `generarContenidoSeccionLegacy()` que NO consulta las tablas específicas del módulo.
+> **La base de datos es la ÚNICA fuente de verdad para todo lo estático.**
+> **Las clases PHP existen ÚNICAMENTE para lógica que requiere ejecución de código.**
+> **Nada estático se hardcodea en PHP.**
 
 ---
 
-## Arquitectura de Generación IA
+## Qué es "estático" vs "lógica"
 
-### Flujo Completo
+| Dato | ¿Estático o lógica? | Fuente |
+|------|---------------------|--------|
+| Nombre del documento | Estático | BD → `tbl_doc_tipo_configuracion.nombre` |
+| Estándar (ej: 2.1.1) | Estático | BD → `tbl_doc_tipo_configuracion.estandar` |
+| Flujo (`secciones_ia` / `programa_con_pta`) | Estático | BD → `tbl_doc_tipo_configuracion.flujo` |
+| Lista de secciones (key, nombre, número) | Estático | BD → `tbl_doc_secciones_config` |
+| Prompt de cada sección | Estático | BD → `tbl_doc_secciones_config.prompt_ia` |
+| Firmantes requeridos | Estático | BD → `tbl_doc_firmantes_config` |
+| Código base del documento (ej: POL-SST) | Estático | BD → `tbl_doc_plantillas.codigo_sugerido` |
+| Contexto PTA + Indicadores (Tipo B) | Lógica PHP | Clase PHP → `getContextoBase()` |
+| Contexto cliente base | Lógica PHP | `AbstractDocumentoSST::getContextoBase()` |
+
+---
+
+## Las Tres Tablas de Configuración
 
 ```
-Usuario hace clic en "Generar con IA"
-              ↓
-DocumentosSSTController::generarSeccionIA()
-              ↓
-DocumentoSSTFactory::crear('programa_induccion_reinduccion')
-              ↓
-┌─ ¿Existe clase en Factory? ────────────────────────────┐
-│                                                         │
-│  SÍ → Instancia ProgramaInduccionReinduccion           │
-│       ↓                                                 │
-│       getContextoBase() ← CONSULTA BD:                 │
-│         • tbl_induccion_etapas (Fase 1)                │
-│         • tbl_pta_cliente (Fase 2)                     │
-│         • tbl_indicadores_sst (Fase 3)                 │
-│         • tbl_cliente_contexto_sst (Contexto)          │
-│       ↓                                                 │
-│       getPromptParaSeccion() ← Prompt específico       │
-│       ↓                                                 │
-│       IADocumentacionService::generarSeccion()         │
-│       ↓                                                 │
-│       OpenAI genera contenido con DATOS REALES ✅      │
-│                                                         │
-│  NO → Método legacy (sin datos de BD) ❌               │
-│       Retorna "[Seccion no definida]"                  │
-└─────────────────────────────────────────────────────────┘
+tbl_doc_tipo_configuracion          ← TIPO de documento
+├── tipo_documento (snake_case)     ← identificador único
+├── nombre                          ← nombre legible
+├── descripcion
+├── estandar                        ← numeral resolución 0312
+├── flujo                           ← 'secciones_ia' | 'programa_con_pta'
+├── categoria
+└── activo
+
+tbl_doc_secciones_config            ← SECCIONES del documento
+├── id_tipo_config (FK)
+├── seccion_key                     ← key único por sección
+├── nombre                          ← nombre legible
+├── numero                          ← orden visible al usuario
+├── prompt_ia                       ← instrucciones para OpenAI ← FUENTE ÚNICA
+├── tipo_contenido
+├── es_obligatoria
+└── orden
+
+tbl_doc_firmantes_config            ← FIRMANTES del documento
+├── id_tipo_config (FK)
+├── firmante_tipo                   ← 'representante_legal' | 'consultor_sst' | etc.
+├── rol_display
+├── orden
+└── activo
 ```
 
-### Archivos Clave
-
-| Archivo | Responsabilidad |
-|---------|-----------------|
-| `DocumentoSSTFactory.php` | Crea instancias del tipo de documento correcto |
-| `ProgramaInduccionReinduccion.php` | Define secciones, contexto y prompts para 1.2.2 |
-| `IADocumentacionService.php` | Llama a OpenAI con el contexto completo |
-| `DocumentosSSTController.php` | Orquesta el flujo de generación |
+Estas tablas se administran desde: `/listSeccionesConfig`
 
 ---
 
-## Cómo se Asegura que el 100% de las Secciones Usen Datos Reales
+## Flujo de Generación con IA (cómo funciona realmente)
 
-### 1. Método `getContextoBase()` - Inyección de Datos de BD
+```
+Usuario hace clic "Generar con IA" (sección X)
+                    │
+                    ▼
+POST /documentos/generar-seccion
+  {tipo: 'politica_sst_general', seccion: 'objetivo', id_cliente: 23}
+                    │
+                    ▼
+generarSeccionIA() → generarConIAReal()
+                    │
+    ┌───────────────┼───────────────────────────────────┐
+    │               │                                   │
+    ▼               ▼                                   ▼
+  PASO 1          PASO 2                              PASO 3
+  prompt          contexto base                       nombre/número
+  de BD           de PHP                              de BD
+    │               │                                   │
+    ▼               ▼                                   ▼
+DocumentoConfig  Factory::crear()                  DocumentoConfig
+Service::        → getContextoBase()               Service::
+obtenerPrompt    (consulta BD si Tipo B)           obtenerSecciones()
+Seccion()
+    │               │                                   │
+    └───────────────┴───────────────────────────────────┘
+                    │
+                    ▼
+          IADocumentacionService::generarSeccion()
+                    │
+                    ▼
+                OpenAI API
+                    │
+                    ▼
+            Contenido generado ✅
+```
 
-Cada clase de documento DEBE sobrescribir este método para consultar las tablas relevantes:
+### Si no existe prompt en BD para esa sección:
+```
+DocumentoConfigService::obtenerPromptSeccion() → null
+                    │
+                    ▼
+            ERROR claro en log:
+            "Sección '{key}' del tipo '{tipo}' no tiene prompt_ia en BD.
+             Configúralo en /listSeccionesConfig"
+                    │
+                    ▼
+        Response: {success: false, message: 'Sección sin prompt configurado'}
+```
+
+**No hay fallback a PHP.** Un error de configuración debe verse como error, no silenciarse.
+
+---
+
+## Responsabilidades de la Clase PHP
+
+### Qué SÍ hace la clase PHP
+
+| Método | Propósito | ¿Quién lo tiene? |
+|--------|-----------|-----------------|
+| `getTipoDocumento()` | Identifica el tipo (requerido por Factory) | Todas las clases |
+| `getContextoBase()` | Consulta BD para construir contexto IA | Tipo B sobrescribe; Tipo A usa el de Abstract |
+
+### Qué NO hace la clase PHP
+
+| ❌ Prohibido | Por qué | Alternativa |
+|-------------|---------|-------------|
+| `getPromptParaSeccion()` con strings hardcodeados | El prompt vive en BD | BD → `tbl_doc_secciones_config.prompt_ia` |
+| `getSecciones()` con array hardcodeado | Las secciones viven en BD | BD → `tbl_doc_secciones_config` |
+| `getContenidoEstatico()` con texto hardcodeado | No hay fallback estático | Si no hay prompt en BD → error explícito |
+| `getFirmantesRequeridos()` con array hardcodeado | Los firmantes viven en BD | BD → `tbl_doc_firmantes_config` |
+
+> **Nota sobre clases existentes:** Las clases PHP actuales todavía tienen estos métodos por razones históricas.
+> Se están migrando progresivamente. En clases nuevas no se agregan.
+
+---
+
+## Diferencia Tipo A vs Tipo B
+
+| | Tipo A (`secciones_ia`) | Tipo B (`programa_con_pta`) |
+|---|---|---|
+| **Flujo** | Directo al editor IA | PTA → Indicadores → Editor IA |
+| **Contexto IA** | Solo datos del cliente | Datos cliente + PTA + Indicadores |
+| **`getContextoBase()`** | Usa el de `AbstractDocumentoSST` | Sobrescribe para consultar PTA e indicadores |
+| **Clase PHP necesaria** | No (solo necesita BD) | Sí (para `getContextoBase()`) |
+| **Ejemplos** | `politica_sst_general`, `procedimiento_control_documental` | `programa_capacitacion`, `programa_induccion_reinduccion` |
+
+---
+
+## Checklist: Crear un Nuevo Documento con Generación IA
+
+### Paso 1 — Registrar en BD (PRIMERO, siempre)
+
+1. Insertar en `tbl_doc_tipo_configuracion`:
+   ```sql
+   INSERT INTO tbl_doc_tipo_configuracion
+     (tipo_documento, nombre, descripcion, estandar, flujo, categoria)
+   VALUES
+     ('mi_nuevo_documento', 'Nombre Legible', 'Descripción...', '3.1.5',
+      'secciones_ia', 'procedimientos');
+   ```
+
+2. Insertar secciones en `tbl_doc_secciones_config`:
+   ```sql
+   INSERT INTO tbl_doc_secciones_config
+     (id_tipo_config, numero, nombre, seccion_key, prompt_ia, tipo_contenido, es_obligatoria, orden)
+   VALUES
+     (@id_tipo, 1, 'Objetivo', 'objetivo',
+      'Genera el objetivo del documento para {empresa}. Debe expresar...', 'texto', 1, 10),
+     (@id_tipo, 2, 'Alcance', 'alcance',
+      'Define el alcance del documento. Aplica a...', 'texto', 1, 20);
+   ```
+   > Los prompts deben ser específicos. Usar `{empresa}` como placeholder del nombre de empresa.
+
+3. Insertar firmantes en `tbl_doc_firmantes_config`:
+   ```sql
+   INSERT INTO tbl_doc_firmantes_config
+     (id_tipo_config, firmante_tipo, rol_display, columna_encabezado, orden)
+   VALUES
+     (@id_tipo, 'consultor_sst', 'Elaboró', 'Responsable SST', 1),
+     (@id_tipo, 'representante_legal', 'Aprobó', 'Representante Legal', 2);
+   ```
+
+4. Verificar usando la pantalla admin: `/listSeccionesConfig`
+
+### Paso 2 — Clase PHP (SOLO si es Tipo B)
+
+Si el flujo es `programa_con_pta`, crear clase en `app/Libraries/DocumentosSSTTypes/`:
 
 ```php
-public function getContextoBase(array $cliente, ?array $contexto): string
+class MiNuevoDocumento extends AbstractDocumentoSST
 {
-    $idCliente = $cliente['id_cliente'] ?? 0;
-    $anio = (int) date('Y');
+    public function getTipoDocumento(): string
+    {
+        return 'mi_nuevo_documento'; // debe coincidir exactamente con BD
+    }
 
-    // FASE 1: Etapas de inducción
-    $etapasTexto = $this->obtenerEtapasInduccion($idCliente, $anio);
+    // SOLO sobrescribir si necesita datos de PTA/Indicadores
+    public function getContextoBase(array $cliente, ?array $contexto): string
+    {
+        $idCliente = $cliente['id_cliente'] ?? 0;
+        $anio = (int) date('Y');
 
-    // FASE 2: Actividades del PTA
-    $actividadesTexto = $this->obtenerActividadesInduccion($idCliente, $anio);
+        // Consultar tablas específicas del módulo
+        $actividades = $this->obtenerActividadesPTA($idCliente, $anio);
+        $indicadores = $this->obtenerIndicadores($idCliente);
 
-    // FASE 3: Indicadores
-    $indicadoresTexto = $this->obtenerIndicadoresInduccion($idCliente);
+        return parent::getContextoBase($cliente, $contexto) .
+               "\n\nACTIVIDADES DEL PTA:\n" . $actividades .
+               "\n\nINDICADORES:\n" . $indicadores;
+    }
 
-    return "
-============================================================
-ETAPAS DEL PROCESO DE INDUCCIÓN (FASE 1)
-============================================================
-{$etapasTexto}
-
-============================================================
-ACTIVIDADES DE INDUCCIÓN EN EL PLAN DE TRABAJO (FASE 2)
-============================================================
-{$actividadesTexto}
-
-============================================================
-INDICADORES DE INDUCCIÓN (FASE 3)
-============================================================
-{$indicadoresTexto}
-...";
+    // NO agregar: getSecciones(), getPromptParaSeccion(), getContenidoEstatico()
+    // NO agregar: getFirmantesRequeridos() con arrays hardcodeados
+    // Todo eso vive en BD.
 }
 ```
 
-### 2. Contexto del Cliente - Datos Automáticos
-
-El servicio `IADocumentacionService::construirPrompt()` SIEMPRE incluye:
+### Paso 3 — Registrar en Factory (siempre que exista clase PHP)
 
 ```php
-// De tbl_clientes
-$razonSocial = $cliente['nombre_cliente'];
-$nit = $cliente['nit'];
-$direccion = $cliente['direccion'];
-$ciudad = $cliente['ciudad'];
-
-// De tbl_cliente_contexto_sst
-$actividadEconomica = $contexto['sector_economico'];
-$nivelRiesgo = $contexto['nivel_riesgo_arl'];
-$totalTrabajadores = $contexto['total_trabajadores'];
-$tieneCopasst = $contexto['tiene_copasst'];
-$tieneVigia = $contexto['tiene_vigia_sst'];
-$tieneBrigada = $contexto['tiene_brigada_emergencias'];
-$peligrosIdentificados = $contexto['peligros_identificados'];
-$estandaresAplicables = $contexto['estandares_aplicables'];
-// ... más de 20 campos
+// DocumentoSSTFactory.php
+private static array $tiposRegistrados = [
+    // ... existentes ...
+    'mi_nuevo_documento' => MiNuevoDocumento::class,
+];
 ```
 
-### 3. Prompts Específicos por Sección
+Si es Tipo A y no creaste clase PHP, el Factory lanzará `InvalidArgumentException`.
+En ese caso asegúrate de que `generarConIAReal()` maneje el caso usando
+`AbstractDocumentoSST` directamente cuando no existe clase específica.
 
-Cada sección tiene instrucciones que OBLIGAN a usar los datos:
+### Paso 4 — Rutas de vista web
+
+Registrar en `Routes.php` (kebab-case):
+```php
+$routes->get('/documentos-sst/(:num)/mi-nuevo-documento/(:num)',
+             'DocumentosSSTController::verDocumento/$1/$2');
+```
+
+---
+
+## Qué NO hacer (casos reales de problemas)
+
+### ❌ Duplicar prompts en PHP cuando ya están en BD
 
 ```php
-'indicadores' => "Define los indicadores del Programa de Inducción.
-IMPORTANTE: Usa los INDICADORES CONFIGURADOS listados en el contexto de la Fase 3.
-NO inventes indicadores si hay configurados.
-Para cada indicador presenta: nombre, tipo, fórmula, meta y periodicidad.",
+// MAL — el prompt también está en tbl_doc_secciones_config
+public function getPromptParaSeccion(string $seccionKey, int $estandares): string
+{
+    return [
+        'objetivo' => "Genera el objetivo...",  // ← hardcodeado, ignora BD
+    ][$seccionKey] ?? '';
+}
+```
 
-'cronograma' => "Genera el cronograma de actividades del Programa de Inducción.
-IMPORTANTE: Usa las ACTIVIDADES REALES del Plan de Trabajo listadas en el contexto de la Fase 2.
-NO inventes actividades - usa las que están registradas en el PTA."
+```php
+// BIEN — no existe este método en clases nuevas
+// El prompt se lee en generarConIAReal() vía DocumentoConfigService
+```
+
+### ❌ Agregar secciones al array PHP cuando ya están en BD
+
+```php
+// MAL
+public function getSecciones(): array
+{
+    return [
+        ['numero' => 1, 'nombre' => 'Objetivo', 'key' => 'objetivo'],  // ← duplicado de BD
+    ];
+}
+```
+
+### ❌ Silenciar ausencia de prompt con texto genérico
+
+```php
+// MAL — falla silenciosamente
+$prompt = $documentoHandler->getPromptParaSeccion($seccion, $estandares);
+if (empty($prompt)) {
+    $prompt = "Genera contenido para la sección.";  // ← texto basura
+}
+```
+
+```php
+// BIEN — falla ruidosamente
+$prompt = $this->configService->obtenerPromptSeccion($tipoDocumento, $seccionKey);
+if (empty($prompt)) {
+    log_message('error', "Sin prompt BD: tipo={$tipoDocumento}, seccion={$seccionKey}");
+    return $this->response->setJSON([
+        'success' => false,
+        'message' => "La sección '{$seccionKey}' no tiene prompt configurado. Ve a /listSeccionesConfig"
+    ]);
+}
 ```
 
 ---
 
-## Tablas Consultadas por Módulo
+## Estado de Migración (2026-02-18) — COMPLETADO
 
-### 1.2.2 Programa de Inducción y Reinducción
-
-| Fase | Tabla | Filtro | Datos Obtenidos |
-|------|-------|--------|-----------------|
-| 1 | `tbl_induccion_etapas` | `id_cliente`, `anio` | Etapas, temas, duración, responsable |
-| 2 | `tbl_pta_cliente` | `id_cliente`, `anio`, `tipo_servicio LIKE 'Induccion'` | Actividades, fechas, responsables |
-| 3 | `tbl_indicadores_sst` | `id_cliente`, `categoria='induccion'` | Indicadores, fórmulas, metas |
-| - | `tbl_cliente_contexto_sst` | `id_cliente` | Contexto general de la empresa |
-
-### 1.2.1 Programa de Capacitación (ProgramaCapacitacion.php)
-
-| Fase | Tabla | Filtro |
-|------|-------|--------|
-| 1 | `tbl_capacitaciones_cliente` | `id_cliente`, `anio` |
-| 2 | `tbl_pta_cliente` | `tipo_servicio='Capacitacion'` |
-| 3 | `tbl_indicadores_sst` | `categoria='capacitacion'` |
-
-### 3.1.2 Programa PyP Salud (ProgramaPromocionPrevencionSalud.php)
-
-| Fase | Tabla | Filtro |
-|------|-------|--------|
-| 1 | `tbl_pta_cliente` | `tipo_servicio='Programa PyP Salud'` |
-| 2 | `tbl_indicadores_sst` | `categoria='pyp_salud'` |
+| Componente | Estado |
+|---|---|
+| `tbl_doc_tipo_configuracion` | ✅ 31 tipos registrados |
+| `tbl_doc_secciones_config` | ✅ 293 secciones con `prompt_ia` |
+| `tbl_doc_firmantes_config` | ✅ Firmantes configurados |
+| Admin `/listSeccionesConfig` | ✅ Rutas registradas en `Routes.php` (líneas 1403-1409) |
+| `generarConIAReal()` | ✅ Lee prompt de BD vía `DocumentoConfigService` |
+| `getPromptParaSeccion()` en clases PHP | ✅ Eliminado de 32 clases y de la interfaz |
+| `getSecciones()` en clases PHP | ⚠️ Dead code (nadie la llama) — limpiar progresivamente |
+| `getFirmantesRequeridos()` en clases PHP | ⚠️ Dead code — limpiar progresivamente |
+| `getContenidoEstatico()` en clases PHP | 🔒 Aún en uso (líneas 279 y 1136 del controlador) |
 
 ---
 
-## Checklist para Nuevos Tipos de Documento
+## Discrepancias Factory vs BD (barrido 2026-02-18)
 
-Al crear un nuevo tipo de documento que use fases con datos de BD:
+### En Factory PHP pero SIN entrada en BD → fallan en runtime
 
-- [ ] **1. Crear clase** en `app/Libraries/DocumentosSSTTypes/`
-  - Nombre: `{TipoDocumento}.php` (PascalCase)
-  - Extender: `AbstractDocumentoSST`
+Si un usuario navega a `/documentos/generar/{tipo}/{id}`, `generarConIAReal()` lanzará
+error explícito porque el tipo no existe en `tbl_doc_tipo_configuracion`.
 
-- [ ] **2. Implementar métodos obligatorios:**
-  ```php
-  getTipoDocumento(): string    // 'programa_xyz'
-  getNombre(): string           // 'Programa XYZ'
-  getDescripcion(): string      // Descripción larga
-  getEstandar(): ?string        // '1.2.2'
-  getSecciones(): array         // Lista de secciones
-  getFirmantesRequeridos(): array
-  ```
+| tipo_documento | Clase PHP | ¿Tiene secciones en BD? | Acción requerida |
+|---|---|---|---|
+| `acta_constitucion_brigada` | ✅ | ❌ | Registrar en BD o confirmar si usa otro flujo |
+| `acta_constitucion_cocolab` | ✅ | ❌ | Registrar en BD o confirmar si usa otro flujo |
+| `acta_constitucion_copasst` | ✅ | ❌ | Registrar en BD o confirmar si usa otro flujo |
+| `acta_constitucion_vigia` | ✅ | ❌ | Registrar en BD o confirmar si usa otro flujo |
+| `acta_recomposicion_brigada` | ✅ | ❌ | Registrar en BD o confirmar si usa otro flujo |
+| `acta_recomposicion_cocolab` | ✅ | ❌ | Registrar en BD o confirmar si usa otro flujo |
+| `acta_recomposicion_copasst` | ✅ | ❌ | Registrar en BD o confirmar si usa otro flujo |
+| `acta_recomposicion_vigia` | ✅ | ❌ | Registrar en BD o confirmar si usa otro flujo |
+| `pve_riesgo_biomecanico` | ✅ | ❌ | Registrar en BD con secciones y prompts |
+| `pve_riesgo_psicosocial` | ✅ | ❌ | Registrar en BD con secciones y prompts |
 
-- [ ] **3. Sobrescribir `getContextoBase()`:**
-  - Consultar tablas de fases previas
-  - Formatear datos como texto para la IA
-  - Incluir instrucciones de uso
+> **Nota sobre actas:** Los documentos de actas (constitución/recomposición) posiblemente usan
+> un flujo diferente (no `/documentos/generar/`). Verificar con el módulo de Comités y Elecciones
+> antes de registrar en BD.
 
-- [ ] **4. Implementar `getPromptParaSeccion()`:**
-  - Primero consultar BD (`DocumentoConfigService`)
-  - Fallback a prompts estáticos
-  - Incluir instrucciones de usar datos del contexto
+### En BD pero SIN clase PHP en Factory → usan contexto base genérico
 
-- [ ] **5. Registrar en Factory** ⚠️ **OBLIGATORIO**:
-  ```php
-  // DocumentoSSTFactory.php
-  private static array $tiposRegistrados = [
-      'programa_xyz' => ProgramaXyz::class,
-  ];
-  ```
-  **Sin este paso, la generación mostrará "[Seccion no definida]"**
+Estos tipos cargarán la página sin error (BD los tiene), pero `getContextoBase()` usará
+`buildContextoBaseGenerico()` ya que no hay clase PHP. Solo es problema si son Tipo B.
 
-- [ ] **6. Probar generación:**
-  - Verificar que cada sección muestre datos reales
-  - Verificar que NO aparezca "[Seccion no definida]"
-  - Si falla, revisar pasos 1 y 5 primero
-
----
-
-## Estructura del Prompt Enviado a OpenAI
-
-```
-┌─────────────────────────────────────────────────────────┐
-│ SYSTEM PROMPT (IADocumentacionService)                  │
-│ - Reglas de redacción                                   │
-│ - Normativa colombiana (0312/2019, 1072/2015)          │
-│ - Restricciones según estándares (7/21/60)             │
-└─────────────────────────────────────────────────────────┘
-                          +
-┌─────────────────────────────────────────────────────────┐
-│ USER PROMPT                                             │
-│                                                         │
-│ CONTEXTO DEL CLIENTE: (automático)                     │
-│ - Nombre, NIT, dirección                               │
-│ - Actividad económica, nivel riesgo                    │
-│ - Trabajadores, COPASST/Vigía                          │
-│ - Peligros identificados                               │
-│                                                         │
-│ CONTEXTO BASE DEL DOCUMENTO: (getContextoBase)         │
-│ - Etapas configuradas (Fase 1)                         │
-│ - Actividades del PTA (Fase 2)                         │
-│ - Indicadores configurados (Fase 3)                    │
-│                                                         │
-│ INSTRUCCIÓN: (getPromptParaSeccion)                    │
-│ "Genera el contenido de la sección X usando los        │
-│  datos REALES listados arriba..."                      │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## Solución Implementada (2026-02-04)
-
-### Archivos Creados/Modificados
-
-1. **CREADO:** `app/Libraries/DocumentosSSTTypes/ProgramaInduccionReinduccion.php`
-   - 13 secciones definidas
-   - `getContextoBase()` consulta 3 tablas
-   - Prompts específicos para inducción
-
-2. **MODIFICADO:** `app/Libraries/DocumentosSSTTypes/DocumentoSSTFactory.php`
-   - Agregado registro: `'programa_induccion_reinduccion' => ProgramaInduccionReinduccion::class`
-
-### Resultado
-
-Ahora al generar cualquier sección del documento 1.2.2, la IA recibe:
-- ✅ Datos reales de las etapas configuradas
-- ✅ Actividades reales del Plan de Trabajo
-- ✅ Indicadores reales configurados
-- ✅ Contexto completo del cliente (peligros, trabajadores, comités, etc.)
+| tipo_documento | ¿Tiene secciones? | Observación |
+|---|---|---|
+| `matriz_requisitos_legales` | ❌ 0 secciones | No generará nada — configurar secciones en BD |
+| `plan_emergencias` | ❌ 0 secciones | No generará nada — configurar secciones en BD |
+| `politica_sst` | ❌ 0 secciones | **Duplicado** de `politica_sst_general` — considerar eliminar |
+| `reglamento_higiene_seguridad` | ❌ 0 secciones | No generará nada — configurar secciones en BD |
 
 ---
 
 ## Referencias
 
-- [TROUBLESHOOTING_GENERACION_IA.md](./TROUBLESHOOTING_GENERACION_IA.md) - Problemas comunes
-- [PROMPT_NUEVO_DOCUMENTO_SST.md](../PROMPT_NUEVO_DOCUMENTO_SST.md) - Guía para crear documentos
-- `app/Services/IADocumentacionService.php` - Servicio de IA
-- `app/Services/DocumentoConfigService.php` - Lectura de prompts desde BD
+- Admin prompts: `/listSeccionesConfig`
+- Service BD: `app/Services/DocumentoConfigService.php`
+- Controlador generación: `app/Controllers/DocumentosSSTController.php` → `generarConIAReal()`
+- Clases PHP: `app/Libraries/DocumentosSSTTypes/`
+- Factory: `app/Libraries/DocumentosSSTTypes/DocumentoSSTFactory.php`
+- Troubleshooting: `1_A_TROUBLESHOOTING_GENERACION_IA.md`

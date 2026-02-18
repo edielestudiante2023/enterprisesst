@@ -63,6 +63,10 @@ $routes->get('/listClients', 'ConsultantController::listClients');
 $routes->get('/editClient/(:num)', 'ConsultantController::editClient/$1');
 $routes->post('/updateClient/(:num)', 'ConsultantController::updateClient/$1');
 $routes->get('/deleteClient/(:num)', 'ConsultantController::deleteClient/$1');
+$routes->post('/reactivarCliente/(:num)', 'ConsultantController::reactivarCliente/$1');
+$routes->post('/retirarCliente/(:num)', 'ConsultantController::retirarCliente/$1');
+$routes->post('/marcarPendiente/(:num)', 'ConsultantController::marcarPendiente/$1');
+$routes->post('/cliente/paz-y-salvo/(:num)', 'ConsultantController::emitirPazYSalvo/$1');
 $routes->post('/addClientPost', 'ConsultantController::addClientPost');
 $routes->get('/responsableSGSST/(:num)', 'SGSSTPlanear::responsableDelSGSST/$1');
 
@@ -993,6 +997,7 @@ $routes->get('/documentos-sst/(:num)/politica-acoso-laboral/(:num)', 'Documentos
 $routes->get('/documentos-sst/(:num)/politica-violencias-genero/(:num)', 'DocumentosSSTController::politicaViolenciasGenero/$1/$2');
 $routes->get('/documentos-sst/(:num)/politica-discriminacion/(:num)', 'DocumentosSSTController::politicaDiscriminacion/$1/$2');
 $routes->get('/documentos-sst/(:num)/politica-desconexion-laboral/(:num)', 'DocumentosSSTController::politicaDesconexionLaboral/$1/$2');
+$routes->get('/documentos-sst/(:num)/politica-incapacidades-licencias/(:num)', 'DocumentosSSTController::politicaIncapacidadesLicencias/$1/$2');
 
 // 2.8 Comunicación del SG-SST
 $routes->get('/documentos-sst/(:num)/mecanismos-comunicacion-sgsst/(:num)', 'DocumentosSSTController::mecanismosComunicacionSgsst/$1/$2');
@@ -1394,5 +1399,13 @@ $routes->get('/miembro-token/(:segment)/acta/(:num)', 'MiembroComiteController::
 $routes->get('/miembro-token/(:segment)/comite/(:num)/nueva-acta', 'MiembroComiteController::nuevaActa/$1/$2');
 $routes->post('/miembro-token/(:segment)/comite/(:num)/guardar-acta', 'MiembroComiteController::guardarActa/$1/$2');
 $routes->get('/miembro-token/(:segment)/acta/(:num)/editar', 'MiembroComiteController::editarActa/$1/$2');
+
+/* ===================== SECCIONES CONFIG (tbl_doc_secciones_config) ===================== */
+$routes->get('/listSeccionesConfig', 'DocSeccionesConfigController::index');
+$routes->get('/addSeccionConfig', 'DocSeccionesConfigController::create');
+$routes->post('/addSeccionConfigPost', 'DocSeccionesConfigController::store');
+$routes->get('/editSeccionConfig/(:num)', 'DocSeccionesConfigController::edit/$1');
+$routes->post('/editSeccionConfigPost/(:num)', 'DocSeccionesConfigController::update/$1');
+$routes->get('/deleteSeccionConfig/(:num)', 'DocSeccionesConfigController::delete/$1');
 $routes->post('/miembro-token/(:segment)/acta/(:num)/cerrar', 'MiembroComiteController::cerrarActa/$1/$2');
 $routes->get('/miembro-token/(:segment)/compromisos', 'MiembroComiteController::misCompromisos/$1');

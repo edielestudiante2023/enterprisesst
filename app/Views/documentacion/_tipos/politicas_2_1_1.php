@@ -1,7 +1,7 @@
 <?php
 /**
  * Vista de Tipo: 2.1.1 Políticas de Seguridad y Salud en el Trabajo
- * Carpeta con dropdown para 6 políticas de SST
+ * Carpeta con dropdown para 8 políticas de SST
  * Variables: $carpeta, $cliente, $fasesInfo, $documentosSSTAprobados, $contextoCliente
  */
 
@@ -19,7 +19,7 @@ if (!empty($documentosSSTAprobados)) {
         }
     }
 }
-$totalEsperado = 7; // 7 políticas (incluye Desconexión Laboral - Ley 2191/2022)
+$totalEsperado = 8; // 8 políticas (incluye Desconexión Laboral - Ley 2191/2022 e Incapacidades - Ley 2466/2025)
 ?>
 
 <!-- Card de Carpeta con Dropdown de Políticas -->
@@ -60,6 +60,7 @@ $totalEsperado = 7; // 7 políticas (incluye Desconexión Laboral - Ley 2191/202
                                 'politica_discriminacion'         => ['icono' => 'bi-people',              'color' => 'text-info',    'nombre' => 'Política Discriminación'],
                                 'politica_desconexion_laboral'    => ['icono' => 'bi-power',               'color' => 'text-success', 'nombre' => 'Política Desconexión Laboral'],
                                 'politica_prevencion_emergencias' => ['icono' => 'bi-exclamation-triangle','color' => 'text-danger',  'nombre' => 'Política Emergencias'],
+                                'politica_incapacidades_licencias'=> ['icono' => 'bi-file-medical',        'color' => 'text-danger',  'nombre' => 'Política Incapacidades y Licencias'],
                             ];
                             foreach ($politicas as $tipo => $info):
                                 $yaExiste = isset($docsExistentesTipos[$tipo]);
@@ -106,6 +107,7 @@ $totalEsperado = 7; // 7 políticas (incluye Desconexión Laboral - Ley 2191/202
                 <li>Política de Prevención de la Discriminación, Maltrato y Violencia</li>
                 <li>Política de Desconexión Laboral (Ley 2191/2022)</li>
                 <li>Política de Prevención y Respuesta ante Emergencias</li>
+                <li>Política de Gestión de Incapacidades y Licencias (Ley 2466/2025)</li>
             </ol>
         </div>
     </div>

@@ -65,12 +65,6 @@ class ManualConvivenciaLaboral extends AbstractDocumentoSST
         return ['responsable_sst', 'representante_legal'];
     }
 
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string
-    {
-        // Este documento NO usa IA - retorna vacio
-        return '';
-    }
-
     /**
      * Contenido estatico del Manual de Convivencia Laboral
      * Basado en Resolucion 3461 de 2025

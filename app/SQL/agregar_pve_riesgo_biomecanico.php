@@ -33,7 +33,7 @@ VALUES
  'PVE de Riesgo Biomecanico',
  'Programa de Vigilancia Epidemiologica para la prevencion de desordenes musculoesqueleticos asociados a factores de riesgo biomecanico, incluyendo posturas, movimientos repetitivos, manipulacion manual de cargas y vibraciones',
  '4.2.3',
- 'secciones_ia',
+ 'programa_con_pta',
  'programas',
  'bi-body-text',
  20)

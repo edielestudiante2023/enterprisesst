@@ -123,6 +123,10 @@ BEGIN
     INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
     VALUES (p_id_cliente, v_id_planear, '1.2.3. Responsables del Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST con curso virtual de 50 horas', '1.2.3', 11, 'estandar', 'award');
 
+    -- 1.2.4 - Aplica: 7, 21, 60
+    INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
+    VALUES (p_id_cliente, v_id_planear, '1.2.4. Reglamento de Higiene y Seguridad Industrial', '1.2.4', 12, 'estandar', 'clipboard-check');
+
     -- ========================================================================
     -- PLANEAR - Categoria II: GESTION INTEGRAL DEL SG-SST (15%)
     -- Estandares 2.1.1 a 2.11.1
@@ -130,25 +134,25 @@ BEGIN
 
     -- 2.1.1 - Aplica: 7, 21, 60
     INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-    VALUES (p_id_cliente, v_id_planear, '2.1.1. Politica del Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST firmada, fechada y comunicada al COPASST', '2.1.1', 12, 'estandar', 'file-earmark-text');
+    VALUES (p_id_cliente, v_id_planear, '2.1.1. Politica del Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST firmada, fechada y comunicada al COPASST', '2.1.1', 13, 'estandar', 'file-earmark-text');
 
     -- 2.2.1 - Aplica: 7, 21, 60
     INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-    VALUES (p_id_cliente, v_id_planear, '2.2.1. Objetivos definidos, claros, medibles, cuantificables, con metas, documentados, revisados del SG-SST', '2.2.1', 13, 'estandar', 'bullseye');
+    VALUES (p_id_cliente, v_id_planear, '2.2.1. Objetivos definidos, claros, medibles, cuantificables, con metas, documentados, revisados del SG-SST', '2.2.1', 14, 'estandar', 'bullseye');
 
     -- 2.3.1 - Aplica: 60
     IF p_nivel_estandares = 60 THEN
         INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-        VALUES (p_id_cliente, v_id_planear, '2.3.1. Evaluacion e identificacion de prioridades', '2.3.1', 14, 'estandar', 'clipboard-check');
+        VALUES (p_id_cliente, v_id_planear, '2.3.1. Evaluacion e identificacion de prioridades', '2.3.1', 15, 'estandar', 'clipboard-check');
     END IF;
 
     -- 2.4.1 - Aplica: 7, 21, 60
     INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-    VALUES (p_id_cliente, v_id_planear, '2.4.1. Plan que identifica objetivos, metas, responsabilidad, recursos con cronograma y firmado', '2.4.1', 15, 'estandar', 'calendar');
+    VALUES (p_id_cliente, v_id_planear, '2.4.1. Plan que identifica objetivos, metas, responsabilidad, recursos con cronograma y firmado', '2.4.1', 16, 'estandar', 'calendar');
 
     -- 2.5.1 - Aplica: 7, 21, 60
     INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-    VALUES (p_id_cliente, v_id_planear, '2.5.1. Archivo o retencion documental del Sistema de Gestion en Seguridad y Salud en el Trabajo SG-SST', '2.5.1', 16, 'estandar', 'folder2');
+    VALUES (p_id_cliente, v_id_planear, '2.5.1. Archivo o retencion documental del Sistema de Gestion en Seguridad y Salud en el Trabajo SG-SST', '2.5.1', 17, 'estandar', 'folder2');
     SET v_id_251 = LAST_INSERT_ID();
 
     -- 2.5.1.1 - Sub-carpeta: Listado Maestro de Documentos Externos (Aplica: 7, 21, 60)
@@ -158,35 +162,35 @@ BEGIN
     -- 2.6.1 - Aplica: 60
     IF p_nivel_estandares = 60 THEN
         INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-        VALUES (p_id_cliente, v_id_planear, '2.6.1. Rendicion sobre el desempeno', '2.6.1', 17, 'estandar', 'bar-chart');
+        VALUES (p_id_cliente, v_id_planear, '2.6.1. Rendicion sobre el desempeno', '2.6.1', 18, 'estandar', 'bar-chart');
     END IF;
 
     -- 2.7.1 - Aplica: 7, 21, 60
     INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-    VALUES (p_id_cliente, v_id_planear, '2.7.1. Matriz legal', '2.7.1', 18, 'estandar', 'book-half');
+    VALUES (p_id_cliente, v_id_planear, '2.7.1. Matriz legal', '2.7.1', 19, 'estandar', 'book-half');
 
     -- 2.8.1 - Aplica: 60
     IF p_nivel_estandares = 60 THEN
         INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-        VALUES (p_id_cliente, v_id_planear, '2.8.1. Mecanismos de comunicacion, auto reporte en Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST', '2.8.1', 19, 'estandar', 'megaphone');
+        VALUES (p_id_cliente, v_id_planear, '2.8.1. Mecanismos de comunicacion, auto reporte en Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST', '2.8.1', 20, 'estandar', 'megaphone');
     END IF;
 
     -- 2.9.1 - Aplica: 60
     IF p_nivel_estandares = 60 THEN
         INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-        VALUES (p_id_cliente, v_id_planear, '2.9.1. Identificacion, evaluacion, para adquisicion de productos y servicios en Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST', '2.9.1', 20, 'estandar', 'cart');
+        VALUES (p_id_cliente, v_id_planear, '2.9.1. Identificacion, evaluacion, para adquisicion de productos y servicios en Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST', '2.9.1', 21, 'estandar', 'cart');
     END IF;
 
     -- 2.10.1 - Aplica: 60
     IF p_nivel_estandares = 60 THEN
         INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-        VALUES (p_id_cliente, v_id_planear, '2.10.1. Evaluacion y seleccion de proveedores y contratistas', '2.10.1', 21, 'estandar', 'building');
+        VALUES (p_id_cliente, v_id_planear, '2.10.1. Evaluacion y seleccion de proveedores y contratistas', '2.10.1', 22, 'estandar', 'building');
     END IF;
 
     -- 2.11.1 - Aplica: 60
     IF p_nivel_estandares = 60 THEN
         INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-        VALUES (p_id_cliente, v_id_planear, '2.11.1. Evaluacion del impacto de cambios internos y externos en el Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST', '2.11.1', 22, 'estandar', 'arrow-repeat');
+        VALUES (p_id_cliente, v_id_planear, '2.11.1. Evaluacion del impacto de cambios internos y externos en el Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST', '2.11.1', 23, 'estandar', 'arrow-repeat');
     END IF;
 
     -- ========================================================================
@@ -438,21 +442,24 @@ DELIMITER ;
 -- ============================================================================
 -- Resumen de carpetas por nivel (verificado contra Res. 0312/2019):
 -- ============================================================================
--- NIVEL 7 (Microempresa <=10 trab Riesgo I-III): 21 estandares
+-- NIVEL 7 (Microempresa <=10 trab Riesgo I-III): 21 estandares + 1 carpeta custom
 --   PLANEAR: 1.1.1, 1.1.2, 1.1.3, 1.1.4, 1.1.7, 1.1.8, 1.2.1, 1.2.2, 1.2.3,
---            2.1.1, 2.2.1, 2.4.1, 2.5.1, 2.7.1
+--            1.2.4(*), 2.1.1, 2.2.1, 2.4.1, 2.5.1, 2.7.1
 --   HACER:   3.1.4, 3.2.1, 3.2.2, 4.1.1, 4.1.2, 4.2.1, 4.2.6
 --   VERIFICAR: (vacio)
 --   ACTUAR: (vacio)
---   TOTAL: 21 estandares + 4 PHVA + 1 raiz = 26 carpetas
+--   TOTAL: 22 carpetas estandar + 4 PHVA + 1 raiz = 27 carpetas
 --
--- NIVEL 21 (11-50 trab o <=10 Riesgo IV-V): 29 estandares
---   PLANEAR: los 14 del nivel 7 + 1.1.6
+-- NIVEL 21 (11-50 trab o <=10 Riesgo IV-V): 29 estandares + 1 carpeta custom
+--   PLANEAR: los 15 del nivel 7 + 1.1.6
 --   HACER:   los 7 del nivel 7 + 3.1.1, 3.1.2, 3.1.6, 4.2.5, 5.1.1, 5.1.2
 --   VERIFICAR: 6.1.3
 --   ACTUAR: (vacio)
---   TOTAL: 29 estandares + 4 PHVA + 1 raiz = 34 carpetas
+--   TOTAL: 30 carpetas estandar + 4 PHVA + 1 raiz = 35 carpetas
 --
--- NIVEL 60 (>50 trabajadores): 60 estandares
---   Todos los 60 estandares + 4 PHVA + 1 raiz = 65 carpetas
+-- NIVEL 60 (>50 trabajadores): 60 estandares + 1 carpeta custom
+--   Todos los 60 estandares + 1.2.4(*) + 4 PHVA + 1 raiz = 66 carpetas
+--
+-- (*) 1.2.4 es carpeta organizacional para el Reglamento de Higiene y Seguridad
+--     Industrial (CST arts. 349-352, Res. 1016/1989). Aplica todos los niveles.
 -- ============================================================================

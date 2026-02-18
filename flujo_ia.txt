@@ -1,0 +1,237 @@
+Flujo Universal de Documentos IA
+Leyenda: 👤 BOTÓN/ACCIÓN USUARIO — ⚙️ AUTOMÁTICO SISTEMA — 📋 MODAL — 🔔 TOAST — 📧 EMAIL
+
+Actualizado: 2026-02-18
+Cambio interno: prompts de secciones ahora vienen de tbl_doc_secciones_config (BD),
+no de clases PHP. El UX es idéntico, excepto que si falta prompt en BD → error toast.
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  FASE 0 — ACCESO                                                     ║
+║  Contexto: Carpeta Documentación → Editor IA                         ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  👤 Clic "Crear con IA" (en carpeta documentación)
+                    │
+                    ▼
+  ⚙️ Redirige a /documentos/generar/{tipo}/{id_cliente}
+  ⚙️ generarConIA() → DocumentoConfigService lee tipo desde tbl_doc_tipo_configuracion
+     → Si tipo no existe en BD: error "Tipo de documento no válido"
+     → Si tipo existe: carga secciones desde tbl_doc_secciones_config
+                    │
+                    ▼
+  ⚙️ SweetAlert se dispara automáticamente UNA SOLA VEZ por sesión
+  ┌─────────────────────────────────────────────────────────────────┐
+  │ 📋 SWEETALERT: "Verificación de datos"                          │
+  │   Muestra: empresa, actividad económica, riesgo, trabajadores,  │
+  │   peligros, comités, PTA (si Tipo B), indicadores (si Tipo B)   │
+  │                                                                 │
+  │   👤 [Confirmar y continuar]    👤 [Generar de todas formas]    │
+  └─────────────────────────────────────────────────────────────────┘
+                    │ confirma
+                    ▼
+  ⚙️ verificacionConfirmada = true (no vuelve a dispararse)
+  ⚙️ Carga vista generar_con_ia.php con sidebar lateral
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  FASE 1 — GENERACIÓN DE SECCIONES                                    ║
+║  Contexto: /documentos/generar/{tipo}/{id}  →  Sidebar lateral       ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  OPCIÓN A: Generación sección por sección                        │
+  │                                                                  │
+  │  👤 Clic "Generar con IA" (botón por sección)                   │
+  │       ⚙️ 🔔 Toast "progress" aparece (Generando...)             │
+  │       ⚙️ POST /documentos/generar-seccion                        │
+  │            PASO 1: Lee nombre, número y prompt_ia desde          │
+  │                    tbl_doc_secciones_config (BD)                 │
+  │            PASO 2: getContextoBase() desde clase PHP             │
+  │                    (Tipo B: incluye PTA + indicadores)           │
+  │                    (Tipo A: solo datos del cliente)              │
+  │            PASO 3: Marco normativo desde tbl_doc_prompts         │
+  │            PASO 4: → OpenAI API con prompt de BD                 │
+  │                                                                  │
+  │       Si sección sin prompt_ia en BD:                           │
+  │       ⚙️ 🔔 Toast error "Sección sin prompt. Ir a              │
+  │                           /listSeccionesConfig"                  │
+  │                                                                  │
+  │       ⚙️ 🔔 Toast "ia" (contenido listo)                        │
+  │       ⚙️ 🔔 Toast "database" (tablas consultadas + conteos)     │
+  │       ⚙️ Contenido aparece en el editor de la sección            │
+  │                                                                  │
+  │  👤 Edita el contenido generado (editor inline)                 │
+  │                                                                  │
+  │  👤 Clic "Guardar sección"                                       │
+  │       ⚙️ POST /documentos/guardar-seccion                        │
+  │       ⚙️ Si es el 1er guardado: crea tbl_documentos_sst         │
+  │            estado = 'borrador'                                   │
+  │       ⚙️ 🔔 Toast "save" confirma                               │
+  │       ⚙️ Botón "Enviar a Firmas" se activa (AJAX)               │
+  │                                                                  │
+  │  👤 Clic "Aprobar sección"                                       │
+  │       ⚙️ POST /documentos/aprobar-seccion                        │
+  │       ⚙️ tbl_doc_secciones.aprobado = 1                         │
+  │       ⚙️ Barra de progreso avanza                                │
+  └──────────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  OPCIÓN B: Generación en lote                                    │
+  │                                                                  │
+  │  👤 Clic "Generar Todo" (sidebar)                               │
+  │       ⚙️ modoBatch = true (suprime toasts individuales)         │
+  │       ⚙️ Modal de progreso con barra por sección                 │
+  │       ⚙️ Genera y guarda TODAS las secciones secuencialmente    │
+  │       ⚙️ Solo toasts de ERROR no se suprimen                    │
+  └──────────────────────────────────────────────────────────────────┘
+
+  ⚙️ AUTOMÁTICO: getEstadoIA() evalúa continuamente
+      ¿Todas las secciones tienen aprobado = 1?
+                    │ SÍ
+                    ▼
+  ⚙️ estado_ia calculado = 'aprobado'
+  ⚙️ Botón "Aprobar Documento" se HABILITA en sidebar
+
+  ┌──────────────────────────────────────────────────────┐
+  │  estado en BD = "borrador"  (aún no se ha aprobado) │
+  └──────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  FASE 2 — APROBACIÓN DEL DOCUMENTO                                   ║
+║  Contexto: Sidebar del editor IA  →  estado pasa a 'aprobado'        ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  👤 Clic "Aprobar Documento" (#btnAprobarDocumento en sidebar)
+                    │
+                    ▼
+  ⚙️ Abre modal #modalAprobarDocumento
+  ┌─────────────────────────────────────────────────────────────────┐
+  │ 📋 MODAL "Aprobar Documento"                                    │
+  │   👤 Escribe descripción del cambio (obligatoria, min 10 chars) │
+  │   👤 Selecciona tipo: [MENOR 1.0→1.1] [MAYOR 1.x→2.0]         │
+  │        (primera aprobación siempre = 1.0, tipo no importa)      │
+  │                                                                 │
+  │   👤 Clic [Confirmar]                                           │
+  └─────────────────────────────────────────────────────────────────┘
+                    │
+                    ▼
+  ⚙️ POST /documentos-sst/aprobar-documento
+  ⚙️ DocumentoVersionService::aprobarVersion() en transacción BD:
+      ├─ Marca versiones anteriores → estado='obsoleto' en tbl_doc_versiones_sst
+      ├─ INSERT nuevo registro:
+      │     estado='vigente', version_texto='1.0'
+      │     contenido_snapshot = JSON completo (foto del documento)
+      │     hash_documento = SHA-256
+      └─ UPDATE tbl_documentos_sst:
+            estado = 'aprobado'
+            version = 1, fecha_aprobacion = NOW()
+  ⚙️ 🔔 Toast success "Documento aprobado - versión 1.0"
+
+  ┌──────────────────────────────────────────────────────┐
+  │  estado = "aprobado"  +  versión 1.0 vigente         │
+  └──────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  FASE 3 — FIRMA ELECTRÓNICA (opcional)                               ║
+║  Contexto: Sidebar editor IA  o  Toolbar vista web                   ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  (Disponible desde estados: borrador / generado / aprobado)
+
+  👤 Clic "Enviar a Firmas" (sidebar o toolbar)
+                    │
+                    ▼
+  ⚙️ FirmaElectronicaController determina firmantes:
+      ¿requiere_delegado_sst = true?
+          → 3 firmantes: Delegado → Consultor → RepLegal
+      ¿estandares ≤ 10 sin delegado?
+          → 2 firmantes: Consultor → RepLegal
+      DEFAULT (>10 estandares)
+          → 3 firmantes: Consultor → Vigia/COPASST → RepLegal
+
+  ⚙️ INSERT tbl_doc_firma_solicitudes (token único por firmante, orden)
+  ⚙️ estado = 'pendiente_firma'
+  ⚙️ 📧 Email automático al PRIMER firmante (con enlace único)
+
+            Firmante recibe email
+                    │
+                    ▼
+  👤 Clic enlace en email → Página pública de firma
+  👤 Firma: [Dibujar] o [Subir imagen] o [Texto]
+  👤 Clic "Firmar documento"
+                    │
+                    ▼
+  ⚙️ INSERT tbl_doc_firma_evidencias (ip, user_agent, firma_imagen base64)
+  ⚙️ solicitud firmante N → estado='firmado'
+  ⚙️ AUTOMÁTICO: ¿quedan firmantes pendientes?
+      │ SÍ → siguiente solicitud pasa a 'pendiente'
+      │       📧 Email automático al siguiente firmante
+      │ NO ↓
+  ⚙️ estado documento = 'firmado'
+  ⚙️ publicarDocumentoFirmado() → genera PDF con firmas embebidas
+
+  ┌──────────────────────────────────────────────────────┐
+  │  estado = "firmado"                                  │
+  │  Toolbar muestra: [Ver Firmas] en lugar de [Enviar]  │
+  └──────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  FLUJO ALTERNATIVO — NUEVA VERSIÓN                                   ║
+║  Contexto: Toolbar vista web  →  vuelve al editor IA                 ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  (Solo disponible desde estado 'aprobado')
+
+  👤 Clic "Iniciar nueva versión" (toolbar vista web)
+                    │
+                    ▼
+  ⚙️ Abre modal #modalNuevaVersion
+  ┌─────────────────────────────────────────────────────────────────┐
+  │ 📋 MODAL "Nueva Versión"                                        │
+  │   👤 Selecciona: [MENOR 1.0→1.1]  [MAYOR 1.0→2.0]             │
+  │   👤 Escribe motivo del cambio (min 10 chars)                   │
+  │   ⚙️ Preview de nueva versión calculada en tiempo real          │
+  │                                                                 │
+  │   👤 Clic [Iniciar]    👤 Clic [Cancelar versión]              │
+  └─────────────────────────────────────────────────────────────────┘
+         │ Iniciar                              │ Cancelar
+         ▼                                      ▼
+  ⚙️ POST /documentos-sst/           ⚙️ POST /documentos-sst/
+      iniciar-nueva-version               cancelar-nueva-version
+  ⚙️ estado = 'borrador'             ⚙️ estado regresa a 'aprobado'
+  ⚙️ guarda tipo_cambio_pendiente    ⚙️ descarta cambios del borrador
+  ⚙️ Redirige al editor IA
+         │
+         ▼
+  → (repite desde FASE 1 — solo edita secciones necesarias)
+         │
+         ▼ (aprueba)
+  ⚙️ Versión anterior → 'obsoleto'
+  ⚙️ Nueva versión → 'vigente' (1.1 ó 2.0)
+  ⚙️ estado = 'aprobado'
+
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  FUENTES DE DATOS INTERNAS (sin impacto en UX)                       ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  Al hacer clic "Generar con IA", el backend construye el prompt así:
+
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  tbl_doc_secciones_config.prompt_ia  ← INSTRUCCIÓN PRINCIPAL   │
+  │  (editable desde /listSeccionesConfig)                          │
+  ├─────────────────────────────────────────────────────────────────┤
+  │  PHP class::getContextoBase()        ← DATOS DEL MÓDULO        │
+  │  Tipo A: solo datos del cliente                                 │
+  │  Tipo B: cliente + PTA + indicadores (consulta BD)             │
+  ├─────────────────────────────────────────────────────────────────┤
+  │  MarcoNormativoService               ← NORMATIVA               │
+  │  (excepto sección marco_legal)                                  │
+  └─────────────────────────────────────────────────────────────────┘
+                    │
+                    ▼
+             OpenAI API → contenido generado

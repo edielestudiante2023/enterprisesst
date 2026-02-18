@@ -38,6 +38,7 @@ class DocumentoSSTFactory
         'politica_discriminacion' => PoliticaDiscriminacion::class,
         'politica_prevencion_emergencias' => PoliticaPrevencionEmergencias::class,
         'politica_desconexion_laboral' => PoliticaDesconexionLaboral::class,
+        'politica_incapacidades_licencias' => PoliticaIncapacidadesLicencias::class,
         // 1.1.8 Conformacion Comite de Convivencia
         'manual_convivencia_laboral' => ManualConvivenciaLaboral::class,
         // 2.2.1 Objetivos y Metas del SG-SST
@@ -69,6 +70,10 @@ class DocumentoSSTFactory
         'pve_riesgo_psicosocial' => PveRiesgoPsicosocial::class,
         // 4.2.5 Mantenimiento Periodico de Instalaciones, Equipos, Maquinas, Herramientas
         'programa_mantenimiento_periodico' => ProgramaMantenimientoPeriodico::class,
+        // 5.1.1 Plan de Prevencion, Preparacion y Respuesta ante Emergencias
+        'plan_emergencias' => PlanEmergencias::class,
+        // 1.1.2 Reglamento de Higiene y Seguridad Industrial
+        'reglamento_higiene_seguridad' => ReglamentoHigieneSeguridadIndustrial::class,
         // 1.1.5 Identificacion de Trabajadores de Alto Riesgo y Cotizacion de Pension Especial
         'identificacion_alto_riesgo' => IdentificacionAltoRiesgo::class,
         // Actas de Constitucion - Comites Electorales

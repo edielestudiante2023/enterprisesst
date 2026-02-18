@@ -121,22 +121,6 @@ class ProcedimientoMatrizLegal extends AbstractDocumentoSST
     }
 
     /**
-     * Obtiene el prompt para una seccion desde BD
-     */
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string
-    {
-        // Intentar obtener desde BD
-        $promptBD = $this->getConfigService()->obtenerPromptSeccion($this->getTipoDocumento(), $seccionKey);
-
-        if (!empty($promptBD)) {
-            return $promptBD;
-        }
-
-        // Fallback a prompts estaticos
-        return $this->getPromptFallback($seccionKey, $estandares);
-    }
-
-    /**
      * Prompts de fallback si BD no tiene configuracion
      */
     protected function getPromptFallback(string $seccionKey, int $estandares): string

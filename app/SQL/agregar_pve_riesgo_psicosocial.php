@@ -33,7 +33,7 @@ VALUES
  'PVE de Riesgo Psicosocial',
  'Programa de Vigilancia Epidemiologica para la prevencion de efectos en la salud derivados de la exposicion a factores de riesgo psicosocial, incluyendo estres laboral, acoso, carga mental, jornadas laborales y relaciones interpersonales',
  '4.2.3',
- 'secciones_ia',
+ 'programa_con_pta',
  'programas',
  'bi-brain',
  21)

@@ -2,8 +2,6 @@
 
 namespace App\Libraries\DocumentosSSTTypes;
 
-use App\Services\DocumentoConfigService;
-
 /**
  * Clase PveRiesgoPsicosocial
  *
@@ -16,8 +14,6 @@ use App\Services\DocumentoConfigService;
  */
 class PveRiesgoPsicosocial extends AbstractDocumentoSST
 {
-    private ?DocumentoConfigService $configService = null;
-
     public function getTipoDocumento(): string
     {
         return 'pve_riesgo_psicosocial';
@@ -215,113 +211,6 @@ INSTRUCCIONES DE GENERACIÓN:
             log_message('error', "Error obteniendo indicadores PVE Psicosocial: " . $e->getMessage());
             return "Error al obtener indicadores: " . $e->getMessage();
         }
-    }
-
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string
-    {
-        try {
-            if ($this->configService === null) {
-                $this->configService = new DocumentoConfigService();
-            }
-
-            $prompt = $this->configService->obtenerPromptSeccion(
-                $this->getTipoDocumento(),
-                $seccionKey
-            );
-
-            if (!empty($prompt)) {
-                return str_replace('{ESTANDARES}', (string)$estandares, $prompt);
-            }
-
-        } catch (\Exception $e) {
-            log_message('warning', "Error obteniendo prompt de BD para {$seccionKey}: " . $e->getMessage());
-        }
-
-        return $this->getPromptEstatico($seccionKey, $estandares);
-    }
-
-    private function getPromptEstatico(string $seccionKey, int $estandares): string
-    {
-        $prompts = [
-            'introduccion' => "Genera una introducción para el PVE de Riesgo Psicosocial.
-Usa el contexto de la empresa y menciona la importancia de la vigilancia de factores psicosociales.
-Incluye referencia a la Resolución 0312/2019 estándar 4.2.3, Resolución 2646/2008 y Resolución 2764/2022.
-Máximo 3 párrafos.",
-
-            'objetivo_general' => "Genera el objetivo general del PVE de Riesgo Psicosocial.
-Debe ser un objetivo SMART orientado a identificar, evaluar e intervenir factores de riesgo psicosocial.
-IMPORTANTE: El objetivo debe estar alineado con las ACTIVIDADES registradas en el Plan de Trabajo.",
-
-            'objetivos_especificos' => "Genera los objetivos específicos del PVE.
-IMPORTANTE: Los objetivos deben derivarse de las ACTIVIDADES del PVE listadas en el contexto.
-Incluir mínimo 5 objetivos que aborden: diagnóstico con batería, intervención, capacitación, seguimiento a casos y evaluación.
-Presentar en formato de lista numerada.",
-
-            'alcance' => "Genera el alcance del PVE de Riesgo Psicosocial.
-Debe especificar:
-- A quiénes aplica (todos los trabajadores)
-- Qué factores cubre (intralaborales, extralaborales, estrés)
-- Articulación con el Comité de Convivencia Laboral
-- Período de vigencia",
-
-            'marco_legal' => "Genera el marco legal del PVE de Riesgo Psicosocial.
-Incluir:
-- Resolución 0312 de 2019 (Estándar 4.2.3)
-- Resolución 2646 de 2008 (Factores de riesgo psicosocial)
-- Resolución 2764 de 2022 (Batería de riesgo psicosocial)
-- Ley 1010 de 2006 (Acoso laboral)
-- Decreto 1072 de 2015 (Decreto Único Reglamentario)
-- Ley 1616 de 2013 (Salud mental)
-- Resolución 2404 de 2019 (Guía técnica)",
-
-            'definiciones' => "Genera las definiciones técnicas relevantes para el PVE de Riesgo Psicosocial.
-Incluir: Factor de riesgo psicosocial, Factor intralaboral, Factor extralaboral, Estrés laboral, Batería de riesgo psicosocial, Acoso laboral, Burnout, Carga mental, Clima organizacional, Comité de Convivencia Laboral.",
-
-            'responsabilidades' => "Genera las responsabilidades para el PVE de Riesgo Psicosocial.
-Incluir responsabilidades de:
-- Representante Legal o Alta Dirección
-- Responsable del SG-SST
-- Psicólogo especialista en SST
-- COPASST o Vigía de SST
-- Comité de Convivencia Laboral
-- Trabajadores",
-
-            'metodologia' => "Genera la metodología del PVE de Riesgo Psicosocial.
-IMPORTANTE: La metodología debe describir CÓMO se ejecutarán las ACTIVIDADES REALES listadas en el contexto.
-Estructura en fases:
-1. Diagnóstico: Aplicación de Batería de Riesgo Psicosocial (Res. 2764/2022)
-2. Análisis: Clasificación de resultados por dominios y dimensiones
-3. Intervención: Acciones según nivel de riesgo (primaria, secundaria, terciaria)
-4. Seguimiento: Monitoreo de casos alto/muy alto, articulación con EPS
-5. Evaluación: Medición de indicadores y reaplicación de batería",
-
-            'cronograma' => "Genera el cronograma de actividades del PVE de Riesgo Psicosocial.
-IMPORTANTE: Usa las ACTIVIDADES REALES del Plan de Trabajo listadas en el contexto.
-Presenta las actividades con sus meses programados en formato de tabla markdown.
-Columnas: Actividad | Responsable | Ene | Feb | Mar | Abr | May | Jun | Jul | Ago | Sep | Oct | Nov | Dic",
-
-            'indicadores' => "Define los indicadores del PVE de Riesgo Psicosocial.
-IMPORTANTE: Usa los INDICADORES CONFIGURADOS listados en el contexto.
-Presenta cada indicador con: nombre, tipo, fórmula, meta y periodicidad.",
-
-            'recursos' => "Genera la sección de recursos necesarios para el PVE.
-Basándote en las ACTIVIDADES del Plan de Trabajo, identifica:
-- Recursos humanos (psicólogo especialista en SST obligatorio para aplicación de batería)
-- Recursos físicos (espacios privados para aplicación)
-- Recursos financieros
-- Recursos tecnológicos (plataforma para batería)",
-
-            'evaluacion_seguimiento' => "Genera la sección de Evaluación y Seguimiento del PVE.
-IMPORTANTE: Usa los INDICADORES listados en el contexto.
-Incluye:
-- Periodicidad de medición de cada indicador
-- Frecuencia de reaplicación de la batería (mínimo cada 2 años según Res. 2764/2022)
-- Seguimiento a casos individuales de riesgo alto/muy alto
-- Articulación con Comité de Convivencia Laboral
-- Proceso de mejora continua"
-        ];
-
-        return $prompts[$seccionKey] ?? "Genera el contenido para la sección '{$seccionKey}' del PVE de Riesgo Psicosocial.";
     }
 
     public function getContenidoEstatico(string $seccionKey, array $cliente, ?array $contexto, int $estandares, int $anio): string

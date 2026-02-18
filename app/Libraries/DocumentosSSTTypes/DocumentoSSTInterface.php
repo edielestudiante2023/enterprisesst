@@ -6,104 +6,53 @@ namespace App\Libraries\DocumentosSSTTypes;
  * Interface DocumentoSSTInterface
  *
  * Contrato que deben implementar todos los tipos de documentos del SG-SST.
- * Esta interfaz permite agregar nuevos tipos de documentos de forma escalable
- * sin modificar el controlador principal.
  *
- * PATRÓN: Strategy Pattern
+ * ARQUITECTURA (2026-02-18):
+ * - Secciones, prompts y firmantes viven en BD (tbl_doc_secciones_config, tbl_doc_firmantes_config).
+ * - Las clases PHP son responsables SOLO de lógica que requiere ejecución de código:
+ *   → getContextoBase() para Tipo B (consulta PTA e indicadores de BD).
+ *   → Tipo A usa la implementación base de AbstractDocumentoSST.
+ * - NO hardcodear secciones, prompts ni firmantes en clases PHP.
  *
- * Para agregar un nuevo tipo de documento:
- * 1. Crear una clase que implemente esta interfaz
- * 2. Colocarla en app/Libraries/DocumentosSSTTypes/
- * 3. El Factory la detectará automáticamente
+ * Ver: docs/MODULO_NUMERALES_SGSST/02_GENERACION_IA/ARQUITECTURA_GENERACION_IA_DOCUMENTOS.md
  *
  * @package App\Libraries\DocumentosSSTTypes
  * @author Enterprise SST
- * @version 1.0
  */
 interface DocumentoSSTInterface
 {
     /**
-     * Obtiene el identificador único del tipo de documento
-     * Debe coincidir con el valor usado en tbl_documentos_sst.tipo_documento
-     *
-     * @return string Ej: 'programa_capacitacion', 'procedimiento_control_documental'
+     * Identificador único del tipo de documento.
+     * Debe coincidir EXACTAMENTE con tbl_doc_tipo_configuracion.tipo_documento (snake_case).
      */
     public function getTipoDocumento(): string;
 
     /**
-     * Obtiene el nombre legible del documento
-     *
-     * @return string Ej: 'Programa de Capacitación en SST'
+     * Nombre legible del documento.
+     * Ej: 'Política de Seguridad y Salud en el Trabajo'
      */
     public function getNombre(): string;
 
     /**
-     * Obtiene la descripción del documento
-     *
-     * @return string Descripción breve del propósito del documento
+     * Descripción breve del propósito del documento.
      */
     public function getDescripcion(): string;
 
     /**
-     * Obtiene el código de estándar relacionado (si aplica)
-     *
-     * @return string|null Ej: '2.5.1', '1.1.3', null si no aplica
+     * Numeral del estándar relacionado (Resolución 0312/2019).
+     * Ej: '2.1.1', '2.5.1', null si no aplica.
      */
     public function getEstandar(): ?string;
 
     /**
-     * Obtiene las secciones que componen el documento
-     *
-     * @return array Array de secciones con estructura:
-     *               [['numero' => 1, 'nombre' => 'Objetivo', 'key' => 'objetivo'], ...]
-     */
-    public function getSecciones(): array;
-
-    /**
-     * Obtiene el prompt de IA para generar una sección específica
-     *
-     * @param string $seccionKey Clave de la sección (ej: 'objetivo', 'alcance')
-     * @param int $estandares Nivel de estándares del cliente (7, 21, 60)
-     * @return string El prompt para enviar a la IA
-     */
-    public function getPromptParaSeccion(string $seccionKey, int $estandares): string;
-
-    /**
-     * Obtiene los firmantes requeridos para el documento
-     *
-     * @param int $estandares Nivel de estándares (afecta si es COPASST o Vigía)
-     * @return array Lista de tipos de firmante: ['representante_legal', 'responsable_sst', ...]
-     */
-    public function getFirmantesRequeridos(int $estandares): array;
-
-    /**
-     * Genera el contexto base para la IA basado en datos del cliente
-     *
-     * @param array $cliente Datos del cliente
-     * @param array|null $contexto Contexto SST del cliente (actividad económica, etc.)
-     * @return string Contexto formateado para incluir en el prompt
+     * Contexto base para la IA.
+     * Tipo A: usa la implementación de AbstractDocumentoSST (solo datos del cliente).
+     * Tipo B: sobrescribir para incluir PTA e indicadores consultados desde BD.
      */
     public function getContextoBase(array $cliente, ?array $contexto): string;
 
     /**
-     * Obtiene contenido estático/fallback para una sección
-     * Usado cuando la IA no está disponible o falla
-     *
-     * @param string $seccionKey Clave de la sección
-     * @param array $cliente Datos del cliente
-     * @param array|null $contexto Contexto SST
-     * @param int $estandares Nivel de estándares
-     * @param int $anio Año del documento
-     * @return string Contenido estático de la sección
-     */
-    public function getContenidoEstatico(string $seccionKey, array $cliente, ?array $contexto, int $estandares, int $anio): string;
-
-    /**
-     * Valida si una sección tiene contenido válido
-     *
-     * @param string $seccionKey Clave de la sección
-     * @param string $contenido Contenido a validar
-     * @return bool True si el contenido es válido
+     * Valida si una sección tiene contenido válido.
      */
     public function validarSeccion(string $seccionKey, string $contenido): bool;
 
