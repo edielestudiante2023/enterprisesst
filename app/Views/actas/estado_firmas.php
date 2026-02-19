@@ -137,11 +137,23 @@
                                             <i class="bi bi-eye"></i>
                                         </button>
                                         <?php elseif ($asist['asistio'] && empty($asist['firma_fecha']) && $acta['estado'] === 'pendiente_firma'): ?>
-                                        <form action="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/reenviar/' . $asist['id_asistente']) ?>" method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-outline-primary btn-sm" title="Enviar/Reenviar email de firma">
-                                                <i class="bi bi-envelope"></i>
+                                        <?php $urlFirmaActa = base_url('acta/firmar/' . ($asist['token_firma'] ?? '')); ?>
+                                        <?php $urlReenviarActa = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/reenviar/' . $asist['id_asistente']); ?>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-info" title="Copiar enlace de firma"
+                                                    onclick="copiarEnlaceFirma('<?= $urlFirmaActa ?>', '<?= esc($asist['nombre_completo']) ?>')">
+                                                <i class="bi bi-clipboard"></i>
                                             </button>
-                                        </form>
+                                            <form action="<?= $urlReenviarActa ?>" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-primary" title="Reenviar email de firma">
+                                                    <i class="bi bi-envelope"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-outline-warning" title="Enviar a email alternativo"
+                                                    onclick="modalEmailAlternativo('<?= $urlReenviarActa ?>', '<?= esc($asist['nombre_completo']) ?>', '<?= esc($asist['email'] ?? '') ?>')">
+                                                <i class="bi bi-envelope-at"></i>
+                                            </button>
+                                        </div>
                                         <?php elseif (!$asist['asistio']): ?>
                                         <small class="text-muted">N/A</small>
                                         <?php elseif (in_array($acta['estado'], ['borrador', 'en_edicion'])): ?>
@@ -266,6 +278,8 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="<?= base_url('js/firma-helpers.js') ?>"></script>
 <script>
 function verFirma(idAsistente, nombre) {
     document.getElementById('nombreFirmante').textContent = nombre;

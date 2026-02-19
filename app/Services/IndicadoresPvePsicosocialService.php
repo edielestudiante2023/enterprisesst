@@ -7,136 +7,23 @@ use App\Models\IndicadorSSTModel;
 /**
  * Servicio para generar indicadores del PVE de Riesgo Psicosocial
  * segun Resolucion 0312/2019 - Estandar 4.2.3
+ *
+ * PARTE 2 del modulo de 3 partes:
+ * - IA genera indicadores personalizados usando contexto COMPLETO del cliente
+ * - Consultor revisa y selecciona
+ * - Se guardan en tbl_indicadores_sst con categoria = 'pve_psicosocial'
  */
 class IndicadoresPvePsicosocialService
 {
     protected IndicadorSSTModel $indicadorModel;
+    protected const CATEGORIA = 'pve_psicosocial';
+    protected const NUMERAL = '4.2.3';
+    protected const CANTIDAD_GENERAR = 7;
 
     public function __construct()
     {
         $this->indicadorModel = new IndicadorSSTModel();
     }
-
-    /**
-     * Indicadores base del PVE de Riesgo Psicosocial
-     */
-    public const INDICADORES_PVE_PSICOSOCIAL = [
-        [
-            'nombre' => 'Cumplimiento de Actividades del PVE Psicosocial',
-            'tipo' => 'proceso',
-            'formula' => '(Actividades PVE Psicosocial ejecutadas / Actividades PVE Psicosocial programadas) x 100',
-            'meta' => 90,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '4.2.3',
-            'descripcion' => 'Mide el cumplimiento de las actividades del programa de vigilancia epidemiologica de riesgo psicosocial',
-            'definicion' => 'Mide el porcentaje de actividades ejecutadas del Programa de Vigilancia Epidemiologica de riesgo psicosocial frente a las programadas en el cronograma.',
-            'interpretacion' => 'Un resultado >=90% indica buen cumplimiento. Valores menores requieren revision de recursos y prioridades del PVE psicosocial.',
-            'origen_datos' => 'Cronograma PVE psicosocial, registros de actividades ejecutadas, actas, informes',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, psicologo especialista'
-        ],
-        [
-            'nombre' => 'Cobertura de Aplicacion de Bateria de Riesgo Psicosocial',
-            'tipo' => 'proceso',
-            'formula' => '(Trabajadores evaluados con bateria / Total trabajadores de la empresa) x 100',
-            'meta' => 90,
-            'unidad' => '%',
-            'periodicidad' => 'anual',
-            'phva' => 'verificar',
-            'numeral' => '4.2.3',
-            'descripcion' => 'Mide la cobertura de aplicacion de la bateria de riesgo psicosocial (Res. 2764/2022)',
-            'definicion' => 'Mide la proporcion de trabajadores a quienes se les aplico la Bateria de Instrumentos de Evaluacion de Riesgo Psicosocial segun Res. 2764/2022.',
-            'interpretacion' => 'Un 90% o mas indica buena cobertura. Es obligatorio aplicar la bateria cada 2 anos (riesgo alto) o 3 anos (bajo/medio). Solo puede aplicarla un psicologo especialista.',
-            'origen_datos' => 'Informe de bateria de riesgo psicosocial, listado de trabajadores evaluados, psicologo especialista',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, psicologo especialista, Comite Convivencia'
-        ],
-        [
-            'nombre' => 'Proporcion de Trabajadores en Riesgo Alto o Muy Alto',
-            'tipo' => 'resultado',
-            'formula' => '(Trabajadores en nivel alto + muy alto / Total trabajadores evaluados) x 100',
-            'meta' => 15,
-            'unidad' => '%',
-            'periodicidad' => 'anual',
-            'phva' => 'verificar',
-            'numeral' => '4.2.3',
-            'descripcion' => 'Mide la proporcion de trabajadores clasificados en riesgo psicosocial alto o muy alto',
-            'menor_es_mejor' => true,
-            'definicion' => 'Mide la proporcion de trabajadores clasificados en nivel de riesgo psicosocial alto o muy alto segun los resultados de la bateria de riesgo psicosocial.',
-            'interpretacion' => 'Valores <=15% son aceptables. Valores superiores requieren intervencion prioritaria con programa especifico. Nivel muy alto exige intervencion inmediata (Res. 2764/2022).',
-            'origen_datos' => 'Resultados de bateria de riesgo psicosocial, informe del psicologo especialista',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, psicologo especialista, ARL'
-        ],
-        [
-            'nombre' => 'Cobertura de Participacion en Talleres de Intervencion',
-            'tipo' => 'proceso',
-            'formula' => '(Trabajadores participantes en talleres / Total trabajadores convocados) x 100',
-            'meta' => 80,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '4.2.3',
-            'descripcion' => 'Mide la participacion de trabajadores en talleres de intervencion psicosocial',
-            'definicion' => 'Mide la proporcion de trabajadores que participan en talleres y actividades de intervencion psicosocial (manejo del estres, comunicacion, liderazgo, etc.).',
-            'interpretacion' => 'Un 80% o mas indica buena participacion. Priorizar la participacion de trabajadores en nivel de riesgo alto y muy alto.',
-            'origen_datos' => 'Registros de asistencia a talleres, listados de convocatoria, informes de actividades',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, psicologo especialista, COPASST/Vigia'
-        ],
-        [
-            'nombre' => 'Tasa de Ausentismo por Estres Laboral',
-            'tipo' => 'resultado',
-            'formula' => '(Dias de ausencia por estres laboral / Total dias laborados programados) x 100',
-            'meta' => 2,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '4.2.3',
-            'descripcion' => 'Mide el ausentismo laboral atribuible a factores de estres y riesgo psicosocial',
-            'menor_es_mejor' => true,
-            'definicion' => 'Mide el porcentaje de dias laborales perdidos por incapacidades relacionadas con estres laboral, ansiedad, depresion y otros trastornos psicosociales.',
-            'interpretacion' => 'Valores <=2% son aceptables. Valores superiores indican alto impacto del riesgo psicosocial y requieren revision de condiciones laborales.',
-            'origen_datos' => 'Registros de incapacidades (diagnostico CIE-10 relacionado con estres), nomina, EPS',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, Recursos Humanos, psicologo especialista'
-        ],
-        [
-            'nombre' => 'Efectividad de Intervenciones Psicosociales',
-            'tipo' => 'resultado',
-            'formula' => '(Trabajadores que mejoraron nivel de riesgo / Total trabajadores intervenidos) x 100',
-            'meta' => 60,
-            'unidad' => '%',
-            'periodicidad' => 'anual',
-            'phva' => 'verificar',
-            'numeral' => '4.2.3',
-            'descripcion' => 'Mide la efectividad de las intervenciones midiendo la reduccion del nivel de riesgo psicosocial',
-            'definicion' => 'Mide la proporcion de trabajadores intervenidos que lograron reducir su nivel de riesgo psicosocial en la siguiente aplicacion de la bateria.',
-            'interpretacion' => 'Valores >=60% indican buena efectividad del programa de intervencion. Se compara nivel de riesgo entre dos aplicaciones consecutivas de la bateria.',
-            'origen_datos' => 'Comparativo de baterias (aplicacion anterior vs actual), informes del psicologo especialista',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, psicologo especialista, ARL'
-        ],
-        [
-            'nombre' => 'Quejas por Acoso Laboral ante Comite de Convivencia',
-            'tipo' => 'resultado',
-            'formula' => 'Numero de quejas recibidas por acoso laboral en el periodo',
-            'meta' => 0,
-            'unidad' => 'quejas',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '4.2.3',
-            'descripcion' => 'Registra las quejas formales de acoso laboral presentadas ante el Comite de Convivencia Laboral',
-            'menor_es_mejor' => true,
-            'definicion' => 'Registra la cantidad de quejas formales por presunto acoso laboral recibidas por el Comite de Convivencia Laboral segun Ley 1010/2006.',
-            'interpretacion' => 'Lo ideal es 0 quejas. Un aumento puede indicar deterioro del clima laboral o mayor confianza en los canales de denuncia. Toda queja debe tramitarse en maximo 10 dias.',
-            'origen_datos' => 'Actas del Comite de Convivencia Laboral, registro de quejas, seguimiento de casos',
-            'cargo_responsable' => 'Presidente del Comite de Convivencia Laboral',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, Comite de Convivencia Laboral'
-        ]
-    ];
 
     /**
      * Obtiene el resumen de indicadores del PVE Psicosocial para un cliente
@@ -147,7 +34,7 @@ class IndicadoresPvePsicosocialService
             ->where('id_cliente', $idCliente)
             ->where('activo', 1)
             ->groupStart()
-                ->where('categoria', 'pve_psicosocial')
+                ->where('categoria', self::CATEGORIA)
                 ->orLike('nombre_indicador', 'psicosocial', 'both')
                 ->orLike('nombre_indicador', 'estres laboral', 'both')
                 ->orLike('nombre_indicador', 'bateria', 'both')
@@ -170,7 +57,7 @@ class IndicadoresPvePsicosocialService
 
         return [
             'existentes' => $total,
-            'sugeridos' => count(self::INDICADORES_PVE_PSICOSOCIAL),
+            'limite' => self::CANTIDAD_GENERAR,
             'medidos' => $medidos,
             'cumplen' => $cumplen,
             'completo' => $total >= 3,
@@ -179,33 +66,50 @@ class IndicadoresPvePsicosocialService
     }
 
     /**
-     * Preview de indicadores que se generarian
+     * Preview de indicadores generados por IA segun contexto completo del cliente
      */
     public function previewIndicadores(int $idCliente, ?array $contexto = null): array
     {
-        $indicadores = [];
-
-        foreach (self::INDICADORES_PVE_PSICOSOCIAL as $idx => $ind) {
-            $indicadores[] = [
-                'indice' => $idx,
-                'nombre' => $ind['nombre'],
-                'tipo' => $ind['tipo'],
-                'formula' => $ind['formula'],
-                'meta' => $ind['meta'],
-                'unidad' => $ind['unidad'],
-                'periodicidad' => $ind['periodicidad'],
-                'phva' => $ind['phva'],
-                'numeral' => $ind['numeral'],
-                'descripcion' => $ind['descripcion'] ?? '',
-                'origen' => 'base',
-                'seleccionado' => true
+        $apiKey = env('OPENAI_API_KEY', '');
+        if (empty($apiKey)) {
+            log_message('error', 'IndicadoresPvePsicosocial: OPENAI_API_KEY no configurada');
+            return [
+                'indicadores' => [],
+                'total' => 0,
+                'contexto_aplicado' => false,
+                'error' => 'API Key de OpenAI no configurada'
             ];
         }
 
+        // Construir contexto completo del cliente reutilizando ObjetivosSgsstService
+        $objetivosService = new \App\Services\ObjetivosSgsstService();
+        $contextoTexto = $objetivosService->construirContextoCompleto($contexto, $idCliente);
+
+        $systemPrompt = $this->construirSystemPrompt();
+        $userPrompt = $contextoTexto;
+        $userPrompt .= "\n\nGenera exactamente " . self::CANTIDAD_GENERAR . " indicadores del PVE de Riesgo Psicosocial personalizados para esta empresa.";
+        $userPrompt .= "\nDeben ser especificos para su actividad economica, peligros psicosociales identificados y nivel de riesgo.";
+
+        $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey, 0.7);
+
+        if (!$response['success']) {
+            log_message('error', 'Error IA Indicadores PVE Psicosocial: ' . ($response['error'] ?? 'desconocido'));
+            return [
+                'indicadores' => [],
+                'total' => 0,
+                'contexto_aplicado' => $contexto ? true : false,
+                'error' => 'Error al generar indicadores: ' . ($response['error'] ?? 'Error desconocido')
+            ];
+        }
+
+        $indicadores = $this->procesarRespuestaIA($response['contenido']);
+
+        // Deteccion de duplicados contra indicadores existentes del cliente
         $existentes = $this->indicadorModel->getByCliente($idCliente);
         $nombresExistentes = array_map('strtolower', array_column($existentes, 'nombre_indicador'));
 
         foreach ($indicadores as &$ind) {
+            $ind['ya_existe'] = false;
             $nombreLower = strtolower($ind['nombre']);
             foreach ($nombresExistentes as $existente) {
                 if (similar_text($nombreLower, $existente) > strlen($nombreLower) * 0.7) {
@@ -215,26 +119,163 @@ class IndicadoresPvePsicosocialService
                 }
             }
         }
+        unset($ind);
 
         return [
             'indicadores' => $indicadores,
             'total' => count($indicadores),
-            'contexto_aplicado' => $contexto ? true : false
+            'contexto_aplicado' => $contexto ? true : false,
+            'generado_con_ia' => true
         ];
     }
 
     /**
-     * Genera los indicadores del PVE Psicosocial
+     * System prompt especializado para PVE Psicosocial
+     */
+    protected function construirSystemPrompt(): string
+    {
+        $cantidad = self::CANTIDAD_GENERAR;
+        return "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia, especialista en Riesgo Psicosocial.
+Tu tarea es generar indicadores del Programa de Vigilancia Epidemiologica de Riesgo Psicosocial personalizados segun el contexto REAL de la empresa.
+
+NORMATIVIDAD APLICABLE:
+- Resolucion 0312/2019 - Estandar 4.2.3
+- Resolucion 2764/2022 (Bateria de Riesgo Psicosocial)
+- Ley 1010/2006 (Acoso Laboral)
+
+REGLAS OBLIGATORIAS:
+1. Genera EXACTAMENTE {$cantidad} indicadores
+2. Cada indicador DEBE tener estos 14 campos: nombre, tipo, formula, meta, unidad, periodicidad, phva, numeral, descripcion, definicion, interpretacion, origen_datos, cargo_responsable, cargos_conocer_resultado
+3. 'tipo' solo puede ser: estructura, proceso, resultado (incluir al menos 2 de proceso y 2 de resultado)
+4. 'periodicidad' solo puede ser: mensual, trimestral, semestral, anual
+5. Las formulas deben ser matematicamente correctas y calculables
+6. Las metas deben ser numericas y realistas
+7. Si hay peligros psicosociales identificados, los indicadores deben abordarlos directamente
+8. Si hay observaciones del consultor, integrar esa informacion
+9. Adaptar los cargos responsables al tamano y estructura de la empresa
+10. NO generar indicadores genericos — deben reflejar la realidad de la empresa
+11. Temas relevantes: bateria psicosocial, estres laboral, acoso laboral, carga mental, clima laboral, trabajo bajo presion, turnos nocturnos, ausentismo por causa psicosocial
+12. Responde SOLO en formato JSON valido sin markdown
+
+FORMATO DE RESPUESTA (JSON array):
+[{\"nombre\":\"...\",\"tipo\":\"proceso\",\"formula\":\"...\",\"meta\":90,\"unidad\":\"%\",\"periodicidad\":\"trimestral\",\"phva\":\"verificar\",\"numeral\":\"4.2.3\",\"descripcion\":\"...\",\"definicion\":\"...\",\"interpretacion\":\"...\",\"origen_datos\":\"...\",\"cargo_responsable\":\"...\",\"cargos_conocer_resultado\":\"...\"}]";
+    }
+
+    /**
+     * Procesa la respuesta JSON de la IA
+     */
+    protected function procesarRespuestaIA(string $contenidoIA): array
+    {
+        $contenidoIA = preg_replace('/```json\s*/', '', $contenidoIA);
+        $contenidoIA = preg_replace('/```\s*/', '', $contenidoIA);
+        $contenidoIA = trim($contenidoIA);
+
+        $respuesta = json_decode($contenidoIA, true);
+        if (!is_array($respuesta)) {
+            log_message('error', 'IndicadoresPvePsicosocial: JSON invalido de IA: ' . substr($contenidoIA, 0, 500));
+            return [];
+        }
+
+        $indicadores = [];
+        foreach ($respuesta as $idx => $ind) {
+            if (empty($ind['nombre'])) continue;
+
+            $indicadores[] = [
+                'indice' => $idx,
+                'nombre' => $ind['nombre'],
+                'tipo' => in_array($ind['tipo'] ?? '', ['estructura', 'proceso', 'resultado']) ? $ind['tipo'] : 'proceso',
+                'formula' => $ind['formula'] ?? '',
+                'meta' => $ind['meta'] ?? null,
+                'unidad' => $ind['unidad'] ?? '%',
+                'periodicidad' => in_array($ind['periodicidad'] ?? '', ['mensual', 'trimestral', 'semestral', 'anual']) ? $ind['periodicidad'] : 'trimestral',
+                'phva' => in_array($ind['phva'] ?? '', ['planear', 'hacer', 'verificar', 'actuar']) ? $ind['phva'] : 'verificar',
+                'numeral' => $ind['numeral'] ?? self::NUMERAL,
+                'descripcion' => $ind['descripcion'] ?? '',
+                'definicion' => $ind['definicion'] ?? null,
+                'interpretacion' => $ind['interpretacion'] ?? null,
+                'origen_datos' => $ind['origen_datos'] ?? null,
+                'cargo_responsable' => $ind['cargo_responsable'] ?? null,
+                'cargos_conocer_resultado' => $ind['cargos_conocer_resultado'] ?? null,
+                'origen' => 'ia',
+                'seleccionado' => true
+            ];
+        }
+
+        return $indicadores;
+    }
+
+    /**
+     * Llama a la API de OpenAI
+     */
+    protected function llamarOpenAI(string $systemPrompt, string $userPrompt, string $apiKey, float $temperature = 0.7): array
+    {
+        $data = [
+            'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt]
+            ],
+            'temperature' => $temperature,
+            'max_tokens' => 4000
+        ];
+
+        log_message('debug', 'IndicadoresPvePsicosocial llamarOpenAI - modelo: ' . $data['model'] . ', temperature: ' . $temperature);
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            log_message('error', 'IndicadoresPvePsicosocial curl error: ' . $error);
+            return ['success' => false, 'error' => "Error de conexion: {$error}"];
+        }
+
+        $result = json_decode($response, true);
+
+        if ($httpCode !== 200) {
+            $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
+            log_message('error', 'IndicadoresPvePsicosocial OpenAI HTTP ' . $httpCode . ': ' . $errorMsg);
+            return ['success' => false, 'error' => $errorMsg];
+        }
+
+        if (isset($result['choices'][0]['message']['content'])) {
+            return [
+                'success' => true,
+                'contenido' => trim($result['choices'][0]['message']['content'])
+            ];
+        }
+
+        return ['success' => false, 'error' => 'Respuesta inesperada de OpenAI'];
+    }
+
+    /**
+     * Genera los indicadores del PVE Psicosocial en BD
      */
     public function generarIndicadores(int $idCliente, ?array $indicadoresSeleccionados = null): array
     {
+        if (empty($indicadoresSeleccionados)) {
+            return ['creados' => 0, 'existentes' => 0, 'errores' => ['No se proporcionaron indicadores para generar'], 'total' => 0];
+        }
+
         $creados = 0;
         $existentes = 0;
         $errores = [];
 
-        $indicadores = $indicadoresSeleccionados ?? self::INDICADORES_PVE_PSICOSOCIAL;
-
-        foreach ($indicadores as $ind) {
+        foreach ($indicadoresSeleccionados as $ind) {
             $existe = $this->indicadorModel
                 ->where('id_cliente', $idCliente)
                 ->where('activo', 1)
@@ -251,13 +292,13 @@ class IndicadoresPvePsicosocialService
                     'id_cliente' => $idCliente,
                     'nombre_indicador' => $ind['nombre'],
                     'tipo_indicador' => $ind['tipo'],
-                    'categoria' => 'pve_psicosocial',
+                    'categoria' => self::CATEGORIA,
                     'formula' => $ind['formula'],
                     'meta' => $ind['meta'],
                     'unidad_medida' => $ind['unidad'],
                     'periodicidad' => $ind['periodicidad'],
                     'phva' => $ind['phva'],
-                    'numeral_resolucion' => $ind['numeral'] ?? '4.2.3',
+                    'numeral_resolucion' => $ind['numeral'] ?? self::NUMERAL,
                     'definicion' => $ind['definicion'] ?? null,
                     'interpretacion' => $ind['interpretacion'] ?? null,
                     'origen_datos' => $ind['origen_datos'] ?? null,
@@ -275,7 +316,7 @@ class IndicadoresPvePsicosocialService
             'creados' => $creados,
             'existentes' => $existentes,
             'errores' => $errores,
-            'total' => count($indicadores)
+            'total' => count($indicadoresSeleccionados)
         ];
     }
 
@@ -288,7 +329,7 @@ class IndicadoresPvePsicosocialService
             ->where('id_cliente', $idCliente)
             ->where('activo', 1)
             ->groupStart()
-                ->where('categoria', 'pve_psicosocial')
+                ->where('categoria', self::CATEGORIA)
                 ->orLike('nombre_indicador', 'psicosocial', 'both')
                 ->orLike('nombre_indicador', 'estres laboral', 'both')
                 ->orLike('nombre_indicador', 'bateria', 'both')

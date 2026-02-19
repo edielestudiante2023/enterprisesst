@@ -655,6 +655,7 @@ $routes->get('/contracts/diagnostico-firmas/(:num)', 'ContractController::diagno
 
 // Firma digital de contratos (sistema independiente)
 $routes->post('/contracts/enviar-firma', 'ContractController::enviarFirma');
+$routes->post('/contracts/reenviar-firma-contrato', 'ContractController::reenviarFirmaContrato');
 $routes->get('/contracts/estado-firma/(:num)', 'ContractController::estadoFirma/$1');
 $routes->get('/contrato/firmar/(:segment)', 'ContractController::paginaFirmaContrato/$1');
 $routes->post('/contrato/procesar-firma', 'ContractController::procesarFirmaContrato');
@@ -1089,6 +1090,7 @@ $routes->post('/documentos-sst/adjuntar-soporte-custodia-hc', 'DocumentosSSTCont
 $routes->post('/documentos-sst/adjuntar-soporte-curso-50h', 'DocumentosSSTController::adjuntarSoporteCurso50h');
 $routes->post('/documentos-sst/adjuntar-soporte-evaluacion-prioridades', 'DocumentosSSTController::adjuntarSoporteEvaluacionPrioridades');
 $routes->post('/documentos-sst/adjuntar-soporte-plan-objetivos', 'DocumentosSSTController::adjuntarSoportePlanObjetivos');
+$routes->post('/documentos-sst/adjuntar-soporte-plan-trabajo-anual', 'DocumentosSSTController::adjuntarSoportePlanTrabajoAnual');
 $routes->post('/documentos-sst/adjuntar-soporte-rendicion', 'DocumentosSSTController::adjuntarSoporteRendicion');
 $routes->post('/documentos-sst/adjuntar-soporte-copasst', 'DocumentosSSTController::adjuntarSoporteCopasst');
 $routes->post('/documentos-sst/adjuntar-soporte-capacitacion-copasst', 'DocumentosSSTController::adjuntarSoporteCapacitacionCopasst');

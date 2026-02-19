@@ -53,90 +53,114 @@
         </div>
 
         <!-- Contexto del Cliente para la IA -->
+        <?php
+            $riesgo = $contexto['nivel_riesgo_arl'] ?? 'N/A';
+            $colorRiesgo = match($riesgo) {
+                'I', 'II' => 'success',
+                'III' => 'warning',
+                'IV', 'V' => 'danger',
+                default => 'secondary'
+            };
+            $peligros = [];
+            if (!empty($contexto['peligros_identificados'])) {
+                $peligros = json_decode($contexto['peligros_identificados'], true) ?: [];
+            }
+            $infraestructura = [];
+            if (!empty($contexto['tiene_copasst'])) $infraestructura[] = 'COPASST';
+            if (!empty($contexto['tiene_vigia_sst'])) $infraestructura[] = 'Vigia SST';
+            if (!empty($contexto['tiene_comite_convivencia'])) $infraestructura[] = 'Comite Convivencia';
+            if (!empty($contexto['tiene_brigada_emergencias'])) $infraestructura[] = 'Brigada Emergencias';
+        ?>
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
                     <i class="bi bi-cpu text-primary me-2"></i>Contexto para la IA
+                    <small class="text-muted ms-2">La IA usara esta informacion para generar capacitaciones SST personalizadas</small>
                 </h6>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#collapseContexto">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="<?= base_url('contexto/' . $cliente['id_cliente']) ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i>Editar Contexto
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#collapseContexto">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                </div>
             </div>
             <div class="collapse show" id="collapseContexto">
                 <div class="card-body">
                     <div class="row">
-                        <!-- Datos del Cliente -->
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <h6 class="text-muted mb-3"><i class="bi bi-building me-1"></i>Datos de la Empresa</h6>
-                            <table class="table table-sm table-borderless">
+                            <table class="table table-sm table-borderless mb-0">
                                 <tr>
-                                    <td class="text-muted" style="width:40%">Actividad economica:</td>
+                                    <td class="text-muted" style="width:45%">Actividad:</td>
                                     <td><strong><?= esc($contexto['actividad_economica_principal'] ?? 'No definida') ?></strong></td>
                                 </tr>
+                                <?php if (!empty($contexto['sector_economico'])): ?>
                                 <tr>
-                                    <td class="text-muted">Codigo CIIU:</td>
-                                    <td><?= esc($contexto['codigo_ciiu_principal'] ?? 'N/A') ?></td>
+                                    <td class="text-muted">Sector:</td>
+                                    <td><?= esc($contexto['sector_economico']) ?></td>
+                                </tr>
+                                <?php endif; ?>
+                                <tr>
+                                    <td class="text-muted">Riesgo ARL:</td>
+                                    <td><span class="badge bg-<?= $colorRiesgo ?>"><?= $riesgo ?></span></td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted">Nivel de riesgo ARL:</td>
-                                    <td>
-                                        <?php
-                                        $riesgo = $contexto['nivel_riesgo_arl'] ?? 'N/A';
-                                        $colorRiesgo = match($riesgo) {
-                                            'I', 'II' => 'success',
-                                            'III' => 'warning',
-                                            'IV', 'V' => 'danger',
-                                            default => 'secondary'
-                                        };
-                                        ?>
-                                        <span class="badge bg-<?= $colorRiesgo ?>"><?= $riesgo ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted">Total trabajadores:</td>
+                                    <td class="text-muted">Trabajadores:</td>
                                     <td><strong><?= $contexto['total_trabajadores'] ?? 'No definido' ?></strong></td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted">Estandares aplicables:</td>
-                                    <td><span class="badge bg-info"><?= $contexto['estandares_aplicables'] ?? '60' ?> estandares</span></td>
+                                    <td class="text-muted">Estandares:</td>
+                                    <td><span class="badge bg-info"><?= $contexto['estandares_aplicables'] ?? 60 ?> est.</span></td>
                                 </tr>
                             </table>
                         </div>
-
-                        <!-- Peligros Identificados -->
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-3"><i class="bi bi-exclamation-triangle me-1"></i>Peligros Identificados</h6>
-                            <?php
-                            $peligros = [];
-                            if (!empty($contexto['peligros_identificados'])) {
-                                $peligros = json_decode($contexto['peligros_identificados'], true) ?? [];
-                            }
-                            ?>
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-3"><i class="bi bi-shield-check me-1"></i>Infraestructura SST</h6>
+                            <?php if (!empty($infraestructura)): ?>
+                                <?php foreach ($infraestructura as $inf): ?>
+                                    <span class="badge bg-success-subtle text-success me-1 mb-1"><i class="bi bi-check me-1"></i><?= $inf ?></span>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <small class="text-muted">Sin infraestructura registrada</small>
+                            <?php endif; ?>
+                            <?php if (!empty($contexto['responsable_sgsst_cargo'])): ?>
+                            <div class="mt-2">
+                                <small class="text-muted">Responsable SST:</small>
+                                <br><small><strong><?= esc($contexto['responsable_sgsst_cargo']) ?></strong></small>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-3"><i class="bi bi-exclamation-diamond me-1"></i>Peligros Identificados</h6>
                             <?php if (!empty($peligros)): ?>
-                                <div class="d-flex flex-wrap gap-1">
+                                <div style="max-height:120px; overflow-y:auto;">
                                     <?php foreach ($peligros as $peligro): ?>
-                                        <span class="badge bg-warning text-dark"><?= esc($peligro) ?></span>
+                                        <span class="badge bg-danger-subtle text-danger me-1 mb-1" style="font-size:0.7rem;"><?= esc($peligro) ?></span>
                                     <?php endforeach; ?>
                                 </div>
+                                <small class="text-muted"><?= count($peligros) ?> peligro(s) registrado(s)</small>
                             <?php else: ?>
-                                <p class="text-muted small mb-0">
-                                    <i class="bi bi-info-circle me-1"></i>No hay peligros identificados.
-                                    <a href="<?= base_url('contexto-cliente/' . $cliente['id_cliente']) ?>">Configurar contexto</a>
-                                </p>
-                            <?php endif; ?>
-
-                            <?php if (!empty($contexto['observaciones_contexto'])): ?>
-                                <div class="mt-3">
-                                    <small class="text-muted d-block mb-1">Observaciones:</small>
-                                    <small><?= esc($contexto['observaciones_contexto']) ?></small>
+                                <div class="alert alert-warning small py-1 px-2 mb-0">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Sin peligros registrados.
+                                    <a href="<?= base_url('contexto/' . $cliente['id_cliente']) ?>" target="_blank">Registrar</a>
                                 </div>
                             <?php endif; ?>
                         </div>
                     </div>
-
+                    <?php if (!empty($contexto['observaciones_contexto'])): ?>
+                    <hr class="my-2">
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-2"><i class="bi bi-journal-text me-1"></i>Contexto y Observaciones</h6>
+                            <div class="alert alert-light border small mb-0" style="max-height:100px; overflow-y:auto;">
+                                <?= nl2br(esc($contexto['observaciones_contexto'])) ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                     <hr class="my-3">
-
-                    <!-- Instrucciones adicionales para la IA -->
                     <div class="row">
                         <div class="col-12">
                             <label class="form-label">
@@ -144,9 +168,9 @@
                                 <small class="text-muted">(opcional)</small>
                             </label>
                             <textarea id="instruccionesIA" class="form-control" rows="3"
-                                placeholder="Ej: Incluir capacitacion de trabajo en alturas, enfocarse en riesgo quimico, agregar capacitacion de primeros auxilios..."></textarea>
+                                placeholder="Ej: Enfocarse en capacitaciones de trabajo en alturas, incluir primeros auxilios, priorizar capacitaciones sobre el manejo de quimicos..."></textarea>
                             <small class="text-muted">
-                                Describa necesidades especificas de la empresa para personalizar las capacitaciones.
+                                Describa necesidades especificas para personalizar las capacitaciones SST.
                             </small>
                         </div>
                     </div>

@@ -56,88 +56,136 @@
         </div>
 
         <!-- Contexto del Cliente para la IA -->
+        <?php
+            $estandares = $contexto['estandares_aplicables'] ?? 60;
+            $limiteObj = $estandares <= 7 ? 3 : ($estandares <= 21 ? 4 : 6);
+            $riesgo = $contexto['nivel_riesgo_arl'] ?? 'N/A';
+            $colorRiesgo = match($riesgo) {
+                'I', 'II' => 'success',
+                'III' => 'warning',
+                'IV', 'V' => 'danger',
+                default => 'secondary'
+            };
+            $peligros = [];
+            if (!empty($contexto['peligros_identificados'])) {
+                $peligros = json_decode($contexto['peligros_identificados'], true) ?: [];
+            }
+            $infraestructura = [];
+            if (!empty($contexto['tiene_copasst'])) $infraestructura[] = 'COPASST';
+            if (!empty($contexto['tiene_vigia_sst'])) $infraestructura[] = 'Vigia SST';
+            if (!empty($contexto['tiene_comite_convivencia'])) $infraestructura[] = 'Comite Convivencia';
+            if (!empty($contexto['tiene_brigada_emergencias'])) $infraestructura[] = 'Brigada Emergencias';
+        ?>
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
                     <i class="bi bi-cpu text-primary me-2"></i>Contexto para la IA
+                    <small class="text-muted ms-2">La IA usara toda esta informacion para generar objetivos personalizados</small>
                 </h6>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#collapseContexto">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="<?= base_url('contexto/' . $cliente['id_cliente']) ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i>Editar Contexto
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#collapseContexto">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                </div>
             </div>
             <div class="collapse show" id="collapseContexto">
                 <div class="card-body">
                     <div class="row">
                         <!-- Datos del Cliente -->
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <h6 class="text-muted mb-3"><i class="bi bi-building me-1"></i>Datos de la Empresa</h6>
-                            <table class="table table-sm table-borderless">
+                            <table class="table table-sm table-borderless mb-0">
                                 <tr>
-                                    <td class="text-muted" style="width:40%">Actividad economica:</td>
+                                    <td class="text-muted" style="width:45%">Actividad:</td>
                                     <td><strong><?= esc($contexto['actividad_economica_principal'] ?? 'No definida') ?></strong></td>
                                 </tr>
+                                <?php if (!empty($contexto['sector_economico'])): ?>
                                 <tr>
-                                    <td class="text-muted">Nivel de riesgo ARL:</td>
-                                    <td>
-                                        <?php
-                                        $riesgo = $contexto['nivel_riesgo_arl'] ?? 'N/A';
-                                        $colorRiesgo = match($riesgo) {
-                                            'I', 'II' => 'success',
-                                            'III' => 'warning',
-                                            'IV', 'V' => 'danger',
-                                            default => 'secondary'
-                                        };
-                                        ?>
-                                        <span class="badge bg-<?= $colorRiesgo ?>"><?= $riesgo ?></span>
-                                    </td>
+                                    <td class="text-muted">Sector:</td>
+                                    <td><?= esc($contexto['sector_economico']) ?></td>
+                                </tr>
+                                <?php endif; ?>
+                                <tr>
+                                    <td class="text-muted">Riesgo ARL:</td>
+                                    <td><span class="badge bg-<?= $colorRiesgo ?>"><?= $riesgo ?></span></td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted">Total trabajadores:</td>
+                                    <td class="text-muted">Trabajadores:</td>
                                     <td><strong><?= $contexto['total_trabajadores'] ?? 'No definido' ?></strong></td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted">Estandares aplicables:</td>
-                                    <td><span class="badge bg-info"><?= $contexto['estandares_aplicables'] ?? '60' ?> estandares</span></td>
+                                    <td class="text-muted">Estandares:</td>
+                                    <td><span class="badge bg-info"><?= $estandares ?> est.</span> = <strong class="text-success"><?= $limiteObj ?> obj. max</strong></td>
                                 </tr>
                             </table>
                         </div>
 
-                        <!-- Limites segun estandares -->
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-3"><i class="bi bi-sliders me-1"></i>Limites segun Estandares</h6>
-                            <div class="alert alert-light border small">
-                                <?php
-                                $estandares = $contexto['estandares_aplicables'] ?? 60;
-                                $limiteObj = $estandares <= 7 ? 3 : ($estandares <= 21 ? 4 : 6);
-                                ?>
-                                <div class="row">
-                                    <div class="col-12">
-                                        <strong class="text-success"><?= $limiteObj ?></strong> objetivos maximo
-                                    </div>
-                                </div>
-                                <hr class="my-2">
-                                <small class="text-muted">
-                                    Segun Res. 0312/2019: 7 est. = 3 obj, 21 est. = 4 obj, 60 est. = 6 obj
-                                </small>
+                        <!-- Infraestructura SST -->
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-3"><i class="bi bi-shield-check me-1"></i>Infraestructura SST</h6>
+                            <?php if (!empty($infraestructura)): ?>
+                                <?php foreach ($infraestructura as $inf): ?>
+                                    <span class="badge bg-success-subtle text-success me-1 mb-1"><i class="bi bi-check me-1"></i><?= $inf ?></span>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <small class="text-muted">Sin infraestructura registrada</small>
+                            <?php endif; ?>
+
+                            <?php if (!empty($contexto['responsable_sgsst_cargo'])): ?>
+                            <div class="mt-2">
+                                <small class="text-muted">Responsable SST:</small>
+                                <br><small><strong><?= esc($contexto['responsable_sgsst_cargo']) ?></strong></small>
+                            </div>
+                            <?php endif; ?>
+
+                            <div class="mt-2">
+                                <small class="text-muted">Politica SST:</small>
+                                <?php if (!empty($politicaSST)): ?>
+                                    <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Documentada</span>
+                                <?php else: ?>
+                                    <span class="badge bg-warning-subtle text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Pendiente</span>
+                                <?php endif; ?>
                             </div>
 
-                            <?php if (!empty($politicaSST)): ?>
                             <div class="mt-2">
-                                <small class="text-muted d-block mb-1">
-                                    <i class="bi bi-file-text me-1"></i>Politica SST:
-                                </small>
-                                <small class="text-success">
-                                    <i class="bi bi-check-circle me-1"></i>Documentada
-                                </small>
+                                <small class="text-muted d-block">Segun Res. 0312/2019:</small>
+                                <small class="text-muted">7 est.=3 obj, 21 est.=4 obj, 60 est.=6 obj</small>
                             </div>
+                        </div>
+
+                        <!-- Peligros identificados -->
+                        <div class="col-md-4">
+                            <h6 class="text-muted mb-3"><i class="bi bi-exclamation-diamond me-1"></i>Peligros Identificados</h6>
+                            <?php if (!empty($peligros)): ?>
+                                <div style="max-height:120px; overflow-y:auto;">
+                                    <?php foreach ($peligros as $peligro): ?>
+                                        <span class="badge bg-danger-subtle text-danger me-1 mb-1" style="font-size:0.7rem;"><?= esc($peligro) ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                                <small class="text-muted"><?= count($peligros) ?> peligro(s) registrado(s)</small>
                             <?php else: ?>
-                            <div class="alert alert-warning small mt-2 mb-0">
-                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                Se recomienda documentar la Politica SST primero
-                            </div>
+                                <div class="alert alert-warning small py-1 px-2 mb-0">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Sin peligros registrados.
+                                    <a href="<?= base_url('contexto/' . $cliente['id_cliente']) ?>" target="_blank">Registrar</a>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>
+
+                    <?php if (!empty($contexto['observaciones_contexto'])): ?>
+                    <hr class="my-2">
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-2"><i class="bi bi-journal-text me-1"></i>Contexto y Observaciones</h6>
+                            <div class="alert alert-light border small mb-0" style="max-height:100px; overflow-y:auto;">
+                                <?= nl2br(esc($contexto['observaciones_contexto'])) ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
 
                     <hr class="my-3">
 
@@ -369,22 +417,42 @@
         const modal = new bootstrap.Modal(document.getElementById('modalPreview'));
         modal.show();
 
+        // Mostrar spinner mientras la IA genera los objetivos
+        document.getElementById('previewContent').innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-success mb-3" role="status" style="width:3rem;height:3rem;">
+                    <span class="visually-hidden">Generando...</span>
+                </div>
+                <h6 class="text-muted">Generando objetivos personalizados con IA...</h6>
+                <small class="text-muted">Analizando contexto de la empresa, peligros y observaciones</small>
+            </div>`;
+
         const instrucciones = encodeURIComponent(getInstruccionesIA());
         fetch(`<?= base_url('generador-ia') ?>/${idCliente}/preview-objetivos?anio=${anio}&instrucciones=${instrucciones}`)
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
+                    if (data.data.error) {
+                        document.getElementById('previewContent').innerHTML =
+                            `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>${data.data.explicacion_ia}</div>`;
+                        return;
+                    }
                     objetivosData = data.data.objetivos;
                     explicacionIA = data.data.explicacion_ia || '';
+                    if (objetivosData.length === 0) {
+                        document.getElementById('previewContent').innerHTML =
+                            `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>La IA no genero objetivos. Intente de nuevo o agregue instrucciones adicionales.</div>`;
+                        return;
+                    }
                     renderPreviewTable();
                 } else {
                     document.getElementById('previewContent').innerHTML =
-                        `<div class="alert alert-danger">${data.message}</div>`;
+                        `<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>${data.message || 'Error al generar objetivos'}</div>`;
                 }
             })
             .catch(err => {
                 document.getElementById('previewContent').innerHTML =
-                    `<div class="alert alert-danger">Error de conexion</div>`;
+                    `<div class="alert alert-danger"><i class="bi bi-wifi-off me-2"></i>Error de conexion con el servidor</div>`;
             });
     }
 
@@ -393,14 +461,14 @@
         if (explicacionIA) {
             explicacionHtml = `
                 <div class="alert alert-success small mb-3">
-                    <i class="bi bi-robot me-2"></i><strong>IA aplico cambios:</strong> ${explicacionIA}
+                    <i class="bi bi-robot me-2"></i><strong>IA:</strong> ${explicacionIA}
                 </div>`;
         }
 
         let html = `
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <strong>Total: ${objetivosData.length} objetivos sugeridos</strong>
+                    <strong>Total: ${objetivosData.length} objetivos generados por IA</strong>
                     <small class="text-muted ms-2">(limite: ${limiteObjetivos})</small>
                 </div>
                 <div>
@@ -504,7 +572,7 @@
                                 </div>
                             </div>
 
-                            <!-- Seccion IA: Instrucciones para regenerar -->
+                            <!-- Seccion IA: Regenerar o Replantear -->
                             <div class="border-top pt-2 mt-2">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <button type="button" class="btn btn-sm btn-link text-decoration-none p-0"
@@ -518,14 +586,21 @@
                                     <div class="card card-body bg-light border-0 p-2">
                                         <div class="mb-2">
                                             <textarea class="form-control form-control-sm instrucciones-ia-objetivo"
-                                                      data-idx="${idx}" rows="2"
-                                                      placeholder="Ej: Hazlo mas especifico para el sector construccion, enfoca en riesgo de altura, agrega meta trimestral..."></textarea>
+                                                      data-idx="${idx}" rows="3"
+                                                      placeholder="Ej: Enfocarlo en riesgo biologico, agregar meta trimestral... O escriba el objetivo completo que desea"></textarea>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-purple w-100"
-                                                style="border-color:#9c27b0; color:#9c27b0;"
-                                                onclick="regenerarObjetivoConIA(${idx})">
-                                            <i class="bi bi-magic me-1"></i>Regenerar este objetivo
-                                        </button>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-sm flex-fill"
+                                                    style="border:1px solid #9c27b0; color:#9c27b0;"
+                                                    onclick="regenerarObjetivoConIA(${idx}, this, 'mejorar')">
+                                                <i class="bi bi-magic me-1"></i>Regenerar
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger flex-fill"
+                                                    onclick="regenerarObjetivoConIA(${idx}, this, 'replantear')">
+                                                <i class="bi bi-arrow-repeat me-1"></i>Replantear nuevo
+                                            </button>
+                                        </div>
+                                        <small class="text-muted mt-1 d-block"><strong>Regenerar:</strong> mejora el actual &nbsp;|&nbsp; <strong>Replantear:</strong> lienzo en blanco</small>
                                     </div>
                                 </div>
                             </div>
@@ -566,19 +641,25 @@
         card.classList.toggle('border-warning');
     }
 
-    function regenerarObjetivoConIA(idx) {
+    function regenerarObjetivoConIA(idx, btnElement, modo) {
         const instrucciones = document.querySelector(`.instrucciones-ia-objetivo[data-idx="${idx}"]`).value;
         const objetivoActual = getObjetivoData(idx);
 
-        if (!instrucciones.trim()) {
-            showToast('info', 'Instrucciones', 'Escriba instrucciones para que la IA mejore este objetivo');
+        // Replantear no necesita instrucciones (lienzo en blanco)
+        if (modo === 'mejorar' && !instrucciones.trim()) {
+            showToast('info', 'Instrucciones', 'Escriba instrucciones para mejorar este objetivo');
             return;
         }
 
-        const btn = event.target;
+        // Deshabilitar AMBOS botones del panel
+        const panel = document.getElementById(`iaPanelObjetivo${idx}`);
+        const botones = panel.querySelectorAll('button');
+        botones.forEach(b => b.disabled = true);
+
+        const btn = btnElement;
         const btnOriginal = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Regenerando...';
+        const labelModo = modo === 'replantear' ? 'Replanteando...' : 'Regenerando...';
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>${labelModo}`;
 
         fetch(`<?= base_url('generador-ia') ?>/${idCliente}/regenerar-objetivo`, {
             method: 'POST',
@@ -586,40 +667,55 @@
             body: JSON.stringify({
                 objetivo_actual: objetivoActual,
                 instrucciones: instrucciones,
-                contexto_general: getInstruccionesIA()
+                contexto_general: getInstruccionesIA(),
+                modo: modo
             })
         })
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
         .then(data => {
-            btn.disabled = false;
+            botones.forEach(b => b.disabled = false);
             btn.innerHTML = btnOriginal;
 
             if (data.success && data.data) {
-                // Actualizar los campos con la respuesta de IA
                 const nuevoObj = data.data;
-                document.querySelector(`.objetivo-titulo[data-idx="${idx}"]`).value = nuevoObj.objetivo || objetivoActual.objetivo;
-                document.querySelector(`.objetivo-descripcion[data-idx="${idx}"]`).value = nuevoObj.descripcion || objetivoActual.descripcion;
-                document.querySelector(`.objetivo-meta[data-idx="${idx}"]`).value = nuevoObj.meta || objetivoActual.meta;
-                document.querySelector(`.objetivo-indicador[data-idx="${idx}"]`).value = nuevoObj.indicador_sugerido || objetivoActual.indicador_sugerido;
-                document.querySelector(`.objetivo-responsable[data-idx="${idx}"]`).value = nuevoObj.responsable || objetivoActual.responsable;
+
+                // Actualizar TODOS los campos
+                if (nuevoObj.objetivo) document.querySelector(`.objetivo-titulo[data-idx="${idx}"]`).value = nuevoObj.objetivo;
+                if (nuevoObj.descripcion) document.querySelector(`.objetivo-descripcion[data-idx="${idx}"]`).value = nuevoObj.descripcion;
+                if (nuevoObj.meta) document.querySelector(`.objetivo-meta[data-idx="${idx}"]`).value = nuevoObj.meta;
+                if (nuevoObj.indicador_sugerido) document.querySelector(`.objetivo-indicador[data-idx="${idx}"]`).value = nuevoObj.indicador_sugerido;
+                if (nuevoObj.responsable) document.querySelector(`.objetivo-responsable[data-idx="${idx}"]`).value = nuevoObj.responsable;
+                if (nuevoObj.phva) {
+                    document.querySelector(`.objetivo-phva[data-idx="${idx}"]`).value = nuevoObj.phva;
+                }
 
                 // Actualizar objetivosData
                 objetivosData[idx] = {...objetivosData[idx], ...nuevoObj, generado_por_ia: true};
 
                 // Feedback visual
                 const card = document.querySelector(`.objetivo-card[data-idx="${idx}"]`);
-                card.classList.add('border-success');
-                setTimeout(() => card.classList.remove('border-success'), 2000);
+                const borderColor = modo === 'replantear' ? 'border-danger' : 'border-success';
+                card.classList.add(borderColor);
+                setTimeout(() => card.classList.remove(borderColor), 2500);
 
-                showToast('success', 'Objetivo mejorado', 'La IA ha actualizado el objetivo');
+                // Limpiar textarea
+                document.querySelector(`.instrucciones-ia-objetivo[data-idx="${idx}"]`).value = '';
+
+                const msg = modo === 'replantear' ? 'Objetivo replanteado desde cero' : 'Objetivo mejorado por la IA';
+                showToast('success', modo === 'replantear' ? 'Nuevo objetivo' : 'Objetivo mejorado', msg);
             } else {
                 showToast('error', 'Error', data.message || 'No se pudo regenerar el objetivo');
+                console.error('Regenerar error:', data);
             }
         })
         .catch(err => {
-            btn.disabled = false;
+            botones.forEach(b => b.disabled = false);
             btn.innerHTML = btnOriginal;
-            showToast('error', 'Error de conexion', 'No se pudo conectar con el servidor');
+            showToast('error', 'Error de conexion', err.message);
+            console.error('Regenerar fetch error:', err);
         });
     }
 

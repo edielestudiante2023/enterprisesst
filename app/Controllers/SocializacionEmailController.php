@@ -82,14 +82,18 @@ class SocializacionEmailController extends BaseController
                 ]);
             }
 
-            // Validar email del cliente
-            $emailCliente = $cliente['correo_cliente'] ?? null;
-            $emailConsultor = $consultor['correo_consultor'] ?? null;
+            // Obtener destinatarios desde tbl_cliente_responsables_sst
+            $responsableModel = new ResponsableSSTModel();
+            $repLegal = $responsableModel->getRepresentanteLegal($idCliente);
+            $delegadoSST = $responsableModel->getResponsableSGSST($idCliente);
 
-            if (empty($emailCliente) && empty($emailConsultor)) {
+            $tieneEmailRepLegal = $repLegal && !empty($repLegal['email']) && filter_var($repLegal['email'], FILTER_VALIDATE_EMAIL);
+            $tieneEmailDelegado = $delegadoSST && !empty($delegadoSST['email']) && filter_var($delegadoSST['email'], FILTER_VALIDATE_EMAIL);
+
+            if (!$tieneEmailRepLegal && !$tieneEmailDelegado) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'No se encontraron emails configurados para el cliente ni el consultor'
+                    'message' => 'No se encontraron emails válidos en Responsables SST. Registre el email del Representante Legal o del Responsable SG-SST en el módulo Responsables SST.'
                 ]);
             }
 
@@ -100,23 +104,16 @@ class SocializacionEmailController extends BaseController
             $destinatarios = [];
             $emailsEnviados = [];
 
-            if (!empty($emailCliente) && filter_var($emailCliente, FILTER_VALIDATE_EMAIL)) {
-                $destinatarios[] = $emailCliente;
-                $emailsEnviados[] = $emailCliente . ' (Cliente)';
+            if ($tieneEmailRepLegal) {
+                $destinatarios[] = $repLegal['email'];
+                $emailsEnviados[] = $repLegal['email'] . ' (Representante Legal: ' . ($repLegal['nombre_completo'] ?? '') . ')';
             }
 
-            if (!empty($emailConsultor) && filter_var($emailConsultor, FILTER_VALIDATE_EMAIL)) {
-                if (!in_array($emailConsultor, $destinatarios)) {
-                    $destinatarios[] = $emailConsultor;
-                    $emailsEnviados[] = $emailConsultor . ' (Consultor: ' . $nombreConsultor . ')';
+            if ($tieneEmailDelegado) {
+                if (!in_array($delegadoSST['email'], $destinatarios)) {
+                    $destinatarios[] = $delegadoSST['email'];
+                    $emailsEnviados[] = $delegadoSST['email'] . ' (Responsable SG-SST: ' . ($delegadoSST['nombre_completo'] ?? '') . ')';
                 }
-            }
-
-            if (empty($destinatarios)) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'No hay emails válidos para enviar'
-                ]);
             }
 
             // Preparar email con SendGrid

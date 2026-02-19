@@ -1,46 +1,77 @@
-# Continuacion de Chat - Estado al 2026-02-19
+# PROMPT: Estado despues de nivelar UX Contexto IA en vistas generador_ia
 
-## SESION ACTUAL: Mejoras UX vistas cliente (read-only)
+**Fecha:** 2026-02-19
+**Estado:** COMPLETADO - 14 vistas actualizadas, sintaxis validada
 
-### Estado: IMPLEMENTADO - Pendiente revision usuario
+---
 
-### Que se hizo
+## Que se hizo
 
-#### Mejoras UX aplicadas a 2 vistas de cliente (solo visual, sin edicion)
+### Tarea: Nivelar UX del card "Contexto para la IA" en 14 vistas
 
-**`app/Views/client/list_plan_trabajo.php`** (PTA cliente)
-- Badges de estado: ABIERTA (azul), CERRADA (rojo), GESTIONANDO (amarillo)
-- Mini progress bar para porcentaje de avance (colores por rango)
-- Tabla estilizada: header con gradiente azul, hover en filas
-- Texto truncado expandible ("ver mas/ver menos") en Actividad y Observaciones
-- Accordion colapsable para tarjetas de Estado y Mes
-- `stripHtml()` en updateCardCounts y applyCardFilters para filtros con badges
-- Excel export con format.body stripHtml
+Se replico el patron de 3 columnas de `objetivos_sgsst.php` (la vista de referencia) en las 14 vistas restantes del generador IA.
 
-**`app/Views/client/list_cronogramas.php`** (Cronogramas cliente)
-- Eliminado CSS restrictivo `max-width: 50ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`
-- Badges de estado: PROGRAMADA (azul), EJECUTADA (verde), CANCELADA (rojo), REPROGRAMADA (amarillo)
-- Mini progress bar para % Cobertura (colores por rango)
-- Tabla estilizada: header con gradiente azul (reemplaza `#007bff` plano)
-- Texto truncado expandible en Capacitacion, Perfil Asistentes, Observaciones
-- Accordion colapsable para tarjetas de Estado y Mes
-- `stripHtml()` en updateStatusCounts, applyFilters, initComplete (filtros tfoot)
-- Eliminados tooltips innecesarios (data-bs-toggle="tooltip")
-- Excel export con format.body stripHtml
+### Parte 1 - Actividades (7 vistas actualizadas):
 
-### Archivos modificados
-- `app/Views/client/list_plan_trabajo.php`
-- `app/Views/client/list_cronogramas.php`
+| # | Archivo | Cambio |
+|---|---------|--------|
+| 1 | `pve_riesgo_psicosocial.php` | 2-col → 3-col + Estado Actual separado |
+| 2 | `pve_riesgo_biomecanico.php` | 2-col (datos+estado) → 3-col + Estado Actual separado |
+| 3 | `estilos_vida_saludable.php` | 2-col (datos+peligros) → 3-col con infraestructura |
+| 4 | `evaluaciones_medicas_ocupacionales.php` | 2-col → 3-col con infraestructura |
+| 5 | `mantenimiento_periodico.php` | 2-col → 3-col, conservando seccion Inventario Activos |
+| 6 | `pyp_salud.php` | 2-col → 3-col con infraestructura |
+| 7 | `capacitacion_sst.php` | 2-col → 3-col con infraestructura |
 
-### Contexto anterior (misma cadena de mejoras UX)
-- Se hicieron mejoras identicas en vistas de CONSULTOR:
-  - `app/Views/consultant/list_cronogramas.php` (cronograma consultor - AJAX/DataTables)
-  - `app/Views/client/list_pta_cliente_nueva.php` (PTA consultor - PHP rendered)
-- Documentado en `docs/UX_MEJORAS_TABLA_PTA.md` y `docs/UX_MEJORAS_TABLA_CRONOGRAMA.md`
+### Parte 2 - Indicadores (7 vistas actualizadas):
 
-### Verificacion pendiente
-- [ ] `/nuevoListPlanTrabajoCliente/{id}` - badges, progress bars, truncate, accordion
-- [ ] `/listCronogramasCliente/{id}` - badges, progress bars, truncate, accordion
-- [ ] Filtros de tarjetas (estado/mes/año) funcionan con badges HTML
-- [ ] Excel export limpio (sin HTML)
-- [ ] Filtros tfoot en cronogramas muestran opciones limpias (sin HTML)
+| # | Archivo | Cambio |
+|---|---------|--------|
+| 8 | `indicadores_pve_psicosocial.php` | Card contexto NUEVO (colapsado por defecto) |
+| 9 | `indicadores_pve_biomecanico.php` | Card contexto NUEVO (colapsado) |
+| 10 | `indicadores_estilos_vida_saludable.php` | Card contexto NUEVO (colapsado) |
+| 11 | `indicadores_evaluaciones_medicas_ocupacionales.php` | Card contexto NUEVO (colapsado) |
+| 12 | `indicadores_mantenimiento_periodico.php` | Card contexto NUEVO (colapsado) |
+| 13 | `indicadores_pyp_salud.php` | Card contexto NUEVO (colapsado) |
+| 14 | `indicadores_objetivos.php` | Card contexto NUEVO (colapsado, entre info y instrucciones) |
+
+### Patron aplicado en cada vista:
+
+**Parte 1 (Actividades):**
+- PHP prep block ANTES del card (variables $riesgo, $colorRiesgo, $peligros, $infraestructura)
+- Card header: titulo + subtitulo + boton "Editar Contexto" (target="_blank") + collapse chevron
+- 3 columnas (col-md-4): Datos Empresa | Infraestructura SST | Peligros Identificados
+- Observaciones colapsable con nl2br y scroll
+- Textarea instrucciones IA con placeholder contextualizado
+
+**Parte 2 (Indicadores):**
+- Card colapsado por defecto (collapse sin show)
+- Boton "Ver contexto IA" en vez de chevron
+- Mismas 3 columnas
+- SIN textarea instrucciones
+
+### Estilos aplicados:
+- Peligros: `bg-danger-subtle text-danger` (font-size: 0.7rem, max-height: 120px scroll)
+- Infraestructura: `bg-success-subtle text-success` con icono `bi-check`
+- Riesgo ARL: badge coloreado con match() (I,II=success, III=warning, IV,V=danger)
+- Observaciones: `alert alert-light border small`, max-height: 100px scroll
+- Link contexto: `base_url('contexto/' . $cliente['id_cliente'])` con target="_blank"
+
+---
+
+## Pendiente para verificar visualmente
+
+1. Probar en navegador con cliente 18 (tiene datos ricos)
+2. Verificar collapse funciona en todas las vistas
+3. Verificar "Editar Contexto" abre en nueva pestana
+4. Verificar scroll de peligros y observaciones
+5. Verificar que indicadores muestran "Ver contexto IA" colapsado
+
+---
+
+## Tarea completada anteriormente (mismo chat)
+
+### Backend: Fix hardcodeo en 15 services PHP
+- Todos los services usan `construirContextoCompleto()` de ObjetivosSgsstService
+- Documentado en `docs/MODULO_NUMERALES_SGSST/FIX_HARDCODEO_BLUEPRINT.md`
+- Auditoria: 7 rojos → todos verdes, 8 amarillos → todos verdes

@@ -226,24 +226,25 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-3">
-                                    <label class="form-label fw-bold text-danger">Total Trabajadores *</label>
-                                    <input type="number" name="total_trabajadores" class="form-control" required min="1"
-                                           value="<?= esc($contexto['total_trabajadores'] ?? 1) ?>" id="totalTrabajadores">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Trabajadores Directos</label>
-                                    <input type="number" name="trabajadores_directos" class="form-control" min="0"
-                                           value="<?= esc($contexto['trabajadores_directos'] ?? 1) ?>">
+                                    <label class="form-label fw-bold text-danger">Trabajadores Directos *</label>
+                                    <input type="number" name="trabajadores_directos" class="form-control" required min="1"
+                                           value="<?= esc($contexto['trabajadores_directos'] ?? 1) ?>" id="trabajadoresDirectos">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold">Trabajadores Temporales</label>
                                     <input type="number" name="trabajadores_temporales" class="form-control" min="0"
-                                           value="<?= esc($contexto['trabajadores_temporales'] ?? 0) ?>">
+                                           value="<?= esc($contexto['trabajadores_temporales'] ?? 0) ?>" id="trabajadoresTemporales">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold">Contratistas Permanentes</label>
                                     <input type="number" name="contratistas_permanentes" class="form-control" min="0"
-                                           value="<?= esc($contexto['contratistas_permanentes'] ?? 0) ?>">
+                                           value="<?= esc($contexto['contratistas_permanentes'] ?? 0) ?>" id="contratistaPermanentes">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Total Trabajadores</label>
+                                    <input type="number" class="form-control bg-light fw-bold" readonly
+                                           value="<?= esc($contexto['total_trabajadores'] ?? 1) ?>" id="totalTrabajadores">
+                                    <small class="text-muted">Suma automatica</small>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold">Numero de Sedes</label>
@@ -780,11 +781,26 @@
                 '<span class="badge bg-' + color + ' nivel-badge">' + estandares + '</span>';
         }
 
-        document.getElementById('totalTrabajadores').addEventListener('input', actualizarDisplays);
+        // Calcular total trabajadores = directos + temporales + contratistas
+        function calcularTotalTrabajadores() {
+            const directos = parseInt(document.getElementById('trabajadoresDirectos').value) || 0;
+            const temporales = parseInt(document.getElementById('trabajadoresTemporales').value) || 0;
+            const contratistas = parseInt(document.getElementById('contratistaPermanentes').value) || 0;
+            const total = directos + temporales + contratistas;
+            document.getElementById('totalTrabajadores').value = total > 0 ? total : 1;
+            actualizarDisplays();
+        }
+
+        document.getElementById('trabajadoresDirectos').addEventListener('input', calcularTotalTrabajadores);
+        document.getElementById('trabajadoresTemporales').addEventListener('input', calcularTotalTrabajadores);
+        document.getElementById('contratistaPermanentes').addEventListener('input', calcularTotalTrabajadores);
         document.querySelectorAll('input[name="niveles_riesgo_arl[]"]').forEach(function(checkbox) {
             checkbox.addEventListener('change', actualizarDisplays);
         });
         document.getElementById('estandaresAplicables').addEventListener('change', actualizarDisplays);
+
+        // Calcular total al cargar la pagina
+        calcularTotalTrabajadores();
 
         // Contador de peligros por categoria
         function actualizarContadoresPeligros() {

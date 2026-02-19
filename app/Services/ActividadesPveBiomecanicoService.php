@@ -252,6 +252,17 @@ class ActividadesPveBiomecanicoService
             $contextoTexto .= "- Actividad economica: " . ($contexto['actividad_economica_principal'] ?? 'No especificada') . "\n";
             $contextoTexto .= "- Nivel de riesgo: " . ($contexto['nivel_riesgo_arl'] ?? 'No especificado') . "\n";
             $contextoTexto .= "- Trabajadores: " . ($contexto['total_trabajadores'] ?? 'No especificado') . "\n";
+            if (!empty($contexto['peligros_identificados'])) {
+                $peligros = is_string($contexto['peligros_identificados'])
+                    ? (json_decode($contexto['peligros_identificados'], true) ?? [])
+                    : $contexto['peligros_identificados'];
+                if (!empty($peligros)) {
+                    $contextoTexto .= "- Peligros identificados: " . implode(', ', $peligros) . "\n";
+                }
+            }
+            if (!empty($contexto['observaciones_contexto'])) {
+                $contextoTexto .= "\nOBSERVACIONES DEL CONSULTOR:\n" . $contexto['observaciones_contexto'] . "\n";
+            }
         }
 
         $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia, especialista en ergonomia y riesgo biomecanico.

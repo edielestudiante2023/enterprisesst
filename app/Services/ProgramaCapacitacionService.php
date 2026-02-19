@@ -11,7 +11,7 @@ use Config\Database;
 
 /**
  * Servicio para generar el documento del Programa de Capacitacion
- * Utiliza datos REALES del cliente (cronograma, PTA, indicadores, responsables)
+ * Utiliza IA con contexto completo del cliente para personalizar todas las secciones
  */
 class ProgramaCapacitacionService
 {
@@ -35,12 +35,10 @@ class ProgramaCapacitacionService
      */
     public function generarDocumento(int $idCliente, int $anio): array
     {
-        // Obtener todos los datos necesarios
         $cliente = $this->clienteModel->find($idCliente);
         $contexto = $this->contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
-        // Obtener capacitaciones del cronograma con join a capacitaciones_sst
         $capacitaciones = $this->cronogramaModel
             ->select('tbl_cronog_capacitacion.*, capacitaciones_sst.capacitacion as tema_capacitacion, capacitaciones_sst.objetivo_capacitacion')
             ->join('capacitaciones_sst', 'capacitaciones_sst.id_capacitacion = tbl_cronog_capacitacion.id_capacitacion', 'left')
@@ -49,10 +47,8 @@ class ProgramaCapacitacionService
             ->orderBy('tbl_cronog_capacitacion.fecha_programada', 'ASC')
             ->findAll();
 
-        // Obtener indicadores de capacitacion
         $indicadores = $this->indicadorModel->getByCliente($idCliente, true, 'capacitacion');
 
-        // Obtener responsable SST
         $responsableModel = new ResponsableSSTModel();
         $responsables = $responsableModel->getByCliente($idCliente);
         $responsableSST = null;
@@ -63,8 +59,6 @@ class ProgramaCapacitacionService
             }
         }
 
-        // Obtener actividades del PTA relacionadas con capacitacion
-        // Usar SQL raw con COLLATE para evitar errores de collation
         $actividadesPTA = $this->db->table('tbl_pta_cliente')
             ->where('id_cliente', $idCliente)
             ->where('YEAR(fecha_propuesta)', $anio)
@@ -76,10 +70,8 @@ class ProgramaCapacitacionService
             ->get()
             ->getResultArray();
 
-        // Generar contenido del documento
         $contenido = $this->generarContenido($cliente, $contexto, $capacitaciones, $indicadores, $responsableSST, $anio, $estandares);
 
-        // Guardar documento en la base de datos
         $documentoId = $this->guardarDocumento($idCliente, $anio, $contenido);
 
         return [
@@ -94,7 +86,7 @@ class ProgramaCapacitacionService
     }
 
     /**
-     * Genera el contenido estructurado del documento
+     * Genera el contenido estructurado del documento usando IA para secciones de texto
      */
     protected function generarContenido(
         array $cliente,
@@ -111,7 +103,6 @@ class ProgramaCapacitacionService
             9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
 
-        // Agrupar capacitaciones por mes (usando fecha_programada)
         $cronogramaPorMes = [];
         foreach ($capacitaciones as $cap) {
             $mes = !empty($cap['fecha_programada']) ? (int)date('n', strtotime($cap['fecha_programada'])) : 1;
@@ -120,6 +111,9 @@ class ProgramaCapacitacionService
             }
             $cronogramaPorMes[$mes][] = $cap;
         }
+
+        // Generar secciones de texto con IA (una sola llamada para todas)
+        $seccionesIA = $this->generarSeccionesConIA($cliente, $contexto, $capacitaciones, $responsable, $anio, $estandares);
 
         return [
             'titulo' => 'PROGRAMA DE CAPACITACION EN SEGURIDAD Y SALUD EN EL TRABAJO',
@@ -135,38 +129,14 @@ class ProgramaCapacitacionService
             'estandares_aplicables' => $estandares,
 
             'secciones' => [
-                [
-                    'titulo' => '1. INTRODUCCION',
-                    'contenido' => $this->generarIntroduccion($cliente, $estandares)
-                ],
-                [
-                    'titulo' => '2. OBJETIVO GENERAL',
-                    'contenido' => "Desarrollar competencias en Seguridad y Salud en el Trabajo en todos los niveles de {$cliente['nombre_cliente']}, mediante la ejecucion de actividades de formacion y capacitacion que permitan la prevencion de accidentes de trabajo y enfermedades laborales, cumpliendo con los requisitos legales establecidos en la Resolucion 0312 de 2019."
-                ],
-                [
-                    'titulo' => '3. OBJETIVOS ESPECIFICOS',
-                    'contenido' => $this->generarObjetivosEspecificos($estandares)
-                ],
-                [
-                    'titulo' => '4. ALCANCE',
-                    'contenido' => "Este programa aplica a todos los trabajadores de {$cliente['nombre_cliente']}, incluyendo trabajadores directos, contratistas, subcontratistas y visitantes que realicen actividades en las instalaciones de la empresa."
-                ],
-                [
-                    'titulo' => '5. MARCO LEGAL',
-                    'contenido' => $this->generarMarcoLegal()
-                ],
-                [
-                    'titulo' => '6. DEFINICIONES',
-                    'contenido' => $this->generarDefiniciones()
-                ],
-                [
-                    'titulo' => '7. RESPONSABILIDADES',
-                    'contenido' => $this->generarResponsabilidades($responsable, $estandares)
-                ],
-                [
-                    'titulo' => '8. METODOLOGIA',
-                    'contenido' => $this->generarMetodologia()
-                ],
+                ['titulo' => '1. INTRODUCCION', 'contenido' => $seccionesIA['introduccion']],
+                ['titulo' => '2. OBJETIVO GENERAL', 'contenido' => $seccionesIA['objetivo_general']],
+                ['titulo' => '3. OBJETIVOS ESPECIFICOS', 'contenido' => $seccionesIA['objetivos_especificos']],
+                ['titulo' => '4. ALCANCE', 'contenido' => $seccionesIA['alcance']],
+                ['titulo' => '5. MARCO LEGAL', 'contenido' => $seccionesIA['marco_legal']],
+                ['titulo' => '6. DEFINICIONES', 'contenido' => $seccionesIA['definiciones']],
+                ['titulo' => '7. RESPONSABILIDADES', 'contenido' => $seccionesIA['responsabilidades']],
+                ['titulo' => '8. METODOLOGIA', 'contenido' => $seccionesIA['metodologia']],
                 [
                     'titulo' => '9. CRONOGRAMA DE CAPACITACIONES',
                     'tipo' => 'tabla',
@@ -176,14 +146,8 @@ class ProgramaCapacitacionService
                     'titulo' => '10. INDICADORES',
                     'contenido' => $this->generarSeccionIndicadores($indicadores)
                 ],
-                [
-                    'titulo' => '11. RECURSOS',
-                    'contenido' => $this->generarRecursos()
-                ],
-                [
-                    'titulo' => '12. EVALUACION Y SEGUIMIENTO',
-                    'contenido' => $this->generarEvaluacion()
-                ]
+                ['titulo' => '11. RECURSOS', 'contenido' => $seccionesIA['recursos']],
+                ['titulo' => '12. EVALUACION Y SEGUIMIENTO', 'contenido' => $seccionesIA['evaluacion']]
             ],
 
             'firma' => [
@@ -196,98 +160,271 @@ class ProgramaCapacitacionService
         ];
     }
 
-    protected function generarIntroduccion(array $cliente, int $estandares): string
+    /**
+     * Genera todas las secciones de texto con UNA sola llamada a OpenAI
+     * Usa contexto completo del cliente para personalizar cada seccion
+     */
+    protected function generarSeccionesConIA(
+        array $cliente,
+        ?array $contexto,
+        array $capacitaciones,
+        ?array $responsable,
+        int $anio,
+        int $estandares
+    ): array {
+        $apiKey = env('OPENAI_API_KEY', '');
+        if (empty($apiKey)) {
+            log_message('error', 'ProgramaCapacitacion: OPENAI_API_KEY no configurada');
+            return $this->generarSeccionesFallback($cliente, $estandares, $responsable);
+        }
+
+        // Reutilizar construirContextoCompleto() de ObjetivosSgsstService
+        $objetivosService = new \App\Services\ObjetivosSgsstService();
+        $contextoTexto = $objetivosService->construirContextoCompleto($contexto, (int)$cliente['id_cliente']);
+
+        $resumenCapacitaciones = $this->construirResumenCapacitaciones($capacitaciones);
+        $systemPrompt = $this->construirSystemPrompt();
+        $userPrompt = $this->construirUserPrompt($contextoTexto, $resumenCapacitaciones, $cliente, $responsable, $anio, $estandares);
+
+        try {
+            $respuesta = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey);
+            if ($respuesta) {
+                $secciones = $this->procesarRespuestaIA($respuesta);
+                if ($secciones) {
+                    log_message('info', 'ProgramaCapacitacion: Secciones generadas con IA para cliente ' . $cliente['id_cliente']);
+                    return $secciones;
+                }
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'ProgramaCapacitacion: Error IA: ' . $e->getMessage());
+        }
+
+        log_message('warning', 'ProgramaCapacitacion: Usando fallback sin IA para cliente ' . $cliente['id_cliente']);
+        return $this->generarSeccionesFallback($cliente, $estandares, $responsable);
+    }
+
+    /**
+     * System prompt especializado para generar Programa de Capacitacion
+     */
+    protected function construirSystemPrompt(): string
     {
+        return <<<'PROMPT'
+Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia, especializado en diseñar Programas de Capacitacion conforme a la normatividad colombiana vigente.
+
+Tu tarea es generar las secciones de texto del Programa de Capacitacion para una empresa especifica. Cada seccion debe ser PERSONALIZADA segun la actividad economica, peligros identificados, nivel de riesgo, observaciones del consultor y demas contexto proporcionado.
+
+REGLAS:
+1. NO uses texto generico que aplique a cualquier empresa. Cada seccion debe reflejar la realidad de la empresa.
+2. Si hay peligros identificados, incorporalos en la introduccion, objetivos y metodologia.
+3. Si hay observaciones del consultor, integra esa informacion en las secciones relevantes.
+4. El marco legal debe incluir normas generales de SST MAS las especificas del sector economico de la empresa.
+5. Las definiciones deben incluir terminos relevantes al sector y peligros especificos.
+6. Las responsabilidades deben adaptarse al tamaño de la empresa y su estructura SST (COPASST vs Vigia).
+7. La metodologia debe ser practica y adaptada al tipo y tamaño de empresa.
+8. Los recursos deben ser realistas para el tamaño y tipo de empresa.
+9. La evaluacion debe considerar indicadores relevantes para el contexto.
+10. Usa lenguaje formal tecnico de SST colombiano. Escribe con tildes.
+11. NO inventes datos. Usa solamente la informacion proporcionada.
+12. La introduccion debe tener 2-3 parrafos sustanciales.
+13. Los objetivos especificos deben ser minimo 4 y maximo 8, dependiendo del nivel de estandares.
+
+FORMATO DE RESPUESTA:
+Responde UNICAMENTE con un JSON valido (sin markdown, sin ```json```, sin comentarios), con estas 10 claves:
+
+{
+  "introduccion": "Texto de la introduccion (2-3 parrafos separados con \\n\\n)",
+  "objetivo_general": "Un parrafo con el objetivo general personalizado",
+  "objetivos_especificos": "Lista con guiones:\\n- Objetivo 1\\n- Objetivo 2\\n...",
+  "alcance": "Texto del alcance (1-2 parrafos)",
+  "marco_legal": "El presente programa se fundamenta en:\\n\\n- Norma: descripcion\\n- Norma: descripcion\\n...",
+  "definiciones": "**Termino:** Definicion.\\n\\n**Termino2:** Definicion2.\\n...",
+  "responsabilidades": "**Alta Direccion:**\\n- Item\\n...\\n\\n**Responsable del SG-SST (NOMBRE):**\\n- Item\\n...\\n\\n**COPASST/Vigia:**\\n- Item\\n...\\n\\n**Trabajadores:**\\n- Item\\n...",
+  "metodologia": "Texto con subsecciones y listas de actividades concretas",
+  "recursos": "**Recursos Humanos:**\\n- Item\\n...\\n\\n**Recursos Fisicos:**\\n- Item\\n...\\n\\n**Recursos Financieros:**\\n- Item\\n...",
+  "evaluacion": "Texto de evaluacion y seguimiento con criterios y frecuencia"
+}
+PROMPT;
+    }
+
+    /**
+     * Construye el user prompt con contexto completo del cliente
+     */
+    protected function construirUserPrompt(
+        string $contextoTexto,
+        string $resumenCapacitaciones,
+        array $cliente,
+        ?array $responsable,
+        int $anio,
+        int $estandares
+    ): string {
         $nivel = $estandares <= 7 ? 'basico (hasta 10 trabajadores, riesgo I, II o III)' :
                 ($estandares <= 21 ? 'intermedio (11 a 50 trabajadores, riesgo I, II o III)' :
                 'avanzado (mas de 50 trabajadores o riesgo IV y V)');
 
-        return "{$cliente['nombre_cliente']} en cumplimiento de la normatividad legal vigente en materia de Seguridad y Salud en el Trabajo, especificamente la Resolucion 0312 de 2019 que establece los Estandares Minimos del Sistema de Gestion de Seguridad y Salud en el Trabajo (SG-SST), ha desarrollado el presente Programa de Capacitacion.\n\n" .
-               "La empresa aplica los estandares de nivel {$nivel}, lo cual determina los requisitos minimos de capacitacion que deben cumplirse.\n\n" .
-               "La capacitacion es un elemento fundamental del SG-SST que permite a los trabajadores conocer los peligros y riesgos asociados a su labor, asi como las medidas de prevencion y control para evitar accidentes de trabajo y enfermedades laborales.";
+        $organo = $estandares <= 10 ? 'Vigia de SST' : 'COPASST';
+        $nombreResponsable = $responsable ? $responsable['nombre_completo'] : 'el Responsable del SG-SST';
+        $cargoResponsable = $responsable ? ($responsable['cargo'] ?? 'Responsable SG-SST') : 'Responsable SG-SST';
+
+        $prompt = "AÑO DE VIGENCIA: {$anio}\n";
+        $prompt .= "NIVEL DE ESTANDARES: {$nivel} ({$estandares} estandares - Resolucion 0312 de 2019)\n";
+        $prompt .= "ORGANO DE PARTICIPACION: {$organo}\n";
+        $prompt .= "RESPONSABLE SG-SST: {$nombreResponsable} ({$cargoResponsable})\n\n";
+        $prompt .= $contextoTexto;
+
+        if (!empty($resumenCapacitaciones)) {
+            $prompt .= "\n\nCAPACITACIONES PROGRAMADAS EN EL CRONOGRAMA:\n" . $resumenCapacitaciones;
+        }
+
+        $prompt .= "\n\nGenera las 10 secciones del Programa de Capacitacion personalizadas para esta empresa.";
+
+        return $prompt;
     }
 
-    protected function generarObjetivosEspecificos(int $estandares): string
+    /**
+     * Construye resumen de capacitaciones programadas para incluir en el prompt
+     */
+    protected function construirResumenCapacitaciones(array $capacitaciones): string
     {
-        $objetivos = [
-            "Realizar induccion y reinduccion en SST a todos los trabajadores",
-            "Capacitar a los trabajadores sobre los peligros y riesgos asociados a sus actividades",
-            "Formar a los integrantes del COPASST/Vigia SST en sus funciones y responsabilidades",
-            "Entrenar a los brigadistas de emergencias en prevencion y atencion de situaciones de emergencia"
+        if (empty($capacitaciones)) {
+            return 'No hay capacitaciones programadas aun.';
+        }
+
+        $resumen = '';
+        foreach ($capacitaciones as $cap) {
+            $tema = $cap['tema_capacitacion'] ?? $cap['capacitacion'] ?? 'Sin definir';
+            $fecha = $cap['fecha_programada'] ?? '';
+            $resumen .= "- {$tema}";
+            if (!empty($fecha)) {
+                $resumen .= " (programada: {$fecha})";
+            }
+            $resumen .= "\n";
+        }
+
+        return $resumen;
+    }
+
+    /**
+     * Llama a la API de OpenAI con una sola peticion para todas las secciones
+     */
+    protected function llamarOpenAI(string $systemPrompt, string $userPrompt, string $apiKey): ?string
+    {
+        $data = [
+            'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt]
+            ],
+            'temperature' => 0.7,
+            'max_tokens' => 6000,
+            'response_format' => ['type' => 'json_object']
         ];
 
-        if ($estandares > 21) {
-            $objetivos[] = "Desarrollar competencias en los trabajadores para la identificacion de peligros y valoracion de riesgos";
-            $objetivos[] = "Promover estilos de vida y trabajo saludables";
+        log_message('info', 'ProgramaCapacitacion: Llamando OpenAI para generar secciones del documento');
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_TIMEOUT => 90,
+            CURLOPT_CONNECTTIMEOUT => 10
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlError) {
+            log_message('error', 'ProgramaCapacitacion: cURL error: ' . $curlError);
+            return null;
         }
 
-        $lista = "";
-        foreach ($objetivos as $obj) {
-            $lista .= "- {$obj}\n";
+        if ($httpCode !== 200) {
+            log_message('error', 'ProgramaCapacitacion: HTTP ' . $httpCode . ' - ' . substr($response, 0, 500));
+            return null;
         }
-        return $lista;
+
+        $decoded = json_decode($response, true);
+        $content = $decoded['choices'][0]['message']['content'] ?? null;
+
+        if ($content) {
+            $tokens = $decoded['usage']['total_tokens'] ?? 0;
+            log_message('info', "ProgramaCapacitacion: Respuesta recibida ({$tokens} tokens)");
+        }
+
+        return $content;
     }
 
-    protected function generarMarcoLegal(): string
+    /**
+     * Procesa la respuesta JSON de OpenAI y valida que todas las secciones esten presentes
+     */
+    protected function procesarRespuestaIA(string $respuesta): ?array
     {
-        return "El presente programa se fundamenta en la siguiente normatividad:\n\n" .
-               "- Ley 9 de 1979: Codigo Sanitario Nacional\n" .
-               "- Resolucion 2400 de 1979: Disposiciones sobre vivienda, higiene y seguridad en los establecimientos de trabajo\n" .
-               "- Decreto 1295 de 1994: Organizacion y administracion del Sistema General de Riesgos Profesionales\n" .
-               "- Ley 1562 de 2012: Sistema de Gestion de Seguridad y Salud en el Trabajo\n" .
-               "- Decreto 1072 de 2015: Decreto Unico Reglamentario del Sector Trabajo (Capitulo 6)\n" .
-               "- Resolucion 0312 de 2019: Estandares Minimos del SG-SST";
+        $data = json_decode($respuesta, true);
+        if (!$data) {
+            log_message('error', 'ProgramaCapacitacion: JSON invalido de OpenAI: ' . substr($respuesta, 0, 200));
+            return null;
+        }
+
+        $seccionesRequeridas = [
+            'introduccion', 'objetivo_general', 'objetivos_especificos',
+            'alcance', 'marco_legal', 'definiciones', 'responsabilidades',
+            'metodologia', 'recursos', 'evaluacion'
+        ];
+
+        foreach ($seccionesRequeridas as $seccion) {
+            if (empty($data[$seccion])) {
+                log_message('error', "ProgramaCapacitacion: Seccion '{$seccion}' vacia o faltante en respuesta IA");
+                return null;
+            }
+        }
+
+        return $data;
     }
 
-    protected function generarDefiniciones(): string
+    /**
+     * Genera secciones basicas de fallback cuando la IA no esta disponible
+     */
+    protected function generarSeccionesFallback(array $cliente, int $estandares, ?array $responsable): array
     {
-        return "**Capacitacion:** Proceso mediante el cual se desarrollan competencias, habilidades y destrezas en los trabajadores.\n\n" .
-               "**Induccion:** Capacitacion inicial que recibe el trabajador al ingresar a la empresa sobre aspectos generales y especificos de SST.\n\n" .
-               "**Reinduccion:** Capacitacion periodica para actualizar conocimientos y reforzar conceptos de SST.\n\n" .
-               "**Entrenamiento:** Proceso de aprendizaje practico que permite desarrollar habilidades especificas.\n\n" .
-               "**Competencia:** Capacidad demostrada para aplicar conocimientos y habilidades.";
-    }
-
-    protected function generarResponsabilidades(?array $responsable, int $estandares): string
-    {
-        $nombreResponsable = $responsable ? $responsable['nombre_completo'] : 'el Responsable del SG-SST';
+        $nombre = $cliente['nombre_cliente'];
+        $nivel = $estandares <= 7 ? 'basico (hasta 10 trabajadores, riesgo I, II o III)' :
+                ($estandares <= 21 ? 'intermedio (11 a 50 trabajadores, riesgo I, II o III)' :
+                'avanzado (mas de 50 trabajadores o riesgo IV y V)');
         $organo = $estandares <= 10 ? 'Vigia de SST' : 'COPASST';
+        $nombreResponsable = $responsable ? $responsable['nombre_completo'] : 'el Responsable del SG-SST';
 
-        return "**Alta Direccion:**\n" .
-               "- Asignar los recursos necesarios para la ejecucion del programa\n" .
-               "- Garantizar la participacion de los trabajadores en las capacitaciones\n\n" .
-               "**Responsable del SG-SST ({$nombreResponsable}):**\n" .
-               "- Planificar y coordinar las actividades de capacitacion\n" .
-               "- Realizar seguimiento al cumplimiento del cronograma\n" .
-               "- Evaluar la efectividad de las capacitaciones\n" .
-               "- Mantener los registros de asistencia y evaluacion\n\n" .
-               "**{$organo}:**\n" .
-               "- Participar en las actividades de capacitacion\n" .
-               "- Proponer temas de capacitacion segun las necesidades identificadas\n" .
-               "- Verificar el cumplimiento del programa\n\n" .
-               "**Trabajadores:**\n" .
-               "- Asistir a las capacitaciones programadas\n" .
-               "- Aplicar los conocimientos adquiridos en su labor diaria\n" .
-               "- Participar activamente en las actividades de formacion";
+        return [
+            'introduccion' => "{$nombre} en cumplimiento de la normatividad legal vigente en materia de Seguridad y Salud en el Trabajo, especificamente la Resolucion 0312 de 2019 que establece los Estandares Minimos del Sistema de Gestion de Seguridad y Salud en el Trabajo (SG-SST), ha desarrollado el presente Programa de Capacitacion.\n\nLa empresa aplica los estandares de nivel {$nivel}, lo cual determina los requisitos minimos de capacitacion que deben cumplirse.\n\nLa capacitacion es un elemento fundamental del SG-SST que permite a los trabajadores conocer los peligros y riesgos asociados a su labor, asi como las medidas de prevencion y control para evitar accidentes de trabajo y enfermedades laborales.",
+
+            'objetivo_general' => "Desarrollar competencias en Seguridad y Salud en el Trabajo en todos los niveles de {$nombre}, mediante la ejecucion de actividades de formacion y capacitacion que permitan la prevencion de accidentes de trabajo y enfermedades laborales, cumpliendo con los requisitos legales establecidos en la Resolucion 0312 de 2019.",
+
+            'objetivos_especificos' => "- Realizar induccion y reinduccion en SST a todos los trabajadores\n- Capacitar a los trabajadores sobre los peligros y riesgos asociados a sus actividades\n- Formar a los integrantes del {$organo} en sus funciones y responsabilidades\n- Entrenar a los brigadistas de emergencias en prevencion y atencion de situaciones de emergencia",
+
+            'alcance' => "Este programa aplica a todos los trabajadores de {$nombre}, incluyendo trabajadores directos, contratistas, subcontratistas y visitantes que realicen actividades en las instalaciones de la empresa.",
+
+            'marco_legal' => "El presente programa se fundamenta en la siguiente normatividad:\n\n- Ley 9 de 1979: Codigo Sanitario Nacional\n- Resolucion 2400 de 1979: Disposiciones sobre vivienda, higiene y seguridad en los establecimientos de trabajo\n- Decreto 1295 de 1994: Organizacion y administracion del Sistema General de Riesgos Profesionales\n- Ley 1562 de 2012: Sistema de Gestion de Seguridad y Salud en el Trabajo\n- Decreto 1072 de 2015: Decreto Unico Reglamentario del Sector Trabajo (Capitulo 6)\n- Resolucion 0312 de 2019: Estandares Minimos del SG-SST",
+
+            'definiciones' => "**Capacitacion:** Proceso mediante el cual se desarrollan competencias, habilidades y destrezas en los trabajadores.\n\n**Induccion:** Capacitacion inicial que recibe el trabajador al ingresar a la empresa sobre aspectos generales y especificos de SST.\n\n**Reinduccion:** Capacitacion periodica para actualizar conocimientos y reforzar conceptos de SST.\n\n**Entrenamiento:** Proceso de aprendizaje practico que permite desarrollar habilidades especificas.\n\n**Competencia:** Capacidad demostrada para aplicar conocimientos y habilidades.",
+
+            'responsabilidades' => "**Alta Direccion:**\n- Asignar los recursos necesarios para la ejecucion del programa\n- Garantizar la participacion de los trabajadores en las capacitaciones\n\n**Responsable del SG-SST ({$nombreResponsable}):**\n- Planificar y coordinar las actividades de capacitacion\n- Realizar seguimiento al cumplimiento del cronograma\n- Evaluar la efectividad de las capacitaciones\n- Mantener los registros de asistencia y evaluacion\n\n**{$organo}:**\n- Participar en las actividades de capacitacion\n- Proponer temas de capacitacion segun las necesidades identificadas\n- Verificar el cumplimiento del programa\n\n**Trabajadores:**\n- Asistir a las capacitaciones programadas\n- Aplicar los conocimientos adquiridos en su labor diaria\n- Participar activamente en las actividades de formacion",
+
+            'metodologia' => "Las capacitaciones se desarrollaran utilizando las siguientes metodologias:\n\n**Capacitaciones Teoricas:**\n- Presentaciones interactivas\n- Material audiovisual\n- Documentos de apoyo\n\n**Capacitaciones Practicas:**\n- Talleres demostrativos\n- Simulacros\n- Ejercicios practicos en campo\n\n**Evaluacion:**\n- Evaluacion escrita al finalizar cada capacitacion\n- Evaluacion practica cuando aplique\n- Retroalimentacion individual",
+
+            'recursos' => "Para la ejecucion del programa de capacitacion se requieren los siguientes recursos:\n\n**Recursos Humanos:**\n- Responsable del SG-SST\n- Capacitadores internos y/o externos\n- ARL (Administradora de Riesgos Laborales)\n\n**Recursos Fisicos:**\n- Sala de capacitaciones o espacio adecuado\n- Equipos audiovisuales (computador, proyector)\n- Material didactico\n\n**Recursos Financieros:**\n- Presupuesto asignado por la alta direccion para actividades de capacitacion",
+
+            'evaluacion' => "El programa sera evaluado trimestralmente considerando:\n\n- Cumplimiento del cronograma de capacitaciones\n- Cobertura de trabajadores capacitados\n- Resultados de las evaluaciones aplicadas\n- Aplicacion de conocimientos en el trabajo\n\nLos resultados de la evaluacion seran presentados en las reuniones del {$organo} y serviran para realizar ajustes al programa segun las necesidades identificadas."
+        ];
     }
 
-    protected function generarMetodologia(): string
-    {
-        return "Las capacitaciones se desarrollaran utilizando las siguientes metodologias:\n\n" .
-               "**Capacitaciones Teoricas:**\n" .
-               "- Presentaciones interactivas\n" .
-               "- Material audiovisual\n" .
-               "- Documentos de apoyo\n\n" .
-               "**Capacitaciones Practicas:**\n" .
-               "- Talleres demostrativos\n" .
-               "- Simulacros\n" .
-               "- Ejercicios practicos en campo\n\n" .
-               "**Evaluacion:**\n" .
-               "- Evaluacion escrita al finalizar cada capacitacion\n" .
-               "- Evaluacion practica cuando aplique\n" .
-               "- Retroalimentacion individual";
-    }
-
+    /**
+     * Genera la tabla del cronograma de capacitaciones (datos dinamicos de BD)
+     */
     protected function generarTablaCronograma(array $cronogramaPorMes, array $meses, int $anio): array
     {
         $filas = [];
@@ -314,6 +451,9 @@ class ProgramaCapacitacionService
         ];
     }
 
+    /**
+     * Genera la seccion de indicadores (datos dinamicos de BD)
+     */
     protected function generarSeccionIndicadores(array $indicadores): string
     {
         if (empty($indicadores)) {
@@ -336,45 +476,17 @@ class ProgramaCapacitacionService
         return $contenido;
     }
 
-    protected function generarRecursos(): string
-    {
-        return "Para la ejecucion del programa de capacitacion se requieren los siguientes recursos:\n\n" .
-               "**Recursos Humanos:**\n" .
-               "- Responsable del SG-SST\n" .
-               "- Capacitadores internos y/o externos\n" .
-               "- ARL (Administradora de Riesgos Laborales)\n\n" .
-               "**Recursos Fisicos:**\n" .
-               "- Sala de capacitaciones o espacio adecuado\n" .
-               "- Equipos audiovisuales (computador, proyector)\n" .
-               "- Material didactico\n\n" .
-               "**Recursos Financieros:**\n" .
-               "- Presupuesto asignado por la alta direccion para actividades de capacitacion";
-    }
-
-    protected function generarEvaluacion(): string
-    {
-        return "El programa sera evaluado trimestralmente considerando:\n\n" .
-               "- Cumplimiento del cronograma de capacitaciones\n" .
-               "- Cobertura de trabajadores capacitados\n" .
-               "- Resultados de las evaluaciones aplicadas\n" .
-               "- Aplicacion de conocimientos en el trabajo\n\n" .
-               "Los resultados de la evaluacion seran presentados en las reuniones del COPASST/Vigia SST y serviran para realizar ajustes al programa segun las necesidades identificadas.";
-    }
-
     /**
      * Guarda el documento generado en la base de datos
      */
     protected function guardarDocumento(int $idCliente, int $anio, array $contenido): int
     {
-        // Verificar si existe tabla de documentos SST
         $existeTabla = $this->db->tableExists('tbl_documentos_sst');
 
         if (!$existeTabla) {
-            // Crear tabla si no existe
             $this->crearTablaDocumentos();
         }
 
-        // Verificar si ya existe el documento
         $documentoExistente = $this->db->table('tbl_documentos_sst')
             ->where('id_cliente', $idCliente)
             ->where('tipo_documento', 'programa_capacitacion')

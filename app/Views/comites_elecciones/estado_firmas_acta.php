@@ -312,19 +312,31 @@ $tipoComiteNombre = [
                                 <img src="<?= $evidencia['firma_imagen'] ?>"
                                      alt="Firma"
                                      class="firma-imagen">
-                            <?php elseif ($sol['estado'] === 'pendiente'): ?>
-                                <a href="<?= base_url("firma/reenviar/{$sol['id_solicitud']}") ?>"
-                                   class="btn btn-sm btn-outline-warning me-1"
-                                   onclick="return confirm('Reenviar solicitud de firma?')">
-                                    <i class="fas fa-redo me-1"></i> Reenviar
-                                </a>
+                            <?php elseif (in_array($sol['estado'], ['pendiente', 'esperando'])): ?>
+                                <?php $urlFirmaCopasst = base_url('firma/firmar/' . $sol['token']); ?>
+                                <button type="button" class="btn btn-sm btn-outline-info me-1"
+                                        onclick="copiarEnlaceFirma('<?= $urlFirmaCopasst ?>', '<?= esc($sol['firmante_nombre']) ?>')"
+                                        title="Copiar enlace de firma">
+                                    <i class="fas fa-copy me-1"></i>Copiar enlace
+                                </button>
+                                <?php if ($sol['estado'] === 'pendiente'): ?>
+                                <form action="<?= base_url("firma/reenviar/{$sol['id_solicitud']}") ?>" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning me-1"
+                                            onclick="return confirm('Reenviar solicitud de firma?')">
+                                        <i class="fas fa-redo me-1"></i>Reenviar
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-warning me-1"
+                                        onclick="modalEmailAlternativo('<?= base_url("firma/reenviar/{$sol['id_solicitud']}") ?>', '<?= esc($sol['firmante_nombre']) ?>', '<?= esc($sol['firmante_email']) ?>')"
+                                        title="Enviar a email alternativo">
+                                    <i class="fas fa-at me-1"></i>Email alt.
+                                </button>
                                 <a href="<?= base_url("firma/cancelar/{$sol['id_solicitud']}") ?>"
                                    class="btn btn-sm btn-outline-danger"
                                    onclick="return confirm('Cancelar esta solicitud de firma?')">
                                     <i class="fas fa-times"></i>
                                 </a>
-                            <?php elseif ($sol['estado'] === 'esperando'): ?>
-                                <span class="badge bg-secondary">Esperando turno</span>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -352,5 +364,8 @@ $tipoComiteNombre = [
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="<?= base_url('js/firma-helpers.js') ?>"></script>
 
 <?= $this->endSection() ?>

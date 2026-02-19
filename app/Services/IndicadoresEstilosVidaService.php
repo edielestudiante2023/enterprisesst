@@ -7,135 +7,23 @@ use App\Models\IndicadorSSTModel;
 /**
  * Servicio para generar indicadores de Estilos de Vida Saludable
  * segun Resolucion 0312/2019 - Estandar 3.1.7
+ *
+ * PARTE 2 del modulo de 3 partes:
+ * - IA genera indicadores personalizados usando contexto COMPLETO del cliente
+ * - Consultor revisa y selecciona
+ * - Se guardan en tbl_indicadores_sst con categoria = 'estilos_vida_saludable'
  */
 class IndicadoresEstilosVidaService
 {
     protected IndicadorSSTModel $indicadorModel;
+    protected const CATEGORIA = 'estilos_vida_saludable';
+    protected const NUMERAL = '3.1.7';
+    protected const CANTIDAD_GENERAR = 7;
 
     public function __construct()
     {
         $this->indicadorModel = new IndicadorSSTModel();
     }
-
-    /**
-     * Indicadores base de Estilos de Vida Saludable
-     */
-    public const INDICADORES_ESTILOS_VIDA = [
-        [
-            'nombre' => 'Cumplimiento de Actividades del Programa de Estilos de Vida Saludable',
-            'tipo' => 'proceso',
-            'formula' => '(Actividades EVS ejecutadas / Actividades EVS programadas) x 100',
-            'meta' => 90,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.7',
-            'descripcion' => 'Mide el cumplimiento de las actividades de promocion de estilos de vida saludables',
-            'definicion' => 'Mide el porcentaje de actividades ejecutadas del programa de estilos de vida saludable frente a las programadas, incluyendo campanas de prevencion de tabaquismo, alcoholismo y farmacodependencia.',
-            'interpretacion' => 'Un resultado >=90% indica buen cumplimiento. Valores menores requieren reprogramacion de actividades y revision de recursos asignados al programa.',
-            'origen_datos' => 'Plan de trabajo anual (actividades EVS), registros de ejecucion, actas',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, trabajadores'
-        ],
-        [
-            'nombre' => 'Cobertura de Participacion en Campanas de Prevencion',
-            'tipo' => 'proceso',
-            'formula' => '(Trabajadores participantes en campanas / Total trabajadores convocados) x 100',
-            'meta' => 80,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.7',
-            'descripcion' => 'Mide la participacion de trabajadores en campanas de tabaquismo, alcoholismo y farmacodependencia',
-            'definicion' => 'Mide la proporcion de trabajadores que participan en las campanas de prevencion de consumo de tabaco, alcohol y sustancias psicoactivas.',
-            'interpretacion' => 'Un 80% o mas indica buena participacion. Valores menores requieren revision de estrategias de convocatoria y metodologia de las campanas.',
-            'origen_datos' => 'Registros de asistencia a campanas, listados de convocatoria, nomina',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, trabajadores'
-        ],
-        [
-            'nombre' => 'Numero de Campanas de Prevencion Realizadas',
-            'tipo' => 'proceso',
-            'formula' => 'Campanas realizadas en el periodo',
-            'meta' => 6,
-            'unidad' => 'campanas/ano',
-            'periodicidad' => 'semestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.7',
-            'descripcion' => 'Mide la cantidad de campanas de prevencion de tabaquismo, alcoholismo y farmacodependencia realizadas',
-            'definicion' => 'Registra el numero total de campanas de prevencion de tabaquismo, alcoholismo y farmacodependencia realizadas durante el periodo.',
-            'interpretacion' => 'La meta de 6 campanas/ano (una bimestral) es el minimo recomendado. Deben cubrir los 3 temas: tabaquismo, alcoholismo y farmacodependencia.',
-            'origen_datos' => 'Registros de campanas realizadas, material de divulgacion, actas de ejecucion',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia'
-        ],
-        [
-            'nombre' => 'Variacion en Porcentaje de Fumadores Activos',
-            'tipo' => 'resultado',
-            'formula' => '((Fumadores periodo actual - Fumadores periodo anterior) / Fumadores periodo anterior) x 100',
-            'meta' => -5,
-            'unidad' => '%',
-            'periodicidad' => 'anual',
-            'phva' => 'verificar',
-            'numeral' => '3.1.7',
-            'descripcion' => 'Mide la reduccion en el porcentaje de fumadores activos entre trabajadores',
-            'menor_es_mejor' => true,
-            'definicion' => 'Mide la variacion porcentual de fumadores activos entre un periodo y otro, con el objetivo de evidenciar reduccion progresiva del habito de fumar.',
-            'interpretacion' => 'Valores negativos indican reduccion (objetivo deseado). La meta de -5% significa reducir al menos 5% los fumadores. Valores positivos indican aumento del habito.',
-            'origen_datos' => 'Encuestas de habitos de salud, diagnostico de condiciones de salud, perfil sociodemografico',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, medico ocupacional'
-        ],
-        [
-            'nombre' => 'Tasa de Ausentismo por Enfermedades Cronicas No Transmisibles',
-            'tipo' => 'resultado',
-            'formula' => '(Dias ausencia por ECNT / Dias laborados programados) x 100',
-            'meta' => 3,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.7',
-            'descripcion' => 'Mide el ausentismo atribuible a enfermedades cronicas no transmisibles',
-            'menor_es_mejor' => true,
-            'definicion' => 'Mide el porcentaje de dias laborales perdidos por enfermedades cronicas no transmisibles (diabetes, hipertension, obesidad, etc.) respecto al total programado.',
-            'interpretacion' => 'Valores <=3% son aceptables. Valores superiores requieren fortalecimiento de campanas de estilos de vida saludable y seguimiento medico.',
-            'origen_datos' => 'Registros de incapacidades (diagnostico ECNT), nomina, EPS',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, Recursos Humanos, medico ocupacional'
-        ],
-        [
-            'nombre' => 'Satisfaccion de Trabajadores con el Programa',
-            'tipo' => 'resultado',
-            'formula' => '(Trabajadores satisfechos / Total trabajadores encuestados) x 100',
-            'meta' => 80,
-            'unidad' => '%',
-            'periodicidad' => 'anual',
-            'phva' => 'verificar',
-            'numeral' => '3.1.7',
-            'descripcion' => 'Mide la satisfaccion de los trabajadores con las actividades del programa',
-            'definicion' => 'Mide el nivel de satisfaccion de los trabajadores con las actividades del programa de estilos de vida saludable mediante encuestas de percepcion.',
-            'interpretacion' => 'Valores >=80% indican buena aceptacion del programa. Valores menores sugieren necesidad de ajustar temas, metodologias o frecuencia de actividades.',
-            'origen_datos' => 'Encuestas de satisfaccion, evaluacion de actividades, sugerencias de trabajadores',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia'
-        ],
-        [
-            'nombre' => 'Casos Remitidos a EPS por Consumo de SPA',
-            'tipo' => 'resultado',
-            'formula' => 'Numero de casos identificados y remitidos a EPS',
-            'meta' => 0,
-            'unidad' => 'casos',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.7',
-            'descripcion' => 'Registra los casos de consumo de sustancias psicoactivas detectados y canalizados a EPS',
-            'definicion' => 'Registra la cantidad de trabajadores identificados con consumo de sustancias psicoactivas (SPA) que fueron canalizados a su EPS para atencion especializada.',
-            'interpretacion' => 'Lo ideal es 0 casos. La deteccion y canalizacion oportuna es obligatoria. Un aumento de casos puede indicar mejor deteccion o mayor prevalencia.',
-            'origen_datos' => 'Registros de canalizacion a EPS, reportes de deteccion, seguimiento de casos',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, medico ocupacional'
-        ]
-    ];
 
     /**
      * Obtiene el resumen de indicadores de Estilos de Vida para un cliente
@@ -146,7 +34,7 @@ class IndicadoresEstilosVidaService
             ->where('id_cliente', $idCliente)
             ->where('activo', 1)
             ->groupStart()
-                ->where('categoria', 'estilos_vida_saludable')
+                ->where('categoria', self::CATEGORIA)
                 ->orLike('nombre_indicador', 'estilos de vida', 'both')
                 ->orLike('nombre_indicador', 'tabaquismo', 'both')
                 ->orLike('nombre_indicador', 'alcoholismo', 'both')
@@ -171,7 +59,7 @@ class IndicadoresEstilosVidaService
 
         return [
             'existentes' => $total,
-            'sugeridos' => count(self::INDICADORES_ESTILOS_VIDA),
+            'limite' => self::CANTIDAD_GENERAR,
             'medidos' => $medidos,
             'cumplen' => $cumplen,
             'completo' => $total >= 3,
@@ -180,35 +68,48 @@ class IndicadoresEstilosVidaService
     }
 
     /**
-     * Preview de indicadores que se generarian
+     * Preview de indicadores generados por IA segun contexto completo del cliente
      */
     public function previewIndicadores(int $idCliente, ?array $contexto = null): array
     {
-        $indicadores = [];
-
-        // 1. Agregar indicadores base
-        foreach (self::INDICADORES_ESTILOS_VIDA as $idx => $ind) {
-            $indicadores[] = [
-                'indice' => $idx,
-                'nombre' => $ind['nombre'],
-                'tipo' => $ind['tipo'],
-                'formula' => $ind['formula'],
-                'meta' => $ind['meta'],
-                'unidad' => $ind['unidad'],
-                'periodicidad' => $ind['periodicidad'],
-                'phva' => $ind['phva'],
-                'numeral' => $ind['numeral'],
-                'descripcion' => $ind['descripcion'] ?? '',
-                'origen' => 'base',
-                'seleccionado' => true
+        $apiKey = env('OPENAI_API_KEY', '');
+        if (empty($apiKey)) {
+            log_message('error', 'IndicadoresEstilosVida: OPENAI_API_KEY no configurada');
+            return [
+                'indicadores' => [],
+                'total' => 0,
+                'contexto_aplicado' => false,
+                'error' => 'API Key de OpenAI no configurada'
             ];
         }
 
-        // 2. Marcar los que ya existen
+        $objetivosService = new \App\Services\ObjetivosSgsstService();
+        $contextoTexto = $objetivosService->construirContextoCompleto($contexto, $idCliente);
+
+        $systemPrompt = $this->construirSystemPrompt();
+        $userPrompt = $contextoTexto;
+        $userPrompt .= "\n\nGenera exactamente " . self::CANTIDAD_GENERAR . " indicadores de Estilos de Vida Saludable personalizados para esta empresa.";
+        $userPrompt .= "\nDeben ser especificos para su actividad economica, perfil demografico de trabajadores y peligros identificados.";
+
+        $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey, 0.7);
+
+        if (!$response['success']) {
+            log_message('error', 'Error IA Indicadores Estilos Vida: ' . ($response['error'] ?? 'desconocido'));
+            return [
+                'indicadores' => [],
+                'total' => 0,
+                'contexto_aplicado' => $contexto ? true : false,
+                'error' => 'Error al generar indicadores: ' . ($response['error'] ?? 'Error desconocido')
+            ];
+        }
+
+        $indicadores = $this->procesarRespuestaIA($response['contenido']);
+
         $existentes = $this->indicadorModel->getByCliente($idCliente);
         $nombresExistentes = array_map('strtolower', array_column($existentes, 'nombre_indicador'));
 
         foreach ($indicadores as &$ind) {
+            $ind['ya_existe'] = false;
             $nombreLower = strtolower($ind['nombre']);
             foreach ($nombresExistentes as $existente) {
                 if (similar_text($nombreLower, $existente) > strlen($nombreLower) * 0.7) {
@@ -218,26 +119,164 @@ class IndicadoresEstilosVidaService
                 }
             }
         }
+        unset($ind);
 
         return [
             'indicadores' => $indicadores,
             'total' => count($indicadores),
-            'contexto_aplicado' => $contexto ? true : false
+            'contexto_aplicado' => $contexto ? true : false,
+            'generado_con_ia' => true
         ];
     }
 
     /**
-     * Genera los indicadores de Estilos de Vida Saludable
+     * System prompt especializado para Estilos de Vida Saludable
+     */
+    protected function construirSystemPrompt(): string
+    {
+        $cantidad = self::CANTIDAD_GENERAR;
+        return "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia, especialista en Promocion de la Salud y Estilos de Vida Saludable.
+Tu tarea es generar indicadores del Programa de Estilos de Vida Saludable personalizados segun el contexto REAL de la empresa.
+
+NORMATIVIDAD APLICABLE:
+- Resolucion 0312/2019 - Estandar 3.1.7
+- Resolucion 1075/1992 (Prevencion de tabaquismo, alcoholismo y farmacodependencia)
+- Ley 1335/2009 (Espacios libres de humo)
+- Decreto 1072/2015 (Capitulo 6 - SG-SST)
+
+REGLAS OBLIGATORIAS:
+1. Genera EXACTAMENTE {$cantidad} indicadores
+2. Cada indicador DEBE tener estos 14 campos: nombre, tipo, formula, meta, unidad, periodicidad, phva, numeral, descripcion, definicion, interpretacion, origen_datos, cargo_responsable, cargos_conocer_resultado
+3. 'tipo' solo puede ser: estructura, proceso, resultado (incluir al menos 2 de proceso y 2 de resultado)
+4. 'periodicidad' solo puede ser: mensual, trimestral, semestral, anual
+5. Las formulas deben ser matematicamente correctas y calculables
+6. Las metas deben ser numericas y realistas
+7. Si hay observaciones del consultor sobre habitos de los trabajadores, integrar esa informacion
+8. Adaptar los cargos responsables al tamano y estructura de la empresa
+9. NO generar indicadores genericos — deben reflejar la realidad de la empresa
+10. OBLIGATORIO incluir indicadores sobre los 3 temas de Res. 1075/1992: tabaquismo, alcoholismo y farmacodependencia
+11. Temas relevantes: campanas de prevencion, participacion en actividades, reduccion de fumadores, enfermedades cronicas no transmisibles (ECNT), consumo de sustancias psicoactivas (SPA), canalizacion a EPS, satisfaccion del programa
+12. Responde SOLO en formato JSON valido sin markdown
+
+FORMATO DE RESPUESTA (JSON array):
+[{\"nombre\":\"...\",\"tipo\":\"proceso\",\"formula\":\"...\",\"meta\":90,\"unidad\":\"%\",\"periodicidad\":\"trimestral\",\"phva\":\"verificar\",\"numeral\":\"3.1.7\",\"descripcion\":\"...\",\"definicion\":\"...\",\"interpretacion\":\"...\",\"origen_datos\":\"...\",\"cargo_responsable\":\"...\",\"cargos_conocer_resultado\":\"...\"}]";
+    }
+
+    /**
+     * Procesa la respuesta JSON de la IA
+     */
+    protected function procesarRespuestaIA(string $contenidoIA): array
+    {
+        $contenidoIA = preg_replace('/```json\s*/', '', $contenidoIA);
+        $contenidoIA = preg_replace('/```\s*/', '', $contenidoIA);
+        $contenidoIA = trim($contenidoIA);
+
+        $respuesta = json_decode($contenidoIA, true);
+        if (!is_array($respuesta)) {
+            log_message('error', 'IndicadoresEstilosVida: JSON invalido de IA: ' . substr($contenidoIA, 0, 500));
+            return [];
+        }
+
+        $indicadores = [];
+        foreach ($respuesta as $idx => $ind) {
+            if (empty($ind['nombre'])) continue;
+
+            $indicadores[] = [
+                'indice' => $idx,
+                'nombre' => $ind['nombre'],
+                'tipo' => in_array($ind['tipo'] ?? '', ['estructura', 'proceso', 'resultado']) ? $ind['tipo'] : 'proceso',
+                'formula' => $ind['formula'] ?? '',
+                'meta' => $ind['meta'] ?? null,
+                'unidad' => $ind['unidad'] ?? '%',
+                'periodicidad' => in_array($ind['periodicidad'] ?? '', ['mensual', 'trimestral', 'semestral', 'anual']) ? $ind['periodicidad'] : 'trimestral',
+                'phva' => in_array($ind['phva'] ?? '', ['planear', 'hacer', 'verificar', 'actuar']) ? $ind['phva'] : 'verificar',
+                'numeral' => $ind['numeral'] ?? self::NUMERAL,
+                'descripcion' => $ind['descripcion'] ?? '',
+                'definicion' => $ind['definicion'] ?? null,
+                'interpretacion' => $ind['interpretacion'] ?? null,
+                'origen_datos' => $ind['origen_datos'] ?? null,
+                'cargo_responsable' => $ind['cargo_responsable'] ?? null,
+                'cargos_conocer_resultado' => $ind['cargos_conocer_resultado'] ?? null,
+                'origen' => 'ia',
+                'seleccionado' => true
+            ];
+        }
+
+        return $indicadores;
+    }
+
+    /**
+     * Llama a la API de OpenAI
+     */
+    protected function llamarOpenAI(string $systemPrompt, string $userPrompt, string $apiKey, float $temperature = 0.7): array
+    {
+        $data = [
+            'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt]
+            ],
+            'temperature' => $temperature,
+            'max_tokens' => 4000
+        ];
+
+        log_message('debug', 'IndicadoresEstilosVida llamarOpenAI - modelo: ' . $data['model'] . ', temperature: ' . $temperature);
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            log_message('error', 'IndicadoresEstilosVida curl error: ' . $error);
+            return ['success' => false, 'error' => "Error de conexion: {$error}"];
+        }
+
+        $result = json_decode($response, true);
+
+        if ($httpCode !== 200) {
+            $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
+            log_message('error', 'IndicadoresEstilosVida OpenAI HTTP ' . $httpCode . ': ' . $errorMsg);
+            return ['success' => false, 'error' => $errorMsg];
+        }
+
+        if (isset($result['choices'][0]['message']['content'])) {
+            return [
+                'success' => true,
+                'contenido' => trim($result['choices'][0]['message']['content'])
+            ];
+        }
+
+        return ['success' => false, 'error' => 'Respuesta inesperada de OpenAI'];
+    }
+
+    /**
+     * Genera los indicadores de Estilos de Vida Saludable en BD
      */
     public function generarIndicadores(int $idCliente, ?array $indicadoresSeleccionados = null): array
     {
+        if (empty($indicadoresSeleccionados)) {
+            return ['creados' => 0, 'existentes' => 0, 'errores' => ['No se proporcionaron indicadores para generar'], 'total' => 0];
+        }
+
         $creados = 0;
         $existentes = 0;
         $errores = [];
 
-        $indicadores = $indicadoresSeleccionados ?? self::INDICADORES_ESTILOS_VIDA;
-
-        foreach ($indicadores as $ind) {
+        foreach ($indicadoresSeleccionados as $ind) {
             $existe = $this->indicadorModel
                 ->where('id_cliente', $idCliente)
                 ->where('activo', 1)
@@ -254,13 +293,13 @@ class IndicadoresEstilosVidaService
                     'id_cliente' => $idCliente,
                     'nombre_indicador' => $ind['nombre'],
                     'tipo_indicador' => $ind['tipo'],
-                    'categoria' => 'estilos_vida_saludable',
+                    'categoria' => self::CATEGORIA,
                     'formula' => $ind['formula'],
                     'meta' => $ind['meta'],
                     'unidad_medida' => $ind['unidad'],
                     'periodicidad' => $ind['periodicidad'],
                     'phva' => $ind['phva'],
-                    'numeral_resolucion' => $ind['numeral'] ?? '3.1.7',
+                    'numeral_resolucion' => $ind['numeral'] ?? self::NUMERAL,
                     'definicion' => $ind['definicion'] ?? null,
                     'interpretacion' => $ind['interpretacion'] ?? null,
                     'origen_datos' => $ind['origen_datos'] ?? null,
@@ -278,7 +317,7 @@ class IndicadoresEstilosVidaService
             'creados' => $creados,
             'existentes' => $existentes,
             'errores' => $errores,
-            'total' => count($indicadores)
+            'total' => count($indicadoresSeleccionados)
         ];
     }
 
@@ -291,7 +330,7 @@ class IndicadoresEstilosVidaService
             ->where('id_cliente', $idCliente)
             ->where('activo', 1)
             ->groupStart()
-                ->where('categoria', 'estilos_vida_saludable')
+                ->where('categoria', self::CATEGORIA)
                 ->orLike('nombre_indicador', 'estilos de vida', 'both')
                 ->orLike('nombre_indicador', 'tabaquismo', 'both')
                 ->orLike('nombre_indicador', 'alcoholismo', 'both')

@@ -306,7 +306,7 @@
                                 </div>
                                 <?php $linkFirma = base_url('contrato/firmar/' . ($contract['token_firma'] ?? '')); ?>
                                 <div class="btn-group w-100 mb-2">
-                                    <button onclick="copiarLinkFirma()" class="btn btn-outline-info" title="Copiar enlace">
+                                    <button onclick="copiarEnlaceFirma('<?= $linkFirma ?>', '<?= esc($contract['nombre_rep_legal_cliente'] ?? 'Cliente') ?>')" class="btn btn-outline-info" title="Copiar enlace">
                                         <i class="fas fa-copy"></i> Copiar Link
                                     </button>
                                     <a href="https://wa.me/?text=<?= urlencode('Firme el contrato SST: ' . $linkFirma) ?>"
@@ -316,6 +316,9 @@
                                 </div>
                                 <button onclick="reenviarFirma()" class="btn btn-outline-warning w-100 mb-2">
                                     <i class="fas fa-redo"></i> Reenviar por Email
+                                </button>
+                                <button onclick="emailAlternativoContrato()" class="btn btn-outline-info w-100 mb-2">
+                                    <i class="fas fa-at"></i> Enviar a Email Alternativo
                                 </button>
                             <?php else: ?>
                                 <button onclick="enviarAFirmar()" class="btn w-100 mb-2 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -499,6 +502,50 @@
             }
         });
     }
+    function emailAlternativoContrato() {
+        Swal.fire({
+            title: 'Enviar a email alternativo',
+            html:
+                '<div class="text-start mb-3">' +
+                    '<small class="text-muted">Firmante: <strong><?= esc($contract['nombre_rep_legal_cliente'] ?? 'Cliente') ?></strong></small><br>' +
+                    '<small class="text-muted">Email registrado: <?= esc($contract['email_cliente'] ?? 'N/A') ?></small>' +
+                '</div>' +
+                '<div class="text-start">' +
+                    '<label class="form-label fw-bold">Email alternativo:</label>' +
+                    '<input type="email" id="swal-email-alt" class="form-control" placeholder="correo.personal@gmail.com" autocomplete="email">' +
+                    '<small class="text-muted mt-1 d-block">El enlace de firma se enviará a este correo</small>' +
+                '</div>',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-paper-plane me-1"></i>Enviar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#17a2b8',
+            focusConfirm: false,
+            preConfirm: function() {
+                var email = document.getElementById('swal-email-alt').value.trim();
+                if (!email) { Swal.showValidationMessage('Ingrese un email'); return false; }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { Swal.showValidationMessage('Email no válido'); return false; }
+                return email;
+            }
+        }).then(function(result) {
+            if (result.isConfirmed && result.value) {
+                Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+                var formData = new FormData();
+                formData.append('id_contrato', '<?= $contract['id_contrato'] ?>');
+                formData.append('email_alternativo', result.value);
+                fetch('<?= base_url("/contracts/reenviar-firma-contrato") ?>', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    Swal.fire({ icon: data.success ? 'success' : 'error', title: data.success ? 'Enviado' : 'Error', text: data.mensaje, timer: 4000 });
+                }).catch(function() {
+                    Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor.' });
+                });
+            }
+        });
+    }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?= base_url('js/firma-helpers.js') ?>"></script>
 </body>
 </html>

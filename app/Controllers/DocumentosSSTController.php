@@ -3271,7 +3271,7 @@ Se debe generar acta que registre:
     }
 
     /**
-     * Adjuntar soporte de plan de objetivos y metas (2.4.1)
+     * Adjuntar soporte de plan de objetivos y metas (2.2.1)
      */
     public function adjuntarSoportePlanObjetivos()
     {
@@ -3281,6 +3281,20 @@ Se debe generar acta que registre:
             'soporte_plan_objetivos_',
             'Soporte plan objetivos, metas, recursos',
             'Soporte del plan de objetivos y metas adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Adjuntar soporte de Plan de Trabajo Anual (2.4.1)
+     */
+    public function adjuntarSoportePlanTrabajoAnual()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_plan_trabajo_anual',
+            'SOP-PTA',
+            'soporte_plan_trabajo_anual_',
+            'Soporte Plan de Trabajo Anual',
+            'Soporte del Plan de Trabajo Anual adjuntado exitosamente.'
         );
     }
 

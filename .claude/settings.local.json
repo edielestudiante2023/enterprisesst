@@ -77,7 +77,12 @@
       "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root empresas_sst:*)",
       "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root empresas_sst -e \"\nSELECT dtc.tipo_documento, dtc.nombre, dtc.flujo, COUNT\\(dsc.id\\) as num_secciones\nFROM tbl_doc_tipo_configuracion dtc\nLEFT JOIN tbl_doc_secciones_config dsc ON dtc.tipo_documento = dsc.tipo_documento\nWHERE dtc.tipo_documento IN \\(''matriz_requisitos_legales'',''plan_emergencias'',''reglamento_higiene_seguridad'',''politica_sst''\\)\nGROUP BY dtc.tipo_documento, dtc.nombre, dtc.flujo;\")",
       "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root empresas_sst -e \"\nSELECT tipo_documento, nombre, descripcion, estandar, flujo, categoria, icono, orden\nFROM tbl_doc_tipo_configuracion\nWHERE tipo_documento IN \\(''plan_emergencias'',''reglamento_higiene_seguridad''\\);\")",
-      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root empresas_sst -e:*)"
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root empresas_sst -e:*)",
+      "Bash(echo:*)",
+      "Bash(mysql/bin/mysql:*)",
+      "Bash(for:*)",
+      "Bash(do echo -n \"$f: \")",
+      "Bash(done)"
     ]
   }
 }

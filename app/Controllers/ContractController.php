@@ -1201,4 +1201,72 @@ class ContractController extends Controller
 
         return $httpCode >= 200 && $httpCode < 300;
     }
+
+    /**
+     * Reenviar solicitud de firma de contrato.
+     * Soporta email alternativo via POST AJAX.
+     */
+    public function reenviarFirmaContrato()
+    {
+        $idContrato = $this->request->getPost('id_contrato');
+        $emailAlternativo = trim($this->request->getPost('email_alternativo') ?? '');
+        $isAjax = $this->request->isAJAX();
+
+        $contract = $this->contractLibrary->getContractWithClient($idContrato);
+        if (!$contract) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Contrato no encontrado']);
+            return redirect()->back()->with('error', 'Contrato no encontrado');
+        }
+
+        if (($contract['estado_firma'] ?? '') !== 'pendiente_firma') {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'El contrato no está en estado pendiente de firma']);
+            return redirect()->back()->with('error', 'El contrato no está en estado pendiente de firma');
+        }
+
+        // Generar nuevo token
+        $token = bin2hex(random_bytes(32));
+        $expiracion = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+        $this->contractModel->update($idContrato, [
+            'token_firma' => $token,
+            'token_firma_expiracion' => $expiracion
+        ]);
+
+        $urlFirma = base_url("contrato/firmar/{$token}");
+
+        // Determinar email destino
+        $emailDestino = $contract['email_cliente'] ?? '';
+        $nombreFirmante = $contract['nombre_rep_legal_cliente'] ?? 'Representante Legal';
+
+        if (!empty($emailAlternativo) && filter_var($emailAlternativo, FILTER_VALIDATE_EMAIL)) {
+            $emailDestino = $emailAlternativo;
+        }
+
+        if (empty($emailDestino)) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'No hay email destino']);
+            return redirect()->back()->with('error', 'No hay email destino');
+        }
+
+        $enviado = $this->enviarEmailFirmaContrato(
+            $emailDestino,
+            $nombreFirmante,
+            $contract,
+            $urlFirma,
+            'Se requiere su firma digital para el contrato de prestacion de servicios SST (REENVÍO).',
+            false
+        );
+
+        if ($isAjax) {
+            return $this->response->setJSON([
+                'success' => $enviado,
+                'mensaje' => $enviado
+                    ? "Solicitud enviada a {$emailDestino}"
+                    : 'Error al enviar el email'
+            ]);
+        }
+
+        return redirect()->to('/contracts/view/' . $idContrato)
+            ->with($enviado ? 'success' : 'error',
+                   $enviado ? "Solicitud reenviada a {$emailDestino}" : 'Error al reenviar');
+    }
 }

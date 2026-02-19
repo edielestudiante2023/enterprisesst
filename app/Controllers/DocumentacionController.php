@@ -408,8 +408,14 @@ class DocumentacionController extends Controller
             } elseif ($tipoCarpetaFases === 'evaluacion_prioridades') {
                 // 2.3.1: Evaluación e identificación de prioridades
                 $queryDocs->where('tipo_documento', 'soporte_evaluacion_prioridades');
+            } elseif ($tipoCarpetaFases === 'plan_trabajo_anual') {
+                // 2.4.1: Plan de Trabajo Anual (soporte/adjunto)
+                $queryDocs->whereIn('tipo_documento', [
+                    'soporte_plan_trabajo_anual',
+                    'soporte_plan_objetivos' // legacy
+                ]);
             } elseif ($tipoCarpetaFases === 'plan_objetivos_metas') {
-                // 2.2.1/2.4.1: Plan de Objetivos y Metas SG-SST
+                // 2.2.1: Plan de Objetivos y Metas SG-SST
                 $queryDocs->whereIn('tipo_documento', [
                     'plan_objetivos_metas',
                     'soporte_plan_objetivos'
@@ -790,11 +796,15 @@ class DocumentacionController extends Controller
             return 'reglamento_higiene_seguridad';
         }
 
+        // 2.4.1. Plan de Trabajo Anual (soporte/adjunto, como 1.1.4)
+        if ($codigo === '2.4.1' ||
+            (strpos($nombre, 'plan de trabajo anual') !== false) ||
+            (strpos($nombre, 'plan') !== false && strpos($nombre, 'cronograma') !== false && strpos($nombre, 'firmado') !== false)) {
+            return 'plan_trabajo_anual';
+        }
+
         // 2.2.1. Objetivos definidos, claros, medibles, cuantificables, con metas
-        // 2.4.1. Plan que identifica objetivos, metas, responsabilidad, recursos
         if ($codigo === '2.2.1' ||
-            $codigo === '2.4.1' ||
-            (strpos($nombre, 'plan') !== false && strpos($nombre, 'objetivos') !== false) ||
             (strpos($nombre, 'objetivos') !== false && strpos($nombre, 'metas') !== false)) {
             return 'plan_objetivos_metas';
         }

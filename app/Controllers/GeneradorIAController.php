@@ -706,6 +706,7 @@ class GeneradorIAController extends BaseController
         $objetivoActual = $json['objetivo_actual'] ?? null;
         $instrucciones = $json['instrucciones'] ?? '';
         $contextoGeneral = $json['contexto_general'] ?? '';
+        $modo = $json['modo'] ?? 'mejorar'; // 'mejorar' o 'replantear'
 
         if (empty($objetivoActual)) {
             return $this->response->setJSON([
@@ -719,8 +720,15 @@ class GeneradorIAController extends BaseController
             $contextoModel = new \App\Models\ClienteContextoSstModel();
             $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
 
-            $userPrompt = $this->construirPromptRegenerarObjetivo($objetivoActual, $instrucciones, $contextoGeneral, $contexto);
-            $systemPrompt = 'Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia. Tu tarea es mejorar objetivos del SG-SST siguiendo las instrucciones del usuario. Responde SOLO en formato JSON valido sin markdown.';
+            $userPrompt = $this->construirPromptRegenerarObjetivo($objetivoActual, $instrucciones, $contextoGeneral, $contexto, $idCliente, $modo);
+
+            if ($modo === 'replantear') {
+                $systemPrompt = 'Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia. Tu tarea es CREAR un objetivo COMPLETAMENTE NUEVO para el SG-SST de esta empresa. IGNORA el objetivo actual — genera uno totalmente diferente usando el contexto de la empresa. Si el usuario escribio algo, usalo como base del nuevo objetivo. Responde SOLO en formato JSON valido sin markdown.';
+            } else {
+                $systemPrompt = 'Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia. Tu tarea es MEJORAR un objetivo existente del SG-SST siguiendo las instrucciones del usuario y el contexto de la empresa. El resultado DEBE ser notablemente diferente al original. Responde SOLO en formato JSON valido sin markdown.';
+            }
+
+            log_message('debug', "regenerarObjetivo: modo={$modo}, instrucciones=" . substr($instrucciones, 0, 100));
 
             // Llamar a OpenAI usando curl
             $apiKey = env('OPENAI_API_KEY', '');
@@ -781,9 +789,11 @@ class GeneradorIAController extends BaseController
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $userPrompt]
             ],
-            'temperature' => 0.7,
-            'max_tokens' => 800
+            'temperature' => 0.8,
+            'max_tokens' => 1500
         ];
+
+        log_message('debug', 'regenerarObjetivo: Llamando OpenAI modelo=' . $data['model']);
 
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
         curl_setopt_array($ch, [
@@ -794,7 +804,7 @@ class GeneradorIAController extends BaseController
                 'Authorization: Bearer ' . $apiKey
             ],
             CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_TIMEOUT => 30,
+            CURLOPT_TIMEOUT => 45,
             CURLOPT_SSL_VERIFYPEER => false
         ]);
 
@@ -804,63 +814,82 @@ class GeneradorIAController extends BaseController
         curl_close($ch);
 
         if ($error) {
+            log_message('error', 'regenerarObjetivo curl error: ' . $error);
             return ['success' => false, 'error' => "Error de conexion: {$error}"];
         }
 
         $result = json_decode($response, true);
 
         if ($httpCode !== 200) {
-            return ['success' => false, 'error' => $result['error']['message'] ?? 'Error HTTP ' . $httpCode];
+            $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
+            log_message('error', 'regenerarObjetivo OpenAI HTTP ' . $httpCode . ': ' . $errorMsg);
+            return ['success' => false, 'error' => $errorMsg];
         }
 
         if (isset($result['choices'][0]['message']['content'])) {
+            $contenido = trim($result['choices'][0]['message']['content']);
+            log_message('debug', 'regenerarObjetivo respuesta OK: ' . substr($contenido, 0, 200));
             return [
                 'success' => true,
-                'contenido' => trim($result['choices'][0]['message']['content'])
+                'contenido' => $contenido
             ];
         }
 
+        log_message('error', 'regenerarObjetivo: respuesta inesperada de OpenAI');
         return ['success' => false, 'error' => 'Respuesta inesperada de OpenAI'];
     }
 
     /**
      * Construye el prompt para regenerar un objetivo con IA
+     * Usa contexto completo del cliente via ObjetivosSgsstService
      */
-    private function construirPromptRegenerarObjetivo(array $objetivoActual, string $instrucciones, string $contextoGeneral, ?array $contexto): string
+    private function construirPromptRegenerarObjetivo(array $objetivoActual, string $instrucciones, string $contextoGeneral, ?array $contexto, int $idCliente, string $modo = 'mejorar'): string
     {
-        $actividadEconomica = $contexto['actividad_economica_principal'] ?? 'No especificada';
-        $nivelRiesgo = $contexto['nivel_riesgo_arl'] ?? 'No especificado';
+        $service = new \App\Services\ObjetivosSgsstService();
+        $contextoCompleto = $service->construirContextoCompleto($contexto, $idCliente);
 
-        $prompt = "OBJETIVO ACTUAL A MEJORAR:
-- Titulo: {$objetivoActual['objetivo']}
-- Descripcion: {$objetivoActual['descripcion']}
-- Meta: {$objetivoActual['meta']}
-- Indicador sugerido: {$objetivoActual['indicador_sugerido']}
-- Responsable: {$objetivoActual['responsable']}
-- Ciclo PHVA: {$objetivoActual['phva']}
+        $prompt = '';
 
-CONTEXTO DE LA EMPRESA:
-- Actividad economica: {$actividadEconomica}
-- Nivel de riesgo ARL: {$nivelRiesgo}";
+        if ($modo === 'replantear') {
+            // REPLANTEAR: lienzo en blanco, ignorar objetivo actual
+            $prompt .= "MODO: REPLANTEAR — Crear un objetivo COMPLETAMENTE NUEVO desde cero.\n";
+            $prompt .= "El objetivo actual sera DESCARTADO. NO lo uses como referencia.\n\n";
+            $prompt .= $contextoCompleto;
 
-        if (!empty($contextoGeneral)) {
-            $prompt .= "\n- Contexto adicional: {$contextoGeneral}";
+            if (!empty($contextoGeneral)) {
+                $prompt .= "\nINSTRUCCIONES GENERALES DEL CONSULTOR:\n{$contextoGeneral}\n";
+            }
+
+            if (!empty(trim($instrucciones))) {
+                $prompt .= "\nEL USUARIO QUIERE ESTE OBJETIVO:\n{$instrucciones}\n\n";
+                $prompt .= "Usa el texto del usuario como TITULO del nuevo objetivo. Genera descripcion, meta SMART, indicador y responsable coherentes con ese titulo y el contexto de la empresa.\n";
+            } else {
+                $prompt .= "\nGenera un objetivo NUEVO y DIFERENTE para el SG-SST de esta empresa basado en su contexto, peligros y observaciones. NO repitas temas de objetivos comunes — se creativo y especifico.\n";
+            }
+        } else {
+            // MEJORAR: tomar el actual y mejorarlo con las instrucciones
+            $prompt .= "MODO: MEJORAR — Tomar el objetivo actual y mejorarlo.\n\n";
+            $prompt .= "OBJETIVO ACTUAL:\n";
+            $prompt .= "- Titulo: {$objetivoActual['objetivo']}\n";
+            $prompt .= "- Descripcion: {$objetivoActual['descripcion']}\n";
+            $prompt .= "- Meta: {$objetivoActual['meta']}\n";
+            $prompt .= "- Indicador: {$objetivoActual['indicador_sugerido']}\n";
+            $prompt .= "- Responsable: {$objetivoActual['responsable']}\n";
+            $prompt .= "- PHVA: {$objetivoActual['phva']}\n\n";
+
+            $prompt .= $contextoCompleto;
+
+            if (!empty($contextoGeneral)) {
+                $prompt .= "\nINSTRUCCIONES GENERALES DEL CONSULTOR:\n{$contextoGeneral}\n";
+            }
+
+            $prompt .= "\nINSTRUCCIONES DE MEJORA:\n{$instrucciones}\n\n";
+            $prompt .= "Mejora el objetivo siguiendo las instrucciones. El resultado DEBE ser notablemente diferente. Vincula a la actividad economica y peligros de la empresa.\n";
         }
 
-        $prompt .= "\n\nINSTRUCCIONES DEL USUARIO:
-{$instrucciones}
-
-IMPORTANTE: Mejora el objetivo siguiendo las instrucciones. Mantén el formato del SG-SST colombiano. La meta debe ser SMART (especifica, medible, alcanzable, relevante, temporal).
-
-Responde en formato JSON con esta estructura exacta:
-{
-    \"objetivo\": \"titulo mejorado\",
-    \"descripcion\": \"descripcion mejorada\",
-    \"meta\": \"meta cuantificable mejorada\",
-    \"indicador_sugerido\": \"indicador mejorado\",
-    \"responsable\": \"responsable apropiado\",
-    \"phva\": \"PLANEAR|HACER|VERIFICAR|ACTUAR\"
-}";
+        $prompt .= "\nLa meta debe ser SMART con plazo y porcentaje concreto.\n";
+        $prompt .= "Responde SOLO en JSON sin markdown:\n";
+        $prompt .= "{\"objetivo\":\"titulo\",\"descripcion\":\"desc\",\"meta\":\"meta\",\"indicador_sugerido\":\"indicador\",\"responsable\":\"cargo\",\"phva\":\"PLANEAR|HACER|VERIFICAR|ACTUAR\"}";
 
         return $prompt;
     }

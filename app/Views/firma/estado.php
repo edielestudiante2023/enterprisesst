@@ -274,13 +274,22 @@
 
                                             <!-- Acciones -->
                                             <?php if (in_array($sol['estado'], ['pendiente', 'esperando', 'expirado'])): ?>
-                                                <div class="mt-2 pt-2 border-top d-flex gap-2">
+                                                <div class="mt-2 pt-2 border-top d-flex gap-2 flex-wrap">
+                                                    <?php $urlFirmaSol = base_url('firma/firmar/' . $sol['token']); ?>
+                                                    <button type="button" class="btn btn-sm btn-outline-info"
+                                                            onclick="copiarEnlaceFirma('<?= $urlFirmaSol ?>', '<?= esc($sol['firmante_nombre']) ?>')">
+                                                        <i class="bi bi-clipboard me-1"></i>Copiar enlace
+                                                    </button>
                                                     <?php if (in_array($sol['estado'], ['pendiente', 'expirado'])): ?>
                                                         <form action="<?= base_url('firma/reenviar/' . $sol['id_solicitud']) ?>" method="post" class="d-inline">
                                                             <button type="submit" class="btn btn-sm btn-outline-primary">
                                                                 <i class="bi bi-send me-1"></i>Reenviar
                                                             </button>
                                                         </form>
+                                                        <button type="button" class="btn btn-sm btn-outline-warning"
+                                                                onclick="modalEmailAlternativo('<?= base_url('firma/reenviar/' . $sol['id_solicitud']) ?>', '<?= esc($sol['firmante_nombre']) ?>', '<?= esc($sol['firmante_email'] ?? '') ?>')">
+                                                            <i class="bi bi-envelope-at me-1"></i>Email alt.
+                                                        </button>
                                                     <?php endif; ?>
                                                     <form action="<?= base_url('firma/cancelar/' . $sol['id_solicitud']) ?>" method="post" class="d-inline"
                                                           onsubmit="return confirm('Cancelar esta solicitud de firma?')">
@@ -312,5 +321,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?= base_url('js/firma-helpers.js') ?>"></script>
 </body>
 </html>

@@ -1230,26 +1230,33 @@ class ActasController extends BaseController
 
     /**
      * Reenviar notificación de firma a un asistente específico
+     * Soporta email alternativo via POST (AJAX o form normal)
      */
     public function reenviarAsistente(int $idActa, int $idAsistente)
     {
-        $acta = $this->actaModel->find($idActa);
+        $isAjax = $this->request->isAJAX();
 
+        $acta = $this->actaModel->find($idActa);
         if (!$acta) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Acta no encontrada']);
             return redirect()->back()->with('error', 'Acta no encontrada');
         }
 
         $asistente = $this->asistentesModel->find($idAsistente);
-
         if (!$asistente || $asistente['id_acta'] != $idActa) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Asistente no encontrado']);
             return redirect()->back()->with('error', 'Asistente no encontrado');
         }
 
         if (!empty($asistente['firma_fecha'])) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Este asistente ya firmó el acta']);
             return redirect()->back()->with('error', 'Este asistente ya firmó el acta');
         }
 
-        if (empty($asistente['email'])) {
+        $emailAlternativo = trim($this->request->getPost('email_alternativo') ?? '');
+
+        if (empty($asistente['email']) && empty($emailAlternativo)) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'El asistente no tiene email registrado']);
             return redirect()->back()->with('error', 'El asistente no tiene email registrado');
         }
 
@@ -1263,17 +1270,29 @@ class ActasController extends BaseController
             'estado_firma' => 'pendiente'
         ]);
 
+        // Determinar email destino
+        $asistenteParaEnvio = $asistente;
+        $emailDestino = $asistente['email'];
+        if (!empty($emailAlternativo) && filter_var($emailAlternativo, FILTER_VALIDATE_EMAIL)) {
+            $asistenteParaEnvio['email'] = $emailAlternativo;
+            $emailDestino = $emailAlternativo;
+        }
+
         // Enviar email real con SendGrid
-        $emailEnviado = $this->enviarEmailFirmaActa($asistente, $token, $acta, $comite);
+        $emailEnviado = $this->enviarEmailFirmaActa($asistenteParaEnvio, $token, $acta, $comite);
 
         if ($emailEnviado) {
             $this->asistentesModel->update($idAsistente, [
                 'recordatorio_enviado_at' => date('Y-m-d H:i:s')
             ]);
-            return redirect()->back()->with('success', "Email enviado a {$asistente['nombre_completo']}");
+            $msg = "Email enviado a {$emailDestino}";
+            if ($isAjax) return $this->response->setJSON(['success' => true, 'mensaje' => $msg]);
+            return redirect()->back()->with('success', $msg);
         }
 
-        return redirect()->back()->with('error', 'Error al enviar el email. Verifique la configuración de SendGrid.');
+        $msgError = 'Error al enviar el email. Verifique la configuración de SendGrid.';
+        if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => $msgError]);
+        return redirect()->back()->with('error', $msgError);
     }
 
     /**

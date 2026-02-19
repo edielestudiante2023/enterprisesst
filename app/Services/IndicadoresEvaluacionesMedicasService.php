@@ -7,134 +7,23 @@ use App\Models\IndicadorSSTModel;
 /**
  * Servicio para generar indicadores de Evaluaciones Medicas Ocupacionales
  * segun Resolucion 0312/2019 - Estandar 3.1.4
+ *
+ * PARTE 2 del modulo de 3 partes:
+ * - IA genera indicadores personalizados usando contexto COMPLETO del cliente
+ * - Consultor revisa y selecciona
+ * - Se guardan en tbl_indicadores_sst con categoria = 'evaluaciones_medicas_ocupacionales'
  */
 class IndicadoresEvaluacionesMedicasService
 {
     protected IndicadorSSTModel $indicadorModel;
+    protected const CATEGORIA = 'evaluaciones_medicas_ocupacionales';
+    protected const NUMERAL = '3.1.4';
+    protected const CANTIDAD_GENERAR = 7;
 
     public function __construct()
     {
         $this->indicadorModel = new IndicadorSSTModel();
     }
-
-    /**
-     * Indicadores base de Evaluaciones Medicas Ocupacionales
-     */
-    public const INDICADORES_EVALUACIONES_MEDICAS = [
-        [
-            'nombre' => 'Cobertura de Evaluaciones Medicas Ocupacionales de Ingreso',
-            'tipo' => 'proceso',
-            'formula' => '(Trabajadores con evaluacion de ingreso / Total trabajadores que ingresaron en el periodo) x 100',
-            'meta' => 100,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.4',
-            'descripcion' => 'Mide que todos los trabajadores nuevos sean evaluados medicamente antes de iniciar labores',
-            'definicion' => 'Mide la proporcion de trabajadores nuevos que recibieron evaluacion medica ocupacional de ingreso antes de iniciar sus labores, segun Res. 2346/2007.',
-            'interpretacion' => 'El 100% indica cumplimiento total. Es obligatorio evaluar a todo trabajador antes del inicio de labores. Valores menores generan riesgo legal.',
-            'origen_datos' => 'Registro de ingresos (Recursos Humanos), certificados de aptitud de ingreso, IPS contratada',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, Recursos Humanos, medico ocupacional'
-        ],
-        [
-            'nombre' => 'Cumplimiento de Evaluaciones Medicas Periodicas segun Profesiograma',
-            'tipo' => 'proceso',
-            'formula' => '(Evaluaciones periodicas realizadas / Evaluaciones periodicas programadas segun profesiograma) x 100',
-            'meta' => 90,
-            'unidad' => '%',
-            'periodicidad' => 'semestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.4',
-            'descripcion' => 'Mide el cumplimiento de las evaluaciones periodicas segun la frecuencia definida por el profesiograma y los peligros',
-            'definicion' => 'Mide el porcentaje de evaluaciones medicas periodicas realizadas segun la frecuencia definida en el profesiograma por cargo y nivel de exposicion a peligros.',
-            'interpretacion' => 'Un 90% o mas indica buen cumplimiento. La frecuencia depende del tipo de peligro: anual para peligros altos, bianual para medios.',
-            'origen_datos' => 'Profesiograma, cronograma de evaluaciones periodicas, certificados de aptitud, IPS',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, medico ocupacional'
-        ],
-        [
-            'nombre' => 'Comunicacion Oportuna de Resultados a Trabajadores',
-            'tipo' => 'proceso',
-            'formula' => '(Certificados entregados en 5 dias habiles / Total evaluaciones realizadas) x 100',
-            'meta' => 95,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.4',
-            'descripcion' => 'Mide la oportunidad en la entrega de resultados a los trabajadores segun Res. 2346/2007',
-            'definicion' => 'Mide el porcentaje de certificados de aptitud entregados al trabajador dentro de los 5 dias habiles siguientes a la evaluacion, segun Res. 2346/2007 Art. 14.',
-            'interpretacion' => 'Valores >=95% indican buena oportunidad. Es un derecho del trabajador recibir copia del certificado. El incumplimiento genera sanciones.',
-            'origen_datos' => 'Registros de entrega de certificados (firma del trabajador), fechas de evaluacion vs entrega',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, Recursos Humanos, medico ocupacional'
-        ],
-        [
-            'nombre' => 'Cumplimiento de Restricciones y Recomendaciones Medicas',
-            'tipo' => 'proceso',
-            'formula' => '(Restricciones implementadas / Total restricciones emitidas por el medico) x 100',
-            'meta' => 100,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.4',
-            'descripcion' => 'Mide la implementacion efectiva de las restricciones y recomendaciones medico-laborales',
-            'definicion' => 'Mide el porcentaje de restricciones y recomendaciones medico-laborales que fueron efectivamente implementadas por la empresa en los puestos de trabajo.',
-            'interpretacion' => 'El 100% es obligatorio. El incumplimiento de restricciones medicas genera responsabilidad legal directa del empleador ante accidentes o agravamiento.',
-            'origen_datos' => 'Certificados de aptitud con restricciones, registro de implementacion, seguimiento de jefes inmediatos',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, medico ocupacional, jefes inmediatos'
-        ],
-        [
-            'nombre' => 'Cobertura de Evaluaciones Medicas de Egreso',
-            'tipo' => 'proceso',
-            'formula' => '(Trabajadores con evaluacion de egreso / Total trabajadores retirados en el periodo) x 100',
-            'meta' => 90,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '3.1.4',
-            'descripcion' => 'Mide que los trabajadores retirados sean evaluados medicamente al finalizar la relacion laboral',
-            'definicion' => 'Mide la proporcion de trabajadores retirados que recibieron evaluacion medica de egreso dentro de los 5 dias siguientes a la terminacion del vinculo laboral.',
-            'interpretacion' => 'Un 90% o mas indica buena gestion. La evaluacion de egreso es obligatoria y protege a la empresa ante futuras reclamaciones por enfermedad laboral.',
-            'origen_datos' => 'Registro de retiros (Recursos Humanos), certificados de egreso, IPS contratada',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, Recursos Humanos, medico ocupacional'
-        ],
-        [
-            'nombre' => 'Prevalencia de Enfermedad Laboral Diagnosticada',
-            'tipo' => 'resultado',
-            'formula' => '(Casos de enfermedad laboral diagnosticada / Total trabajadores evaluados) x 100',
-            'meta' => 5,
-            'unidad' => '%',
-            'periodicidad' => 'anual',
-            'phva' => 'verificar',
-            'numeral' => '3.1.4',
-            'descripcion' => 'Mide la prevalencia de enfermedades laborales detectadas mediante las evaluaciones medicas',
-            'menor_es_mejor' => true,
-            'definicion' => 'Mide la proporcion de trabajadores evaluados que presentan diagnostico de enfermedad de origen laboral calificada por EPS/ARL.',
-            'interpretacion' => 'A menor valor, mejor estado de salud laboral. Valores <=5% son aceptables. Valores superiores requieren revision de PVE y medidas de control.',
-            'origen_datos' => 'Diagnostico de condiciones de salud, calificaciones de origen EPS/ARL, evaluaciones medicas',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, medico ocupacional, ARL'
-        ],
-        [
-            'nombre' => 'Trabajadores con Aptitud Laboral Sin Restriccion',
-            'tipo' => 'resultado',
-            'formula' => '(Trabajadores aptos sin restriccion / Total trabajadores evaluados) x 100',
-            'meta' => 80,
-            'unidad' => '%',
-            'periodicidad' => 'anual',
-            'phva' => 'verificar',
-            'numeral' => '3.1.4',
-            'descripcion' => 'Mide el porcentaje de trabajadores que resultan aptos sin restricciones en sus evaluaciones medicas',
-            'definicion' => 'Mide la proporcion de trabajadores que tras la evaluacion medica ocupacional resultan aptos para desempenar sus funciones sin ninguna restriccion medica.',
-            'interpretacion' => 'Valores >=80% indican buen estado de salud general. El 20% restante puede tener restricciones temporales o permanentes que requieren seguimiento.',
-            'origen_datos' => 'Certificados de aptitud laboral, diagnostico de condiciones de salud, IPS',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, medico ocupacional, Recursos Humanos'
-        ]
-    ];
 
     /**
      * Obtiene el resumen de indicadores de Evaluaciones Medicas para un cliente
@@ -145,7 +34,7 @@ class IndicadoresEvaluacionesMedicasService
             ->where('id_cliente', $idCliente)
             ->where('activo', 1)
             ->groupStart()
-                ->where('categoria', 'evaluaciones_medicas_ocupacionales')
+                ->where('categoria', self::CATEGORIA)
                 ->orLike('nombre_indicador', 'evaluacion medica', 'both')
                 ->orLike('nombre_indicador', 'evaluaciones medicas', 'both')
                 ->orLike('nombre_indicador', 'profesiograma', 'both')
@@ -169,7 +58,7 @@ class IndicadoresEvaluacionesMedicasService
 
         return [
             'existentes' => $total,
-            'sugeridos' => count(self::INDICADORES_EVALUACIONES_MEDICAS),
+            'limite' => self::CANTIDAD_GENERAR,
             'medidos' => $medidos,
             'cumplen' => $cumplen,
             'completo' => $total >= 3,
@@ -178,35 +67,48 @@ class IndicadoresEvaluacionesMedicasService
     }
 
     /**
-     * Preview de indicadores que se generarian
+     * Preview de indicadores generados por IA segun contexto completo del cliente
      */
     public function previewIndicadores(int $idCliente, ?array $contexto = null): array
     {
-        $indicadores = [];
-
-        // 1. Agregar indicadores base
-        foreach (self::INDICADORES_EVALUACIONES_MEDICAS as $idx => $ind) {
-            $indicadores[] = [
-                'indice' => $idx,
-                'nombre' => $ind['nombre'],
-                'tipo' => $ind['tipo'],
-                'formula' => $ind['formula'],
-                'meta' => $ind['meta'],
-                'unidad' => $ind['unidad'],
-                'periodicidad' => $ind['periodicidad'],
-                'phva' => $ind['phva'],
-                'numeral' => $ind['numeral'],
-                'descripcion' => $ind['descripcion'] ?? '',
-                'origen' => 'base',
-                'seleccionado' => true
+        $apiKey = env('OPENAI_API_KEY', '');
+        if (empty($apiKey)) {
+            log_message('error', 'IndicadoresEvaluacionesMedicas: OPENAI_API_KEY no configurada');
+            return [
+                'indicadores' => [],
+                'total' => 0,
+                'contexto_aplicado' => false,
+                'error' => 'API Key de OpenAI no configurada'
             ];
         }
 
-        // 2. Marcar los que ya existen
+        $objetivosService = new \App\Services\ObjetivosSgsstService();
+        $contextoTexto = $objetivosService->construirContextoCompleto($contexto, $idCliente);
+
+        $systemPrompt = $this->construirSystemPrompt();
+        $userPrompt = $contextoTexto;
+        $userPrompt .= "\n\nGenera exactamente " . self::CANTIDAD_GENERAR . " indicadores de Evaluaciones Medicas Ocupacionales personalizados para esta empresa.";
+        $userPrompt .= "\nDeben ser especificos para su actividad economica, peligros identificados, tamano de empresa y nivel de riesgo.";
+
+        $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey, 0.7);
+
+        if (!$response['success']) {
+            log_message('error', 'Error IA Indicadores Evaluaciones Medicas: ' . ($response['error'] ?? 'desconocido'));
+            return [
+                'indicadores' => [],
+                'total' => 0,
+                'contexto_aplicado' => $contexto ? true : false,
+                'error' => 'Error al generar indicadores: ' . ($response['error'] ?? 'Error desconocido')
+            ];
+        }
+
+        $indicadores = $this->procesarRespuestaIA($response['contenido']);
+
         $existentes = $this->indicadorModel->getByCliente($idCliente);
         $nombresExistentes = array_map('strtolower', array_column($existentes, 'nombre_indicador'));
 
         foreach ($indicadores as &$ind) {
+            $ind['ya_existe'] = false;
             $nombreLower = strtolower($ind['nombre']);
             foreach ($nombresExistentes as $existente) {
                 if (similar_text($nombreLower, $existente) > strlen($nombreLower) * 0.7) {
@@ -216,26 +118,163 @@ class IndicadoresEvaluacionesMedicasService
                 }
             }
         }
+        unset($ind);
 
         return [
             'indicadores' => $indicadores,
             'total' => count($indicadores),
-            'contexto_aplicado' => $contexto ? true : false
+            'contexto_aplicado' => $contexto ? true : false,
+            'generado_con_ia' => true
         ];
     }
 
     /**
-     * Genera los indicadores de Evaluaciones Medicas Ocupacionales
+     * System prompt especializado para Evaluaciones Medicas Ocupacionales
+     */
+    protected function construirSystemPrompt(): string
+    {
+        $cantidad = self::CANTIDAD_GENERAR;
+        return "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia, especialista en Medicina del Trabajo y Evaluaciones Medicas Ocupacionales.
+Tu tarea es generar indicadores de Evaluaciones Medicas Ocupacionales personalizados segun el contexto REAL de la empresa.
+
+NORMATIVIDAD APLICABLE:
+- Resolucion 0312/2019 - Estandar 3.1.4
+- Resolucion 2346/2007 (Evaluaciones Medicas Ocupacionales)
+- Decreto 1072/2015 (Capitulo 6 - SG-SST)
+
+REGLAS OBLIGATORIAS:
+1. Genera EXACTAMENTE {$cantidad} indicadores
+2. Cada indicador DEBE tener estos 14 campos: nombre, tipo, formula, meta, unidad, periodicidad, phva, numeral, descripcion, definicion, interpretacion, origen_datos, cargo_responsable, cargos_conocer_resultado
+3. 'tipo' solo puede ser: estructura, proceso, resultado (incluir al menos 2 de proceso y 2 de resultado)
+4. 'periodicidad' solo puede ser: mensual, trimestral, semestral, anual
+5. Las formulas deben ser matematicamente correctas y calculables
+6. Las metas deben ser numericas y realistas
+7. Si hay peligros identificados, vincular los examenes medicos a los peligros prioritarios
+8. Si hay observaciones del consultor, integrar esa informacion
+9. Adaptar los cargos responsables al tamano y estructura de la empresa
+10. NO generar indicadores genericos — deben reflejar la realidad de la empresa
+11. Temas relevantes: evaluaciones de ingreso, periodicas y egreso, profesiograma, restricciones y recomendaciones medicas, aptitud laboral, enfermedad laboral, comunicacion de resultados, custodia de historias clinicas
+12. Responde SOLO en formato JSON valido sin markdown
+
+FORMATO DE RESPUESTA (JSON array):
+[{\"nombre\":\"...\",\"tipo\":\"proceso\",\"formula\":\"...\",\"meta\":90,\"unidad\":\"%\",\"periodicidad\":\"trimestral\",\"phva\":\"verificar\",\"numeral\":\"3.1.4\",\"descripcion\":\"...\",\"definicion\":\"...\",\"interpretacion\":\"...\",\"origen_datos\":\"...\",\"cargo_responsable\":\"...\",\"cargos_conocer_resultado\":\"...\"}]";
+    }
+
+    /**
+     * Procesa la respuesta JSON de la IA
+     */
+    protected function procesarRespuestaIA(string $contenidoIA): array
+    {
+        $contenidoIA = preg_replace('/```json\s*/', '', $contenidoIA);
+        $contenidoIA = preg_replace('/```\s*/', '', $contenidoIA);
+        $contenidoIA = trim($contenidoIA);
+
+        $respuesta = json_decode($contenidoIA, true);
+        if (!is_array($respuesta)) {
+            log_message('error', 'IndicadoresEvaluacionesMedicas: JSON invalido de IA: ' . substr($contenidoIA, 0, 500));
+            return [];
+        }
+
+        $indicadores = [];
+        foreach ($respuesta as $idx => $ind) {
+            if (empty($ind['nombre'])) continue;
+
+            $indicadores[] = [
+                'indice' => $idx,
+                'nombre' => $ind['nombre'],
+                'tipo' => in_array($ind['tipo'] ?? '', ['estructura', 'proceso', 'resultado']) ? $ind['tipo'] : 'proceso',
+                'formula' => $ind['formula'] ?? '',
+                'meta' => $ind['meta'] ?? null,
+                'unidad' => $ind['unidad'] ?? '%',
+                'periodicidad' => in_array($ind['periodicidad'] ?? '', ['mensual', 'trimestral', 'semestral', 'anual']) ? $ind['periodicidad'] : 'trimestral',
+                'phva' => in_array($ind['phva'] ?? '', ['planear', 'hacer', 'verificar', 'actuar']) ? $ind['phva'] : 'verificar',
+                'numeral' => $ind['numeral'] ?? self::NUMERAL,
+                'descripcion' => $ind['descripcion'] ?? '',
+                'definicion' => $ind['definicion'] ?? null,
+                'interpretacion' => $ind['interpretacion'] ?? null,
+                'origen_datos' => $ind['origen_datos'] ?? null,
+                'cargo_responsable' => $ind['cargo_responsable'] ?? null,
+                'cargos_conocer_resultado' => $ind['cargos_conocer_resultado'] ?? null,
+                'origen' => 'ia',
+                'seleccionado' => true
+            ];
+        }
+
+        return $indicadores;
+    }
+
+    /**
+     * Llama a la API de OpenAI
+     */
+    protected function llamarOpenAI(string $systemPrompt, string $userPrompt, string $apiKey, float $temperature = 0.7): array
+    {
+        $data = [
+            'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt]
+            ],
+            'temperature' => $temperature,
+            'max_tokens' => 4000
+        ];
+
+        log_message('debug', 'IndicadoresEvaluacionesMedicas llamarOpenAI - modelo: ' . $data['model'] . ', temperature: ' . $temperature);
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            log_message('error', 'IndicadoresEvaluacionesMedicas curl error: ' . $error);
+            return ['success' => false, 'error' => "Error de conexion: {$error}"];
+        }
+
+        $result = json_decode($response, true);
+
+        if ($httpCode !== 200) {
+            $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
+            log_message('error', 'IndicadoresEvaluacionesMedicas OpenAI HTTP ' . $httpCode . ': ' . $errorMsg);
+            return ['success' => false, 'error' => $errorMsg];
+        }
+
+        if (isset($result['choices'][0]['message']['content'])) {
+            return [
+                'success' => true,
+                'contenido' => trim($result['choices'][0]['message']['content'])
+            ];
+        }
+
+        return ['success' => false, 'error' => 'Respuesta inesperada de OpenAI'];
+    }
+
+    /**
+     * Genera los indicadores de Evaluaciones Medicas en BD
      */
     public function generarIndicadores(int $idCliente, ?array $indicadoresSeleccionados = null): array
     {
+        if (empty($indicadoresSeleccionados)) {
+            return ['creados' => 0, 'existentes' => 0, 'errores' => ['No se proporcionaron indicadores para generar'], 'total' => 0];
+        }
+
         $creados = 0;
         $existentes = 0;
         $errores = [];
 
-        $indicadores = $indicadoresSeleccionados ?? self::INDICADORES_EVALUACIONES_MEDICAS;
-
-        foreach ($indicadores as $ind) {
+        foreach ($indicadoresSeleccionados as $ind) {
             $existe = $this->indicadorModel
                 ->where('id_cliente', $idCliente)
                 ->where('activo', 1)
@@ -252,13 +291,13 @@ class IndicadoresEvaluacionesMedicasService
                     'id_cliente' => $idCliente,
                     'nombre_indicador' => $ind['nombre'],
                     'tipo_indicador' => $ind['tipo'],
-                    'categoria' => 'evaluaciones_medicas_ocupacionales',
+                    'categoria' => self::CATEGORIA,
                     'formula' => $ind['formula'],
                     'meta' => $ind['meta'],
                     'unidad_medida' => $ind['unidad'],
                     'periodicidad' => $ind['periodicidad'],
                     'phva' => $ind['phva'],
-                    'numeral_resolucion' => $ind['numeral'] ?? '3.1.4',
+                    'numeral_resolucion' => $ind['numeral'] ?? self::NUMERAL,
                     'definicion' => $ind['definicion'] ?? null,
                     'interpretacion' => $ind['interpretacion'] ?? null,
                     'origen_datos' => $ind['origen_datos'] ?? null,
@@ -276,7 +315,7 @@ class IndicadoresEvaluacionesMedicasService
             'creados' => $creados,
             'existentes' => $existentes,
             'errores' => $errores,
-            'total' => count($indicadores)
+            'total' => count($indicadoresSeleccionados)
         ];
     }
 
@@ -289,7 +328,7 @@ class IndicadoresEvaluacionesMedicasService
             ->where('id_cliente', $idCliente)
             ->where('activo', 1)
             ->groupStart()
-                ->where('categoria', 'evaluaciones_medicas_ocupacionales')
+                ->where('categoria', self::CATEGORIA)
                 ->orLike('nombre_indicador', 'evaluacion medica', 'both')
                 ->orLike('nombre_indicador', 'evaluaciones medicas', 'both')
                 ->orLike('nombre_indicador', 'profesiograma', 'both')

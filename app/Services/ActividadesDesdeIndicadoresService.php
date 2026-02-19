@@ -495,6 +495,8 @@ REGLAS ESTRICTAS:
         }
         $ejemploKey = $catsObjetivo[0] ?? 'emergencias';
 
+        $observacionesTexto = !empty($contexto['observaciones']) ? "\nOBSERVACIONES DEL CONSULTOR:\n{$contexto['observaciones']}\n" : '';
+
         $userPrompt = "CONTEXTO DE LA EMPRESA:
 - Empresa: {$contexto['empresa']}
 - Actividad economica: {$contexto['actividad_economica']}
@@ -502,7 +504,7 @@ REGLAS ESTRICTAS:
 - Total trabajadores: {$contexto['total_trabajadores']}
 - Estandares aplicables: {$contexto['estandares_aplicables']}
 - Peligros identificados: {$peligrosTexto}
-
+{$observacionesTexto}
 {$indicadoresTexto}
 
 {$huerfanosTexto}

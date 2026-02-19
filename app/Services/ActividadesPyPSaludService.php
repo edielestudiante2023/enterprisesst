@@ -384,6 +384,9 @@ class ActividadesPyPSaludService
                 $peligros = json_decode($contexto['peligros_identificados'], true) ?? [];
                 $contextoTexto .= "- Peligros identificados: " . implode(', ', $peligros) . "\n";
             }
+            if (!empty($contexto['observaciones_contexto'])) {
+                $contextoTexto .= "\nOBSERVACIONES DEL CONSULTOR:\n" . $contexto['observaciones_contexto'] . "\n";
+            }
         }
 
         $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia.

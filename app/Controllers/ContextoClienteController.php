@@ -93,7 +93,7 @@ class ContextoClienteController extends Controller
         // Validar
         $rules = [
             'id_cliente' => 'required|numeric',
-            'total_trabajadores' => 'required|numeric|greater_than[0]',
+            'trabajadores_directos' => 'required|numeric|greater_than[0]',
             'estandares_aplicables' => 'required|in_list[7,21,60]'
         ];
 
@@ -101,8 +101,12 @@ class ContextoClienteController extends Controller
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // Obtener valores del formulario
-        $nuevoTrabajadores = (int) $this->request->getPost('total_trabajadores');
+        // Calcular total trabajadores como suma de directos + temporales + contratistas
+        $trabajadoresDirectos = (int) ($this->request->getPost('trabajadores_directos') ?? 1);
+        $trabajadoresTemporales = (int) ($this->request->getPost('trabajadores_temporales') ?? 0);
+        $contratistas = (int) ($this->request->getPost('contratistas_permanentes') ?? 0);
+        $nuevoTrabajadores = $trabajadoresDirectos + $trabajadoresTemporales + $contratistas;
+        if ($nuevoTrabajadores < 1) $nuevoTrabajadores = 1;
         $nivelesRiesgo = $this->request->getPost('niveles_riesgo_arl') ?? [];
         $estandaresAplicables = (int) $this->request->getPost('estandares_aplicables') ?: 60;
 
@@ -133,9 +137,9 @@ class ContextoClienteController extends Controller
             'estandares_aplicables' => $estandaresAplicables,
             'arl_actual' => $this->request->getPost('arl_actual'),
             'total_trabajadores' => $nuevoTrabajadores,
-            'trabajadores_directos' => $this->request->getPost('trabajadores_directos') ?? $nuevoTrabajadores,
-            'trabajadores_temporales' => $this->request->getPost('trabajadores_temporales') ?? 0,
-            'contratistas_permanentes' => $this->request->getPost('contratistas_permanentes') ?? 0,
+            'trabajadores_directos' => $trabajadoresDirectos,
+            'trabajadores_temporales' => $trabajadoresTemporales,
+            'contratistas_permanentes' => $contratistas,
             'numero_sedes' => $this->request->getPost('numero_sedes') ?? 1,
             'turnos_trabajo' => json_encode($this->request->getPost('turnos_trabajo') ?? []),
             'id_consultor_responsable' => $this->request->getPost('id_consultor_responsable'),

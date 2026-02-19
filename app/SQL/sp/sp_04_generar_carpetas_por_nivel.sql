@@ -148,7 +148,7 @@ BEGIN
 
     -- 2.4.1 - Aplica: 7, 21, 60
     INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
-    VALUES (p_id_cliente, v_id_planear, '2.4.1. Plan que identifica objetivos, metas, responsabilidad, recursos con cronograma y firmado', '2.4.1', 16, 'estandar', 'calendar');
+    VALUES (p_id_cliente, v_id_planear, '2.4.1. Plan de Trabajo Anual que identifica objetivos, metas, responsabilidad, recursos con cronograma y firmado', '2.4.1', 16, 'estandar', 'calendar');
 
     -- 2.5.1 - Aplica: 7, 21, 60
     INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)

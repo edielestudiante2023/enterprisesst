@@ -861,17 +861,29 @@ class FirmaElectronicaController extends Controller
 
     /**
      * Reenviar solicitud de firma
+     * Soporta email alternativo via POST (AJAX o form normal)
      */
     public function reenviar($idSolicitud)
     {
         if (!session()->get('isLoggedIn')) {
+            $isAjax = $this->request->isAJAX();
+            if ($isAjax) {
+                return $this->response->setJSON(['success' => false, 'mensaje' => 'Sesión expirada']);
+            }
             return redirect()->to('/login');
         }
 
         $solicitud = $this->firmaModel->find($idSolicitud);
         if (!$solicitud) {
+            $isAjax = $this->request->isAJAX();
+            if ($isAjax) {
+                return $this->response->setJSON(['success' => false, 'mensaje' => 'Solicitud no encontrada']);
+            }
             return redirect()->back()->with('error', 'Solicitud no encontrada');
         }
+
+        $emailAlternativo = trim($this->request->getPost('email_alternativo') ?? '');
+        $isAjax = $this->request->isAJAX();
 
         $nuevoToken = $this->firmaModel->reenviar($idSolicitud);
 
@@ -879,15 +891,40 @@ class FirmaElectronicaController extends Controller
         $solicitudActualizada = $this->firmaModel->find($idSolicitud);
         $documento = $this->getDocumentoSST($solicitud['id_documento']);
 
-        if ($documento && !empty($solicitudActualizada['firmante_email'])) {
-            $this->enviarCorreoFirma($solicitudActualizada, $documento);
+        // Determinar email destino
+        $emailDestino = $solicitudActualizada['firmante_email'];
+        if (!empty($emailAlternativo) && filter_var($emailAlternativo, FILTER_VALIDATE_EMAIL)) {
+            // Clonar solicitud con email alternativo (no modifica BD)
+            $solicitudParaEnvio = $solicitudActualizada;
+            $solicitudParaEnvio['firmante_email'] = $emailAlternativo;
+            $emailDestino = $emailAlternativo;
+        } else {
+            $solicitudParaEnvio = $solicitudActualizada;
+        }
+
+        $enviado = false;
+        if ($documento && !empty($emailDestino)) {
+            $enviado = $this->enviarCorreoFirma($solicitudParaEnvio, $documento);
             $this->firmaModel->registrarAudit($idSolicitud, 'email_reenviado', [
-                'email' => $solicitudActualizada['firmante_email'],
+                'email' => $emailDestino,
+                'email_alternativo' => !empty($emailAlternativo) ? $emailAlternativo : null,
                 'nuevo_token' => substr($nuevoToken, 0, 8) . '...'
             ]);
         }
 
-        return redirect()->back()->with('success', 'Solicitud reenviada exitosamente');
+        if ($isAjax) {
+            return $this->response->setJSON([
+                'success' => $enviado,
+                'mensaje' => $enviado
+                    ? "Solicitud enviada a {$emailDestino}"
+                    : 'Error al enviar el email'
+            ]);
+        }
+
+        return redirect()->back()->with(
+            $enviado ? 'success' : 'error',
+            $enviado ? 'Solicitud reenviada exitosamente' : 'Error al reenviar'
+        );
     }
 
     /**

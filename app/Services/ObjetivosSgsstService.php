@@ -7,7 +7,7 @@ namespace App\Services;
  * Estándar 2.2.1 - Resolución 0312/2019
  *
  * PARTE 1 del módulo de 3 partes:
- * - IA genera sugerencias de objetivos
+ * - IA genera sugerencias de objetivos usando contexto COMPLETO del cliente
  * - Consultor refina y selecciona
  * - Se guardan en tbl_pta_cliente con tipo_servicio = 'Objetivos SG-SST'
  */
@@ -16,72 +16,12 @@ class ObjetivosSgsstService
     protected const TIPO_SERVICIO = 'Objetivos SG-SST';
 
     /**
-     * Límites fijos de objetivos según estándares
+     * Límites fijos de objetivos según estándares (Res. 0312/2019)
      */
     public const LIMITES_OBJETIVOS = [
         7 => 3,   // Básico: 3 objetivos
         21 => 4,  // Intermedio: 4 objetivos
         60 => 6   // Avanzado: 6 objetivos
-    ];
-
-    /**
-     * Objetivos base del SG-SST (aplicables a cualquier empresa)
-     */
-    public const OBJETIVOS_BASE = [
-        [
-            'objetivo' => 'Reducir la accidentalidad laboral',
-            'descripcion' => 'Disminuir la frecuencia y severidad de accidentes de trabajo mediante acciones preventivas',
-            'meta' => 'Reducir en un 10% la tasa de accidentalidad respecto al año anterior',
-            'indicador_sugerido' => 'Índice de Frecuencia de Accidentes',
-            'phva' => 'PLANEAR',
-            'responsable' => 'Responsable SST',
-            'numeral' => '2.2.1'
-        ],
-        [
-            'objetivo' => 'Prevenir enfermedades laborales',
-            'descripcion' => 'Implementar medidas de promoción y prevención para evitar enfermedades de origen laboral',
-            'meta' => 'Mantener la tasa de enfermedad laboral por debajo del promedio del sector',
-            'indicador_sugerido' => 'Tasa de Enfermedad Laboral',
-            'phva' => 'PLANEAR',
-            'responsable' => 'Responsable SST',
-            'numeral' => '2.2.1'
-        ],
-        [
-            'objetivo' => 'Cumplir los requisitos legales en SST',
-            'descripcion' => 'Asegurar el cumplimiento de la normatividad vigente en materia de seguridad y salud en el trabajo',
-            'meta' => 'Alcanzar el 100% de cumplimiento en la autoevaluación de estándares mínimos',
-            'indicador_sugerido' => 'Porcentaje de Cumplimiento Estándares',
-            'phva' => 'PLANEAR',
-            'responsable' => 'Responsable SST',
-            'numeral' => '2.2.1'
-        ],
-        [
-            'objetivo' => 'Fortalecer la cultura de autocuidado',
-            'descripcion' => 'Promover comportamientos seguros y hábitos de autocuidado en todos los trabajadores',
-            'meta' => 'Capacitar al 100% del personal en temas de SST según cronograma',
-            'indicador_sugerido' => 'Cobertura de Capacitación SST',
-            'phva' => 'HACER',
-            'responsable' => 'Responsable SST',
-            'numeral' => '2.2.1'
-        ],
-        [
-            'objetivo' => 'Gestionar eficazmente los peligros identificados',
-            'descripcion' => 'Implementar controles para los peligros prioritarios de la matriz de riesgos',
-            'meta' => 'Intervenir el 80% de los peligros con riesgo alto o muy alto',
-            'indicador_sugerido' => 'Porcentaje de Peligros Intervenidos',
-            'phva' => 'HACER',
-            'responsable' => 'Responsable SST',
-            'numeral' => '2.2.1'
-        ],
-        [
-            'objetivo' => 'Mejorar la respuesta ante emergencias',
-            'descripcion' => 'Fortalecer la capacidad de respuesta de la organización ante situaciones de emergencia',
-            'meta' => 'Realizar al menos 2 simulacros de emergencia al año con participación del 90% del personal',
-            'indicador_sugerido' => 'Participación en Simulacros',
-            'phva' => 'HACER',
-            'responsable' => 'Brigada de Emergencias',
-            'numeral' => '2.2.1'
-        ]
     ];
 
     /**
@@ -101,6 +41,14 @@ class ObjetivosSgsstService
     {
         $db = \Config\Database::connect();
 
+        $estandares = 60;
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+        if ($contexto) {
+            $estandares = (int)($contexto['estandares_aplicables'] ?? 60);
+        }
+        $limite = $this->getLimiteObjetivos($estandares);
+
         $existentes = $db->table('tbl_pta_cliente')
             ->where('id_cliente', $idCliente)
             ->where('tipo_servicio', self::TIPO_SERVICIO)
@@ -109,134 +57,245 @@ class ObjetivosSgsstService
 
         return [
             'existentes' => $existentes,
-            'sugeridos' => count(self::OBJETIVOS_BASE),
+            'limite' => $limite,
             'completo' => $existentes >= 3
         ];
     }
 
     /**
-     * Preview de objetivos que se generarían
-     * Personaliza según contexto del cliente e instrucciones
+     * Preview de objetivos generados por IA según contexto completo del cliente
      */
     public function previewObjetivos(int $idCliente, int $anio, ?array $contexto = null, string $instrucciones = ''): array
     {
-        $estandares = $contexto['estandares_aplicables'] ?? 60;
+        $estandares = (int)($contexto['estandares_aplicables'] ?? 60);
         $limite = $this->getLimiteObjetivos($estandares);
 
-        // Tomar solo los objetivos que corresponden según el límite
-        $objetivosBase = array_slice(self::OBJETIVOS_BASE, 0, $limite);
-
-        $objetivos = [];
-        foreach ($objetivosBase as $idx => $obj) {
-            $objetivos[] = [
-                'indice' => $idx,
-                'objetivo' => $obj['objetivo'],
-                'descripcion' => $obj['descripcion'],
-                'meta' => $obj['meta'],
-                'indicador_sugerido' => $obj['indicador_sugerido'],
-                'phva' => $obj['phva'],
-                'responsable' => $obj['responsable'],
-                'numeral' => $obj['numeral'],
-                'fecha_propuesta' => "{$anio}-01-01",
-                'origen' => 'base'
+        $apiKey = env('OPENAI_API_KEY', '');
+        if (empty($apiKey)) {
+            log_message('error', 'ObjetivosSgsstService: OPENAI_API_KEY no configurada');
+            return [
+                'objetivos' => [],
+                'total' => 0,
+                'limite' => $limite,
+                'estandares' => $estandares,
+                'anio' => $anio,
+                'instrucciones_procesadas' => false,
+                'explicacion_ia' => 'Error: API Key de OpenAI no configurada. Configure OPENAI_API_KEY en .env',
+                'error' => true
             ];
         }
 
-        $explicacionIA = '';
+        // Construir contexto completo del cliente para la IA
+        $contextoTexto = $this->construirContextoCompleto($contexto, $idCliente);
 
-        // Si hay instrucciones, usar IA para personalizar
+        $systemPrompt = $this->construirSystemPromptGenerar($limite);
+
+        $userPrompt = "AÑO: {$anio}\nCANTIDAD EXACTA: {$limite} objetivos\n\n";
+        $userPrompt .= $contextoTexto;
+
         if (!empty($instrucciones)) {
-            $resultadoIA = $this->personalizarConIA($objetivos, $instrucciones, $contexto, $anio, $limite);
-            $objetivos = $resultadoIA['objetivos'];
-            $explicacionIA = $resultadoIA['explicacion'] ?? '';
+            $userPrompt .= "\n\nINSTRUCCIONES ADICIONALES DEL CONSULTOR:\n\"{$instrucciones}\"";
         }
 
+        $userPrompt .= "\n\nGenera exactamente {$limite} objetivos del SG-SST personalizados para esta empresa. Deben ser especificos para su actividad economica, nivel de riesgo y peligros identificados.";
+
+        $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey, 0.7);
+
+        if (!$response['success']) {
+            log_message('error', 'Error IA Objetivos preview: ' . ($response['error'] ?? 'desconocido'));
+            return [
+                'objetivos' => [],
+                'total' => 0,
+                'limite' => $limite,
+                'estandares' => $estandares,
+                'anio' => $anio,
+                'instrucciones_procesadas' => !empty($instrucciones),
+                'explicacion_ia' => 'Error al generar objetivos: ' . ($response['error'] ?? 'Error desconocido'),
+                'error' => true
+            ];
+        }
+
+        $resultado = $this->procesarRespuestaIA($response['contenido'], $anio, $limite);
+
         return [
-            'objetivos' => $objetivos,
-            'total' => count($objetivos),
+            'objetivos' => $resultado['objetivos'],
+            'total' => count($resultado['objetivos']),
             'limite' => $limite,
             'estandares' => $estandares,
             'anio' => $anio,
             'instrucciones_procesadas' => !empty($instrucciones),
-            'explicacion_ia' => $explicacionIA
+            'explicacion_ia' => $resultado['explicacion'] ?? ''
         ];
     }
 
     /**
-     * Personaliza objetivos con IA según instrucciones del consultor
+     * Construye el contexto completo del cliente para los prompts de IA
+     * Incluye TODOS los campos de tbl_cliente_contexto_sst + datos del cliente
      */
-    protected function personalizarConIA(array $objetivos, string $instrucciones, ?array $contexto, int $anio, int $limite): array
+    public function construirContextoCompleto(?array $contexto, int $idCliente): string
     {
-        $apiKey = env('OPENAI_API_KEY', '');
-        if (empty($apiKey)) {
-            return ['objetivos' => $objetivos, 'explicacion' => ''];
+        if (!$contexto) {
+            return "CONTEXTO DE LA EMPRESA:\n- Sin datos de contexto registrados. Generar objetivos genericos de SST.\n";
         }
 
-        $objetivosTexto = "";
-        foreach ($objetivos as $idx => $obj) {
-            $objetivosTexto .= "{$idx}. {$obj['objetivo']}\n   Meta: {$obj['meta']}\n";
+        // Obtener nombre del cliente
+        $db = \Config\Database::connect();
+        $cliente = $db->table('tbl_clientes')->where('id_cliente', $idCliente)->get()->getRowArray();
+        $nombreCliente = $cliente['nombre_cliente'] ?? 'Empresa';
+
+        $texto = "CONTEXTO COMPLETO DE LA EMPRESA:\n";
+        $texto .= "- Empresa: {$nombreCliente}\n";
+
+        // Clasificación económica
+        if (!empty($contexto['actividad_economica_principal'])) {
+            $texto .= "- Actividad economica principal: {$contexto['actividad_economica_principal']}\n";
+        }
+        if (!empty($contexto['sector_economico'])) {
+            $texto .= "- Sector economico: {$contexto['sector_economico']}\n";
+        }
+        if (!empty($contexto['codigo_ciiu_principal'])) {
+            $texto .= "- Codigo CIIU principal: {$contexto['codigo_ciiu_principal']}\n";
         }
 
-        $contextoTexto = "";
-        if ($contexto) {
-            $contextoTexto = "CONTEXTO DE LA EMPRESA:\n";
-            $contextoTexto .= "- Actividad: " . ($contexto['actividad_economica_principal'] ?? 'No especificada') . "\n";
-            $contextoTexto .= "- Nivel riesgo: " . ($contexto['nivel_riesgo_arl'] ?? 'No especificado') . "\n";
-            $contextoTexto .= "- Trabajadores: " . ($contexto['total_trabajadores'] ?? 'No especificado') . "\n";
-            $contextoTexto .= "- Estándares: " . ($contexto['estandares_aplicables'] ?? 60) . "\n";
+        // Riesgo
+        if (!empty($contexto['nivel_riesgo_arl'])) {
+            $texto .= "- Nivel de riesgo ARL: {$contexto['nivel_riesgo_arl']}\n";
+        }
+        if (!empty($contexto['niveles_riesgo_arl'])) {
+            $niveles = json_decode($contexto['niveles_riesgo_arl'], true);
+            if (is_array($niveles) && count($niveles) > 1) {
+                $texto .= "- Niveles de riesgo multiples: " . implode(', ', $niveles) . "\n";
+            }
+        }
+        if (!empty($contexto['clase_riesgo_cotizacion'])) {
+            $texto .= "- Clase de riesgo cotizacion: {$contexto['clase_riesgo_cotizacion']}\n";
+        }
+        if (!empty($contexto['arl_actual'])) {
+            $texto .= "- ARL actual: {$contexto['arl_actual']}\n";
         }
 
-        $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia.
-Tu tarea es personalizar los objetivos del SG-SST según las instrucciones del consultor.
+        // Tamaño y estructura
+        $texto .= "- Total trabajadores: " . ($contexto['total_trabajadores'] ?? 'No especificado') . "\n";
+        if (!empty($contexto['trabajadores_directos'])) {
+            $texto .= "  - Directos: {$contexto['trabajadores_directos']}\n";
+        }
+        if (!empty($contexto['trabajadores_temporales']) && $contexto['trabajadores_temporales'] > 0) {
+            $texto .= "  - Temporales: {$contexto['trabajadores_temporales']}\n";
+        }
+        if (!empty($contexto['contratistas_permanentes']) && $contexto['contratistas_permanentes'] > 0) {
+            $texto .= "  - Contratistas permanentes: {$contexto['contratistas_permanentes']}\n";
+        }
+        if (!empty($contexto['numero_sedes']) && $contexto['numero_sedes'] > 1) {
+            $texto .= "- Numero de sedes: {$contexto['numero_sedes']}\n";
+        }
+        if (!empty($contexto['turnos_trabajo'])) {
+            $turnos = json_decode($contexto['turnos_trabajo'], true);
+            if (is_array($turnos) && !empty($turnos)) {
+                $texto .= "- Turnos de trabajo: " . implode(', ', $turnos) . "\n";
+            }
+        }
 
-REGLAS:
-1. Máximo {$limite} objetivos (límite según estándares aplicables)
-2. Los objetivos deben ser MEDIBLES, ALCANZABLES y con PLAZO DEFINIDO
-3. Cada objetivo debe tener una meta cuantificable
-4. Responde SOLO en formato JSON válido
+        // Estándares
+        $estandares = $contexto['estandares_aplicables'] ?? 60;
+        $descripcionNivel = match((int)$estandares) {
+            7 => 'Basico (7 estandares)',
+            21 => 'Intermedio (21 estandares)',
+            default => 'Completo (60 estandares)'
+        };
+        $texto .= "- Estandares aplicables: {$descripcionNivel}\n";
+
+        // Infraestructura SST
+        $infraestructura = [];
+        if (!empty($contexto['tiene_copasst'])) $infraestructura[] = 'COPASST';
+        if (!empty($contexto['tiene_vigia_sst'])) $infraestructura[] = 'Vigia SST';
+        if (!empty($contexto['tiene_comite_convivencia'])) $infraestructura[] = 'Comite de Convivencia';
+        if (!empty($contexto['tiene_brigada_emergencias'])) $infraestructura[] = 'Brigada de Emergencias';
+        if (!empty($infraestructura)) {
+            $texto .= "- Infraestructura SST activa: " . implode(', ', $infraestructura) . "\n";
+        }
+
+        $faltantes = [];
+        if (empty($contexto['tiene_copasst']) && empty($contexto['tiene_vigia_sst'])) $faltantes[] = 'COPASST/Vigia';
+        if (empty($contexto['tiene_comite_convivencia'])) $faltantes[] = 'Comite Convivencia';
+        if (empty($contexto['tiene_brigada_emergencias'])) $faltantes[] = 'Brigada Emergencias';
+        if (!empty($faltantes)) {
+            $texto .= "- Infraestructura SST faltante: " . implode(', ', $faltantes) . "\n";
+        }
+
+        // Responsable SST
+        if (!empty($contexto['responsable_sgsst_cargo'])) {
+            $texto .= "- Responsable SG-SST: {$contexto['responsable_sgsst_cargo']}\n";
+        }
+
+        // Peligros identificados
+        if (!empty($contexto['peligros_identificados'])) {
+            $peligros = json_decode($contexto['peligros_identificados'], true);
+            if (is_array($peligros) && !empty($peligros)) {
+                $texto .= "\nPELIGROS IDENTIFICADOS EN LA EMPRESA:\n";
+                foreach ($peligros as $peligro) {
+                    $texto .= "- {$peligro}\n";
+                }
+            }
+        }
+
+        // CONTEXTO Y OBSERVACIONES (campo clave para personalización)
+        if (!empty($contexto['observaciones_contexto'])) {
+            $texto .= "\nCONTEXTO Y OBSERVACIONES DEL CONSULTOR:\n";
+            $texto .= $contexto['observaciones_contexto'] . "\n";
+        }
+
+        return $texto;
+    }
+
+    /**
+     * System prompt para generar objetivos
+     */
+    protected function construirSystemPromptGenerar(int $limite): string
+    {
+        return "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia.
+Tu tarea es GENERAR objetivos del SG-SST personalizados segun el contexto REAL de la empresa.
+
+REGLAS OBLIGATORIAS:
+1. Genera EXACTAMENTE {$limite} objetivos (limite segun Resolucion 0312/2019)
+2. Los objetivos DEBEN ser especificos para la actividad economica y peligros de la empresa
+3. Cada objetivo debe ser SMART: Especifico, Medible, Alcanzable, Relevante, Temporal
+4. Distribuye los objetivos en el ciclo PHVA (al menos 1 PLANEAR, 1 HACER, y si el limite lo permite, incluir VERIFICAR y ACTUAR)
+5. Las metas deben ser cuantificables con porcentajes, numeros o plazos concretos
+6. Los responsables deben ser cargos reales segun el tamaño de la empresa
+7. Si hay peligros identificados, al menos 2 objetivos deben abordarlos directamente
+8. Si hay observaciones del consultor, integrar esa informacion en los objetivos
+9. NO generar objetivos genericos — deben reflejar la realidad de la empresa
+10. Responde SOLO en formato JSON valido sin markdown
 
 FORMATO DE RESPUESTA (JSON):
 {
   \"objetivos\": [
     {
-      \"objetivo\": \"Título del objetivo\",
-      \"descripcion\": \"Descripción detallada\",
-      \"meta\": \"Meta cuantificable\",
-      \"indicador_sugerido\": \"Nombre del indicador\",
+      \"objetivo\": \"Titulo conciso del objetivo\",
+      \"descripcion\": \"Descripcion detallada vinculada a la realidad de la empresa\",
+      \"meta\": \"Meta cuantificable con plazo (ej: Reducir en 15% los incidentes en el primer semestre 2026)\",
+      \"indicador_sugerido\": \"Nombre del indicador de medicion\",
       \"phva\": \"PLANEAR|HACER|VERIFICAR|ACTUAR\",
-      \"responsable\": \"Cargo responsable\"
+      \"responsable\": \"Cargo especifico del responsable\"
     }
   ],
-  \"explicacion\": \"Breve explicación de los cambios realizados\"
+  \"explicacion\": \"Breve justificacion de por que se eligieron estos objetivos para esta empresa\"
 }";
-
-        $userPrompt = "AÑO: {$anio}\nLÍMITE: {$limite} objetivos\n\n";
-        $userPrompt .= $contextoTexto . "\n";
-        $userPrompt .= "OBJETIVOS BASE:\n{$objetivosTexto}\n";
-        $userPrompt .= "INSTRUCCIONES DEL CONSULTOR:\n\"{$instrucciones}\"\n\n";
-        $userPrompt .= "Personaliza los objetivos según las instrucciones. Si no hay cambios necesarios, devuelve los objetivos originales.";
-
-        $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey);
-
-        if (!$response['success']) {
-            log_message('error', 'Error IA Objetivos: ' . ($response['error'] ?? 'desconocido'));
-            return ['objetivos' => $objetivos, 'explicacion' => ''];
-        }
-
-        return $this->procesarRespuestaIA($response['contenido'], $objetivos, $anio, $limite);
     }
 
     /**
      * Procesa la respuesta JSON de la IA
      */
-    protected function procesarRespuestaIA(string $contenidoIA, array $objetivosBase, int $anio, int $limite): array
+    protected function procesarRespuestaIA(string $contenidoIA, int $anio, int $limite): array
     {
         $contenidoIA = preg_replace('/```json\s*/', '', $contenidoIA);
         $contenidoIA = preg_replace('/```\s*/', '', $contenidoIA);
+        $contenidoIA = trim($contenidoIA);
 
         $respuesta = json_decode($contenidoIA, true);
         if (!$respuesta || !isset($respuesta['objetivos'])) {
-            return ['objetivos' => $objetivosBase, 'explicacion' => 'No se pudieron procesar las instrucciones'];
+            log_message('error', 'ObjetivosSgsstService: JSON invalido de IA: ' . substr($contenidoIA, 0, 500));
+            return ['objetivos' => [], 'explicacion' => 'Error al procesar respuesta de IA. Intente de nuevo.'];
         }
 
         $objetivos = [];
@@ -267,7 +326,7 @@ FORMATO DE RESPUESTA (JSON):
     /**
      * Llama a la API de OpenAI
      */
-    protected function llamarOpenAI(string $systemPrompt, string $userPrompt, string $apiKey): array
+    protected function llamarOpenAI(string $systemPrompt, string $userPrompt, string $apiKey, float $temperature = 0.7): array
     {
         $data = [
             'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
@@ -275,9 +334,11 @@ FORMATO DE RESPUESTA (JSON):
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $userPrompt]
             ],
-            'temperature' => 0.3,
-            'max_tokens' => 2000
+            'temperature' => $temperature,
+            'max_tokens' => 3000
         ];
+
+        log_message('debug', 'ObjetivosSgsstService llamarOpenAI - modelo: ' . $data['model'] . ', temperature: ' . $temperature);
 
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
         curl_setopt_array($ch, [
@@ -288,7 +349,7 @@ FORMATO DE RESPUESTA (JSON):
                 'Authorization: Bearer ' . $apiKey
             ],
             CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_TIMEOUT => 30,
+            CURLOPT_TIMEOUT => 45,
             CURLOPT_SSL_VERIFYPEER => false
         ]);
 
@@ -298,13 +359,16 @@ FORMATO DE RESPUESTA (JSON):
         curl_close($ch);
 
         if ($error) {
-            return ['success' => false, 'error' => "Error de conexión: {$error}"];
+            log_message('error', 'ObjetivosSgsstService curl error: ' . $error);
+            return ['success' => false, 'error' => "Error de conexion: {$error}"];
         }
 
         $result = json_decode($response, true);
 
         if ($httpCode !== 200) {
-            return ['success' => false, 'error' => $result['error']['message'] ?? 'Error HTTP ' . $httpCode];
+            $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
+            log_message('error', 'ObjetivosSgsstService OpenAI HTTP ' . $httpCode . ': ' . $errorMsg);
+            return ['success' => false, 'error' => $errorMsg];
         }
 
         if (isset($result['choices'][0]['message']['content'])) {
@@ -314,7 +378,7 @@ FORMATO DE RESPUESTA (JSON):
             ];
         }
 
-        return ['success' => false, 'error' => 'Respuesta inesperada'];
+        return ['success' => false, 'error' => 'Respuesta inesperada de OpenAI'];
     }
 
     /**
