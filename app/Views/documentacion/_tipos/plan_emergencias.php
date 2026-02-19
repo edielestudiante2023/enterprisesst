@@ -1,29 +1,72 @@
 <?php
 /**
  * Vista de Tipo: 5.1.1 Plan de Prevencion, Preparacion y respuesta ante emergencias
- * Carpeta para adjuntar soportes del plan de emergencias
+ * Carpeta HIBRIDA: Documento generado con IA + Adjuntar soportes externos
+ *
  * Variables: $carpeta, $cliente, $documentosSSTAprobados
  */
+
+// Separar documentos IA de soportes adjuntados
+$docsIA = [];
+$soportes = [];
+if (!empty($documentosSSTAprobados)) {
+    foreach ($documentosSSTAprobados as $d) {
+        if (($d['tipo_documento'] ?? '') === 'plan_emergencias') {
+            $docsIA[] = $d;
+        } else {
+            $soportes[] = $d;
+        }
+    }
+}
+
+// Verificar si hay documento IA para el ano actual
+$hayAprobadoAnioActual = false;
+foreach ($docsIA as $d) {
+    if (($d['anio'] ?? date('Y')) == date('Y')) {
+        $hayAprobadoAnioActual = true;
+        break;
+    }
+}
+
+$anioActual = date('Y');
 ?>
 
-<!-- Card de Carpeta con Boton Adjuntar -->
+<!-- Card de Carpeta con Boton IA -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <h4 class="mb-1">
-                    <i class="bi bi-folder-fill text-warning me-2"></i>
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
                     <?= esc($carpeta['nombre']) ?>
                 </h4>
                 <?php if (!empty($carpeta['codigo'])): ?>
-                    <span class="badge bg-light text-dark me-2"><?= esc($carpeta['codigo']) ?></span>
+                    <span class="badge bg-danger me-2"><?= esc($carpeta['codigo']) ?></span>
                 <?php endif; ?>
+                <span class="badge bg-info">Documento con IA</span>
                 <?php if (!empty($carpeta['descripcion'])): ?>
-                    <p class="text-muted mb-0 mt-1"><?= esc($carpeta['descripcion']) ?></p>
+                    <p class="text-muted mb-0 mt-2"><?= esc($carpeta['descripcion']) ?></p>
+                <?php else: ?>
+                    <p class="text-muted mb-0 mt-2">
+                        Documento obligatorio que define las acciones de prevencion, preparacion y respuesta
+                        ante emergencias, incluyendo identificacion de amenazas, analisis de vulnerabilidad,
+                        organizacion de brigadas y plan de evacuacion. Resolucion 0312/2019 estandar 5.1.1.
+                    </p>
                 <?php endif; ?>
             </div>
             <div class="col-md-4 text-end">
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalAdjuntarEmergencias">
+                <?php if ($hayAprobadoAnioActual): ?>
+                    <a href="<?= base_url('documentos/generar/plan_emergencias/' . $cliente['id_cliente']) ?>"
+                       class="btn btn-outline-danger">
+                        <i class="bi bi-arrow-repeat me-1"></i>Nueva version <?= $anioActual ?>
+                    </a>
+                <?php else: ?>
+                    <a href="<?= base_url('documentos/generar/plan_emergencias/' . $cliente['id_cliente']) ?>"
+                       class="btn btn-danger">
+                        <i class="bi bi-magic me-1"></i>Crear con IA <?= $anioActual ?>
+                    </a>
+                <?php endif; ?>
+                <button type="button" class="btn btn-outline-secondary mt-2" data-bs-toggle="modal" data-bs-target="#modalAdjuntarEmergencias">
                     <i class="bi bi-cloud-upload me-1"></i>Adjuntar Soporte
                 </button>
             </div>
@@ -31,37 +74,49 @@
     </div>
 </div>
 
-<!-- Informacion sobre el modulo -->
-<div class="alert alert-danger mb-4">
-    <div class="d-flex align-items-start">
-        <i class="bi bi-exclamation-triangle me-3 fs-4"></i>
+<!-- Informacion del Auditor -->
+<div class="alert alert-danger border-0 mb-4">
+    <div class="d-flex">
+        <div class="me-3">
+            <i class="bi bi-clipboard-check fs-4"></i>
+        </div>
         <div>
-            <h6 class="mb-1">Plan de Prevencion, Preparacion y Respuesta ante Emergencias</h6>
+            <strong>Requisito Legal:</strong>
             <p class="mb-0 small">
-                Adjunte los documentos relacionados con el plan de emergencias:
-                plan de emergencias, analisis de vulnerabilidad, planos de evacuacion, procedimientos, simulacros, etc.
+                Obligatorio segun Resolucion 0312/2019 estandar 5.1.1, Decreto 1072/2015 art. 2.2.4.6.25.
+                Debe incluir identificacion de amenazas, analisis de vulnerabilidad, conformacion de brigada,
+                plan de evacuacion y programacion de simulacros (minimo 1 al ano).
             </p>
         </div>
     </div>
 </div>
 
+<!-- Tabla de Documentos SST (generados con IA) -->
+<?= view('documentacion/_components/tabla_documentos_sst', [
+    'tipoCarpetaFases' => 'plan_emergencias',
+    'documentosSSTAprobados' => $docsIA,
+    'cliente' => $cliente
+]) ?>
+
 <!-- Tabla de Soportes Adjuntados -->
 <?= view('documentacion/_components/tabla_soportes', [
-    'soportes' => $documentosSSTAprobados ?? [],
-    'titulo' => 'Soportes Plan de Emergencias',
-    'subtitulo' => 'Prevencion, preparacion y respuesta',
-    'icono' => 'bi-exclamation-triangle',
+    'soportes' => $soportes,
+    'titulo' => 'Soportes Adicionales Plan de Emergencias',
+    'subtitulo' => 'Planos, actas de simulacro, certificados de brigada',
+    'icono' => 'bi-paperclip',
     'colorHeader' => 'warning',
     'codigoDefault' => 'SOP-EME',
-    'emptyIcon' => 'bi-exclamation-triangle',
-    'emptyMessage' => 'No hay soportes adjuntados aun.',
-    'emptyHint' => 'Use el boton "Adjuntar Soporte" para agregar documentos.'
+    'emptyIcon' => 'bi-paperclip',
+    'emptyMessage' => 'No hay soportes adicionales adjuntados.',
+    'emptyHint' => 'Use el boton "Adjuntar Soporte" para agregar planos de evacuacion, actas de simulacro, etc.'
 ]) ?>
 
 <!-- Subcarpetas -->
+<?php if (!empty($subcarpetas)): ?>
 <div class="row">
     <?= view('documentacion/_components/lista_subcarpetas', ['subcarpetas' => $subcarpetas ?? []]) ?>
 </div>
+<?php endif; ?>
 
 <!-- Modal para Adjuntar -->
 <div class="modal fade" id="modalAdjuntarEmergencias" tabindex="-1">
@@ -102,7 +157,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">Descripcion</label>
-                        <input type="text" class="form-control" name="descripcion" required placeholder="Ej: Plan emergencias 2026, Simulacro evacuacion...">
+                        <input type="text" class="form-control" name="descripcion" required placeholder="Ej: Plano evacuacion sede principal, Acta simulacro...">
                     </div>
 
                     <div class="mb-3">

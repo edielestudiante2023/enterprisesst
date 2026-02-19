@@ -303,7 +303,7 @@ if (!function_exists('convertirMarkdownAHtml')) {
                             <i class="bi bi-patch-check me-1"></i>Ver Firmas
                         </a>
                     <?php endif; ?>
-                    <?php if (in_array($documento['estado'] ?? '', ['generado', 'aprobado', 'en_revision', 'pendiente_firma'])): ?>
+                    <?php if (($documento['estado'] ?? '') === 'pendiente_firma'): ?>
                         <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>" class="btn btn-outline-warning btn-sm me-2" target="_blank">
                             <i class="bi bi-clock-history me-1"></i>Estado Firmas
                         </a>
@@ -499,9 +499,9 @@ if (!function_exists('convertirMarkdownAHtml')) {
 
             // Datos del Consultor desde tbl_consultor
             $consultorNombre = $consultor['nombre_consultor'] ?? '';
-            // Según 1_A_SISTEMA_FIRMAS: Tipo E (2 firmantes por estándares) = "Consultor SST"
-            // Tipo D (firmantesDefinidos) = "Responsable del SG-SST"
-            $consultorCargo = $esSoloDosFirmantes ? 'Consultor SST' : 'Responsable del SG-SST';
+            // Según 1_A_SISTEMA_FIRMAS: Tipo D (firmantesDefinidos) = "Responsable del SG-SST"
+            // Tipo E (2 firmantes por estándares) y Tipo F (3 firmantes) = "Consultor SST"
+            $consultorCargo = $esDosFirmantesPorDefinicion ? 'Responsable del SG-SST' : 'Consultor SST';
             $consultorLicencia = $consultor['numero_licencia'] ?? '';
 
             // Datos del Delegado SST (si aplica)
@@ -526,12 +526,12 @@ if (!function_exists('convertirMarkdownAHtml')) {
                 </div>
 
                 <?php if ($esSoloDosFirmantes): ?>
-                <!-- ========== 7 ESTÁNDARES SIN DELEGADO: Solo 2 firmantes (Tipo E) ========== -->
+                <!-- ========== 2 FIRMANTES: Tipo D (firmantesDefinidos) o Tipo E (7 estándares) ========== -->
                 <table class="table table-bordered mb-0" style="font-size: 0.85rem; border-top: none;">
                     <thead>
                         <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
                             <th style="width: 50%; text-align: center; font-weight: 600; color: #495057; border-top: none;">
-                                <i class="bi bi-person-badge me-1"></i>Elaboró / Consultor SST
+                                <i class="bi bi-person-badge me-1"></i>Elaboró / <?= esc($consultorCargo) ?>
                             </th>
                             <th style="width: 50%; text-align: center; font-weight: 600; color: #495057; border-top: none;">
                                 <i class="bi bi-person-check me-1"></i>Aprobó / Representante Legal
@@ -540,7 +540,7 @@ if (!function_exists('convertirMarkdownAHtml')) {
                     </thead>
                     <tbody>
                         <tr>
-                            <!-- CONSULTOR SST / ELABORÓ (Tipo E: 2 firmantes por estándares) -->
+                            <!-- ELABORÓ (Tipo D: Responsable SG-SST / Tipo E: Consultor SST) -->
                             <td style="vertical-align: top; padding: 20px; height: 180px; position: relative;">
                                 <div style="margin-bottom: 8px;">
                                     <strong style="color: #495057;">Nombre:</strong>

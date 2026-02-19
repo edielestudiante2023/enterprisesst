@@ -5,9 +5,9 @@ namespace App\Libraries\DocumentosSSTTypes;
 /**
  * Clase ReglamentoHigieneSeguridadIndustrial
  *
- * Reglamento de Higiene y Seguridad Industrial - Estándar 1.1.2
+ * Reglamento de Higiene y Seguridad Industrial - Estándar 1.2.4
  * Basado en Resolución 1016/1989, Código Sustantivo del Trabajo (arts. 349-352),
- * Decreto 1072/2015 y Resolución 0312/2019 estándar 1.1.2.
+ * Decreto 1072/2015 y Resolución 0312/2019 estándar 1.2.4.
  *
  * Tipo A (secciones_ia): IA genera contenido personalizado para cada empresa.
  * Nota: tipo_documento en BD es 'reglamento_higiene_seguridad' (sin 'industrial')
@@ -28,12 +28,12 @@ class ReglamentoHigieneSeguridadIndustrial extends AbstractDocumentoSST
 
     public function getDescripcion(): string
     {
-        return 'Documento obligatorio que establece las normas internas de higiene y seguridad industrial para los trabajadores. Obligatorio para empresas con 10 o más trabajadores permanentes según Resolución 1016/1989 y artículos 349-352 del Código Sustantivo del Trabajo. Cumplimiento del estándar 1.1.2 de la Resolución 0312/2019.';
+        return 'Documento obligatorio que establece las normas internas de higiene y seguridad industrial para los trabajadores. Obligatorio para empresas con 10 o más trabajadores permanentes según Resolución 1016/1989 y artículos 349-352 del Código Sustantivo del Trabajo. Cumplimiento del estándar 1.2.4 de la Resolución 0312/2019.';
     }
 
     public function getEstandar(): ?string
     {
-        return '1.1.2';
+        return '1.2.4';
     }
 
     public function getSecciones(): array

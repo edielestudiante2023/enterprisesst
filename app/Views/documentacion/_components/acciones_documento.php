@@ -61,6 +61,10 @@ $mapaRutas = [
     // 4.2.3 PVE Riesgo Biomecanico y Psicosocial
     'pve_riesgo_biomecanico' => 'pve-riesgo-biomecanico/' . $docSST['anio'],
     'pve_riesgo_psicosocial' => 'pve-riesgo-psicosocial/' . $docSST['anio'],
+    // 1.2.4 Reglamento de Higiene y Seguridad Industrial
+    'reglamento_higiene_seguridad' => 'reglamento-higiene-seguridad/' . $docSST['anio'],
+    // 5.1.1 Plan de Emergencias
+    'plan_emergencias' => 'plan-emergencias/' . $docSST['anio'],
 ];
 
 // Presupuesto SST tiene ruta diferente
@@ -131,6 +135,10 @@ if ($tipoDoc === 'programa_capacitacion') {
     $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/pve-riesgo-biomecanico');
 } elseif ($tipoDoc === 'pve_riesgo_psicosocial') {
     $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/pve-riesgo-psicosocial');
+} elseif ($tipoDoc === 'reglamento_higiene_seguridad') {
+    $urlEditar = base_url('documentos/generar/reglamento_higiene_seguridad/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'plan_emergencias') {
+    $urlEditar = base_url('documentos/generar/plan_emergencias/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 }
 ?>
 <div class="btn-group btn-group-sm">

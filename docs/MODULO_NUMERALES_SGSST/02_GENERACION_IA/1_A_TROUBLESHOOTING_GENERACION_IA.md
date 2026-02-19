@@ -573,6 +573,7 @@ Ver `app/Libraries/DocumentosSSTTypes/ProcedimientoMatrizLegal.php` como ejemplo
 | 2026-02-04 | "[Seccion no definida]" en procedimiento_matriz_legal | Creada clase `ProcedimientoMatrizLegal.php` y registrada en Factory |
 | 2026-02-13 | "[Seccion no definida]" + SweetAlert colgado en identificacion_alto_riesgo | Faltaba clase PHP. Creada `IdentificacionAltoRiesgo.php` y registrada en Factory. Causa raiz: SQL y vista existian pero la clase PHP no se creo (checklist de ZZ_96 tenia la clase como ultimo paso) |
 | 2026-02-13 | SweetAlert mostraba 19 actividades PTA y 17 indicadores no relacionados en doc Tipo A | `previsualizarDatos()` no diferenciaba flujo `secciones_ia` vs `programa_con_pta`. Fix: backend detecta flujo y salta queries PTA/indicadores para Tipo A. Frontend solo muestra contexto. Ver [1_A_REPARAR_IA_TIPO_A_UNA_PARTE.md](./1_A_REPARAR_IA_TIPO_A_UNA_PARTE.md) |
+| 2026-02-18 | "SweetAlert no aparece" en reglamento_higiene_seguridad (falso positivo) | BD completa, SweetAlert es código compartido en `generar_con_ia.php`. No requiere implementación por documento. Causa: `verificacionConfirmada=true` de sesión anterior o falta de clic en "Generar Todo". |
 
 ---
 
@@ -782,6 +783,50 @@ DESPUÉS (dos modos distintos):
 ### Bug relacionado: `select('DISTINCT nombre_indicador')` en metadata
 
 En el mismo archivo `ProgramaInduccionReinduccion.php`, el método `getMetadataConsultas()` usaba `->select('DISTINCT nombre_indicador')` que CI4 v4.6 escapaba como `` `DISTINCT` `nombre_indicador` `` (SQL inválido). Fix: `->distinct()->select('nombre_indicador')`.
+
+---
+
+## Problema: "SweetAlert no aparece" en documento nuevo (falso positivo)
+
+### Síntoma
+
+Al crear un nuevo tipo de documento (ej: `reglamento_higiene_seguridad`), el desarrollador busca código SweetAlert en la clase PHP (`DocumentosSSTTypes/*.php`) o en la vista `_tipos/*.php` y no lo encuentra. Cree que falta implementar el SweetAlert de verificación de datos.
+
+### Investigación (2026-02-18)
+
+Se ejecutó diagnóstico completo para `reglamento_higiene_seguridad`:
+
+| Componente | Estado | Detalle |
+|---|---|---|
+| `tbl_doc_tipo_configuracion` | ✅ | id=7, flujo=secciones_ia, activo=1 |
+| `tbl_doc_secciones_config` | ✅ | 11 secciones, todas con prompt_ia |
+| `tbl_doc_firmantes_config` | ✅ | 2 firmantes (representante_legal, responsable_sst) |
+| `tbl_marco_normativo` | ✅ | 1698 chars, método=automático, fecha=2026-02-18 |
+| Ruta generación | ✅ | Genérica: `/documentos/generar/(:segment)/(:num)` → `generarConIA()` |
+| Ruta previsualizar | ✅ | Genérica: `/documentos/previsualizar-datos/(:segment)/(:num)` → `previsualizarDatos()` |
+
+### Causa raíz
+
+El SweetAlert de verificación de datos es **código compartido** que vive en `generar_con_ia.php`, NO en las clases PHP ni en las vistas `_tipos/`. Funciona automáticamente para cualquier documento que pase por el flujo genérico.
+
+**Ubicación exacta del código:**
+- **SweetAlert 1 (Marco Normativo):** `generar_con_ia.php` líneas ~1245-1283 — aparece al clicar "Generar Todo con IA"
+- **SweetAlert 2 (Resumen datos):** `generar_con_ia.php` líneas ~1293-1388 — aparece después del marco normativo
+- **Endpoint datos:** `GET /documentos/previsualizar-datos/{tipo}/{id_cliente}` → `DocumentosSSTController::previsualizarDatos()`
+- **Variable JS de sesión:** `verificacionConfirmada = true` después de confirmar → no se repite en la misma sesión
+
+**Si el SweetAlert "no aparece" después de haberlo visto una vez:** es porque `verificacionConfirmada = true`. Recargar la página resetea la variable.
+
+### Lección arquitectónica
+
+Al crear un documento nuevo, **NO hay que implementar SweetAlerts por separado**. Solo necesita:
+1. Registro en `tbl_doc_tipo_configuracion` con `flujo` correcto (`secciones_ia` o `programa_con_pta`)
+2. El flujo genérico `generarConIA()` → `generar_con_ia.php` hace el resto automáticamente
+3. Para Tipo B: además agregar entradas en `getFiltroServicioPTA()` y `getCategoriaIndicador()`
+
+### Script diagnóstico
+
+`app/SQL/verificar_config_reglamento.php` — verifica las 4 tablas de configuración para cualquier tipo de documento. Ejecutar: `php app/SQL/verificar_config_reglamento.php`
 
 ---
 

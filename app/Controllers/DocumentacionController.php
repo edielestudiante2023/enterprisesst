@@ -364,8 +364,8 @@ class DocumentacionController extends Controller
                 // 4.2.6: Entrega de EPP
                 $queryDocs->where('tipo_documento', 'soporte_entrega_epp');
             } elseif ($tipoCarpetaFases === 'plan_emergencias') {
-                // 5.1.1: Plan de emergencias
-                $queryDocs->where('tipo_documento', 'soporte_plan_emergencias');
+                // 5.1.1: Plan de emergencias (híbrida: documento IA + soportes)
+                $queryDocs->whereIn('tipo_documento', ['plan_emergencias', 'soporte_plan_emergencias']);
             } elseif ($tipoCarpetaFases === 'brigada_emergencias') {
                 // 5.1.2: Brigada de emergencias
                 $queryDocs->where('tipo_documento', 'soporte_brigada_emergencias');
@@ -483,6 +483,9 @@ class DocumentacionController extends Controller
             } elseif ($tipoCarpetaFases === 'identificacion_alto_riesgo') {
                 // 1.1.5: Identificación de trabajadores de alto riesgo
                 $queryDocs->where('tipo_documento', 'identificacion_alto_riesgo');
+            } elseif ($tipoCarpetaFases === 'reglamento_higiene_seguridad') {
+                // 1.2.4: Reglamento de Higiene y Seguridad Industrial
+                $queryDocs->where('tipo_documento', 'reglamento_higiene_seguridad');
             } elseif ($tipoCarpetaFases === 'documentos_externos') {
                 // 2.5.1.1: Listado Maestro de Documentos Externos
                 $queryDocs->where('tipo_documento', 'soporte_documento_externo');
@@ -778,6 +781,13 @@ class DocumentacionController extends Controller
             strpos($nombre, 'induccion') !== false ||
             strpos($nombre, 'reinduccion') !== false) {
             return 'induccion_reinduccion';
+        }
+
+        // 1.2.4. Reglamento de Higiene y Seguridad Industrial
+        if ($codigo === '1.2.4' ||
+            strpos($nombre, 'reglamento') !== false && strpos($nombre, 'higiene') !== false ||
+            strpos($nombre, 'reglamento') !== false && strpos($nombre, 'seguridad industrial') !== false) {
+            return 'reglamento_higiene_seguridad';
         }
 
         // 2.2.1. Objetivos definidos, claros, medibles, cuantificables, con metas

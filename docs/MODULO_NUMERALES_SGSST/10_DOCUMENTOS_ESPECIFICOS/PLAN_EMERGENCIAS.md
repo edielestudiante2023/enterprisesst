@@ -55,6 +55,20 @@
 | Generación IA | `/documentos/generar/plan_emergencias/{id_cliente}` |
 | Vista previa | `/documentos-sst/{id_cliente}/plan-emergencias/{anio}` |
 
+## Carpeta Híbrida (A + B)
+
+La carpeta 5.1.1 es **híbrida**: permite tanto adjuntar soportes externos como crear
+el documento completo con IA.
+
+| Funcionalidad | Tipo documento BD | Componente vista |
+|--------------|-------------------|------------------|
+| Crear con IA | `plan_emergencias` | `tabla_documentos_sst` |
+| Adjuntar soporte | `soporte_plan_emergencias` | `tabla_soportes` |
+
+- `DocumentacionController` consulta ambos tipos: `whereIn(['plan_emergencias', 'soporte_plan_emergencias'])`
+- La vista `_tipos/plan_emergencias.php` separa los docs por tipo y muestra ambas tablas
+- `acciones_documento.php` tiene mapeo de `plan_emergencias` en `$mapaRutas` y `$urlEditar`
+
 ## Archivos Implementados
 
 | Archivo | Estado |
@@ -66,6 +80,9 @@
 | BD `tbl_doc_firmantes_config` (2 firmantes) | ✅ LOCAL + PRODUCCIÓN |
 | `app/Config/Routes.php` (ruta vista previa) | ✅ |
 | `app/Controllers/DocumentosSSTController.php` (método) | ✅ |
+| `app/Views/documentacion/_tipos/plan_emergencias.php` (híbrida) | ✅ |
+| `app/Views/documentacion/_components/acciones_documento.php` | ✅ |
+| `app/Controllers/DocumentacionController.php` (query híbrida) | ✅ |
 
 ## Decisiones de Diseño
 
@@ -79,3 +96,5 @@
 - El análisis de vulnerabilidad usa la metodología de 3 elementos (personas, recursos,
   sistemas) acorde con GTC 45.
 - La sección de simulacros cumple el requisito mínimo de 1 simulacro anual (Res. 0312/2019).
+- **Carpeta híbrida**: permite adjuntar soportes adicionales (planos, actas de simulacro,
+  certificados de brigada) junto al documento generado con IA.
