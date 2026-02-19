@@ -108,7 +108,7 @@
                                 </div>
                                 <!-- Tipo Servicio -->
                                 <div class="col-md-4">
-                                    <label for="tipo_servicio" class="form-label">Tipo Servicio</label>
+                                    <label for="tipo_servicio" class="form-label">Fuente de la Actividad</label>
                                     <input type="text" name="tipo_servicio" id="tipo_servicio" class="form-control" value="<?= esc($record['tipo_servicio']) ?>">
                                 </div>
                             </div>

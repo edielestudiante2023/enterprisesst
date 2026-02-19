@@ -573,7 +573,7 @@
                             <th>Acciones</th>
                             <th>ID</th>
                             <th>Cliente</th>
-                            <th class="d-none">Tipo Servicio</th>
+                            <th>Fuente de la Actividad</th>
                             <th>PHVA</th>
                             <th>Numeral Plan Trabajo</th>
                             <th>Actividad</th>
@@ -600,7 +600,7 @@
                                 </td>
                                 <td><?= esc($row['id_ptacliente']) ?></td>
                                 <td class="editable"><?= esc($row['nombre_cliente']) ?></td>
-                                <td class="d-none"><?= esc($row['tipo_servicio']) ?></td>
+                                <td><?= esc($row['tipo_servicio']) ?></td>
                                 <td class="editable"><?= esc($row['phva_plandetrabajo']) ?></td>
                                 <td class="editable"><?= esc($row['numeral_plandetrabajo']) ?></td>
                                 <td class="editable"><?= esc($row['actividad_plandetrabajo']) ?></td>
@@ -645,7 +645,7 @@
                             <th></th>
                             <th><input type="text" placeholder="Buscar ID" class="form-control form-control-sm"></th>
                             <th><input type="text" placeholder="Buscar Cliente" class="form-control form-control-sm"></th>
-                            <th class="d-none"></th>
+                            <th><input type="text" placeholder="Buscar Fuente" class="form-control form-control-sm"></th>
                             <th><input type="text" placeholder="Buscar PHVA" class="form-control form-control-sm"></th>
                             <th><input type="text" placeholder="Buscar Numeral Plan Trabajo" class="form-control form-control-sm"></th>
                             <th><input type="text" placeholder="Buscar Actividad" class="form-control form-control-sm"></th>
@@ -1083,7 +1083,7 @@
                         charset: 'UTF-8',
                         bom: true,
                         exportOptions: {
-                            columns: [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                             format: {
                                 body: function(data, row, column, node) {
                                     // Decode HTML entities
