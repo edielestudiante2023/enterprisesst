@@ -586,7 +586,7 @@ class GeneradorIAController extends BaseController
             'politicaSST' => $politicaSST,
             'resumenObjetivos' => $objetivosService->getResumenObjetivos($idCliente, $anio),
             'objetivosExistentes' => $objetivosService->getObjetivosCliente($idCliente, $anio),
-            'verificacionIndicadores' => $indicadoresService->getResumenIndicadores($idCliente)
+            'verificacionIndicadores' => $indicadoresService->getResumenIndicadores($idCliente, $anio)
         ];
 
         return view('generador_ia/objetivos_sgsst', $data);
@@ -889,7 +889,7 @@ Responde en formato JSON con esta estructura exacta:
             'contexto' => $contexto ?? [],
             'limiteIndicadores' => $indicadoresService->getLimiteIndicadores($estandares),
             'verificacionObjetivos' => $indicadoresService->verificarObjetivosPrevios($idCliente, $anio),
-            'resumenIndicadores' => $indicadoresService->getResumenIndicadores($idCliente),
+            'resumenIndicadores' => $indicadoresService->getResumenIndicadores($idCliente, $anio),
             'indicadoresExistentes' => $indicadoresService->getIndicadoresCliente($idCliente)
         ]);
     }
@@ -900,6 +900,7 @@ Responde en formato JSON con esta estructura exacta:
     public function previewIndicadoresObjetivos(int $idCliente)
     {
         $anio = $this->request->getGet('anio') ?? (int)date('Y');
+        $instrucciones = urldecode($this->request->getGet('instrucciones') ?? '');
 
         $cliente = $this->clienteModel->find($idCliente);
         if (!$cliente) {
@@ -909,13 +910,20 @@ Responde en formato JSON con esta estructura exacta:
         $contextoModel = new \App\Models\ClienteContextoSstModel();
         $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
 
-        $indicadoresService = new \App\Services\IndicadoresObjetivosService();
-        $preview = $indicadoresService->previewIndicadores($idCliente, (int)$anio, $contexto);
+        try {
+            $indicadoresService = new \App\Services\IndicadoresObjetivosService();
+            $preview = $indicadoresService->previewIndicadores($idCliente, (int)$anio, $contexto, $instrucciones);
 
-        return $this->response->setJSON([
-            'success' => true,
-            'data' => $preview
-        ]);
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $preview
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     /**

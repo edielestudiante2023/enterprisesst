@@ -584,6 +584,11 @@ $routes->get('/admin/usage', 'UsageController::index');
 $routes->get('/admin/usage/user/(:num)', 'UsageController::userDetail/$1');
 $routes->get('/admin/usage/export-csv', 'UsageController::exportCsv');
 $routes->get('/admin/usage/chart-data', 'UsageController::chartData');
+
+// Monitor de Documentos SST
+$routes->get('admin/dashboard-documentos-sst', 'DashboardDocumentosSstController::index');
+$routes->get('admin/dashboard-documentos-sst/data', 'DashboardDocumentosSstController::getData');
+
 /* Rutas de Recuperación de Contraseña: */
 
 

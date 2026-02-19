@@ -56,9 +56,23 @@
         <div class="alert alert-info mb-4">
             <i class="bi bi-info-circle me-2"></i>
             <strong>Indicadores para medir los Objetivos del SG-SST:</strong>
-            <div class="mt-2">
-                <span class="badge bg-success me-2"><i class="bi bi-check me-1"></i>Parte 1 completa</span>
-                <strong><?= $verificacionObjetivos['total_objetivos'] ?></strong> objetivos definidos
+            La IA generara indicadores a partir de los <strong><?= $verificacionObjetivos['total_objetivos'] ?></strong> objetivos definidos en la Parte 1.
+        </div>
+
+        <!-- Instrucciones adicionales para la IA -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-chat-dots text-primary me-2"></i>Instrucciones adicionales para la IA
+                    <small class="text-muted">(opcional)</small>
+                </h6>
+            </div>
+            <div class="card-body">
+                <textarea id="instruccionesIA" class="form-control" rows="3"
+                    placeholder="Ej: Enfocar indicadores en prevencion de riesgo psicosocial, incluir indicadores de resultado con metas trimestrales, la empresa tiene certificacion ISO 45001..."></textarea>
+                <small class="text-muted">
+                    Describa necesidades especificas para personalizar los indicadores del SG-SST.
+                </small>
             </div>
         </div>
 
@@ -107,25 +121,13 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Indicadores que se generaran -->
-                        <div class="alert alert-light border mb-3">
-                            <strong><i class="bi bi-lightbulb me-1"></i>Indicadores sugeridos:</strong>
-                            <ul class="mb-0 mt-2 small">
-                                <li><strong>Indice de Frecuencia de AT</strong> - Mide frecuencia de accidentes</li>
-                                <li><strong>Indice de Severidad de AT</strong> - Mide dias perdidos</li>
-                                <li><strong>Tasa de Enfermedad Laboral</strong> - Mide incidencia EL</li>
-                                <li><strong>Cumplimiento Estandares Minimos</strong> - Res. 0312/2019</li>
-                                <li><strong>Cobertura Capacitacion SST</strong> - Formacion del personal</li>
-                            </ul>
-                        </div>
-
                         <!-- Botones -->
                         <div class="d-grid gap-2">
                             <button type="button" class="btn btn-outline-primary" onclick="previewIndicadores()">
                                 <i class="bi bi-eye me-1"></i>Ver Preview de Indicadores
                             </button>
                             <button type="button" class="btn btn-primary" onclick="previewIndicadores()">
-                                <i class="bi bi-magic me-1"></i>Generar Indicadores
+                                <i class="bi bi-magic me-1"></i>Generar Indicadores con IA
                             </button>
                         </div>
                     </div>
@@ -191,10 +193,10 @@
                 <!-- Ir al documento -->
                 <div class="card border-0 shadow-sm mt-3">
                     <div class="card-body">
-                        <a href="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/plan-objetivos-metas/' . $anio) ?>"
+                        <a href="<?= base_url('documentos/generar/plan_objetivos_metas/' . $cliente['id_cliente']) ?>"
                            class="btn btn-<?= ($resumenIndicadores['completo']) ? 'success' : 'secondary' ?> w-100"
                            <?= !$resumenIndicadores['completo'] ? 'onclick="alert(\'Primero genere los indicadores\'); return false;"' : '' ?>>
-                            <i class="bi bi-file-text me-1"></i>Ir al Documento (Parte 3)
+                            <i class="bi bi-magic me-1"></i>Generar Documento con IA (Parte 3)
                         </a>
                     </div>
                 </div>
@@ -303,6 +305,7 @@
     const anio = <?= $anio ?>;
     const limiteIndicadores = <?= $limiteIndicadores ?? 10 ?>;
     let indicadoresData = [];
+    let explicacionIA = '';
 
     const tiposColor = {
         'estructura': 'secondary',
@@ -342,11 +345,25 @@
         bsToast.show();
     }
 
+    function getInstruccionesIA() {
+        const textarea = document.getElementById('instruccionesIA');
+        return textarea ? textarea.value.trim() : '';
+    }
+
     function previewIndicadores() {
         const modal = new bootstrap.Modal(document.getElementById('modalPreview'));
         modal.show();
 
-        fetch(`<?= base_url('generador-ia') ?>/${idCliente}/preview-indicadores-objetivos?anio=${anio}`)
+        // Mostrar spinner de carga con mensaje IA
+        document.getElementById('previewContent').innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2">La IA esta generando indicadores a partir de los objetivos...</p>
+                <small class="text-muted">Esto puede tardar unos segundos</small>
+            </div>`;
+
+        const instrucciones = encodeURIComponent(getInstruccionesIA());
+        fetch(`<?= base_url('generador-ia') ?>/${idCliente}/preview-indicadores-objetivos?anio=${anio}&instrucciones=${instrucciones}`)
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
@@ -356,6 +373,7 @@
                         return;
                     }
                     indicadoresData = data.data.indicadores;
+                    explicacionIA = data.data.explicacion_ia || '';
                     renderPreviewTable();
                 } else {
                     document.getElementById('previewContent').innerHTML =
@@ -369,10 +387,18 @@
     }
 
     function renderPreviewTable() {
+        let explicacionHtml = '';
+        if (explicacionIA) {
+            explicacionHtml = `
+                <div class="alert alert-success small mb-3">
+                    <i class="bi bi-robot me-2"></i><strong>Criterio de la IA:</strong> ${explicacionIA}
+                </div>`;
+        }
+
         let html = `
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <strong>Total: ${indicadoresData.length} indicadores sugeridos</strong>
+                    <strong>Total: ${indicadoresData.length} indicadores generados por IA</strong>
                     <small class="text-muted ms-2">(limite: ${limiteIndicadores})</small>
                 </div>
                 <div>
@@ -384,9 +410,10 @@
                     </button>
                 </div>
             </div>
+            ${explicacionHtml}
             <div class="alert alert-light small border mb-3">
                 <i class="bi bi-info-circle me-1"></i>
-                Seleccione los indicadores que desea crear. Los que ya existen aparecen deshabilitados.
+                Indicadores generados a partir de los objetivos de la Parte 1. Edite y seleccione los que desea crear.
                 <div class="mt-2">
                     <span class="badge bg-secondary me-1">Estructura</span> Miden recursos
                     <span class="badge bg-primary ms-2 me-1">Proceso</span> Miden ejecucion
@@ -472,10 +499,10 @@
                                 </div>
                             </div>
 
-                            <!-- Objetivo asociado -->
-                            ${ind.objetivo_asociado ? `
+                            <!-- Objetivo origen (vinculo a Parte 1) -->
+                            ${ind.objetivo_origen ? `
                             <div class="small text-success mb-2">
-                                <i class="bi bi-bullseye me-1"></i>Objetivo: ${escapeHtml(ind.objetivo_asociado.substring(0,80))}...
+                                <i class="bi bi-bullseye me-1"></i>Mide objetivo: ${escapeHtml(ind.objetivo_origen.substring(0,100))}
                             </div>` : ''}
 
                             <!-- Seccion IA: Instrucciones para regenerar -->
@@ -550,9 +577,12 @@
             // Campos originales que no son editables en la UI
             phva: original.phva || 'verificar',
             numeral: original.numeral || '2.2.1',
-            menor_es_mejor: original.menor_es_mejor || false,
-            objetivo_relacionado: original.objetivo_relacionado || '',
-            objetivo_asociado: original.objetivo_asociado || ''
+            definicion: original.definicion || '',
+            interpretacion: original.interpretacion || '',
+            origen_datos: original.origen_datos || '',
+            cargo_responsable: original.cargo_responsable || 'Responsable del SG-SST',
+            cargos_conocer_resultado: original.cargos_conocer_resultado || '',
+            objetivo_origen: original.objetivo_origen || ''
         };
     }
 

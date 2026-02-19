@@ -109,14 +109,10 @@
                                 <?php
                                 $estandares = $contexto['estandares_aplicables'] ?? 60;
                                 $limiteObj = $estandares <= 7 ? 3 : ($estandares <= 21 ? 4 : 6);
-                                $limiteInd = $estandares <= 7 ? 5 : ($estandares <= 21 ? 8 : 10);
                                 ?>
                                 <div class="row">
-                                    <div class="col-6">
+                                    <div class="col-12">
                                         <strong class="text-success"><?= $limiteObj ?></strong> objetivos maximo
-                                    </div>
-                                    <div class="col-6">
-                                        <strong class="text-primary"><?= $limiteInd ?></strong> indicadores maximo
                                     </div>
                                 </div>
                                 <hr class="my-2">
@@ -163,169 +159,62 @@
             </div>
         </div>
 
-        <div class="row">
-            <!-- Paso 1: Objetivos -->
-            <div class="col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">
-                            <span class="badge bg-white text-success me-2">1</span>
-                            Objetivos del SG-SST
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- Estado actual -->
-                        <div class="mb-3">
-                            <p class="text-muted small mb-2">Estado actual (<?= $anio ?>):</p>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Objetivos definidos:</span>
-                                <strong><?= $resumenObjetivos['existentes'] ?></strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Limite segun estandares:</span>
-                                <strong><?= $limiteObj ?></strong>
-                            </div>
-                            <?php if ($resumenObjetivos['completo']): ?>
-                                <div class="alert alert-success small mb-0 mt-2">
-                                    <i class="bi bi-check-circle me-1"></i>Fase completa
-                                </div>
-                            <?php else: ?>
-                                <div class="alert alert-warning small mb-0 mt-2">
-                                    <i class="bi bi-exclamation-triangle me-1"></i>Minimo 3 objetivos requeridos
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Que se generara -->
-                        <div class="alert alert-light small mb-3">
-                            <strong>Objetivos tipicos del SG-SST:</strong>
-                            <ul class="mb-0 mt-1">
-                                <li>Reducir accidentalidad laboral</li>
-                                <li>Prevenir enfermedades laborales</li>
-                                <li>Cumplir requisitos legales SST</li>
-                                <li>Fortalecer cultura de autocuidado</li>
-                            </ul>
-                        </div>
-
-                        <!-- Botones -->
-                        <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-outline-success" onclick="previewObjetivos()">
-                                <i class="bi bi-eye me-1"></i>Ver Preview
-                            </button>
-                            <button type="button" class="btn btn-success" onclick="generarObjetivos()">
-                                <i class="bi bi-magic me-1"></i>Generar Objetivos
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Paso 2: Indicadores -->
-            <div class="col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <span class="badge bg-white text-primary me-2">2</span>
-                            Indicadores de Objetivos
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- Estado actual -->
-                        <div class="mb-3">
-                            <p class="text-muted small mb-2">Estado actual:</p>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Indicadores configurados:</span>
-                                <strong><?= $verificacionIndicadores['total'] ?? 0 ?></strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Limite segun estandares:</span>
-                                <strong><?= $limiteInd ?></strong>
-                            </div>
-                            <?php if (($verificacionIndicadores['completo'] ?? false)): ?>
-                                <div class="alert alert-success small mb-0 mt-2">
-                                    <i class="bi bi-check-circle me-1"></i>Fase completa
-                                </div>
-                            <?php else: ?>
-                                <div class="alert alert-warning small mb-0 mt-2">
-                                    <i class="bi bi-exclamation-triangle me-1"></i>Faltan indicadores
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Indicadores sugeridos -->
-                        <div class="alert alert-light small mb-3">
-                            <strong>Indicadores recomendados:</strong>
-                            <ul class="mb-0 mt-1">
-                                <li>Indice de frecuencia de accidentes</li>
-                                <li>Tasa de enfermedad laboral</li>
-                                <li>Cumplimiento estandares minimos</li>
-                                <li>Cobertura de capacitacion SST</li>
-                            </ul>
-                        </div>
-
-                        <!-- Boton -->
-                        <div class="d-grid">
-                            <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/indicadores-objetivos') ?>"
-                               class="btn btn-<?= $resumenObjetivos['completo'] ? 'primary' : 'secondary' ?>"
-                               <?= !$resumenObjetivos['completo'] ? 'onclick="alert(\'Primero genere los objetivos del SG-SST\'); return false;"' : '' ?>>
-                                <i class="bi bi-graph-up me-1"></i>Ir a Indicadores
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Paso 3: Documento -->
-        <?php
-        $fase1Completa = $resumenObjetivos['completo'] ?? false;
-        $fase2Completa = ($verificacionIndicadores['completo'] ?? false);
-        $puedeGenerarDoc = $fase1Completa && $fase2Completa;
-        ?>
+        <!-- Estado y acciones de Objetivos -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-dark text-white">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <span class="badge bg-white text-dark me-2">3</span>
-                            Documento: Plan de Objetivos y Metas
+                            <i class="bi bi-bullseye me-2"></i>Objetivos del SG-SST
                         </h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-white text-dark"><?= $resumenObjetivos['existentes'] ?> / <?= $limiteObj ?> objetivos</span>
+                            <?php if ($resumenObjetivos['completo']): ?>
+                                <span class="badge bg-light text-success"><i class="bi bi-check-circle me-1"></i>Fase completa</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-8">
-                                <p class="mb-2">
-                                    <i class="bi bi-file-earmark-text me-2 text-primary"></i>
-                                    <strong>Documento formal</strong> que consolida los objetivos e indicadores definidos.
-                                </p>
-                                <div class="d-flex gap-3 small">
-                                    <span class="<?= $fase1Completa ? 'text-success' : 'text-muted' ?>">
-                                        <i class="bi bi-<?= $fase1Completa ? 'check-circle-fill' : 'circle' ?> me-1"></i>
-                                        Fase 1: Objetivos
-                                    </span>
-                                    <span class="<?= $fase2Completa ? 'text-success' : 'text-muted' ?>">
-                                        <i class="bi bi-<?= $fase2Completa ? 'check-circle-fill' : 'circle' ?> me-1"></i>
-                                        Fase 2: Indicadores
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col-md-4 text-end">
-                                <?php if ($puedeGenerarDoc): ?>
-                                    <a href="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/plan-objetivos-metas/' . $anio) ?>"
-                                       class="btn btn-success">
-                                        <i class="bi bi-file-earmark-plus me-1"></i>Ir al Documento
-                                    </a>
+                                <?php if (!$resumenObjetivos['completo']): ?>
+                                    <div class="alert alert-warning small mb-0">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        Minimo 3 objetivos requeridos. Genere objetivos medibles y cuantificables para el SG-SST.
+                                    </div>
                                 <?php else: ?>
-                                    <button type="button" class="btn btn-secondary" disabled>
-                                        <i class="bi bi-lock me-1"></i>Complete las fases anteriores
-                                    </button>
+                                    <p class="text-muted mb-0 small">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Objetivos definidos para <?= $anio ?>. Puede regenerar o agregar mas objetivos si lo necesita.
+                                    </p>
                                 <?php endif; ?>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-outline-success" onclick="previewObjetivos()">
+                                        <i class="bi bi-eye me-1"></i>Ver Preview
+                                    </button>
+                                    <button type="button" class="btn btn-success" onclick="generarObjetivos()">
+                                        <i class="bi bi-magic me-1"></i>Generar Objetivos
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Navegacion al siguiente paso -->
+        <?php if ($resumenObjetivos['completo']): ?>
+        <div class="d-flex justify-content-end mb-4">
+            <a href="<?= base_url('generador-ia/' . $cliente['id_cliente'] . '/indicadores-objetivos') ?>"
+               class="btn btn-primary">
+                Siguiente: Indicadores de Objetivos
+                <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        <?php endif; ?>
 
         <!-- Objetivos existentes -->
         <?php if (!empty($objetivosExistentes)): ?>

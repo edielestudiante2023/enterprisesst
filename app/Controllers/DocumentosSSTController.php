@@ -99,6 +99,26 @@ class DocumentosSSTController extends BaseController
     }
 
     /**
+     * Verifica que un cliente solo acceda a sus propios documentos (anti-IDOR)
+     * Admin/consultant pueden acceder a cualquier documento
+     * @return \CodeIgniter\HTTP\RedirectResponse|null Redirect si no autorizado, null si OK
+     */
+    protected function verificarPropiedadDocumento(int $idClienteDocumento)
+    {
+        $session = session();
+        $role = $session->get('role');
+        if (in_array($role, ['admin', 'consultant'])) {
+            return null;
+        }
+        $idCliente = $session->get('id_cliente') ?? $session->get('user_id');
+        if ((int)$idClienteDocumento !== (int)$idCliente) {
+            return redirect()->to('/client/mis-documentos-sst')
+                ->with('error', 'No tiene permiso para acceder a este documento');
+        }
+        return null;
+    }
+
+    /**
      * Obtiene el código de plantilla desde la base de datos
      * Los códigos ya NO están hardcodeados - se obtienen de tbl_doc_plantillas.tipo_documento
      *
@@ -2067,6 +2087,9 @@ Se debe generar acta que registre:
             return redirect()->back()->with('error', 'Documento no encontrado');
         }
 
+        $denegado = $this->verificarPropiedadDocumento($documento['id_cliente']);
+        if ($denegado) return $denegado;
+
         $cliente = $this->clienteModel->find($documento['id_cliente']);
         $contenido = json_decode($documento['contenido'], true);
 
@@ -3557,6 +3580,9 @@ Se debe generar acta que registre:
             return redirect()->back()->with('error', 'Documento no encontrado');
         }
 
+        $denegado = $this->verificarPropiedadDocumento($documento['id_cliente']);
+        if ($denegado) return $denegado;
+
         $cliente = $this->clienteModel->find($documento['id_cliente']);
         $contenido = json_decode($documento['contenido'], true);
 
@@ -3785,6 +3811,9 @@ Se debe generar acta que registre:
         if (!$version) {
             return redirect()->back()->with('error', 'Version no encontrada');
         }
+
+        $denegado = $this->verificarPropiedadDocumento($version['id_cliente']);
+        if ($denegado) return $denegado;
 
         $cliente = $this->clienteModel->find($version['id_cliente']);
         $contenido = json_decode($version['contenido_snapshot'], true);

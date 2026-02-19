@@ -560,6 +560,12 @@
                         Pendientes
                     </a>
                 </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="<?= base_url('admin/dashboard-documentos-sst') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #0984e3 0%, #6c5ce7 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3); border-radius: 12px; transition: all 0.3s ease;">
+                        <i class="fas fa-file-alt fa-lg mb-2 d-block"></i>
+                        Monitor Documentos
+                    </a>
+                </div>
             </div>
         </div>
 

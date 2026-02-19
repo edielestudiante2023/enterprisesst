@@ -6,6 +6,8 @@
     <title><?= esc($titulo) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
     <style>
         body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
         .navbar { background: rgba(255, 255, 255, 0.95); border-bottom: 3px solid #bd9751; }
@@ -94,7 +96,7 @@
         </div>
         <?php endif; ?>
 
-        <!-- Lista completa de documentos del cliente -->
+        <!-- Lista completa de documentos del cliente (solo descarga) -->
         <?php if (!empty($todosDocumentos)): ?>
         <div class="card border-0 shadow-sm mt-4">
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
@@ -105,14 +107,13 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table id="tablaDocumentos" class="table table-hover mb-0" style="width:100%">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 120px;">Codigo</th>
+                                <th>Codigo</th>
                                 <th>Documento</th>
-                                <th style="width: 80px;" class="text-center">Ano</th>
-                                <th style="width: 140px;" class="text-center">Estado</th>
-                                <th style="width: 100px;" class="text-center">Accion</th>
+                                <th class="text-center">Ano</th>
+                                <th class="text-center">Descargar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,32 +130,17 @@
                                     <span class="badge bg-secondary"><?= esc($doc['anio']) ?></span>
                                 </td>
                                 <td class="text-center">
-                                    <?php
-                                    $estadoConfig = [
-                                        'borrador' => ['badge' => 'bg-secondary', 'texto' => 'Borrador', 'icono' => 'bi-pencil'],
-                                        'generado' => ['badge' => 'bg-info', 'texto' => 'Generado', 'icono' => 'bi-file-earmark-text'],
-                                        'pendiente_firma' => ['badge' => 'bg-warning text-dark', 'texto' => 'Pendiente Firma', 'icono' => 'bi-hourglass-split'],
-                                        'aprobado' => ['badge' => 'bg-primary', 'texto' => 'Aprobado', 'icono' => 'bi-check-circle'],
-                                        'firmado' => ['badge' => 'bg-success', 'texto' => 'Firmado', 'icono' => 'bi-patch-check-fill'],
-                                    ];
-                                    $config = $estadoConfig[$doc['estado']] ?? ['badge' => 'bg-secondary', 'texto' => ucfirst($doc['estado']), 'icono' => 'bi-question-circle'];
-                                    ?>
-                                    <span class="badge <?= $config['badge'] ?>">
-                                        <i class="bi <?= $config['icono'] ?> me-1"></i><?= $config['texto'] ?>
-                                    </span>
-                                </td>
-                                <td class="text-center">
                                     <?php if (!empty($doc['archivo_firmado'])): ?>
                                         <a href="<?= esc($doc['archivo_firmado']) ?>"
-                                           class="btn btn-sm btn-success text-white"
-                                           title="Descargar documento firmado" target="_blank">
-                                            <i class="bi bi-patch-check-fill"></i>
+                                           class="btn btn-sm btn-danger text-white"
+                                           title="Descargar PDF" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                                         </a>
                                     <?php else: ?>
                                         <a href="<?= base_url('documentos-sst/exportar-pdf/' . $doc['id_documento']) ?>"
                                            class="btn btn-sm btn-danger text-white"
                                            title="Descargar PDF" target="_blank">
-                                            <i class="bi bi-file-earmark-pdf"></i>
+                                            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                                         </a>
                                     <?php endif; ?>
                                 </td>
@@ -174,5 +160,44 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        $('#tablaDocumentos').DataTable({
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel',
+                    className: 'btn btn-success btn-sm',
+                    title: '<?= esc($cliente['nombre_cliente'] ?? '') ?> - Documentos SST',
+                    exportOptions: {
+                        columns: [0, 1, 2]
+                    }
+                }
+            ],
+            language: {
+                search: "Buscar:",
+                lengthMenu: "Mostrar _MENU_ registros",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ documentos",
+                infoEmpty: "Sin documentos",
+                infoFiltered: "(filtrado de _MAX_ total)",
+                zeroRecords: "No se encontraron documentos",
+                paginate: { first: "Primero", last: "Ultimo", next: "Siguiente", previous: "Anterior" }
+            },
+            pageLength: 25,
+            order: [[2, 'desc'], [0, 'asc']],
+            columnDefs: [
+                { targets: 3, orderable: false, searchable: false }
+            ]
+        });
+    });
+    </script>
 </body>
 </html>

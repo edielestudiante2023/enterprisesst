@@ -6,11 +6,11 @@ use App\Models\IndicadorSSTModel;
 
 /**
  * Servicio para generar Indicadores de Objetivos del SG-SST
- * Estándar 2.2.1 - Resolución 0312/2019
+ * Estandar 2.2.1 - Resolucion 0312/2019
  *
- * PARTE 2 del módulo de 3 partes:
+ * PARTE 2 del modulo de 3 partes:
  * - CONSUME los objetivos de Parte 1 (tbl_pta_cliente tipo_servicio='Objetivos SG-SST')
- * - Genera indicadores para medir cumplimiento de objetivos
+ * - La IA genera indicadores que MIDEN el cumplimiento de cada objetivo
  * - Se guardan en tbl_indicadores_sst con categoria = 'objetivos_sgsst'
  */
 class IndicadoresObjetivosService
@@ -19,192 +19,7 @@ class IndicadoresObjetivosService
     protected ObjetivosSgsstService $objetivosService;
 
     protected const CATEGORIA = 'objetivos_sgsst';
-
-    /**
-     * Límites fijos de indicadores según estándares
-     */
-    public const LIMITES_INDICADORES = [
-        7 => 5,   // Básico: 5 indicadores
-        21 => 8,  // Intermedio: 8 indicadores
-        60 => 10  // Avanzado: 10 indicadores
-    ];
-
-    /**
-     * Indicadores base para objetivos del SG-SST
-     */
-    public const INDICADORES_BASE = [
-        [
-            'nombre' => 'Indice de Frecuencia de Accidentes de Trabajo',
-            'tipo' => 'resultado',
-            'formula' => '(Numero de accidentes x 240.000) / Horas hombre trabajadas',
-            'meta' => 0,
-            'unidad' => 'IF',
-            'periodicidad' => 'mensual',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Mide la frecuencia de accidentes de trabajo por horas trabajadas',
-            'menor_es_mejor' => true,
-            'objetivo_relacionado' => 'Reducir la accidentalidad laboral',
-            'definicion' => 'Mide la relacion entre el numero de accidentes de trabajo ocurridos y las horas hombre trabajadas durante un periodo, expresado por cada 240.000 HHT.',
-            'interpretacion' => 'A menor valor, menor frecuencia de accidentalidad. Un IF=0 indica cero accidentes. Valores crecientes requieren investigacion y acciones correctivas inmediatas.',
-            'origen_datos' => 'Registros FURAT, reportes de accidentes de trabajo, nomina (horas trabajadas)',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL'
-        ],
-        [
-            'nombre' => 'Indice de Severidad de Accidentes de Trabajo',
-            'tipo' => 'resultado',
-            'formula' => '(Dias perdidos por AT x 240.000) / Horas hombre trabajadas',
-            'meta' => 0,
-            'unidad' => 'IS',
-            'periodicidad' => 'mensual',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Mide la severidad de accidentes de trabajo en dias perdidos',
-            'menor_es_mejor' => true,
-            'objetivo_relacionado' => 'Reducir la accidentalidad laboral',
-            'definicion' => 'Mide la gravedad de los accidentes de trabajo ocurridos, relacionando los dias de incapacidad generados con las horas hombre trabajadas.',
-            'interpretacion' => 'A menor valor, menor severidad de los accidentes. Un IS=0 indica cero dias perdidos. Valores altos indican accidentes graves que requieren intervencion prioritaria.',
-            'origen_datos' => 'Registros FURAT, incapacidades por AT, nomina (horas trabajadas)',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL'
-        ],
-        [
-            'nombre' => 'Tasa de Incidencia de Enfermedad Laboral',
-            'tipo' => 'resultado',
-            'formula' => '(Casos nuevos de enfermedad laboral / Promedio trabajadores) x 100.000',
-            'meta' => 0,
-            'unidad' => 'x100mil',
-            'periodicidad' => 'anual',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Mide la aparicion de nuevos casos de enfermedad laboral',
-            'menor_es_mejor' => true,
-            'objetivo_relacionado' => 'Prevenir enfermedades laborales',
-            'definicion' => 'Mide la proporcion de nuevos casos de enfermedad calificada como laboral respecto al promedio de trabajadores en el periodo.',
-            'interpretacion' => 'A menor valor, mejor gestion preventiva. Un valor de 0 indica que no se presentaron nuevos casos de enfermedad laboral en el periodo.',
-            'origen_datos' => 'Calificaciones de origen EPS/ARL, registros de enfermedad laboral, nomina promedio',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL, medico ocupacional'
-        ],
-        [
-            'nombre' => 'Porcentaje de Cumplimiento de Estandares Minimos',
-            'tipo' => 'proceso',
-            'formula' => '(Estandares cumplidos / Total estandares aplicables) x 100',
-            'meta' => 100,
-            'unidad' => '%',
-            'periodicidad' => 'anual',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Mide el cumplimiento de la Resolucion 0312/2019',
-            'objetivo_relacionado' => 'Cumplir los requisitos legales en SST',
-            'definicion' => 'Mide el porcentaje de estandares minimos de la Resolucion 0312/2019 que la empresa cumple segun su clasificacion de riesgo y numero de trabajadores.',
-            'interpretacion' => 'El 100% indica cumplimiento total. Valores >=85% son aceptables, entre 60-85% requieren plan de mejora, <60% estado critico.',
-            'origen_datos' => 'Autoevaluacion de estandares minimos Res. 0312/2019, plan de mejora',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL'
-        ],
-        [
-            'nombre' => 'Cobertura de Capacitacion en SST',
-            'tipo' => 'proceso',
-            'formula' => '(Trabajadores capacitados / Total trabajadores) x 100',
-            'meta' => 100,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Mide el porcentaje de trabajadores capacitados en SST',
-            'objetivo_relacionado' => 'Fortalecer la cultura de autocuidado',
-            'definicion' => 'Mide la proporcion de trabajadores que han recibido capacitacion en temas de SST respecto al total de la poblacion trabajadora.',
-            'interpretacion' => 'El 100% indica que todos los trabajadores han sido capacitados. Valores menores requieren refuerzo en cobertura de formacion.',
-            'origen_datos' => 'Registros de asistencia a capacitaciones, cronograma de capacitacion, nomina',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, trabajadores'
-        ],
-        [
-            'nombre' => 'Cumplimiento del Plan de Trabajo Anual',
-            'tipo' => 'proceso',
-            'formula' => '(Actividades ejecutadas / Actividades programadas) x 100',
-            'meta' => 90,
-            'unidad' => '%',
-            'periodicidad' => 'trimestral',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Mide la ejecucion de las actividades del plan de trabajo SST',
-            'definicion' => 'Mide el porcentaje de actividades ejecutadas del Plan de Trabajo Anual del SG-SST frente a las actividades programadas para el periodo.',
-            'interpretacion' => 'Un resultado >=90% indica buen cumplimiento. Valores menores requieren reprogramacion y analisis de causas de incumplimiento.',
-            'origen_datos' => 'Plan de Trabajo Anual, cronograma de actividades, actas de ejecucion',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia'
-        ],
-        [
-            'nombre' => 'Porcentaje de Peligros Intervenidos',
-            'tipo' => 'proceso',
-            'formula' => '(Peligros con control implementado / Total peligros prioritarios) x 100',
-            'meta' => 80,
-            'unidad' => '%',
-            'periodicidad' => 'semestral',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Mide la gestion de peligros identificados en la matriz',
-            'objetivo_relacionado' => 'Gestionar eficazmente los peligros identificados',
-            'definicion' => 'Mide la proporcion de peligros prioritarios identificados en la Matriz IPVR que cuentan con medidas de control implementadas.',
-            'interpretacion' => 'A mayor porcentaje, mejor gestion de peligros. Un 80% o superior indica buena intervencion. Priorizar peligros con nivel de riesgo alto e inaceptable.',
-            'origen_datos' => 'Matriz de identificacion de peligros y valoracion de riesgos (IPVR), registros de controles',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, trabajadores'
-        ],
-        [
-            'nombre' => 'Participacion en Simulacros de Emergencia',
-            'tipo' => 'proceso',
-            'formula' => '(Trabajadores participantes / Total trabajadores convocados) x 100',
-            'meta' => 90,
-            'unidad' => '%',
-            'periodicidad' => 'semestral',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Mide la participacion del personal en simulacros',
-            'objetivo_relacionado' => 'Mejorar la respuesta ante emergencias',
-            'definicion' => 'Mide el porcentaje de trabajadores que participan activamente en los simulacros de emergencia programados.',
-            'interpretacion' => 'Un 90% o mas indica participacion adecuada. Valores menores requieren refuerzo en convocatoria y sensibilizacion sobre preparacion ante emergencias.',
-            'origen_datos' => 'Registros de asistencia a simulacros, plan de emergencias, informe post-simulacro',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, brigada de emergencias'
-        ],
-        [
-            'nombre' => 'Indice de Lesiones Incapacitantes',
-            'tipo' => 'resultado',
-            'formula' => '(IF x IS) / 1000',
-            'meta' => 0,
-            'unidad' => 'ILI',
-            'periodicidad' => 'mensual',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Indicador combinado de frecuencia y severidad',
-            'menor_es_mejor' => true,
-            'definicion' => 'Indicador combinado que relaciona la frecuencia y la severidad de los accidentes de trabajo. Resulta de multiplicar IF por IS y dividir entre 1000.',
-            'interpretacion' => 'A menor valor, menor impacto de la accidentalidad. Un ILI=0 indica cero accidentes o cero dias perdidos. Valores crecientes indican deterioro en seguridad.',
-            'origen_datos' => 'Calculado a partir del Indice de Frecuencia (IF) y el Indice de Severidad (IS)',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL'
-        ],
-        [
-            'nombre' => 'Investigacion de Incidentes y Accidentes',
-            'tipo' => 'proceso',
-            'formula' => '(Incidentes/Accidentes investigados / Total ocurridos) x 100',
-            'meta' => 100,
-            'unidad' => '%',
-            'periodicidad' => 'mensual',
-            'phva' => 'verificar',
-            'numeral' => '2.2.1',
-            'descripcion' => 'Mide el cumplimiento de investigacion de eventos',
-            'definicion' => 'Mide el porcentaje de incidentes y accidentes de trabajo que fueron investigados dentro de los 15 dias calendario siguientes a su ocurrencia.',
-            'interpretacion' => 'El 100% indica que todos los eventos fueron investigados oportunamente. Es obligatorio investigar todos los accidentes graves y mortales (Res. 1401/2007).',
-            'origen_datos' => 'Informes de investigacion de accidentes, FURAT, registros de incidentes',
-            'cargo_responsable' => 'Responsable del SG-SST',
-            'cargos_conocer_resultado' => 'Gerencia, Responsable SG-SST, COPASST/Vigia, ARL, trabajadores'
-        ]
-    ];
+    protected const NUMERAL = '2.2.1';
 
     public function __construct()
     {
@@ -213,25 +28,30 @@ class IndicadoresObjetivosService
     }
 
     /**
-     * Obtiene el límite de indicadores según estándares del cliente
+     * Limite de indicadores segun estandares
      */
     public function getLimiteIndicadores(int $estandares): int
     {
-        if ($estandares <= 7) return self::LIMITES_INDICADORES[7];
-        if ($estandares <= 21) return self::LIMITES_INDICADORES[21];
-        return self::LIMITES_INDICADORES[60];
+        if ($estandares <= 7) return 5;
+        if ($estandares <= 21) return 8;
+        return 10;
     }
 
     /**
-     * Obtiene el resumen de indicadores de objetivos para un cliente
+     * Resumen de indicadores existentes para un cliente
      */
-    public function getResumenIndicadores(int $idCliente): array
+    public function getResumenIndicadores(int $idCliente, int $anio = 0): array
     {
         $indicadores = $this->indicadorModel
             ->where('id_cliente', $idCliente)
             ->where('activo', 1)
             ->where('categoria', self::CATEGORIA)
             ->findAll();
+
+        // Calcular minimo basado en objetivos existentes
+        if ($anio === 0) $anio = (int)date('Y');
+        $objetivos = $this->objetivosService->getObjetivosCliente($idCliente, $anio);
+        $minimo = max(3, (int)ceil(count($objetivos) / 2));
 
         $total = count($indicadores);
         $medidos = 0;
@@ -248,16 +68,16 @@ class IndicadoresObjetivosService
 
         return [
             'existentes' => $total,
-            'sugeridos' => count(self::INDICADORES_BASE),
             'medidos' => $medidos,
             'cumplen' => $cumplen,
-            'completo' => $total >= 3,
-            'minimo' => 3
+            'completo' => $total >= $minimo,
+            'minimo' => $minimo,
+            'total' => $total
         ];
     }
 
     /**
-     * VALIDACIÓN OBLIGATORIA: Verificar que existan objetivos de Parte 1
+     * VALIDACION OBLIGATORIA: Verificar que existan objetivos de Parte 1
      */
     public function verificarObjetivosPrevios(int $idCliente, int $anio): array
     {
@@ -268,18 +88,18 @@ class IndicadoresObjetivosService
             'total_objetivos' => count($objetivos),
             'objetivos' => $objetivos,
             'mensaje' => count($objetivos) > 0
-                ? 'Objetivos encontrados para asociar indicadores'
+                ? "Se encontraron " . count($objetivos) . " objetivos del SG-SST"
                 : 'Debe completar la Parte 1 (Objetivos) antes de generar indicadores'
         ];
     }
 
     /**
-     * Preview de indicadores que se generarían
-     * CONSUME los objetivos de Parte 1 para sugerir indicadores relevantes
+     * Preview de indicadores generados por IA.
+     * La IA genera indicadores a partir de los objetivos de Parte 1.
      */
-    public function previewIndicadores(int $idCliente, int $anio, ?array $contexto = null): array
+    public function previewIndicadores(int $idCliente, int $anio, ?array $contexto = null, string $instrucciones = ''): array
     {
-        // VALIDACIÓN: Verificar objetivos previos
+        // VALIDACION: Verificar objetivos previos
         $verificacion = $this->verificarObjetivosPrevios($idCliente, $anio);
         if (!$verificacion['tiene_objetivos']) {
             return [
@@ -290,73 +110,237 @@ class IndicadoresObjetivosService
             ];
         }
 
+        // Leer objetivos de Parte 1
+        $objetivos = $verificacion['objetivos'];
         $estandares = $contexto['estandares_aplicables'] ?? 60;
         $limite = $this->getLimiteIndicadores($estandares);
 
-        // Obtener objetivos existentes para mapear indicadores
-        $objetivosCliente = $verificacion['objetivos'];
-        $objetivosTexto = array_map(function($obj) {
-            return $obj['actividad_plandetrabajo'];
-        }, $objetivosCliente);
+        // Leer indicadores existentes para no repetir
+        $existentes = $this->getIndicadoresCliente($idCliente);
+        $nombresExistentes = array_map(function($ind) {
+            return $ind['nombre_indicador'];
+        }, $existentes);
 
-        // Tomar indicadores base hasta el límite
-        $indicadoresBase = array_slice(self::INDICADORES_BASE, 0, $limite);
+        // Generar con IA
+        $resultado = $this->generarConIA($objetivos, $nombresExistentes, $limite, $contexto, $instrucciones);
 
-        $indicadores = [];
-        foreach ($indicadoresBase as $idx => $ind) {
-            // Buscar si hay un objetivo relacionado
-            $objetivoAsociado = '';
-            if (!empty($ind['objetivo_relacionado'])) {
-                foreach ($objetivosTexto as $objTexto) {
-                    if (stripos($objTexto, substr($ind['objetivo_relacionado'], 0, 20)) !== false) {
-                        $objetivoAsociado = $objTexto;
-                        break;
-                    }
-                }
-            }
+        return [
+            'indicadores' => $resultado['indicadores'],
+            'total' => count($resultado['indicadores']),
+            'limite' => $limite,
+            'total_objetivos' => count($objetivos),
+            'explicacion_ia' => $resultado['explicacion'] ?? ''
+        ];
+    }
 
-            $indicadores[] = [
-                'indice' => $idx,
-                'nombre' => $ind['nombre'],
-                'tipo' => $ind['tipo'],
-                'formula' => $ind['formula'],
-                'meta' => $ind['meta'],
-                'unidad' => $ind['unidad'],
-                'periodicidad' => $ind['periodicidad'],
-                'phva' => $ind['phva'],
-                'numeral' => $ind['numeral'],
-                'descripcion' => $ind['descripcion'] ?? '',
-                'menor_es_mejor' => $ind['menor_es_mejor'] ?? false,
-                'objetivo_relacionado' => $ind['objetivo_relacionado'] ?? '',
-                'objetivo_asociado' => $objetivoAsociado,
-                'origen' => 'base',
-                'seleccionado' => true
-            ];
+    /**
+     * La IA genera indicadores que miden el cumplimiento de los objetivos de Parte 1.
+     * Cada indicador esta vinculado a un objetivo especifico.
+     */
+    protected function generarConIA(array $objetivos, array $indicadoresExistentes, int $limite, ?array $contexto, string $instrucciones = ''): array
+    {
+        $apiKey = env('OPENAI_API_KEY', '');
+        if (empty($apiKey)) {
+            throw new \RuntimeException('OPENAI_API_KEY no configurada. La generacion de indicadores requiere la API de OpenAI.');
         }
 
-        // Marcar los que ya existen
-        $existentes = $this->getIndicadoresCliente($idCliente);
-        $nombresExistentes = array_map('strtolower', array_column($existentes, 'nombre_indicador'));
+        // Formatear objetivos de Parte 1 para el prompt
+        $objTexto = "";
+        foreach ($objetivos as $i => $obj) {
+            $partes = explode(' | Meta: ', $obj['actividad_plandetrabajo']);
+            $titulo = $partes[0] ?? 'Sin titulo';
+            $meta = $partes[1] ?? '';
+            $phva = $obj['phva_plandetrabajo'] ?? 'PLANEAR';
+            $responsable = $obj['responsable_sugerido_plandetrabajo'] ?? 'Responsable SST';
 
-        foreach ($indicadores as &$ind) {
-            $nombreLower = strtolower($ind['nombre']);
-            foreach ($nombresExistentes as $existente) {
-                if (similar_text($nombreLower, $existente) > strlen($nombreLower) * 0.6) {
-                    $ind['ya_existe'] = true;
-                    $ind['seleccionado'] = false;
-                    break;
-                }
+            $objTexto .= ($i + 1) . ". {$titulo}\n";
+            if ($meta) {
+                $objTexto .= "   Meta: {$meta}\n";
             }
+            $objTexto .= "   PHVA: {$phva} | Responsable: {$responsable}\n";
+        }
+
+        // Formatear indicadores existentes
+        $existentesTexto = "";
+        if (!empty($indicadoresExistentes)) {
+            $existentesTexto = "INDICADORES QUE YA EXISTEN (NO REPETIR):\n";
+            foreach ($indicadoresExistentes as $nombre) {
+                $existentesTexto .= "- {$nombre}\n";
+            }
+        }
+
+        // Contexto empresa
+        $contextoTexto = "";
+        if ($contexto) {
+            $contextoTexto = "CONTEXTO DE LA EMPRESA:\n";
+            $contextoTexto .= "- Actividad economica: " . ($contexto['actividad_economica_principal'] ?? 'No definida') . "\n";
+            $contextoTexto .= "- Nivel de riesgo ARL: " . ($contexto['nivel_riesgo_arl'] ?? 'No definido') . "\n";
+            $contextoTexto .= "- Total trabajadores: " . ($contexto['total_trabajadores'] ?? 'No definido') . "\n";
+            $contextoTexto .= "- Estandares aplicables: " . ($contexto['estandares_aplicables'] ?? 60) . "\n";
+        }
+
+        $totalObj = count($objetivos);
+
+        $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia, especializado en disenar indicadores de gestion segun la Resolucion 0312 de 2019.
+
+Tu tarea es GENERAR indicadores que MIDAN el cumplimiento de los objetivos del SG-SST que te proporcionare.
+
+REGLAS OBLIGATORIAS:
+1. Genera entre {$totalObj} y {$limite} indicadores en total
+2. Cada indicador DEBE estar vinculado a un objetivo especifico de los proporcionados
+3. Un objetivo puede tener 1 o 2 indicadores, pero cada indicador mide UN objetivo
+4. Los indicadores deben ser MEDIBLES, CUANTIFICABLES y con formula clara
+5. Rankea por CRITICIDAD: los mas importantes primero
+6. Marca como 'recomendado': true los indicadores mas criticos (hasta {$limite})
+7. NO repitas indicadores que ya existen en el sistema
+8. Tipos permitidos: 'estructura' (recursos), 'proceso' (ejecucion), 'resultado' (impacto)
+9. Periodicidad permitida: 'mensual', 'trimestral', 'semestral', 'anual'
+10. Si hay instrucciones del consultor, aplicalas con prioridad
+11. Responde SOLO en formato JSON valido
+
+FORMATO DE RESPUESTA (JSON):
+{
+  \"indicadores\": [
+    {
+      \"nombre\": \"Nombre del indicador\",
+      \"tipo\": \"resultado\",
+      \"formula\": \"(Numerador / Denominador) x 100\",
+      \"descripcion\": \"Breve descripcion del indicador en 1-2 oraciones\",
+      \"meta\": 90,
+      \"unidad\": \"%\",
+      \"periodicidad\": \"trimestral\",
+      \"phva\": \"verificar\",
+      \"definicion\": \"Que mide este indicador y por que es importante\",
+      \"interpretacion\": \"Como leer el resultado y que hacer si no se cumple la meta\",
+      \"origen_datos\": \"De donde salen los datos para calcular el indicador\",
+      \"cargo_responsable\": \"Quien mide el indicador\",
+      \"cargos_conocer_resultado\": \"Quienes deben conocer el resultado\",
+      \"recomendado\": true,
+      \"objetivo_origen\": \"Titulo del objetivo que mide este indicador\"
+    }
+  ],
+  \"explicacion\": \"Explicacion del criterio de priorizacion usado\"
+}";
+
+        $userPrompt = "OBJETIVOS DEL SG-SST ({$totalObj} definidos en Parte 1):\n";
+        $userPrompt .= $objTexto . "\n";
+        $userPrompt .= "LIMITE DE INDICADORES: maximo {$limite}\n\n";
+
+        if (!empty($contextoTexto)) {
+            $userPrompt .= $contextoTexto . "\n";
+        }
+
+        if (!empty($existentesTexto)) {
+            $userPrompt .= $existentesTexto . "\n";
+        }
+
+        if (!empty($instrucciones)) {
+            $userPrompt .= "INSTRUCCIONES ADICIONALES DEL CONSULTOR:\n\"{$instrucciones}\"\n\n";
+        }
+
+        $userPrompt .= "Genera indicadores que midan el cumplimiento de estos objetivos. Cada indicador debe estar vinculado a un objetivo especifico.";
+
+        $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey);
+
+        if (!$response['success']) {
+            log_message('error', 'Error en IA Indicadores Objetivos: ' . ($response['error'] ?? 'desconocido'));
+            throw new \RuntimeException('Error al generar indicadores con IA: ' . ($response['error'] ?? 'desconocido'));
+        }
+
+        // Parsear respuesta
+        $contenidoIA = $response['contenido'];
+        $contenidoIA = preg_replace('/```json\s*/', '', $contenidoIA);
+        $contenidoIA = preg_replace('/```\s*/', '', $contenidoIA);
+
+        $respuesta = json_decode($contenidoIA, true);
+        if (!$respuesta || empty($respuesta['indicadores'])) {
+            log_message('warning', 'No se pudo parsear respuesta IA indicadores objetivos: ' . $contenidoIA);
+            throw new \RuntimeException('La IA no genero una respuesta valida. Intente nuevamente.');
+        }
+
+        // Formatear indicadores
+        $indicadores = [];
+        foreach ($respuesta['indicadores'] as $idx => $ind) {
+            $indicadores[] = [
+                'indice' => $idx,
+                'nombre' => $ind['nombre'] ?? 'Indicador SST',
+                'tipo' => $ind['tipo'] ?? 'proceso',
+                'formula' => $ind['formula'] ?? '',
+                'descripcion' => $ind['descripcion'] ?? '',
+                'meta' => $ind['meta'] ?? 100,
+                'unidad' => $ind['unidad'] ?? '%',
+                'periodicidad' => $ind['periodicidad'] ?? 'trimestral',
+                'phva' => $ind['phva'] ?? 'verificar',
+                'definicion' => $ind['definicion'] ?? '',
+                'interpretacion' => $ind['interpretacion'] ?? '',
+                'origen_datos' => $ind['origen_datos'] ?? '',
+                'cargo_responsable' => $ind['cargo_responsable'] ?? 'Responsable del SG-SST',
+                'cargos_conocer_resultado' => $ind['cargos_conocer_resultado'] ?? '',
+                'recomendado' => $ind['recomendado'] ?? false,
+                'seleccionado' => $ind['recomendado'] ?? false,
+                'objetivo_origen' => $ind['objetivo_origen'] ?? '',
+                'origen' => 'ia',
+                'generado_por_ia' => true
+            ];
         }
 
         return [
             'indicadores' => $indicadores,
-            'total' => count($indicadores),
-            'limite' => $limite,
-            'estandares' => $estandares,
-            'objetivos_base' => count($objetivosCliente),
-            'contexto_aplicado' => $contexto ? true : false
+            'explicacion' => $respuesta['explicacion'] ?? ''
         ];
+    }
+
+    /**
+     * Llama a la API de OpenAI
+     */
+    protected function llamarOpenAI(string $systemPrompt, string $userPrompt, string $apiKey): array
+    {
+        $data = [
+            'model' => env('OPENAI_MODEL', 'gpt-4o'),
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt]
+            ],
+            'temperature' => 0.3,
+            'max_tokens' => 3000
+        ];
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT => 45,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            return ['success' => false, 'error' => "Error de conexion: {$error}"];
+        }
+
+        $result = json_decode($response, true);
+
+        if ($httpCode !== 200) {
+            return ['success' => false, 'error' => $result['error']['message'] ?? 'Error HTTP ' . $httpCode];
+        }
+
+        if (isset($result['choices'][0]['message']['content'])) {
+            return [
+                'success' => true,
+                'contenido' => trim($result['choices'][0]['message']['content'])
+            ];
+        }
+
+        return ['success' => false, 'error' => 'Respuesta inesperada'];
     }
 
     /**
@@ -364,7 +348,7 @@ class IndicadoresObjetivosService
      */
     public function generarIndicadores(int $idCliente, int $anio, ?array $indicadoresSeleccionados = null): array
     {
-        // VALIDACIÓN: Verificar objetivos previos
+        // VALIDACION: Verificar objetivos previos
         $verificacion = $this->verificarObjetivosPrevios($idCliente, $anio);
         if (!$verificacion['tiene_objetivos']) {
             return [
@@ -375,18 +359,25 @@ class IndicadoresObjetivosService
             ];
         }
 
+        if (empty($indicadoresSeleccionados)) {
+            throw new \RuntimeException('No se recibieron indicadores para generar. Ejecute primero la previsualizacion con IA.');
+        }
+
         $creados = 0;
         $existentes = 0;
         $errores = [];
 
-        $indicadores = $indicadoresSeleccionados ?? self::INDICADORES_BASE;
+        foreach ($indicadoresSeleccionados as $ind) {
+            $nombreIndicador = $ind['nombre'] ?? $ind['nombre_indicador'] ?? '';
+            if (empty($nombreIndicador)) {
+                continue;
+            }
 
-        foreach ($indicadores as $ind) {
             // Verificar si ya existe un indicador similar
             $existe = $this->indicadorModel
                 ->where('id_cliente', $idCliente)
                 ->where('activo', 1)
-                ->like('nombre_indicador', substr($ind['nombre'], 0, 30), 'both')
+                ->like('nombre_indicador', substr($nombreIndicador, 0, 30), 'both')
                 ->countAllResults();
 
             if ($existe > 0) {
@@ -397,15 +388,15 @@ class IndicadoresObjetivosService
             try {
                 $this->indicadorModel->insert([
                     'id_cliente' => $idCliente,
-                    'nombre_indicador' => $ind['nombre'],
-                    'tipo_indicador' => $ind['tipo'],
+                    'nombre_indicador' => $nombreIndicador,
+                    'tipo_indicador' => $ind['tipo'] ?? 'proceso',
                     'categoria' => self::CATEGORIA,
-                    'formula' => $ind['formula'],
-                    'meta' => $ind['meta'],
-                    'unidad_medida' => $ind['unidad'],
-                    'periodicidad' => $ind['periodicidad'],
-                    'phva' => $ind['phva'],
-                    'numeral_resolucion' => $ind['numeral'] ?? '2.2.1',
+                    'formula' => $ind['formula'] ?? '',
+                    'meta' => $ind['meta'] ?? 100,
+                    'unidad_medida' => $ind['unidad'] ?? '%',
+                    'periodicidad' => $ind['periodicidad'] ?? 'trimestral',
+                    'phva' => $ind['phva'] ?? 'verificar',
+                    'numeral_resolucion' => self::NUMERAL,
                     'definicion' => $ind['definicion'] ?? null,
                     'interpretacion' => $ind['interpretacion'] ?? null,
                     'origen_datos' => $ind['origen_datos'] ?? null,
@@ -415,7 +406,7 @@ class IndicadoresObjetivosService
                 ]);
                 $creados++;
             } catch (\Exception $e) {
-                $errores[] = "Error en '{$ind['nombre']}': " . $e->getMessage();
+                $errores[] = "Error en '{$nombreIndicador}': " . $e->getMessage();
             }
         }
 
@@ -423,7 +414,7 @@ class IndicadoresObjetivosService
             'creados' => $creados,
             'existentes' => $existentes,
             'errores' => $errores,
-            'total' => count($indicadores)
+            'total' => count($indicadoresSeleccionados)
         ];
     }
 

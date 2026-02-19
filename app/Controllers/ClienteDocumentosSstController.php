@@ -8,6 +8,7 @@ use CodeIgniter\Controller;
 /**
  * Controlador para que el CLIENTE vea sus documentos SST aprobados
  * Solo lectura - sin edicion, sin gestion
+ * Clientes solo ven documentos aprobados/firmados (con PDF o enlace listo)
  */
 class ClienteDocumentosSstController extends Controller
 {
@@ -16,6 +17,20 @@ class ClienteDocumentosSstController extends Controller
     public function __construct()
     {
         $this->db = Database::connect();
+    }
+
+    /**
+     * Retorna los estados visibles segun el rol del usuario
+     * Cliente: solo aprobado/firmado (tienen PDF listo o son soportes)
+     * Admin/Consultant: todos los estados
+     */
+    protected function getEstadosVisibles(): array
+    {
+        $role = session()->get('role');
+        if ($role === 'client') {
+            return ['aprobado', 'firmado'];
+        }
+        return ['borrador', 'generado', 'aprobado', 'firmado', 'pendiente_firma'];
     }
 
     /**
@@ -71,10 +86,10 @@ class ClienteDocumentosSstController extends Controller
             $arbolCarpetas[] = $this->construirArbolConDocumentos($phva, $idCliente);
         }
 
-        // Obtener TODOS los documentos del cliente (sin depender del mapeo de carpetas)
+        // Obtener documentos del cliente filtrados por rol
         $todosDocumentos = $this->db->table('tbl_documentos_sst')
             ->where('id_cliente', $idCliente)
-            ->whereIn('estado', ['borrador', 'generado', 'aprobado', 'firmado', 'pendiente_firma'])
+            ->whereIn('estado', $this->getEstadosVisibles())
             ->orderBy('updated_at', 'DESC')
             ->get()
             ->getResultArray();
@@ -105,10 +120,27 @@ class ClienteDocumentosSstController extends Controller
     public function carpeta(int $idCarpeta)
     {
         $session = session();
-        $idCliente = $session->get('id_cliente') ?? $session->get('user_id');
+        $role = $session->get('role');
 
-        if (!$idCliente) {
-            return redirect()->to('/login')->with('error', 'Debe iniciar sesion');
+        // Obtener carpeta primero para resolver el cliente desde ella
+        $carpeta = $this->db->table('tbl_doc_carpetas')
+            ->where('id_carpeta', $idCarpeta)
+            ->get()
+            ->getRowArray();
+
+        if (!$carpeta) {
+            return redirect()->to('/client/mis-documentos-sst')->with('error', 'Carpeta no encontrada');
+        }
+
+        // Resolver id_cliente desde la carpeta (no desde sesion)
+        $idCliente = (int) $carpeta['id_cliente'];
+
+        // Verificar autorizacion: clientes solo ven sus propias carpetas
+        if ($role === 'client') {
+            $idClienteSesion = $session->get('id_cliente') ?? $session->get('user_id');
+            if ((int)$idClienteSesion !== $idCliente) {
+                return redirect()->to('/client/mis-documentos-sst')->with('error', 'No tiene acceso a esta carpeta');
+            }
         }
 
         // Obtener datos del cliente
@@ -116,17 +148,6 @@ class ClienteDocumentosSstController extends Controller
             ->where('id_cliente', $idCliente)
             ->get()
             ->getRowArray();
-
-        // Obtener carpeta actual (verificar que pertenece al cliente)
-        $carpeta = $this->db->table('tbl_doc_carpetas')
-            ->where('id_carpeta', $idCarpeta)
-            ->where('id_cliente', $idCliente)
-            ->get()
-            ->getRowArray();
-
-        if (!$carpeta) {
-            return redirect()->to('/client/mis-documentos-sst')->with('error', 'Carpeta no encontrada');
-        }
 
         // Obtener ruta de navegacion (breadcrumb)
         $ruta = $this->obtenerRutaCarpeta($idCarpeta);
@@ -162,7 +183,8 @@ class ClienteDocumentosSstController extends Controller
             'subcarpetas' => $subcarpetas,
             'documentos' => $documentos,
             'tipoCarpetaFases' => $tipoCarpetaFases,
-            'documentosSSTAprobados' => $documentosSSTAprobados
+            'documentosSSTAprobados' => $documentosSSTAprobados,
+            'idCliente' => $idCliente
         ];
 
         return view('client/documentos_sst/carpeta', $data);
@@ -179,44 +201,53 @@ class ClienteDocumentosSstController extends Controller
 
         $queryDocs = $this->db->table('tbl_documentos_sst')
             ->where('id_cliente', $idCliente)
-            ->whereIn('estado', ['borrador', 'generado', 'aprobado', 'firmado', 'pendiente_firma']);
+            ->whereIn('estado', $this->getEstadosVisibles());
 
-        // Mapeo de tipo de carpeta a tipo_documento (igual que el consultor)
+        // Mapeo de tipo de carpeta a tipo_documento
         $filtros = [
-            'archivo_documental' => null, // Mostrar TODOS
+            'archivo_documental' => null, // Mostrar TODOS (usar array_key_exists)
             'responsabilidades_sgsst' => ['responsabilidades_rep_legal_sgsst', 'responsabilidades_responsable_sgsst', 'responsabilidades_trabajadores_sgsst'],
             'presupuesto_sst' => ['presupuesto_sst'],
             'afiliacion_srl' => ['planilla_afiliacion_srl'],
-            'verificacion_medidas_prevencion' => ['soporte_verificacion_medidas'],
-            'planificacion_auditorias_copasst' => ['soporte_planificacion_auditoria'],
-            'entrega_epp' => ['soporte_entrega_epp'],
-            'plan_emergencias' => ['soporte_plan_emergencias'],
-            'brigada_emergencias' => ['soporte_brigada_emergencias'],
-            'revision_direccion' => ['soporte_revision_direccion'],
+            'responsables_sst' => ['asignacion_responsable_sgsst'],
+            'identificacion_alto_riesgo' => ['identificacion_alto_riesgo', 'listado_trabajadores_alto_riesgo'],
+            'conformacion_copasst' => ['soporte_conformacion_copasst', 'acta_constitucion_copasst'],
+            'capacitacion_copasst' => ['soporte_capacitacion_copasst'],
+            'comite_convivencia' => ['soporte_comite_convivencia', 'manual_convivencia_laboral', 'acta_constitucion_cocolab', 'acta_recomposicion_cocolab', 'politica_acoso_laboral'],
+            'capacitacion_sst' => ['programa_capacitacion'],
+            'induccion_reinduccion' => ['programa_induccion_reinduccion'],
+            'responsables_curso_50h' => ['soporte_curso_50h'],
+            'reglamento_hsi' => ['reglamento_hsi'],
+            'politica_sst' => ['politica_sst_general'],
+            'evaluacion_prioridades' => ['soporte_evaluacion_prioridades'],
+            'plan_objetivos_metas' => ['soporte_plan_objetivos', 'plan_objetivos_metas'],
+            'documentos_externos' => ['soporte_documento_externo'],
+            'rendicion_desempeno' => ['soporte_rendicion_desempeno'],
+            'matriz_legal' => ['procedimiento_matriz_legal', 'soporte_matriz_legal'],
+            'mecanismos_comunicacion_sgsst' => ['mecanismos_comunicacion_sgsst'],
+            'diagnostico_condiciones_salud' => ['soporte_diagnostico_salud'],
+            'promocion_prevencion_salud' => ['programa_promocion_prevencion_salud'],
+            'informacion_medico_perfiles' => ['soporte_perfiles_medico'],
+            'evaluaciones_medicas' => ['soporte_evaluaciones_medicas'],
+            'custodia_historias_clinicas' => ['soporte_custodia_hc'],
             'agua_servicios_sanitarios' => ['soporte_agua_servicios'],
             'eliminacion_residuos' => ['soporte_eliminacion_residuos'],
             'mediciones_ambientales' => ['soporte_mediciones_ambientales'],
             'medidas_prevencion_control' => ['soporte_medidas_prevencion_control'],
-            'diagnostico_condiciones_salud' => ['soporte_diagnostico_salud'],
-            'informacion_medico_perfiles' => ['soporte_perfiles_medico'],
-            'evaluaciones_medicas' => ['soporte_evaluaciones_medicas'],
-            'custodia_historias_clinicas' => ['soporte_custodia_hc'],
-            'responsables_curso_50h' => ['soporte_curso_50h'],
-            'evaluacion_prioridades' => ['soporte_evaluacion_prioridades'],
-            'plan_objetivos_metas' => ['soporte_plan_objetivos'],
-            'rendicion_desempeno' => ['soporte_rendicion_desempeno'],
-            'conformacion_copasst' => ['soporte_conformacion_copasst'],
-            'comite_convivencia' => ['soporte_comite_convivencia'],
-            'capacitacion_sst' => ['programa_capacitacion'],
-            'responsables_sst' => ['asignacion_responsable_sgsst'],
-            'identificacion_alto_riesgo' => ['identificacion_alto_riesgo'],
-            'mecanismos_comunicacion_sgsst' => ['mecanismos_comunicacion_sgsst'],
+            'verificacion_medidas_prevencion' => ['soporte_verificacion_medidas'],
+            'entrega_epp' => ['soporte_entrega_epp'],
+            'plan_emergencias' => ['soporte_plan_emergencias'],
+            'brigada_emergencias' => ['soporte_brigada_emergencias', 'acta_constitucion_brigada'],
+            'indicadores_sgsst' => ['ficha_tecnica_ind_24', 'ficha_tecnica_ind_32'],
+            'revision_direccion' => ['soporte_revision_direccion'],
+            'planificacion_auditorias_copasst' => ['soporte_planificacion_auditoria'],
         ];
 
-        if (isset($filtros[$tipoCarpetaFases])) {
+        if (array_key_exists($tipoCarpetaFases, $filtros)) {
             if ($filtros[$tipoCarpetaFases] !== null) {
                 $queryDocs->whereIn('tipo_documento', $filtros[$tipoCarpetaFases]);
             }
+            // null = mostrar todos (archivo_documental)
         } else {
             return [];
         }
@@ -277,14 +308,22 @@ class ClienteDocumentosSstController extends Controller
             '1.1.4' => 'afiliacion_srl',
             '1.1.5' => 'identificacion_alto_riesgo',
             '1.1.6' => 'conformacion_copasst',
-            '1.1.8' => 'manual_convivencia_1_1_8',
+            '1.1.7' => 'capacitacion_copasst',
+            '1.1.8' => 'comite_convivencia',
             '1.2.1' => 'capacitacion_sst',
+            '1.2.2' => 'induccion_reinduccion',
             '1.2.3' => 'responsables_curso_50h',
+            '1.2.4' => 'reglamento_hsi',
+            '2.1.1' => 'politica_sst',
             '2.3.1' => 'evaluacion_prioridades',
             '2.4.1' => 'plan_objetivos_metas',
             '2.5.1' => 'archivo_documental',
+            '2.5.1.1' => 'documentos_externos',
             '2.6.1' => 'rendicion_desempeno',
+            '2.7.1' => 'matriz_legal',
+            '2.8.1' => 'mecanismos_comunicacion_sgsst',
             '3.1.1' => 'diagnostico_condiciones_salud',
+            '3.1.2' => 'promocion_prevencion_salud',
             '3.1.3' => 'informacion_medico_perfiles',
             '3.1.4' => 'evaluaciones_medicas',
             '3.1.5' => 'custodia_historias_clinicas',
@@ -296,9 +335,9 @@ class ClienteDocumentosSstController extends Controller
             '4.2.6' => 'entrega_epp',
             '5.1.1' => 'plan_emergencias',
             '5.1.2' => 'brigada_emergencias',
+            '6.1.1' => 'indicadores_sgsst',
             '6.1.3' => 'revision_direccion',
             '6.1.4' => 'planificacion_auditorias_copasst',
-            '2.8.1' => 'mecanismos_comunicacion_sgsst',
         ];
 
         if (isset($mapaCodigos[$codigo])) {
@@ -399,7 +438,7 @@ class ClienteDocumentosSstController extends Controller
                 $docs = $this->db->table('tbl_documentos_sst')
                     ->where('id_cliente', $idCliente)
                     ->where('tipo_documento', $tipoDoc)
-                    ->whereIn('estado', ['borrador', 'generado', 'aprobado', 'firmado', 'pendiente_firma'])
+                    ->whereIn('estado', $this->getEstadosVisibles())
                     ->orderBy('anio', 'DESC')
                     ->get()
                     ->getResultArray();

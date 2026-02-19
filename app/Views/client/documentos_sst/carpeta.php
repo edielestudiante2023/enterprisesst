@@ -44,7 +44,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-2">
                     <li class="breadcrumb-item">
-                        <a href="<?= base_url('client/mis-documentos-sst') ?>">
+                        <a href="<?= base_url('client/mis-documentos-sst/' . ($idCliente ?? '')) ?>">
                             <i class="bi bi-folder-check me-1"></i>Mis Documentos
                         </a>
                     </li>
@@ -94,7 +94,7 @@
         </div>
         <?php endif; ?>
 
-        <!-- Tabla de documentos/soportes SST -->
+        <!-- Tabla de documentos/soportes SST (solo descarga) -->
         <?php if (!empty($documentosSSTAprobados)): ?>
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-success text-white">
@@ -111,23 +111,12 @@
                                 <th style="width: 120px;">Codigo</th>
                                 <th>Documento</th>
                                 <th style="width: 80px;" class="text-center">Ano</th>
-                                <th style="width: 80px;" class="text-center">Version</th>
-                                <th style="width: 130px;" class="text-center">Estado</th>
-                                <th style="width: 100px;" class="text-center">Firmas</th>
-                                <th style="width: 120px;" class="text-center">Acciones</th>
+                                <th style="width: 120px;" class="text-center">Descargar</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($documentosSSTAprobados as $docSST): ?>
                             <?php
-                            $estadoConfig = [
-                                'borrador' => ['badge' => 'bg-secondary', 'texto' => 'Borrador', 'icono' => 'bi-pencil'],
-                                'generado' => ['badge' => 'bg-info', 'texto' => 'Generado', 'icono' => 'bi-file-earmark-text'],
-                                'pendiente_firma' => ['badge' => 'bg-warning text-dark', 'texto' => 'Pendiente Firma', 'icono' => 'bi-hourglass-split'],
-                                'aprobado' => ['badge' => 'bg-primary', 'texto' => 'Aprobado', 'icono' => 'bi-check-circle'],
-                                'firmado' => ['badge' => 'bg-success', 'texto' => 'Firmado', 'icono' => 'bi-patch-check-fill'],
-                            ];
-                            $config = $estadoConfig[$docSST['estado']] ?? ['badge' => 'bg-secondary', 'texto' => ucfirst($docSST['estado']), 'icono' => 'bi-question-circle'];
                             $esEnlace = !empty($docSST['url_externa']);
                             $urlArchivo = $esEnlace ? $docSST['url_externa'] : ($docSST['archivo_pdf'] ?? null);
                             ?>
@@ -143,42 +132,19 @@
                                     <span class="badge bg-secondary"><?= esc($docSST['anio']) ?></span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary">v<?= esc($docSST['version_texto'] ?? '1.0') ?></span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge <?= $config['badge'] ?>">
-                                        <i class="bi <?= $config['icono'] ?> me-1"></i><?= $config['texto'] ?>
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <?php if ($docSST['firmas_total'] > 0): ?>
-                                        <span class="badge <?= $docSST['firmas_firmadas'] == $docSST['firmas_total'] ? 'bg-success' : 'bg-warning text-dark' ?>">
-                                            <?= $docSST['firmas_firmadas'] ?>/<?= $docSST['firmas_total'] ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="text-muted small">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-center">
                                     <div class="btn-group btn-group-sm">
                                         <?php if ($esEnlace && $urlArchivo): ?>
-                                            <!-- Enlace externo (Google Drive, etc.) -->
                                             <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Abrir enlace">
                                                 <i class="bi bi-box-arrow-up-right"></i>
                                             </a>
                                         <?php elseif ($urlArchivo): ?>
-                                            <!-- Archivo PDF -->
-                                            <a href="<?= esc($urlArchivo) ?>" class="btn btn-outline-primary" target="_blank" title="Ver">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="<?= esc($urlArchivo) ?>" class="btn btn-danger" download title="Descargar">
-                                                <i class="bi bi-download"></i>
+                                            <a href="<?= esc($urlArchivo) ?>" class="btn btn-danger" target="_blank" title="Descargar PDF">
+                                                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                                             </a>
                                         <?php else: ?>
-                                            <!-- Generar PDF dinámico -->
                                             <a href="<?= base_url('documentos-sst/exportar-pdf/' . $docSST['id_documento']) ?>"
                                                class="btn btn-danger" target="_blank" title="Descargar PDF">
-                                                <i class="bi bi-file-earmark-pdf"></i>
+                                                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                                             </a>
                                         <?php endif; ?>
                                     </div>
@@ -206,8 +172,7 @@
                                 <th style="width: 120px;">Codigo</th>
                                 <th>Documento</th>
                                 <th style="width: 80px;" class="text-center">Ano</th>
-                                <th style="width: 120px;" class="text-center">Estado</th>
-                                <th style="width: 100px;" class="text-center">Accion</th>
+                                <th style="width: 120px;" class="text-center">Descargar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -217,28 +182,13 @@
                                 <td><strong><?= esc($doc['titulo']) ?></strong></td>
                                 <td class="text-center"><span class="badge bg-secondary"><?= esc($doc['anio']) ?></span></td>
                                 <td class="text-center">
-                                    <?php
-                                    $estadoConfig = [
-                                        'borrador' => ['badge' => 'bg-secondary', 'texto' => 'Borrador', 'icono' => 'bi-pencil'],
-                                        'generado' => ['badge' => 'bg-info', 'texto' => 'Generado', 'icono' => 'bi-file-earmark-text'],
-                                        'pendiente_firma' => ['badge' => 'bg-warning text-dark', 'texto' => 'Pendiente Firma', 'icono' => 'bi-hourglass-split'],
-                                        'aprobado' => ['badge' => 'bg-primary', 'texto' => 'Aprobado', 'icono' => 'bi-check-circle'],
-                                        'firmado' => ['badge' => 'bg-success', 'texto' => 'Firmado', 'icono' => 'bi-patch-check-fill'],
-                                    ];
-                                    $config = $estadoConfig[$doc['estado']] ?? ['badge' => 'bg-secondary', 'texto' => ucfirst($doc['estado']), 'icono' => 'bi-question-circle'];
-                                    ?>
-                                    <span class="badge <?= $config['badge'] ?>">
-                                        <i class="bi <?= $config['icono'] ?> me-1"></i><?= $config['texto'] ?>
-                                    </span>
-                                </td>
-                                <td class="text-center">
                                     <?php if (!empty($doc['archivo_firmado'])): ?>
-                                        <a href="<?= esc($doc['archivo_firmado']) ?>" class="btn btn-sm btn-success text-white" target="_blank">
-                                            <i class="bi bi-patch-check-fill"></i>
+                                        <a href="<?= esc($doc['archivo_firmado']) ?>" class="btn btn-sm btn-danger" target="_blank" title="Descargar PDF">
+                                            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                                         </a>
                                     <?php else: ?>
-                                        <a href="<?= base_url('documentos-sst/exportar-pdf/' . $doc['id_documento']) ?>" class="btn btn-sm btn-danger" target="_blank">
-                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        <a href="<?= base_url('documentos-sst/exportar-pdf/' . $doc['id_documento']) ?>" class="btn btn-sm btn-danger" target="_blank" title="Descargar PDF">
+                                            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                                         </a>
                                     <?php endif; ?>
                                 </td>
@@ -266,7 +216,7 @@
                     <i class="bi bi-arrow-left me-1"></i>Volver
                 </a>
             <?php else: ?>
-                <a href="<?= base_url('client/mis-documentos-sst') ?>" class="btn btn-outline-secondary">
+                <a href="<?= base_url('client/mis-documentos-sst/' . ($idCliente ?? '')) ?>" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>Volver al inicio
                 </a>
             <?php endif; ?>

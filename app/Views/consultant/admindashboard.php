@@ -644,8 +644,13 @@
                     </button>
                 </a>
                 <a href="<?= base_url('/admin/usage') ?>" rel="noopener noreferrer">
-                    <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;" aria-label="Consumo de Plataforma">
+                    <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;" aria-label="Consumo de Plataforma">
                         <i class="fas fa-chart-line me-2"></i>Consumo de Plataforma
+                    </button>
+                </a>
+                <a href="<?= base_url('/admin/dashboard-documentos-sst') ?>" target="_blank" rel="noopener noreferrer">
+                    <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #0984e3, #6c5ce7); border: none;" aria-label="Monitor Documentos SST">
+                        <i class="fas fa-file-alt me-2"></i>Monitor Documentos SST
                     </button>
                 </a>
             </div>

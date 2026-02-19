@@ -15,6 +15,7 @@ use CodeIgniter\Filters\SecureHeaders;
 use App\Filters\SessionTimeoutFilter;
 use App\Filters\AuthFilter;
 use App\Filters\MiembroFilter;
+use App\Filters\ClientFilter;
 
 class Filters extends BaseFilters
 {
@@ -40,6 +41,7 @@ class Filters extends BaseFilters
         'sessiontimeout' => SessionTimeoutFilter::class,
         'auth'           => AuthFilter::class,
         'miembro'        => MiembroFilter::class,
+        'clientfilter'   => ClientFilter::class,
     ];
 
     /**
@@ -108,6 +110,11 @@ class Filters extends BaseFilters
      * @var array<string, array<string, list<string>>>
      */
     public array $filters = [
+        'clientfilter' => [
+            'before' => [
+                'client/*',
+            ],
+        ],
         'auth' => [
             'before' => [
                 'dashboard',
