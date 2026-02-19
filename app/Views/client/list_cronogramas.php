@@ -14,14 +14,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Configuración para ajustar ancho de columnas a 50 caracteres */
-        .styled-table thead th,
-        .styled-table tbody td,
+        /* Columnas de texto largo permiten wrap */
         .styled-table tfoot th {
-            max-width: 50ch;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         /* Estilos personalizados adicionales */
@@ -47,19 +42,30 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
         }
 
-        .table thead th {
-            background-color: #007bff;
-            color: #fff;
+        /* === UX: Tabla estilizada con gradiente === */
+        #cronogramasTable thead th {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
+            color: #fff !important;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 10px 8px;
+            border-bottom: 2px solid #1a3a8a;
+            white-space: nowrap;
             text-align: center;
         }
 
-        .table tbody td {
+        #cronogramasTable tbody td {
             text-align: center;
-            font-size: 15px;
+            font-size: 0.85rem;
             vertical-align: middle;
+            padding: 6px 8px;
         }
+
+        #cronogramasTable tbody tr:hover { background-color: #eef2ff !important; }
 
         .alert-success {
             background-color: #d4edda;
@@ -134,6 +140,62 @@
             padding-left: 10px;
             margin: 20px 0 15px 0;
         }
+
+        /* === UX: Estado Badges === */
+        .estado-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .estado-programada   { background: #cce5ff; color: #004085; }
+        .estado-ejecutada    { background: #d4edda; color: #155724; }
+        .estado-cancelada    { background: #f8d7da; color: #721c24; }
+        .estado-reprogramada { background: #fff3cd; color: #856404; }
+
+        /* === UX: Mini Progress Bar === */
+        .mini-progress { display: flex; align-items: center; gap: 6px; min-width: 100px; }
+        .mini-progress-bar { flex: 1; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; }
+        .mini-progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+        .mini-progress-text { font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+
+        /* === UX: Texto truncado expandible === */
+        .col-truncate { max-width: 250px !important; }
+        .cell-truncate {
+            max-height: 60px;
+            overflow: hidden;
+            transition: max-height .3s ease;
+            position: relative;
+        }
+        .cell-truncate.expanded { max-height: none; }
+        .btn-expand {
+            display: inline-block;
+            font-size: 0.72rem;
+            color: #4e73df;
+            cursor: pointer;
+            margin-top: 2px;
+            font-weight: 600;
+        }
+        .btn-expand:hover { text-decoration: underline; }
+
+        /* === UX: Accordion filtros === */
+        .filter-toggle-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 4px 14px;
+            font-size: 0.82rem;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .filter-toggle-btn:hover { background: #f8f9fa; color: #4e73df; }
+        .filter-toggle-btn i { transition: transform .2s; }
+        .filter-toggle-btn.collapsed i { transform: rotate(-90deg); }
     </style>
 </head>
 
@@ -199,6 +261,14 @@
         <div class="row mb-4 mt-2" id="yearCards">
             <!-- Se generarán dinámicamente con JavaScript -->
         </div>
+
+        <!-- Accordion: Estado + Mes -->
+        <div class="d-flex justify-content-end mb-2">
+            <button class="filter-toggle-btn" data-bs-toggle="collapse" data-bs-target="#cardFiltersPanel" aria-expanded="true">
+                <i class="fas fa-chevron-down"></i> Estado y Mes
+            </button>
+        </div>
+        <div class="collapse show" id="cardFiltersPanel">
 
         <!-- Tarjetas de Estados (clickeables) -->
         <div class="section-title">
@@ -342,6 +412,8 @@
             </div>
         </div>
 
+        </div><!-- /cardFiltersPanel -->
+
         <div class="table-container">
             <!-- Botones de DataTables -->
             <div class="d-flex justify-content-between mb-3">
@@ -350,7 +422,7 @@
             </div>
 
             <table id="cronogramasTable" class="styled-table table table-hover table-bordered nowrap" style="width:100%">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <!-- Se muestran las columnas definidas -->
                         <th>Capacitación</th>
@@ -449,48 +521,35 @@
                     <?php if (!empty($cronogramas) && is_array($cronogramas)): ?>
                         <?php foreach ($cronogramas as $cronograma): ?>
                             <tr>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_capacitacion']); ?>">
-                                    <?= esc($cronograma['nombre_capacitacion']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_programada']); ?>">
-                                    <?= esc($cronograma['fecha_programada']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['fecha_de_realizacion']); ?>">
-                                    <?= esc($cronograma['fecha_de_realizacion']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['estado']); ?>">
-                                    <?= esc($cronograma['estado']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['perfil_de_asistentes']); ?>">
-                                    <?= esc($cronograma['perfil_de_asistentes']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['nombre_del_capacitador']); ?>">
-                                    <?= esc($cronograma['nombre_del_capacitador']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['horas_de_duracion_de_la_capacitacion']); ?>">
-                                    <?= esc($cronograma['horas_de_duracion_de_la_capacitacion']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']); ?>">
-                                    <?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_asistentes_a_capacitacion']); ?>">
-                                    <?= esc($cronograma['numero_de_asistentes_a_capacitacion']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_total_de_personas_programadas']); ?>">
-                                    <?= esc($cronograma['numero_total_de_personas_programadas']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['porcentaje_cobertura']); ?>">
-                                    <?= esc($cronograma['porcentaje_cobertura']); ?>%
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['numero_de_personas_evaluadas']); ?>">
-                                    <?= esc($cronograma['numero_de_personas_evaluadas']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['promedio_de_calificaciones']); ?>">
-                                    <?= esc($cronograma['promedio_de_calificaciones']); ?>
-                                </td>
-                                <td data-bs-toggle="tooltip" title="<?= esc($cronograma['observaciones']); ?>">
-                                    <?= esc($cronograma['observaciones']); ?>
-                                </td>
+                                <td class="col-truncate"><div class="cell-truncate"><?= esc($cronograma['nombre_capacitacion']); ?></div></td>
+                                <td><?= esc($cronograma['fecha_programada']); ?></td>
+                                <td><?= esc($cronograma['fecha_de_realizacion']); ?></td>
+                                <td><?php
+                                    $est = esc($cronograma['estado']);
+                                    $cls = 'estado-programada';
+                                    if ($est === 'EJECUTADA') $cls = 'estado-ejecutada';
+                                    elseif ($est === 'CANCELADA POR EL CLIENTE') $cls = 'estado-cancelada';
+                                    elseif ($est === 'REPROGRAMADA') $cls = 'estado-reprogramada';
+                                    echo '<span class="estado-badge ' . $cls . '">' . $est . '</span>';
+                                ?></td>
+                                <td class="col-truncate"><div class="cell-truncate"><?= esc($cronograma['perfil_de_asistentes']); ?></div></td>
+                                <td><?= esc($cronograma['nombre_del_capacitador']); ?></td>
+                                <td><?= esc($cronograma['horas_de_duracion_de_la_capacitacion']); ?></td>
+                                <td><?= esc($cronograma['indicador_de_realizacion_de_la_capacitacion']); ?></td>
+                                <td><?= esc($cronograma['numero_de_asistentes_a_capacitacion']); ?></td>
+                                <td><?= esc($cronograma['numero_total_de_personas_programadas']); ?></td>
+                                <td><?php
+                                    $pct = floatval($cronograma['porcentaje_cobertura']);
+                                    $color = '#e74a3b';
+                                    if ($pct >= 100) $color = '#1cc88a';
+                                    elseif ($pct >= 50) $color = '#4e73df';
+                                    elseif ($pct > 0) $color = '#f6c23e';
+                                    $w = max($pct, 2);
+                                    echo '<div class="mini-progress"><div class="mini-progress-bar"><div class="mini-progress-fill" style="width:' . $w . '%;background:' . $color . '"></div></div><span class="mini-progress-text">' . $pct . '%</span></div>';
+                                ?></td>
+                                <td><?= esc($cronograma['numero_de_personas_evaluadas']); ?></td>
+                                <td><?= esc($cronograma['promedio_de_calificaciones']); ?></td>
+                                <td class="col-truncate"><div class="cell-truncate"><?= esc($cronograma['observaciones']); ?></div></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else : ?>
@@ -552,6 +611,13 @@
             var activeMonth = null;
             var activeStatus = null;
 
+            // Helper: extraer texto plano de HTML
+            function stripHtml(html) {
+                var tmp = document.createElement('DIV');
+                tmp.innerHTML = html;
+                return (tmp.textContent || tmp.innerText || '').trim();
+            }
+
             // Inicializar DataTables con Buttons, filtros en el <tfoot> y configuración de columnas
             var table = $('#cronogramasTable').DataTable({
                 stateSave: true,
@@ -568,8 +634,16 @@
                 buttons: [
                     {
                         extend: 'excelHtml5',
-                        text: 'Exportar a Excel',
-                        className: 'btn btn-success btn-sm'
+                        text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
+                        className: 'btn btn-success btn-sm',
+                        exportOptions: {
+                            columns: ':visible',
+                            format: {
+                                body: function(data) {
+                                    return stripHtml(data);
+                                }
+                            }
+                        }
                     },
                     {
                         extend: 'colvis',
@@ -587,8 +661,9 @@
                         if (filterElement.length && !filterElement.prop('disabled')) {
                             column.data().unique().sort().each(function (d) {
                                 if (d) {
-                                    if (filterElement.find('option[value="' + d + '"]').length === 0) {
-                                        filterElement.append('<option value="' + d + '">' + d + '</option>');
+                                    var clean = stripHtml(d);
+                                    if (clean && filterElement.find('option[value="' + clean + '"]').length === 0) {
+                                        filterElement.append('<option value="' + clean + '">' + clean + '</option>');
                                     }
                                 }
                             });
@@ -656,7 +731,7 @@
 
                 table.rows({search: 'applied'}).every(function() {
                     var data = this.data();
-                    var estado = data[3]; // Columna 3: Estado
+                    var estado = stripHtml(data[3]); // Columna 3: Estado (stripHtml para badges)
                     if (estado === 'PROGRAMADA') {
                         countProgramada++;
                     } else if (estado === 'EJECUTADA') {
@@ -720,7 +795,7 @@
                 $.fn.dataTable.ext.search.push(
                     function(settings, data, dataIndex) {
                         var fechaProgramada = data[1] || ''; // Columna 1: Fecha Programada
-                        var estado = data[3] || ''; // Columna 3: Estado
+                        var estado = stripHtml(data[3] || ''); // Columna 3: Estado (stripHtml para badges)
 
                         // Filtro por año
                         if (activeYear) {
@@ -843,24 +918,45 @@
             updateMonthlyCounts();
             generateYearCards();
 
+            // === UX: Texto truncado con ver más / ver menos ===
+            function initTruncateButtons() {
+                $('#cronogramasTable .cell-truncate').each(function() {
+                    var $cell = $(this);
+                    $cell.removeClass('expanded');
+                    $cell.next('.btn-expand').remove();
+                    if (this.scrollHeight > 62) {
+                        $cell.after('<span class="btn-expand">ver más</span>');
+                    }
+                });
+            }
+            $(document).on('click', '.btn-expand', function() {
+                var $btn = $(this);
+                var $cell = $btn.prev('.cell-truncate');
+                if ($cell.hasClass('expanded')) {
+                    $cell.removeClass('expanded');
+                    $btn.text('ver más');
+                } else {
+                    $cell.addClass('expanded');
+                    $btn.text('ver menos');
+                }
+            });
+            table.on('draw.dt', function() {
+                setTimeout(initTruncateButtons, 50);
+            });
+            initTruncateButtons();
+
+            // === UX: Accordion toggle ===
+            $('#cardFiltersPanel').on('shown.bs.collapse', function() {
+                $('.filter-toggle-btn').removeClass('collapsed');
+            }).on('hidden.bs.collapse', function() {
+                $('.filter-toggle-btn').addClass('collapsed');
+            });
+
             // Evento para los filtros del <tfoot>
             $('tfoot .filter-select').on('change', function () {
                 var columnIndex = $(this).closest('th').index();
                 var value = $(this).val();
                 table.column(columnIndex).search(value ? '^' + value + '$' : '', true, false).draw();
-            });
-
-            // Inicializar tooltips de Bootstrap 5
-            function initializeTooltips() {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                });
-            }
-
-            initializeTooltips();
-            table.on('draw.dt', function () {
-                initializeTooltips();
             });
 
             // Botón para restablecer el estado y filtros

@@ -75,6 +75,79 @@
       padding-left: 10px;
       margin: 20px 0 15px 0;
     }
+
+    /* === UX: Estado Badges === */
+    .estado-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .estado-abierta     { background: #cce5ff; color: #004085; }
+    .estado-cerrada     { background: #f8d7da; color: #721c24; }
+    .estado-gestionando { background: #fff3cd; color: #856404; }
+
+    /* === UX: Mini Progress Bar === */
+    .mini-progress { display: flex; align-items: center; gap: 6px; min-width: 100px; }
+    .mini-progress-bar { flex: 1; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; }
+    .mini-progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+    .mini-progress-text { font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+
+    /* === UX: Tabla estilizada === */
+    #planesTable thead th {
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
+      color: #fff !important;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 8px;
+      border-bottom: 2px solid #1a3a8a;
+      white-space: nowrap;
+    }
+    #planesTable tbody td {
+      padding: 6px 8px;
+      vertical-align: middle;
+      font-size: 0.85rem;
+    }
+    #planesTable tbody tr:hover { background-color: #eef2ff !important; }
+
+    /* === UX: Texto truncado expandible === */
+    .col-truncate { max-width: 250px !important; }
+    .cell-truncate {
+      max-height: 60px;
+      overflow: hidden;
+      transition: max-height .3s ease;
+      position: relative;
+    }
+    .cell-truncate.expanded { max-height: none; }
+    .btn-expand {
+      display: inline-block;
+      font-size: 0.72rem;
+      color: #4e73df;
+      cursor: pointer;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+    .btn-expand:hover { text-decoration: underline; }
+
+    /* === UX: Accordion filtros === */
+    .filter-toggle-btn {
+      background: none;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 4px 14px;
+      font-size: 0.82rem;
+      color: #6c757d;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .filter-toggle-btn:hover { background: #f8f9fa; color: #4e73df; }
+    .filter-toggle-btn i { transition: transform .2s; }
+    .filter-toggle-btn.collapsed i { transform: rotate(-90deg); }
   </style>
 </head>
 <body>
@@ -123,6 +196,14 @@
     <div class="row mb-4 mt-2" id="yearCards">
       <!-- Se generarán dinámicamente con JavaScript -->
     </div>
+
+    <!-- Accordion: Estado + Mes -->
+    <div class="d-flex justify-content-end mb-2">
+      <button class="filter-toggle-btn" data-bs-toggle="collapse" data-bs-target="#cardFiltersPanel" aria-expanded="true">
+        <i class="fas fa-chevron-down"></i> Estado y Mes
+      </button>
+    </div>
+    <div class="collapse show" id="cardFiltersPanel">
 
     <!-- Tarjetas de Estados (clickeables) -->
     <div class="section-title">
@@ -183,6 +264,8 @@
       <?php endforeach; ?>
     </div>
 
+    </div><!-- /cardFiltersPanel -->
+
     <!-- Título y nombre del cliente -->
     <div class="text-center mb-4">
       <h2 class="mb-2">Plan de Trabajo Anual</h2>
@@ -238,7 +321,7 @@
     <!-- Tabla -->
     <div class="table-responsive">
       <table id="planesTable" class="table table-bordered table-striped">
-        <thead class="table-dark">
+        <thead>
           <tr>
             <th>Estado de Actividad</th>
             <th>Fecha Propuesta</th>
@@ -253,15 +336,29 @@
         <tbody>
           <?php foreach ($planes as $plan): ?>
           <tr>
-            <td><?= esc($plan['estado_actividad']) ?></td>
+            <td><?php
+              $est = esc($plan['estado_actividad']);
+              $cls = 'estado-abierta';
+              if ($est === 'CERRADA') $cls = 'estado-cerrada';
+              elseif ($est === 'GESTIONANDO') $cls = 'estado-gestionando';
+              echo '<span class="estado-badge ' . $cls . '">' . $est . '</span>';
+            ?></td>
             <!-- Se asume que en el controlador ya se formateó la fecha a DD-MM-YYYY -->
             <td><?= esc($plan['fecha_propuesta']) ?></td>
             <td><?= esc($plan['phva_plandetrabajo']) ?></td>
-            <td><?= esc($plan['nombre_actividad']) ?></td>
+            <td class="col-truncate"><div class="cell-truncate"><?= esc($plan['nombre_actividad']) ?></div></td>
             <td><?= esc($plan['fecha_cierre']) ?></td>
             <td><?= esc($plan['responsable_sugerido_plandetrabajo']) ?></td>
-            <td><?= esc($plan['porcentaje_avance']) ?>%</td>
-            <td><?= esc($plan['observaciones']) ?></td>
+            <td><?php
+              $pct = floatval($plan['porcentaje_avance']);
+              $color = '#e74a3b';
+              if ($pct >= 100) $color = '#1cc88a';
+              elseif ($pct >= 50) $color = '#4e73df';
+              elseif ($pct > 0) $color = '#f6c23e';
+              $w = max($pct, 2);
+              echo '<div class="mini-progress"><div class="mini-progress-bar"><div class="mini-progress-fill" style="width:' . $w . '%;background:' . $color . '"></div></div><span class="mini-progress-text">' . $pct . '%</span></div>';
+            ?></td>
+            <td class="col-truncate"><div class="cell-truncate"><?= esc($plan['observaciones']) ?></div></td>
           </tr>
           <?php endforeach; ?>
         </tbody>
@@ -314,6 +411,13 @@
       var activeMonth = null;
       var activeStatus = null;
 
+      // Helper: extraer texto plano de HTML
+      function stripHtml(html) {
+        var tmp = document.createElement('DIV');
+        tmp.innerHTML = html;
+        return (tmp.textContent || tmp.innerText || '').trim();
+      }
+
       // Configuramos moment.js para el formato DD-MM-YYYY que se muestra en la tabla
       $.fn.dataTable.moment('DD-MM-YYYY');
 
@@ -329,7 +433,14 @@
           text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
           className: 'btn btn-success',
           title: 'Plan de Trabajo',
-          exportOptions: { columns: ':visible' }
+          exportOptions: {
+            columns: ':visible',
+            format: {
+              body: function(data) {
+                return stripHtml(data);
+              }
+            }
+          }
         }]
       });
 
@@ -353,9 +464,9 @@
       // Función para actualizar las tarjetas superiores
       function updateCardCounts() {
         var data = table.column(0, {search: 'applied'}).data().toArray();
-        var countActivas = data.filter(function(x) { return x.trim() === 'ABIERTA'; }).length;
-        var countCerradas = data.filter(function(x) { return x.trim() === 'CERRADA'; }).length;
-        var countGestionando = data.filter(function(x) { return x.trim() === 'GESTIONANDO'; }).length;
+        var countActivas = data.filter(function(x) { return stripHtml(x) === 'ABIERTA'; }).length;
+        var countCerradas = data.filter(function(x) { return stripHtml(x) === 'CERRADA'; }).length;
+        var countGestionando = data.filter(function(x) { return stripHtml(x) === 'GESTIONANDO'; }).length;
         $('#countActivas').text(countActivas);
         $('#countCerradas').text(countCerradas);
         $('#countGestionando').text(countGestionando);
@@ -446,7 +557,7 @@
         $.fn.dataTable.ext.search.push(
           function(settings, data, dataIndex) {
             var fechaPropuesta = (data[1] || '').trim(); // Columna 1: Fecha Propuesta (DD-MM-YYYY)
-            var estado = (data[0] || '').trim(); // Columna 0: Estado
+            var estado = stripHtml(data[0] || ''); // Columna 0: Estado (stripHtml para badges)
 
             // Filtro por año
             if (activeYear) {
@@ -613,6 +724,40 @@
         }
         $('#fechaDesde').val(formatearFecha(primerDia));
         $('#fechaHasta').val(formatearFecha(ultimoDia));
+      });
+
+      // === UX: Texto truncado con ver más / ver menos ===
+      function initTruncateButtons() {
+        $('#planesTable .cell-truncate').each(function() {
+          var $cell = $(this);
+          $cell.removeClass('expanded');
+          $cell.next('.btn-expand').remove();
+          if (this.scrollHeight > 62) {
+            $cell.after('<span class="btn-expand">ver más</span>');
+          }
+        });
+      }
+      $(document).on('click', '.btn-expand', function() {
+        var $btn = $(this);
+        var $cell = $btn.prev('.cell-truncate');
+        if ($cell.hasClass('expanded')) {
+          $cell.removeClass('expanded');
+          $btn.text('ver más');
+        } else {
+          $cell.addClass('expanded');
+          $btn.text('ver menos');
+        }
+      });
+      table.on('draw.dt', function() {
+        setTimeout(initTruncateButtons, 50);
+      });
+      initTruncateButtons();
+
+      // === UX: Accordion toggle ===
+      $('#cardFiltersPanel').on('shown.bs.collapse', function() {
+        $('.filter-toggle-btn').removeClass('collapsed');
+      }).on('hidden.bs.collapse', function() {
+        $('.filter-toggle-btn').addClass('collapsed');
       });
 
       // Botón para restablecer filtros

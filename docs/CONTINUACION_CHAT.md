@@ -1,56 +1,46 @@
-# Continuacion de Chat - Estado al 2026-02-18
+# Continuacion de Chat - Estado al 2026-02-19
 
-## SESION ACTUAL: Indicadores de Objetivos consumen Part 1 con IA
+## SESION ACTUAL: Mejoras UX vistas cliente (read-only)
 
-### Estado: IMPLEMENTADO - Pendiente verificacion usuario
+### Estado: IMPLEMENTADO - Pendiente revision usuario
 
 ### Que se hizo
 
-#### 1. Reescrito `app/Services/IndicadoresObjetivosService.php`
-- **Eliminado** `INDICADORES_BASE` (array hardcodeado de 10 indicadores genericos)
-- **Nuevo** `generarConIA()`: lee objetivos de Part 1, los formatea como texto, los envia a OpenAI, IA genera indicadores vinculados a cada objetivo
-- **Nuevo** `llamarOpenAI()`: curl a OpenAI (mismo patron de IndicadoresCapacitacionService)
-- **Actualizado** `previewIndicadores()`: ahora recibe `$instrucciones`, valida Part 1, llama IA
-- **Actualizado** `getResumenIndicadores()`: ahora recibe `$anio`, calcula minimo basado en objetivos reales
-- **Actualizado** `generarIndicadores()`: exige indicadores seleccionados (no fallback a base)
+#### Mejoras UX aplicadas a 2 vistas de cliente (solo visual, sin edicion)
 
-#### 2. Actualizado `app/Controllers/GeneradorIAController.php`
-- `previewIndicadoresObjetivos()`: lee `instrucciones` del query string, pasa al service, try/catch
-- `indicadoresObjetivos()`: pasa `$anio` a `getResumenIndicadores()`
-- `objetivosSgsst()`: pasa `$anio` a `getResumenIndicadores()`
+**`app/Views/client/list_plan_trabajo.php`** (PTA cliente)
+- Badges de estado: ABIERTA (azul), CERRADA (rojo), GESTIONANDO (amarillo)
+- Mini progress bar para porcentaje de avance (colores por rango)
+- Tabla estilizada: header con gradiente azul, hover en filas
+- Texto truncado expandible ("ver mas/ver menos") en Actividad y Observaciones
+- Accordion colapsable para tarjetas de Estado y Mes
+- `stripHtml()` en updateCardCounts y applyCardFilters para filtros con badges
+- Excel export con format.body stripHtml
 
-#### 3. Actualizado `app/Views/generador_ia/indicadores_objetivos.php`
-- Textarea "Instrucciones adicionales para la IA"
-- Eliminada lista hardcodeada de "Indicadores sugeridos"
-- JS: `getInstruccionesIA()` + pasa instrucciones al fetch de preview
-- JS: captura y muestra `explicacion_ia` de la respuesta IA
-- JS: `objetivo_asociado` → `objetivo_origen` (vinculo real a Part 1)
-- JS: `getIndicadorData()` incluye campos ficha tecnica
-
-#### 4. Actualizado `app/Views/generador_ia/objetivos_sgsst.php`
-- Removidos paneles Part 2 y Part 3 (cada vista enfoca en su fase)
-- Agregado boton "Siguiente: Indicadores de Objetivos" cuando fase completa
-- Corregido key mismatch `total` → `existentes`
+**`app/Views/client/list_cronogramas.php`** (Cronogramas cliente)
+- Eliminado CSS restrictivo `max-width: 50ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`
+- Badges de estado: PROGRAMADA (azul), EJECUTADA (verde), CANCELADA (rojo), REPROGRAMADA (amarillo)
+- Mini progress bar para % Cobertura (colores por rango)
+- Tabla estilizada: header con gradiente azul (reemplaza `#007bff` plano)
+- Texto truncado expandible en Capacitacion, Perfil Asistentes, Observaciones
+- Accordion colapsable para tarjetas de Estado y Mes
+- `stripHtml()` en updateStatusCounts, applyFilters, initComplete (filtros tfoot)
+- Eliminados tooltips innecesarios (data-bs-toggle="tooltip")
+- Excel export con format.body stripHtml
 
 ### Archivos modificados
-- `app/Services/IndicadoresObjetivosService.php` (reescrito completo)
-- `app/Controllers/GeneradorIAController.php` (3 metodos)
-- `app/Views/generador_ia/indicadores_objetivos.php` (textarea IA + JS)
-- `app/Views/generador_ia/objetivos_sgsst.php` (UX simplificado)
+- `app/Views/client/list_plan_trabajo.php`
+- `app/Views/client/list_cronogramas.php`
+
+### Contexto anterior (misma cadena de mejoras UX)
+- Se hicieron mejoras identicas en vistas de CONSULTOR:
+  - `app/Views/consultant/list_cronogramas.php` (cronograma consultor - AJAX/DataTables)
+  - `app/Views/client/list_pta_cliente_nueva.php` (PTA consultor - PHP rendered)
+- Documentado en `docs/UX_MEJORAS_TABLA_PTA.md` y `docs/UX_MEJORAS_TABLA_CRONOGRAMA.md`
 
 ### Verificacion pendiente
-- [ ] `/generador-ia/{cliente}/indicadores-objetivos` → clic "Generar Indicadores con IA"
-- [ ] Modal muestra indicadores generados por IA vinculados a objetivos reales
-- [ ] "Mejorar con IA" en indicador individual funciona
-- [ ] Guardar → BD `tbl_indicadores_sst` con `categoria='objetivos_sgsst'`
-
----
-
-## SESION ANTERIOR: PLAN EMERGENCIAS 5.1.1 CARPETA HIBRIDA
-
-### Tareas completadas
-1. BD script ejecutado OK (plan_emergencias 12 secciones + 2 firmantes)
-2. DocumentacionController query hibrida actualizada
-3. Vista plan_emergencias.php reescrita como hibrida
-4. acciones_documento.php agregado plan_emergencias
-5. Documentacion PLAN_EMERGENCIAS.md actualizado
+- [ ] `/nuevoListPlanTrabajoCliente/{id}` - badges, progress bars, truncate, accordion
+- [ ] `/listCronogramasCliente/{id}` - badges, progress bars, truncate, accordion
+- [ ] Filtros de tarjetas (estado/mes/año) funcionan con badges HTML
+- [ ] Excel export limpio (sin HTML)
+- [ ] Filtros tfoot en cronogramas muestran opciones limpias (sin HTML)
