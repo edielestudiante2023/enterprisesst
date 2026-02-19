@@ -45,14 +45,7 @@
       padding: 6px;
     }
 
-    td,
-    th {
-      max-width: 20ch;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      height: 25px;
-    }
+    /* Regla global removida - ahora se estiliza por tabla */
 
     .tooltip-inner {
       max-width: 300px;
@@ -244,6 +237,146 @@
       box-shadow: 0 4px 12px rgba(238, 9, 121, 0.4);
       color: #fff !important;
     }
+
+    /* ============ TEXTO TRUNCADO EXPANDIBLE ============ */
+    .cell-truncate {
+      max-height: 60px;
+      overflow: hidden;
+      position: relative;
+      transition: max-height 0.3s ease;
+    }
+    .cell-truncate.expanded { max-height: 2000px; }
+    .btn-expand {
+      display: inline-block;
+      font-size: 11px;
+      color: #4e73df;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 2px;
+      user-select: none;
+    }
+    .btn-expand:hover { color: #224abe; text-decoration: underline; }
+
+    /* ============ BADGES DE ESTADO ============ */
+    .estado-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .estado-programada { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+    .estado-ejecutada { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .estado-cancelada { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+    .estado-reprogramada { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+
+    /* ============ MINI PROGRESS BAR ============ */
+    .mini-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 100px;
+    }
+    .mini-progress-bar {
+      flex: 1;
+      height: 14px;
+      background: #dee2e6;
+      border-radius: 7px;
+      overflow: hidden;
+      min-width: 60px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .mini-progress-fill {
+      height: 100%;
+      border-radius: 7px;
+      transition: width 0.3s ease;
+      min-width: 2px;
+    }
+    .mini-progress-text {
+      font-size: 13px;
+      font-weight: 800;
+      min-width: 40px;
+      text-align: right;
+      color: #333;
+    }
+
+    /* ============ BOTONES ACCIONES COMPACTOS ============ */
+    .btn-action {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-size: 13px;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    .btn-action:hover { transform: scale(1.1); }
+    .btn-action-edit { background: #ffc107; color: #000; }
+    .btn-action-edit:hover { background: #ffca2c; color: #000; }
+    .btn-action-delete { background: #dc3545; color: #fff; }
+    .btn-action-delete:hover { background: #e04050; color: #fff; }
+    .action-group { display: flex; gap: 4px; justify-content: center; }
+
+    /* ============ TABLA ESTILIZADA ============ */
+    #cronogramaTable { border-collapse: separate; border-spacing: 0; }
+    #cronogramaTable thead th {
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 10px 8px;
+      white-space: nowrap;
+      border: none;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    #cronogramaTable thead th:first-child { border-radius: 8px 0 0 0; }
+    #cronogramaTable thead th:last-child { border-radius: 0 8px 0 0; }
+    #cronogramaTable tbody td {
+      vertical-align: middle;
+      padding: 8px 8px;
+      font-size: 13px;
+      border-bottom: 1px solid #e9ecef;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+    #cronogramaTable tbody tr:hover td { background-color: #f0f4ff !important; }
+    #cronogramaTable tbody tr:nth-child(even) td { background-color: #f8f9fc; }
+    /* Columnas con texto truncado: permitir wrap */
+    .col-truncate {
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
+      max-width: 250px !important;
+    }
+
+    /* ============ ACORDEON DE FILTROS ============ */
+    .filter-toggle-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .filter-toggle-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .filter-toggle-btn .fa-chevron-down { transition: transform 0.3s ease; }
+    .filter-toggle-btn.collapsed .fa-chevron-down { transform: rotate(-90deg); }
+    #cardFiltersPanel { transition: all 0.35s ease; }
   </style>
 </head>
 
@@ -387,6 +520,14 @@
       </div>
     </div>
 
+    <!-- Toggle de filtros por Estado y Mes -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <button class="filter-toggle-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cardFiltersPanel" aria-expanded="false">
+        <i class="fas fa-layer-group me-2"></i>Filtros por Estado y Mes
+        <i class="fas fa-chevron-down ms-2"></i>
+      </button>
+    </div>
+    <div class="collapse" id="cardFiltersPanel">
     <!-- Tarjetas de Estados (clickeables) -->
     <div class="section-title">
       <i class="fas fa-tasks"></i> Filtrar por Estado
@@ -528,6 +669,7 @@
         </div>
       </div>
     </div>
+    </div><!-- Fin cardFiltersPanel collapse -->
 
     <!-- Bloque para seleccionar cliente -->
     <div class="row mb-2">
@@ -809,6 +951,24 @@
         }
       } catch(e) { localStorage.removeItem(storageKey); }
 
+      // ============ HELPERS UX ============
+      function buildEstadoBadgeCronog(estado) {
+        var cls = 'estado-programada';
+        if (estado === 'EJECUTADA') cls = 'estado-ejecutada';
+        else if (estado === 'CANCELADA POR EL CLIENTE') cls = 'estado-cancelada';
+        else if (estado === 'REPROGRAMADA') cls = 'estado-reprogramada';
+        return '<span class="editable-select estado-badge ' + cls + '" data-field="estado">' + estado + '</span>';
+      }
+      function buildProgressBar(pct) {
+        pct = parseFloat(pct) || 0;
+        var color = '#e74a3b';
+        if (pct >= 100) color = '#1cc88a';
+        else if (pct >= 50) color = '#4e73df';
+        else if (pct > 0) color = '#f6c23e';
+        var w = Math.max(pct, 2);
+        return '<div class="mini-progress"><div class="mini-progress-bar"><div class="mini-progress-fill" style="width:' + w + '%;background:' + color + '"></div></div><span class="mini-progress-text">' + pct + '%</span></div>';
+      }
+
       var table = $('#cronogramaTable').DataTable({
         stateSave: true,
         order: [[7, 'asc']], // Ordenar por fecha programada ASC por defecto (índice 7 tras agregar Gestión Rápida)
@@ -824,8 +984,19 @@
         scrollCollapse: true,
         buttons: [{
             extend: 'excelHtml5',
-            text: 'Exportar a Excel',
-            className: 'btn btn-success btn-sm'
+            text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
+            className: 'btn btn-success btn-sm',
+            title: 'Cronograma_Capacitacion',
+            charset: 'UTF-8',
+            bom: true,
+            exportOptions: {
+              columns: [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+              format: {
+                body: function(data, row, column, node) {
+                  return $('<div/>').html(data).text();
+                }
+              }
+            }
           },
           {
             extend: 'colvis',
@@ -885,14 +1056,22 @@
           },
           {
             data: 'nombre_capacitacion',
+            className: 'col-truncate',
             render: function(data, type, row) {
               data = (data === null || data === "") ? "" : data;
+              if (type !== 'display') return data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable" data-field="nombre_capacitacion" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+              return '<div class="cell-truncate"><span class="editable" data-field="nombre_capacitacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span></div>';
             }
           },
           {
-            data: 'objetivo_capacitacion'
+            data: 'objetivo_capacitacion',
+            className: 'col-truncate',
+            render: function(data, type, row) {
+              data = (data === null || data === "") ? "" : data;
+              if (type !== 'display') return data;
+              return '<div class="cell-truncate">' + (data || '&nbsp;') + '</div>';
+            }
           },
           {
             data: 'nombre_cliente',
@@ -922,8 +1101,12 @@
             data: 'estado',
             render: function(data, type, row) {
               data = (data === null || data === "") ? "" : data;
-              var displayText = data || '&nbsp;';
-              return '<span class="editable-select" data-field="estado" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+              if (type !== 'display') return data;
+              var cls = 'estado-programada';
+              if (data === 'EJECUTADA') cls = 'estado-ejecutada';
+              else if (data === 'CANCELADA POR EL CLIENTE') cls = 'estado-cancelada';
+              else if (data === 'REPROGRAMADA') cls = 'estado-reprogramada';
+              return '<span class="editable-select estado-badge ' + cls + '" data-field="estado" data-id="' + row.id_cronograma_capacitacion + '">' + (data || '&nbsp;') + '</span>';
             }
           },
           {
@@ -980,11 +1163,11 @@
           {
             data: 'porcentaje_cobertura',
             render: function(data, type, row) {
-              // Calcular % Cobertura automáticamente
               var asistentes = parseFloat(row.numero_de_asistentes_a_capacitacion) || 0;
               var programados = parseFloat(row.numero_total_de_personas_programadas) || 0;
               var porcentaje = programados > 0 ? Math.round((asistentes / programados) * 100) : 0;
-              return porcentaje + '%';
+              if (type !== 'display') return porcentaje;
+              return buildProgressBar(porcentaje);
             }
           },
           {
@@ -1007,10 +1190,12 @@
           },
           {
             data: 'observaciones',
+            className: 'col-truncate',
             render: function(data, type, row) {
               data = (data === null || data === "") ? "" : data;
+              if (type !== 'display') return data;
               var displayText = data || '&nbsp;';
-              return '<span class="editable" data-field="observaciones" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+              return '<div class="cell-truncate"><span class="editable" data-field="observaciones" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span></div>';
             }
           }
         ],
@@ -1377,24 +1562,34 @@
           success: function(response) {
             if (response.success) {
               console.log('Registro actualizado correctamente');
-              
-              // Si se actualizaron los campos que afectan el % Cobertura, actualizar manualmente
+
+              // Si se cambio el estado, actualizar badge
+              if (field === 'estado') {
+                cell.removeClass('estado-programada estado-ejecutada estado-cancelada estado-reprogramada');
+                var cls = 'estado-programada';
+                if (value === 'EJECUTADA') cls = 'estado-ejecutada';
+                else if (value === 'CANCELADA POR EL CLIENTE') cls = 'estado-cancelada';
+                else if (value === 'REPROGRAMADA') cls = 'estado-reprogramada';
+                cell.addClass(cls);
+                updateStatusCounts();
+              }
+
+              // Si se actualizaron los campos que afectan el % Cobertura, reconstruir progress bar
               if (field === 'numero_de_asistentes_a_capacitacion' || field === 'numero_total_de_personas_programadas') {
                 var row = table.row(cell.closest('tr'));
                 var rowData = row.data();
-                
-                // Actualizar el dato en el objeto de la fila
+
                 rowData[field] = value;
-                
-                // Recalcular y actualizar la columna de % Cobertura
+
                 var asistentes = parseFloat(rowData.numero_de_asistentes_a_capacitacion) || 0;
                 var programados = parseFloat(rowData.numero_total_de_personas_programadas) || 0;
                 var porcentaje = programados > 0 ? Math.round((asistentes / programados) * 100) : 0;
-                
-                // Encontrar y actualizar la celda del % Cobertura (columna 15)
+
                 var coberturaCell = cell.closest('tr').find('td').eq(16);
-                coberturaCell.text(porcentaje + '%');
+                coberturaCell.html(buildProgressBar(porcentaje));
               }
+
+              initTruncateButtons();
             } else {
               alert('Error: ' + response.message);
             }
@@ -1771,6 +1966,46 @@
             $btn.prop('disabled', false).html('<i class="fas fa-envelope"></i> Socializar Cronograma');
           }
         });
+      });
+
+      // ===================================================================
+      // TEXTO TRUNCADO EXPANDIBLE
+      // ===================================================================
+      function initTruncateButtons() {
+        $('.cell-truncate').each(function() {
+          var $el = $(this);
+          $el.next('.btn-expand').remove();
+          $el.removeClass('expanded');
+          if (this.scrollHeight > 65) {
+            if ($el.next('.btn-expand').length === 0) {
+              $el.after('<span class="btn-expand">ver m&aacute;s &#9660;</span>');
+            }
+          }
+        });
+      }
+
+      $(document).on('click', '.btn-expand', function() {
+        var $btn = $(this);
+        var $cell = $btn.prev('.cell-truncate');
+        if ($cell.hasClass('expanded')) {
+          $cell.removeClass('expanded');
+          $btn.html('ver m&aacute;s &#9660;');
+        } else {
+          $cell.addClass('expanded');
+          $btn.html('ver menos &#9650;');
+        }
+      });
+
+      // Inicializar truncation en cada draw
+      table.on('draw.dt', function() {
+        setTimeout(initTruncateButtons, 50);
+      });
+
+      // Toggle acordeon (clase collapsed)
+      $('#cardFiltersPanel').on('show.bs.collapse', function() {
+        $('.filter-toggle-btn').removeClass('collapsed');
+      }).on('hide.bs.collapse', function() {
+        $('.filter-toggle-btn').addClass('collapsed');
       });
 
     });

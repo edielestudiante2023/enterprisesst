@@ -54,8 +54,10 @@ class CronogcapacitacionController extends Controller
             $cronograma['objetivo_capacitacion'] = $capacitacion['objetivo_capacitacion'] ?? 'Objetivo no disponible';
 
             // Generar botones de acciones
-            $cronograma['acciones'] = '<a href="' . base_url('/editcronogCapacitacion/' . $cronograma['id_cronograma_capacitacion']) . '" class="btn btn-warning btn-sm">Editar</a> ' .
-                '<a href="' . base_url('/deletecronogCapacitacion/' . $cronograma['id_cronograma_capacitacion']) . '" class="btn btn-danger btn-sm" onclick="return confirm(\'¿Estás seguro de eliminar este cronograma?\');">Eliminar</a>';
+            $cronograma['acciones'] = '<div class="action-group">'
+                . '<a href="' . base_url('/editcronogCapacitacion/' . $cronograma['id_cronograma_capacitacion']) . '" class="btn-action btn-action-edit" title="Editar"><i class="fas fa-pen"></i></a>'
+                . '<a href="' . base_url('/deletecronogCapacitacion/' . $cronograma['id_cronograma_capacitacion']) . '" class="btn-action btn-action-delete" title="Eliminar" onclick="return confirm(\'¿Estás seguro de eliminar este cronograma?\');"><i class="fas fa-trash"></i></a>'
+                . '</div>';
         }
 
         return $this->response->setJSON($cronogramas);

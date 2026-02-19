@@ -295,6 +295,158 @@
             100% { box-shadow: 0 4px 15px rgba(238, 9, 121, 0.4); }
         }
 
+        /* ============ TEXTO TRUNCADO EXPANDIBLE ============ */
+        .cell-truncate {
+            max-height: 60px;
+            overflow: hidden;
+            position: relative;
+            transition: max-height 0.3s ease;
+        }
+        .cell-truncate.expanded {
+            max-height: 2000px;
+        }
+        .btn-expand {
+            display: inline-block;
+            font-size: 11px;
+            color: #4e73df;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 2px;
+            user-select: none;
+        }
+        .btn-expand:hover {
+            color: #224abe;
+            text-decoration: underline;
+        }
+
+        /* ============ BADGES DE ESTADO ============ */
+        .estado-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .estado-abierta { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+        .estado-cerrada { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .estado-gestionando { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+        .estado-cerrada-sin { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+
+        /* ============ MINI PROGRESS BAR ============ */
+        .mini-progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 100px;
+        }
+        .mini-progress-bar {
+            flex: 1;
+            height: 14px;
+            background: #dee2e6;
+            border-radius: 7px;
+            overflow: hidden;
+            min-width: 60px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .mini-progress-fill {
+            height: 100%;
+            border-radius: 7px;
+            transition: width 0.3s ease;
+            min-width: 2px;
+        }
+        .mini-progress-text {
+            font-size: 13px;
+            font-weight: 800;
+            min-width: 40px;
+            text-align: right;
+            color: #333;
+        }
+
+        /* ============ CELDAS EDITABLES ============ */
+        td.editable {
+            cursor: pointer;
+        }
+
+        /* ============ BOTONES ACCIONES COMPACTOS ============ */
+        .btn-action {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 13px;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-action:hover { transform: scale(1.1); }
+        .btn-action-edit { background: #ffc107; color: #000; }
+        .btn-action-edit:hover { background: #ffca2c; color: #000; }
+        .btn-action-delete { background: #dc3545; color: #fff; }
+        .btn-action-delete:hover { background: #e04050; color: #fff; }
+        .action-group { display: flex; gap: 4px; justify-content: center; }
+
+        /* ============ FILAS COMPACTAS Y TABLA ESTILIZADA ============ */
+        #ptaTable {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        #ptaTable thead th {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 10px 8px;
+            white-space: nowrap;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        #ptaTable thead th:first-child { border-radius: 8px 0 0 0; }
+        #ptaTable thead th:last-child { border-radius: 0 8px 0 0; }
+        #ptaTable tbody td {
+            vertical-align: middle;
+            padding: 8px 8px;
+            font-size: 13px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        #ptaTable tbody tr:hover td {
+            background-color: #f0f4ff !important;
+        }
+        #ptaTable tbody tr:nth-child(even) td {
+            background-color: #f8f9fc;
+        }
+
+        /* ============ ACORDEON DE FILTROS ============ */
+        .filter-toggle-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .filter-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .filter-toggle-btn .fa-chevron-down {
+            transition: transform 0.3s ease;
+        }
+        .filter-toggle-btn.collapsed .fa-chevron-down {
+            transform: rotate(-90deg);
+        }
+        #cardFiltersPanel {
+            transition: all 0.35s ease;
+        }
+
         /* ============ TOAST NOTIFICATIONS ============ */
         .toast-container { z-index: 9999; }
         .toast { min-width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,.15); margin-bottom: 8px; }
@@ -317,14 +469,20 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-        <!-- Sección de Filtros por Año -->
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="section-title mb-0">
-                <i class="fas fa-calendar-alt"></i> Filtrar por Año
-            </div>
-            <button type="button" id="btnClearCardFilters" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-times"></i> Limpiar Filtros de Tarjetas
+        <!-- Toggle de filtros por tarjetas -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <button class="filter-toggle-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cardFiltersPanel" aria-expanded="false">
+                <i class="fas fa-layer-group me-2"></i>Filtros por Tarjetas (Año / Estado / Mes)
+                <i class="fas fa-chevron-down ms-2"></i>
             </button>
+            <button type="button" id="btnClearCardFilters" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-times"></i> Limpiar Filtros
+            </button>
+        </div>
+        <div class="collapse" id="cardFiltersPanel">
+        <!-- Sección de Filtros por Año -->
+        <div class="section-title mt-2">
+            <i class="fas fa-calendar-alt"></i> Filtrar por Año
         </div>
         <div class="row mb-4 mt-2" id="yearCards">
             <!-- Se generarán dinámicamente con JavaScript -->
@@ -481,6 +639,7 @@
                 </div>
             </div>
         </div>
+        </div><!-- Fin cardFiltersPanel collapse -->
 
         <h1 class="mb-4">Plan de Trabajo Anual Cliente</h1>
         
@@ -594,22 +753,51 @@
                         <?php foreach ($records as $row): ?>
                             <tr>
                                 <td>
-                                    <!-- Se incluyen los filtros en los enlaces de editar y eliminar -->
-                                    <a href="<?= base_url('/pta-cliente-nueva/edit/' . esc($row['id_ptacliente']) . '?' . http_build_query($filters)) ?>" class="btn btn-warning btn-sm">Editar</a>
-                                    <a href="<?= base_url('/pta-cliente-nueva/delete/' . esc($row['id_ptacliente']) . '?' . http_build_query($filters)) ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este registro?')">Eliminar</a>
+                                    <div class="action-group">
+                                        <a href="<?= base_url('/pta-cliente-nueva/edit/' . esc($row['id_ptacliente']) . '?' . http_build_query($filters)) ?>" class="btn-action btn-action-edit" title="Editar"><i class="fas fa-pen"></i></a>
+                                        <a href="<?= base_url('/pta-cliente-nueva/delete/' . esc($row['id_ptacliente']) . '?' . http_build_query($filters)) ?>" class="btn-action btn-action-delete" title="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este registro?')"><i class="fas fa-trash"></i></a>
+                                    </div>
                                 </td>
                                 <td><?= esc($row['id_ptacliente']) ?></td>
                                 <td class="editable"><?= esc($row['nombre_cliente']) ?></td>
                                 <td><?= esc($row['tipo_servicio']) ?></td>
                                 <td class="editable"><?= esc($row['phva_plandetrabajo']) ?></td>
                                 <td class="editable"><?= esc($row['numeral_plandetrabajo']) ?></td>
-                                <td class="editable"><?= esc($row['actividad_plandetrabajo']) ?></td>
+                                <td class="editable">
+                                    <div class="cell-truncate"><?= esc($row['actividad_plandetrabajo']) ?></div>
+                                </td>
                                 <td class="editable"><?= esc($row['responsable_sugerido_plandetrabajo']) ?></td>
                                 <td class="editable"><?= esc($row['fecha_propuesta']) ?></td>
                                 <td class="editable"><?= esc($row['fecha_cierre']) ?></td>
-                                <td class="editable"><?= esc($row['estado_actividad']) ?></td>
-                                <td class="editable"><?= esc($row['porcentaje_avance']) ?></td>
-                                <td class="editable"><?= esc($row['observaciones']) ?></td>
+                                <td class="editable">
+                                    <?php
+                                    $estado = $row['estado_actividad'];
+                                    $badgeClass = 'estado-abierta';
+                                    if ($estado === 'CERRADA') $badgeClass = 'estado-cerrada';
+                                    elseif ($estado === 'GESTIONANDO') $badgeClass = 'estado-gestionando';
+                                    elseif ($estado === 'CERRADA SIN EJECUCIÓN') $badgeClass = 'estado-cerrada-sin';
+                                    ?>
+                                    <span class="estado-badge <?= $badgeClass ?>"><?= esc($estado) ?></span>
+                                </td>
+                                <td class="editable">
+                                    <?php
+                                    $pct = (float)($row['porcentaje_avance'] ?? 0);
+                                    $barColor = '#e74a3b';
+                                    if ($pct >= 100) $barColor = '#1cc88a';
+                                    elseif ($pct >= 50) $barColor = '#4e73df';
+                                    elseif ($pct > 0) $barColor = '#f6c23e';
+                                    ?>
+                                    <?php $barWidth = max($pct, 2); ?>
+                                    <div class="mini-progress">
+                                        <div class="mini-progress-bar">
+                                            <div class="mini-progress-fill" style="width:<?= $barWidth ?>%;background:<?= $barColor ?>"></div>
+                                        </div>
+                                        <span class="mini-progress-text"><?= number_format($pct, 0) ?>%</span>
+                                    </div>
+                                </td>
+                                <td class="editable">
+                                    <div class="cell-truncate"><?= esc($row['observaciones']) ?></div>
+                                </td>
                                 <td class="text-center">
                                     <div class="month-buttons" style="display: grid; grid-template-columns: repeat(4, 32px); gap: 4px; justify-content: center;">
                                         <?php
@@ -841,7 +1029,7 @@
                 $.fn.dataTable.ext.search.push(
                     function(settings, data, dataIndex) {
                         var fechaPropuesta = data[8] || ''; // Columna 8: Fecha Propuesta
-                        var estadoActividad = data[10] || ''; // Columna 10: Estado
+                        var estadoActividad = $('<div/>').html(data[10] || '').text().trim(); // Columna 10: Estado (strip HTML)
 
                         // Filtro por año
                         if (activeYear) {
@@ -1123,22 +1311,27 @@
                     }
                 });
 
+                // Helper: extraer texto plano de HTML
+                function stripHtml(html) {
+                    return $('<div/>').html(html).text().trim();
+                }
+
                 // Función para actualizar los contadores de las tarjetas superiores
                 function updateCardCounts() {
                     var data = table.column(10, {
                         search: 'applied'
                     }).data().toArray();
                     var countActivas = data.filter(function(x) {
-                        return x.trim() === 'ABIERTA';
+                        return stripHtml(x) === 'ABIERTA';
                     }).length;
                     var countCerradas = data.filter(function(x) {
-                        return x.trim() === 'CERRADA';
+                        return stripHtml(x) === 'CERRADA';
                     }).length;
                     var countGestionando = data.filter(function(x) {
-                        return x.trim() === 'GESTIONANDO';
+                        return stripHtml(x) === 'GESTIONANDO';
                     }).length;
                     var countCerradasSinEjecucion = data.filter(function(x) {
-                        return x.trim() === 'CERRADA SIN EJECUCIÓN';
+                        return stripHtml(x) === 'CERRADA SIN EJECUCIÓN';
                     }).length;
                     $('#countActivas').text(countActivas);
                     $('#countCerradas').text(countCerradas);
@@ -1184,9 +1377,30 @@
                 updateMonthlyCounts();
                 generateYearCards(); // Generar tarjetas de año al inicializar
 
+                // Helpers para construir HTML de badge y progress bar
+                function buildEstadoBadge(estado) {
+                    var cls = 'estado-abierta';
+                    if (estado === 'CERRADA') cls = 'estado-cerrada';
+                    else if (estado === 'GESTIONANDO') cls = 'estado-gestionando';
+                    else if (estado === 'CERRADA SIN EJECUCIÓN') cls = 'estado-cerrada-sin';
+                    return '<span class="estado-badge ' + cls + '">' + estado + '</span>';
+                }
+                function buildProgressBar(pct) {
+                    pct = parseFloat(pct) || 0;
+                    var color = '#e74a3b';
+                    if (pct >= 100) color = '#1cc88a';
+                    else if (pct >= 50) color = '#4e73df';
+                    else if (pct > 0) color = '#f6c23e';
+                    var w = Math.max(pct, 2); // minimo visible
+                    return '<div class="mini-progress"><div class="mini-progress-bar"><div class="mini-progress-fill" style="width:' + w + '%;background:' + color + '"></div></div><span class="mini-progress-text">' + pct + '%</span></div>';
+                }
+                function buildTruncateCell(text) {
+                    return '<div class="cell-truncate">' + $('<span/>').text(text).html() + '</div>';
+                }
+
                 $('#ptaTable tbody').on('dblclick', 'td.editable', function() {
                     var cell = table.cell(this);
-                    var originalValue = cell.data();
+                    var originalHtml = cell.data();
                     var $td = $(this);
                     if ($td.find('input, select').length > 0) return;
                     var colIndex = table.cell($td).index().column;
@@ -1203,22 +1417,29 @@
                     };
                     var disallowed = [0, 1, 2, 3, 13, 14, 15, 16, 17];
                     if (disallowed.indexOf(colIndex) !== -1 || !editableMapping.hasOwnProperty(colIndex)) {
-                        cell.data(originalValue).draw();
+                        cell.data(originalHtml).draw();
                         return;
                     }
 
+                    // Extraer valor plano según la columna
+                    var plainValue = stripHtml(originalHtml);
+                    // Para porcentaje, quitar el '%'
+                    if (colIndex === 11) plainValue = plainValue.replace('%', '').trim();
+
                     var inputElement;
                     if (colIndex === 8 || colIndex === 9) {
-                        inputElement = $('<input type="date" class="form-control form-control-sm" />').val(originalValue);
+                        inputElement = $('<input type="date" class="form-control form-control-sm" />').val(plainValue);
                     } else if (colIndex === 10) {
                         inputElement = $('<select class="form-select form-select-sm"></select>');
                         var options = ["ABIERTA", "CERRADA", "GESTIONANDO", "CERRADA SIN EJECUCIÓN"];
                         $.each(options, function(i, option) {
-                            var selected = (originalValue === option) ? "selected" : "";
+                            var selected = (plainValue === option) ? "selected" : "";
                             inputElement.append('<option value="' + option + '" ' + selected + '>' + option + '</option>');
                         });
+                    } else if (colIndex === 11) {
+                        inputElement = $('<input type="number" class="form-control form-control-sm" min="0" max="100" step="1" />').val(plainValue);
                     } else {
-                        inputElement = $('<input type="text" class="form-control form-control-sm" />').val(originalValue);
+                        inputElement = $('<input type="text" class="form-control form-control-sm" />').val(plainValue);
                     }
 
                     $td.empty().append(inputElement);
@@ -1227,19 +1448,16 @@
                     inputElement.on('blur keydown', function(e) {
                         if (e.type === 'blur' || (e.type === 'keydown' && e.which === 13)) {
                             var newValue = (colIndex === 10) ? inputElement.find("option:selected").val() : $(this).val();
-                            if (newValue === originalValue) {
-                                cell.data(originalValue).draw();
+                            if (newValue === plainValue) {
+                                cell.data(originalHtml).draw();
                                 return;
                             }
                             var fieldName = editableMapping[colIndex];
                             var rowData = table.row($td.closest('tr')).data();
                             var id = rowData[1];
-                            var dataToSend = {
-                                id: id
-                            };
+                            var dataToSend = { id: id };
                             dataToSend[fieldName] = newValue;
 
-                            // Si se está editando la fecha de cierre (columna 9) y tiene un valor, también enviar estado_actividad = CERRADA
                             if (colIndex === 9 && newValue && newValue.trim() !== '') {
                                 dataToSend['estado_actividad'] = 'CERRADA';
                             }
@@ -1253,37 +1471,47 @@
                                 dataType: "json",
                                 success: function(response) {
                                     if (response.status === 'success') {
-                                        cell.data(newValue).draw();
+                                        // Reconstruir HTML según la columna
+                                        if (colIndex === 10) {
+                                            cell.data(buildEstadoBadge(newValue)).draw();
+                                        } else if (colIndex === 11) {
+                                            cell.data(buildProgressBar(newValue)).draw();
+                                        } else if (colIndex === 6 || colIndex === 12) {
+                                            cell.data(buildTruncateCell(newValue)).draw();
+                                        } else {
+                                            cell.data(newValue).draw();
+                                        }
 
-                                        // Si se cambió la fecha de cierre y se actualizó el estado, actualizar la celda de estado
+                                        // Fecha cierre → estado CERRADA
                                         if (colIndex === 9 && newValue && newValue.trim() !== '') {
-                                            var estadoCell = table.cell($td.closest('tr'), 10); // Columna 10 es estado_actividad
-                                            estadoCell.data('CERRADA').draw();
+                                            var estadoCell = table.cell($td.closest('tr'), 10);
+                                            estadoCell.data(buildEstadoBadge('CERRADA')).draw();
                                         }
 
-                                        // Si se cambió el estado y se retornó un porcentaje, actualizar la celda del porcentaje
+                                        // Estado cambió → actualizar porcentaje
                                         if (fieldName === 'estado_actividad' && response.porcentaje_avance !== undefined) {
-                                            var porcentajeCell = table.cell($td.closest('tr'), 11); // Columna 11 es porcentaje_avance
-                                            porcentajeCell.data(response.porcentaje_avance).draw();
+                                            var porcentajeCell = table.cell($td.closest('tr'), 11);
+                                            porcentajeCell.data(buildProgressBar(response.porcentaje_avance)).draw();
                                         }
 
-                                        // Si se cambió la fecha de cierre y hay porcentaje en la respuesta, actualizarlo
+                                        // Fecha cierre → actualizar porcentaje
                                         if (colIndex === 9 && response.porcentaje_avance !== undefined) {
                                             var porcentajeCell = table.cell($td.closest('tr'), 11);
-                                            porcentajeCell.data(response.porcentaje_avance).draw();
+                                            porcentajeCell.data(buildProgressBar(response.porcentaje_avance)).draw();
                                         }
 
                                         updateCardCounts();
                                         updateMonthlyCounts();
+                                        initTruncateButtons();
                                     } else {
                                         alert('Error: ' + response.message);
-                                        cell.data(originalValue).draw();
+                                        cell.data(originalHtml).draw();
                                     }
                                 },
                                 error: function(xhr, status, error) {
                                     console.error("AJAX error:", status, error);
                                     alert('Error en la comunicación con el servidor.');
-                                    cell.data(originalValue).draw();
+                                    cell.data(originalHtml).draw();
                                 }
                             });
                         }
@@ -1306,7 +1534,7 @@
                 var ids = [];
                 table.rows().every(function() {
                     var data = this.data();
-                    if (data[10] === 'CERRADA') {
+                    if (stripHtml(data[10]) === 'CERRADA') {
                         ids.push(data[1]);
                     }
                 });
@@ -1327,8 +1555,8 @@
                         if (response.status === 'success') {
                             table.rows().every(function() {
                                 var data = this.data();
-                                if (data[10] === 'CERRADA') {
-                                    data[11] = '100';
+                                if (stripHtml(data[10]) === 'CERRADA') {
+                                    data[11] = '<div class="mini-progress"><div class="mini-progress-bar"><div class="mini-progress-fill" style="width:100%;background:#1cc88a"></div></div><span class="mini-progress-text">100%</span></div>';
                                     this.data(data);
                                 }
                             });
@@ -1417,6 +1645,52 @@
                         $button.prop('disabled', false).css('opacity', '1');
                     }
                 });
+            });
+
+            // ===================================================================
+            // TEXTO TRUNCADO EXPANDIBLE
+            // ===================================================================
+            function initTruncateButtons() {
+                $('.cell-truncate').each(function() {
+                    var $el = $(this);
+                    // Remover botón previo si existe
+                    $el.next('.btn-expand').remove();
+                    $el.removeClass('expanded');
+                    // Solo agregar botón si el contenido desborda
+                    if (this.scrollHeight > 65) {
+                        if ($el.next('.btn-expand').length === 0) {
+                            $el.after('<span class="btn-expand">ver m&aacute;s &#9660;</span>');
+                        }
+                    }
+                });
+            }
+
+            // Delegado para click en "ver más / ver menos"
+            $(document).on('click', '.btn-expand', function() {
+                var $btn = $(this);
+                var $cell = $btn.prev('.cell-truncate');
+                if ($cell.hasClass('expanded')) {
+                    $cell.removeClass('expanded');
+                    $btn.html('ver m&aacute;s &#9660;');
+                } else {
+                    $cell.addClass('expanded');
+                    $btn.html('ver menos &#9650;');
+                }
+            });
+
+            // Inicializar después de cada draw de DataTables
+            if (table) {
+                table.on('draw', function() {
+                    initTruncateButtons();
+                });
+                initTruncateButtons();
+            }
+
+            // Toggle botón acordeón (clase collapsed)
+            $('#cardFiltersPanel').on('show.bs.collapse', function() {
+                $('.filter-toggle-btn').removeClass('collapsed');
+            }).on('hide.bs.collapse', function() {
+                $('.filter-toggle-btn').addClass('collapsed');
             });
 
             // Manejador para el botón Socializar Plan de Trabajo
