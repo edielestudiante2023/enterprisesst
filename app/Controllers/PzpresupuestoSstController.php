@@ -1991,4 +1991,124 @@ class PzpresupuestoSstController extends BaseController
             'id_documento' => $documento['id_documento']
         ]);
     }
+
+    /**
+     * Vista estado de firmas del presupuesto.
+     */
+    public function estadoFirmas($idCliente, $anio)
+    {
+        $presupuesto = $this->db->table('tbl_presupuesto_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('anio', $anio)
+            ->get()->getRowArray();
+
+        if (!$presupuesto) {
+            return redirect()->back()->with('error', 'Presupuesto no encontrado');
+        }
+
+        $cliente = $this->db->table('tbl_clientes')
+            ->where('id_cliente', $idCliente)
+            ->get()->getRowArray();
+
+        $contexto = $this->db->table('tbl_cliente_contexto_sst')
+            ->where('id_cliente', $idCliente)
+            ->get()->getRowArray();
+
+        return view('documentos_sst/presupuesto_estado_firmas', [
+            'presupuesto' => $presupuesto,
+            'cliente' => $cliente,
+            'contexto' => $contexto,
+            'anio' => $anio,
+        ]);
+    }
+
+    /**
+     * Reenviar firma del presupuesto. Soporta email alternativo via AJAX.
+     */
+    public function reenviarFirmaPresupuesto()
+    {
+        $idPresupuesto = $this->request->getPost('id_presupuesto');
+        $emailAlternativo = trim($this->request->getPost('email_alternativo') ?? '');
+        $isAjax = $this->request->isAJAX();
+
+        $presupuesto = $this->db->table('tbl_presupuesto_sst')
+            ->where('id_presupuesto', $idPresupuesto)
+            ->get()->getRowArray();
+
+        if (!$presupuesto) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Presupuesto no encontrado']);
+            return redirect()->back()->with('error', 'Presupuesto no encontrado');
+        }
+
+        if (($presupuesto['estado'] ?? '') !== 'pendiente_firma') {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'El presupuesto no está en estado pendiente de firma']);
+            return redirect()->back()->with('error', 'El presupuesto no está en estado pendiente de firma');
+        }
+
+        $cliente = $this->db->table('tbl_clientes')
+            ->where('id_cliente', $presupuesto['id_cliente'])
+            ->get()->getRowArray();
+
+        $contexto = $this->db->table('tbl_cliente_contexto_sst')
+            ->where('id_cliente', $presupuesto['id_cliente'])
+            ->get()->getRowArray();
+
+        // Generar nuevo token
+        $token = bin2hex(random_bytes(32));
+        $expiracion = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+        $this->db->table('tbl_presupuesto_sst')
+            ->where('id_presupuesto', $idPresupuesto)
+            ->update([
+                'token_firma' => $token,
+                'token_expiracion' => $expiracion,
+            ]);
+
+        $urlFirma = base_url("presupuesto/aprobar/{$token}");
+
+        // Determinar email destino
+        $emailDestino = $contexto['representante_legal_email'] ?? $cliente['email'] ?? '';
+        $nombreFirmante = $contexto['representante_legal_nombre'] ?? $cliente['representante_legal'] ?? 'Representante Legal';
+
+        if (!empty($emailAlternativo) && filter_var($emailAlternativo, FILTER_VALIDATE_EMAIL)) {
+            $emailDestino = $emailAlternativo;
+        }
+
+        if (empty($emailDestino)) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'No hay email destino']);
+            return redirect()->back()->with('error', 'No hay email destino');
+        }
+
+        // Obtener datos para el email
+        $items = $this->getItemsConDetalles($idPresupuesto, $presupuesto['anio']);
+        $totales = $this->calcularTotales($items);
+        $meses = $this->getMesesPresupuesto($presupuesto['mes_inicio'], $presupuesto['anio']);
+
+        $enviado = $this->enviarEmailSendGrid(
+            $emailDestino,
+            $nombreFirmante,
+            $cliente,
+            $presupuesto,
+            $items,
+            $totales,
+            $meses,
+            $urlFirma,
+            'Se requiere su aprobacion y firma digital del presupuesto SST (REENVÍO).',
+            false
+        );
+
+        if ($isAjax) {
+            return $this->response->setJSON([
+                'success' => $enviado,
+                'mensaje' => $enviado
+                    ? "Solicitud enviada a {$emailDestino}"
+                    : 'Error al enviar el email'
+            ]);
+        }
+
+        $redireccion = "documentos-sst/presupuesto/estado-firmas/{$presupuesto['id_cliente']}/{$presupuesto['anio']}";
+        return redirect()->to($redireccion)
+            ->with($enviado ? 'success' : 'error',
+                   $enviado ? "Solicitud reenviada a {$emailDestino}" : 'Error al reenviar');
+    }
 }

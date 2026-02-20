@@ -1110,31 +1110,42 @@ class ContractController extends Controller
     }
 
     /**
-     * Consultar estado de firma de un contrato (autenticado)
+     * Estado de firma de un contrato.
+     * GET normal → renderiza vista HTML.
+     * AJAX → retorna JSON.
      */
     public function estadoFirma($idContrato)
     {
-        $contract = $this->contractModel->find($idContrato);
+        $contract = $this->contractLibrary->getContractWithClient($idContrato);
 
         if (!$contract) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Contrato no encontrado']);
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Contrato no encontrado']);
+            }
+            return redirect()->to('/contracts')->with('error', 'Contrato no encontrado');
         }
 
-        $data = [
-            'success' => true,
-            'estado_firma' => $contract['estado_firma'] ?? 'sin_enviar',
-        ];
-
-        if (($contract['estado_firma'] ?? '') === 'firmado') {
-            $data['firma'] = [
-                'nombre' => $contract['firma_cliente_nombre'],
-                'cedula' => $contract['firma_cliente_cedula'],
-                'fecha' => $contract['firma_cliente_fecha'],
-                'ip' => $contract['firma_cliente_ip'],
+        // AJAX → JSON (compatibilidad con llamadas existentes)
+        if ($this->request->isAJAX()) {
+            $data = [
+                'success' => true,
+                'estado_firma' => $contract['estado_firma'] ?? 'sin_enviar',
             ];
+            if (($contract['estado_firma'] ?? '') === 'firmado') {
+                $data['firma'] = [
+                    'nombre' => $contract['firma_cliente_nombre'],
+                    'cedula' => $contract['firma_cliente_cedula'],
+                    'fecha' => $contract['firma_cliente_fecha'],
+                    'ip' => $contract['firma_cliente_ip'],
+                ];
+            }
+            return $this->response->setJSON($data);
         }
 
-        return $this->response->setJSON($data);
+        // GET normal → vista HTML
+        return view('contracts/estado_firma', [
+            'contract' => $contract,
+        ]);
     }
 
     /**

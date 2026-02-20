@@ -191,6 +191,12 @@
                             <i class="bi bi-clock-history me-1"></i>Estado Firmas
                         </a>
                     <?php endif; ?>
+                    <?php $estadoPresupuesto = $presupuesto['estado'] ?? 'borrador'; ?>
+                    <?php if (in_array($estadoPresupuesto, ['pendiente_firma', 'aprobado', 'cerrado'])): ?>
+                        <a href="<?= base_url('documentos-sst/presupuesto/estado-firmas/' . $cliente['id_cliente'] . '/' . $anio) ?>" class="btn btn-outline-info btn-sm" target="_blank">
+                            <i class="bi bi-pen me-1"></i>Firma Presupuesto
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

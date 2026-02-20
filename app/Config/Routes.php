@@ -1170,6 +1170,10 @@ $routes->post('/presupuesto/procesar-firma', 'PzpresupuestoSstController::proces
 $routes->get('/presupuesto/consulta/(:segment)', 'PzpresupuestoSstController::vistaCliente/$1');
 $routes->post('/documentos-sst/presupuesto/generar-token-consulta', 'PzpresupuestoSstController::generarTokenConsulta');
 
+// Estado de firmas y reenvío
+$routes->get('/documentos-sst/presupuesto/estado-firmas/(:num)/(:num)', 'PzpresupuestoSstController::estadoFirmas/$1/$2');
+$routes->post('/documentos-sst/presupuesto/reenviar-firma', 'PzpresupuestoSstController::reenviarFirmaPresupuesto');
+
 // Crear nueva versión del presupuesto
 $routes->post('/documentos-sst/presupuesto/nueva-version/(:num)/(:num)', 'PzpresupuestoSstController::crearNuevaVersion/$1/$2');
 

@@ -1,77 +1,95 @@
-# PROMPT: Estado despues de nivelar UX Contexto IA en vistas generador_ia
+# PROMPT: Copiar Enlace + Email Alternativo — Transversal a 5 Sistemas de Firma
 
 **Fecha:** 2026-02-19
-**Estado:** COMPLETADO - 14 vistas actualizadas, sintaxis validada
+**Estado:** COMPLETADO - 5 sistemas de firma actualizados
 
 ---
 
 ## Que se hizo
 
-### Tarea: Nivelar UX del card "Contexto para la IA" en 14 vistas
+### Tarea: Implementar "Copiar Enlace" + "Email Alternativo" en los 5 sistemas de firma
 
-Se replico el patron de 3 columnas de `objetivos_sgsst.php` (la vista de referencia) en las 14 vistas restantes del generador IA.
+**Problema de negocio:** Cliente Ardurra Colombia tiene TI corporativo que bloquea emails de la plataforma. Los firmantes no reciben las solicitudes de firma.
 
-### Parte 1 - Actividades (7 vistas actualizadas):
+**Solucion:** Dos funcionalidades transversales:
+1. **Copiar enlace** - copia URL de firma al portapapeles para compartir por WhatsApp/chat
+2. **Email alternativo** - envia la notificacion a un correo personal via SweetAlert2 + AJAX
 
-| # | Archivo | Cambio |
-|---|---------|--------|
-| 1 | `pve_riesgo_psicosocial.php` | 2-col → 3-col + Estado Actual separado |
-| 2 | `pve_riesgo_biomecanico.php` | 2-col (datos+estado) → 3-col + Estado Actual separado |
-| 3 | `estilos_vida_saludable.php` | 2-col (datos+peligros) → 3-col con infraestructura |
-| 4 | `evaluaciones_medicas_ocupacionales.php` | 2-col → 3-col con infraestructura |
-| 5 | `mantenimiento_periodico.php` | 2-col → 3-col, conservando seccion Inventario Activos |
-| 6 | `pyp_salud.php` | 2-col → 3-col con infraestructura |
-| 7 | `capacitacion_sst.php` | 2-col → 3-col con infraestructura |
+### Archivo JS compartido (CREADO):
+- `public/js/firma-helpers.js` - Funciones: `copiarEnlaceFirma()`, `modalEmailAlternativo()`, `enviarEmailAlternativo()`, `validarEmailFirma()`, `mostrarToastFirma()`, `copiarEnlaceFallback()`
 
-### Parte 2 - Indicadores (7 vistas actualizadas):
+### Sistema 1 - Documentos SST (FirmaElectronicaController):
+- `app/Views/firma/estado.php` - Agregados botones copiar enlace + WhatsApp + email alt en cada firmante del timeline
+- `app/Controllers/FirmaElectronicaController.php` - Ya tenia `reenviarFirma()`, se verifico soporte `email_alternativo`
 
-| # | Archivo | Cambio |
-|---|---------|--------|
-| 8 | `indicadores_pve_psicosocial.php` | Card contexto NUEVO (colapsado por defecto) |
-| 9 | `indicadores_pve_biomecanico.php` | Card contexto NUEVO (colapsado) |
-| 10 | `indicadores_estilos_vida_saludable.php` | Card contexto NUEVO (colapsado) |
-| 11 | `indicadores_evaluaciones_medicas_ocupacionales.php` | Card contexto NUEVO (colapsado) |
-| 12 | `indicadores_mantenimiento_periodico.php` | Card contexto NUEVO (colapsado) |
-| 13 | `indicadores_pyp_salud.php` | Card contexto NUEVO (colapsado) |
-| 14 | `indicadores_objetivos.php` | Card contexto NUEVO (colapsado, entre info y instrucciones) |
+### Sistema 2 - Presupuesto SST (PzpresupuestoSstController):
+- `app/Views/documentos_sst/presupuesto_estado_firmas.php` - **VISTA NUEVA** timeline estado firmas
+- `app/Controllers/PzpresupuestoSstController.php` - **2 metodos nuevos**: `estadoFirmas()` + `reenviarFirmaPresupuesto()`
+- `app/Config/Routes.php` - 2 rutas nuevas:
+  - `GET /documentos-sst/presupuesto/estado-firmas/(:num)/(:num)`
+  - `POST /documentos-sst/presupuesto/reenviar-firma`
 
-### Patron aplicado en cada vista:
+### Sistema 3 - Actas Comite (ActasController):
+- `app/Views/actas/estado_firmas.php` - Agregados botones copiar enlace + WhatsApp + email alt
+- Controller ya tenia soporte `email_alternativo`
 
-**Parte 1 (Actividades):**
-- PHP prep block ANTES del card (variables $riesgo, $colorRiesgo, $peligros, $infraestructura)
-- Card header: titulo + subtitulo + boton "Editar Contexto" (target="_blank") + collapse chevron
-- 3 columnas (col-md-4): Datos Empresa | Infraestructura SST | Peligros Identificados
-- Observaciones colapsable con nl2br y scroll
-- Textarea instrucciones IA con placeholder contextualizado
+### Sistema 4 - COPASST (ComitesEleccionesController):
+- `app/Views/comites_elecciones/estado_firmas_acta.php` - Agregados botones copiar enlace + WhatsApp + email alt
+- Controller ya tenia soporte `email_alternativo`
 
-**Parte 2 (Indicadores):**
-- Card colapsado por defecto (collapse sin show)
-- Boton "Ver contexto IA" en vez de chevron
-- Mismas 3 columnas
-- SIN textarea instrucciones
-
-### Estilos aplicados:
-- Peligros: `bg-danger-subtle text-danger` (font-size: 0.7rem, max-height: 120px scroll)
-- Infraestructura: `bg-success-subtle text-success` con icono `bi-check`
-- Riesgo ARL: badge coloreado con match() (I,II=success, III=warning, IV,V=danger)
-- Observaciones: `alert alert-light border small`, max-height: 100px scroll
-- Link contexto: `base_url('contexto/' . $cliente['id_cliente'])` con target="_blank"
+### Sistema 5 - Contratos (ContractController):
+- `app/Views/contracts/estado_firma.php` - **VISTA NUEVA** timeline estado firma contrato
+- `app/Controllers/ContractController.php` - `estadoFirma()` modificado: GET → HTML view, AJAX → JSON
+- `app/Views/contracts/view.php` - Ya tenia botones embebidos desde sesion anterior
 
 ---
 
-## Pendiente para verificar visualmente
+## Archivos modificados/creados
 
-1. Probar en navegador con cliente 18 (tiene datos ricos)
-2. Verificar collapse funciona en todas las vistas
-3. Verificar "Editar Contexto" abre en nueva pestana
-4. Verificar scroll de peligros y observaciones
-5. Verificar que indicadores muestran "Ver contexto IA" colapsado
+| Archivo | Accion |
+|---------|--------|
+| `public/js/firma-helpers.js` | CREADO - JS compartido |
+| `app/Views/firma/estado.php` | MODIFICADO - botones copiar/email alt |
+| `app/Views/actas/estado_firmas.php` | MODIFICADO - botones copiar/email alt |
+| `app/Views/comites_elecciones/estado_firmas_acta.php` | MODIFICADO - botones copiar/email alt |
+| `app/Views/contracts/estado_firma.php` | CREADO - vista timeline |
+| `app/Views/contracts/view.php` | Ya tenia botones (sesion anterior) |
+| `app/Views/documentos_sst/presupuesto_estado_firmas.php` | CREADO - vista timeline |
+| `app/Controllers/ContractController.php` | MODIFICADO - estadoFirma() dual mode |
+| `app/Controllers/PzpresupuestoSstController.php` | MODIFICADO - 2 metodos nuevos |
+| `app/Config/Routes.php` | MODIFICADO - 2 rutas presupuesto |
 
 ---
 
-## Tarea completada anteriormente (mismo chat)
+## Patron de botones en cada sistema
 
-### Backend: Fix hardcodeo en 15 services PHP
-- Todos los services usan `construirContextoCompleto()` de ObjetivosSgsstService
-- Documentado en `docs/MODULO_NUMERALES_SGSST/FIX_HARDCODEO_BLUEPRINT.md`
-- Auditoria: 7 rojos → todos verdes, 8 amarillos → todos verdes
+```html
+<!-- Copiar enlace -->
+<button onclick="copiarEnlaceFirma(url, nombre)">Copiar enlace</button>
+<!-- WhatsApp -->
+<a href="https://wa.me/?text=..." target="_blank">WhatsApp</a>
+<!-- Reenviar (email original) -->
+<button onclick="reenviarFirma{Sistema}()">Reenviar</button>
+<!-- Email alternativo -->
+<button onclick="modalEmailAlternativo(urlReenvio, nombre, email)">Email alt.</button>
+```
+
+---
+
+## Pendiente para verificar
+
+1. Probar copiar enlace en cada sistema (clipboard API + fallback)
+2. Probar email alternativo con SweetAlert modal
+3. Verificar reenvio normal sigue funcionando
+4. Probar en movil (responsive)
+5. Verificar tokens expirados muestran advertencia
+6. **Opcional:** Agregar boton "Ver Estado Firmas" en toolbar de `presupuesto_preview.php`
+
+---
+
+## Tarea completada anteriormente (mismo dia)
+
+### Nivelar UX Contexto IA en 14 vistas generador_ia
+- 7 vistas actividades: 2-col → 3-col
+- 7 vistas indicadores: card contexto nuevo colapsado
+- Backend: Fix hardcodeo en 15 services PHP

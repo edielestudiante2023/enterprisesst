@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Firma - Presupuesto SST <?= esc($anio) ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .timeline { position: relative; padding-left: 40px; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot {
+            position: absolute;
+            left: -33px;
+            top: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px #dee2e6;
+        }
+        .timeline-dot.firmado { background: #10B981; box-shadow: 0 0 0 2px #10B981; }
+        .timeline-dot.pendiente { background: #F59E0B; box-shadow: 0 0 0 2px #F59E0B; }
+        .timeline-dot.sin_enviar { background: #9CA3AF; box-shadow: 0 0 0 2px #9CA3AF; }
+        .timeline-dot.expirado { background: #EF4444; box-shadow: 0 0 0 2px #EF4444; }
+        .firma-thumb {
+            max-height: 60px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            background: #fff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-pen me-2"></i>Estado de Firma - Presupuesto SST <?= esc($anio) ?>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="<?= base_url("documentos-sst/presupuesto/preview/{$presupuesto['id_cliente']}/{$anio}") ?>">
+                    <i class="bi bi-arrow-left me-1"></i>Volver al Presupuesto
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <?php if (session()->getFlashdata('success')): ?>
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="bi bi-check-circle me-2"></i><?= session()->getFlashdata('success') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+        <?php if (session()->getFlashdata('error')): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-triangle me-2"></i><?= session()->getFlashdata('error') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php
+        $estado = $presupuesto['estado'] ?? 'borrador';
+        $nombreFirmante = $contexto['representante_legal_nombre'] ?? $cliente['representante_legal'] ?? 'Representante Legal';
+        $emailFirmante = $contexto['representante_legal_email'] ?? $cliente['email'] ?? '';
+        $tokenExpirado = false;
+        if ($estado === 'pendiente_firma' && !empty($presupuesto['token_expiracion'])) {
+            $tokenExpirado = strtotime($presupuesto['token_expiracion']) < time();
+        }
+        // Mapear estado del presupuesto a concepto de firma
+        $esFirmado = in_array($estado, ['aprobado', 'cerrado']);
+        $esPendiente = $estado === 'pendiente_firma';
+        ?>
+
+        <div class="row">
+            <!-- Panel izquierdo -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Presupuesto</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>A&ntilde;o:</strong> <code><?= esc($anio) ?></code></p>
+                        <p class="mb-2"><strong>Cliente:</strong> <?= esc($cliente['nombre_empresa'] ?? '') ?></p>
+                        <p class="mb-2"><strong>NIT:</strong> <?= esc($cliente['nit'] ?? '') ?></p>
+                        <p class="mb-0"><strong>Estado:</strong>
+                            <?php
+                            $badgeClass = match(true) {
+                                $esFirmado => 'bg-success',
+                                $tokenExpirado => 'bg-danger',
+                                $esPendiente => 'bg-warning text-dark',
+                                default => 'bg-secondary'
+                            };
+                            $estadoTexto = match(true) {
+                                $esFirmado => 'Aprobado / Firmado',
+                                $tokenExpirado => 'Expirado',
+                                $esPendiente => 'Pendiente de firma',
+                                default => ucfirst($estado)
+                            };
+                            ?>
+                            <span class="badge <?= $badgeClass ?>"><?= $estadoTexto ?></span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Resumen -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Resumen</h6>
+                    </div>
+                    <div class="card-body">
+                        <?php $progreso = $esFirmado ? 100 : 0; ?>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">Progreso</small>
+                                <small class="fw-bold"><?= $esFirmado ? '1/1' : '0/1' ?></small>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: <?= $progreso ?>%"></div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 text-center">
+                            <?php if ($esFirmado): ?>
+                            <div>
+                                <span class="d-block fs-4 fw-bold text-success">1</span>
+                                <small class="text-muted">Firmada</small>
+                            </div>
+                            <?php elseif ($esPendiente): ?>
+                            <div>
+                                <span class="d-block fs-4 fw-bold text-warning">1</span>
+                                <small class="text-muted"><?= $tokenExpirado ? 'Expirada' : 'Pendiente' ?></small>
+                            </div>
+                            <?php else: ?>
+                            <div>
+                                <span class="d-block fs-4 fw-bold text-secondary">1</span>
+                                <small class="text-muted">Sin enviar</small>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($esFirmado): ?>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-patch-check text-success" style="font-size: 2rem;"></i>
+                        <p class="fw-bold mt-2 mb-0">Presupuesto aprobado y firmado</p>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Panel principal: Timeline -->
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Estado de Firma</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <?php
+                                $dotClass = match(true) {
+                                    $esFirmado => 'firmado',
+                                    $tokenExpirado => 'expirado',
+                                    $esPendiente => 'pendiente',
+                                    default => 'sin_enviar'
+                                };
+                                ?>
+                                <div class="timeline-dot <?= $dotClass ?>"></div>
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body py-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <?= esc($nombreFirmante) ?>
+                                                    <small class="text-muted ms-2">Representante Legal</small>
+                                                </h6>
+                                                <small class="text-muted">
+                                                    <?php if (!empty($emailFirmante)): ?>
+                                                        <?= esc($emailFirmante) ?>
+                                                    <?php endif; ?>
+                                                </small>
+                                            </div>
+                                            <div>
+                                                <span class="badge <?= $badgeClass ?>"><?= $estadoTexto ?></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Detalles segun estado -->
+                                        <?php if ($esFirmado): ?>
+                                            <div class="mt-2 pt-2 border-top">
+                                                <small class="text-success">
+                                                    <i class="bi bi-check-circle me-1"></i>
+                                                    Firmado el <?= !empty($presupuesto['fecha_aprobacion']) ? date('d/m/Y H:i', strtotime($presupuesto['fecha_aprobacion'])) : 'N/A' ?>
+                                                    <?php if (!empty($presupuesto['firmado_por'])): ?>
+                                                        por <?= esc($presupuesto['firmado_por']) ?>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($presupuesto['cedula_firmante'])): ?>
+                                                        (C.C. <?= esc($presupuesto['cedula_firmante']) ?>)
+                                                    <?php endif; ?>
+                                                </small>
+                                                <?php if (!empty($presupuesto['ip_firma'])): ?>
+                                                    <br><small class="text-muted">IP: <?= esc($presupuesto['ip_firma']) ?></small>
+                                                <?php endif; ?>
+                                                <?php if (!empty($presupuesto['firma_imagen'])): ?>
+                                                    <div class="mt-2">
+                                                        <img src="<?= base_url($presupuesto['firma_imagen']) ?>" class="firma-thumb" alt="Firma">
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php elseif ($esPendiente && !$tokenExpirado): ?>
+                                            <div class="mt-2 pt-2 border-top">
+                                                <small class="text-warning">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    Esperando firma. Expira el <?= date('d/m/Y H:i', strtotime($presupuesto['token_expiracion'])) ?>
+                                                </small>
+                                            </div>
+                                        <?php elseif ($tokenExpirado): ?>
+                                            <div class="mt-2 pt-2 border-top">
+                                                <small class="text-danger">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                                    Enlace expirado el <?= date('d/m/Y H:i', strtotime($presupuesto['token_expiracion'])) ?>. Reenv&iacute;e para generar un nuevo enlace.
+                                                </small>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="mt-2 pt-2 border-top">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-hourglass me-1"></i>
+                                                    No se ha enviado solicitud de firma
+                                                </small>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <!-- Acciones -->
+                                        <?php if ($esPendiente): ?>
+                                            <?php $urlFirma = base_url('presupuesto/aprobar/' . ($presupuesto['token_firma'] ?? '')); ?>
+                                            <div class="mt-2 pt-2 border-top d-flex gap-2 flex-wrap">
+                                                <button type="button" class="btn btn-sm btn-outline-info"
+                                                        onclick="copiarEnlaceFirma('<?= $urlFirma ?>', '<?= esc($nombreFirmante) ?>')">
+                                                    <i class="bi bi-clipboard me-1"></i>Copiar enlace
+                                                </button>
+                                                <a href="https://wa.me/?text=<?= urlencode('Apruebe el presupuesto SST: ' . $urlFirma) ?>"
+                                                   target="_blank" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-whatsapp me-1"></i>WhatsApp
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                        onclick="reenviarFirmaPresupuesto()">
+                                                    <i class="bi bi-send me-1"></i>Reenviar
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-warning"
+                                                        onclick="modalEmailAlternativo('<?= base_url('documentos-sst/presupuesto/reenviar-firma') ?>', '<?= esc($nombreFirmante) ?>', '<?= esc($emailFirmante) ?>')">
+                                                    <i class="bi bi-envelope-at me-1"></i>Email alt.
+                                                </button>
+                                            </div>
+                                        <?php elseif (!$esFirmado && !$esPendiente): ?>
+                                            <div class="mt-2 pt-2 border-top">
+                                                <a href="<?= base_url("documentos-sst/presupuesto/preview/{$presupuesto['id_cliente']}/{$anio}") ?>" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-send me-1"></i>Ir al presupuesto para enviar a firmar
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?= base_url('js/firma-helpers.js') ?>"></script>
+    <script>
+    function reenviarFirmaPresupuesto() {
+        Swal.fire({
+            title: 'Reenviar Solicitud de Firma',
+            html: '<p>Se generará un nuevo enlace y se enviará a:</p><p><strong><?= esc($emailFirmante) ?></strong></p><p class="text-muted small">El enlace anterior quedará invalidado.</p>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            confirmButtonText: '<i class="bi bi-send me-1"></i>Reenviar',
+            cancelButtonText: 'Cancelar'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+                var formData = new FormData();
+                formData.append('id_presupuesto', '<?= $presupuesto['id_presupuesto'] ?>');
+                fetch('<?= base_url("documentos-sst/presupuesto/reenviar-firma") ?>', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Enviado', text: data.mensaje, timer: 3000 }).then(function() { location.reload(); });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.mensaje });
+                    }
+                }).catch(function() {
+                    Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor.' });
+                });
+            }
+        });
+    }
+    </script>
+</body>
+</html>
