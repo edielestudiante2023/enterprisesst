@@ -359,6 +359,91 @@ $esVistaHistorica = isset($_GET['fase']) && $_GET['fase'] !== $proceso['estado']
                     </div>
                     <?php endif; ?>
 
+                    <!-- Gestion de Candidatos durante Votacion -->
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center"
+                             data-bs-toggle="collapse" data-bs-target="#panelCandidatosVotacion" role="button" aria-expanded="true">
+                            <h6 class="mb-0"><i class="bi bi-people me-2"></i>Candidatos Inscritos</h6>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="collapse show" id="panelCandidatosVotacion">
+                            <div class="card-body">
+                                <?php if (!$esVistaHistorica): ?>
+                                <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/inscribir/trabajador') ?>"
+                                   class="btn btn-success btn-sm mb-3">
+                                    <i class="bi bi-plus-lg me-1"></i>Inscribir Candidato
+                                </a>
+                                <?php endif; ?>
+
+                                <?php if (empty($candidatosTrabajadores)): ?>
+                                <div class="alert alert-warning mb-0">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>No hay candidatos inscritos.
+                                </div>
+                                <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Foto</th>
+                                                <th>Nombre</th>
+                                                <th>Documento</th>
+                                                <th>Cargo</th>
+                                                <th class="text-center">Votos</th>
+                                                <?php if (!$esVistaHistorica): ?><th>Acciones</th><?php endif; ?>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($candidatosTrabajadores as $t): ?>
+                                            <tr>
+                                                <td>
+                                                    <?php if (!empty($t['foto'])): ?>
+                                                    <img src="<?= base_url($t['foto']) ?>" alt="Foto"
+                                                         class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    <?php else: ?>
+                                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                                                         style="width: 40px; height: 40px;">
+                                                        <i class="bi bi-person"></i>
+                                                    </div>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><strong><?= esc($t['nombres'] . ' ' . $t['apellidos']) ?></strong></td>
+                                                <td><?= esc($t['documento_identidad']) ?></td>
+                                                <td><?= esc($t['cargo']) ?></td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-primary"><?= $t['votos_obtenidos'] ?? 0 ?></span>
+                                                </td>
+                                                <?php if (!$esVistaHistorica): ?>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a href="<?= base_url('comites-elecciones/candidato/' . $t['id_candidato'] . '/editar') ?>"
+                                                           class="btn btn-outline-primary" title="Editar candidato">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <?php
+                                                        $tieneVotos = ($t['votos_obtenidos'] ?? 0) > 0;
+                                                        $msgConfirm = $tieneVotos
+                                                            ? '⚠️ Este candidato tiene ' . $t['votos_obtenidos'] . ' voto(s). Al eliminarlo se perderán esos votos. ¿Continuar?'
+                                                            : '¿Eliminar este candidato?';
+                                                        ?>
+                                                        <form action="<?= base_url('comites-elecciones/candidato/' . $t['id_candidato'] . '/eliminar') ?>" method="post" class="d-inline"
+                                                              onsubmit="return confirm('<?= $msgConfirm ?>');">
+                                                            <button type="submit" class="btn btn-outline-danger" title="Eliminar candidato">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                                <?php endif; ?>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
                     <hr>
                     <div class="d-flex justify-content-between flex-wrap gap-2">
                         <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/resultados') ?>" class="btn btn-outline-info">

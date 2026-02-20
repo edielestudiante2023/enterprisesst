@@ -504,8 +504,8 @@ class ComitesEleccionesController extends BaseController
 
         $cliente = $this->clienteModel->find($proceso['id_cliente']);
 
-        // Validar que el proceso esté en estado de inscripción (o designación para empleador)
-        $estadosPermitidos = ['inscripcion', 'configuracion'];
+        // Validar que el proceso esté en estado de inscripción, votación (o designación para empleador)
+        $estadosPermitidos = ['inscripcion', 'configuracion', 'votacion'];
         if ($representacion === 'empleador') {
             $estadosPermitidos[] = 'designacion_empleador';
         }
@@ -565,8 +565,8 @@ class ComitesEleccionesController extends BaseController
 
         $cliente = $this->clienteModel->find($proceso['id_cliente']);
 
-        // Validar estado
-        $estadosPermitidos = ['inscripcion', 'configuracion'];
+        // Validar estado (incluye votacion para permitir reemplazos durante votación)
+        $estadosPermitidos = ['inscripcion', 'configuracion', 'votacion'];
         if ($representacion === 'empleador') {
             $estadosPermitidos[] = 'designacion_empleador';
         }
@@ -767,6 +767,18 @@ class ComitesEleccionesController extends BaseController
             ->where('id_proceso', $candidato['id_proceso'])
             ->get()
             ->getRowArray();
+
+        // Si el candidato tiene votos, limpiarlos antes de eliminar
+        if (!empty($candidato['votos_obtenidos']) && $candidato['votos_obtenidos'] > 0) {
+            $this->db->table('tbl_votos_comite')
+                ->where('id_candidato', $idCandidato)
+                ->delete();
+
+            $this->db->table('tbl_procesos_electorales')
+                ->where('id_proceso', $candidato['id_proceso'])
+                ->set('votos_emitidos', 'votos_emitidos - ' . (int)$candidato['votos_obtenidos'], false)
+                ->update();
+        }
 
         // Eliminar foto si existe
         if ($candidato['foto'] && file_exists(FCPATH . $candidato['foto'])) {
