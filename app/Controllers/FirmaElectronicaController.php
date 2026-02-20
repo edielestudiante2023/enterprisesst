@@ -91,6 +91,10 @@ class FirmaElectronicaController extends Controller
 
         $contexto = $this->contextoModel->getByCliente($documento['id_cliente']);
 
+        // Emails alternativos (opcionales, del formulario)
+        $emailAltDelegado = trim($this->request->getPost('email_alt_delegado') ?? '');
+        $emailAltRepresentante = trim($this->request->getPost('email_alt_representante') ?? '');
+
         // Verificar si hay delegado/vigia configurado con datos completos
         $tieneSegundoFirmante = !empty(trim($contexto['delegado_sst_nombre'] ?? ''))
                              && !empty(trim($contexto['delegado_sst_email'] ?? ''));
@@ -101,10 +105,11 @@ class FirmaElectronicaController extends Controller
 
         // 1. Crear solicitud para Delegado/Vigia SST (solo si tiene datos completos)
         if ($tieneSegundoFirmante) {
+            $emailDelegado = !empty($emailAltDelegado) ? $emailAltDelegado : $contexto['delegado_sst_email'];
             $datosDelegado = [
                 'id_documento' => $idDocumento,
                 'firmante_tipo' => 'delegado_sst',
-                'firmante_email' => $contexto['delegado_sst_email'],
+                'firmante_email' => $emailDelegado,
                 'firmante_nombre' => $contexto['delegado_sst_nombre'],
                 'firmante_cargo' => $contexto['delegado_sst_cargo'] ?? 'Delegado SST',
                 'firmante_documento' => $contexto['delegado_sst_cedula'] ?? '',
@@ -125,10 +130,11 @@ class FirmaElectronicaController extends Controller
 
         // 2. Crear solicitud para Representante Legal (siempre)
         // Estado 'esperando' solo si realmente se creó solicitud del delegado
+        $emailRepLegal = !empty($emailAltRepresentante) ? $emailAltRepresentante : ($contexto['representante_legal_email'] ?? '');
         $datosRepLegal = [
             'id_documento' => $idDocumento,
             'firmante_tipo' => 'representante_legal',
-            'firmante_email' => $contexto['representante_legal_email'] ?? '',
+            'firmante_email' => $emailRepLegal,
             'firmante_nombre' => $contexto['representante_legal_nombre'] ?? 'Representante Legal',
             'firmante_cargo' => $contexto['representante_legal_cargo'] ?? 'Representante Legal',
             'firmante_documento' => $contexto['representante_legal_cedula'] ?? '',
