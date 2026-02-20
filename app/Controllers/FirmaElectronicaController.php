@@ -938,12 +938,20 @@ class FirmaElectronicaController extends Controller
      */
     public function cancelar($idSolicitud)
     {
+        $isAjax = $this->request->isAJAX();
+
         if (!session()->get('isLoggedIn')) {
+            if ($isAjax) {
+                return $this->response->setJSON(['success' => false, 'mensaje' => 'Sesión expirada']);
+            }
             return redirect()->to('/login');
         }
 
         $solicitud = $this->firmaModel->find($idSolicitud);
         if (!$solicitud) {
+            if ($isAjax) {
+                return $this->response->setJSON(['success' => false, 'mensaje' => 'Solicitud no encontrada']);
+            }
             return redirect()->back()->with('error', 'Solicitud no encontrada');
         }
 
@@ -962,6 +970,10 @@ class FirmaElectronicaController extends Controller
                         ->where('id_documento', $solicitud['id_documento'])
                         ->update(['estado' => 'aprobado']);
             }
+        }
+
+        if ($isAjax) {
+            return $this->response->setJSON(['success' => true, 'mensaje' => 'Solicitud cancelada']);
         }
 
         return redirect()->back()->with('success', 'Solicitud cancelada');

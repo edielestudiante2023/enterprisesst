@@ -2111,4 +2111,36 @@ class PzpresupuestoSstController extends BaseController
             ->with($enviado ? 'success' : 'error',
                    $enviado ? "Solicitud reenviada a {$emailDestino}" : 'Error al reenviar');
     }
+
+    /**
+     * Cancelar firma pendiente de un presupuesto.
+     * Invalida el token y resetea el estado a borrador.
+     */
+    public function cancelarFirmaPresupuesto()
+    {
+        $isAjax = $this->request->isAJAX();
+        $idPresupuesto = $this->request->getPost('id_presupuesto');
+
+        $presupuesto = $this->presupuestoModel->find($idPresupuesto);
+        if (!$presupuesto) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Presupuesto no encontrado']);
+            return redirect()->back()->with('error', 'Presupuesto no encontrado');
+        }
+
+        if (in_array($presupuesto['estado'] ?? '', ['aprobado', 'cerrado'])) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'El presupuesto ya fue aprobado, no se puede cancelar']);
+            return redirect()->back()->with('error', 'El presupuesto ya fue aprobado, no se puede cancelar');
+        }
+
+        $this->presupuestoModel->update($idPresupuesto, [
+            'estado'          => 'borrador',
+            'token_firma'     => null,
+            'token_expiracion' => null,
+        ]);
+
+        $msg = 'Solicitud de firma cancelada para el presupuesto ' . ($presupuesto['anio'] ?? '');
+        if ($isAjax) return $this->response->setJSON(['success' => true, 'mensaje' => $msg]);
+        $redireccion = "documentos-sst/presupuesto/estado-firmas/{$presupuesto['id_cliente']}/{$presupuesto['anio']}";
+        return redirect()->to($redireccion)->with('success', $msg);
+    }
 }

@@ -52,6 +52,24 @@
         .sidebar {
             position: sticky;
             top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            scrollbar-width: auto;
+            scrollbar-color: #764ba2 #f0e6f6;
+        }
+        .sidebar::-webkit-scrollbar {
+            width: 10px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: #f0e6f6;
+            border-radius: 5px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 5px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a6fd6, #6a4190);
         }
         .nav-secciones .nav-link {
             padding: 8px 12px;

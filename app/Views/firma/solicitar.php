@@ -181,12 +181,26 @@
                             </div>
                         <?php else: ?>
 
+                        <?php if (in_array($documento['estado'], ['borrador', 'generado'])): ?>
+                        <div class="alert alert-warning border-warning mb-4">
+                            <h6 class="alert-heading mb-2">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                Documento en estado <?= ucfirst($documento['estado']) ?>
+                            </h6>
+                            <p class="mb-0 small">
+                                Este documento aun no ha sido revisado ni aprobado. Si continua con el envio a firmas,
+                                el firmante recibira el documento en su estado actual. Asegurese de que el contenido
+                                sea el definitivo antes de solicitar firmas.
+                            </p>
+                        </div>
+                        <?php endif; ?>
+
                         <p class="text-muted mb-4">
                             Se enviara una solicitud de firma electronica a los siguientes firmantes configurados en el contexto del cliente.
                         </p>
 
                         <!-- Formulario de envio (envuelve firmantes + boton) -->
-                        <form action="<?= base_url('firma/crear-solicitud') ?>" method="post">
+                        <form id="formSolicitarFirmas" action="<?= base_url('firma/crear-solicitud') ?>" method="post">
                             <input type="hidden" name="id_documento" value="<?= $documento['id_documento'] ?>">
 
                         <!-- Resumen de firmantes -->
@@ -220,19 +234,58 @@
                                                 <p class="mb-0"><?= esc($contexto['delegado_sst_cedula']) ?></p>
                                             </div>
                                         </div>
+                                        <?php $solDelegado = $estadoFirmas['delegado_sst'] ?? null; ?>
+                                        <?php if (is_array($solDelegado) && in_array($solDelegado['estado'], ['pendiente', 'esperando'])): ?>
+                                        <?php $urlFirmaDelegado = base_url('firma/firmar/' . $solDelegado['token']); ?>
                                         <div class="mt-2 pt-2 border-top d-flex gap-2 flex-wrap align-items-center">
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    onclick="copiarEnlaceFirma('<?= $urlFirmaDelegado ?>', '<?= esc($contexto['delegado_sst_nombre']) ?>')">
+                                                <i class="bi bi-clipboard me-1"></i>Copiar enlace
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    onclick="reenviarSolicitud(<?= $solDelegado['id_solicitud'] ?>, '<?= esc($contexto['delegado_sst_nombre']) ?>')">
+                                                <i class="bi bi-send me-1"></i>Reenviar
+                                            </button>
                                             <button type="button" class="btn btn-sm btn-outline-warning"
-                                                    onclick="document.getElementById('email-alt-delegado-wrap').classList.toggle('d-none');">
+                                                    onclick="modalEmailAlternativo('<?= base_url('firma/reenviar/' . $solDelegado['id_solicitud']) ?>', '<?= esc($contexto['delegado_sst_nombre']) ?>', '<?= esc($solDelegado['firmante_email']) ?>')">
                                                 <i class="bi bi-envelope-at me-1"></i>Email alt.
                                             </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    onclick="cancelarSolicitud(<?= $solDelegado['id_solicitud'] ?>, '<?= esc($contexto['delegado_sst_nombre']) ?>')">
+                                                <i class="bi bi-x-circle me-1"></i>Cancelar
+                                            </button>
+                                            <a href="<?= base_url('firma/audit-log/' . $solDelegado['id_solicitud']) ?>" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                                <i class="bi bi-clock-history me-1"></i>Audit Log
+                                            </a>
                                         </div>
-                                        <div id="email-alt-delegado-wrap" class="d-none mt-2">
-                                            <div class="input-group input-group-sm">
-                                                <input type="email" name="email_alt_delegado" class="form-control"
-                                                       placeholder="correo.personal@gmail.com">
+                                        <?php elseif (is_array($solDelegado) && $solDelegado['estado'] === 'firmado'): ?>
+                                        <div class="mt-2 pt-2 border-top d-flex gap-2 flex-wrap align-items-center">
+                                            <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Firmado</span>
+                                            <a href="<?= base_url('firma/audit-log/' . $solDelegado['id_solicitud']) ?>" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                                <i class="bi bi-clock-history me-1"></i>Audit Log
+                                            </a>
+                                        </div>
+                                        <?php else: ?>
+                                        <div class="mt-2 pt-2 border-top">
+                                            <div class="d-flex gap-2 flex-wrap align-items-center mb-2">
+                                                <button type="button" class="btn btn-sm btn-outline-warning"
+                                                        onclick="document.getElementById('email-alt-delegado-wrap').classList.toggle('d-none');">
+                                                    <i class="bi bi-envelope-at me-1"></i>Email alt.
+                                                </button>
                                             </div>
-                                            <small class="text-muted">La solicitud se enviara a este correo en vez del corporativo</small>
+                                            <div id="email-alt-delegado-wrap" class="d-none mb-2">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="email" name="email_alt_delegado" class="form-control"
+                                                           placeholder="correo.personal@gmail.com">
+                                                </div>
+                                                <small class="text-muted">La solicitud se enviara a este correo en vez del corporativo</small>
+                                            </div>
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Para copiar enlace, reenviar, cancelar o ver audit log, primero envie la solicitud con el boton <strong>"Enviar Solicitud"</strong>.
+                                            </small>
                                         </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -266,19 +319,58 @@
                                                 <p class="mb-0"><?= esc($contexto['representante_legal_cedula']) ?></p>
                                             </div>
                                         </div>
+                                        <?php $solRepLegal = $estadoFirmas['representante_legal'] ?? null; ?>
+                                        <?php if (is_array($solRepLegal) && in_array($solRepLegal['estado'], ['pendiente', 'esperando'])): ?>
+                                        <?php $urlFirmaRepLegal = base_url('firma/firmar/' . $solRepLegal['token']); ?>
                                         <div class="mt-2 pt-2 border-top d-flex gap-2 flex-wrap align-items-center">
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    onclick="copiarEnlaceFirma('<?= $urlFirmaRepLegal ?>', '<?= esc($contexto['representante_legal_nombre']) ?>')">
+                                                <i class="bi bi-clipboard me-1"></i>Copiar enlace
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    onclick="reenviarSolicitud(<?= $solRepLegal['id_solicitud'] ?>, '<?= esc($contexto['representante_legal_nombre']) ?>')">
+                                                <i class="bi bi-send me-1"></i>Reenviar
+                                            </button>
                                             <button type="button" class="btn btn-sm btn-outline-warning"
-                                                    onclick="document.getElementById('email-alt-replegal-wrap').classList.toggle('d-none');">
+                                                    onclick="modalEmailAlternativo('<?= base_url('firma/reenviar/' . $solRepLegal['id_solicitud']) ?>', '<?= esc($contexto['representante_legal_nombre']) ?>', '<?= esc($solRepLegal['firmante_email']) ?>')">
                                                 <i class="bi bi-envelope-at me-1"></i>Email alt.
                                             </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    onclick="cancelarSolicitud(<?= $solRepLegal['id_solicitud'] ?>, '<?= esc($contexto['representante_legal_nombre']) ?>')">
+                                                <i class="bi bi-x-circle me-1"></i>Cancelar
+                                            </button>
+                                            <a href="<?= base_url('firma/audit-log/' . $solRepLegal['id_solicitud']) ?>" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                                <i class="bi bi-clock-history me-1"></i>Audit Log
+                                            </a>
                                         </div>
-                                        <div id="email-alt-replegal-wrap" class="d-none mt-2">
-                                            <div class="input-group input-group-sm">
-                                                <input type="email" name="email_alt_representante" class="form-control"
-                                                       placeholder="correo.personal@gmail.com">
+                                        <?php elseif (is_array($solRepLegal) && $solRepLegal['estado'] === 'firmado'): ?>
+                                        <div class="mt-2 pt-2 border-top d-flex gap-2 flex-wrap align-items-center">
+                                            <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Firmado</span>
+                                            <a href="<?= base_url('firma/audit-log/' . $solRepLegal['id_solicitud']) ?>" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                                <i class="bi bi-clock-history me-1"></i>Audit Log
+                                            </a>
+                                        </div>
+                                        <?php else: ?>
+                                        <div class="mt-2 pt-2 border-top">
+                                            <div class="d-flex gap-2 flex-wrap align-items-center mb-2">
+                                                <button type="button" class="btn btn-sm btn-outline-warning"
+                                                        onclick="document.getElementById('email-alt-replegal-wrap').classList.toggle('d-none');">
+                                                    <i class="bi bi-envelope-at me-1"></i>Email alt.
+                                                </button>
                                             </div>
-                                            <small class="text-muted">La solicitud se enviara a este correo en vez del corporativo</small>
+                                            <div id="email-alt-replegal-wrap" class="d-none mb-2">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="email" name="email_alt_representante" class="form-control"
+                                                           placeholder="correo.personal@gmail.com">
+                                                </div>
+                                                <small class="text-muted">La solicitud se enviara a este correo en vez del corporativo</small>
+                                            </div>
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Para copiar enlace, reenviar, cancelar o ver audit log, primero envie la solicitud con el boton <strong>"Enviar Solicitud"</strong>.
+                                            </small>
                                         </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -306,7 +398,7 @@
                                 <a href="<?= base_url('documentos-sst/' . ($documento['id_cliente'] ?? '') . '/' . str_replace('_', '-', $documento['tipo_documento'] ?? 'programa-capacitacion') . '/' . ($documento['anio'] ?? date('Y'))) ?>" class="btn btn-outline-secondary">
                                     <i class="bi bi-x-lg me-1"></i>Cancelar
                                 </a>
-                                <button type="submit" class="btn btn-primary btn-lg">
+                                <button type="button" class="btn btn-primary btn-lg" onclick="confirmarEnvioFirmas()">
                                     <i class="bi bi-send me-2"></i>
                                     Enviar Solicitud<?= $requiereDelegado ? ' a Delegado SST' : '' ?>
                                 </button>
@@ -334,5 +426,113 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?= base_url('js/firma-helpers.js') ?>"></script>
+    <script>
+    function reenviarSolicitud(idSolicitud, nombre) {
+        Swal.fire({
+            title: 'Reenviar Solicitud',
+            html: '<p>Se reenviará la solicitud de firma a:</p><p><strong>' + nombre + '</strong></p><p class="text-muted small">Se generará un nuevo enlace. El anterior quedará invalidado.</p>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: '<i class="bi bi-send me-1"></i>Reenviar',
+            cancelButtonText: 'Cancelar'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+                fetch('<?= base_url("firma/reenviar/") ?>' + idSolicitud, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Enviado', text: data.mensaje || 'Solicitud reenviada', timer: 3000 }).then(function() { location.reload(); });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.mensaje || 'No se pudo reenviar' });
+                    }
+                }).catch(function() {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión con el servidor.' });
+                });
+            }
+        });
+    }
+
+    function confirmarEnvioFirmas() {
+        var esBorrador = <?= in_array($documento['estado'], ['borrador', 'generado']) ? 'true' : 'false' ?>;
+
+        function mostrarConfirmacionLegal() {
+            Swal.fire({
+                title: 'Confirmacion de Responsabilidad',
+                html: '<div class="text-start">' +
+                    '<p>Al enviar esta solicitud de firma electronica, tenga en cuenta:</p>' +
+                    '<ul class="small">' +
+                    '<li>El documento quedara <strong>bloqueado</strong> y no podra ser editado mientras las firmas esten vigentes.</li>' +
+                    '<li>Editar un documento que ya fue firmado puede tener <strong>implicaciones legales</strong> y comprometer su <strong>licencia profesional</strong> como responsable del SG-SST.</li>' +
+                    '<li>La firma electronica tiene plena validez legal segun la <strong>Ley 527 de 1999</strong>.</li>' +
+                    '</ul>' +
+                    '<p class="mb-0"><strong>¿Es consciente de los riesgos y desea continuar?</strong></p>' +
+                    '</div>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                confirmButtonText: '<i class="bi bi-check-lg me-1"></i>Si, enviar a firmar',
+                cancelButtonText: 'No, volver',
+                focusCancel: true
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    document.getElementById('formSolicitarFirmas').submit();
+                }
+            });
+        }
+
+        if (esBorrador) {
+            Swal.fire({
+                title: 'Documento en Borrador',
+                html: '<p>Este documento se encuentra en estado <strong>Borrador</strong> y aun no ha sido revisado ni aprobado.</p>' +
+                    '<p>¿Esta seguro de que desea enviarlo a firmar en su estado actual?</p>',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                confirmButtonText: '<i class="bi bi-check me-1"></i>Si, continuar',
+                cancelButtonText: 'No, revisar primero',
+                focusCancel: true
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    mostrarConfirmacionLegal();
+                }
+            });
+        } else {
+            mostrarConfirmacionLegal();
+        }
+    }
+
+    function cancelarSolicitud(idSolicitud, nombre) {
+        Swal.fire({
+            title: 'Cancelar Solicitud',
+            html: '<p>Se cancelará la solicitud de firma de:</p><p><strong>' + nombre + '</strong></p><p class="text-muted small">El enlace de firma quedará invalidado.</p>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: '<i class="bi bi-x-circle me-1"></i>Sí, cancelar',
+            cancelButtonText: 'No, mantener'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Cancelando...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+                fetch('<?= base_url("firma/cancelar/") ?>' + idSolicitud, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Cancelada', text: data.mensaje || 'Solicitud cancelada', timer: 3000 }).then(function() { location.reload(); });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.mensaje || 'No se pudo cancelar' });
+                    }
+                }).catch(function() {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión con el servidor.' });
+                });
+            }
+        });
+    }
+    </script>
 </body>
 </html>

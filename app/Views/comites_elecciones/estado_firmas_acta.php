@@ -308,10 +308,13 @@ $tipoComiteNombre = [
 
                         <!-- Firma/Acciones -->
                         <div class="col-md-4 text-end">
-                            <?php if ($sol['estado'] === 'firmado' && $evidencia && !empty($evidencia['firma_imagen'])): ?>
-                                <img src="<?= $evidencia['firma_imagen'] ?>"
-                                     alt="Firma"
-                                     class="firma-imagen">
+                            <?php if ($sol['estado'] === 'firmado'): ?>
+                                <?php if ($evidencia && !empty($evidencia['firma_imagen'])): ?>
+                                <img src="<?= $evidencia['firma_imagen'] ?>" alt="Firma" class="firma-imagen me-2">
+                                <?php endif; ?>
+                                <a href="<?= base_url("firma/audit-log/{$sol['id_solicitud']}") ?>" class="btn btn-sm btn-outline-secondary" target="_blank" title="Ver Audit Log">
+                                    <i class="fas fa-history me-1"></i>Audit Log
+                                </a>
                             <?php elseif (in_array($sol['estado'], ['pendiente', 'esperando'])): ?>
                                 <?php $urlFirmaCopasst = base_url('firma/firmar/' . $sol['token']); ?>
                                 <button type="button" class="btn btn-sm btn-outline-info me-1"
@@ -332,11 +335,14 @@ $tipoComiteNombre = [
                                     <i class="fas fa-at me-1"></i>Email alt.
                                 </button>
                                 <a href="<?= base_url("firma/cancelar/{$sol['id_solicitud']}") ?>"
-                                   class="btn btn-sm btn-outline-danger"
+                                   class="btn btn-sm btn-outline-danger me-1"
                                    onclick="return confirm('Cancelar esta solicitud de firma?')">
                                     <i class="fas fa-times"></i>
                                 </a>
                                 <?php endif; ?>
+                                <a href="<?= base_url("firma/audit-log/{$sol['id_solicitud']}") ?>" class="btn btn-sm btn-outline-secondary" target="_blank" title="Ver Audit Log">
+                                    <i class="fas fa-history me-1"></i>Audit Log
+                                </a>
                             <?php endif; ?>
                         </div>
                     </div>

@@ -656,6 +656,7 @@ $routes->get('/contracts/diagnostico-firmas/(:num)', 'ContractController::diagno
 // Firma digital de contratos (sistema independiente)
 $routes->post('/contracts/enviar-firma', 'ContractController::enviarFirma');
 $routes->post('/contracts/reenviar-firma-contrato', 'ContractController::reenviarFirmaContrato');
+$routes->post('/contracts/cancelar-firma-contrato', 'ContractController::cancelarFirmaContrato');
 $routes->get('/contracts/estado-firma/(:num)', 'ContractController::estadoFirma/$1');
 $routes->get('/contrato/firmar/(:segment)', 'ContractController::paginaFirmaContrato/$1');
 $routes->post('/contrato/procesar-firma', 'ContractController::procesarFirmaContrato');
@@ -1173,6 +1174,7 @@ $routes->post('/documentos-sst/presupuesto/generar-token-consulta', 'Pzpresupues
 // Estado de firmas y reenvío
 $routes->get('/documentos-sst/presupuesto/estado-firmas/(:num)/(:num)', 'PzpresupuestoSstController::estadoFirmas/$1/$2');
 $routes->post('/documentos-sst/presupuesto/reenviar-firma', 'PzpresupuestoSstController::reenviarFirmaPresupuesto');
+$routes->post('/documentos-sst/presupuesto/cancelar-firma', 'PzpresupuestoSstController::cancelarFirmaPresupuesto');
 
 // Crear nueva versión del presupuesto
 $routes->post('/documentos-sst/presupuesto/nueva-version/(:num)/(:num)', 'PzpresupuestoSstController::crearNuevaVersion/$1/$2');
@@ -1294,6 +1296,7 @@ $routes->post('/actas/comite/(:num)/acta/(:num)/cerrar', 'ActasController::cerra
 $routes->get('/actas/comite/(:num)/acta/(:num)/firmas', 'ActasController::estadoFirmas/$2');
 $routes->post('/actas/comite/(:num)/acta/(:num)/reenviar-todos', 'ActasController::reenviarTodos/$2');
 $routes->post('/actas/comite/(:num)/acta/(:num)/reenviar/(:num)', 'ActasController::reenviarAsistente/$2/$3');
+$routes->post('/actas/comite/(:num)/acta/(:num)/cancelar-firma/(:num)', 'ActasController::cancelarFirmaAsistente/$2/$3');
 $routes->get('/actas/ver/(:num)', 'ActasController::verActa/$1');
 $routes->post('/actas/cerrar/(:num)', 'ActasController::cerrarActa/$1');
 $routes->get('/actas/firmas/(:num)', 'ActasController::estadoFirmas/$1');

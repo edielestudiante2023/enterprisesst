@@ -1,63 +1,56 @@
-# PROMPT: Diagnosticar y corregir "Solicitar Firmas" — Email Alternativo en produccion
+# ESTADO FINAL: Auditoria y nivelacion de paginas de firma electronica
 
 **Fecha:** 2026-02-20
-**Estado:** EN PROGRESO — funcionalidad implementada pero con problema en produccion
+**Estado:** COMPLETADO
 
 ---
 
-## Contexto del problema
+## Resumen de lo realizado
 
-Cliente **Ardurra Colombia** tiene TI corporativo que bloquea emails de la plataforma (`@ardurra.com`). Los firmantes no reciben solicitudes de firma. Se implemento "email alternativo" en la pagina **Solicitar Firmas** (`firma/solicitar/{id}`) para poder enviar a un correo personal en vez del corporativo.
+Se auditaron las 6 paginas de firma electronica del sistema y se nivelaron para que todas tengan los botones estandar.
 
-## Que ya se hizo (TODO COMMITEADO Y PUSHEADO A MAIN)
+### Pagina de referencia: `firma/estado.php`
+Botones estandar por firmante pendiente: `[Copiar enlace] [Reenviar] [Email alt.] [Cancelar] [Audit Log]`
 
-### 1. Email alternativo en "Solicitar Firmas" (commit c023645)
-- **`app/Views/firma/solicitar.php`** — Se agregaron 2 campos opcionales "Usar email alternativo" (uno por firmante: Delegado SST y Representante Legal). Cada uno es un enlace que despliega un `<input type="email">` con `name="email_alt_delegado"` y `name="email_alt_representante"`.
-- **`app/Controllers/FirmaElectronicaController.php`** — Se modifico `crearSolicitud()` para leer `email_alt_delegado` y `email_alt_representante` del POST. Si estan llenos, usa ese email en vez del configurado en contexto.
+### Resultado por pagina
 
-### 2. Copiar enlace + Email alt en Estado de Firmas (commits anteriores, ya en produccion)
-- **`public/js/firma-helpers.js`** — JS compartido con `copiarEnlaceFirma()`, `modalEmailAlternativo()`, `enviarEmailAlternativo()`
-- **`app/Views/firma/estado.php`** — Botones: Copiar enlace, WhatsApp, Reenviar, Email alt, Cancelar, Audit Log
-- Mismos botones en: `actas/estado_firmas.php`, `comites_elecciones/estado_firmas_acta.php`, `contracts/estado_firma.php` (nueva), `documentos_sst/presupuesto_estado_firmas.php` (nueva)
+| # | Pagina | Copiar | Reenviar | Email alt. | Cancelar | Audit Log | Cambios |
+|---|--------|--------|----------|------------|----------|-----------|---------|
+| 1 | `firma/solicitar.php` | ✅ NUEVO | ✅ NUEVO | ✅ | ✅ NUEVO | ✅ NUEVO | +4 botones (condicional: solo si solicitud existe) |
+| 2 | `firma/estado.php` | ✅ | ✅ | ✅ | ✅ | ✅ | REFERENCIA |
+| 3 | `actas/estado_firmas.php` | ✅ | ✅ | ✅ | ✅ NUEVO | - | +Cancelar |
+| 4 | `comites_elecciones/estado_firmas_acta.php` | ✅ | ✅ | ✅ | ✅ | ✅ NUEVO | +Audit Log |
+| 5 | `contracts/estado_firma.php` | ✅ | ✅ | ✅ | ✅ NUEVO | - | +Cancelar |
+| 6 | `presupuesto_estado_firmas.php` | ✅ | ✅ | ✅ | ✅ NUEVO | - | +Cancelar |
 
-### 3. Boton "Firma Presupuesto" en toolbar (commit bb8683c)
-- **`app/Views/documentos_sst/presupuesto_preview.php`** — Boton visible cuando presupuesto en `pendiente_firma/aprobado/cerrado`
+### Nota sobre Audit Log
+Solo COPASST (#4) y Documentos SST (#1, #2) tienen Audit Log porque usan `tbl_doc_firmas_solicitudes`. Actas, Contratos y Presupuesto tienen tablas propias sin infraestructura de audit log.
 
-## PROBLEMA ACTUAL
+## Archivos modificados
 
-La pagina `firma/solicitar/26` en produccion (`dashboard.cycloidtalent.com`) muestra "Usar email alternativo" visualmente (deploy exitoso), pero el usuario reporta que **"sigue igual"**. Posibles causas:
+### Vistas (frontend)
+- `app/Views/firma/solicitar.php` — Agregados 5 botones condicionales por firmante (si solicitud existe: Copiar/Reenviar/Email alt./Cancelar/Audit Log; si no: solo Email alt.) + SweetAlert2 + firma-helpers.js
+- `app/Views/comites_elecciones/estado_firmas_acta.php` — Agregado boton Audit Log en estados firmado y pendiente/esperando
+- `app/Views/actas/estado_firmas.php` — Agregado boton Cancelar firma en btn-group
+- `app/Views/contracts/estado_firma.php` — Agregado boton Cancelar + funcion JS `cancelarFirmaContrato()`
+- `app/Views/documentos_sst/presupuesto_estado_firmas.php` — Agregado boton Cancelar + funcion JS `cancelarFirmaPresupuesto()`
 
-1. **El campo `<input>` esta FUERA del `<form>`** — Revisar que los inputs `email_alt_delegado` y `email_alt_representante` esten DENTRO del tag `<form action="firma/crear-solicitud">` (linea 276 aprox). Si estan fuera, el POST no los envia.
-2. **El controller no los recibe** — Verificar que `$this->request->getPost('email_alt_delegado')` funciona en produccion.
-3. **Despues de enviar, la pagina "Estado Firmas" no muestra los botones copiar/reenviar** — Verificar que `firma/estado.php` tiene los botones (commit ceafc0b, anterior).
+### Controllers (backend)
+- `app/Controllers/FirmaElectronicaController.php` — `cancelar()` ahora soporta AJAX (JSON response)
+- `app/Controllers/ActasController.php` — Nuevo metodo `cancelarFirmaAsistente($idActa, $idAsistente)`
+- `app/Controllers/ContractController.php` — Nuevo metodo `cancelarFirmaContrato()`
+- `app/Controllers/PzpresupuestoSstController.php` — Nuevo metodo `cancelarFirmaPresupuesto()`
 
-### Documento de prueba
-- **MAN-CVL-001** (Manual de Convivencia Laboral, id_documento=26, cliente Ardurra Colombia)
-- Firmantes: Henry Pulido Sosa (`hpulido@ardurra.com`, Delegado SST) + Juan Ricardo Baraya Lievano (`jbaraya@ardurra.com`, Rep Legal)
-- Firma secuencial: Delegado primero, luego Rep Legal
-
-## Diagnostico a realizar
-
-1. Leer `app/Views/firma/solicitar.php` y verificar que los inputs estan DENTRO del `<form>` tag
-2. Leer `app/Controllers/FirmaElectronicaController.php` funcion `crearSolicitud()` y verificar que lee los campos
-3. Si los inputs estan fuera del form, moverlos adentro
-4. Verificar que `firma/estado.php` tiene los botones copiar enlace / email alt (commit ceafc0b)
-5. Commit + push + probar en produccion
-
-## Archivos clave
-
-| Archivo | Que revisar |
-|---------|-------------|
-| `app/Views/firma/solicitar.php` | Inputs dentro del `<form>` tag |
-| `app/Controllers/FirmaElectronicaController.php` | `crearSolicitud()` lee email_alt_* del POST |
-| `app/Views/firma/estado.php` | Botones copiar/reenviar/email alt existen |
-| `public/js/firma-helpers.js` | Funciones compartidas |
+### Rutas
+- `app/Config/Routes.php` — 3 rutas nuevas:
+  - `POST /actas/comite/(:num)/acta/(:num)/cancelar-firma/(:num)`
+  - `POST /contracts/cancelar-firma-contrato`
+  - `POST /documentos-sst/presupuesto/cancelar-firma`
 
 ## Flujo Git
-
 ```
 git add .
-git commit -m "fix: ..."
+git commit -m "feat: nivelar botones firma electronica en todas las paginas"
 git checkout main
 git merge cycloid
 git push origin main

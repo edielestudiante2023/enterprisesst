@@ -139,6 +139,7 @@
                                         <?php elseif ($asist['asistio'] && empty($asist['firma_fecha']) && $acta['estado'] === 'pendiente_firma'): ?>
                                         <?php $urlFirmaActa = base_url('acta/firmar/' . ($asist['token_firma'] ?? '')); ?>
                                         <?php $urlReenviarActa = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/reenviar/' . $asist['id_asistente']); ?>
+                                        <?php $urlCancelarActa = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/cancelar-firma/' . $asist['id_asistente']); ?>
                                         <div class="btn-group btn-group-sm">
                                             <button type="button" class="btn btn-outline-info" title="Copiar enlace de firma"
                                                     onclick="copiarEnlaceFirma('<?= $urlFirmaActa ?>', '<?= esc($asist['nombre_completo']) ?>')">
@@ -153,6 +154,12 @@
                                                     onclick="modalEmailAlternativo('<?= $urlReenviarActa ?>', '<?= esc($asist['nombre_completo']) ?>', '<?= esc($asist['email'] ?? '') ?>')">
                                                 <i class="bi bi-envelope-at"></i>
                                             </button>
+                                            <form action="<?= $urlCancelarActa ?>" method="post" class="d-inline"
+                                                  onsubmit="return confirm('¿Cancelar solicitud de firma para <?= esc($asist['nombre_completo']) ?>?')">
+                                                <button type="submit" class="btn btn-outline-danger" title="Cancelar firma">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                         <?php elseif (!$asist['asistio']): ?>
                                         <small class="text-muted">N/A</small>

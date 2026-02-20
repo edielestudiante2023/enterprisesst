@@ -35,28 +35,20 @@ class FasesDocumentoService
     public const FASES_POR_CARPETA = [
         // 2.4. Capacitación SST
         'capacitacion_sst' => [
-            'cronograma' => [
-                'nombre' => 'Cronograma',
-                'descripcion' => 'Programacion anual de capacitaciones',
+            'capacitaciones' => [
+                'nombre' => 'Capacitaciones SST',
+                'descripcion' => 'Programacion anual de capacitaciones y actividades PTA',
                 'url_modulo' => '/generador-ia/{cliente}/capacitacion-sst',
                 'url_generar' => '/generador-ia/{cliente}/capacitacion-sst',
                 'orden' => 1
-            ],
-            'pta' => [
-                'nombre' => 'Plan de Trabajo',
-                'descripcion' => 'Actividades derivadas del cronograma',
-                'url_modulo' => '/pta-cliente-nueva/list',
-                'url_generar' => '/generador-ia/{cliente}',
-                'orden' => 2,
-                'depende_de' => 'cronograma'
             ],
             'indicadores' => [
                 'nombre' => 'Indicadores',
                 'descripcion' => 'Indicadores para medir cumplimiento',
                 'url_modulo' => '/indicadores-sst/{cliente}',
                 'url_generar' => '/indicadores-sst/{cliente}',
-                'orden' => 3,
-                'depende_de' => 'pta'
+                'orden' => 2,
+                'depende_de' => 'capacitaciones'
             ]
         ],
         // 1.4. Plan de Trabajo Anual
@@ -334,8 +326,8 @@ class FasesDocumentoService
     protected function obtenerEstadoFase(int $idCliente, string $fase, int $anio): array
     {
         switch ($fase) {
-            case 'cronograma':
-                return $this->verificarCronograma($idCliente, $anio);
+            case 'capacitaciones':
+                return $this->verificarCapacitaciones($idCliente, $anio);
 
             case 'pta':
                 return $this->verificarPTA($idCliente, $anio);
@@ -395,16 +387,18 @@ class FasesDocumentoService
     }
 
     /**
-     * Verifica estado del cronograma de capacitaciones
+     * Verifica estado de Capacitaciones SST (Parte 1 del flujo 3 partes)
+     * Parte 1 escribe simultáneamente en tbl_cronog_capacitacion y tbl_pta_cliente
      */
-    protected function verificarCronograma(int $idCliente, int $anio): array
+    protected function verificarCapacitaciones(int $idCliente, int $anio): array
     {
-        $cantidad = $this->cronogramaModel
+        // Verificar cronograma
+        $cantidadCronograma = $this->cronogramaModel
             ->where('id_cliente', $idCliente)
             ->where('YEAR(fecha_programada)', $anio)
             ->countAllResults();
 
-        if ($cantidad === 0) {
+        if ($cantidadCronograma === 0) {
             return [
                 'estado' => self::ESTADO_PENDIENTE,
                 'mensaje' => 'No hay capacitaciones programadas para ' . $anio,
@@ -412,30 +406,44 @@ class FasesDocumentoService
             ];
         }
 
-        // Verificar si tiene el mínimo según estándares
+        // Verificar mínimo según estándares (4/8/12)
         $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
-        $minimo = $estandares <= 7 ? 4 : ($estandares <= 21 ? 9 : 13);
+        $minimo = $estandares <= 7 ? 4 : ($estandares <= 21 ? 8 : 12);
 
-        if ($cantidad < $minimo) {
+        if ($cantidadCronograma < $minimo) {
             return [
                 'estado' => self::ESTADO_EN_PROCESO,
-                'mensaje' => "Tiene {$cantidad} de {$minimo} capacitaciones requeridas",
-                'cantidad' => $cantidad
+                'mensaje' => "Tiene {$cantidadCronograma} de {$minimo} capacitaciones requeridas",
+                'cantidad' => $cantidadCronograma
+            ];
+        }
+
+        // Verificar que también existan actividades en PTA
+        $cantidadPTA = $this->ptaModel
+            ->where('id_cliente', $idCliente)
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->countAllResults();
+
+        if ($cantidadPTA === 0) {
+            return [
+                'estado' => self::ESTADO_EN_PROCESO,
+                'mensaje' => "{$cantidadCronograma} capacitaciones programadas, pendiente generar actividades PTA",
+                'cantidad' => $cantidadCronograma
             ];
         }
 
         return [
             'estado' => self::ESTADO_COMPLETO,
-            'mensaje' => "{$cantidad} capacitaciones programadas",
-            'cantidad' => $cantidad
+            'mensaje' => "{$cantidadCronograma} capacitaciones, {$cantidadPTA} actividades PTA",
+            'cantidad' => $cantidadCronograma
         ];
     }
 
     /**
-     * Verifica estado del Plan de Trabajo Anual
+     * Verifica estado del Plan de Trabajo Anual (usado por carpeta plan_trabajo)
      */
     protected function verificarPTA(int $idCliente, int $anio): array
     {
@@ -452,26 +460,9 @@ class FasesDocumentoService
             ];
         }
 
-        // Verificar si tiene actividades de capacitación (derivadas del cronograma)
-        // Usar COLLATE para evitar errores de collation entre diferentes tablas
-        $db = \Config\Database::connect();
-        $capacitaciones = $db->table('tbl_pta_cliente')
-            ->where('id_cliente', $idCliente)
-            ->where('YEAR(fecha_propuesta)', $anio)
-            ->where("actividad_plandetrabajo LIKE 'Capacitaci%' COLLATE utf8mb4_general_ci", null, false)
-            ->countAllResults();
-
-        if ($capacitaciones === 0) {
-            return [
-                'estado' => self::ESTADO_EN_PROCESO,
-                'mensaje' => "Tiene {$cantidad} actividades pero ninguna de capacitación",
-                'cantidad' => $cantidad
-            ];
-        }
-
         return [
             'estado' => self::ESTADO_COMPLETO,
-            'mensaje' => "{$cantidad} actividades ({$capacitaciones} de capacitación)",
+            'mensaje' => "{$cantidad} actividades en el Plan de Trabajo",
             'cantidad' => $cantidad
         ];
     }

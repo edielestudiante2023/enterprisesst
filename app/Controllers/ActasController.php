@@ -1296,6 +1296,44 @@ class ActasController extends BaseController
     }
 
     /**
+     * Cancelar firma pendiente de un asistente de acta.
+     * Invalida el token y resetea el estado de firma.
+     */
+    public function cancelarFirmaAsistente(int $idActa, int $idAsistente)
+    {
+        $isAjax = $this->request->isAJAX();
+
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Acta no encontrada']);
+            return redirect()->back()->with('error', 'Acta no encontrada');
+        }
+
+        $asistente = $this->asistentesModel->find($idAsistente);
+        if (!$asistente || $asistente['id_acta'] != $idActa) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Asistente no encontrado']);
+            return redirect()->back()->with('error', 'Asistente no encontrado');
+        }
+
+        if (!empty($asistente['firma_fecha'])) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Este asistente ya firmó, no se puede cancelar']);
+            return redirect()->back()->with('error', 'Este asistente ya firmó, no se puede cancelar');
+        }
+
+        $this->asistentesModel->update($idAsistente, [
+            'token_firma'              => null,
+            'token_expira'             => null,
+            'estado_firma'             => 'cancelado',
+            'notificacion_enviada_at'  => null,
+            'recordatorio_enviado_at'  => null,
+        ]);
+
+        $msg = 'Solicitud de firma cancelada para ' . ($asistente['nombre_completo'] ?? 'asistente');
+        if ($isAjax) return $this->response->setJSON(['success' => true, 'mensaje' => $msg]);
+        return redirect()->back()->with('success', $msg);
+    }
+
+    /**
      * Dashboard de compromisos
      */
     public function compromisos(int $idCliente)

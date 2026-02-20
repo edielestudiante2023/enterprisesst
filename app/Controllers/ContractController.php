@@ -1280,4 +1280,35 @@ class ContractController extends Controller
             ->with($enviado ? 'success' : 'error',
                    $enviado ? "Solicitud reenviada a {$emailDestino}" : 'Error al reenviar');
     }
+
+    /**
+     * Cancelar firma pendiente de un contrato.
+     * Invalida el token y resetea el estado de firma a sin_enviar.
+     */
+    public function cancelarFirmaContrato()
+    {
+        $isAjax = $this->request->isAJAX();
+        $idContrato = $this->request->getPost('id_contrato');
+
+        $contract = $this->contractModel->find($idContrato);
+        if (!$contract) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'Contrato no encontrado']);
+            return redirect()->back()->with('error', 'Contrato no encontrado');
+        }
+
+        if (($contract['estado_firma'] ?? '') === 'firmado') {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'mensaje' => 'El contrato ya fue firmado, no se puede cancelar']);
+            return redirect()->back()->with('error', 'El contrato ya fue firmado, no se puede cancelar');
+        }
+
+        $this->contractModel->update($idContrato, [
+            'estado_firma'          => 'sin_enviar',
+            'token_firma'           => null,
+            'token_firma_expiracion' => null,
+        ]);
+
+        $msg = 'Solicitud de firma cancelada para el contrato ' . ($contract['numero_contrato'] ?? '');
+        if ($isAjax) return $this->response->setJSON(['success' => true, 'mensaje' => $msg]);
+        return redirect()->to('/contracts/estado-firma/' . $idContrato)->with('success', $msg);
+    }
 }

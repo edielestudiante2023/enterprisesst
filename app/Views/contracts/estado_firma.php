@@ -252,6 +252,10 @@
                                                         onclick="modalEmailAlternativo('<?= base_url('contracts/reenviar-firma-contrato') ?>', '<?= esc($nombreFirmante) ?>', '<?= esc($emailFirmante) ?>')">
                                                     <i class="bi bi-envelope-at me-1"></i>Email alt.
                                                 </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        onclick="cancelarFirmaContrato()">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                                </button>
                                             </div>
                                         <?php elseif ($estadoFirma === 'sin_enviar'): ?>
                                             <div class="mt-2 pt-2 border-top">
@@ -295,6 +299,37 @@
                 }).then(function(r) { return r.json(); }).then(function(data) {
                     if (data.success) {
                         Swal.fire({ icon: 'success', title: 'Enviado', text: data.mensaje, timer: 3000 }).then(function() { location.reload(); });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.mensaje });
+                    }
+                }).catch(function() {
+                    Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor.' });
+                });
+            }
+        });
+    }
+
+    function cancelarFirmaContrato() {
+        Swal.fire({
+            title: 'Cancelar Solicitud de Firma',
+            html: '<p>Se cancelará la solicitud de firma para:</p><p><strong><?= esc($nombreFirmante) ?></strong></p><p class="text-muted small">El enlace de firma quedará invalidado y el contrato volverá a estado "sin enviar".</p>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: '<i class="bi bi-x-circle me-1"></i>Sí, cancelar',
+            cancelButtonText: 'No, mantener'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Cancelando...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+                var formData = new FormData();
+                formData.append('id_contrato', '<?= $contract['id_contrato'] ?>');
+                fetch('<?= base_url("contracts/cancelar-firma-contrato") ?>', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Cancelada', text: data.mensaje, timer: 3000 }).then(function() { location.reload(); });
                     } else {
                         Swal.fire({ icon: 'error', title: 'Error', text: data.mensaje });
                     }
