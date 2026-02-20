@@ -1,95 +1,65 @@
-# PROMPT: Copiar Enlace + Email Alternativo — Transversal a 5 Sistemas de Firma
+# PROMPT: Diagnosticar y corregir "Solicitar Firmas" — Email Alternativo en produccion
 
-**Fecha:** 2026-02-19
-**Estado:** COMPLETADO - 5 sistemas de firma actualizados
-
----
-
-## Que se hizo
-
-### Tarea: Implementar "Copiar Enlace" + "Email Alternativo" en los 5 sistemas de firma
-
-**Problema de negocio:** Cliente Ardurra Colombia tiene TI corporativo que bloquea emails de la plataforma. Los firmantes no reciben las solicitudes de firma.
-
-**Solucion:** Dos funcionalidades transversales:
-1. **Copiar enlace** - copia URL de firma al portapapeles para compartir por WhatsApp/chat
-2. **Email alternativo** - envia la notificacion a un correo personal via SweetAlert2 + AJAX
-
-### Archivo JS compartido (CREADO):
-- `public/js/firma-helpers.js` - Funciones: `copiarEnlaceFirma()`, `modalEmailAlternativo()`, `enviarEmailAlternativo()`, `validarEmailFirma()`, `mostrarToastFirma()`, `copiarEnlaceFallback()`
-
-### Sistema 1 - Documentos SST (FirmaElectronicaController):
-- `app/Views/firma/estado.php` - Agregados botones copiar enlace + WhatsApp + email alt en cada firmante del timeline
-- `app/Controllers/FirmaElectronicaController.php` - Ya tenia `reenviarFirma()`, se verifico soporte `email_alternativo`
-
-### Sistema 2 - Presupuesto SST (PzpresupuestoSstController):
-- `app/Views/documentos_sst/presupuesto_estado_firmas.php` - **VISTA NUEVA** timeline estado firmas
-- `app/Controllers/PzpresupuestoSstController.php` - **2 metodos nuevos**: `estadoFirmas()` + `reenviarFirmaPresupuesto()`
-- `app/Config/Routes.php` - 2 rutas nuevas:
-  - `GET /documentos-sst/presupuesto/estado-firmas/(:num)/(:num)`
-  - `POST /documentos-sst/presupuesto/reenviar-firma`
-
-### Sistema 3 - Actas Comite (ActasController):
-- `app/Views/actas/estado_firmas.php` - Agregados botones copiar enlace + WhatsApp + email alt
-- Controller ya tenia soporte `email_alternativo`
-
-### Sistema 4 - COPASST (ComitesEleccionesController):
-- `app/Views/comites_elecciones/estado_firmas_acta.php` - Agregados botones copiar enlace + WhatsApp + email alt
-- Controller ya tenia soporte `email_alternativo`
-
-### Sistema 5 - Contratos (ContractController):
-- `app/Views/contracts/estado_firma.php` - **VISTA NUEVA** timeline estado firma contrato
-- `app/Controllers/ContractController.php` - `estadoFirma()` modificado: GET → HTML view, AJAX → JSON
-- `app/Views/contracts/view.php` - Ya tenia botones embebidos desde sesion anterior
+**Fecha:** 2026-02-20
+**Estado:** EN PROGRESO — funcionalidad implementada pero con problema en produccion
 
 ---
 
-## Archivos modificados/creados
+## Contexto del problema
 
-| Archivo | Accion |
-|---------|--------|
-| `public/js/firma-helpers.js` | CREADO - JS compartido |
-| `app/Views/firma/estado.php` | MODIFICADO - botones copiar/email alt |
-| `app/Views/actas/estado_firmas.php` | MODIFICADO - botones copiar/email alt |
-| `app/Views/comites_elecciones/estado_firmas_acta.php` | MODIFICADO - botones copiar/email alt |
-| `app/Views/contracts/estado_firma.php` | CREADO - vista timeline |
-| `app/Views/contracts/view.php` | Ya tenia botones (sesion anterior) |
-| `app/Views/documentos_sst/presupuesto_estado_firmas.php` | CREADO - vista timeline |
-| `app/Controllers/ContractController.php` | MODIFICADO - estadoFirma() dual mode |
-| `app/Controllers/PzpresupuestoSstController.php` | MODIFICADO - 2 metodos nuevos |
-| `app/Config/Routes.php` | MODIFICADO - 2 rutas presupuesto |
+Cliente **Ardurra Colombia** tiene TI corporativo que bloquea emails de la plataforma (`@ardurra.com`). Los firmantes no reciben solicitudes de firma. Se implemento "email alternativo" en la pagina **Solicitar Firmas** (`firma/solicitar/{id}`) para poder enviar a un correo personal en vez del corporativo.
 
----
+## Que ya se hizo (TODO COMMITEADO Y PUSHEADO A MAIN)
 
-## Patron de botones en cada sistema
+### 1. Email alternativo en "Solicitar Firmas" (commit c023645)
+- **`app/Views/firma/solicitar.php`** — Se agregaron 2 campos opcionales "Usar email alternativo" (uno por firmante: Delegado SST y Representante Legal). Cada uno es un enlace que despliega un `<input type="email">` con `name="email_alt_delegado"` y `name="email_alt_representante"`.
+- **`app/Controllers/FirmaElectronicaController.php`** — Se modifico `crearSolicitud()` para leer `email_alt_delegado` y `email_alt_representante` del POST. Si estan llenos, usa ese email en vez del configurado en contexto.
 
-```html
-<!-- Copiar enlace -->
-<button onclick="copiarEnlaceFirma(url, nombre)">Copiar enlace</button>
-<!-- WhatsApp -->
-<a href="https://wa.me/?text=..." target="_blank">WhatsApp</a>
-<!-- Reenviar (email original) -->
-<button onclick="reenviarFirma{Sistema}()">Reenviar</button>
-<!-- Email alternativo -->
-<button onclick="modalEmailAlternativo(urlReenvio, nombre, email)">Email alt.</button>
+### 2. Copiar enlace + Email alt en Estado de Firmas (commits anteriores, ya en produccion)
+- **`public/js/firma-helpers.js`** — JS compartido con `copiarEnlaceFirma()`, `modalEmailAlternativo()`, `enviarEmailAlternativo()`
+- **`app/Views/firma/estado.php`** — Botones: Copiar enlace, WhatsApp, Reenviar, Email alt, Cancelar, Audit Log
+- Mismos botones en: `actas/estado_firmas.php`, `comites_elecciones/estado_firmas_acta.php`, `contracts/estado_firma.php` (nueva), `documentos_sst/presupuesto_estado_firmas.php` (nueva)
+
+### 3. Boton "Firma Presupuesto" en toolbar (commit bb8683c)
+- **`app/Views/documentos_sst/presupuesto_preview.php`** — Boton visible cuando presupuesto en `pendiente_firma/aprobado/cerrado`
+
+## PROBLEMA ACTUAL
+
+La pagina `firma/solicitar/26` en produccion (`dashboard.cycloidtalent.com`) muestra "Usar email alternativo" visualmente (deploy exitoso), pero el usuario reporta que **"sigue igual"**. Posibles causas:
+
+1. **El campo `<input>` esta FUERA del `<form>`** — Revisar que los inputs `email_alt_delegado` y `email_alt_representante` esten DENTRO del tag `<form action="firma/crear-solicitud">` (linea 276 aprox). Si estan fuera, el POST no los envia.
+2. **El controller no los recibe** — Verificar que `$this->request->getPost('email_alt_delegado')` funciona en produccion.
+3. **Despues de enviar, la pagina "Estado Firmas" no muestra los botones copiar/reenviar** — Verificar que `firma/estado.php` tiene los botones (commit ceafc0b, anterior).
+
+### Documento de prueba
+- **MAN-CVL-001** (Manual de Convivencia Laboral, id_documento=26, cliente Ardurra Colombia)
+- Firmantes: Henry Pulido Sosa (`hpulido@ardurra.com`, Delegado SST) + Juan Ricardo Baraya Lievano (`jbaraya@ardurra.com`, Rep Legal)
+- Firma secuencial: Delegado primero, luego Rep Legal
+
+## Diagnostico a realizar
+
+1. Leer `app/Views/firma/solicitar.php` y verificar que los inputs estan DENTRO del `<form>` tag
+2. Leer `app/Controllers/FirmaElectronicaController.php` funcion `crearSolicitud()` y verificar que lee los campos
+3. Si los inputs estan fuera del form, moverlos adentro
+4. Verificar que `firma/estado.php` tiene los botones copiar enlace / email alt (commit ceafc0b)
+5. Commit + push + probar en produccion
+
+## Archivos clave
+
+| Archivo | Que revisar |
+|---------|-------------|
+| `app/Views/firma/solicitar.php` | Inputs dentro del `<form>` tag |
+| `app/Controllers/FirmaElectronicaController.php` | `crearSolicitud()` lee email_alt_* del POST |
+| `app/Views/firma/estado.php` | Botones copiar/reenviar/email alt existen |
+| `public/js/firma-helpers.js` | Funciones compartidas |
+
+## Flujo Git
+
 ```
-
----
-
-## Pendiente para verificar
-
-1. Probar copiar enlace en cada sistema (clipboard API + fallback)
-2. Probar email alternativo con SweetAlert modal
-3. Verificar reenvio normal sigue funcionando
-4. Probar en movil (responsive)
-5. Verificar tokens expirados muestran advertencia
-6. **Opcional:** Agregar boton "Ver Estado Firmas" en toolbar de `presupuesto_preview.php`
-
----
-
-## Tarea completada anteriormente (mismo dia)
-
-### Nivelar UX Contexto IA en 14 vistas generador_ia
-- 7 vistas actividades: 2-col → 3-col
-- 7 vistas indicadores: card contexto nuevo colapsado
-- Backend: Fix hardcodeo en 15 services PHP
+git add .
+git commit -m "fix: ..."
+git checkout main
+git merge cycloid
+git push origin main
+git checkout cycloid
+```

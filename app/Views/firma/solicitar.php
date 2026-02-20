@@ -185,6 +185,10 @@
                             Se enviara una solicitud de firma electronica a los siguientes firmantes configurados en el contexto del cliente.
                         </p>
 
+                        <!-- Formulario de envio (envuelve firmantes + boton) -->
+                        <form action="<?= base_url('firma/crear-solicitud') ?>" method="post">
+                            <input type="hidden" name="id_documento" value="<?= $documento['id_documento'] ?>">
+
                         <!-- Resumen de firmantes -->
                         <div class="mb-4">
                             <?php if ($requiereDelegado): ?>
@@ -291,10 +295,6 @@
                                 <strong>Evidencia registrada:</strong> IP, fecha/hora UTC, geolocalizacion (opcional), user agent, hash del documento.
                             </p>
                         </div>
-
-                        <!-- Formulario de envio -->
-                        <form action="<?= base_url('firma/crear-solicitud') ?>" method="post">
-                            <input type="hidden" name="id_documento" value="<?= $documento['id_documento'] ?>">
 
                             <div class="d-flex justify-content-between align-items-center">
                                 <a href="<?= base_url('documentos-sst/' . ($documento['id_cliente'] ?? '') . '/' . str_replace('_', '-', $documento['tipo_documento'] ?? 'programa-capacitacion') . '/' . ($documento['anio'] ?? date('Y'))) ?>" class="btn btn-outline-secondary">
