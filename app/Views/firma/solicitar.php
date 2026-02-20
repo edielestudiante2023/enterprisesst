@@ -268,9 +268,21 @@
                                         <?php else: ?>
                                         <div class="mt-2 pt-2 border-top">
                                             <div class="d-flex gap-2 flex-wrap align-items-center mb-2">
+                                                <button type="button" class="btn btn-sm btn-outline-info disabled" tabindex="-1" title="Disponible despues de enviar la solicitud">
+                                                    <i class="bi bi-clipboard me-1"></i>Copiar enlace
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-primary disabled" tabindex="-1" title="Disponible despues de enviar la solicitud">
+                                                    <i class="bi bi-send me-1"></i>Reenviar
+                                                </button>
                                                 <button type="button" class="btn btn-sm btn-outline-warning"
                                                         onclick="document.getElementById('email-alt-delegado-wrap').classList.toggle('d-none');">
                                                     <i class="bi bi-envelope-at me-1"></i>Email alt.
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger disabled" tabindex="-1" title="Disponible despues de enviar la solicitud">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary disabled" tabindex="-1" title="Disponible despues de enviar la solicitud">
+                                                    <i class="bi bi-clock-history me-1"></i>Audit Log
                                                 </button>
                                             </div>
                                             <div id="email-alt-delegado-wrap" class="d-none mb-2">
@@ -280,10 +292,10 @@
                                                 </div>
                                                 <small class="text-muted">La solicitud se enviara a este correo en vez del corporativo</small>
                                             </div>
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-info-circle me-1"></i>
-                                                Para copiar enlace, reenviar, cancelar o ver audit log, primero envie la solicitud con el boton <strong>"Enviar Solicitud"</strong>.
-                                            </small>
+                                            <div class="alert alert-light border py-2 px-3 mb-0 small">
+                                                <i class="bi bi-lock-fill text-danger me-1"></i>
+                                                <strong class="text-danger">Los botones deshabilitados se activaran al hacer clic en "Enviar Solicitud" al final de esta pagina.</strong>
+                                            </div>
                                         </div>
                                         <?php endif; ?>
                                     </div>
@@ -353,9 +365,21 @@
                                         <?php else: ?>
                                         <div class="mt-2 pt-2 border-top">
                                             <div class="d-flex gap-2 flex-wrap align-items-center mb-2">
+                                                <button type="button" class="btn btn-sm btn-outline-info disabled" tabindex="-1" title="Disponible despues de enviar la solicitud">
+                                                    <i class="bi bi-clipboard me-1"></i>Copiar enlace
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-primary disabled" tabindex="-1" title="Disponible despues de enviar la solicitud">
+                                                    <i class="bi bi-send me-1"></i>Reenviar
+                                                </button>
                                                 <button type="button" class="btn btn-sm btn-outline-warning"
                                                         onclick="document.getElementById('email-alt-replegal-wrap').classList.toggle('d-none');">
                                                     <i class="bi bi-envelope-at me-1"></i>Email alt.
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger disabled" tabindex="-1" title="Disponible despues de enviar la solicitud">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary disabled" tabindex="-1" title="Disponible despues de enviar la solicitud">
+                                                    <i class="bi bi-clock-history me-1"></i>Audit Log
                                                 </button>
                                             </div>
                                             <div id="email-alt-replegal-wrap" class="d-none mb-2">
@@ -365,10 +389,10 @@
                                                 </div>
                                                 <small class="text-muted">La solicitud se enviara a este correo en vez del corporativo</small>
                                             </div>
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-info-circle me-1"></i>
-                                                Para copiar enlace, reenviar, cancelar o ver audit log, primero envie la solicitud con el boton <strong>"Enviar Solicitud"</strong>.
-                                            </small>
+                                            <div class="alert alert-light border py-2 px-3 mb-0 small">
+                                                <i class="bi bi-lock-fill text-danger me-1"></i>
+                                                <strong class="text-danger">Los botones deshabilitados se activaran al hacer clic en "Enviar Solicitud" al final de esta pagina.</strong>
+                                            </div>
                                         </div>
                                         <?php endif; ?>
                                     </div>
