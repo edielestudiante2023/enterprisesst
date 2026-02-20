@@ -220,15 +220,18 @@
                                                 <p class="mb-0"><?= esc($contexto['delegado_sst_cedula']) ?></p>
                                             </div>
                                         </div>
-                                        <div class="mt-2 pt-2 border-top">
-                                            <a href="#" class="small text-decoration-none" onclick="event.preventDefault(); document.getElementById('email-alt-delegado-wrap').classList.toggle('d-none');">
-                                                <i class="bi bi-envelope-at me-1"></i>Usar email alternativo
-                                            </a>
-                                            <div id="email-alt-delegado-wrap" class="d-none mt-2">
-                                                <input type="email" name="email_alt_delegado" class="form-control form-control-sm"
+                                        <div class="mt-2 pt-2 border-top d-flex gap-2 flex-wrap align-items-center">
+                                            <button type="button" class="btn btn-sm btn-outline-warning"
+                                                    onclick="document.getElementById('email-alt-delegado-wrap').classList.toggle('d-none');">
+                                                <i class="bi bi-envelope-at me-1"></i>Email alt.
+                                            </button>
+                                        </div>
+                                        <div id="email-alt-delegado-wrap" class="d-none mt-2">
+                                            <div class="input-group input-group-sm">
+                                                <input type="email" name="email_alt_delegado" class="form-control"
                                                        placeholder="correo.personal@gmail.com">
-                                                <small class="text-muted">Si el email corporativo no recibe correos, use uno alternativo</small>
                                             </div>
+                                            <small class="text-muted">La solicitud se enviara a este correo en vez del corporativo</small>
                                         </div>
                                     </div>
                                 </div>
@@ -263,15 +266,18 @@
                                                 <p class="mb-0"><?= esc($contexto['representante_legal_cedula']) ?></p>
                                             </div>
                                         </div>
-                                        <div class="mt-2 pt-2 border-top">
-                                            <a href="#" class="small text-decoration-none" onclick="event.preventDefault(); document.getElementById('email-alt-replegal-wrap').classList.toggle('d-none');">
-                                                <i class="bi bi-envelope-at me-1"></i>Usar email alternativo
-                                            </a>
-                                            <div id="email-alt-replegal-wrap" class="d-none mt-2">
-                                                <input type="email" name="email_alt_representante" class="form-control form-control-sm"
+                                        <div class="mt-2 pt-2 border-top d-flex gap-2 flex-wrap align-items-center">
+                                            <button type="button" class="btn btn-sm btn-outline-warning"
+                                                    onclick="document.getElementById('email-alt-replegal-wrap').classList.toggle('d-none');">
+                                                <i class="bi bi-envelope-at me-1"></i>Email alt.
+                                            </button>
+                                        </div>
+                                        <div id="email-alt-replegal-wrap" class="d-none mt-2">
+                                            <div class="input-group input-group-sm">
+                                                <input type="email" name="email_alt_representante" class="form-control"
                                                        placeholder="correo.personal@gmail.com">
-                                                <small class="text-muted">Si el email corporativo no recibe correos, use uno alternativo</small>
                                             </div>
+                                            <small class="text-muted">La solicitud se enviara a este correo en vez del corporativo</small>
                                         </div>
                                     </div>
                                 </div>
