@@ -47,13 +47,17 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Código de Actividad Económica <span class="text-danger">*</span></label>
                         <input type="text" name="codigo_actividad_economica" class="form-control" placeholder="Ej: 7020" required>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Ciudad del Cliente <span class="text-danger">*</span></label>
                         <input type="text" name="ciudad_cliente" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Vendedor</label>
+                        <input type="text" name="vendedor" class="form-control" placeholder="Nombre del vendedor">
                     </div>
                 </div>
             </div>
@@ -118,6 +122,20 @@
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Persona de Contacto Compras <span class="text-danger">*</span></label>
                         <input type="text" name="persona_contacto_compras" class="form-control" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Persona de Contacto Operaciones</label>
+                        <input type="text" name="persona_contacto_operaciones" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Persona de Contacto Pagos/Tesorería</label>
+                        <input type="text" name="persona_contacto_pagos" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Horarios y Días de Atención</label>
+                        <textarea name="horarios_y_dias" class="form-control" rows="2" placeholder="Ej: Lunes a Viernes 8am - 5pm"></textarea>
                     </div>
                 </div>
             </div>
@@ -200,6 +218,32 @@
                     </div>
                 </div>
                 <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Frecuencia de Servicio</label>
+                        <select name="frecuencia_servicio" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            <option value="Mensual">Mensual</option>
+                            <option value="Bimensual">Bimensual</option>
+                            <option value="Trimestral">Trimestral</option>
+                            <option value="Proyecto">Proyecto</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Plazo de Cartera</label>
+                        <select name="plazo_cartera" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            <option value="PAGO INMEDIATO">Pago Inmediato</option>
+                            <option value="PLAZO 8 DÍAS">Plazo 8 Días</option>
+                            <option value="PLAZO 15 DÍAS">Plazo 15 Días</option>
+                            <option value="PLAZO 30 DÍAS">Plazo 30 Días</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Día Cierre Facturación</label>
+                        <input type="number" name="fecha_cierre_facturacion" class="form-control" min="1" max="31" placeholder="Ej: 20">
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Logo</label>
                         <input type="file" name="logo" class="form-control" accept="image/*">
@@ -207,6 +251,39 @@
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Firma del Representante Legal</label>
                         <input type="file" name="firma_representante_legal" class="form-control" accept="image/*">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección 6: Documentos del Cliente -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-folder2-open me-2"></i>Documentos del Cliente</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">RUT</label>
+                        <input type="file" name="rut_archivo" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">PDF o imagen</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Cámara de Comercio</label>
+                        <input type="file" name="camara_comercio_archivo" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">PDF o imagen</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Cédula Representante Legal (Documento)</label>
+                        <input type="file" name="cedula_rep_legal_archivo" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">PDF o imagen</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Oferta Comercial</label>
+                        <input type="file" name="oferta_comercial_archivo" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">PDF o imagen</small>
                     </div>
                 </div>
             </div>

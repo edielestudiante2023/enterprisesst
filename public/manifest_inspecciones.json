@@ -1,0 +1,23 @@
+{
+    "name": "Inspecciones SST - Cycloid",
+    "short_name": "Inspecciones",
+    "description": "Módulo de inspecciones de seguridad y salud en el trabajo",
+    "start_url": "/inspecciones",
+    "scope": "/inspecciones/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#1c2437",
+    "theme_color": "#1c2437",
+    "icons": [
+        {
+            "src": "/assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

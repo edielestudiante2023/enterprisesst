@@ -1,56 +1,146 @@
-# ESTADO FINAL: Auditoria y nivelacion de paginas de firma electronica
+# ESTADO: Modulo Inspecciones PWA - Acta de Visita + Inspeccion Locativa
 
-**Fecha:** 2026-02-20
-**Estado:** COMPLETADO
+**Fecha:** 2026-02-24
+**Estado:** FASE 1 + FASE 2 COMPLETAS (Acta de Visita + Inspeccion Locativa)
 
 ---
 
 ## Resumen de lo realizado
 
-Se auditaron las 6 paginas de firma electronica del sistema y se nivelaron para que todas tengan los botones estandar.
+### Sesion 1 (2026-02-21): Acta de Visita
+Se replico el modulo de inspecciones PWA desde `enterprisesstph` (proyecto referencia) a `enterprisesst` (proyecto destino). Se leyeron 9 documentos de diseno (00-08) y se implemento la Fase 1 completa.
 
-### Pagina de referencia: `firma/estado.php`
-Botones estandar por firmante pendiente: `[Copiar enlace] [Reenviar] [Email alt.] [Cancelar] [Audit Log]`
+### Sesion 2 (2026-02-24): Inspeccion Locativa
+Se leyeron 5 documentos adicionales (09-13) y se implemento el modulo de Inspeccion Locativa completo.
 
-### Resultado por pagina
+### Documentacion leida
+- `enterprisesstph/docs/00_PLAN_MAESTRO.md` a `13_PATRON_INSPECCION_NITEMS.md`
+- Docs 09-13: diseno PDF, inspeccion locativa, patron camara/galeria, patron plano, patron N-items
 
-| # | Pagina | Copiar | Reenviar | Email alt. | Cancelar | Audit Log | Cambios |
-|---|--------|--------|----------|------------|----------|-----------|---------|
-| 1 | `firma/solicitar.php` | ✅ NUEVO | ✅ NUEVO | ✅ | ✅ NUEVO | ✅ NUEVO | +4 botones (condicional: solo si solicitud existe) |
-| 2 | `firma/estado.php` | ✅ | ✅ | ✅ | ✅ | ✅ | REFERENCIA |
-| 3 | `actas/estado_firmas.php` | ✅ | ✅ | ✅ | ✅ NUEVO | - | +Cancelar |
-| 4 | `comites_elecciones/estado_firmas_acta.php` | ✅ | ✅ | ✅ | ✅ | ✅ NUEVO | +Audit Log |
-| 5 | `contracts/estado_firma.php` | ✅ | ✅ | ✅ | ✅ NUEVO | - | +Cancelar |
-| 6 | `presupuesto_estado_firmas.php` | ✅ | ✅ | ✅ | ✅ NUEVO | - | +Cancelar |
+---
 
-### Nota sobre Audit Log
-Solo COPASST (#4) y Documentos SST (#1, #2) tienen Audit Log porque usan `tbl_doc_firmas_solicitudes`. Actas, Contratos y Presupuesto tienen tablas propias sin infraestructura de audit log.
+## BD - Migraciones ejecutadas
 
-## Archivos modificados
+### Acta de Visita (LOCAL + PRODUCCION OK)
+- Script: `app/SQL/crear_tablas_acta_visita.php`
+- 4 tablas: `tbl_acta_visita`, `tbl_acta_visita_integrantes`, `tbl_acta_visita_temas`, `tbl_acta_visita_fotos`
+- ALTER `tbl_pendientes` ADD `id_acta_visita` + FK
 
-### Vistas (frontend)
-- `app/Views/firma/solicitar.php` — Agregados 5 botones condicionales por firmante (si solicitud existe: Copiar/Reenviar/Email alt./Cancelar/Audit Log; si no: solo Email alt.) + SweetAlert2 + firma-helpers.js
-- `app/Views/comites_elecciones/estado_firmas_acta.php` — Agregado boton Audit Log en estados firmado y pendiente/esperando
-- `app/Views/actas/estado_firmas.php` — Agregado boton Cancelar firma en btn-group
-- `app/Views/contracts/estado_firma.php` — Agregado boton Cancelar + funcion JS `cancelarFirmaContrato()`
-- `app/Views/documentos_sst/presupuesto_estado_firmas.php` — Agregado boton Cancelar + funcion JS `cancelarFirmaPresupuesto()`
+### Inspeccion Locativa (LOCAL + PRODUCCION OK)
+- Script: `app/SQL/migrate_inspeccion_locativa.php`
+- 2 tablas: `tbl_inspeccion_locativa`, `tbl_hallazgo_locativo`
+- FK con CASCADE en hallazgos
 
-### Controllers (backend)
-- `app/Controllers/FirmaElectronicaController.php` — `cancelar()` ahora soporta AJAX (JSON response)
-- `app/Controllers/ActasController.php` — Nuevo metodo `cancelarFirmaAsistente($idActa, $idAsistente)`
-- `app/Controllers/ContractController.php` — Nuevo metodo `cancelarFirmaContrato()`
-- `app/Controllers/PzpresupuestoSstController.php` — Nuevo metodo `cancelarFirmaPresupuesto()`
+---
 
-### Rutas
-- `app/Config/Routes.php` — 3 rutas nuevas:
-  - `POST /actas/comite/(:num)/acta/(:num)/cancelar-firma/(:num)`
-  - `POST /contracts/cancelar-firma-contrato`
-  - `POST /documentos-sst/presupuesto/cancelar-firma`
+## Archivos creados - Acta de Visita (17 archivos)
+
+**Controllers (2):**
+- `app/Controllers/Inspecciones/InspeccionesController.php`
+- `app/Controllers/Inspecciones/ActaVisitaController.php`
+
+**Models (5):**
+- `app/Models/ActaVisitaModel.php`
+- `app/Models/ActaVisitaIntegranteModel.php`
+- `app/Models/ActaVisitaTemaModel.php`
+- `app/Models/ActaVisitaFotoModel.php`
+- `app/Models/VencimientosMantenimientoModel.php`
+
+**Vistas (8):**
+- `app/Views/inspecciones/layout_pwa.php`
+- `app/Views/inspecciones/dashboard.php`
+- `app/Views/inspecciones/acta_visita/list.php`
+- `app/Views/inspecciones/acta_visita/form.php`
+- `app/Views/inspecciones/acta_visita/firma.php`
+- `app/Views/inspecciones/acta_visita/view.php`
+- `app/Views/inspecciones/acta_visita/pdf.php`
+- `app/Views/inspecciones/acta_visita/confirmacion.php`
+
+**PWA (2):**
+- `public/manifest_inspecciones.json`
+- `public/sw_inspecciones.js`
+
+## Archivos creados - Inspeccion Locativa (8 archivos)
+
+**Controller (1):**
+- `app/Controllers/Inspecciones/InspeccionLocativaController.php` — CRUD: list, create, store, edit, update, view, finalizar, generatePdf, delete + privados: saveHallazgos (delete+reinsert con fotos), generarPdfInterno (DOMPDF), uploadToReportes (id_detailreport=10, tag insp_locativa_id)
+
+**Models (2):**
+- `app/Models/InspeccionLocativaModel.php` — getByConsultor, getPendientesByConsultor, getAllPendientes, getByCliente
+- `app/Models/HallazgoLocativoModel.php` — getByInspeccion, deleteByInspeccion
+
+**Vistas (4):**
+- `app/Views/inspecciones/inspeccion_locativa/list.php` — Cards con filtro Select2, conteo hallazgos, SweetAlert delete
+- `app/Views/inspecciones/inspeccion_locativa/form.php` — Accordion datos+hallazgos, patron camara/galeria, autoguardado localStorage
+- `app/Views/inspecciones/inspeccion_locativa/view.php` — Read-only con modal fotos, badges estado
+- `app/Views/inspecciones/inspeccion_locativa/pdf.php` — DOMPDF FT-SST-216 v001, intro+riesgos+enfoque+hallazgos+observaciones
+
+**Migration (1):**
+- `app/SQL/migrate_inspeccion_locativa.php`
+
+**Directorios:**
+- `public/uploads/inspecciones/locativas/hallazgos/`
+- `public/uploads/inspecciones/locativas/pdfs/`
+
+## Archivos modificados (3)
+
+- `app/Config/Routes.php` — +10 rutas inspeccion-locativa en grupo inspecciones
+- `app/Controllers/Inspecciones/InspeccionesController.php` — +use InspeccionLocativaModel, +totalLocativas, +pendientesLocativas en dashboard
+- `app/Views/inspecciones/dashboard.php` — Card "Locativas" habilitada con conteo + seccion pendientes locativas
+
+---
+
+## Hallazgo: tablas mantenimientos no existen
+- `tbl_vencimientos_mantenimientos` y `tbl_mantenimientos` NO existen en ninguna BD
+- Se agrego try-catch en InspeccionesController::getMantenimientos() y ActaVisitaController::generarPdfInterno()
+- Cuando se creen estas tablas, las queries funcionaran automaticamente
+
+---
+
+## Pendiente para proximas sesiones
+
+### Fase 3: Senalizacion (patron N-ITEMS FIJOS)
+- 37 items predefinidos en ITEMS_DEFINITION
+- Tabla master + detalle, scoring automatico
+- FT-SST-201, id_detailreport=11
+
+### Fase 4: Extintores (patron N-ITEMS DINAMICOS)
+- Items dinamicos con criterios SI/NO y estado
+- FT-SST-202, id_detailreport=12
+
+### Fase 5: Botiquin (patron PLANO)
+- 1 tabla simple, sin detalle
+- FT-SST-204, id_detailreport=13
+
+### Fase 6: Gabinetes (patron N-ITEMS DINAMICOS)
+- FT-SST-203, id_detailreport=14
+
+### Offline (doc 05)
+- IndexedDB, Background Sync, Photo compression
+
+### Push + Email + Cron (doc 06)
+- Web Push, SendGrid, Cron commands
+
+---
+
+## Verificacion rapida
+
+### Acta de Visita
+1. Login → `/inspecciones` → card "Actas de Visita" habilitada
+2. Click → listado → Nueva → formulario accordion
+3. Guardar borrador → editar → firmas → finalizar → PDF
+
+### Inspeccion Locativa
+1. Login → `/inspecciones` → card "Locativas" habilitada con conteo
+2. Click → listado vacio → Nueva → formulario con Select2
+3. Agregar hallazgos con fotos (camara/galeria) → Guardar borrador
+4. Editar → agregar mas hallazgos → Finalizar → PDF generado
+5. Ver PDF → header FT-SST-216, intro, hallazgos con fotos, estados coloreados
 
 ## Flujo Git
 ```
 git add .
-git commit -m "feat: nivelar botones firma electronica en todas las paginas"
+git commit -m "feat: modulo inspecciones PWA - acta de visita + inspeccion locativa"
 git checkout main
 git merge cycloid
 git push origin main

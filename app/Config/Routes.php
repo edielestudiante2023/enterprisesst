@@ -1429,3 +1429,81 @@ $routes->post('/editSeccionConfigPost/(:num)', 'DocSeccionesConfigController::up
 $routes->get('/deleteSeccionConfig/(:num)', 'DocSeccionesConfigController::delete/$1');
 $routes->post('/miembro-token/(:segment)/acta/(:num)/cerrar', 'MiembroComiteController::cerrarActa/$1/$2');
 $routes->get('/miembro-token/(:segment)/compromisos', 'MiembroComiteController::misCompromisos/$1');
+
+// ============================================================================
+// Catalogo de Mantenimientos (CRUD web)
+// ============================================================================
+$routes->get('mantenimientos', 'MantenimientoController::findAll');
+$routes->get('mantenimientos/add', 'MantenimientoController::addMantenimientoController');
+$routes->post('mantenimientos/addpost', 'MantenimientoController::addPostMantenimientoController');
+$routes->get('mantenimientos/edit/(:num)', 'MantenimientoController::editMantenimientoController/$1');
+$routes->post('mantenimientos/editpost/(:num)', 'MantenimientoController::editPostMantenimientoController/$1');
+$routes->get('mantenimientos/delete/(:num)', 'MantenimientoController::deleteMantenimientoController/$1');
+
+// ============================================================================
+// Vencimientos de Mantenimiento (web + emails)
+// ============================================================================
+$routes->get('vencimientos', 'VencimientosMantenimientoController::listVencimientosMantenimiento');
+$routes->get('vencimientos/add', 'VencimientosMantenimientoController::addVencimientosMantenimiento');
+$routes->post('vencimientos/addpost', 'VencimientosMantenimientoController::addpostVencimientosMantenimiento');
+$routes->get('vencimientos/edit/(:num)', 'VencimientosMantenimientoController::editVencimientosMantenimiento/$1');
+$routes->post('vencimientos/editpost/(:num)', 'VencimientosMantenimientoController::editpostVencimientosMantenimiento/$1');
+$routes->get('vencimientos/delete/(:num)', 'VencimientosMantenimientoController::deleteVencimientosMantenimiento/$1');
+$routes->get('cron/send-emails', 'VencimientosMantenimientoController::sendEmailsAutomatically');
+$routes->get('vencimientos/testEmailForVencimiento/(:num)', 'VencimientosMantenimientoController::testEmailForVencimiento/$1');
+$routes->get('vencimientos/send-emails', 'VencimientosMantenimientoController::sendEmailsForUpcomingVencimientos');
+$routes->post('vencimientos/send-selected-emails', 'VencimientosMantenimientoController::sendSelectedEmails');
+
+// Vista de vencimientos para el portal del cliente
+$routes->get('/listVencimientosCliente/(:num)', 'VencimientosClienteController::listVencimientosCliente/$1');
+
+// ============================================================================
+// Modulo de Inspecciones SST (PWA)
+// ============================================================================
+$routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', 'filter' => 'auth'], function($routes) {
+    $routes->get('/', 'InspeccionesController::dashboard');
+
+    // Acta de Visita
+    $routes->get('acta-visita', 'ActaVisitaController::list');
+    $routes->get('acta-visita/create', 'ActaVisitaController::create');
+    $routes->get('acta-visita/create/(:num)', 'ActaVisitaController::create/$1');
+    $routes->post('acta-visita/store', 'ActaVisitaController::store');
+    $routes->get('acta-visita/edit/(:num)', 'ActaVisitaController::edit/$1');
+    $routes->post('acta-visita/update/(:num)', 'ActaVisitaController::update/$1');
+    $routes->get('acta-visita/view/(:num)', 'ActaVisitaController::view/$1');
+    $routes->get('acta-visita/firma/(:num)', 'ActaVisitaController::firma/$1');
+    $routes->post('acta-visita/save-firma/(:num)', 'ActaVisitaController::saveFirma/$1');
+    $routes->get('acta-visita/pdf/(:num)', 'ActaVisitaController::generatePdf/$1');
+    $routes->post('acta-visita/finalizar/(:num)', 'ActaVisitaController::finalizar/$1');
+    $routes->get('acta-visita/delete/(:num)', 'ActaVisitaController::delete/$1');
+
+    // Inspeccion Locativa
+    $routes->get('inspeccion-locativa', 'InspeccionLocativaController::list');
+    $routes->get('inspeccion-locativa/create', 'InspeccionLocativaController::create');
+    $routes->get('inspeccion-locativa/create/(:num)', 'InspeccionLocativaController::create/$1');
+    $routes->post('inspeccion-locativa/store', 'InspeccionLocativaController::store');
+    $routes->get('inspeccion-locativa/edit/(:num)', 'InspeccionLocativaController::edit/$1');
+    $routes->post('inspeccion-locativa/update/(:num)', 'InspeccionLocativaController::update/$1');
+    $routes->get('inspeccion-locativa/view/(:num)', 'InspeccionLocativaController::view/$1');
+    $routes->get('inspeccion-locativa/pdf/(:num)', 'InspeccionLocativaController::generatePdf/$1');
+    $routes->post('inspeccion-locativa/finalizar/(:num)', 'InspeccionLocativaController::finalizar/$1');
+    $routes->get('inspeccion-locativa/delete/(:num)', 'InspeccionLocativaController::delete/$1');
+
+    // Gestion de Mantenimientos (vencimientos PWA)
+    $routes->get('mantenimientos', 'MantenimientosPwaController::list');
+    $routes->get('mantenimientos/cliente/(:num)', 'MantenimientosPwaController::list/$1');
+    $routes->get('mantenimientos/create/(:num)', 'MantenimientosPwaController::create/$1');
+    $routes->post('mantenimientos/store', 'MantenimientosPwaController::store');
+    $routes->get('mantenimientos/edit/(:num)', 'MantenimientosPwaController::edit/$1');
+    $routes->post('mantenimientos/update/(:num)', 'MantenimientosPwaController::update/$1');
+    $routes->post('mantenimientos/ejecutado/(:num)', 'MantenimientosPwaController::markEjecutado/$1');
+    $routes->get('mantenimientos/delete/(:num)', 'MantenimientosPwaController::delete/$1');
+
+    // API endpoints AJAX
+    $routes->get('api/clientes', 'InspeccionesController::getClientes');
+    $routes->get('api/pendientes/(:num)', 'InspeccionesController::getPendientes/$1');
+    $routes->get('api/mantenimientos/(:num)', 'InspeccionesController::getMantenimientos/$1');
+    $routes->get('api/mantenimientos-catalog', 'MantenimientosPwaController::apiCatalog');
+    $routes->post('api/mantenimientos-catalog', 'MantenimientosPwaController::apiAddCatalog');
+    $routes->get('api/vencimientos/(:num)', 'MantenimientosPwaController::apiVencimientos/$1');
+});

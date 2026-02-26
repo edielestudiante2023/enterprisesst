@@ -73,12 +73,23 @@ class ConsultantController extends Controller
 
         if ($logo && $logo->isValid() && !$logo->hasMoved()) {
             $logoName = $logo->getRandomName();
-            $logo->move(ROOTPATH . 'public/uploads', $logoName); // Cambiado WRITEPATH por ROOTPATH
+            $logo->move(ROOTPATH . 'public/uploads', $logoName);
         }
 
         if ($firma && $firma->isValid() && !$firma->hasMoved()) {
             $firmaName = $firma->getRandomName();
-            $firma->move(ROOTPATH . 'public/uploads', $firmaName); // Cambiado WRITEPATH por ROOTPATH
+            $firma->move(ROOTPATH . 'public/uploads', $firmaName);
+        }
+
+        // Procesar archivos de documentos del cliente
+        $docFiles = ['rut_archivo', 'camara_comercio_archivo', 'cedula_rep_legal_archivo', 'oferta_comercial_archivo'];
+        $docNames = [];
+        foreach ($docFiles as $fieldName) {
+            $file = $this->request->getFile($fieldName);
+            if ($file && $file->isValid() && !$file->hasMoved()) {
+                $docNames[$fieldName] = $file->getRandomName();
+                $file->move(ROOTPATH . 'public/uploads', $docNames[$fieldName]);
+            }
         }
 
         $data = [
@@ -99,11 +110,25 @@ class ConsultantController extends Controller
             'fecha_fin_contrato' => $this->request->getVar('fecha_fin_contrato'),
             'ciudad_cliente' => $this->request->getVar('ciudad_cliente'),
             'estado' => 'activo',
-            'id_consultor' => $id_consultor,  // Modificado para usar el valor del formulario
+            'id_consultor' => $id_consultor,
             'logo' => $logoName,
             'firma_representante_legal' => $firmaName,
             'estandares' => $this->request->getVar('estandares'),
+            'vendedor' => $this->request->getVar('vendedor'),
+            'persona_contacto_operaciones' => $this->request->getVar('persona_contacto_operaciones'),
+            'persona_contacto_pagos' => $this->request->getVar('persona_contacto_pagos'),
+            'horarios_y_dias' => $this->request->getVar('horarios_y_dias'),
+            'frecuencia_servicio' => $this->request->getVar('frecuencia_servicio'),
+            'plazo_cartera' => $this->request->getVar('plazo_cartera'),
+            'fecha_cierre_facturacion' => $this->request->getVar('fecha_cierre_facturacion'),
         ];
+
+        // Agregar archivos de documentos al data
+        foreach ($docFiles as $fieldName) {
+            if (isset($docNames[$fieldName])) {
+                $data[$fieldName] = $docNames[$fieldName];
+            }
+        }
 
         if ($clientModel->save($data)) {
             // Obtener el ID del cliente recién creado
@@ -215,6 +240,19 @@ class ConsultantController extends Controller
                 $resumen['indicadores'] = $resultado['creados'];
             } catch (\Exception $e) {
                 log_message('error', 'Error al generar Indicadores Legales: ' . $e->getMessage());
+            }
+
+            // Enviar email de felicitación por cliente nuevo
+            try {
+                $this->enviarEmailClienteNuevo(
+                    $nombreCliente,
+                    $nitCliente,
+                    $this->request->getVar('ciudad_cliente') ?? '',
+                    $this->request->getVar('vendedor') ?? '',
+                    $this->request->getVar('frecuencia_servicio') ?? ''
+                );
+            } catch (\Exception $e) {
+                log_message('error', 'Error al enviar email de felicitación: ' . $e->getMessage());
             }
 
             session()->setFlashdata('msg', 'Cliente agregado exitosamente.');
@@ -495,8 +533,32 @@ class ConsultantController extends Controller
             'ciudad_cliente' => $this->request->getVar('ciudad_cliente'),
             'estado' => $this->request->getVar('estado'),
             'id_consultor' => $this->request->getVar('id_consultor'),
-            'estandares' => $this->request->getVar('estandares')
+            'estandares' => $this->request->getVar('estandares'),
+            'vendedor' => $this->request->getVar('vendedor'),
+            'persona_contacto_operaciones' => $this->request->getVar('persona_contacto_operaciones'),
+            'persona_contacto_pagos' => $this->request->getVar('persona_contacto_pagos'),
+            'horarios_y_dias' => $this->request->getVar('horarios_y_dias'),
+            'frecuencia_servicio' => $this->request->getVar('frecuencia_servicio'),
+            'plazo_cartera' => $this->request->getVar('plazo_cartera'),
+            'fecha_cierre_facturacion' => $this->request->getVar('fecha_cierre_facturacion'),
         ];
+
+        // Manejar la subida de documentos del cliente (RUT, Cámara, Cédula RL, Oferta)
+        $docFiles = ['rut_archivo', 'camara_comercio_archivo', 'cedula_rep_legal_archivo', 'oferta_comercial_archivo'];
+        foreach ($docFiles as $fieldName) {
+            $file = $this->request->getFile($fieldName);
+            if ($file && $file->isValid() && !$file->hasMoved()) {
+                $newName = $file->getRandomName();
+                $file->move(ROOTPATH . 'public/uploads', $newName);
+
+                // Eliminar archivo anterior si existe
+                if (!empty($client[$fieldName]) && file_exists(ROOTPATH . 'public/uploads/' . $client[$fieldName])) {
+                    unlink(ROOTPATH . 'public/uploads/' . $client[$fieldName]);
+                }
+
+                $data[$fieldName] = $newName;
+            }
+        }
 
         // Manejar la subida de un nuevo logo
         $newLogo = $this->request->getFile('logo');
@@ -749,6 +811,56 @@ class ConsultantController extends Controller
         } catch (\Exception $e) {
             // Capturar la excepción y mostrar un mensaje de advertencia
             return redirect()->to('/listClients')->with('error', 'No puedes eliminar clientes que ya tienen registros grabados en la base de datos. Póngase en contacto con su administrador.');
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Email de felicitación por cliente nuevo (SendGrid)
+    // ─────────────────────────────────────────────────────────────
+
+    private function enviarEmailClienteNuevo(string $nombreCliente, string $nit, string $ciudad, string $vendedor = '', string $frecuenciaServicio = '')
+    {
+        require_once ROOTPATH . 'vendor/autoload.php';
+
+        $email = new \SendGrid\Mail\Mail();
+        $email->setFrom(
+            getenv('SENDGRID_FROM_EMAIL') ?: 'notificacion.cycloidtalent@cycloidtalent.com',
+            getenv('SENDGRID_FROM_NAME') ?: 'Enterprise SST'
+        );
+        $email->setSubject("NUEVO CLIENTE GANADO — {$nombreCliente}");
+
+        $destinatarios = [
+            'natalia.jimenez@cycloidtalent.com',
+            'diana.cuestas@cycloidtalent.com',
+            'edison.cuervo@cycloidtalent.com',
+            'solangel.cuervo@cycloidtalent.com',
+            'eleyson.segura@cycloidtalent.com',
+        ];
+
+        foreach ($destinatarios as $dest) {
+            $email->addTo($dest);
+        }
+
+        $fecha = date('d/m/Y');
+
+        $html = view('emails/cliente_nuevo', [
+            'nombre_cliente'      => $nombreCliente,
+            'nit'                 => $nit,
+            'ciudad'              => $ciudad,
+            'vendedor'            => $vendedor,
+            'frecuencia_servicio' => $frecuenciaServicio,
+            'fecha'               => $fecha,
+        ]);
+
+        $email->addContent('text/html', $html);
+
+        $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+        $response = $sendgrid->send($email);
+
+        if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
+            log_message('info', "Email de felicitación enviado para cliente: {$nombreCliente}");
+        } else {
+            log_message('error', "Error al enviar email de felicitación. Status: {$response->statusCode()} Body: {$response->body()}");
         }
     }
 }

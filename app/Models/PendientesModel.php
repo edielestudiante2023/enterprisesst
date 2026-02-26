@@ -18,6 +18,7 @@ class PendientesModel extends Model
         'conteo_dias',
         'estado_avance',
         'evidencia_para_cerrarla',
+        'id_acta_visita',
     ];
 
     protected $useTimestamps = true;

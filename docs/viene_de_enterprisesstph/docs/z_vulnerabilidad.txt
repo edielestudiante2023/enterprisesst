@@ -1,0 +1,113 @@
+MATRIZ DE ANÁLISIS DE VULNERABILIDAD POR AMENAZA
+<<[CLIENTE]>>
+
+
+Matriz de Vulnerabilidad por Amenaza: Una Herramienta para la Seguridad Estructural
+
+La matriz de vulnerabilidad por amenaza es una herramienta fundamental para evaluar la seguridad estructural de una edificación frente a diferentes tipos de amenazas, como sismos, inundaciones, incendios y vientos fuertes.
+Esta matriz permite identificar las debilidades de la estructura y tomar las medidas correctivas necesarias para minimizar el riesgo de colapso u otros daños durante una emergencia.
+Componentes Clave de la Matriz:
+Amenazas: Se identifican y clasifican las amenazas potenciales a las que está expuesta la edificación, considerando su probabilidad de ocurrencia y severidad.
+
+
+Vulnerabilidades: Se evalúan las características de la edificación que la hacen susceptible a los daños causados por las amenazas identificadas. Esto incluye aspectos como el diseño, la calidad de los materiales, la antigüedad y el estado de mantenimiento.
+
+
+Nivel de Riesgo: Se combina la información sobre las amenazas y las vulnerabilidades para determinar el nivel de riesgo general que enfrenta la edificación.
+
+
+Tabla de Comparación del Nivel de Vulnerabilidad:
+La tabla que mencionas presenta una clasificación del nivel de vulnerabilidad en función de un rango numérico, asignando acciones a seguir para cada rango:
+0-50: Alta vulnerabilidad funcional. Se requiere una revisión exhaustiva de todos los aspectos que puedan representar un riesgo para las personas en caso de emergencia.
+
+
+51-70: Vulnerabilidad media-alta y plan de emergencia incompleto. El plan podría activarse parcialmente en una emergencia, pero se requieren mejoras significativas.
+
+
+71-90: Baja vulnerabilidad y plan de emergencia apenas funcional. Se recomienda optimizar el plan para garantizar su efectividad.
+
+
+91-100: Vulnerabilidad mínima y plan de emergencia en óptimas condiciones. Se deben mantener las medidas preventivas y realizar revisiones periódicas para asegurar este nivel de seguridad.
+
+
+Importancia de la Matriz:
+La matriz de vulnerabilidad por amenaza es una herramienta esencial para la gestión del riesgo en las edificaciones. Permite:
+Priorizar las acciones de mitigación: Enfocarse en las amenazas y vulnerabilidades que representan el mayor riesgo para la seguridad de la edificación y sus ocupantes.
+
+
+Asignar recursos de manera eficiente: Optimizar el uso de recursos disponibles para implementar las medidas de prevención y protección más adecuadas.
+
+
+Tomar decisiones informadas: Basar las decisiones sobre la seguridad de la edificación en datos concretos y análisis objetivos.
+
+
+Mejorar la comunicación: Facilitar la comunicación entre diferentes actores involucrados en la gestión del riesgo, como propietarios, inquilinos, autoridades y profesionales de la ingeniería.
+
+
+Cumplir con regulaciones: Asegurar el cumplimiento de las normas y códigos de construcción vigentes relacionados con la seguridad estructural.
+
+ITEM
+CALIFICACION
+1- EL PLAN DE EVACUACIÓN
+ <<[1- EL PLAN DE EVACUACIÓN]>>
+2. ALARMA PARA EVACUACIÓN
+ <<[2. ALARMA PARA EVACUACIÓN]>>
+3. RUTA DE EVACUACIÓN
+ <<[3. RUTA DE EVACUACIÓN]>>
+4. LOS VISITANTES DEL CONJUNTO CONOCEN LAS RUTAS DE EVACUACIÓN
+ <<[4. LOS VISITANTES DEL CONJUNTO CONOCEN LAS RUTAS DE EVACUACIÓN]>>
+5. LOS PUNTOS DE REUNIÓN EN UNA EVACUACIÓN
+ <<[5. LOS PUNTOS DE REUNIÓN EN UNA EVACUACIÓN]>>
+6. LOS PUNTOS DE REUNIÓN EN UNA EVACUACIÓN (PARTE 2)
+ <<[6. LOS PUNTOS DE REUNIÓN EN UNA EVACUACIÓN (PARTE 2)]>>
+7. LA SEÑALIZACIÓN PARA EVACUACIÓN
+ <<[7. LA SEÑALIZACIÓN PARA EVACUACIÓN]>>
+8. LAS RUTAS DE EVACUACIÓN SON
+ <<[8. LAS RUTAS DE EVACUACIÓN SON]>>
+9. LA RUTA PRINCIPAL DE EVACUACIÓN
+ <<[9. LA RUTA PRINCIPAL DE EVACUACIÓN]>>
+10. LA SEÑAL DE ALARMA
+ <<[10. LA SEÑAL DE ALARMA]>>
+11. SISTEMA DE DETECCIÓN
+ <<[11. SISTEMA DE DETECCIÓN]>>
+12. EL SISTEMA DE ILUMINACIÓN
+ <<[12. EL SISTEMA DE ILUMINACIÓN]>>
+13. EL SISTEMA DE ILUMINACIÓN DE EMERGENCIA
+ <<[13. EL SISTEMA DE ILUMINACIÓN DE EMERGENCIA]>>
+14. EL SISTEMA CONTRA INCENDIO
+ <<[14. EL SISTEMA CONTRA INCENDIO]>>
+15. LOS EXTINTORES PARA INCENDIO
+ <<[15. LOS EXTINTORES PARA INCENDIO]>>
+16. DIVULGACIÓN DEL PLAN DE EMERGENCIA A LOS EMPLEADOS
+ <<[16. DIVULGACIÓN DEL PLAN DE EMERGENCIA A LOS EMPLEADOS]>>
+17. COORDINADOR DEL PLAN DE EMERGENCIA
+ <<[17. COORDINADOR DEL PLAN DE EMERGENCIA]>>
+18. LA BRIGADA DE EMERGENCIA
+ <<[18. LA BRIGADA DE EMERGENCIA]>>
+19. SE HAN REALIZADO SIMULACROS
+ <<[19. SE HAN REALIZADO SIMULACROS]>>
+20.
+  ENTIDADES DE SOCORRO EXTERNAS
+ <<[20. ENTIDADES DE SOCORRO EXTERNAS]>>
+21. LOS OCUPANTES DEL CONJUNTO SON
+ <<[21. LOS OCUPANTES DEL CONJUNTO SON]>>
+22. EN LA ENTRADA DEL CONJUNTO O EN CADA PISO
+ <<[22. EN LA ENTRADA DEL CONJUNTO O EN CADA PISO]>>
+23. LAS RUTAS DE CIRCULACIÓN
+ <<[23. LAS RUTAS DE CIRCULACIÓN]>>
+24. LAS PUERTAS DE SALIDA DEL CONJUNTO
+ <<[24. LAS PUERTAS DE SALIDA DEL CONJUNTO]>>
+25. ESTRUCTURA Y TIPO DE CONSTRUCCIÓN
+ <<[25. ESTRUCTURA Y TIPO DE CONSTRUCCIÓN]>>
+OBSERVACIONES DEL CONSULTOR
+ <<[OBSERVACIONES DEL CONSULTOR]>>
+
+
+SUMAN  <<[SUMAN]>>
+
+RESULTADO DE LA EVALUACIÓN
+
+<<[RESULTADO DE LA EVALUCACIÓN]>>
+
+
+

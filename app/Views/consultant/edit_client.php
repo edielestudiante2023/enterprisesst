@@ -295,13 +295,17 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Código de Actividad Económica</label>
                         <input type="text" name="codigo_actividad_economica" value="<?= esc($client['codigo_actividad_economica']) ?>" class="form-control">
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Ciudad</label>
                         <input type="text" name="ciudad_cliente" value="<?= esc($client['ciudad_cliente']) ?>" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Vendedor</label>
+                        <input type="text" name="vendedor" value="<?= esc($client['vendedor'] ?? '') ?>" class="form-control">
                     </div>
                 </div>
             </div>
@@ -368,6 +372,20 @@
                         <input type="text" name="persona_contacto_compras" value="<?= esc($client['persona_contacto_compras']) ?>" class="form-control">
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Persona de Contacto Operaciones</label>
+                        <input type="text" name="persona_contacto_operaciones" value="<?= esc($client['persona_contacto_operaciones'] ?? '') ?>" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Persona de Contacto Pagos/Tesorería</label>
+                        <input type="text" name="persona_contacto_pagos" value="<?= esc($client['persona_contacto_pagos'] ?? '') ?>" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Horarios y Días de Atención</label>
+                        <textarea name="horarios_y_dias" class="form-control" rows="2"><?= esc($client['horarios_y_dias'] ?? '') ?></textarea>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -429,6 +447,30 @@
                     </div>
                 </div>
                 <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Frecuencia de Servicio</label>
+                        <select name="frecuencia_servicio" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            <?php foreach (['Mensual','Bimensual','Trimestral','Proyecto'] as $op): ?>
+                                <option value="<?= $op ?>" <?= ($client['frecuencia_servicio'] ?? '') == $op ? 'selected' : '' ?>><?= $op ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Plazo de Cartera</label>
+                        <select name="plazo_cartera" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            <?php foreach (['PAGO INMEDIATO' => 'Pago Inmediato', 'PLAZO 8 DÍAS' => 'Plazo 8 Días', 'PLAZO 15 DÍAS' => 'Plazo 15 Días', 'PLAZO 30 DÍAS' => 'Plazo 30 Días'] as $val => $label): ?>
+                                <option value="<?= $val ?>" <?= ($client['plazo_cartera'] ?? '') == $val ? 'selected' : '' ?>><?= $label ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Día Cierre Facturación</label>
+                        <input type="number" name="fecha_cierre_facturacion" value="<?= esc($client['fecha_cierre_facturacion'] ?? '') ?>" class="form-control" min="1" max="31">
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Logo</label>
                         <input type="file" name="logo" class="form-control" accept="image/*">
@@ -446,6 +488,63 @@
                             <div class="mt-2 p-2 border rounded d-inline-block bg-light">
                                 <img src="<?= base_url('uploads/' . $client['firma_representante_legal']) ?>" alt="Firma actual" style="max-height: 80px;">
                                 <small class="d-block text-muted mt-1">Firma actual</small>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección 6: Documentos del Cliente -->
+        <div class="card mb-4 section-card shadow-sm">
+            <div class="card-header py-3">
+                <h5 class="mb-0"><i class="bi bi-folder2-open me-2 text-primary"></i>Documentos del Cliente</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">RUT</label>
+                        <input type="file" name="rut_archivo" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <?php if (!empty($client['rut_archivo'])): ?>
+                            <div class="mt-2">
+                                <a href="<?= base_url('uploads/' . $client['rut_archivo']) ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>Ver archivo actual
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Cámara de Comercio</label>
+                        <input type="file" name="camara_comercio_archivo" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <?php if (!empty($client['camara_comercio_archivo'])): ?>
+                            <div class="mt-2">
+                                <a href="<?= base_url('uploads/' . $client['camara_comercio_archivo']) ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>Ver archivo actual
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Cédula Representante Legal (Documento)</label>
+                        <input type="file" name="cedula_rep_legal_archivo" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <?php if (!empty($client['cedula_rep_legal_archivo'])): ?>
+                            <div class="mt-2">
+                                <a href="<?= base_url('uploads/' . $client['cedula_rep_legal_archivo']) ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>Ver archivo actual
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Oferta Comercial</label>
+                        <input type="file" name="oferta_comercial_archivo" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <?php if (!empty($client['oferta_comercial_archivo'])): ?>
+                            <div class="mt-2">
+                                <a href="<?= base_url('uploads/' . $client['oferta_comercial_archivo']) ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>Ver archivo actual
+                                </a>
                             </div>
                         <?php endif; ?>
                     </div>
