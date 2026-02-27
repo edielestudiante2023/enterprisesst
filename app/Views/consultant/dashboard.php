@@ -507,32 +507,32 @@
         <?php endif; ?>
 
         <!-- Botones de Acceso Rápido -->
-        <div class="text-center mb-4">
-            <a href="<?= base_url('/consultor/selector-cliente') ?>" target="_blank" rel="noopener noreferrer">
-                <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary)); border: none;">
-                    <i class="fas fa-eye me-2"></i>Ver Vista del Cliente
-                </button>
-            </a>
-            <a href="<?= base_url('/admin/users') ?>" target="_blank" rel="noopener noreferrer">
-                <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none;" aria-label="Gestión de Usuarios">
-                    <i class="fas fa-users-cog me-2"></i>Gestión de Usuarios
-                </button>
-            </a>
-            <a href="<?= base_url('/admin/usage') ?>" target="_blank" rel="noopener noreferrer">
-                <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;">
-                    <i class="fas fa-chart-line me-2"></i>Consumo de Plataforma
-                </button>
-            </a>
-            <a href="<?= base_url('/documentos/marco-normativo-dashboard') ?>" target="_blank" rel="noopener noreferrer">
-                <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, #f093fb, #f5576c); border: none;" title="Gestión centralizada de marcos normativos para generación IA">
-                    <i class="fas fa-book-open me-2"></i>Marcos Normativos IA
-                </button>
-            </a>
-            <a href="<?= base_url('/inspecciones') ?>" target="_blank" rel="noopener noreferrer">
-                <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #1c2437, #bd9751); border: none;" title="Módulo PWA de Inspecciones SST">
+        <div class="row justify-content-center mb-4 gx-2 gy-2 px-2">
+            <div class="col-6 col-md-auto">
+                <a href="<?= base_url('/inspecciones') ?>" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #1c2437, #bd9751); border: none;" title="Módulo PWA de Inspecciones SST">
                     <i class="fas fa-hard-hat me-2"></i>Inspecciones SST
-                </button>
-            </a>
+                </a>
+            </div>
+            <div class="col-6 col-md-auto">
+                <a href="<?= base_url('/consultor/selector-cliente') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary)); border: none;">
+                    <i class="fas fa-eye me-2"></i>Vista del Cliente
+                </a>
+            </div>
+            <div class="col-6 col-md-auto">
+                <a href="<?= base_url('/admin/users') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none;">
+                    <i class="fas fa-users-cog me-2"></i>Gestión Usuarios
+                </a>
+            </div>
+            <div class="col-6 col-md-auto">
+                <a href="<?= base_url('/admin/usage') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;">
+                    <i class="fas fa-chart-line me-2"></i>Consumo Plataforma
+                </a>
+            </div>
+            <div class="col-6 col-md-auto">
+                <a href="<?= base_url('/documentos/marco-normativo-dashboard') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #f093fb, #f5576c); border: none;">
+                    <i class="fas fa-book-open me-2"></i>Marcos Normativos IA
+                </a>
+            </div>
         </div>
 
         <!-- Dashboards Analíticos -->
