@@ -402,52 +402,98 @@
         /* Responsive design */
         @media (max-width: 768px) {
             .header-logos-custom {
-                flex-direction: column;
-                gap: 15px;
+                flex-direction: row;
+                gap: 8px;
+                justify-content: center;
             }
 
             .header-logos-custom img {
-                max-height: 50px;
+                max-height: 32px;
+            }
+
+            .navbar-custom {
+                padding: 8px 0;
             }
 
             .content-wrapper-custom {
-                margin-top: 180px;
+                margin-top: 65px;
+                padding: 0 8px;
+            }
+
+            .welcome-banner-custom {
+                padding: 16px 14px;
+                border-radius: 14px;
+                margin-bottom: 16px;
             }
 
             .welcome-banner-custom h3 {
-                font-size: 2rem;
+                font-size: 1.1rem;
+                margin-bottom: 4px;
             }
 
             .welcome-banner-custom h4 {
-                font-size: 1.4rem;
+                font-size: 0.95rem;
+                margin-bottom: 2px;
             }
 
             .welcome-banner-custom p {
-                font-size: 1.1rem;
+                font-size: 0.85rem;
             }
 
-            .table-container-custom {
-                padding: 15px;
-            }
-
-            .social-icons-custom {
-                flex-wrap: wrap;
-                gap: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .welcome-banner-custom {
-                padding: 25px 20px;
+            .btn-logout-custom {
+                padding: 10px 14px;
+                font-size: 0.8rem;
+                border-radius: 10px;
+                letter-spacing: 0;
             }
 
             .table-container-custom {
                 padding: 10px;
             }
 
+            .social-icons-custom {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .social-icons-custom a {
+                width: 38px;
+                height: 38px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-logos-custom img {
+                max-height: 26px;
+            }
+
+            .content-wrapper-custom {
+                margin-top: 55px;
+            }
+
+            .welcome-banner-custom {
+                padding: 12px 10px;
+            }
+
+            .welcome-banner-custom h3 {
+                font-size: 0.95rem;
+            }
+
+            .welcome-banner-custom h4 {
+                font-size: 0.85rem;
+            }
+
+            .welcome-banner-custom p {
+                font-size: 0.75rem;
+            }
+
             .btn-logout-custom {
-                padding: 12px 30px;
-                font-size: 1rem;
+                padding: 8px 10px;
+                font-size: 0.75rem;
+            }
+
+            .table-container-custom {
+                padding: 8px;
             }
         }
     </style>
