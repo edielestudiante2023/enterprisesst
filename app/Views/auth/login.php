@@ -15,15 +15,19 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            min-height: 100vh;
+        }
+
         body {
             background: linear-gradient(to top, #0f0c29 0%, #302b63 30%, #24243e 50%, #4a3f6b 70%, #ff6b6b 85%, #ffc371 95%, #ffe259 100%);
-            height: 100vh;
-            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             animation: backgroundShift 20s ease-in-out infinite;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         @keyframes backgroundShift {
@@ -94,6 +98,7 @@
                 transparent 100%
             );
             z-index: 1;
+            pointer-events: none;
         }
 
         .waves::before {
@@ -462,22 +467,53 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
+            body {
+                align-items: flex-start;
+                padding: 20px 0;
+            }
+
+            .particles, .waves {
+                position: absolute;
+            }
+
             .main-container {
                 flex-direction: column;
                 max-width: 95%;
+                min-height: auto;
+                overflow: visible;
+                margin: 10px auto;
             }
-            
+
             .logos-panel, .login-panel {
                 width: 100%;
             }
-            
+
             .logos-panel {
-                min-height: 200px;
+                min-height: 180px;
+                padding: 25px;
             }
-            
+
+            .logo-image-wrapper {
+                max-width: 140px;
+                padding: 10px;
+                margin: 8px auto;
+            }
+
+            .login-panel {
+                padding: 30px 25px;
+            }
+
+            .login-header {
+                margin-bottom: 25px;
+            }
+
             .login-title {
                 font-size: 1.8rem;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
             }
         }
 
