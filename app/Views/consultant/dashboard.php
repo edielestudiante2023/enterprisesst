@@ -524,8 +524,13 @@
                 </button>
             </a>
             <a href="<?= base_url('/documentos/marco-normativo-dashboard') ?>" target="_blank" rel="noopener noreferrer">
-                <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #f093fb, #f5576c); border: none;" title="Gestión centralizada de marcos normativos para generación IA">
+                <button type="button" class="btn btn-logout-custom me-3" style="background: linear-gradient(135deg, #f093fb, #f5576c); border: none;" title="Gestión centralizada de marcos normativos para generación IA">
                     <i class="fas fa-book-open me-2"></i>Marcos Normativos IA
+                </button>
+            </a>
+            <a href="<?= base_url('/inspecciones') ?>" target="_blank" rel="noopener noreferrer">
+                <button type="button" class="btn btn-logout-custom" style="background: linear-gradient(135deg, #1c2437, #bd9751); border: none;" title="Módulo PWA de Inspecciones SST">
+                    <i class="fas fa-hard-hat me-2"></i>Inspecciones SST
                 </button>
             </a>
         </div>

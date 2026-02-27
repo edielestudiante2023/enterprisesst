@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#1c2437">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest_inspecciones.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <title><?= $title ?? 'Inspecciones SST' ?></title>
 
     <!-- Bootstrap 5.3 -->
@@ -318,6 +320,21 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw_inspecciones.js', { scope: '/inspecciones/' })
+                .then(function(reg) {
+                    console.log('SW registrado:', reg.scope);
+                })
+                .catch(function(err) {
+                    console.log('SW error:', err);
+                });
+        });
+    }
+    </script>
 
     <!-- Flash messages -->
     <script>
