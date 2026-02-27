@@ -220,6 +220,9 @@ class UserModel extends Model
             unset($data['password']);
         }
 
+        // Resolver placeholder {id_usuario} en is_unique para excluir el registro actual
+        $this->validationRules['email'] = "required|valid_email|is_unique[tbl_usuarios.email,id_usuario,{$id}]";
+
         return $this->update($id, $data);
     }
 }
