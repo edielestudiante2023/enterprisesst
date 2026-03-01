@@ -28,15 +28,15 @@ class EditorSeccionesController extends Controller
             ->getResultArray();
 
         // Obtener documentos con info de versión vigente
-        $documentos = $this->db->table('tbl_documentos_sst d')
-            ->select('d.id_documento, d.id_cliente, d.tipo_documento, d.codigo, d.titulo, d.anio, d.estado, d.version, d.updated_at, c.nombre_cliente, v.id_version, v.version_texto, v.estado as estado_version')
-            ->join('tbl_clientes c', 'c.id_cliente = d.id_cliente', 'left')
-            ->join('tbl_doc_versiones_sst v', 'v.id_documento = d.id_documento AND v.estado = "vigente"', 'left')
-            ->where('d.contenido IS NOT NULL')
-            ->where('d.contenido !=', '')
-            ->orderBy('d.updated_at', 'DESC')
-            ->get()
-            ->getResultArray();
+        $documentos = $this->db->query("
+            SELECT d.id_documento, d.id_cliente, d.tipo_documento, d.codigo, d.titulo, d.anio, d.estado, d.version, d.updated_at,
+                   c.nombre_cliente, v.id_version, v.version_texto, v.estado AS estado_version
+            FROM tbl_documentos_sst d
+            LEFT JOIN tbl_clientes c ON c.id_cliente = d.id_cliente
+            LEFT JOIN tbl_doc_versiones_sst v ON v.id_documento = d.id_documento AND v.estado = 'vigente'
+            WHERE d.contenido IS NOT NULL AND d.contenido != ''
+            ORDER BY d.updated_at DESC
+        ")->getResultArray();
 
         return view('admin/editor_secciones/index', [
             'documentos' => $documentos,
