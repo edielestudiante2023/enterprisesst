@@ -589,6 +589,11 @@ $routes->get('/admin/usage/chart-data', 'UsageController::chartData');
 $routes->get('admin/dashboard-documentos-sst', 'DashboardDocumentosSstController::index');
 $routes->get('admin/dashboard-documentos-sst/data', 'DashboardDocumentosSstController::getData');
 
+// Editor de Secciones de Documentos (edición directa sin versionamiento)
+$routes->get('admin/editor-secciones', 'EditorSeccionesController::index');
+$routes->get('admin/editor-secciones/edit/(:num)', 'EditorSeccionesController::edit/$1');
+$routes->post('admin/editor-secciones/update/(:num)', 'EditorSeccionesController::update/$1');
+
 /* Rutas de Recuperación de Contraseña: */
 
 

@@ -579,6 +579,11 @@
                     <i class="fas fa-book-open me-2"></i>Marcos Normativos IA
                 </a>
             </div>
+            <div class="col-6 col-md-auto">
+                <a href="<?= base_url('/admin/editor-secciones') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #e44d26, #f16529); border: none;">
+                    <i class="fas fa-edit me-2"></i>Editor Secciones
+                </a>
+            </div>
         </div>
 
         <!-- Dashboards Analíticos -->
