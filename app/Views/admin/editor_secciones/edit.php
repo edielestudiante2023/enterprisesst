@@ -70,6 +70,26 @@
         </div>
     </div>
 
+    <!-- Buscador de texto -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body py-2">
+            <div class="row align-items-center g-2">
+                <div class="col">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="buscadorTexto" class="form-control" placeholder="Buscar texto en todas las secciones... (ej: 66.67%, incapacidad)">
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <span id="resultadoBusqueda" class="badge bg-secondary">0 coincidencias</span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary ms-1" id="btnPrevMatch" disabled title="Anterior"><i class="bi bi-chevron-up"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnNextMatch" disabled title="Siguiente"><i class="bi bi-chevron-down"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger ms-1" id="btnLimpiarBusqueda" title="Limpiar"><i class="bi bi-x-lg"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Formulario de secciones -->
     <form action="<?= site_url('admin/editor-secciones/update/' . $documento['id_documento']) ?>" method="post">
         <?= csrf_field() ?>
@@ -135,5 +155,99 @@ function updateCount(textarea, idx) {
     var count = textarea.value.length;
     document.getElementById('count_' + idx).textContent = count.toLocaleString() + ' chars';
 }
+
+// Buscador de texto en secciones
+(function() {
+    var input = document.getElementById('buscadorTexto');
+    var badge = document.getElementById('resultadoBusqueda');
+    var btnNext = document.getElementById('btnNextMatch');
+    var btnPrev = document.getElementById('btnPrevMatch');
+    var btnClear = document.getElementById('btnLimpiarBusqueda');
+    var matches = [];
+    var currentMatch = -1;
+
+    function buscar() {
+        var query = input.value.trim().toLowerCase();
+        matches = [];
+        currentMatch = -1;
+
+        // Limpiar highlights previos
+        document.querySelectorAll('.seccion-card').forEach(function(card) {
+            card.style.border = '';
+        });
+
+        if (!query) {
+            badge.textContent = '0 coincidencias';
+            badge.className = 'badge bg-secondary';
+            btnNext.disabled = true;
+            btnPrev.disabled = true;
+            return;
+        }
+
+        document.querySelectorAll('.seccion-textarea').forEach(function(textarea) {
+            var contenido = textarea.value.toLowerCase();
+            if (contenido.indexOf(query) !== -1) {
+                var idx = textarea.getAttribute('data-idx');
+                matches.push({ textarea: textarea, idx: idx });
+                // Expandir la sección colapsada
+                var collapse = document.getElementById('seccion_' + idx);
+                if (collapse && !collapse.classList.contains('show')) {
+                    new bootstrap.Collapse(collapse, { show: true });
+                }
+                // Highlight la card
+                textarea.closest('.seccion-card').style.border = '2px solid #e44d26';
+            }
+        });
+
+        badge.textContent = matches.length + ' coincidencia' + (matches.length !== 1 ? 's' : '');
+        badge.className = matches.length > 0 ? 'badge bg-success' : 'badge bg-danger';
+        btnNext.disabled = matches.length === 0;
+        btnPrev.disabled = matches.length === 0;
+
+        if (matches.length > 0) irA(0);
+    }
+
+    function irA(idx) {
+        currentMatch = idx;
+        var m = matches[idx];
+        m.textarea.focus();
+        // Buscar posición del texto y seleccionarlo
+        var pos = m.textarea.value.toLowerCase().indexOf(input.value.trim().toLowerCase());
+        if (pos !== -1) {
+            m.textarea.setSelectionRange(pos, pos + input.value.trim().length);
+        }
+        m.textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        badge.textContent = (idx + 1) + '/' + matches.length;
+    }
+
+    var timer;
+    input.addEventListener('input', function() {
+        clearTimeout(timer);
+        timer = setTimeout(buscar, 300);
+    });
+
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (matches.length > 0) {
+                irA((currentMatch + 1) % matches.length);
+            }
+        }
+    });
+
+    btnNext.addEventListener('click', function() {
+        if (matches.length > 0) irA((currentMatch + 1) % matches.length);
+    });
+
+    btnPrev.addEventListener('click', function() {
+        if (matches.length > 0) irA((currentMatch - 1 + matches.length) % matches.length);
+    });
+
+    btnClear.addEventListener('click', function() {
+        input.value = '';
+        buscar();
+        input.focus();
+    });
+})();
 </script>
 <?= $this->endSection() ?>
