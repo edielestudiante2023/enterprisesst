@@ -1499,6 +1499,32 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->post('mantenimientos/ejecutado/(:num)', 'MantenimientosPwaController::markEjecutado/$1');
     $routes->get('mantenimientos/delete/(:num)', 'MantenimientosPwaController::delete/$1');
 
+    // Inspección Extintores
+    $routes->get('extintores', 'InspeccionExtintoresController::list');
+    $routes->get('extintores/create', 'InspeccionExtintoresController::create');
+    $routes->get('extintores/create/(:num)', 'InspeccionExtintoresController::create/$1');
+    $routes->post('extintores/store', 'InspeccionExtintoresController::store');
+    $routes->get('extintores/edit/(:num)', 'InspeccionExtintoresController::edit/$1');
+    $routes->post('extintores/update/(:num)', 'InspeccionExtintoresController::update/$1');
+    $routes->get('extintores/view/(:num)', 'InspeccionExtintoresController::view/$1');
+    $routes->get('extintores/pdf/(:num)', 'InspeccionExtintoresController::generatePdf/$1');
+    $routes->get('extintores/regenerar/(:num)', 'InspeccionExtintoresController::regenerarPdf/$1');
+    $routes->post('extintores/finalizar/(:num)', 'InspeccionExtintoresController::finalizar/$1');
+    $routes->get('extintores/delete/(:num)', 'InspeccionExtintoresController::delete/$1');
+
+    // Inspección Botiquín
+    $routes->get('botiquin', 'InspeccionBotiquinController::list');
+    $routes->get('botiquin/create', 'InspeccionBotiquinController::create');
+    $routes->get('botiquin/create/(:num)', 'InspeccionBotiquinController::create/$1');
+    $routes->post('botiquin/store', 'InspeccionBotiquinController::store');
+    $routes->get('botiquin/edit/(:num)', 'InspeccionBotiquinController::edit/$1');
+    $routes->post('botiquin/update/(:num)', 'InspeccionBotiquinController::update/$1');
+    $routes->get('botiquin/view/(:num)', 'InspeccionBotiquinController::view/$1');
+    $routes->get('botiquin/pdf/(:num)', 'InspeccionBotiquinController::generatePdf/$1');
+    $routes->get('botiquin/regenerar/(:num)', 'InspeccionBotiquinController::regenerarPdf/$1');
+    $routes->post('botiquin/finalizar/(:num)', 'InspeccionBotiquinController::finalizar/$1');
+    $routes->get('botiquin/delete/(:num)', 'InspeccionBotiquinController::delete/$1');
+
     // API endpoints AJAX
     $routes->get('api/clientes', 'InspeccionesController::getClientes');
     $routes->get('api/pendientes/(:num)', 'InspeccionesController::getPendientes/$1');

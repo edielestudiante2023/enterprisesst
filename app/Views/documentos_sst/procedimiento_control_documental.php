@@ -1084,7 +1084,8 @@
     <?= view('documentos_sst/_components/modal_nueva_version', [
         'id_documento' => $documento['id_documento'],
         'version_actual' => $versionVigente['version_texto'] ?? '1.0',
-        'tipo_documento' => $documento['tipo_documento']
+        'tipo_documento' => $documento['tipo_documento'],
+        'es_primera_aprobacion' => empty($versiones ?? [])
     ]) ?>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

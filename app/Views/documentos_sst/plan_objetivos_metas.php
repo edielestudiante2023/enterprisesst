@@ -808,7 +808,8 @@
         'version_actual' => $versionVigente['version_texto'] ?? '1.0',
         'tipo_documento' => $documento['tipo_documento'] ?? 'plan_objetivos_metas',
         'modal_id' => 'modalAprobarDocumento',
-        'tipo_cambio_default' => empty($versionVigente) ? 'mayor' : 'menor'
+        'tipo_cambio_default' => empty($versionVigente) ? 'mayor' : 'menor',
+        'es_primera_aprobacion' => empty($versionVigente)
     ]) ?>
 
     <!-- Modal Historial de Versiones - COMPONENTE ESTANDAR -->

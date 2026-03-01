@@ -117,8 +117,10 @@ class InspeccionLocativaController extends BaseController
             return redirect()->to('/inspecciones/inspeccion-locativa')->with('error', 'Inspección no encontrada');
         }
 
+        // Si estaba completo, revertir a borrador para re-edición
         if ($inspeccion['estado'] === 'completo') {
-            return redirect()->to('/inspecciones/inspeccion-locativa/view/' . $id);
+            $this->inspeccionModel->update($id, ['estado' => 'borrador']);
+            $inspeccion['estado'] = 'borrador';
         }
 
         $data = [
@@ -140,8 +142,13 @@ class InspeccionLocativaController extends BaseController
     public function update($id)
     {
         $inspeccion = $this->inspeccionModel->find($id);
-        if (!$inspeccion || $inspeccion['estado'] === 'completo') {
+        if (!$inspeccion) {
             return redirect()->to('/inspecciones/inspeccion-locativa')->with('error', 'No se puede editar esta inspección');
+        }
+
+        // Si estaba completo, revertir a borrador
+        if ($inspeccion['estado'] === 'completo') {
+            $this->inspeccionModel->update($id, ['estado' => 'borrador']);
         }
 
         $inspeccionData = [
@@ -250,10 +257,6 @@ class InspeccionLocativaController extends BaseController
         $inspeccion = $this->inspeccionModel->find($id);
         if (!$inspeccion) {
             return redirect()->to('/inspecciones/inspeccion-locativa')->with('error', 'Inspección no encontrada');
-        }
-
-        if ($inspeccion['estado'] === 'completo') {
-            return redirect()->to('/inspecciones/inspeccion-locativa')->with('error', 'No se puede eliminar una inspección completa');
         }
 
         // Eliminar fotos de hallazgos del disco

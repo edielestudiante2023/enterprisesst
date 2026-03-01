@@ -17,6 +17,7 @@
  * @param string $endpoint_aprobar - URL para aprobar documento
  * @param bool $mostrar_tipo_cambio - Si mostrar selector de tipo (default: true)
  * @param string $tipo_cambio_default - Tipo de cambio por defecto ('menor' o 'mayor')
+ * @param bool $es_primera_aprobacion - Si es primera aprobacion (default: false)
  *
  * USO:
  * <?= view('documentos_sst/_components/modal_nueva_version', [
@@ -35,6 +36,8 @@ $endpoint_iniciar = $endpoint_iniciar ?? base_url('documentos-sst/iniciar-nueva-
 $endpoint_aprobar = $endpoint_aprobar ?? base_url('documentos-sst/aprobar-documento');
 $mostrar_tipo_cambio = $mostrar_tipo_cambio ?? true;
 $tipo_cambio_default = $tipo_cambio_default ?? 'menor';
+$es_primera_aprobacion = $es_primera_aprobacion ?? false;
+$endpoint_activo = $es_primera_aprobacion ? $endpoint_aprobar : $endpoint_iniciar;
 
 // Calcular proximas versiones (prediccion)
 $versionParts = explode('.', $version_actual);
@@ -50,7 +53,11 @@ $proximaVersionMayor = ($versionMayor + 1) . '.0';
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="<?= $modal_id ?>Label">
+                    <?php if ($es_primera_aprobacion): ?>
+                    <i class="fas fa-check-circle me-2"></i>Aprobar Documento
+                    <?php else: ?>
                     <i class="fas fa-plus-circle me-2"></i>Crear Nueva Version
+                    <?php endif; ?>
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -207,8 +214,12 @@ $proximaVersionMayor = ($versionMayor + 1) . '.0';
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Cancelar
                 </button>
-                <button type="button" class="btn btn-primary" id="<?= $modal_id ?>_btn_crear">
+                <button type="button" class="btn btn-<?= $es_primera_aprobacion ? 'success' : 'primary' ?>" id="<?= $modal_id ?>_btn_crear">
+                    <?php if ($es_primera_aprobacion): ?>
+                    <i class="fas fa-check-circle me-1"></i>Aprobar Documento
+                    <?php else: ?>
                     <i class="fas fa-plus-circle me-1"></i>Crear Nueva Version
+                    <?php endif; ?>
                 </button>
             </div>
         </div>
@@ -270,7 +281,7 @@ $proximaVersionMayor = ($versionMayor + 1) . '.0';
 
             try {
                 const formData = new FormData(form);
-                const response = await fetch('<?= $endpoint_iniciar ?>', {
+                const response = await fetch('<?= $endpoint_activo ?>', {
                     method: 'POST',
                     body: formData
                 });
@@ -281,8 +292,8 @@ $proximaVersionMayor = ($versionMayor + 1) . '.0';
                     // Mostrar mensaje de exito
                     Swal.fire({
                         icon: 'success',
-                        title: 'Nueva version iniciada',
-                        text: result.message || 'El documento esta en modo de edicion.',
+                        title: '<?= $es_primera_aprobacion ? "Documento aprobado" : "Nueva version iniciada" ?>',
+                        text: result.message || '<?= $es_primera_aprobacion ? "El documento ha sido aprobado exitosamente." : "El documento esta en modo de edicion." ?>',
                         confirmButtonText: 'Continuar'
                     }).then(() => {
                         // Redirigir a la URL de edicion si existe
@@ -293,7 +304,7 @@ $proximaVersionMayor = ($versionMayor + 1) . '.0';
                         }
                     });
                 } else {
-                    throw new Error(result.message || 'Error al crear nueva version');
+                    throw new Error(result.message || '<?= $es_primera_aprobacion ? "Error al aprobar el documento" : "Error al crear nueva version" ?>');
                 }
 
             } catch (error) {
@@ -306,7 +317,7 @@ $proximaVersionMayor = ($versionMayor + 1) . '.0';
 
                 // Restaurar boton
                 this.disabled = false;
-                this.innerHTML = '<i class="fas fa-plus-circle me-1"></i>Crear Nueva Version';
+                this.innerHTML = '<?= $es_primera_aprobacion ? "<i class=\"fas fa-check-circle me-1\"></i>Aprobar Documento" : "<i class=\"fas fa-plus-circle me-1\"></i>Crear Nueva Version" ?>';
             }
         });
     }

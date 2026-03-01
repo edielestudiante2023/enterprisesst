@@ -774,7 +774,8 @@
     <?= view('documentos_sst/_components/modal_nueva_version', [
         'id_documento' => $documento['id_documento'],
         'version_actual' => $versionTextoDisplay ?? '1.0',
-        'tipo_documento' => 'programa_capacitacion'
+        'tipo_documento' => 'programa_capacitacion',
+        'es_primera_aprobacion' => empty($versiones ?? [])
     ]) ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

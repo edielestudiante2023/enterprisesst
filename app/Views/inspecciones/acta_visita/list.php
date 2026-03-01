@@ -50,24 +50,24 @@
                             </span>
                         </div>
                     </div>
-                    <div class="mt-2 d-flex gap-2">
-                        <?php if ($acta['estado'] === 'borrador'): ?>
-                            <a href="/inspecciones/acta-visita/edit/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-dark">
-                                <i class="fas fa-edit"></i> Editar
-                            </a>
-                            <a href="/inspecciones/acta-visita/delete/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $acta['id'] ?>">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        <?php elseif ($acta['estado'] === 'pendiente_firma'): ?>
+                    <div class="mt-2 d-flex gap-2 flex-wrap">
+                        <a href="/inspecciones/acta-visita/edit/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-dark">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="/inspecciones/acta-visita/delete/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $acta['id'] ?>">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                        <?php if ($acta['estado'] === 'pendiente_firma'): ?>
                             <a href="/inspecciones/acta-visita/firma/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-warning">
                                 <i class="fas fa-signature"></i> Firmar
                             </a>
-                        <?php else: ?>
-                            <a href="/inspecciones/acta-visita/pdf/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-success" target="_blank">
-                                <i class="fas fa-file-pdf"></i> PDF
-                            </a>
+                        <?php endif; ?>
+                        <?php if ($acta['estado'] === 'completo'): ?>
                             <a href="/inspecciones/acta-visita/view/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-dark">
                                 <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/inspecciones/acta-visita/pdf/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-success" target="_blank">
+                                <i class="fas fa-file-pdf"></i> PDF
                             </a>
                         <?php endif; ?>
                     </div>

@@ -557,7 +557,8 @@
     <?= view('documentos_sst/_components/modal_nueva_version', [
         'id_documento' => $documento['id_documento'],
         'version_actual' => ($documento['version'] ?? 1) . '.0',
-        'tipo_documento' => $documento['tipo_documento'] ?? 'asignacion_responsable'
+        'tipo_documento' => $documento['tipo_documento'] ?? 'asignacion_responsable',
+        'es_primera_aprobacion' => empty($versiones ?? [])
     ]) ?>
 
     <!-- Modal Regenerar/Actualizar Documento -->

@@ -140,8 +140,10 @@ class ActaVisitaController extends BaseController
             return redirect()->to('/inspecciones/acta-visita')->with('error', 'Acta no encontrada');
         }
 
+        // Si estaba completo, revertir a borrador para re-edición
         if ($acta['estado'] === 'completo') {
-            return redirect()->to('/inspecciones/acta-visita/view/' . $id);
+            $this->actaModel->update($id, ['estado' => 'borrador']);
+            $acta['estado'] = 'borrador';
         }
 
         $data = [
@@ -166,8 +168,13 @@ class ActaVisitaController extends BaseController
     public function update($id)
     {
         $acta = $this->actaModel->find($id);
-        if (!$acta || $acta['estado'] === 'completo') {
+        if (!$acta) {
             return redirect()->to('/inspecciones/acta-visita')->with('error', 'No se puede editar esta acta');
+        }
+
+        // Si estaba completo, revertir a borrador
+        if ($acta['estado'] === 'completo') {
+            $this->actaModel->update($id, ['estado' => 'borrador']);
         }
 
         $actaData = [
@@ -390,10 +397,6 @@ class ActaVisitaController extends BaseController
         $acta = $this->actaModel->find($id);
         if (!$acta) {
             return redirect()->to('/inspecciones/acta-visita')->with('error', 'Acta no encontrada');
-        }
-
-        if ($acta['estado'] === 'completo') {
-            return redirect()->to('/inspecciones/acta-visita')->with('error', 'No se puede eliminar un acta finalizada');
         }
 
         // Eliminar fotos del disco
