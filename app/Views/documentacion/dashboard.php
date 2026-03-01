@@ -291,7 +291,7 @@
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-3">
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <div class="d-flex align-items-center gap-3">
                                 <h5 class="mb-0">
                                     <i class="bi bi-folder-fill text-warning me-2"></i>
@@ -310,6 +310,12 @@
                                     <i class="bi bi-folder-plus me-1"></i>Generar Estructura
                                 </button>
                             </div>
+                        </div>
+                        <!-- Buscador de carpetas -->
+                        <div class="position-relative">
+                            <i class="bi bi-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #6c757d;"></i>
+                            <input type="text" id="buscadorCarpetas" class="form-control form-control-sm" placeholder="Buscar carpeta o documento... (ej: comunicaciones, capacitacion)" style="padding-left: 34px;">
+                            <button type="button" id="btnLimpiarBusqueda" class="btn-close position-absolute d-none" style="right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.6rem;"></button>
                         </div>
                     </div>
                     <div class="card-body main-panel">
@@ -457,6 +463,124 @@
                 if (chevron) chevron.classList.add('rotated');
             });
         });
+
+        // Buscador de carpetas y documentos
+        const buscadorInput = document.getElementById('buscadorCarpetas');
+        const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+        let debounceTimer;
+
+        buscadorInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => filtrarArbol(this.value.trim()), 200);
+            btnLimpiar.classList.toggle('d-none', !this.value.trim());
+        });
+
+        btnLimpiar.addEventListener('click', function() {
+            buscadorInput.value = '';
+            btnLimpiar.classList.add('d-none');
+            filtrarArbol('');
+            buscadorInput.focus();
+        });
+
+        function filtrarArbol(termino) {
+            const carpetas = document.querySelectorAll('.folder-tree li');
+            const docs = document.querySelectorAll('.doc-card');
+
+            if (!termino) {
+                // Restaurar estado normal
+                carpetas.forEach(li => li.style.display = '');
+                docs.forEach(doc => doc.style.display = '');
+                // Restaurar: solo primer nivel expandido
+                document.querySelectorAll('.folder-content').forEach(el => el.classList.remove('show'));
+                document.querySelectorAll('.folder-chevron').forEach(el => el.classList.remove('rotated'));
+                document.querySelectorAll('.folder-tree > li > .folder-content').forEach(el => {
+                    el.classList.add('show');
+                    const folderId = el.id.replace('content-', '');
+                    const chevron = document.getElementById('chevron-' + folderId);
+                    if (chevron) chevron.classList.add('rotated');
+                });
+                return;
+            }
+
+            const palabras = termino.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/\s+/);
+
+            // Primero ocultar todo
+            carpetas.forEach(li => li.style.display = 'none');
+            docs.forEach(doc => doc.style.display = 'none');
+
+            // Funcion para verificar si un texto coincide con todas las palabras
+            function coincide(texto) {
+                const norm = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                return palabras.every(p => norm.includes(p));
+            }
+
+            // Encontrar carpetas y documentos que coinciden
+            carpetas.forEach(li => {
+                const header = li.querySelector(':scope > .folder-header');
+                if (!header) return;
+
+                const nombre = header.querySelector('.folder-name');
+                if (!nombre) return;
+                const textoNombre = nombre.textContent;
+
+                // Revisar documentos dentro de esta carpeta
+                const docsEnCarpeta = li.querySelectorAll(':scope > .folder-content > .docs-container > .doc-card');
+                let tieneDocCoincidente = false;
+                docsEnCarpeta.forEach(doc => {
+                    const docNombre = doc.querySelector('.doc-nombre');
+                    const docMeta = doc.querySelector('.doc-meta');
+                    const textoDoc = (docNombre ? docNombre.textContent : '') + ' ' + (docMeta ? docMeta.textContent : '');
+                    if (coincide(textoDoc)) {
+                        doc.style.display = '';
+                        tieneDocCoincidente = true;
+                    }
+                });
+
+                // La carpeta coincide por nombre o tiene docs que coinciden
+                const carpetaCoincide = coincide(textoNombre);
+
+                if (carpetaCoincide || tieneDocCoincidente) {
+                    // Mostrar esta carpeta y expandirla
+                    li.style.display = '';
+                    const content = li.querySelector(':scope > .folder-content');
+                    const chevron = li.querySelector(':scope > .folder-header .folder-chevron');
+                    if (content) content.classList.add('show');
+                    if (chevron) chevron.classList.add('rotated');
+
+                    // Si la carpeta coincide por nombre, mostrar todos sus docs
+                    if (carpetaCoincide) {
+                        docsEnCarpeta.forEach(doc => doc.style.display = '');
+                    }
+
+                    // Mostrar y expandir todos los ancestros
+                    mostrarAncestros(li);
+
+                    // Mostrar subcarpetas si la carpeta coincide
+                    if (carpetaCoincide) {
+                        li.querySelectorAll('li').forEach(sub => sub.style.display = '');
+                        li.querySelectorAll('.doc-card').forEach(doc => doc.style.display = '');
+                        li.querySelectorAll('.folder-content').forEach(el => el.classList.add('show'));
+                        li.querySelectorAll('.folder-chevron').forEach(el => el.classList.add('rotated'));
+                    }
+                }
+
+                // Revisar subcarpetas recursivamente (ya se manejan en la iteracion general)
+            });
+        }
+
+        function mostrarAncestros(element) {
+            let parent = element.parentElement;
+            while (parent) {
+                if (parent.tagName === 'LI') {
+                    parent.style.display = '';
+                    const content = parent.querySelector(':scope > .folder-content');
+                    const chevron = parent.querySelector(':scope > .folder-header .folder-chevron');
+                    if (content) content.classList.add('show');
+                    if (chevron) chevron.classList.add('rotated');
+                }
+                parent = parent.parentElement;
+            }
+        }
 
         // Generar estructura de carpetas
         document.getElementById('formGenerarEstructura').addEventListener('submit', function(e) {
