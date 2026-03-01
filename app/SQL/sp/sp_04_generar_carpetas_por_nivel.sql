@@ -23,6 +23,7 @@ BEGIN
     DECLARE v_id_verificar INT;
     DECLARE v_id_actuar INT;
     DECLARE v_id_251 INT;
+    DECLARE v_id_281 INT;
 
     -- Validar cliente existe
     IF NOT EXISTS (SELECT 1 FROM tbl_clientes WHERE id_cliente = p_id_cliente) THEN
@@ -173,6 +174,11 @@ BEGIN
     IF p_nivel_estandares = 60 THEN
         INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
         VALUES (p_id_cliente, v_id_planear, '2.8.1. Mecanismos de comunicacion, auto reporte en Sistema de Gestion de Seguridad y Salud en el Trabajo SG-SST', '2.8.1', 20, 'estandar', 'megaphone');
+        SET v_id_281 = LAST_INSERT_ID();
+
+        -- 2.8.1.1 - Sub-carpeta: Matriz de Comunicacion SST (Aplica: 60)
+        INSERT INTO tbl_doc_carpetas (id_cliente, id_carpeta_padre, nombre, codigo, orden, tipo, icono)
+        VALUES (p_id_cliente, v_id_281, '2.8.1.1. Matriz de Comunicacion SST', '2.8.1.1', 1, 'estandar', 'diagram-3');
     END IF;
 
     -- 2.9.1 - Aplica: 60

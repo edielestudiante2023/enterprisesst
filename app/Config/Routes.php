@@ -897,6 +897,16 @@ $routes->get('/generador-ia/(:num)/indicadores-pve-biomecanico', 'GeneradorIACon
 $routes->get('/generador-ia/(:num)/preview-indicadores-pve-biomecanico', 'GeneradorIAController::previewIndicadoresPveBiomecanico/$1');
 $routes->post('/generador-ia/(:num)/generar-indicadores-pve-biomecanico', 'GeneradorIAController::generarIndicadoresPveBiomecanico/$1');
 
+// 4.2.4 Programa de Inspecciones (Parte 1: Actividades)
+$routes->get('/generador-ia/(:num)/programa-inspecciones', 'GeneradorIAController::programaInspecciones/$1');
+$routes->get('/generador-ia/(:num)/preview-actividades-inspecciones', 'GeneradorIAController::previewActividadesInspecciones/$1');
+$routes->post('/generador-ia/(:num)/generar-actividades-inspecciones', 'GeneradorIAController::generarActividadesInspecciones/$1');
+$routes->get('/generador-ia/(:num)/resumen-inspecciones', 'GeneradorIAController::resumenInspecciones/$1');
+// 4.2.4 Programa de Inspecciones (Parte 2: Indicadores)
+$routes->get('/generador-ia/(:num)/indicadores-programa-inspecciones', 'GeneradorIAController::indicadoresProgramaInspecciones/$1');
+$routes->get('/generador-ia/(:num)/preview-indicadores-inspecciones', 'GeneradorIAController::previewIndicadoresInspecciones/$1');
+$routes->post('/generador-ia/(:num)/generar-indicadores-inspecciones', 'GeneradorIAController::generarIndicadoresInspecciones/$1');
+
 // 4.2.3 PVE Riesgo Psicosocial (Parte 1: Actividades)
 $routes->get('/generador-ia/(:num)/pve-riesgo-psicosocial', 'GeneradorIAController::pveRiesgoPsicosocial/$1');
 $routes->get('/generador-ia/(:num)/preview-actividades-pve-psicosocial', 'GeneradorIAController::previewActividadesPvePsicosocial/$1');
@@ -996,6 +1006,10 @@ $routes->post('/documentos-sst/adjuntar-soporte-pve-biomecanico', 'DocumentosSST
 $routes->get('/documentos-sst/(:num)/pve-riesgo-psicosocial/(:num)', 'DocumentosSSTController::pveRiesgoPsicosocial/$1/$2');
 $routes->post('/documentos-sst/adjuntar-soporte-pve-psicosocial', 'DocumentosSSTController::adjuntarSoportePvePsicosocial');
 
+// 4.2.4 Programa de Inspecciones
+$routes->get('/documentos-sst/(:num)/programa-inspecciones/(:num)', 'DocumentosSSTController::programaInspecciones/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-programa-inspecciones', 'DocumentosSSTController::adjuntarSoporteProgramaInspecciones');
+
 // 4.2.5 Programa de Mantenimiento Periodico de Instalaciones, Equipos, Maquinas, Herramientas
 $routes->get('/documentos-sst/(:num)/programa-mantenimiento-periodico/(:num)', 'DocumentosSSTController::programaMantenimientoPeriodico/$1/$2');
 
@@ -1005,6 +1019,10 @@ $routes->post('/documentos-sst/adjuntar-soporte-alto-riesgo', 'DocumentosSSTCont
 
 // 1.2.4 Reglamento de Higiene y Seguridad Industrial
 $routes->get('/documentos-sst/(:num)/reglamento-higiene-seguridad/(:num)', 'DocumentosSSTController::reglamentoHigieneSeguridadIndustrial/$1/$2');
+
+// 6.1.2 Procedimiento de Auditoria Anual del SG-SST
+$routes->get('/documentos-sst/(:num)/procedimiento-auditoria-anual/(:num)', 'DocumentosSSTController::procedimientoAuditoriaAnual/$1/$2');
+$routes->post('/documentos-sst/adjuntar-soporte-auditoria-anual', 'DocumentosSSTController::adjuntarSoporteAuditoriaAnual');
 
 // 5.1.1 Plan de Prevencion, Preparacion y Respuesta ante Emergencias
 $routes->get('/documentos-sst/(:num)/plan-emergencias/(:num)', 'DocumentosSSTController::planEmergencias/$1/$2');
@@ -1402,6 +1420,24 @@ $routes->post('/matriz-legal/procesar-busqueda-ia', 'MatrizLegalController::proc
 $routes->post('/matriz-legal/guardar-desde-ia', 'MatrizLegalController::guardarDesdeIA');
 $routes->get('/matriz-legal/exportar', 'MatrizLegalController::exportar');
 $routes->get('/matriz-legal/descargar-muestra', 'MatrizLegalController::descargarMuestra');
+
+// ============================================
+// MATRIZ DE COMUNICACIÓN SST
+// ============================================
+$routes->get('/matriz-comunicacion', 'MatrizComunicacionController::index');
+$routes->get('/matriz-comunicacion/datatable', 'MatrizComunicacionController::datatable');
+$routes->get('/matriz-comunicacion/ver/(:num)', 'MatrizComunicacionController::ver/$1');
+$routes->post('/matriz-comunicacion/guardar', 'MatrizComunicacionController::guardar');
+$routes->post('/matriz-comunicacion/eliminar/(:num)', 'MatrizComunicacionController::eliminar/$1');
+$routes->get('/matriz-comunicacion/generar-ia', 'MatrizComunicacionController::generarIA');
+$routes->post('/matriz-comunicacion/procesar-generacion-ia', 'MatrizComunicacionController::procesarGeneracionIA');
+$routes->post('/matriz-comunicacion/generar-bulk-ia', 'MatrizComunicacionController::generarBulkIA');
+$routes->post('/matriz-comunicacion/guardar-desde-ia', 'MatrizComunicacionController::guardarDesdeIA');
+$routes->get('/matriz-comunicacion/importar', 'MatrizComunicacionController::importarCSV');
+$routes->post('/matriz-comunicacion/preview-csv', 'MatrizComunicacionController::previewCSV');
+$routes->post('/matriz-comunicacion/procesar-csv', 'MatrizComunicacionController::procesarCSV');
+$routes->get('/matriz-comunicacion/exportar', 'MatrizComunicacionController::exportar');
+$routes->get('/matriz-comunicacion/descargar-muestra', 'MatrizComunicacionController::descargarMuestra');
 
 // ============================================
 // ACCESO DE MIEMBROS AUTENTICADOS (con login)

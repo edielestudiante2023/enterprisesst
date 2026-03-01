@@ -2280,6 +2280,187 @@ Mejora el indicador segun las instrucciones. Responde SOLO con el JSON.";
     }
 
     // =========================================================================
+    // MÓDULO 4.2.4 - PROGRAMA DE INSPECCIONES
+    // =========================================================================
+
+    /**
+     * Vista principal de Programa de Inspecciones (Parte 1 - Actividades)
+     */
+    public function programaInspecciones(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $service = new \App\Services\ActividadesInspeccionesService();
+
+        $anio = (int)date('Y');
+
+        $data = [
+            'titulo' => 'Generador IA - Programa de Inspecciones',
+            'cliente' => $cliente,
+            'contexto' => $contexto,
+            'anio' => $anio,
+            'resumenActividades' => $service->getResumenActividades($idCliente, $anio),
+            'actividadesExistentes' => $service->getActividadesCliente($idCliente, $anio),
+        ];
+
+        return view('generador_ia/programa_inspecciones', $data);
+    }
+
+    /**
+     * Preview de actividades de inspecciones
+     */
+    public function previewActividadesInspecciones(int $idCliente)
+    {
+        $anio = $this->request->getGet('anio') ?? (int)date('Y');
+        $instrucciones = $this->request->getGet('instrucciones') ?? '';
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $service = new \App\Services\ActividadesInspeccionesService();
+        $preview = $service->previewActividades($idCliente, (int)$anio, $contexto, $instrucciones);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Generar actividades de inspecciones en PTA
+     */
+    public function generarActividadesInspecciones(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+
+        $anio = $json['anio'] ?? $this->request->getPost('anio') ?? (int)date('Y');
+        $actividadesSeleccionadas = $json['actividades'] ?? null;
+
+        try {
+            $service = new \App\Services\ActividadesInspeccionesService();
+            $resultado = $service->generarActividades($idCliente, (int)$anio, $actividadesSeleccionadas);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Actividades generadas: {$resultado['creadas']} nuevas, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar actividades: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Resumen de actividades e indicadores de inspecciones
+     */
+    public function resumenInspecciones(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $anio = (int)date('Y');
+
+        $actividadesService = new \App\Services\ActividadesInspeccionesService();
+        $indicadoresService = new \App\Services\IndicadoresInspeccionesService();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'cliente' => $cliente['nombre_cliente'],
+                'anio' => $anio,
+                'actividades' => $actividadesService->getResumenActividades($idCliente, $anio),
+                'indicadores' => $indicadoresService->getResumenIndicadores($idCliente)
+            ]
+        ]);
+    }
+
+    /**
+     * Vista de indicadores de inspecciones (Parte 2)
+     */
+    public function indicadoresProgramaInspecciones(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->to('/clientes')->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int)date('Y');
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresInspeccionesService();
+
+        return view('generador_ia/indicadores_programa_inspecciones', [
+            'cliente' => $cliente,
+            'anio' => $anio,
+            'contexto' => $contexto ?? [],
+            'resumenIndicadores' => $indicadoresService->getResumenIndicadores($idCliente),
+            'indicadoresExistentes' => $indicadoresService->getIndicadoresCliente($idCliente)
+        ]);
+    }
+
+    /**
+     * Preview de indicadores de inspecciones
+     */
+    public function previewIndicadoresInspecciones(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->where('id_cliente', $idCliente)->first();
+
+        $indicadoresService = new \App\Services\IndicadoresInspeccionesService();
+        $preview = $indicadoresService->previewIndicadores($idCliente, $contexto);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $preview
+        ]);
+    }
+
+    /**
+     * Generar indicadores de inspecciones en BD
+     */
+    public function generarIndicadoresInspecciones(int $idCliente)
+    {
+        $json = $this->request->getJSON(true);
+        $indicadoresSeleccionados = $json['indicadores'] ?? null;
+
+        try {
+            $indicadoresService = new \App\Services\IndicadoresInspeccionesService();
+            $resultado = $indicadoresService->generarIndicadores($idCliente, $indicadoresSeleccionados);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => "Indicadores generados: {$resultado['creados']} nuevos, {$resultado['existentes']} ya existian",
+                'data' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al generar indicadores: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // =========================================================================
     // MÓDULO 4.2.3 - PVE RIESGO PSICOSOCIAL
     // =========================================================================
 

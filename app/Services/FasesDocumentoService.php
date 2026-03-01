@@ -195,6 +195,24 @@ class FasesDocumentoService
                 'depende_de' => 'pta_pve_biomecanico'
             ]
         ],
+        // 4.2.4. Programa de Inspecciones a Instalaciones, Maquinaria o Equipos
+        'programa_inspecciones' => [
+            'pta_inspecciones' => [
+                'nombre' => 'Actividades Inspecciones',
+                'descripcion' => 'Actividades del programa de inspecciones a instalaciones, maquinaria y equipos',
+                'url_modulo' => '/pta-cliente-nueva/list/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/programa-inspecciones',
+                'orden' => 1
+            ],
+            'indicadores_inspecciones' => [
+                'nombre' => 'Indicadores Inspecciones',
+                'descripcion' => 'Indicadores para medir el cumplimiento del programa de inspecciones',
+                'url_modulo' => '/indicadores-sst/{cliente}',
+                'url_generar' => '/generador-ia/{cliente}/indicadores-programa-inspecciones',
+                'orden' => 2,
+                'depende_de' => 'pta_inspecciones'
+            ]
+        ],
         // 4.2.5. Mantenimiento Periódico de Instalaciones, Equipos, Máquinas, Herramientas
         'mantenimiento_periodico' => [
             'pta_mantenimiento' => [

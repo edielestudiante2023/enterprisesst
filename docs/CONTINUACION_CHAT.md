@@ -1,146 +1,68 @@
-# ESTADO: Modulo Inspecciones PWA - Acta de Visita + Inspeccion Locativa
+# ESTADO: Programa de Inspecciones 4.2.4 - IMPLEMENTACION COMPLETA
 
-**Fecha:** 2026-02-24
-**Estado:** FASE 1 + FASE 2 COMPLETAS (Acta de Visita + Inspeccion Locativa)
+**Fecha:** 2026-03-01
+**Estado:** Codigo completo, pendiente prueba funcional en navegador
 
 ---
 
 ## Resumen de lo realizado
 
-### Sesion 1 (2026-02-21): Acta de Visita
-Se replico el modulo de inspecciones PWA desde `enterprisesstph` (proyecto referencia) a `enterprisesst` (proyecto destino). Se leyeron 9 documentos de diseno (00-08) y se implemento la Fase 1 completa.
+Se implemento el **Programa de Inspecciones a Instalaciones, Maquinaria o Equipos (4.2.4)** como documento Tipo B (3 partes: PTA + Indicadores + Documento IA) siguiendo el patron de PVE Riesgo Biomecanico.
 
-### Sesion 2 (2026-02-24): Inspeccion Locativa
-Se leyeron 5 documentos adicionales (09-13) y se implemento el modulo de Inspeccion Locativa completo.
-
-### Documentacion leida
-- `enterprisesstph/docs/00_PLAN_MAESTRO.md` a `13_PATRON_INSPECCION_NITEMS.md`
-- Docs 09-13: diseno PDF, inspeccion locativa, patron camara/galeria, patron plano, patron N-items
+Simultaneamente se creo la **Guia Paso a Paso para Programas Tipo B** validada con esta implementacion real.
 
 ---
 
-## BD - Migraciones ejecutadas
+## BD - Scripts ejecutados
 
-### Acta de Visita (LOCAL + PRODUCCION OK)
-- Script: `app/SQL/crear_tablas_acta_visita.php`
-- 4 tablas: `tbl_acta_visita`, `tbl_acta_visita_integrantes`, `tbl_acta_visita_temas`, `tbl_acta_visita_fotos`
-- ALTER `tbl_pendientes` ADD `id_acta_visita` + FK
-
-### Inspeccion Locativa (LOCAL + PRODUCCION OK)
-- Script: `app/SQL/migrate_inspeccion_locativa.php`
-- 2 tablas: `tbl_inspeccion_locativa`, `tbl_hallazgo_locativo`
-- FK con CASCADE en hallazgos
+- Script: `app/SQL/agregar_programa_inspecciones.php`
+- tipo_documento: `programa_inspecciones`, estandar: `4.2.4`, flujo: `programa_con_pta`
+- 10 secciones, 2 firmantes, plantilla PRG-INS-001, mapeo carpeta 4.2.4
+- LOCAL ID: 94, PRODUCCION ID: 80
 
 ---
 
-## Archivos creados - Acta de Visita (17 archivos)
+## Archivos creados (7)
 
-**Controllers (2):**
-- `app/Controllers/Inspecciones/InspeccionesController.php`
-- `app/Controllers/Inspecciones/ActaVisitaController.php`
+**Documentacion (2):**
+- `docs/MODULO_NUMERALES_SGSST/10_DOCUMENTOS_ESPECIFICOS/ProgramaInspecciones.md` — Diseno completo
+- `docs/MODULO_NUMERALES_SGSST/10_DOCUMENTOS_ESPECIFICOS/GUIA_PASO_A_PASO_PROGRAMA_TIPO_B.md` — Guia 14 pasos
 
-**Models (5):**
-- `app/Models/ActaVisitaModel.php`
-- `app/Models/ActaVisitaIntegranteModel.php`
-- `app/Models/ActaVisitaTemaModel.php`
-- `app/Models/ActaVisitaFotoModel.php`
-- `app/Models/VencimientosMantenimientoModel.php`
+**SQL (1):**
+- `app/SQL/agregar_programa_inspecciones.php`
 
-**Vistas (8):**
-- `app/Views/inspecciones/layout_pwa.php`
-- `app/Views/inspecciones/dashboard.php`
-- `app/Views/inspecciones/acta_visita/list.php`
-- `app/Views/inspecciones/acta_visita/form.php`
-- `app/Views/inspecciones/acta_visita/firma.php`
-- `app/Views/inspecciones/acta_visita/view.php`
-- `app/Views/inspecciones/acta_visita/pdf.php`
-- `app/Views/inspecciones/acta_visita/confirmacion.php`
+**Backend (3):**
+- `app/Libraries/DocumentosSSTTypes/ProgramaInspecciones.php` — Clase Parte 3 con getContextoBase()
+- `app/Services/ActividadesInspeccionesService.php` — Service Parte 1 (12 actividades COPASST)
+- `app/Services/IndicadoresInspeccionesService.php` — Service Parte 2 (7 indicadores IA)
 
-**PWA (2):**
-- `public/manifest_inspecciones.json`
-- `public/sw_inspecciones.js`
+**Vistas (2):**
+- `app/Views/generador_ia/programa_inspecciones.php` — Vista Parte 1
+- `app/Views/generador_ia/indicadores_programa_inspecciones.php` — Vista Parte 2
 
-## Archivos creados - Inspeccion Locativa (8 archivos)
+## Archivos modificados (6)
 
-**Controller (1):**
-- `app/Controllers/Inspecciones/InspeccionLocativaController.php` — CRUD: list, create, store, edit, update, view, finalizar, generatePdf, delete + privados: saveHallazgos (delete+reinsert con fotos), generarPdfInterno (DOMPDF), uploadToReportes (id_detailreport=10, tag insp_locativa_id)
-
-**Models (2):**
-- `app/Models/InspeccionLocativaModel.php` — getByConsultor, getPendientesByConsultor, getAllPendientes, getByCliente
-- `app/Models/HallazgoLocativoModel.php` — getByInspeccion, deleteByInspeccion
-
-**Vistas (4):**
-- `app/Views/inspecciones/inspeccion_locativa/list.php` — Cards con filtro Select2, conteo hallazgos, SweetAlert delete
-- `app/Views/inspecciones/inspeccion_locativa/form.php` — Accordion datos+hallazgos, patron camara/galeria, autoguardado localStorage
-- `app/Views/inspecciones/inspeccion_locativa/view.php` — Read-only con modal fotos, badges estado
-- `app/Views/inspecciones/inspeccion_locativa/pdf.php` — DOMPDF FT-SST-216 v001, intro+riesgos+enfoque+hallazgos+observaciones
-
-**Migration (1):**
-- `app/SQL/migrate_inspeccion_locativa.php`
-
-**Directorios:**
-- `public/uploads/inspecciones/locativas/hallazgos/`
-- `public/uploads/inspecciones/locativas/pdfs/`
-
-## Archivos modificados (3)
-
-- `app/Config/Routes.php` — +10 rutas inspeccion-locativa en grupo inspecciones
-- `app/Controllers/Inspecciones/InspeccionesController.php` — +use InspeccionLocativaModel, +totalLocativas, +pendientesLocativas en dashboard
-- `app/Views/inspecciones/dashboard.php` — Card "Locativas" habilitada con conteo + seccion pendientes locativas
+- `app/Libraries/DocumentosSSTTypes/DocumentoSSTFactory.php` — +programa_inspecciones en TIPOS_MAP
+- `app/Services/FasesDocumentoService.php` — +fases programa_inspecciones (pta + indicadores)
+- `app/Controllers/DocumentacionController.php` — +deteccion 4.2.4 + mapeo carpeta + soportes
+- `app/Config/Routes.php` — +9 rutas (4 parte1 + 3 parte2 + 1 vista + 1 soporte)
+- `app/Controllers/GeneradorIAController.php` — +7 metodos
+- `app/Controllers/DocumentosSSTController.php` — +2 metodos + filtros SweetAlert
 
 ---
 
-## Hallazgo: tablas mantenimientos no existen
-- `tbl_vencimientos_mantenimientos` y `tbl_mantenimientos` NO existen en ninguna BD
-- Se agrego try-catch en InspeccionesController::getMantenimientos() y ActaVisitaController::generarPdfInterno()
-- Cuando se creen estas tablas, las queries funcionaran automaticamente
+## Verificacion funcional pendiente
 
----
-
-## Pendiente para proximas sesiones
-
-### Fase 3: Senalizacion (patron N-ITEMS FIJOS)
-- 37 items predefinidos en ITEMS_DEFINITION
-- Tabla master + detalle, scoring automatico
-- FT-SST-201, id_detailreport=11
-
-### Fase 4: Extintores (patron N-ITEMS DINAMICOS)
-- Items dinamicos con criterios SI/NO y estado
-- FT-SST-202, id_detailreport=12
-
-### Fase 5: Botiquin (patron PLANO)
-- 1 tabla simple, sin detalle
-- FT-SST-204, id_detailreport=13
-
-### Fase 6: Gabinetes (patron N-ITEMS DINAMICOS)
-- FT-SST-203, id_detailreport=14
-
-### Offline (doc 05)
-- IndexedDB, Background Sync, Photo compression
-
-### Push + Email + Cron (doc 06)
-- Web Push, SendGrid, Cron commands
-
----
-
-## Verificacion rapida
-
-### Acta de Visita
-1. Login → `/inspecciones` → card "Actas de Visita" habilitada
-2. Click → listado → Nueva → formulario accordion
-3. Guardar borrador → editar → firmas → finalizar → PDF
-
-### Inspeccion Locativa
-1. Login → `/inspecciones` → card "Locativas" habilitada con conteo
-2. Click → listado vacio → Nueva → formulario con Select2
-3. Agregar hallazgos con fotos (camara/galeria) → Guardar borrador
-4. Editar → agregar mas hallazgos → Finalizar → PDF generado
-5. Ver PDF → header FT-SST-216, intro, hallazgos con fotos, estados coloreados
+1. `/generador-ia/{id}/programa-inspecciones` → cargar vista, preview 12 actividades, generar en PTA
+2. `/generador-ia/{id}/indicadores-programa-inspecciones` → preview 7 indicadores, generar en BD
+3. `/documentos/generar/programa_inspecciones/{id}` → SweetAlert con actividades + indicadores → generar documento IA
+4. `/documentos-sst/{id}/programa-inspecciones/2026` → ver documento generado
+5. Carpeta 4.2.4 → verificar que muestra fases y documento
 
 ## Flujo Git
 ```
 git add .
-git commit -m "feat: modulo inspecciones PWA - acta de visita + inspeccion locativa"
+git commit -m "feat: programa de inspecciones 4.2.4 (Tipo B 3 partes) + guia paso a paso"
 git checkout main
 git merge cycloid
 git push origin main

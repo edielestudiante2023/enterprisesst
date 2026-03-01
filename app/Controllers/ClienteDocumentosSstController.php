@@ -226,6 +226,7 @@ class ClienteDocumentosSstController extends Controller
             'rendicion_desempeno' => ['soporte_rendicion_desempeno'],
             'matriz_legal' => ['procedimiento_matriz_legal', 'soporte_matriz_legal'],
             'mecanismos_comunicacion_sgsst' => ['mecanismos_comunicacion_sgsst'],
+            'matriz_comunicacion_sst' => ['procedimiento_matriz_comunicacion'],
             'diagnostico_condiciones_salud' => ['soporte_diagnostico_salud'],
             'promocion_prevencion_salud' => ['programa_promocion_prevencion_salud'],
             'informacion_medico_perfiles' => ['soporte_perfiles_medico'],
@@ -323,6 +324,7 @@ class ClienteDocumentosSstController extends Controller
             '2.6.1' => 'rendicion_desempeno',
             '2.7.1' => 'matriz_legal',
             '2.8.1' => 'mecanismos_comunicacion_sgsst',
+            '2.8.1.1' => 'matriz_comunicacion_sst',
             '3.1.1' => 'diagnostico_condiciones_salud',
             '3.1.2' => 'promocion_prevencion_salud',
             '3.1.3' => 'informacion_medico_perfiles',
@@ -548,6 +550,8 @@ class ClienteDocumentosSstController extends Controller
             'PRC-MRL' => 'procedimiento_matriz_legal',
             // 2.8.1 Mecanismos de Comunicación, Auto Reporte
             'MEC-COM' => 'mecanismos_comunicacion_sgsst',
+            // 2.8.1.1 Matriz de Comunicacion SST
+            'PRC-MCO' => 'procedimiento_matriz_comunicacion',
         ];
 
         return $mapa[$codigoPlantilla] ?? null;

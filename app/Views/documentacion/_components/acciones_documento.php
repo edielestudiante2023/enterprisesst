@@ -65,6 +65,8 @@ $mapaRutas = [
     'reglamento_higiene_seguridad' => 'reglamento-higiene-seguridad/' . $docSST['anio'],
     // 5.1.1 Plan de Emergencias
     'plan_emergencias' => 'plan-emergencias/' . $docSST['anio'],
+    // 6.1.2 Procedimiento de Auditoria Anual
+    'procedimiento_auditoria_anual' => 'procedimiento-auditoria-anual/' . $docSST['anio'],
 ];
 
 // Presupuesto SST tiene ruta diferente
@@ -139,6 +141,8 @@ if ($tipoDoc === 'programa_capacitacion') {
     $urlEditar = base_url('documentos/generar/reglamento_higiene_seguridad/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 } elseif ($tipoDoc === 'plan_emergencias') {
     $urlEditar = base_url('documentos/generar/plan_emergencias/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'procedimiento_auditoria_anual') {
+    $urlEditar = base_url('documentos/generar/procedimiento_auditoria_anual/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 }
 ?>
 <div class="btn-group btn-group-sm">

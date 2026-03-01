@@ -604,6 +604,16 @@ class DocumentosSSTController extends BaseController
                 ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'fichas tecnicas'],
                 ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'inventario de equipos'],
             ],
+            'programa_inspecciones' => [
+                ['type' => 'exact', 'value' => 'Programa de Inspecciones'],
+                ['type' => 'like',  'value' => 'Inspecciones'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'inspeccion'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'instalaciones'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'maquinaria'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'equipos de emergencia'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'condiciones inseguras'],
+                ['type' => 'like',  'field' => 'actividad_plandetrabajo', 'value' => 'hallazgos'],
+            ],
         ];
 
         return $filtros[$tipoDocumento] ?? [];
@@ -623,6 +633,7 @@ class DocumentosSSTController extends BaseController
             'programa_estilos_vida_saludable' => ['estilos_vida_saludable'],
             'programa_evaluaciones_medicas_ocupacionales' => ['evaluaciones_medicas_ocupacionales'],
             'programa_mantenimiento_periodico' => ['mantenimiento_periodico'],
+            'programa_inspecciones' => ['inspecciones'],
         ];
 
         return $categorias[$tipoDocumento] ?? [];
@@ -6313,6 +6324,89 @@ Se debe generar acta que registre:
         return view('documentos_sst/documento_generico', $data);
     }
 
+    /**
+     * 6.1.2 - Vista web de Procedimiento de Auditoria Anual del SG-SST
+     */
+    public function procedimientoAuditoriaAnual(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'procedimiento_auditoria_anual')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/procedimiento_auditoria_anual/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Procedimiento de Auditoria Anual.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'procedimiento_auditoria_anual');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Procedimiento de Auditoria Anual del SG-SST - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('procedimiento_auditoria_anual'),
+            'tipoDocumento' => 'procedimiento_auditoria_anual'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
     public function planEmergencias(int $idCliente, int $anio)
     {
         $cliente = $this->clienteModel->find($idCliente);
@@ -6421,6 +6515,20 @@ Se debe generar acta que registre:
         );
     }
 
+    /**
+     * 6.1.2 - Adjuntar soporte de Auditoria Anual del SG-SST
+     */
+    public function adjuntarSoporteAuditoriaAnual()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_auditoria_anual',
+            'SOP-AUA',
+            'soporte_auditoria_anual_',
+            'Soporte de Auditoria Anual del SG-SST',
+            'Soporte de auditoria anual adjuntado exitosamente.'
+        );
+    }
+
     // =========================================================================
     // 4.2.3 PVE RIESGO BIOMECÁNICO Y PSICOSOCIAL
     // =========================================================================
@@ -6518,6 +6626,102 @@ Se debe generar acta que registre:
             'soporte_pve_biomecanico_',
             'Soporte de PVE Riesgo Biomecánico',
             'Soporte de PVE riesgo biomecánico adjuntado exitosamente.'
+        );
+    }
+
+    /**
+     * Vista web del Programa de Inspecciones (4.2.4)
+     */
+    public function programaInspecciones(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'programa_inspecciones')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/programa_inspecciones/' . $idCliente))
+                ->with('error', 'Documento no encontrado. Genere primero el Programa de Inspecciones.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'programa_inspecciones');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmasElectronicas = [];
+        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        foreach ($solicitudesFirma as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+            $firmasElectronicas[$sol['firmante_tipo']] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
+        }
+
+        $data = [
+            'titulo' => 'Programa de Inspecciones - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'tipoDocumento' => 'programa_inspecciones'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * Adjuntar soporte Programa de Inspecciones
+     */
+    public function adjuntarSoporteProgramaInspecciones()
+    {
+        return $this->adjuntarSoporteGenerico(
+            'soporte_programa_inspecciones',
+            'SOP-INS',
+            'soporte_programa_inspecciones_',
+            'Soporte de Programa de Inspecciones',
+            'Soporte de programa de inspecciones adjuntado exitosamente.'
         );
     }
 

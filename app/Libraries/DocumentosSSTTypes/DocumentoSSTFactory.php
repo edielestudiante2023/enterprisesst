@@ -45,6 +45,8 @@ class DocumentoSSTFactory
         'plan_objetivos_metas' => PlanObjetivosMetas::class,
         // 2.8.1 Mecanismos de Comunicación, Auto Reporte
         'mecanismos_comunicacion_sgsst' => MecanismosComunicacionSgsst::class,
+        // 2.8.1 Procedimiento de Matriz de Comunicacion SST
+        'procedimiento_matriz_comunicacion' => ProcedimientoMatrizComunicacion::class,
         // 3.1.1 Procedimiento de Evaluaciones Médicas Ocupacionales
         'procedimiento_evaluaciones_medicas' => ProcedimientoEvaluacionesMedicas::class,
         // 2.9.1 Procedimiento de Adquisiciones en SST
@@ -68,6 +70,8 @@ class DocumentoSSTFactory
         // 4.2.3 Programas de Seguridad - PVEs
         'pve_riesgo_biomecanico' => PveRiesgoBiomecanico::class,
         'pve_riesgo_psicosocial' => PveRiesgoPsicosocial::class,
+        // 4.2.4 Programa de Inspecciones a Instalaciones, Maquinaria o Equipos
+        'programa_inspecciones' => ProgramaInspecciones::class,
         // 4.2.5 Mantenimiento Periodico de Instalaciones, Equipos, Maquinas, Herramientas
         'programa_mantenimiento_periodico' => ProgramaMantenimientoPeriodico::class,
         // 5.1.1 Plan de Prevencion, Preparacion y Respuesta ante Emergencias
@@ -86,6 +90,8 @@ class DocumentoSSTFactory
         'acta_recomposicion_cocolab' => ActaRecomposicionCocolab::class,
         'acta_recomposicion_brigada' => ActaRecomposicionBrigada::class,
         'acta_recomposicion_vigia' => ActaRecomposicionVigia::class,
+        // 6.1.2 Procedimiento de Auditoria Anual del SG-SST
+        'procedimiento_auditoria_anual' => ProcedimientoAuditoriaAnual::class,
     ];
 
     /**

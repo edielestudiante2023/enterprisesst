@@ -320,7 +320,7 @@ class DocumentacionController extends Controller
 
         // Obtener documentos SST aprobados para mostrar en tabla
         $documentosSSTAprobados = [];
-        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'manual_convivencia_1_1_8', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal', 'capacitacion_copasst', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'adquisiciones_sst', 'evaluacion_proveedores', 'evaluacion_impacto_cambios', 'estilos_vida_saludable', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'procedimientos_seguridad', 'mantenimiento_periodico', 'identificacion_sustancias_cancerigenas', 'metodologia_identificacion_peligros', 'identificacion_alto_riesgo', 'documentos_externos'])) {
+        if (in_array($tipoCarpetaFases, ['capacitacion_sst', 'responsables_sst', 'responsabilidades_sgsst', 'archivo_documental', 'presupuesto_sst', 'afiliacion_srl', 'verificacion_medidas_prevencion', 'planificacion_auditorias_copasst', 'entrega_epp', 'plan_emergencias', 'brigada_emergencias', 'revision_direccion', 'agua_servicios_sanitarios', 'eliminacion_residuos', 'mediciones_ambientales', 'medidas_prevencion_control', 'diagnostico_condiciones_salud', 'informacion_medico_perfiles', 'evaluaciones_medicas', 'custodia_historias_clinicas', 'responsables_curso_50h', 'evaluacion_prioridades', 'plan_objetivos_metas', 'rendicion_desempeno', 'conformacion_copasst', 'comite_convivencia', 'manual_convivencia_1_1_8', 'promocion_prevencion_salud', 'induccion_reinduccion', 'matriz_legal', 'capacitacion_copasst', 'politicas_2_1_1', 'mecanismos_comunicacion_sgsst', 'adquisiciones_sst', 'evaluacion_proveedores', 'evaluacion_impacto_cambios', 'estilos_vida_saludable', 'reporte_accidentes_trabajo', 'investigacion_incidentes', 'procedimientos_seguridad', 'programa_inspecciones', 'mantenimiento_periodico', 'identificacion_sustancias_cancerigenas', 'metodologia_identificacion_peligros', 'identificacion_alto_riesgo', 'auditoria_anual', 'documentos_externos'])) {
             $db = \Config\Database::connect();
             $queryDocs = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
@@ -452,6 +452,9 @@ class DocumentacionController extends Controller
             } elseif ($tipoCarpetaFases === 'mecanismos_comunicacion_sgsst') {
                 // 2.8.1: Mecanismos de Comunicación, Auto Reporte
                 $queryDocs->where('tipo_documento', 'mecanismos_comunicacion_sgsst');
+            } elseif ($tipoCarpetaFases === 'matriz_comunicacion_sst') {
+                // 2.8.1.1: Matriz de Comunicacion SST
+                $queryDocs->where('tipo_documento', 'procedimiento_matriz_comunicacion');
             } elseif ($tipoCarpetaFases === 'responsables_sst') {
                 // 1.1.1: Asignación Responsable del SG-SST
                 $queryDocs->where('tipo_documento', 'asignacion_responsable_sgsst');
@@ -485,12 +488,18 @@ class DocumentacionController extends Controller
                     'pve_riesgo_biomecanico',
                     'pve_riesgo_psicosocial'
                 ]);
+            } elseif ($tipoCarpetaFases === 'programa_inspecciones') {
+                // 4.2.4: Programa de Inspecciones
+                $queryDocs->where('tipo_documento', 'programa_inspecciones');
             } elseif ($tipoCarpetaFases === 'mantenimiento_periodico') {
                 // 4.2.5: Mantenimiento Periodico
                 $queryDocs->where('tipo_documento', 'programa_mantenimiento_periodico');
             } elseif ($tipoCarpetaFases === 'identificacion_alto_riesgo') {
                 // 1.1.5: Identificación de trabajadores de alto riesgo
                 $queryDocs->where('tipo_documento', 'identificacion_alto_riesgo');
+            } elseif ($tipoCarpetaFases === 'auditoria_anual') {
+                // 6.1.2: Procedimiento de Auditoria Anual del SG-SST
+                $queryDocs->where('tipo_documento', 'procedimiento_auditoria_anual');
             } elseif ($tipoCarpetaFases === 'reglamento_higiene_seguridad') {
                 // 1.2.4: Reglamento de Higiene y Seguridad Industrial
                 $queryDocs->where('tipo_documento', 'reglamento_higiene_seguridad');
@@ -595,6 +604,15 @@ class DocumentacionController extends Controller
                 ->orderBy('created_at', 'DESC')
                 ->get()
                 ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'matriz_comunicacion_sst') {
+            // 2.8.1.1 Matriz de Comunicacion SST
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_matriz_comunicacion')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
         } elseif ($tipoCarpetaFases === 'diagnostico_condiciones_salud') {
             // 3.1.1 Diagnóstico de Condiciones de Salud - Soportes adjuntos
             $db = $db ?? \Config\Database::connect();
@@ -685,6 +703,15 @@ class DocumentacionController extends Controller
                 ->orderBy('created_at', 'DESC')
                 ->get()
                 ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'programa_inspecciones') {
+            // 4.2.4 Programa de Inspecciones
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_programa_inspecciones')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
         } elseif ($tipoCarpetaFases === 'mantenimiento_periodico') {
             // 4.2.5 Mantenimiento Periodico
             $db = $db ?? \Config\Database::connect();
@@ -709,6 +736,15 @@ class DocumentacionController extends Controller
             $soportesAdicionales = $db->table('tbl_documentos_sst')
                 ->where('id_cliente', $cliente['id_cliente'])
                 ->where('tipo_documento', 'soporte_comite_convivencia')
+                ->orderBy('created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        } elseif ($tipoCarpetaFases === 'auditoria_anual') {
+            // 6.1.2 Procedimiento de Auditoria Anual del SG-SST
+            $db = $db ?? \Config\Database::connect();
+            $soportesAdicionales = $db->table('tbl_documentos_sst')
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->where('tipo_documento', 'soporte_auditoria_anual')
                 ->orderBy('created_at', 'DESC')
                 ->get()
                 ->getResultArray();
@@ -768,6 +804,15 @@ class DocumentacionController extends Controller
         // ============================================
         if ($codigo === '2.5.1.1') {
             return 'documentos_externos';
+        }
+
+        // ============================================
+        // 2.8.1.1. Matriz de Comunicacion SST
+        // Sub-carpeta de 2.8.1 para la matriz de comunicacion del SG-SST
+        // DEBE ir ANTES de 2.8.1 para que el código específico se capture primero
+        // ============================================
+        if ($codigo === '2.8.1.1') {
+            return 'matriz_comunicacion_sst';
         }
 
         // ============================================
@@ -870,6 +915,13 @@ class DocumentacionController extends Controller
             strpos($nombre, 'verificacion') !== false && strpos($nombre, 'medidas') !== false ||
             strpos($nombre, 'verificacion') !== false && strpos($nombre, 'prevencion') !== false) {
             return 'verificacion_medidas_prevencion';
+        }
+
+        // 6.1.2. Procedimiento de Auditoria Anual del SG-SST
+        // DEBE ir ANTES de 6.1.4 para que el código específico se capture primero
+        if ($codigo === '6.1.2' ||
+            strpos($nombre, 'auditoria') !== false && strpos($nombre, 'anual') !== false) {
+            return 'auditoria_anual';
         }
 
         // 6.1.4. Planificación auditorías con el COPASST
@@ -1117,6 +1169,14 @@ class DocumentacionController extends Controller
             strpos($nombre, 'programas') !== false && strpos($nombre, 'seguridad') !== false && strpos($nombre, 'salud') !== false ||
             strpos($nombre, 'pve') !== false) {
             return 'procedimientos_seguridad';
+        }
+
+        // 4.2.4. Programa de Inspecciones a instalaciones, maquinaria o equipos
+        if ($codigo === '4.2.4' ||
+            strpos($nombre, 'inspecciones') !== false && strpos($nombre, 'instalaciones') !== false ||
+            strpos($nombre, 'inspecciones') !== false && strpos($nombre, 'maquinaria') !== false ||
+            strpos($nombre, 'programa') !== false && strpos($nombre, 'inspecciones') !== false) {
+            return 'programa_inspecciones';
         }
 
         // 4.2.5. Mantenimiento periódico de instalaciones, equipos, máquinas, herramientas
