@@ -1071,7 +1071,7 @@ class ComitesEleccionesController extends BaseController
             'id_proceso' => $idProceso,
             'id_cliente' => $proceso['id_cliente'],
             'nombres' => $this->request->getPost('nombres'),
-            'apellidos' => $this->request->getPost('apellidos'),
+            'apellidos' => '',
             'documento_identidad' => $documento,
             'email' => $this->request->getPost('email'),
             'telefono' => $this->request->getPost('telefono'),

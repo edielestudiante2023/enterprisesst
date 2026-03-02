@@ -84,12 +84,8 @@
                                 <input type="email" name="email" class="form-control">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Nombres *</label>
-                                <input type="text" name="nombres" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Apellidos *</label>
-                                <input type="text" name="apellidos" class="form-control" required>
+                                <label class="form-label">Nombre completo *</label>
+                                <input type="text" name="nombres" class="form-control" required placeholder="Ej: Juan Carlos Rodriguez Perez">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Cargo</label>
