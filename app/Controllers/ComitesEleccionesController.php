@@ -1188,10 +1188,10 @@ class ComitesEleccionesController extends BaseController
         // Crear contenido CSV con BOM para Excel
         $bom = "\xEF\xBB\xBF"; // UTF-8 BOM
         $contenido = $bom;
-        $contenido .= "documento;nombres;apellidos;email;cargo;area\n";
-        $contenido .= "1234567890;Juan Carlos;Rodriguez Perez;juan.rodriguez@empresa.com;Operario;Produccion\n";
-        $contenido .= "1234567891;Maria Elena;Lopez Garcia;maria.lopez@empresa.com;Auxiliar;Administrativa\n";
-        $contenido .= "1234567892;Pedro Antonio;Martinez Silva;pedro.martinez@empresa.com;Tecnico;Mantenimiento\n";
+        $contenido .= "cedula;nombre\n";
+        $contenido .= "1234567890;Juan Carlos Rodriguez Perez\n";
+        $contenido .= "1234567891;Maria Elena Lopez Garcia\n";
+        $contenido .= "1234567892;Pedro Antonio Martinez Silva\n";
 
         $nombreArchivo = 'plantilla_votantes_' . $proceso['tipo_comite'] . '_' . date('Y') . '.csv';
 
@@ -1259,18 +1259,19 @@ class ComitesEleccionesController extends BaseController
 
             $campos = str_getcsv($linea, $separador);
 
-            if (count($campos) < 3) {
+            if (count($campos) < 2) {
                 $errores++;
-                $detallesErrores[] = "Linea " . ($numLinea + 1) . ": formato incorrecto";
+                $detallesErrores[] = "Linea " . ($numLinea + 1) . ": formato incorrecto (minimo: cedula;nombre)";
                 continue;
             }
 
             $documento = trim($campos[0] ?? '');
-            $nombres = trim($campos[1] ?? '');
-            $apellidos = trim($campos[2] ?? '');
-            $email = trim($campos[3] ?? '');
-            $cargo = trim($campos[4] ?? '');
-            $area = trim($campos[5] ?? '');
+            // Si hay 3+ campos: nombres y apellidos separados. Si solo 2: todo el nombre en nombres
+            $nombres   = trim($campos[1] ?? '');
+            $apellidos = isset($campos[2]) ? trim($campos[2]) : '';
+            $email     = trim($campos[3] ?? '');
+            $cargo     = trim($campos[4] ?? '');
+            $area      = trim($campos[5] ?? '');
 
             // Validar documento
             if (empty($documento) || !preg_match('/^[0-9]+$/', $documento)) {
@@ -1279,10 +1280,10 @@ class ComitesEleccionesController extends BaseController
                 continue;
             }
 
-            // Validar nombres
-            if (empty($nombres) || empty($apellidos)) {
+            // Validar nombre
+            if (empty($nombres)) {
                 $errores++;
-                $detallesErrores[] = "Linea " . ($numLinea + 1) . ": nombres o apellidos vacios";
+                $detallesErrores[] = "Linea " . ($numLinea + 1) . ": nombre vacio";
                 continue;
             }
 

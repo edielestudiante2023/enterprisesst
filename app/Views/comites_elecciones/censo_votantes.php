@@ -124,12 +124,9 @@
 
                         <div class="alert alert-info">
                             <h6 class="alert-heading"><i class="bi bi-info-circle me-1"></i>Instrucciones:</h6>
-                            <ol class="mb-0 small">
-                                <li>Descargue la plantilla CSV haciendo clic en "Descargar Plantilla"</li>
-                                <li>Complete los datos de los votantes en Excel o Google Sheets</li>
-                                <li>Guarde el archivo como CSV (separado por comas o punto y coma)</li>
-                                <li>Suba el archivo aqui</li>
-                            </ol>
+                            <p class="small mb-1">Columnas obligatorias: <strong>cedula;nombre</strong></p>
+                            <p class="small mb-1">Columnas opcionales adicionales: <code>cedula;nombre;email;cargo;area</code></p>
+                            <p class="small mb-0 text-muted">El nombre puede ir completo en una sola columna (como lo entrega el sistema de nomina).</p>
                         </div>
 
                         <div class="mb-3">
