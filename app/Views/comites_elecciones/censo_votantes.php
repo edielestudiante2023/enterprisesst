@@ -2,6 +2,14 @@
 
 <?= $this->section('content') ?>
 
+<?php
+$noPendientes = $totalVotantes - $yaVotaron;
+$participacion = $totalVotantes > 0 ? round(($yaVotaron / $totalVotantes) * 100, 1) : 0;
+?>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+
 <div class="container-fluid py-4">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-3">
@@ -32,7 +40,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     <?php endif; ?>
-
     <?php if (session()->getFlashdata('error')): ?>
     <div class="alert alert-danger alert-dismissible fade show">
         <?= session()->getFlashdata('error') ?>
@@ -40,32 +47,45 @@
     </div>
     <?php endif; ?>
 
-    <div class="row">
-        <!-- Estadisticas -->
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body text-center">
-                    <h1 class="display-4 text-primary"><?= $totalVotantes ?></h1>
-                    <p class="text-muted mb-0">Total Votantes</p>
-                </div>
-            </div>
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body text-center">
-                    <h1 class="display-4 text-success"><?= $yaVotaron ?></h1>
-                    <p class="text-muted mb-0">Ya Votaron</p>
-                </div>
-            </div>
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body text-center">
-                    <?php $participacion = $totalVotantes > 0 ? round(($yaVotaron / $totalVotantes) * 100, 1) : 0; ?>
-                    <h1 class="display-4 text-info"><?= $participacion ?>%</h1>
-                    <p class="text-muted mb-0">Participacion</p>
+    <!-- Cards de estado clickeables -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm card-filtro h-100 active" data-filtro="todos" style="cursor:pointer; border-left: 4px solid #0d6efd !important;">
+                <div class="card-body text-center py-3">
+                    <div class="h2 mb-1 text-primary fw-bold"><?= $totalVotantes ?></div>
+                    <div class="small text-muted"><i class="bi bi-people me-1"></i>Total Censo</div>
                 </div>
             </div>
         </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm card-filtro h-100" data-filtro="votaron" style="cursor:pointer; border-left: 4px solid #198754 !important;">
+                <div class="card-body text-center py-3">
+                    <div class="h2 mb-1 text-success fw-bold"><?= $yaVotaron ?></div>
+                    <div class="small text-muted"><i class="bi bi-check-circle me-1"></i>Ya Votaron</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm card-filtro h-100" data-filtro="pendientes" style="cursor:pointer; border-left: 4px solid #ffc107 !important;">
+                <div class="card-body text-center py-3">
+                    <div class="h2 mb-1 text-warning fw-bold"><?= $noPendientes ?></div>
+                    <div class="small text-muted"><i class="bi bi-hourglass-split me-1"></i>Pendientes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0dcaf0 !important;">
+                <div class="card-body text-center py-3">
+                    <div class="h2 mb-1 text-info fw-bold"><?= $participacion ?>%</div>
+                    <div class="small text-muted"><i class="bi bi-bar-chart me-1"></i>Participacion</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Formularios y Lista -->
-        <div class="col-md-8">
+    <div class="row">
+        <!-- Formularios -->
+        <div class="col-md-4">
             <!-- Agregar votante individual -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-primary text-white">
@@ -75,28 +95,28 @@
                     <form action="<?= base_url('comites-elecciones/proceso/agregar-votante') ?>" method="post">
                         <input type="hidden" name="id_proceso" value="<?= $proceso['id_proceso'] ?>">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label class="form-label">Documento *</label>
                                 <input type="text" name="documento_identidad" class="form-control" required>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control">
-                            </div>
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label class="form-label">Nombre completo *</label>
                                 <input type="text" name="nombres" class="form-control" required placeholder="Ej: Juan Carlos Rodriguez Perez">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control">
+                            </div>
+                            <div class="col-12">
                                 <label class="form-label">Cargo</label>
                                 <input type="text" name="cargo" class="form-control">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label class="form-label">Area</label>
                                 <input type="text" name="area" class="form-control">
                             </div>
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary w-100">
                                     <i class="bi bi-plus-lg me-1"></i>Agregar
                                 </button>
                             </div>
@@ -105,197 +125,127 @@
                 </div>
             </div>
 
-            <!-- Importar masivo CSV -->
+            <!-- Importar CSV -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Importar desde CSV</h5>
-                    <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/plantilla-csv') ?>"
-                       class="btn btn-light btn-sm">
-                        <i class="bi bi-download me-1"></i>Descargar Plantilla
+                    <h6 class="mb-0"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Importar CSV</h6>
+                    <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/plantilla-csv') ?>" class="btn btn-light btn-sm">
+                        <i class="bi bi-download me-1"></i>Plantilla
                     </a>
                 </div>
                 <div class="card-body">
                     <form action="<?= base_url('comites-elecciones/proceso/importar-csv') ?>" method="post" enctype="multipart/form-data">
                         <input type="hidden" name="id_proceso" value="<?= $proceso['id_proceso'] ?>">
-
-                        <div class="alert alert-info">
-                            <h6 class="alert-heading"><i class="bi bi-info-circle me-1"></i>Instrucciones:</h6>
-                            <p class="small mb-1">Columnas obligatorias: <strong>cedula;nombre</strong></p>
-                            <p class="small mb-1">Columnas opcionales adicionales: <code>cedula;nombre;email;cargo;area</code></p>
-                            <p class="small mb-0 text-muted">El nombre puede ir completo en una sola columna (como lo entrega el sistema de nomina).</p>
+                        <div class="alert alert-info py-2 small">
+                            <strong>Obligatorio:</strong> cedula;nombre<br>
+                            <span class="text-muted">Opcional: ;email;cargo;area</span>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Archivo CSV *</label>
-                            <input type="file" name="archivo_csv" class="form-control" accept=".csv,.txt" required>
-                            <div class="form-text">Formatos aceptados: .csv, .txt (max 5MB)</div>
+                        <div class="mb-2">
+                            <input type="file" name="archivo_csv" class="form-control form-control-sm" accept=".csv,.txt" required>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Separador de columnas</label>
-                            <select name="separador" class="form-select" style="width: auto;">
-                                <option value=";">Punto y coma (;)</option>
-                                <option value=",">Coma (,)</option>
-                                <option value="\t">Tabulador</option>
+                        <div class="mb-2">
+                            <select name="separador" class="form-select form-select-sm">
+                                <option value=";">Separador: punto y coma (;)</option>
+                                <option value=",">Separador: coma (,)</option>
+                                <option value="\t">Separador: tabulador</option>
                             </select>
                         </div>
-
-                        <div class="form-check mb-3">
+                        <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" name="tiene_encabezado" id="tieneEncabezado" checked>
-                            <label class="form-check-label" for="tieneEncabezado">
-                                La primera fila contiene encabezados (nombres de columnas)
-                            </label>
+                            <label class="form-check-label small" for="tieneEncabezado">Primera fila es encabezado</label>
                         </div>
-
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-upload me-1"></i>Importar CSV
+                        <button type="submit" class="btn btn-success btn-sm w-100">
+                            <i class="bi bi-upload me-1"></i>Importar
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- Importar manual (alternativa rapida) -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-secondary text-white" data-bs-toggle="collapse" data-bs-target="#importeManual" style="cursor:pointer;">
-                    <h6 class="mb-0">
-                        <i class="bi bi-keyboard me-2"></i>Importar Manual (copiar/pegar)
-                        <i class="bi bi-chevron-down float-end"></i>
-                    </h6>
-                </div>
-                <div class="collapse" id="importeManual">
-                    <div class="card-body">
-                        <form action="<?= base_url('comites-elecciones/proceso/importar-votantes') ?>" method="post">
-                            <input type="hidden" name="id_proceso" value="<?= $proceso['id_proceso'] ?>">
-                            <div class="mb-3">
-                                <label class="form-label">Lista de Votantes</label>
-                                <textarea name="lista_votantes" class="form-control font-monospace" rows="5"
-                                          placeholder="documento;nombres;apellidos;email;cargo&#10;123456789;Juan;Perez;juan@email.com;Operario&#10;987654321;Maria;Lopez;maria@email.com;Auxiliar"></textarea>
-                                <small class="text-muted">Un votante por linea. Campos separados por punto y coma (;)</small>
-                            </div>
-                            <button type="submit" class="btn btn-secondary">
-                                <i class="bi bi-upload me-1"></i>Importar
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
             <!-- Envio masivo de emails -->
             <?php if ($totalVotantes > 0 && $proceso['estado'] === 'votacion'): ?>
-            <div class="card border-0 shadow-sm mb-4 border-info">
+            <?php
+            $conEmail = 0; $pendientesConEmail = 0;
+            foreach ($votantes as $v) {
+                if (!empty($v['email'])) { $conEmail++; if (!$v['ha_votado']) $pendientesConEmail++; }
+            }
+            ?>
+            <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-envelope-paper me-2"></i>Notificar Votantes por Email</h5>
+                    <h6 class="mb-0"><i class="bi bi-envelope-paper me-2"></i>Notificar por Email</h6>
                 </div>
                 <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <p class="mb-0">
-                                Enviar enlace de votacion personalizado a todos los votantes pendientes que tengan email registrado.
-                            </p>
-                            <small class="text-muted">
-                                <?php
-                                $conEmail = 0;
-                                $pendientesConEmail = 0;
-                                foreach ($votantes as $v) {
-                                    if (!empty($v['email'])) {
-                                        $conEmail++;
-                                        if (!$v['ha_votado']) $pendientesConEmail++;
-                                    }
-                                }
-                                ?>
-                                <i class="bi bi-info-circle me-1"></i>
-                                <?= $conEmail ?> votantes con email | <?= $pendientesConEmail ?> pendientes por notificar
-                            </small>
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/enviar-enlaces-todos') ?>"
-                                  method="post" onsubmit="return confirm('¿Enviar email a todos los votantes pendientes con email?');">
-                                <button type="submit" class="btn btn-info text-white" <?= $pendientesConEmail === 0 ? 'disabled' : '' ?>>
-                                    <i class="bi bi-send me-1"></i>Enviar a Todos (<?= $pendientesConEmail ?>)
-                                </button>
-                            </form>
-                        </div>
-                    </div>
+                    <p class="small mb-2 text-muted"><?= $conEmail ?> con email | <?= $pendientesConEmail ?> pendientes</p>
+                    <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/enviar-enlaces-todos') ?>"
+                          method="post" onsubmit="return confirm('¿Enviar email a todos los votantes pendientes?');">
+                        <button type="submit" class="btn btn-info text-white btn-sm w-100" <?= $pendientesConEmail === 0 ? 'disabled' : '' ?>>
+                            <i class="bi bi-send me-1"></i>Enviar a Pendientes (<?= $pendientesConEmail ?>)
+                        </button>
+                    </form>
                 </div>
             </div>
             <?php endif; ?>
+        </div>
 
-            <!-- Lista de votantes -->
+        <!-- Tabla de votantes -->
+        <div class="col-md-8">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Votantes Registrados (<?= $totalVotantes ?>)</h5>
-                    <?php if ($totalVotantes > 0): ?>
-                    <span class="badge bg-secondary"><?= $yaVotaron ?> de <?= $totalVotantes ?> han votado</span>
-                    <?php endif; ?>
+                    <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Votantes Registrados</h5>
+                    <span class="badge bg-secondary" id="lblFiltroActivo">Todos: <?= $totalVotantes ?></span>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body">
                     <?php if (empty($votantes)): ?>
-                    <div class="alert alert-warning m-3">
-                        No hay votantes registrados. Agregue votantes usando los formularios anteriores.
+                    <div class="alert alert-warning mb-0">
+                        No hay votantes registrados. Agregue votantes usando los formularios.
                     </div>
                     <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Documento</th>
-                                    <th>Nombre</th>
-                                    <th>Email</th>
-                                    <th>Cargo</th>
-                                    <th>Estado</th>
-                                    <th class="text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($votantes as $v): ?>
-                                <tr class="<?= $v['ha_votado'] ? 'table-success' : '' ?>">
-                                    <td><code><?= esc($v['documento_identidad']) ?></code></td>
-                                    <td><?= esc($v['nombres'] . ' ' . $v['apellidos']) ?></td>
-                                    <td>
+                    <table id="tablaCenso" class="table table-hover table-sm w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Documento</th>
+                                <th>Nombre</th>
+                                <th>Cargo</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($votantes as $v): ?>
+                            <tr data-votado="<?= $v['ha_votado'] ? '1' : '0' ?>">
+                                <td><code class="small"><?= esc($v['documento_identidad']) ?></code></td>
+                                <td><?= esc(trim($v['nombres'] . ' ' . $v['apellidos'])) ?></td>
+                                <td><small class="text-muted"><?= esc($v['cargo'] ?? '-') ?></small></td>
+                                <td>
+                                    <?php if ($v['ha_votado']): ?>
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Voto</span>
+                                    <?php else: ?>
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <?php if (!$v['ha_votado']): ?>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" title="Copiar enlace"
+                                                onclick="copiarEnlace('<?= base_url('votar/emitir/' . $v['token_acceso']) ?>')">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </button>
                                         <?php if (!empty($v['email'])): ?>
-                                            <small><?= esc($v['email']) ?></small>
-                                            <?php if (!empty($v['email_enviado'])): ?>
-                                                <span class="badge bg-info ms-1" title="Email enviado"><i class="bi bi-check"></i></span>
-                                            <?php endif; ?>
-                                        <?php else: ?>
-                                            <span class="text-muted">-</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td><small><?= esc($v['cargo'] ?? '-') ?></small></td>
-                                    <td>
-                                        <?php if ($v['ha_votado']): ?>
-                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Voto</span>
-                                        <?php else: ?>
-                                        <span class="badge bg-warning text-dark">Pendiente</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="text-center">
-                                        <?php if (!$v['ha_votado']): ?>
-                                        <div class="btn-group btn-group-sm">
-                                            <!-- Copiar enlace -->
-                                            <button type="button" class="btn btn-outline-secondary" title="Copiar enlace"
-                                                    onclick="copiarEnlace('<?= base_url('votar/emitir/' . $v['token_acceso']) ?>')">
-                                                <i class="bi bi-link-45deg"></i>
+                                        <form action="<?= base_url('comites-elecciones/votante/' . $v['id_votante'] . '/enviar-enlace') ?>"
+                                              method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-info btn-sm" title="Enviar email">
+                                                <i class="bi bi-envelope"></i>
                                             </button>
-                                            <!-- Enviar email individual -->
-                                            <?php if (!empty($v['email'])): ?>
-                                            <form action="<?= base_url('comites-elecciones/votante/' . $v['id_votante'] . '/enviar-enlace') ?>"
-                                                  method="post" class="d-inline">
-                                                <button type="submit" class="btn btn-outline-info" title="Enviar email">
-                                                    <i class="bi bi-envelope"></i>
-                                                </button>
-                                            </form>
-                                            <?php endif; ?>
-                                        </div>
-                                        <?php else: ?>
-                                        <span class="text-muted">-</span>
+                                        </form>
                                         <?php endif; ?>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                                    </div>
+                                    <?php else: ?>
+                                    <small class="text-muted"><?= date('d/m H:i', strtotime($v['fecha_voto'])) ?></small>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                     <?php endif; ?>
                 </div>
             </div>
@@ -303,12 +253,52 @@
     </div>
 </div>
 
+<?= $this->section('scripts') ?>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 <script>
+var filtroActivo = 'todos';
+
+// Filtro personalizado DataTables
+$.fn.dataTable.ext.search.push(function(settings, data, dataIndex, rowData, counter) {
+    if (filtroActivo === 'todos') return true;
+    var fila = $(settings.nTable).find('tbody tr').eq(dataIndex);
+    var votado = fila.data('votado');
+    if (filtroActivo === 'votaron') return votado == '1';
+    if (filtroActivo === 'pendientes') return votado == '0';
+    return true;
+});
+
+var tabla = $('#tablaCenso').DataTable({
+    language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+    },
+    pageLength: 25,
+    order: [[3, 'asc']],
+    columnDefs: [{ orderable: false, targets: 4 }]
+});
+
+// Cards clickeables
+$('.card-filtro').on('click', function() {
+    filtroActivo = $(this).data('filtro');
+
+    $('.card-filtro').css('opacity', '0.55').css('transform', 'scale(0.97)');
+    $(this).css('opacity', '1').css('transform', 'scale(1)');
+
+    var labels = { todos: 'Todos: <?= $totalVotantes ?>', votaron: 'Votaron: <?= $yaVotaron ?>', pendientes: 'Pendientes: <?= $noPendientes ?>' };
+    $('#lblFiltroActivo').text(labels[filtroActivo]);
+
+    tabla.draw();
+});
+
 function copiarEnlace(url) {
     navigator.clipboard.writeText(url).then(() => {
-        alert('Enlace copiado al portapapeles');
+        var btn = event.currentTarget;
+        btn.innerHTML = '<i class="bi bi-check"></i>';
+        setTimeout(() => btn.innerHTML = '<i class="bi bi-link-45deg"></i>', 1500);
     });
 }
 </script>
+<?= $this->endSection() ?>
 
 <?= $this->endSection() ?>
