@@ -1231,6 +1231,7 @@ $routes->get('/comites-elecciones/candidato/(:num)', 'ComitesEleccionesControlle
 
 // Fase 3: Sistema de Votacion Electronica
 $routes->post('/comites-elecciones/proceso/(:num)/iniciar-votacion', 'ComitesEleccionesController::iniciarVotacion/$1');
+$routes->post('/comites-elecciones/proceso/(:num)/actualizar-fechas-votacion', 'ComitesEleccionesController::actualizarFechasVotacion/$1');
 $routes->get('/comites-elecciones/proceso/(:num)/censo', 'ComitesEleccionesController::censovotantes/$1');
 $routes->post('/comites-elecciones/proceso/agregar-votante', 'ComitesEleccionesController::agregarVotante');
 $routes->post('/comites-elecciones/proceso/importar-votantes', 'ComitesEleccionesController::importarVotantes');

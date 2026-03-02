@@ -966,6 +966,39 @@ class ComitesEleccionesController extends BaseController
     }
 
     /**
+     * Actualizar fechas del periodo de votacion
+     */
+    public function actualizarFechasVotacion(int $idProceso)
+    {
+        $proceso = $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->get()
+            ->getRowArray();
+
+        if (!$proceso) {
+            return redirect()->back()->with('error', 'Proceso no encontrado');
+        }
+
+        $fechaInicio = $this->request->getPost('fecha_inicio_votacion');
+        $fechaFin    = $this->request->getPost('fecha_fin_votacion');
+
+        if (empty($fechaFin)) {
+            return redirect()->back()->with('error', 'La fecha de fin de votacion es obligatoria');
+        }
+
+        $datos = ['fecha_fin_votacion' => $fechaFin, 'updated_at' => date('Y-m-d H:i:s')];
+        if (!empty($fechaInicio)) {
+            $datos['fecha_inicio_votacion'] = $fechaInicio;
+        }
+
+        $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->update($datos);
+
+        return redirect()->back()->with('success', 'Fechas de votacion actualizadas correctamente');
+    }
+
+    /**
      * Gestionar censo de votantes
      */
     public function censovotantes(int $idProceso)

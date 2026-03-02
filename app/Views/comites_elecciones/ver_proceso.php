@@ -314,9 +314,16 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
                             </button>
                         </div>
                         <?php if (!empty($proceso['fecha_fin_votacion'])): ?>
-                        <small class="text-muted">
-                            <i class="bi bi-clock me-1"></i>Expira: <?= date('d/m/Y H:i', strtotime($proceso['fecha_fin_votacion'])) ?>
-                        </small>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>Expira: <?= date('d/m/Y H:i', strtotime($proceso['fecha_fin_votacion'])) ?>
+                            </small>
+                            <?php if (!$esVistaHistorica): ?>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarFechas">
+                                <i class="bi bi-pencil me-1"></i>Editar fecha
+                            </button>
+                            <?php endif; ?>
+                        </div>
                         <?php endif; ?>
                     </div>
                     <?php else: ?>
@@ -384,6 +391,38 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
                     </div>
                 </div>
             </div>
+
+            <?php if (!$esVistaHistorica): ?>
+            <!-- Modal editar fechas de votacion -->
+            <div class="modal fade" id="modalEditarFechas" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="bi bi-calendar-range me-2"></i>Editar Fechas de Votacion</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/actualizar-fechas-votacion') ?>" method="post">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Inicio de Votacion</label>
+                                    <input type="datetime-local" class="form-control" name="fecha_inicio_votacion"
+                                           value="<?= !empty($proceso['fecha_inicio_votacion']) ? date('Y-m-d\TH:i', strtotime($proceso['fecha_inicio_votacion'])) : '' ?>">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Fin de Votacion <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" name="fecha_fin_votacion" required
+                                           value="<?= !empty($proceso['fecha_fin_votacion']) ? date('Y-m-d\TH:i', strtotime($proceso['fecha_fin_votacion'])) : '' ?>">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <?php elseif ($faseVisualizar === 'escrutinio'): ?>
             <!-- Estado: Escrutinio -->
