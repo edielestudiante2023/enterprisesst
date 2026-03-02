@@ -34,6 +34,7 @@ class DocumentoSSTFactory
         'politica_sst_general' => PoliticaSstGeneral::class,
         'politica_alcohol_drogas' => PoliticaAlcoholDrogas::class,
         'politica_acoso_laboral' => PoliticaAcosoLaboral::class,
+        'politica_acoso_sexual' => PoliticaAcosoSexual::class,
         'politica_violencias_genero' => PoliticaViolenciasGenero::class,
         'politica_discriminacion' => PoliticaDiscriminacion::class,
         'politica_prevencion_emergencias' => PoliticaPrevencionEmergencias::class,

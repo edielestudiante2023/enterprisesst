@@ -19,7 +19,7 @@ if (!empty($documentosSSTAprobados)) {
         }
     }
 }
-$totalEsperado = 8; // 8 políticas (incluye Desconexión Laboral - Ley 2191/2022 e Incapacidades - Ley 2466/2025)
+$totalEsperado = 9; // 9 políticas (incluye Acoso Sexual separado - Ley 2365/2024)
 ?>
 
 <!-- Card de Carpeta con Dropdown de Políticas -->
@@ -56,6 +56,7 @@ $totalEsperado = 8; // 8 políticas (incluye Desconexión Laboral - Ley 2191/202
                                 'politica_sst_general'            => ['icono' => 'bi-shield-check',        'color' => 'text-primary', 'nombre' => 'Política SST General'],
                                 'politica_alcohol_drogas'         => ['icono' => 'bi-cup-straw',           'color' => 'text-warning', 'nombre' => 'Política Alcohol y SPA'],
                                 'politica_acoso_laboral'          => ['icono' => 'bi-person-x',            'color' => 'text-danger',  'nombre' => 'Política Acoso Laboral'],
+                                'politica_acoso_sexual'           => ['icono' => 'bi-shield-exclamation',  'color' => 'text-danger',  'nombre' => 'Política Acoso Sexual'],
                                 'politica_violencias_genero'      => ['icono' => 'bi-gender-ambiguous',    'color' => 'text-purple',  'nombre' => 'Política Violencias de Género'],
                                 'politica_discriminacion'         => ['icono' => 'bi-people',              'color' => 'text-info',    'nombre' => 'Política Discriminación'],
                                 'politica_desconexion_laboral'    => ['icono' => 'bi-power',               'color' => 'text-success', 'nombre' => 'Política Desconexión Laboral'],
@@ -102,8 +103,9 @@ $totalEsperado = 8; // 8 políticas (incluye Desconexión Laboral - Ley 2191/202
             <ol class="mb-0 mt-2 small">
                 <li>Política de Seguridad y Salud en el Trabajo (SST)</li>
                 <li>Política de Prevención del Consumo de Alcohol, Tabaco y SPA</li>
-                <li>Política de Prevención del Acoso Laboral</li>
-                <li>Política de Prevención del Acoso Sexual y Violencias de Género</li>
+                <li>Política de Prevención del Acoso Laboral (Ley 1010/2006)</li>
+                <li>Política de Prevención del Acoso Sexual (Ley 2365/2024 - Art. 210A C.P.)</li>
+                <li>Política de Prevención de Violencias de Género (Ley 1257/2008)</li>
                 <li>Política de Prevención de la Discriminación, Maltrato y Violencia</li>
                 <li>Política de Desconexión Laboral (Ley 2191/2022)</li>
                 <li>Política de Prevención y Respuesta ante Emergencias</li>
