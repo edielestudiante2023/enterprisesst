@@ -319,8 +319,8 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
                                 <i class="bi bi-clock me-1"></i>Expira: <?= date('d/m/Y H:i', strtotime($proceso['fecha_fin_votacion'])) ?>
                             </small>
                             <?php if (!$esVistaHistorica): ?>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarFechas">
-                                <i class="bi bi-pencil me-1"></i>Editar fecha
+                            <button type="button" class="btn btn-warning btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#modalEditarFechas">
+                                <i class="bi bi-pencil-fill me-1"></i>Editar fecha
                             </button>
                             <?php endif; ?>
                         </div>
