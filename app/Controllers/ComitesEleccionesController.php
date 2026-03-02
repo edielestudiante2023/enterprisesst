@@ -1188,10 +1188,10 @@ class ComitesEleccionesController extends BaseController
         // Crear contenido CSV con BOM para Excel
         $bom = "\xEF\xBB\xBF"; // UTF-8 BOM
         $contenido = $bom;
-        $contenido .= "cedula;nombre\n";
-        $contenido .= "1234567890;Juan Carlos Rodriguez Perez\n";
-        $contenido .= "1234567891;Maria Elena Lopez Garcia\n";
-        $contenido .= "1234567892;Pedro Antonio Martinez Silva\n";
+        $contenido .= "cedula;nombre;email;cargo;area\n";
+        $contenido .= "1234567890;Juan Carlos Rodriguez Perez;juan@empresa.com;Operario;Produccion\n";
+        $contenido .= "1234567891;Maria Elena Lopez Garcia;;Auxiliar;Administrativa\n";
+        $contenido .= "1234567892;Pedro Antonio Martinez Silva;;;;\n";
 
         $nombreArchivo = 'plantilla_votantes_' . $proceso['tipo_comite'] . '_' . date('Y') . '.csv';
 
@@ -1265,13 +1265,12 @@ class ComitesEleccionesController extends BaseController
                 continue;
             }
 
+            // Formato: cedula;nombre;email;cargo;area
             $documento = trim($campos[0] ?? '');
-            // Si hay 3+ campos: nombres y apellidos separados. Si solo 2: todo el nombre en nombres
             $nombres   = trim($campos[1] ?? '');
-            $apellidos = isset($campos[2]) ? trim($campos[2]) : '';
-            $email     = trim($campos[3] ?? '');
-            $cargo     = trim($campos[4] ?? '');
-            $area      = trim($campos[5] ?? '');
+            $email     = trim($campos[2] ?? '');
+            $cargo     = trim($campos[3] ?? '');
+            $area      = trim($campos[4] ?? '');
 
             // Validar documento
             if (empty($documento) || !preg_match('/^[0-9]+$/', $documento)) {
