@@ -339,11 +339,12 @@ class DocumentacionController extends Controller
                     'responsabilidades_trabajadores_sgsst'
                 ]);
             } elseif ($tipoCarpetaFases === 'politicas_2_1_1') {
-                // 2.1.1: Buscar las 8 políticas de SST
+                // 2.1.1: Buscar las 9 políticas de SST
                 $queryDocs->whereIn('tipo_documento', [
                     'politica_sst_general',
                     'politica_alcohol_drogas',
                     'politica_acoso_laboral',
+                    'politica_acoso_sexual',
                     'politica_violencias_genero',
                     'politica_discriminacion',
                     'politica_prevencion_emergencias',

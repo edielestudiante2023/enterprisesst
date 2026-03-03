@@ -243,6 +243,17 @@ class ClienteDocumentosSstController extends Controller
             'indicadores_sgsst' => ['ficha_tecnica_ind_24', 'ficha_tecnica_ind_32'],
             'revision_direccion' => ['soporte_revision_direccion'],
             'planificacion_auditorias_copasst' => ['soporte_planificacion_auditoria'],
+            'politicas_2_1_1' => [
+                'politica_sst_general',
+                'politica_alcohol_drogas',
+                'politica_acoso_laboral',
+                'politica_acoso_sexual',
+                'politica_violencias_genero',
+                'politica_discriminacion',
+                'politica_prevencion_emergencias',
+                'politica_incapacidades_licencias',
+                'politica_desconexion_laboral'
+            ],
         ];
 
         if (array_key_exists($tipoCarpetaFases, $filtros)) {
