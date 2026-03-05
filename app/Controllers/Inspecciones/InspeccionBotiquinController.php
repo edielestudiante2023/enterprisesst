@@ -79,16 +79,12 @@ class InspeccionBotiquinController extends BaseController
         $userId = session()->get('user_id');
         $role = session()->get('role');
 
-        if ($role === 'admin') {
-            $inspecciones = $this->inspeccionModel
-                ->select('tbl_inspeccion_botiquin.*, tbl_clientes.nombre_cliente, tbl_consultor.nombre_consultor')
-                ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_inspeccion_botiquin.id_cliente', 'left')
-                ->join('tbl_consultor', 'tbl_consultor.id_consultor = tbl_inspeccion_botiquin.id_consultor', 'left')
-                ->orderBy('tbl_inspeccion_botiquin.fecha_inspeccion', 'DESC')
-                ->findAll();
-        } else {
-            $inspecciones = $this->inspeccionModel->getByConsultor($userId);
-        }
+        $inspecciones = $this->inspeccionModel
+            ->select('tbl_inspeccion_botiquin.*, tbl_clientes.nombre_cliente, tbl_consultor.nombre_consultor')
+            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_inspeccion_botiquin.id_cliente', 'left')
+            ->join('tbl_consultor', 'tbl_consultor.id_consultor = tbl_inspeccion_botiquin.id_consultor', 'left')
+            ->orderBy('tbl_inspeccion_botiquin.fecha_inspeccion', 'DESC')
+            ->findAll();
 
         $data = [
             'title'        => 'Inspeccion de Botiquin Tipo B',

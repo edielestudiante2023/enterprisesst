@@ -18,55 +18,21 @@ class InspeccionesController extends BaseController
      */
     public function dashboard()
     {
-        $role = session()->get('role');
-        $userId = session()->get('user_id');
-
         $actaModel = new ActaVisitaModel();
+        $pendientes = $actaModel->getAllPendientes();
+        $totalActas = $actaModel->where('estado', 'completo')->countAllResults();
 
-        // Documentos pendientes del consultor (o todos si es admin)
-        if ($role === 'admin') {
-            $pendientes = $actaModel->getAllPendientes();
-        } else {
-            $pendientes = $actaModel->getPendientesByConsultor($userId);
-        }
-
-        // Conteo de actas completas
-        $totalActas = $actaModel->where('id_consultor', $userId)
-            ->where('estado', 'completo')
-            ->countAllResults();
-
-        // Locativas
         $locativaModel = new InspeccionLocativaModel();
-        $totalLocativas = $locativaModel->where('id_consultor', $userId)
-            ->where('estado', 'completo')
-            ->countAllResults();
+        $pendientesLocativas = $locativaModel->getAllPendientes();
+        $totalLocativas = $locativaModel->where('estado', 'completo')->countAllResults();
 
-        // Pendientes locativas (borradores)
-        if ($role === 'admin') {
-            $pendientesLocativas = $locativaModel->getAllPendientes();
-        } else {
-            $pendientesLocativas = $locativaModel->getPendientesByConsultor($userId);
-        }
-
-        // Extintores
         $extintoresModel = new InspeccionExtintoresModel();
-        $totalExtintores = $extintoresModel->where('id_consultor', $userId)
-            ->where('estado', 'completo')
-            ->countAllResults();
+        $pendientesExtintores = $extintoresModel->getAllPendientes();
+        $totalExtintores = $extintoresModel->where('estado', 'completo')->countAllResults();
 
-        $pendientesExtintores = ($role === 'admin')
-            ? $extintoresModel->getAllPendientes()
-            : $extintoresModel->getPendientesByConsultor($userId);
-
-        // Botiquin
         $botiquinModel = new InspeccionBotiquinModel();
-        $totalBotiquin = $botiquinModel->where('id_consultor', $userId)
-            ->where('estado', 'completo')
-            ->countAllResults();
-
-        $pendientesBotiquin = ($role === 'admin')
-            ? $botiquinModel->getAllPendientes()
-            : $botiquinModel->getPendientesByConsultor($userId);
+        $pendientesBotiquin = $botiquinModel->getAllPendientes();
+        $totalBotiquin = $botiquinModel->where('estado', 'completo')->countAllResults();
 
         $data = [
             'title'                  => 'Inspecciones SST',
@@ -93,17 +59,11 @@ class InspeccionesController extends BaseController
     public function getClientes()
     {
         $clientModel = new ClientModel();
-        $role = session()->get('role');
-        $userId = session()->get('user_id');
 
-        $builder = $clientModel->select('tbl_clientes.id_cliente, tbl_clientes.nombre_cliente, tbl_clientes.nit_cliente')
-            ->join('tbl_contratos', "tbl_contratos.id_cliente = tbl_clientes.id_cliente AND tbl_contratos.estado = 'activo'");
-
-        if ($role === 'consultant') {
-            $builder->where('tbl_clientes.id_consultor', $userId);
-        }
-
-        $clientes = $builder->orderBy('tbl_clientes.nombre_cliente', 'ASC')->findAll();
+        $clientes = $clientModel->select('tbl_clientes.id_cliente, tbl_clientes.nombre_cliente, tbl_clientes.nit_cliente')
+            ->join('tbl_contratos', "tbl_contratos.id_cliente = tbl_clientes.id_cliente AND tbl_contratos.estado = 'activo'")
+            ->orderBy('tbl_clientes.nombre_cliente', 'ASC')
+            ->findAll();
 
         return $this->response->setJSON($clientes);
     }
