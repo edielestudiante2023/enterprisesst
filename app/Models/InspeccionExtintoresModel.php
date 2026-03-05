@@ -19,7 +19,7 @@ class InspeccionExtintoresModel extends Model
         'cantidad_salones_comunales', 'cantidad_cuarto_bombas',
         'cantidad_planta_electrica',
         'recomendaciones_generales',
-        'ruta_pdf', 'estado',
+        'ruta_pdf', 'estado', 'id_documento_sst',
         'created_at', 'updated_at',
     ];
     protected $useTimestamps = true;

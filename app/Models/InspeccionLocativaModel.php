@@ -11,7 +11,7 @@ class InspeccionLocativaModel extends Model
     protected $allowedFields = [
         'id_cliente', 'id_consultor',
         'fecha_inspeccion', 'observaciones',
-        'ruta_pdf', 'estado',
+        'ruta_pdf', 'estado', 'id_documento_sst',
         'created_at', 'updated_at',
     ];
     protected $useTimestamps = true;

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /c/xampp/htdocs/enterprisesst/app/Traits)",
+      "Bash(mkdir -p /c/xampp/htdocs/enterprisesst/app/Libraries)"
+    ]
+  }
+}

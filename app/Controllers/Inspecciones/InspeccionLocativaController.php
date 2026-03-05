@@ -9,9 +9,14 @@ use App\Models\ClientModel;
 use App\Models\ConsultantModel;
 use App\Models\ReporteModel;
 use Dompdf\Dompdf;
+use App\Libraries\InspeccionEmailNotifier;
+use App\Traits\AutosaveJsonTrait;
+use App\Traits\InspeccionVersionTrait;
 
 class InspeccionLocativaController extends BaseController
 {
+    use AutosaveJsonTrait;
+    use InspeccionVersionTrait;
     protected InspeccionLocativaModel $inspeccionModel;
     protected HallazgoLocativoModel $hallazgoModel;
 
@@ -80,14 +85,17 @@ class InspeccionLocativaController extends BaseController
     public function store()
     {
         $userId = session()->get('user_id');
+        $isAutosave = $this->isAutosaveRequest();
 
-        $rules = [
-            'id_cliente'       => 'required|integer',
-            'fecha_inspeccion'  => 'required|valid_date',
-        ];
+        if (!$isAutosave) {
+            $rules = [
+                'id_cliente'       => 'required|integer',
+                'fecha_inspeccion'  => 'required|valid_date',
+            ];
 
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if (!$this->validate($rules)) {
+                return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            }
         }
 
         $inspeccionData = [
@@ -101,7 +109,11 @@ class InspeccionLocativaController extends BaseController
         $this->inspeccionModel->insert($inspeccionData);
         $idInspeccion = $this->inspeccionModel->getInsertID();
 
-        $this->saveHallazgos($idInspeccion);
+        $detailIds = $this->saveHallazgos($idInspeccion);
+
+        if ($isAutosave) {
+            return $this->autosaveJsonSuccess($idInspeccion, ['detail_ids' => $detailIds]);
+        }
 
         return redirect()->to('/inspecciones/inspeccion-locativa/edit/' . $idInspeccion)
             ->with('msg', 'Inspección guardada como borrador');
@@ -115,12 +127,6 @@ class InspeccionLocativaController extends BaseController
         $inspeccion = $this->inspeccionModel->find($id);
         if (!$inspeccion) {
             return redirect()->to('/inspecciones/inspeccion-locativa')->with('error', 'Inspección no encontrada');
-        }
-
-        // Si estaba completo, revertir a borrador para re-edición
-        if ($inspeccion['estado'] === 'completo') {
-            $this->inspeccionModel->update($id, ['estado' => 'borrador']);
-            $inspeccion['estado'] = 'borrador';
         }
 
         $data = [
@@ -143,12 +149,10 @@ class InspeccionLocativaController extends BaseController
     {
         $inspeccion = $this->inspeccionModel->find($id);
         if (!$inspeccion) {
+            if ($this->isAutosaveRequest()) {
+                return $this->autosaveJsonError('No encontrada', 404);
+            }
             return redirect()->to('/inspecciones/inspeccion-locativa')->with('error', 'No se puede editar esta inspección');
-        }
-
-        // Si estaba completo, revertir a borrador
-        if ($inspeccion['estado'] === 'completo') {
-            $this->inspeccionModel->update($id, ['estado' => 'borrador']);
         }
 
         $inspeccionData = [
@@ -158,10 +162,14 @@ class InspeccionLocativaController extends BaseController
         ];
 
         $this->inspeccionModel->update($id, $inspeccionData);
-        $this->saveHallazgos($id);
+        $detailIds = $this->saveHallazgos($id);
 
         if ($this->request->getPost('finalizar')) {
             return $this->finalizar($id);
+        }
+
+        if ($this->isAutosaveRequest()) {
+            return $this->autosaveJsonSuccess((int)$id, ['detail_ids' => $detailIds]);
         }
 
         return redirect()->to('/inspecciones/inspeccion-locativa/edit/' . $id)
@@ -221,8 +229,43 @@ class InspeccionLocativaController extends BaseController
         $inspeccion = $this->inspeccionModel->find($id);
         $this->uploadToReportes($inspeccion, $pdfPath);
 
+        // Registrar versión en sistema documental SST
+        try {
+            $idDoc = $this->registrarVersionDocumento(
+                (int)$inspeccion['id_cliente'],
+                'inspeccion_locativa',
+                'Inspecciones Locativas',
+                json_encode($inspeccion),
+                "Inspección realizada el {$inspeccion['fecha_inspeccion']}",
+                'IL-' . $inspeccion['id_cliente'],
+                (int)date('Y', strtotime($inspeccion['fecha_inspeccion']))
+            );
+            if ($idDoc) {
+                $this->inspeccionModel->update($id, ['id_documento_sst' => $idDoc]);
+            }
+        } catch (\Throwable $e) {
+            log_message('warning', 'registrarVersionDocumento locativa failed: ' . $e->getMessage());
+        }
+
+        // Enviar email con PDF adjunto
+        $emailResult = InspeccionEmailNotifier::enviar(
+            (int) $inspeccion['id_cliente'],
+            (int) $inspeccion['id_consultor'],
+            'INSPECCIÓN LOCATIVA',
+            $inspeccion['fecha_inspeccion'],
+            $pdfPath,
+            (int) $inspeccion['id'],
+            'InspeccionLocativa'
+        );
+        $msg = 'Inspección finalizada y PDF generado.';
+        if ($emailResult['success']) {
+            $msg .= ' ' . $emailResult['message'];
+        } else {
+            $msg .= ' (Email no enviado: ' . $emailResult['error'] . ')';
+        }
+
         return redirect()->to('/inspecciones/inspeccion-locativa/view/' . $id)
-            ->with('msg', 'Inspección finalizada y PDF generado');
+            ->with('msg', $msg);
     }
 
     /**
@@ -237,6 +280,7 @@ class InspeccionLocativaController extends BaseController
 
         // Siempre regenerar desde el template
         $pdfPath = $this->generarPdfInterno($id);
+        $this->inspeccionModel->update($id, ['ruta_pdf' => $pdfPath]);
 
         $fullPath = FCPATH . $pdfPath;
         if (!file_exists($fullPath)) {
@@ -250,7 +294,7 @@ class InspeccionLocativaController extends BaseController
     }
 
     /**
-     * Eliminar inspección (solo borradores)
+     * Eliminar inspección
      */
     public function delete($id)
     {
@@ -258,7 +302,6 @@ class InspeccionLocativaController extends BaseController
         if (!$inspeccion) {
             return redirect()->to('/inspecciones/inspeccion-locativa')->with('error', 'Inspección no encontrada');
         }
-
         // Eliminar fotos de hallazgos del disco
         $hallazgos = $this->hallazgoModel->getByInspeccion($id);
         foreach ($hallazgos as $h) {
@@ -281,12 +324,54 @@ class InspeccionLocativaController extends BaseController
         return redirect()->to('/inspecciones/inspeccion-locativa')->with('msg', 'Inspección eliminada');
     }
 
+    public function regenerarPdf($id)
+    {
+        $inspeccion = $this->inspeccionModel->find($id);
+        if (!$inspeccion || ($inspeccion['estado'] ?? '') !== 'completo') {
+            return redirect()->to('/inspecciones/inspeccion-locativa')->with('error', 'Solo se puede regenerar un registro finalizado.');
+        }
+
+        $pdfPath = $this->generarPdfInterno($id);
+
+        $this->inspeccionModel->update($id, [
+            'ruta_pdf' => $pdfPath,
+        ]);
+
+        $inspeccion = $this->inspeccionModel->find($id);
+        $this->uploadToReportes($inspeccion, $pdfPath);
+
+        return redirect()->to("/inspecciones/inspeccion-locativa/view/{$id}")->with('msg', 'PDF regenerado exitosamente.');
+    }
+
+    public function enviarEmail($id)
+    {
+        $inspeccion = $this->inspeccionModel->find($id);
+        if (!$inspeccion || $inspeccion['estado'] !== 'completo' || empty($inspeccion['ruta_pdf'])) {
+            return redirect()->to("/inspecciones/inspeccion-locativa/view/{$id}")->with('error', 'Debe estar finalizado con PDF para enviar email.');
+        }
+
+        $result = InspeccionEmailNotifier::enviar(
+            (int) $inspeccion['id_cliente'],
+            (int) $inspeccion['id_consultor'],
+            'INSPECCIÓN LOCATIVA',
+            $inspeccion['fecha_inspeccion'],
+            $inspeccion['ruta_pdf'],
+            (int) $inspeccion['id'],
+            'InspeccionLocativa'
+        );
+
+        if ($result['success']) {
+            return redirect()->to("/inspecciones/inspeccion-locativa/view/{$id}")->with('msg', $result['message']);
+        }
+        return redirect()->to("/inspecciones/inspeccion-locativa/view/{$id}")->with('error', $result['error']);
+    }
+
     // ===== MÉTODOS PRIVADOS =====
 
     /**
      * Guardar hallazgos desde POST con fotos
      */
-    private function saveHallazgos(int $idInspeccion): void
+    private function saveHallazgos(int $idInspeccion): array
     {
         $descripciones = $this->request->getPost('hallazgo_descripcion') ?? [];
         $estados = $this->request->getPost('hallazgo_estado') ?? [];
@@ -295,8 +380,10 @@ class InspeccionLocativaController extends BaseController
 
         // Obtener hallazgos existentes para preservar fotos no resubidas
         $existentes = [];
+        $existentesPorOrden = [];
         foreach ($this->hallazgoModel->getByInspeccion($idInspeccion) as $h) {
             $existentes[$h['id']] = $h;
+            $existentesPorOrden[(int)$h['orden']] = $h;
         }
 
         // Eliminar hallazgos anteriores
@@ -308,6 +395,7 @@ class InspeccionLocativaController extends BaseController
         }
 
         $files = $this->request->getFiles();
+        $newIds = [];
 
         foreach ($descripciones as $i => $descripcion) {
             if (empty(trim($descripcion))) {
@@ -316,6 +404,10 @@ class InspeccionLocativaController extends BaseController
 
             $existenteId = $hallazgoIds[$i] ?? null;
             $existente = $existenteId ? ($existentes[$existenteId] ?? null) : null;
+            // Fallback por posición: si el ID está desactualizado (race condition autosave)
+            if (!$existente) {
+                $existente = $existentesPorOrden[$i + 1] ?? null;
+            }
 
             // Foto del hallazgo
             $imagenPath = $existente['imagen'] ?? null;
@@ -346,7 +438,10 @@ class InspeccionLocativaController extends BaseController
                 'observaciones'     => $observaciones[$i] ?? null,
                 'orden'             => $i + 1,
             ]);
+            $newIds[] = $this->hallazgoModel->getInsertID();
         }
+
+        return $newIds;
     }
 
     /**
@@ -466,7 +561,7 @@ class InspeccionLocativaController extends BaseController
             'id_detailreport' => 10,
             'id_report_type'  => 6,
             'id_cliente'      => $inspeccion['id_cliente'],
-            'estado'          => 'Activo',
+            'estado'          => 'CERRADO',
             'observaciones'   => 'Generado automaticamente desde modulo de inspecciones. insp_locativa_id:' . $inspeccion['id'],
             'enlace'          => base_url('uploads/' . $nitCliente . '/' . $fileName),
             'updated_at'      => date('Y-m-d H:i:s'),

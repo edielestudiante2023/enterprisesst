@@ -11,11 +11,17 @@ use App\Models\PendientesModel;
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
 use App\Models\ReporteModel;
+use App\Libraries\InspeccionEmailNotifier;
 use App\Models\VencimientosMantenimientoModel;
+use App\Models\CicloVisitaModel;
 use Dompdf\Dompdf;
+use App\Traits\AutosaveJsonTrait;
+use App\Traits\InspeccionVersionTrait;
 
 class ActaVisitaController extends BaseController
 {
+    use AutosaveJsonTrait;
+    use InspeccionVersionTrait;
     protected ActaVisitaModel $actaModel;
     protected ActaVisitaIntegranteModel $integranteModel;
     protected ActaVisitaTemaModel $temaModel;
@@ -57,7 +63,7 @@ class ActaVisitaController extends BaseController
     }
 
     /**
-     * Formulario de creacion. Opcionalmente recibe id_cliente pre-seleccionado.
+     * Formulario de creación. Opcionalmente recibe id_cliente pre-seleccionado.
      */
     public function create($idCliente = null)
     {
@@ -82,17 +88,20 @@ class ActaVisitaController extends BaseController
     public function store()
     {
         $userId = session()->get('user_id');
+        $isAutosave = $this->isAutosaveRequest();
 
-        // Validar campos minimos
-        $rules = [
-            'id_cliente'   => 'required|integer',
-            'fecha_visita' => 'required|valid_date',
-            'hora_visita'  => 'required',
-            'motivo'       => 'required|min_length[3]',
-        ];
+        // Validar campos mínimos
+        if (!$isAutosave) {
+            $rules = [
+                'id_cliente'   => 'required|integer',
+                'fecha_visita' => 'required|valid_date',
+                'hora_visita'  => 'required',
+                'motivo'       => 'required|min_length[3]',
+            ];
 
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if (!$this->validate($rules)) {
+                return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            }
         }
 
         // Insertar acta
@@ -126,12 +135,16 @@ class ActaVisitaController extends BaseController
         // Guardar fotos
         $this->saveFotos($idActa);
 
+        if ($isAutosave) {
+            return $this->autosaveJsonSuccess($idActa);
+        }
+
         return redirect()->to('/inspecciones/acta-visita/edit/' . $idActa)
             ->with('msg', 'Acta guardada como borrador');
     }
 
     /**
-     * Formulario de edicion (solo borradores y pendiente_firma)
+     * Formulario de edición (solo borradores y pendiente_firma)
      */
     public function edit($id)
     {
@@ -139,13 +152,6 @@ class ActaVisitaController extends BaseController
         if (!$acta) {
             return redirect()->to('/inspecciones/acta-visita')->with('error', 'Acta no encontrada');
         }
-
-        // Si estaba completo, revertir a borrador para re-edición
-        if ($acta['estado'] === 'completo') {
-            $this->actaModel->update($id, ['estado' => 'borrador']);
-            $acta['estado'] = 'borrador';
-        }
-
         $data = [
             'title'       => 'Editar Acta de Visita',
             'acta'        => $acta,
@@ -169,12 +175,10 @@ class ActaVisitaController extends BaseController
     {
         $acta = $this->actaModel->find($id);
         if (!$acta) {
+            if ($this->isAutosaveRequest()) {
+                return $this->autosaveJsonError('No encontrada', 404);
+            }
             return redirect()->to('/inspecciones/acta-visita')->with('error', 'No se puede editar esta acta');
-        }
-
-        // Si estaba completo, revertir a borrador
-        if ($acta['estado'] === 'completo') {
-            $this->actaModel->update($id, ['estado' => 'borrador']);
         }
 
         $actaData = [
@@ -197,6 +201,10 @@ class ActaVisitaController extends BaseController
         $this->saveTemas($id);
         $this->saveCompromisos($id);
         $this->saveFotos($id);
+
+        if ($this->isAutosaveRequest()) {
+            return $this->autosaveJsonSuccess((int)$id);
+        }
 
         $redirect = $this->request->getPost('ir_a_firmas') ? '/inspecciones/acta-visita/firma/' . $id : '/inspecciones/acta-visita/edit/' . $id;
 
@@ -240,11 +248,6 @@ class ActaVisitaController extends BaseController
         if (!$acta) {
             return redirect()->to('/inspecciones/acta-visita')->with('error', 'Acta no encontrada');
         }
-
-        if ($acta['estado'] === 'completo') {
-            return redirect()->to('/inspecciones/acta-visita/view/' . $id);
-        }
-
         // Cambiar estado a pendiente_firma
         if ($acta['estado'] === 'borrador') {
             $this->actaModel->update($id, ['estado' => 'pendiente_firma']);
@@ -252,7 +255,7 @@ class ActaVisitaController extends BaseController
 
         $integrantes = $this->integranteModel->getByActa($id);
 
-        // Determinar que firmas se necesitan
+        // Determinar qué firmas se necesitan
         $firmantes = [];
         foreach ($integrantes as $integrante) {
             if (strtoupper($integrante['rol']) === 'ADMINISTRADOR') {
@@ -298,7 +301,7 @@ class ActaVisitaController extends BaseController
         $firmaBase64 = $this->request->getPost('firma_imagen');
 
         if (!in_array($tipo, ['administrador', 'vigia', 'consultor'])) {
-            return $this->response->setJSON(['success' => false, 'error' => 'Tipo de firma no valido']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Tipo de firma no válido']);
         }
 
         // Decodificar base64 a PNG
@@ -324,7 +327,7 @@ class ActaVisitaController extends BaseController
     }
 
     /**
-     * Finalizar acta: generar PDF + cargar a reportes
+     * Finalizar acta: generar PDF + cargar a reportes + email + actualizar ciclo
      */
     public function finalizar($id)
     {
@@ -362,31 +365,96 @@ class ActaVisitaController extends BaseController
         $acta = $this->actaModel->find($id); // Re-read with updated data
         $this->uploadToReportes($acta, $pdfPath);
 
+        // Enviar email con PDF adjunto
+        $emailResult = InspeccionEmailNotifier::enviar(
+            (int) $acta['id_cliente'],
+            (int) $acta['id_consultor'],
+            'ACTA DE VISITA',
+            $acta['fecha_visita'],
+            $pdfPath,
+            (int) $acta['id'],
+            'ActaVisita'
+        );
+        $emailMsg = '';
+        if ($emailResult['success']) {
+            $emailMsg = $emailResult['message'];
+        } else {
+            $emailMsg = '(Email no enviado: ' . $emailResult['error'] . ')';
+        }
+
+        // ─── Hook: Actualizar ciclo de visita en tbl_ciclos_visita ───
+        $this->actualizarCicloVisita($acta);
+
+        // Registrar versión en sistema documental SST
+        try {
+            $idDoc = $this->registrarVersionDocumento(
+                (int)$acta['id_cliente'],
+                'acta_visita',
+                'Actas de Visita',
+                json_encode($acta),
+                "Acta de visita realizada el {$acta['fecha_visita']}",
+                'AV-' . $acta['id_cliente'],
+                (int)date('Y', strtotime($acta['fecha_visita']))
+            );
+            if ($idDoc) {
+                $this->actaModel->update($id, ['id_documento_sst' => $idDoc]);
+            }
+        } catch (\Throwable $e) {
+            log_message('warning', 'registrarVersionDocumento acta_visita failed: ' . $e->getMessage());
+        }
+
         return $this->response->setJSON([
-            'success' => true,
-            'pdf_url' => base_url($pdfPath),
+            'success'   => true,
+            'pdf_url'   => base_url($pdfPath),
+            'email_msg' => $emailMsg,
         ]);
     }
 
     /**
-     * Ver/descargar PDF generado
+     * Ver/descargar PDF - siempre regenera desde el template actual
      */
     public function generatePdf($id)
     {
         $acta = $this->actaModel->find($id);
-        if (!$acta || empty($acta['ruta_pdf'])) {
-            return redirect()->to('/inspecciones/acta-visita/view/' . $id)->with('error', 'PDF no disponible');
+        if (!$acta) {
+            return redirect()->to('/inspecciones/acta-visita')->with('error', 'Acta no encontrada');
         }
 
-        $pdfPath = FCPATH . $acta['ruta_pdf'];
-        if (!file_exists($pdfPath)) {
-            return redirect()->back()->with('error', 'Archivo PDF no encontrado');
+        // Regenerar PDF desde template actual
+        $pdfRelPath = $this->generarPdfInterno($id);
+        if (!$pdfRelPath) {
+            return redirect()->back()->with('error', 'Error generando PDF');
         }
+        $this->actaModel->update($id, ['ruta_pdf' => $pdfRelPath]);
+
+        $pdfPath = FCPATH . $pdfRelPath;
 
         return $this->response
             ->setHeader('Content-Type', 'application/pdf')
             ->setHeader('Content-Disposition', 'inline; filename="acta_visita_' . $id . '.pdf"')
             ->setBody(file_get_contents($pdfPath));
+    }
+
+    /**
+     * Regenerar PDF de un acta ya finalizada
+     */
+    public function regenerarPdf($id)
+    {
+        $acta = $this->actaModel->find($id);
+        if (!$acta || ($acta['estado'] ?? '') !== 'completo') {
+            return redirect()->to('/inspecciones/acta-visita')->with('error', 'Solo se puede regenerar un registro finalizado.');
+        }
+
+        $pdfPath = $this->generarPdfInterno($id);
+
+        $this->actaModel->update($id, [
+            'ruta_pdf' => $pdfPath,
+        ]);
+
+        $acta = $this->actaModel->find($id);
+        $this->uploadToReportes($acta, $pdfPath);
+
+        return redirect()->to("/inspecciones/acta-visita/view/{$id}")->with('msg', 'PDF regenerado exitosamente.');
     }
 
     /**
@@ -398,7 +466,6 @@ class ActaVisitaController extends BaseController
         if (!$acta) {
             return redirect()->to('/inspecciones/acta-visita')->with('error', 'Acta no encontrada');
         }
-
         // Eliminar fotos del disco
         $fotos = (new ActaVisitaFotoModel())->getByActa($id);
         foreach ($fotos as $foto) {
@@ -415,13 +482,39 @@ class ActaVisitaController extends BaseController
             }
         }
 
-        // CASCADE eliminara integrantes, temas, fotos automaticamente
+        // CASCADE eliminará integrantes, temas, fotos automáticamente
         $this->actaModel->delete($id);
 
         return redirect()->to('/inspecciones/acta-visita')->with('msg', 'Acta eliminada');
     }
 
-    // ========== METODOS PRIVADOS ==========
+    /**
+     * Enviar email con el PDF al cliente y consultor
+     */
+    public function enviarEmail($id)
+    {
+        $acta = $this->actaModel->find($id);
+        if (!$acta || $acta['estado'] !== 'completo' || empty($acta['ruta_pdf'])) {
+            return redirect()->to("/inspecciones/acta-visita/view/{$id}")->with('error', 'Debe estar finalizado con PDF para enviar email.');
+        }
+
+        $result = InspeccionEmailNotifier::enviar(
+            (int) $acta['id_cliente'],
+            (int) $acta['id_consultor'],
+            'ACTA DE VISITA',
+            $acta['fecha_visita'],
+            $acta['ruta_pdf'],
+            (int) $acta['id'],
+            'ActaVisita'
+        );
+
+        if ($result['success']) {
+            return redirect()->to("/inspecciones/acta-visita/view/{$id}")->with('msg', $result['message']);
+        }
+        return redirect()->to("/inspecciones/acta-visita/view/{$id}")->with('error', $result['error']);
+    }
+
+    // ========== MÉTODOS PRIVADOS ==========
 
     /**
      * Guardar/reemplazar integrantes del POST
@@ -536,11 +629,11 @@ class ActaVisitaController extends BaseController
             ->findAll();
 
         // Mantenimientos por vencer
+        $dateThreshold = date('Y-m-d', strtotime('+30 days'));
         $mantenimientos = [];
         try {
-            $dateThreshold = date('Y-m-d', strtotime('+30 days'));
             $mantenimientos = (new VencimientosMantenimientoModel())
-                ->select('tbl_vencimientos_mantenimientos.*, tbl_mantenimientos.descripcion_mantenimiento')
+                ->select('tbl_vencimientos_mantenimientos.*, tbl_mantenimientos.detalle_mantenimiento')
                 ->join('tbl_mantenimientos', 'tbl_mantenimientos.id_mantenimiento = tbl_vencimientos_mantenimientos.id_mantenimiento', 'left')
                 ->where('tbl_vencimientos_mantenimientos.id_cliente', $acta['id_cliente'])
                 ->where('tbl_vencimientos_mantenimientos.estado_actividad', 'sin ejecutar')
@@ -548,7 +641,7 @@ class ActaVisitaController extends BaseController
                 ->orderBy('tbl_vencimientos_mantenimientos.fecha_vencimiento', 'ASC')
                 ->findAll();
         } catch (\Exception $e) {
-            // Tabla aun no creada
+            // Tabla aún no creada
         }
 
         // Cargar firmas como base64 para incrustar en DOMPDF
@@ -566,16 +659,32 @@ class ActaVisitaController extends BaseController
         // Logo del cliente
         $logoBase64 = '';
         if (!empty($cliente['logo'])) {
-            $logoPath = FCPATH . $cliente['logo'];
+            $logoPath = FCPATH . 'uploads/' . $cliente['logo'];
             if (file_exists($logoPath)) {
-                $ext = pathinfo($logoPath, PATHINFO_EXTENSION);
-                $logoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($logoPath));
+                $logoMime = mime_content_type($logoPath);
+                $logoBase64 = 'data:' . $logoMime . ';base64,' . base64_encode(file_get_contents($logoPath));
             }
         }
 
         // Consultor
         $consultantModel = new ConsultantModel();
         $consultor = $consultantModel->find($acta['id_consultor']);
+
+        // Fotos del acta convertidas a base64 para DOMPDF
+        $fotosBase64 = [];
+        $fotosModel = new ActaVisitaFotoModel();
+        $fotos = $fotosModel->getByActa($id);
+        foreach ($fotos as $foto) {
+            $fotoPath = FCPATH . $foto['ruta_archivo'];
+            if (file_exists($fotoPath)) {
+                $mime = mime_content_type($fotoPath);
+                $fotosBase64[] = [
+                    'data'        => 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fotoPath)),
+                    'descripcion' => $foto['descripcion'] ?? '',
+                    'tipo'        => $foto['tipo'] ?? 'foto',
+                ];
+            }
+        }
 
         $data = [
             'acta'                => $acta,
@@ -588,11 +697,15 @@ class ActaVisitaController extends BaseController
             'mantenimientos'      => $mantenimientos,
             'firmas'              => $firmas,
             'logoBase64'          => $logoBase64,
+            'fotos'               => $fotosBase64,
         ];
 
         $html = view('inspecciones/acta_visita/pdf', $data);
 
-        $dompdf = new Dompdf();
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('isHtml5ParserEnabled', true);
+        $dompdf = new Dompdf($options);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('letter', 'portrait');
         $dompdf->render();
@@ -654,7 +767,7 @@ class ActaVisitaController extends BaseController
             'id_detailreport' => 9,
             'id_report_type'  => 6,
             'id_cliente'      => $acta['id_cliente'],
-            'estado'          => 'Activo',
+            'estado'          => 'CERRADO',
             'observaciones'   => 'Generado automaticamente desde modulo de inspecciones. acta_id:' . $acta['id'],
             'enlace'          => base_url('uploads/' . $nitCliente . '/' . $fileName),
             'updated_at'      => date('Y-m-d H:i:s'),
@@ -666,5 +779,50 @@ class ActaVisitaController extends BaseController
 
         $data['created_at'] = date('Y-m-d H:i:s');
         return $reporteModel->save($data);
+    }
+
+    /**
+     * Actualizar ciclo de visita al completar un acta
+     */
+    private function actualizarCicloVisita(array $acta): void
+    {
+        $cicloModel = new CicloVisitaModel();
+
+        $mesActa  = (int)date('n', strtotime($acta['fecha_visita']));
+        $anioActa = (int)date('Y', strtotime($acta['fecha_visita']));
+
+        // Buscar ciclo pendiente para este cliente en el mes del acta
+        $ciclo = $cicloModel->where('id_cliente', $acta['id_cliente'])
+            ->where('mes_esperado', $mesActa)
+            ->where('anio', $anioActa)
+            ->first();
+
+        if (!$ciclo) {
+            return; // No hay ciclo registrado para este periodo
+        }
+
+        // Determinar estatus de agenda
+        $estatusAgenda = 'cumple';
+        if ($ciclo['fecha_agendada'] && $acta['fecha_visita'] !== $ciclo['fecha_agendada']) {
+            $estatusAgenda = 'incumple'; // Fue en otro día del agendado
+        }
+
+        $cicloModel->update($ciclo['id'], [
+            'fecha_acta'      => $acta['fecha_visita'],
+            'id_acta'         => $acta['id'],
+            'estatus_agenda'  => $estatusAgenda,
+            'estatus_mes'     => 'cumple', // Si hay acta en el mes, el mes cumple
+        ]);
+
+        // Auto-generar siguiente ciclo
+        $estandar = $ciclo['estandar'] ?? '';
+        if ($estandar) {
+            $cicloModel->generarSiguienteCiclo(
+                (int)$acta['id_cliente'],
+                $acta['fecha_visita'],
+                $estandar,
+                (int)$acta['id_consultor']
+            );
+        }
     }
 }

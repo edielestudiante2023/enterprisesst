@@ -613,6 +613,18 @@ $routes->get('client/dashboard-pendientes/(:num)', 'ClientDashboardPendientesCon
 $routes->get('client/dashboard-plan-trabajo/(:num)', 'ClientDashboardPlanTrabajoController::index/$1');
 $routes->get('client/dashboard-capacitaciones/(:num)', 'ClientDashboardCapacitacionesController::index/$1');
 
+// Portal cliente - Inspecciones
+$routes->group('client/inspecciones', ['filter' => 'auth'], function($routes) {
+    $routes->get('actas-visita', 'ClientInspeccionesController::listActas');
+    $routes->get('actas-visita/(:num)', 'ClientInspeccionesController::viewActa/$1');
+    $routes->get('extintores', 'ClientInspeccionesController::listExtintores');
+    $routes->get('extintores/(:num)', 'ClientInspeccionesController::viewExtintores/$1');
+    $routes->get('botiquin', 'ClientInspeccionesController::listBotiquin');
+    $routes->get('botiquin/(:num)', 'ClientInspeccionesController::viewBotiquin/$1');
+    $routes->get('locativas', 'ClientInspeccionesController::listLocativas');
+    $routes->get('locativas/(:num)', 'ClientInspeccionesController::viewLocativa/$1');
+});
+
 // Consultor
 $routes->get('consultant/dashboard-pendientes', 'ConsultantDashboardPendientesController::index');
 $routes->get('consultant/dashboard-plan-trabajo', 'ConsultantDashboardPlanTrabajoController::index');
@@ -1517,6 +1529,8 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->post('acta-visita/save-firma/(:num)', 'ActaVisitaController::saveFirma/$1');
     $routes->get('acta-visita/pdf/(:num)', 'ActaVisitaController::generatePdf/$1');
     $routes->post('acta-visita/finalizar/(:num)', 'ActaVisitaController::finalizar/$1');
+    $routes->get('acta-visita/regenerar/(:num)', 'ActaVisitaController::regenerarPdf/$1');
+    $routes->get('acta-visita/enviar-email/(:num)', 'ActaVisitaController::enviarEmail/$1');
     $routes->get('acta-visita/delete/(:num)', 'ActaVisitaController::delete/$1');
 
     // Inspeccion Locativa
@@ -1528,6 +1542,8 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->post('inspeccion-locativa/update/(:num)', 'InspeccionLocativaController::update/$1');
     $routes->get('inspeccion-locativa/view/(:num)', 'InspeccionLocativaController::view/$1');
     $routes->get('inspeccion-locativa/pdf/(:num)', 'InspeccionLocativaController::generatePdf/$1');
+    $routes->get('inspeccion-locativa/regenerar/(:num)', 'InspeccionLocativaController::regenerarPdf/$1');
+    $routes->get('inspeccion-locativa/enviar-email/(:num)', 'InspeccionLocativaController::enviarEmail/$1');
     $routes->post('inspeccion-locativa/finalizar/(:num)', 'InspeccionLocativaController::finalizar/$1');
     $routes->get('inspeccion-locativa/delete/(:num)', 'InspeccionLocativaController::delete/$1');
 
@@ -1551,6 +1567,7 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('extintores/view/(:num)', 'InspeccionExtintoresController::view/$1');
     $routes->get('extintores/pdf/(:num)', 'InspeccionExtintoresController::generatePdf/$1');
     $routes->get('extintores/regenerar/(:num)', 'InspeccionExtintoresController::regenerarPdf/$1');
+    $routes->get('extintores/enviar-email/(:num)', 'InspeccionExtintoresController::enviarEmail/$1');
     $routes->post('extintores/finalizar/(:num)', 'InspeccionExtintoresController::finalizar/$1');
     $routes->get('extintores/delete/(:num)', 'InspeccionExtintoresController::delete/$1');
 
@@ -1564,6 +1581,7 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('botiquin/view/(:num)', 'InspeccionBotiquinController::view/$1');
     $routes->get('botiquin/pdf/(:num)', 'InspeccionBotiquinController::generatePdf/$1');
     $routes->get('botiquin/regenerar/(:num)', 'InspeccionBotiquinController::regenerarPdf/$1');
+    $routes->get('botiquin/enviar-email/(:num)', 'InspeccionBotiquinController::enviarEmail/$1');
     $routes->post('botiquin/finalizar/(:num)', 'InspeccionBotiquinController::finalizar/$1');
     $routes->get('botiquin/delete/(:num)', 'InspeccionBotiquinController::delete/$1');
 

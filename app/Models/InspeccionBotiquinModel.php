@@ -18,7 +18,7 @@ class InspeccionBotiquinModel extends Model
         'estado_collares', 'foto_collares',
         'estado_inmovilizadores', 'foto_inmovilizadores',
         'recomendaciones', 'pendientes_generados',
-        'ruta_pdf', 'estado',
+        'ruta_pdf', 'estado', 'id_documento_sst',
         'created_at', 'updated_at',
     ];
     protected $useTimestamps = true;

@@ -8,10 +8,17 @@ use App\Models\ExtintorDetalleModel;
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
 use App\Models\ReporteModel;
+use App\Models\MantenimientoModel;
+use App\Models\VencimientosMantenimientoModel;
 use Dompdf\Dompdf;
+use App\Libraries\InspeccionEmailNotifier;
+use App\Traits\AutosaveJsonTrait;
+use App\Traits\InspeccionVersionTrait;
 
 class InspeccionExtintoresController extends BaseController
 {
+    use AutosaveJsonTrait;
+    use InspeccionVersionTrait;
     protected InspeccionExtintoresModel $inspeccionModel;
     protected ExtintorDetalleModel $detalleModel;
 
@@ -91,9 +98,12 @@ class InspeccionExtintoresController extends BaseController
     public function store()
     {
         $userId = session()->get('user_id');
+        $isAutosave = $this->isAutosaveRequest();
 
-        if (!$this->validate(['id_cliente' => 'required|integer', 'fecha_inspeccion' => 'required|valid_date'])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if (!$isAutosave) {
+            if (!$this->validate(['id_cliente' => 'required|integer', 'fecha_inspeccion' => 'required|valid_date'])) {
+                return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            }
         }
 
         $inspeccionData = [
@@ -121,7 +131,11 @@ class InspeccionExtintoresController extends BaseController
         $this->inspeccionModel->insert($inspeccionData);
         $idInspeccion = $this->inspeccionModel->getInsertID();
 
-        $this->saveExtintores($idInspeccion);
+        $detailIds = $this->saveExtintores($idInspeccion);
+
+        if ($isAutosave) {
+            return $this->autosaveJsonSuccess($idInspeccion, ['detail_ids' => $detailIds]);
+        }
 
         return redirect()->to('/inspecciones/extintores/edit/' . $idInspeccion)
             ->with('msg', 'Inspeccion guardada como borrador');
@@ -132,12 +146,6 @@ class InspeccionExtintoresController extends BaseController
         $inspeccion = $this->inspeccionModel->find($id);
         if (!$inspeccion) {
             return redirect()->to('/inspecciones/extintores')->with('error', 'Inspeccion no encontrada');
-        }
-
-        // Doc 25: revert to borrador if completo (allow re-editing)
-        if (($inspeccion['estado'] ?? '') === 'completo') {
-            $this->inspeccionModel->update($id, ['estado' => 'borrador']);
-            $inspeccion['estado'] = 'borrador';
         }
 
         $data = [
@@ -158,11 +166,13 @@ class InspeccionExtintoresController extends BaseController
     {
         $inspeccion = $this->inspeccionModel->find($id);
         if (!$inspeccion) {
+            if ($this->isAutosaveRequest()) {
+                return $this->autosaveJsonError('No encontrada', 404);
+            }
             return redirect()->to('/inspecciones/extintores')->with('error', 'No se puede editar');
         }
 
-        // Doc 25: revert to borrador if completo
-        $updateData = [
+        $this->inspeccionModel->update($id, [
             'id_cliente'                    => $this->request->getPost('id_cliente'),
             'fecha_inspeccion'              => $this->request->getPost('fecha_inspeccion'),
             'fecha_vencimiento_global'      => $this->request->getPost('fecha_vencimiento_global') ?: null,
@@ -180,18 +190,16 @@ class InspeccionExtintoresController extends BaseController
             'cantidad_cuarto_bombas'        => (int)$this->request->getPost('cantidad_cuarto_bombas'),
             'cantidad_planta_electrica'     => (int)$this->request->getPost('cantidad_planta_electrica'),
             'recomendaciones_generales'     => $this->request->getPost('recomendaciones_generales'),
-        ];
+        ]);
 
-        if (($inspeccion['estado'] ?? '') === 'completo') {
-            $updateData['estado'] = 'borrador';
-        }
-
-        $this->inspeccionModel->update($id, $updateData);
-
-        $this->saveExtintores($id);
+        $detailIds = $this->saveExtintores($id);
 
         if ($this->request->getPost('finalizar')) {
             return $this->finalizar($id);
+        }
+
+        if ($this->isAutosaveRequest()) {
+            return $this->autosaveJsonSuccess((int)$id, ['detail_ids' => $detailIds]);
         }
 
         return redirect()->to('/inspecciones/extintores/edit/' . $id)
@@ -249,8 +257,43 @@ class InspeccionExtintoresController extends BaseController
             log_message('warning', 'syncVencimiento extintores failed: ' . $e->getMessage());
         }
 
+        // Registrar versión en sistema documental SST
+        try {
+            $idDoc = $this->registrarVersionDocumento(
+                (int)$inspeccion['id_cliente'],
+                'inspeccion_extintores',
+                'Inspecciones de Extintores',
+                json_encode($inspeccion),
+                "Inspección realizada el {$inspeccion['fecha_inspeccion']}",
+                'IE-' . $inspeccion['id_cliente'],
+                (int)date('Y', strtotime($inspeccion['fecha_inspeccion']))
+            );
+            if ($idDoc) {
+                $this->inspeccionModel->update($id, ['id_documento_sst' => $idDoc]);
+            }
+        } catch (\Throwable $e) {
+            log_message('warning', 'registrarVersionDocumento extintores failed: ' . $e->getMessage());
+        }
+
+        // Enviar email con PDF adjunto
+        $emailResult = InspeccionEmailNotifier::enviar(
+            (int) $inspeccion['id_cliente'],
+            (int) $inspeccion['id_consultor'],
+            'INSPECCIÓN EXTINTORES',
+            $inspeccion['fecha_inspeccion'],
+            $pdfPath,
+            (int) $inspeccion['id'],
+            'InspeccionExtintores'
+        );
+        $msg = 'Inspección finalizada y PDF generado.';
+        if ($emailResult['success']) {
+            $msg .= ' ' . $emailResult['message'];
+        } else {
+            $msg .= ' (Email no enviado: ' . $emailResult['error'] . ')';
+        }
+
         return redirect()->to('/inspecciones/extintores/view/' . $id)
-            ->with('msg', 'Inspeccion finalizada y PDF generado');
+            ->with('msg', $msg);
     }
 
     public function generatePdf($id)
@@ -261,6 +304,7 @@ class InspeccionExtintoresController extends BaseController
         }
 
         $pdfPath = $this->generarPdfInterno($id);
+        $this->inspeccionModel->update($id, ['ruta_pdf' => $pdfPath]);
         $fullPath = FCPATH . $pdfPath;
         if (!file_exists($fullPath)) {
             return redirect()->back()->with('error', 'PDF no encontrado');
@@ -279,8 +323,6 @@ class InspeccionExtintoresController extends BaseController
             return redirect()->to('/inspecciones/extintores')->with('error', 'No encontrada');
         }
 
-        // Doc 25: allow deletion regardless of estado (no estado guard)
-
         // Eliminar fotos de extintores
         $extintores = $this->detalleModel->getByInspeccion($id);
         foreach ($extintores as $ext) {
@@ -297,8 +339,6 @@ class InspeccionExtintoresController extends BaseController
 
         return redirect()->to('/inspecciones/extintores')->with('msg', 'Inspeccion eliminada');
     }
-
-    // ===== MÉTODOS PRIVADOS =====
 
     public function regenerarPdf($id)
     {
@@ -319,15 +359,42 @@ class InspeccionExtintoresController extends BaseController
         return redirect()->to("/inspecciones/extintores/view/{$id}")->with('msg', 'PDF regenerado exitosamente.');
     }
 
-    private function saveExtintores(int $idInspeccion): void
+    public function enviarEmail($id)
+    {
+        $inspeccion = $this->inspeccionModel->find($id);
+        if (!$inspeccion || $inspeccion['estado'] !== 'completo' || empty($inspeccion['ruta_pdf'])) {
+            return redirect()->to("/inspecciones/extintores/view/{$id}")->with('error', 'Debe estar finalizado con PDF para enviar email.');
+        }
+
+        $result = InspeccionEmailNotifier::enviar(
+            (int) $inspeccion['id_cliente'],
+            (int) $inspeccion['id_consultor'],
+            'INSPECCIÓN EXTINTORES',
+            $inspeccion['fecha_inspeccion'],
+            $inspeccion['ruta_pdf'],
+            (int) $inspeccion['id'],
+            'InspeccionExtintores'
+        );
+
+        if ($result['success']) {
+            return redirect()->to("/inspecciones/extintores/view/{$id}")->with('msg', $result['message']);
+        }
+        return redirect()->to("/inspecciones/extintores/view/{$id}")->with('error', $result['error']);
+    }
+
+    // ===== MÉTODOS PRIVADOS =====
+
+    private function saveExtintores(int $idInspeccion): array
     {
         $pinturas = $this->request->getPost('ext_pintura_cilindro') ?? [];
         $extIds = $this->request->getPost('ext_id') ?? [];
 
-        // Obtener existentes para preservar fotos
+        // Obtener existentes para preservar fotos (indexados por ID y por orden)
         $existentes = [];
+        $existentesPorOrden = [];
         foreach ($this->detalleModel->getByInspeccion($idInspeccion) as $ext) {
             $existentes[$ext['id']] = $ext;
+            $existentesPorOrden[(int)$ext['orden']] = $ext;
         }
 
         $this->detalleModel->deleteByInspeccion($idInspeccion);
@@ -338,10 +405,15 @@ class InspeccionExtintoresController extends BaseController
         }
 
         $files = $this->request->getFiles();
+        $newIds = [];
 
         foreach ($pinturas as $i => $pintura) {
             $existenteId = $extIds[$i] ?? null;
             $existente = $existenteId ? ($existentes[$existenteId] ?? null) : null;
+            // Fallback por posición: si el ID está desactualizado (race condition autosave)
+            if (!$existente) {
+                $existente = $existentesPorOrden[$i + 1] ?? null;
+            }
 
             // Foto
             $fotoPath = $existente['foto'] ?? null;
@@ -371,7 +443,10 @@ class InspeccionExtintoresController extends BaseController
                 'foto'                 => $fotoPath,
                 'orden'                => $i + 1,
             ]);
+            $newIds[] = $this->detalleModel->getInsertID();
         }
+
+        return $newIds;
     }
 
     private function generarPdfInterno(int $id): ?string
@@ -471,7 +546,7 @@ class InspeccionExtintoresController extends BaseController
             'id_detailreport' => 12,
             'id_report_type'  => 6,
             'id_cliente'      => $inspeccion['id_cliente'],
-            'estado'          => 'Activo',
+            'estado'          => 'CERRADO',
             'observaciones'   => 'Generado automaticamente desde modulo de inspecciones. insp_ext_id:' . $inspeccion['id'],
             'enlace'          => base_url('uploads/' . $nitCliente . '/' . $fileName),
             'updated_at'      => date('Y-m-d H:i:s'),
@@ -489,9 +564,6 @@ class InspeccionExtintoresController extends BaseController
      * Sincroniza fecha_vencimiento_global con tbl_vencimientos_mantenimientos.
      * UPSERT: actualiza si existe un vencimiento "sin ejecutar" para el mismo cliente+tipo,
      * crea uno nuevo si no existe.
-     *
-     * Wrapped in try-catch at call site because MantenimientoModel/VencimientosMantenimientoModel
-     * may not exist yet in this project.
      */
     private function syncVencimiento(array $inspeccion): void
     {
@@ -500,8 +572,8 @@ class InspeccionExtintoresController extends BaseController
             return;
         }
 
-        $mantenimientoModel = new \App\Models\MantenimientoModel();
-        $vencimientoModel = new \App\Models\VencimientosMantenimientoModel();
+        $mantenimientoModel = new MantenimientoModel();
+        $vencimientoModel = new VencimientosMantenimientoModel();
 
         // Buscar tipo de mantenimiento que contenga "extintor"
         $mantenimiento = $mantenimientoModel

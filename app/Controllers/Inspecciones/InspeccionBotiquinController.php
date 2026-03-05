@@ -11,9 +11,14 @@ use App\Models\ReporteModel;
 use App\Models\MantenimientoModel;
 use App\Models\VencimientosMantenimientoModel;
 use Dompdf\Dompdf;
+use App\Libraries\InspeccionEmailNotifier;
+use App\Traits\AutosaveJsonTrait;
+use App\Traits\InspeccionVersionTrait;
 
 class InspeccionBotiquinController extends BaseController
 {
+    use AutosaveJsonTrait;
+    use InspeccionVersionTrait;
     protected InspeccionBotiquinModel $inspeccionModel;
     protected ElementoBotiquinModel $elementoModel;
 
@@ -115,9 +120,12 @@ class InspeccionBotiquinController extends BaseController
     public function store()
     {
         $userId = session()->get('user_id');
+        $isAutosave = $this->isAutosaveRequest();
 
-        if (!$this->validate(['id_cliente' => 'required|integer', 'fecha_inspeccion' => 'required|valid_date'])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if (!$isAutosave) {
+            if (!$this->validate(['id_cliente' => 'required|integer', 'fecha_inspeccion' => 'required|valid_date'])) {
+                return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            }
         }
 
         $inspeccionData = $this->getInspeccionPostData($userId);
@@ -137,6 +145,10 @@ class InspeccionBotiquinController extends BaseController
 
         $this->saveElementos($idInspeccion);
 
+        if ($isAutosave) {
+            return $this->autosaveJsonSuccess($idInspeccion);
+        }
+
         return redirect()->to('/inspecciones/botiquin/edit/' . $idInspeccion)
             ->with('msg', 'Inspeccion guardada como borrador');
     }
@@ -146,12 +158,6 @@ class InspeccionBotiquinController extends BaseController
         $inspeccion = $this->inspeccionModel->find($id);
         if (!$inspeccion) {
             return redirect()->to('/inspecciones/botiquin')->with('error', 'Inspeccion no encontrada');
-        }
-
-        // Doc 25: si estaba completo, revertir a borrador para re-edición
-        if ($inspeccion['estado'] === 'completo') {
-            $this->inspeccionModel->update($id, ['estado' => 'borrador']);
-            $inspeccion['estado'] = 'borrador';
         }
 
         // Indexar elementos por clave para restaurar en el form
@@ -179,12 +185,10 @@ class InspeccionBotiquinController extends BaseController
     {
         $inspeccion = $this->inspeccionModel->find($id);
         if (!$inspeccion) {
+            if ($this->isAutosaveRequest()) {
+                return $this->autosaveJsonError('No encontrada', 404);
+            }
             return redirect()->to('/inspecciones/botiquin')->with('error', 'No se puede editar');
-        }
-
-        // Doc 25: si estaba completo, revertir a borrador
-        if ($inspeccion['estado'] === 'completo') {
-            $this->inspeccionModel->update($id, ['estado' => 'borrador']);
         }
 
         $userId = session()->get('user_id');
@@ -208,6 +212,10 @@ class InspeccionBotiquinController extends BaseController
 
         if ($this->request->getPost('finalizar')) {
             return $this->finalizar($id);
+        }
+
+        if ($this->isAutosaveRequest()) {
+            return $this->autosaveJsonSuccess((int)$id);
         }
 
         return redirect()->to('/inspecciones/botiquin/edit/' . $id)
@@ -269,8 +277,43 @@ class InspeccionBotiquinController extends BaseController
         $this->uploadToReportes($inspeccion, $pdfPath);
         $this->syncVencimiento($inspeccion);
 
+        // Registrar versión en sistema documental SST
+        try {
+            $idDoc = $this->registrarVersionDocumento(
+                (int)$inspeccion['id_cliente'],
+                'inspeccion_botiquin',
+                'Inspecciones de Botiquín',
+                json_encode($inspeccion),
+                "Inspección realizada el {$inspeccion['fecha_inspeccion']}",
+                'IB-' . $inspeccion['id_cliente'],
+                (int)date('Y', strtotime($inspeccion['fecha_inspeccion']))
+            );
+            if ($idDoc) {
+                $this->inspeccionModel->update($id, ['id_documento_sst' => $idDoc]);
+            }
+        } catch (\Throwable $e) {
+            log_message('warning', 'registrarVersionDocumento botiquin failed: ' . $e->getMessage());
+        }
+
+        // Enviar email con PDF adjunto
+        $emailResult = InspeccionEmailNotifier::enviar(
+            (int) $inspeccion['id_cliente'],
+            (int) $inspeccion['id_consultor'],
+            'INSPECCIÓN BOTIQUÍN',
+            $inspeccion['fecha_inspeccion'],
+            $pdfPath,
+            (int) $inspeccion['id'],
+            'InspeccionBotiquin'
+        );
+        $msg = 'Inspección finalizada y PDF generado.';
+        if ($emailResult['success']) {
+            $msg .= ' ' . $emailResult['message'];
+        } else {
+            $msg .= ' (Email no enviado: ' . $emailResult['error'] . ')';
+        }
+
         return redirect()->to('/inspecciones/botiquin/view/' . $id)
-            ->with('msg', 'Inspeccion finalizada y PDF generado');
+            ->with('msg', $msg);
     }
 
     public function generatePdf($id)
@@ -281,6 +324,7 @@ class InspeccionBotiquinController extends BaseController
         }
 
         $pdfPath = $this->generarPdfInterno($id);
+        $this->inspeccionModel->update($id, ['ruta_pdf' => $pdfPath]);
         $fullPath = FCPATH . $pdfPath;
         if (!file_exists($fullPath)) {
             return redirect()->back()->with('error', 'PDF no encontrado');
@@ -317,8 +361,6 @@ class InspeccionBotiquinController extends BaseController
         return redirect()->to('/inspecciones/botiquin')->with('msg', 'Inspeccion eliminada');
     }
 
-    // ===== MÉTODOS PRIVADOS =====
-
     public function regenerarPdf($id)
     {
         $inspeccion = $this->inspeccionModel->find($id);
@@ -337,6 +379,31 @@ class InspeccionBotiquinController extends BaseController
 
         return redirect()->to("/inspecciones/botiquin/view/{$id}")->with('msg', 'PDF regenerado exitosamente.');
     }
+
+    public function enviarEmail($id)
+    {
+        $inspeccion = $this->inspeccionModel->find($id);
+        if (!$inspeccion || $inspeccion['estado'] !== 'completo' || empty($inspeccion['ruta_pdf'])) {
+            return redirect()->to("/inspecciones/botiquin/view/{$id}")->with('error', 'Debe estar finalizado con PDF para enviar email.');
+        }
+
+        $result = InspeccionEmailNotifier::enviar(
+            (int) $inspeccion['id_cliente'],
+            (int) $inspeccion['id_consultor'],
+            'INSPECCIÓN BOTIQUÍN',
+            $inspeccion['fecha_inspeccion'],
+            $inspeccion['ruta_pdf'],
+            (int) $inspeccion['id'],
+            'InspeccionBotiquin'
+        );
+
+        if ($result['success']) {
+            return redirect()->to("/inspecciones/botiquin/view/{$id}")->with('msg', $result['message']);
+        }
+        return redirect()->to("/inspecciones/botiquin/view/{$id}")->with('error', $result['error']);
+    }
+
+    // ===== MÉTODOS PRIVADOS =====
 
     private function getInspeccionPostData(int $userId): array
     {
@@ -564,7 +631,7 @@ class InspeccionBotiquinController extends BaseController
             'id_detailreport' => 13,
             'id_report_type'  => 6,
             'id_cliente'      => $inspeccion['id_cliente'],
-            'estado'          => 'Activo',
+            'estado'          => 'CERRADO',
             'observaciones'   => 'Generado automaticamente desde modulo de inspecciones. insp_bot_id:' . $inspeccion['id'],
             'enlace'          => base_url('uploads/' . $nitCliente . '/' . $fileName),
             'updated_at'      => date('Y-m-d H:i:s'),
