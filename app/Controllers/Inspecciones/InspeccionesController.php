@@ -5,6 +5,8 @@ namespace App\Controllers\Inspecciones;
 use App\Controllers\BaseController;
 use App\Models\ActaVisitaModel;
 use App\Models\InspeccionLocativaModel;
+use App\Models\InspeccionExtintoresModel;
+use App\Models\InspeccionBotiquinModel;
 use App\Models\ClientModel;
 use App\Models\PendientesModel;
 use App\Models\VencimientosMantenimientoModel;
@@ -46,13 +48,37 @@ class InspeccionesController extends BaseController
             $pendientesLocativas = $locativaModel->getPendientesByConsultor($userId);
         }
 
+        // Extintores
+        $extintoresModel = new InspeccionExtintoresModel();
+        $totalExtintores = $extintoresModel->where('id_consultor', $userId)
+            ->where('estado', 'completo')
+            ->countAllResults();
+
+        $pendientesExtintores = ($role === 'admin')
+            ? $extintoresModel->getAllPendientes()
+            : $extintoresModel->getPendientesByConsultor($userId);
+
+        // Botiquin
+        $botiquinModel = new InspeccionBotiquinModel();
+        $totalBotiquin = $botiquinModel->where('id_consultor', $userId)
+            ->where('estado', 'completo')
+            ->countAllResults();
+
+        $pendientesBotiquin = ($role === 'admin')
+            ? $botiquinModel->getAllPendientes()
+            : $botiquinModel->getPendientesByConsultor($userId);
+
         $data = [
-            'title'               => 'Inspecciones SST',
-            'pendientes'          => $pendientes,
-            'pendientesLocativas' => $pendientesLocativas,
-            'totalActas'          => $totalActas,
-            'totalLocativas'      => $totalLocativas,
-            'nombre'              => session()->get('nombre_usuario'),
+            'title'                  => 'Inspecciones SST',
+            'pendientes'             => $pendientes,
+            'pendientesLocativas'    => $pendientesLocativas,
+            'pendientesExtintores'   => $pendientesExtintores,
+            'pendientesBotiquin'     => $pendientesBotiquin,
+            'totalActas'             => $totalActas,
+            'totalLocativas'         => $totalLocativas,
+            'totalExtintores'        => $totalExtintores,
+            'totalBotiquin'          => $totalBotiquin,
+            'nombre'                 => session()->get('nombre_usuario'),
         ];
 
         return view('inspecciones/layout_pwa', [

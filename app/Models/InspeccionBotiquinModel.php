@@ -47,6 +47,16 @@ class InspeccionBotiquinModel extends Model
             ->findAll();
     }
 
+    public function getAllPendientes()
+    {
+        return $this->select('tbl_inspeccion_botiquin.*, tbl_clientes.nombre_cliente, tbl_consultor.nombre_consultor')
+            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_inspeccion_botiquin.id_cliente', 'left')
+            ->join('tbl_consultor', 'tbl_consultor.id_consultor = tbl_inspeccion_botiquin.id_consultor', 'left')
+            ->where('tbl_inspeccion_botiquin.estado', 'borrador')
+            ->orderBy('tbl_inspeccion_botiquin.updated_at', 'DESC')
+            ->findAll();
+    }
+
     public function getByCliente(int $idCliente)
     {
         return $this->select('tbl_inspeccion_botiquin.*, tbl_consultor.nombre_consultor')

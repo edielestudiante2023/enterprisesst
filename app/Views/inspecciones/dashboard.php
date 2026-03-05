@@ -5,7 +5,7 @@
         <small class="text-muted"><?= date('d \d\e F, Y') ?></small>
     </div>
 
-    <!-- Documentos pendientes -->
+    <!-- Pendientes: Actas -->
     <?php if (!empty($pendientes)): ?>
     <div class="section-title">Pendientes</div>
     <?php foreach ($pendientes as $doc): ?>
@@ -75,6 +75,64 @@
     <?php endforeach; ?>
     <?php endif; ?>
 
+    <!-- Pendientes Extintores -->
+    <?php if (!empty($pendientesExtintores)): ?>
+    <div class="section-title">Pendientes Extintores</div>
+    <?php foreach ($pendientesExtintores as $doc): ?>
+    <div class="card card-inspeccion borrador">
+        <div class="card-body py-3 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>
+                        <i class="fas fa-edit text-warning"></i>
+                        Extintores - <?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>
+                    </strong>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= date('d/m/Y', strtotime($doc['fecha_inspeccion'])) ?>
+                        &middot;
+                        <span class="badge badge-borrador" style="font-size: 11px;">Borrador</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2">
+                <a href="/inspecciones/extintores/edit/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-dark">
+                    Continuar editando <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+    <?php endif; ?>
+
+    <!-- Pendientes Botiquin -->
+    <?php if (!empty($pendientesBotiquin)): ?>
+    <div class="section-title">Pendientes Botiquin</div>
+    <?php foreach ($pendientesBotiquin as $doc): ?>
+    <div class="card card-inspeccion borrador">
+        <div class="card-body py-3 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>
+                        <i class="fas fa-edit text-warning"></i>
+                        Botiquin - <?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>
+                    </strong>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= date('d/m/Y', strtotime($doc['fecha_inspeccion'])) ?>
+                        &middot;
+                        <span class="badge badge-borrador" style="font-size: 11px;">Borrador</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2">
+                <a href="/inspecciones/botiquin/edit/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-dark">
+                    Continuar editando <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+    <?php endif; ?>
+
     <!-- Grid de inspecciones -->
     <div class="section-title">Inspecciones</div>
     <div class="grid-inspecciones mb-4">
@@ -83,30 +141,20 @@
             <div><strong>Actas de Visita</strong></div>
             <div class="count">(<?= $totalActas ?>)</div>
         </a>
-        <div class="card-tipo disabled">
-            <i class="fas fa-search"></i>
-            <div><strong>Senalizacion</strong></div>
-            <div class="count">(---)</div>
-        </div>
         <a href="/inspecciones/inspeccion-locativa" class="card-tipo">
             <i class="fas fa-hard-hat"></i>
             <div><strong>Locativas</strong></div>
             <div class="count">(<?= $totalLocativas ?>)</div>
         </a>
-        <div class="card-tipo disabled">
+        <a href="/inspecciones/extintores" class="card-tipo">
             <i class="fas fa-fire-extinguisher"></i>
             <div><strong>Extintores</strong></div>
-            <div class="count">(---)</div>
-        </div>
-        <div class="card-tipo disabled">
+            <div class="count">(<?= $totalExtintores ?>)</div>
+        </a>
+        <a href="/inspecciones/botiquin" class="card-tipo">
             <i class="fas fa-first-aid"></i>
             <div><strong>Botiquin</strong></div>
-            <div class="count">(---)</div>
-        </div>
-        <div class="card-tipo disabled">
-            <i class="fas fa-shower"></i>
-            <div><strong>Gabinetes</strong></div>
-            <div class="count">(---)</div>
-        </div>
+            <div class="count">(<?= $totalBotiquin ?>)</div>
+        </a>
     </div>
 </div>
