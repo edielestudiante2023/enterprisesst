@@ -195,9 +195,8 @@ class AuthController extends Controller
 
             <div style='text-align: center; margin: 30px 0;'>
                 <a href='{$resetLink}'
-                   style='display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #1c2437, #2c3e50);
-                          color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;
-                          box-shadow: 0 4px 15px rgba(28, 36, 55, 0.3);'>
+                   style='display: inline-block; padding: 15px 30px; background-color: #1c2437;
+                          color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;'>
                     Restablecer Contraseña
                 </a>
             </div>

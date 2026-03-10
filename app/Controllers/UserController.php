@@ -371,7 +371,7 @@ class UserController extends Controller
                 <p><strong>Por seguridad, te recomendamos cambiar esta contraseña inmediatamente después de iniciar sesión.</strong></p>
 
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="' . $loginUrl . '" style="background: linear-gradient(135deg, #1c2437, #2c3e50); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Iniciar Sesión</a>
+                    <a href="' . $loginUrl . '" style="background-color: #1c2437; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Iniciar Sesión</a>
                 </div>
 
                 <p style="color: #666; font-size: 14px;">Si no solicitaste este cambio, por favor contacta al administrador del sistema inmediatamente.</p>
@@ -466,7 +466,7 @@ class UserController extends Controller
                 <p><strong>Por seguridad, te recomendamos cambiar tu contraseña después de tu primer inicio de sesión.</strong></p>
 
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="' . $loginUrl . '" style="background: linear-gradient(135deg, #1c2437, #2c3e50); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Iniciar Sesión</a>
+                    <a href="' . $loginUrl . '" style="background-color: #1c2437; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Iniciar Sesión</a>
                 </div>
 
                 <p style="color: #666; font-size: 14px;">Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar al administrador del sistema.</p>
