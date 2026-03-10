@@ -123,13 +123,19 @@ class ResponsableSSTModel extends Model
         ];
 
         foreach ($responsables as $resp) {
-            $resp['nombre_rol'] = self::TIPOS_ROL[$resp['tipo_rol']] ?? $resp['tipo_rol'];
+            $resp['nombre_rol'] = self::TIPOS_ROL[$resp['tipo_rol']] ?? ($resp['tipo_rol'] ?: 'Sin rol asignado');
 
+            $asignado = false;
             foreach ($grupos as $key => &$grupo) {
                 if (in_array($resp['tipo_rol'], $grupo['roles'])) {
                     $grupo['items'][] = $resp;
+                    $asignado = true;
                     break;
                 }
+            }
+            // Si no encaja en ningun grupo, va a "otros"
+            if (!$asignado) {
+                $grupos['otros']['items'][] = $resp;
             }
         }
 
