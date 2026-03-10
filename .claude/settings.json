@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(mkdir -p /c/xampp/htdocs/enterprisesst/app/Traits)",
-      "Bash(mkdir -p /c/xampp/htdocs/enterprisesst/app/Libraries)"
+      "Bash(mkdir -p /c/xampp/htdocs/enterprisesst/app/Libraries)",
+      "Bash(php -r \":*)",
+      "Bash(cp \"C:/xampp/htdocs/enterprisesstph/app/SQL/migrate_informe_avances.php\" \"c:/xampp/htdocs/enterprisesst/app/SQL/\")",
+      "Bash(cp \"C:/xampp/htdocs/enterprisesstph/app/SQL/migrate_informe_metricas_v2.php\" \"c:/xampp/htdocs/enterprisesst/app/SQL/\")",
+      "Bash(cp \"C:/xampp/htdocs/enterprisesstph/app/Models/InformeAvancesModel.php\" \"c:/xampp/htdocs/enterprisesst/app/Models/\")",
+      "Bash(cp \"C:/xampp/htdocs/enterprisesstph/app/Models/HistorialEstandaresModel.php\" \"c:/xampp/htdocs/enterprisesst/app/Models/\")",
+      "Bash(cp \"C:/xampp/htdocs/enterprisesstph/app/Models/HistorialPlanTrabajoModel.php\" \"c:/xampp/htdocs/enterprisesst/app/Models/\")",
+      "Read(//c//**)"
+    ],
+    "additionalDirectories": [
+      "C:\\xampp\\htdocs\\enterprisesstph\\app\\Libraries"
     ]
   }
 }

@@ -66,19 +66,16 @@ class PzpresupuestoSstController extends BaseController
         }
 
         if ($plantilla) {
-            // IMPORTANTE: codigo_sugerido es el PREFIJO (ej: FT-SST)
-            // El código completo con consecutivo se genera en otro lugar
             $this->datosDocumento = [
-                'codigo' => $plantilla['codigo_sugerido'] ?? 'FT-SST',
+                'codigo' => $plantilla['codigo_sugerido'] ?? 'FT-SST-022',
                 'nombre' => $plantilla['nombre'] ?? 'Asignacion de recursos para el SG-SST',
                 'descripcion' => $plantilla['descripcion'] ?? '',
                 'version' => $plantilla['version'] ?? '001'
             ];
         } else {
             // Valores por defecto si no existe en BD
-            // NOTA: Usar solo el prefijo, NO hardcodear consecutivo
             $this->datosDocumento = [
-                'codigo' => 'FT-SST',
+                'codigo' => 'FT-SST-022',
                 'nombre' => 'Asignacion de recursos para el SG-SST',
                 'descripcion' => 'Presupuesto anual de recursos para el SG-SST',
                 'version' => '001'
@@ -89,27 +86,11 @@ class PzpresupuestoSstController extends BaseController
     }
 
     /**
-     * Genera el código completo del documento con consecutivo
-     * Formato: CODIGO_BASE-XXX (ej: FT-SST-001)
-     *
-     * @param int $idCliente ID del cliente
-     * @return string Código completo del documento
+     * Retorna el código completo del documento desde BD (ej: FT-SST-022)
      */
     protected function generarCodigoCompleto(int $idCliente): string
     {
-        $codigoBase = $this->getDatosDocumento()['codigo'];
-
-        // Contar cuántos presupuestos tiene este cliente
-        $consecutivo = $this->db->table('tbl_presupuesto_sst')
-            ->where('id_cliente', $idCliente)
-            ->countAllResults() + 1;
-
-        // Si ya existe un presupuesto, usar ese consecutivo
-        if ($consecutivo > 1) {
-            $consecutivo = 1; // El presupuesto es único por cliente/año, usar 001
-        }
-
-        return $codigoBase . '-' . str_pad($consecutivo, 3, '0', STR_PAD_LEFT);
+        return $this->getDatosDocumento()['codigo'];
     }
 
     /**

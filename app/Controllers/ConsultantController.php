@@ -13,6 +13,8 @@ use App\Libraries\WorkPlanLibrary;
 use App\Libraries\TrainingLibrary;
 use App\Libraries\StandardsLibrary;
 use App\Models\IndicadorSSTModel;
+use App\Models\UserModel;
+use App\Models\RoleModel;
 use CodeIgniter\Controller;
 
 class ConsultantController extends Controller
@@ -255,7 +257,64 @@ class ConsultantController extends Controller
                 log_message('error', 'Error al enviar email de felicitación: ' . $e->getMessage());
             }
 
-            session()->setFlashdata('msg', 'Cliente agregado exitosamente.');
+            // Crear automáticamente usuario de acceso al portal cliente
+            $credencialesMsg = '';
+            try {
+                $correoCliente = $this->request->getVar('correo_cliente');
+                $passwordPlano = $this->request->getVar('password');
+
+                if (!empty($correoCliente) && !empty($passwordPlano)) {
+                    $userModel = new UserModel();
+                    $roleModel = new RoleModel();
+
+                    // Verificar que no exista ya un usuario con ese email
+                    $existente = $userModel->findByEmail($correoCliente);
+
+                    if (!$existente) {
+                        $userId = $userModel->createUser([
+                            'email'           => $correoCliente,
+                            'password'        => $passwordPlano,
+                            'nombre_completo' => $nombreCliente,
+                            'tipo_usuario'    => 'client',
+                            'id_entidad'      => $clientId,
+                            'estado'          => 'activo',
+                        ]);
+
+                        if ($userId) {
+                            // Asignar rol de cliente
+                            $role = $roleModel->findByName('client');
+                            if ($role) {
+                                $roleModel->assignRoleToUser($userId, $role['id_rol']);
+                            }
+
+                            // Enviar credenciales por email al cliente
+                            $emailSent = $this->enviarCredencialesCliente(
+                                $correoCliente,
+                                $nombreCliente,
+                                $passwordPlano
+                            );
+
+                            $resumen['usuario_portal'] = true;
+                            if ($emailSent) {
+                                $credencialesMsg = ' Credenciales enviadas a ' . $correoCliente;
+                                log_message('info', "Usuario portal creado y credenciales enviadas para cliente ID {$clientId}");
+                            } else {
+                                $credencialesMsg = ' Usuario creado pero no se pudo enviar email. Contraseña: ' . $passwordPlano;
+                                log_message('error', "Usuario portal creado pero falló envío email para cliente ID {$clientId}");
+                            }
+                        } else {
+                            log_message('error', 'Error al crear usuario portal para cliente ID ' . $clientId);
+                        }
+                    } else {
+                        log_message('info', "Ya existe usuario con email {$correoCliente}, no se creó duplicado");
+                        $credencialesMsg = ' (El email ya tenía cuenta de usuario existente)';
+                    }
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Error al crear usuario portal automático: ' . $e->getMessage());
+            }
+
+            session()->setFlashdata('msg', 'Cliente agregado exitosamente.' . $credencialesMsg);
             session()->setFlashdata('cliente_creado', [
                 'id'      => $clientId,
                 'nombre'  => $nombreCliente,
@@ -862,5 +921,69 @@ class ConsultantController extends Controller
         } else {
             log_message('error', "Error al enviar email de felicitación. Status: {$response->statusCode()} Body: {$response->body()}");
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Email de credenciales de acceso al portal cliente (SendGrid)
+    // ─────────────────────────────────────────────────────────────
+
+    private function enviarCredencialesCliente(string $email, string $nombre, string $password): bool
+    {
+        require_once ROOTPATH . 'vendor/autoload.php';
+
+        $loginUrl = base_url('/login');
+
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #1c2437, #2c3e50); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: #ffffff; margin: 0;">Enterprise SST</h1>
+            </div>
+            <div style="background: #ffffff; padding: 30px; border: 1px solid #e9ecef; border-top: none;">
+                <h2 style="color: #1c2437;">¡Bienvenido/a, ' . htmlspecialchars($nombre) . '!</h2>
+                <p>Se ha creado tu cuenta en la plataforma <strong>Enterprise SST</strong>.</p>
+                <p>A continuación encontrarás tus credenciales de acceso:</p>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Usuario (correo):</strong></p>
+                    <p style="margin: 5px 0 15px; color: #1c2437; font-size: 16px;">' . htmlspecialchars($email) . '</p>
+                    <p style="margin: 5px 0;"><strong>Contraseña:</strong></p>
+                    <p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #bd9751; letter-spacing: 1px;">' . htmlspecialchars($password) . '</p>
+                </div>
+                <p><strong>Por seguridad, te recomendamos cambiar tu contraseña después de tu primer inicio de sesión.</strong></p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="' . $loginUrl . '" style="background: linear-gradient(135deg, #1c2437, #2c3e50); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Iniciar Sesión</a>
+                </div>
+                <p style="color: #666; font-size: 14px;">Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar al administrador del sistema.</p>
+            </div>
+            <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef; border-top: none;">
+                <p style="margin: 0; color: #666; font-size: 12px;">© 2024 Cycloid Talent SAS - Todos los derechos reservados</p>
+                <p style="margin: 5px 0 0; color: #666; font-size: 12px;">NIT: 901.653.912</p>
+            </div>
+        </body>
+        </html>';
+
+        $mailObj = new \SendGrid\Mail\Mail();
+        $mailObj->setFrom(
+            getenv('SENDGRID_FROM_EMAIL') ?: 'notificacion.cycloidtalent@cycloidtalent.com',
+            getenv('SENDGRID_FROM_NAME') ?: 'Enterprise SST'
+        );
+        $mailObj->setSubject('Bienvenido a Enterprise SST - Tus credenciales de acceso');
+        $mailObj->addTo($email, $nombre);
+        $mailObj->addContent('text/html', $html);
+
+        $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+        $response = $sendgrid->send($mailObj);
+
+        $success = $response->statusCode() >= 200 && $response->statusCode() < 300;
+
+        if ($success) {
+            log_message('info', "Credenciales enviadas a: {$email}");
+        } else {
+            log_message('error', "Error al enviar credenciales a {$email}. Status: {$response->statusCode()} Body: {$response->body()}");
+        }
+
+        return $success;
     }
 }

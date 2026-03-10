@@ -995,6 +995,12 @@ class ComitesEleccionesController extends BaseController
             ->where('id_proceso', $idProceso)
             ->update($datos);
 
+        // Sincronizar token_expira de votantes que no han votado
+        $this->db->table('tbl_votantes_proceso')
+            ->where('id_proceso', $idProceso)
+            ->where('ha_votado', 0)
+            ->update(['token_expira' => $fechaFin]);
+
         return redirect()->back()->with('success', 'Fechas de votacion actualizadas correctamente');
     }
 
@@ -1063,9 +1069,9 @@ class ComitesEleccionesController extends BaseController
             return redirect()->back()->with('error', 'Este votante ya esta registrado');
         }
 
-        // Generar token unico
+        // Generar token unico - expira con la fecha fin de votacion del proceso
         $token = bin2hex(random_bytes(32));
-        $expira = date('Y-m-d H:i:s', strtotime('+48 hours'));
+        $expira = $proceso['fecha_fin_votacion'] ?? date('Y-m-d H:i:s', strtotime('+48 hours'));
 
         $this->db->table('tbl_votantes_proceso')->insert([
             'id_proceso' => $idProceso,
@@ -1142,7 +1148,7 @@ class ComitesEleccionesController extends BaseController
             }
 
             $token = bin2hex(random_bytes(32));
-            $expira = date('Y-m-d H:i:s', strtotime('+48 hours'));
+            $expira = $proceso['fecha_fin_votacion'] ?? date('Y-m-d H:i:s', strtotime('+48 hours'));
 
             $this->db->table('tbl_votantes_proceso')->insert([
                 'id_proceso' => $idProceso,
@@ -1246,7 +1252,7 @@ class ComitesEleccionesController extends BaseController
         $errores = 0;
         $detallesErrores = [];
 
-        $tokenExpira = date('Y-m-d H:i:s', strtotime('+7 days'));
+        $tokenExpira = $proceso['fecha_fin_votacion'] ?? date('Y-m-d H:i:s', strtotime('+7 days'));
 
         foreach ($lineas as $numLinea => $linea) {
             $linea = trim($linea);
