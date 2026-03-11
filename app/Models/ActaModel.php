@@ -333,7 +333,7 @@ class ActaModel extends Model
                 'id_detailreport' => 2,
                 'id_report_type' => 1,
                 'id_cliente' => $acta['id_cliente'],
-                'estado' => 'activo',
+                'estado' => 'CERRADO',
                 'observaciones' => "Auto-publicado al completar firmas. Código verificación: {$acta['codigo_verificacion']}",
                 'enlace' => $enlace,
                 'created_at' => date('Y-m-d H:i:s'),
