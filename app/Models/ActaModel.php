@@ -306,10 +306,21 @@ class ActaModel extends Model
 
     /**
      * Obtener estadísticas de actas por comité
+     * Cumplimiento se calcula desde la fecha de creación del comité en el sistema
+     * y respeta la periodicidad (mensual para COPASST, trimestral para COCOLAB)
      */
     public function getEstadisticas(int $idComite, int $anio): array
     {
         $actas = $this->getByComite($idComite, $anio);
+
+        // Obtener info del comité para calcular cumplimiento correctamente
+        $db = \Config\Database::connect();
+        $comiteInfo = $db->query("
+            SELECT c.created_at, tc.periodicidad_dias
+            FROM tbl_comites c
+            JOIN tbl_tipos_comite tc ON tc.id_tipo = c.id_tipo
+            WHERE c.id_comite = ?
+        ", [$idComite])->getRowArray();
 
         $stats = [
             'total' => count($actas),
@@ -336,10 +347,84 @@ class ActaModel extends Model
         }
 
         $stats['meses_con_acta'] = array_unique($stats['meses_con_acta']);
-        $stats['cumplimiento'] = $anio == date('Y')
-            ? round(count($stats['meses_con_acta']) / date('n') * 100, 1)
-            : round(count($stats['meses_con_acta']) / 12 * 100, 1);
+
+        // Calcular periodos esperados desde la creación del comité en el sistema
+        $periodosEsperados = $this->calcularPeriodosEsperados($comiteInfo, $anio);
+        $periodosConActa = $this->contarPeriodosConActa($stats['meses_con_acta'], $comiteInfo, $anio);
+
+        $stats['periodos_esperados'] = $periodosEsperados;
+        $stats['cumplimiento'] = $periodosEsperados > 0
+            ? round($periodosConActa / $periodosEsperados * 100, 1)
+            : 0;
 
         return $stats;
+    }
+
+    /**
+     * Calcular cuántos periodos de reunión se esperan desde created_at del comité
+     */
+    private function calcularPeriodosEsperados(?array $comiteInfo, int $anio): int
+    {
+        if (!$comiteInfo) {
+            // Fallback: mes actual o 12
+            return $anio == date('Y') ? (int) date('n') : 12;
+        }
+
+        $createdAt = strtotime($comiteInfo['created_at']);
+        $anioCreacion = (int) date('Y', $createdAt);
+        $mesCreacion = (int) date('n', $createdAt);
+        $periodicidadDias = (int) ($comiteInfo['periodicidad_dias'] ?? 30);
+        $esTrimestral = $periodicidadDias >= 80; // 90 días = trimestral
+
+        // Mes de inicio del conteo para el año consultado
+        if ($anio < $anioCreacion) {
+            return 0; // El comité no existía este año
+        } elseif ($anio == $anioCreacion) {
+            $mesInicio = $mesCreacion;
+        } else {
+            $mesInicio = 1; // Años posteriores cuentan desde enero
+        }
+
+        // Mes fin: mes actual (año vigente) o diciembre (años pasados)
+        $mesFin = $anio == (int) date('Y') ? (int) date('n') : 12;
+
+        if ($mesInicio > $mesFin) {
+            return 0;
+        }
+
+        if ($esTrimestral) {
+            // Trimestres: Q1=ene-mar, Q2=abr-jun, Q3=jul-sep, Q4=oct-dic
+            $trimestreInicio = (int) ceil($mesInicio / 3);
+            $trimestreFin = (int) ceil($mesFin / 3);
+            return $trimestreFin - $trimestreInicio + 1;
+        }
+
+        // Mensual
+        return $mesFin - $mesInicio + 1;
+    }
+
+    /**
+     * Contar periodos que tienen al menos un acta
+     */
+    private function contarPeriodosConActa(array $mesesConActa, ?array $comiteInfo, int $anio): int
+    {
+        if (empty($mesesConActa)) {
+            return 0;
+        }
+
+        $periodicidadDias = (int) ($comiteInfo['periodicidad_dias'] ?? 30);
+        $esTrimestral = $periodicidadDias >= 80;
+
+        if ($esTrimestral) {
+            // Contar trimestres únicos con acta
+            $trimestres = [];
+            foreach ($mesesConActa as $mes) {
+                $trimestres[] = (int) ceil($mes / 3);
+            }
+            return count(array_unique($trimestres));
+        }
+
+        // Mensual: cada mes con acta cuenta
+        return count($mesesConActa);
     }
 }
