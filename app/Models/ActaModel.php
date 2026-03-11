@@ -228,7 +228,7 @@ class ActaModel extends Model
             'firmantes_completados' => $firmados
         ]);
 
-        // Si todos firmaron, marcar como firmada
+        // Si todos firmaron, marcar como firmada y publicar automáticamente
         if ($firmados >= $totalFirmantes && $totalFirmantes > 0) {
             $codigoVerificacion = $this->generarCodigoVerificacion($idActa);
 
@@ -237,10 +237,114 @@ class ActaModel extends Model
                 'codigo_verificacion' => $codigoVerificacion
             ]);
 
+            // Auto-publicar PDF a reportList
+            $this->publicarPdfEnReportList($idActa);
+
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Generar PDF del acta firmada y registrarla en tbl_reporte automáticamente
+     */
+    protected function publicarPdfEnReportList(int $idActa): void
+    {
+        try {
+            $acta = $this->getConDetalles($idActa);
+            if (!$acta) return;
+
+            $clienteModel = new ClientModel();
+            $cliente = $clienteModel->find($acta['id_cliente']);
+            if (!$cliente) return;
+
+            $comiteModel = new ComiteModel();
+            $comite = $comiteModel->getConDetalles($acta['id_comite']);
+
+            $asistentesModel = new ActaAsistenteModel();
+            $asistentes = $asistentesModel->getByActa($idActa);
+            $compromisosModel = new ActaCompromisoModel();
+            $compromisos = $compromisosModel->getByActa($idActa) ?? [];
+            $quorumAlcanzado = $asistentesModel->hayQuorum($idActa);
+
+            $codigoDocumento = $acta['codigo_documento'] ?? null;
+            $versionDocumento = $acta['version_documento'] ?? '001';
+
+            if (empty($codigoDocumento)) {
+                $tipoComite = $comite['tipo_codigo'] ?? $comite['codigo'] ?? 'GENERAL';
+                $codigosComite = [
+                    'COPASST' => 'COP', 'COCOLAB' => 'COL', 'BRIGADA' => 'BRI', 'GENERAL' => 'GEN'
+                ];
+                $codigoDocumento = 'ACT-' . ($codigosComite[$tipoComite] ?? substr($tipoComite, 0, 3));
+            }
+
+            // Logo en base64
+            $logoBase64 = '';
+            if (!empty($cliente['logo'])) {
+                $logoPath = FCPATH . 'uploads/' . $cliente['logo'];
+                if (file_exists($logoPath)) {
+                    $logoData = file_get_contents($logoPath);
+                    $logoMime = mime_content_type($logoPath);
+                    $logoBase64 = 'data:' . $logoMime . ';base64,' . base64_encode($logoData);
+                }
+            }
+            $clientePdf = $cliente;
+            $clientePdf['logo'] = $logoBase64;
+
+            $html = view('actas/pdf_acta', [
+                'cliente' => $clientePdf,
+                'comite' => $comite,
+                'acta' => $acta,
+                'asistentes' => $asistentes,
+                'compromisos' => $compromisos,
+                'quorumAlcanzado' => $quorumAlcanzado,
+                'codigoDocumento' => $codigoDocumento,
+                'versionDocumento' => $versionDocumento
+            ]);
+
+            $dompdf = new \Dompdf\Dompdf();
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('letter', 'portrait');
+            $dompdf->render();
+
+            // Guardar PDF en uploads/{nit}/
+            $nitCliente = $cliente['nit_cliente'];
+            $uploadPath = FCPATH . 'uploads/' . $nitCliente;
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0777, true);
+            }
+
+            $fechaReunion = date('Y-m-d', strtotime($acta['fecha_reunion']));
+            $filename = "{$codigoDocumento}_{$acta['numero_acta']}_{$fechaReunion}.pdf";
+            $safeFilename = preg_replace('/[^a-zA-Z0-9_\-.]/', '_', $filename);
+            file_put_contents($uploadPath . '/' . $safeFilename, $dompdf->output());
+
+            $enlace = base_url('uploads/' . $nitCliente . '/' . $safeFilename);
+
+            // Registrar en tbl_reporte
+            $tipoComiteNombre = $comite['tipo_nombre'] ?? $comite['nombre'] ?? 'Comité';
+            $fechaFormateada = date('d/m/Y', strtotime($acta['fecha_reunion']));
+            $tituloReporte = "{$codigoDocumento} - Acta de Reunión #{$acta['consecutivo_anual']} - {$tipoComiteNombre} {$fechaFormateada} (Firmado)";
+
+            $reporteModel = new ReporteModel();
+            $reporteModel->save([
+                'titulo_reporte' => $tituloReporte,
+                'id_detailreport' => null,
+                'id_report_type' => 1,
+                'id_cliente' => $acta['id_cliente'],
+                'estado' => 'activo',
+                'observaciones' => "Auto-publicado al completar firmas. Código verificación: {$acta['codigo_verificacion']}",
+                'enlace' => $enlace,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+            log_message('info', "Acta #{$idActa} ({$acta['numero_acta']}) auto-publicada en reportList: {$enlace}");
+
+        } catch (\Exception $e) {
+            log_message('error', "Error al auto-publicar acta #{$idActa} en reportList: " . $e->getMessage());
+        }
     }
 
     /**

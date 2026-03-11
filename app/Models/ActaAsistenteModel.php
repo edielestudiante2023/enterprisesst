@@ -298,20 +298,25 @@ class ActaAsistenteModel extends Model
     }
 
     /**
-     * Obtener asistentes que no han firmado después de X horas
+     * Obtener asistentes que no han firmado y necesitan recordatorio diario.
+     * Envía recordatorios cada 24h después de la primera notificación.
      */
-    public function getPendientesRecordatorio(int $horasDesdeEnvio = 48): array
+    public function getPendientesRecordatorio(int $horasDesdeEnvio = 24): array
     {
-        $fechaLimite = date('Y-m-d H:i:s', strtotime("-{$horasDesdeEnvio} hours"));
+        $fechaLimiteNotificacion = date('Y-m-d H:i:s', strtotime("-{$horasDesdeEnvio} hours"));
+        $fechaLimiteRecordatorio = date('Y-m-d H:i:s', strtotime("-{$horasDesdeEnvio} hours"));
 
         return $this->select('tbl_acta_asistentes.*, tbl_actas.numero_acta, tbl_actas.fecha_reunion')
                     ->join('tbl_actas', 'tbl_actas.id_acta = tbl_acta_asistentes.id_acta')
                     ->where('tbl_acta_asistentes.asistio', 1)
                     ->where('tbl_acta_asistentes.estado_firma', 'pendiente')
                     ->where('tbl_acta_asistentes.notificacion_enviada_at IS NOT NULL')
-                    ->where('tbl_acta_asistentes.notificacion_enviada_at <', $fechaLimite)
-                    ->where('(tbl_acta_asistentes.recordatorio_enviado_at IS NULL OR tbl_acta_asistentes.recordatorio_enviado_at < tbl_acta_asistentes.notificacion_enviada_at)')
+                    ->where('tbl_acta_asistentes.notificacion_enviada_at <', $fechaLimiteNotificacion)
                     ->where('tbl_actas.estado', 'pendiente_firma')
+                    ->groupStart()
+                        ->where('tbl_acta_asistentes.recordatorio_enviado_at IS NULL')
+                        ->orWhere('tbl_acta_asistentes.recordatorio_enviado_at <', $fechaLimiteRecordatorio)
+                    ->groupEnd()
                     ->findAll();
     }
 

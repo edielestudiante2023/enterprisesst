@@ -117,8 +117,17 @@ class ActaNotificacionModel extends Model
     /**
      * Programar recordatorio de firma
      */
-    public function programarRecordatorioFirma(int $idActa, int $idAsistente, string $email, string $nombre, int $idCliente, string $numeroActa): int|false
+    public function programarRecordatorioFirma(int $idActa, int $idAsistente, string $email, string $nombre, int $idCliente, string $numeroActa, string $tokenFirma = '', int $diasPendiente = 0): int|false
     {
+        $urlFirma = !empty($tokenFirma) ? base_url("acta/firmar/{$tokenFirma}") : '';
+        $diasTexto = $diasPendiente > 0 ? " (pendiente hace {$diasPendiente} día" . ($diasPendiente > 1 ? 's' : '') . ")" : '';
+
+        $cuerpo = "Aún no ha firmado el acta {$numeroActa}{$diasTexto}. Por favor complete su firma electrónica.";
+        if (!empty($urlFirma)) {
+            $cuerpo .= "<br><br><a href='{$urlFirma}' style='background:#3B82F6;color:white;padding:12px 30px;text-decoration:none;border-radius:8px;display:inline-block;'>Firmar Acta</a>";
+            $cuerpo .= "<br><br><small>O copie este enlace: {$urlFirma}</small>";
+        }
+
         return $this->programar([
             'id_cliente' => $idCliente,
             'tipo' => 'firma_recordatorio',
@@ -127,8 +136,8 @@ class ActaNotificacionModel extends Model
             'destinatario_email' => $email,
             'destinatario_nombre' => $nombre,
             'destinatario_tipo' => 'miembro',
-            'asunto' => "RECORDATORIO: Firma pendiente - Acta {$numeroActa}",
-            'cuerpo' => "Aún no ha firmado el acta {$numeroActa}. Por favor ingrese al enlace para completar su firma."
+            'asunto' => "RECORDATORIO: Firma pendiente - Acta {$numeroActa}{$diasTexto}",
+            'cuerpo' => $cuerpo
         ]);
     }
 

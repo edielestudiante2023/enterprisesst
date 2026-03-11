@@ -12,32 +12,34 @@ use App\Models\ComiteModel;
 use App\Models\ClientModel;
 
 /**
- * Comando para procesar notificaciones de actas
+ * Comando para procesar notificaciones diarias de actas
  *
  * Ejecutar con: php spark actas:notificaciones
  *
- * Tareas:
- * 1. Enviar notificaciones pendientes (firma, tareas, etc.)
+ * Tareas (en orden):
+ * 1. Generar recordatorios de firma pendiente (diarios)
  * 2. Generar alertas de actas faltantes del mes
- * 3. Generar alertas de tareas vencidas
- * 4. Enviar resumen semanal a consultores
+ * 3. Generar alertas de tareas vencidas/por vencer
+ * 4. Enviar TODAS las notificaciones pendientes (incluye las recién generadas)
+ * 5. Resumen semanal a consultores (solo lunes)
  *
- * Para CRON (ejecutar cada hora):
- * 0 * * * * cd /ruta/al/proyecto && php spark actas:notificaciones >> /var/log/actas-notif.log 2>&1
+ * CRON recomendado (7:00 AM diario):
+ * 0 7 * * * cd /ruta/al/proyecto && php spark actas:notificaciones >> writable/logs/cron-actas.log 2>&1
  */
 class ProcesarNotificacionesActas extends BaseCommand
 {
     protected $group = 'Actas';
     protected $name = 'actas:notificaciones';
-    protected $description = 'Procesa y envia notificaciones de actas (firmas, tareas, alertas)';
+    protected $description = 'Procesa y envia notificaciones diarias de actas (firmas, tareas, alertas)';
     protected $usage = 'actas:notificaciones [opciones]';
     protected $arguments = [];
     protected $options = [
-        '--enviar' => 'Enviar notificaciones pendientes',
-        '--alertas' => 'Generar alertas de actas y tareas',
-        '--resumen' => 'Enviar resumen semanal (solo lunes)',
+        '--enviar' => 'Solo enviar notificaciones pendientes (no genera nuevas)',
+        '--alertas' => 'Solo generar alertas de actas y tareas',
+        '--firmas' => 'Solo generar recordatorios de firma',
+        '--resumen' => 'Solo enviar resumen semanal (ignora dia)',
         '--todo' => 'Ejecutar todas las tareas',
-        '--test' => 'Modo de prueba (no envia emails)'
+        '--test' => 'Modo de prueba (no envia emails reales)'
     ];
 
     protected $notificacionModel;
@@ -50,6 +52,12 @@ class ProcesarNotificacionesActas extends BaseCommand
     protected $modoTest = false;
     protected $enviados = 0;
     protected $errores = 0;
+    protected $generados = 0;
+
+    // Config SendGrid desde .env
+    protected $sendgridApiKey;
+    protected $sendgridFromEmail;
+    protected $sendgridFromName;
 
     public function run(array $params)
     {
@@ -60,104 +68,121 @@ class ProcesarNotificacionesActas extends BaseCommand
         $this->comiteModel = new ComiteModel();
         $this->clienteModel = new ClientModel();
 
+        // Cargar config SendGrid desde .env
+        $this->sendgridApiKey = getenv('SENDGRID_API_KEY') ?: '';
+        $this->sendgridFromEmail = getenv('SENDGRID_FROM_EMAIL') ?: 'notificacion.cycloidtalent@cycloidtalent.com';
+        $this->sendgridFromName = getenv('SENDGRID_FROM_NAME') ?: 'Enterprise SST';
+
         $this->modoTest = CLI::getOption('test') !== null;
 
         if ($this->modoTest) {
             CLI::write('MODO DE PRUEBA - No se enviaran emails reales', 'yellow');
         }
 
-        $todo = CLI::getOption('todo') !== null;
-        $ejecutarEnviar = $todo || CLI::getOption('enviar') !== null;
-        $ejecutarAlertas = $todo || CLI::getOption('alertas') !== null;
-        $ejecutarResumen = $todo || CLI::getOption('resumen') !== null;
-
-        // Si no se especifica ninguna opcion, ejecutar todo
-        if (!$ejecutarEnviar && !$ejecutarAlertas && !$ejecutarResumen) {
-            $ejecutarEnviar = true;
-            $ejecutarAlertas = true;
-            $ejecutarResumen = true;
-        }
+        // Determinar qué ejecutar
+        $soloEnviar = CLI::getOption('enviar') !== null;
+        $soloAlertas = CLI::getOption('alertas') !== null;
+        $soloFirmas = CLI::getOption('firmas') !== null;
+        $soloResumen = CLI::getOption('resumen') !== null;
+        $todo = CLI::getOption('todo') !== null || (!$soloEnviar && !$soloAlertas && !$soloFirmas && !$soloResumen);
 
         CLI::write('===========================================', 'cyan');
-        CLI::write(' Procesador de Notificaciones de Actas', 'cyan');
+        CLI::write(' Notificaciones de Actas - ' . date('d/m/Y H:i'), 'cyan');
         CLI::write('===========================================', 'cyan');
         CLI::newLine();
 
-        // 1. Enviar notificaciones pendientes
-        if ($ejecutarEnviar) {
-            $this->enviarNotificacionesPendientes();
-        }
-
-        // 2. Generar alertas
-        if ($ejecutarAlertas) {
-            $this->generarAlertasActasFaltantes();
-            $this->generarAlertasTareasVencidas();
+        // FASE 1: GENERAR notificaciones (encolar en tbl_actas_notificaciones)
+        if ($todo || $soloFirmas) {
             $this->generarRecordatoriosFirma();
         }
 
-        // 3. Resumen semanal (solo lunes)
-        if ($ejecutarResumen && date('N') == 1) {
-            $this->enviarResumenSemanal();
+        if ($todo || $soloAlertas) {
+            $this->generarAlertasActasFaltantes();
+            $this->generarAlertasTareasVencidas();
+        }
+
+        if ($todo || $soloResumen) {
+            // Resumen semanal solo lunes (o forzar con --resumen)
+            if ($soloResumen || date('N') == 1) {
+                $this->enviarResumenSemanal();
+            }
+        }
+
+        // FASE 2: ENVIAR todas las notificaciones pendientes (incluye las recién generadas)
+        if ($todo || $soloEnviar || $soloFirmas || $soloAlertas) {
+            $this->enviarNotificacionesPendientes();
         }
 
         // Resumen final
         CLI::newLine();
         CLI::write('===========================================', 'cyan');
-        CLI::write(" Completado: {$this->enviados} enviados, {$this->errores} errores", 'cyan');
+        CLI::write(" Generados: {$this->generados} | Enviados: {$this->enviados} | Errores: {$this->errores}", 'cyan');
         CLI::write('===========================================', 'cyan');
     }
 
     /**
-     * Enviar notificaciones pendientes de la cola
+     * Generar recordatorios de firma pendiente (diarios, cada 24h)
      */
-    protected function enviarNotificacionesPendientes(): void
+    protected function generarRecordatoriosFirma(): void
     {
-        CLI::write('Procesando notificaciones pendientes...', 'light_gray');
+        CLI::write('[FIRMAS] Verificando firmas pendientes...', 'light_gray');
 
-        $pendientes = $this->notificacionModel->getPendientesEnvio(100);
+        $pendientes = $this->asistentesModel->getPendientesRecordatorio(24);
 
         if (empty($pendientes)) {
-            CLI::write('  No hay notificaciones pendientes', 'light_gray');
+            CLI::write('  No hay firmas pendientes de recordatorio', 'light_gray');
             return;
         }
 
-        CLI::write("  Encontradas: " . count($pendientes), 'light_gray');
+        CLI::write("  Encontrados: " . count($pendientes) . " asistente(s) sin firmar", 'light_gray');
 
-        foreach ($pendientes as $notif) {
-            $resultado = $this->enviarEmail(
-                $notif['destinatario_email'],
-                $notif['destinatario_nombre'],
-                $notif['asunto'],
-                $notif['cuerpo'],
-                $notif['tipo']
+        foreach ($pendientes as $asistente) {
+            if (empty($asistente['email'])) {
+                CLI::write("  [SKIP] {$asistente['nombre_completo']} - sin email", 'yellow');
+                continue;
+            }
+
+            $acta = $this->actaModel->find($asistente['id_acta']);
+            if (!$acta) continue;
+
+            // Calcular días desde la primera notificación
+            $diasPendiente = 0;
+            if (!empty($asistente['notificacion_enviada_at'])) {
+                $diasPendiente = (int) ceil((time() - strtotime($asistente['notificacion_enviada_at'])) / 86400);
+            }
+
+            $this->notificacionModel->programarRecordatorioFirma(
+                $asistente['id_acta'],
+                $asistente['id_asistente'],
+                $asistente['email'],
+                $asistente['nombre_completo'],
+                $acta['id_cliente'],
+                $asistente['numero_acta'],
+                $asistente['token_firma'] ?? '',
+                $diasPendiente
             );
 
-            if ($resultado) {
-                $this->notificacionModel->marcarEnviada($notif['id_notificacion']);
-                $this->enviados++;
-                CLI::write("  [OK] {$notif['tipo']} -> {$notif['destinatario_email']}", 'green');
-            } else {
-                $this->notificacionModel->marcarFallida($notif['id_notificacion'], 'Error de envio');
-                $this->errores++;
-                CLI::write("  [ERROR] {$notif['tipo']} -> {$notif['destinatario_email']}", 'red');
-            }
+            $this->asistentesModel->update($asistente['id_asistente'], [
+                'recordatorio_enviado_at' => date('Y-m-d H:i:s')
+            ]);
+
+            $this->generados++;
+            CLI::write("  [GENERADO] {$asistente['email']} - Acta {$asistente['numero_acta']} (dia {$diasPendiente})", 'cyan');
         }
     }
 
     /**
-     * Generar alertas de actas faltantes del mes
+     * Generar alertas de actas faltantes del mes (después del día 10)
      */
     protected function generarAlertasActasFaltantes(): void
     {
         $diaActual = (int) date('j');
-        $diaMes = 10; // Dia limite por defecto
 
-        // Solo generar alertas despues del dia 10
-        if ($diaActual < $diaMes) {
+        if ($diaActual < 10) {
             return;
         }
 
-        CLI::write('Verificando actas faltantes del mes...', 'light_gray');
+        CLI::write('[ALERTAS] Verificando actas faltantes del mes...', 'light_gray');
 
         $clientes = $this->clienteModel->where('estado', 'activo')->findAll();
 
@@ -165,7 +190,7 @@ class ProcesarNotificacionesActas extends BaseCommand
             $sinActa = $this->actaModel->getComitesSinActaMes($cliente['id_cliente']);
 
             foreach ($sinActa as $comite) {
-                // Verificar si ya se envio alerta este mes
+                // No duplicar alerta del mismo mes
                 $yaEnviada = $this->notificacionModel
                     ->where('id_cliente', $cliente['id_cliente'])
                     ->where('tipo', 'alerta_sin_acta')
@@ -173,11 +198,8 @@ class ProcesarNotificacionesActas extends BaseCommand
                     ->where('YEAR(created_at)', date('Y'))
                     ->first();
 
-                if ($yaEnviada) {
-                    continue;
-                }
+                if ($yaEnviada) continue;
 
-                // Obtener consultor del cliente
                 if (!empty($cliente['id_consultor'])) {
                     $consultorModel = new \App\Models\ConsultantModel();
                     $consultor = $consultorModel->find($cliente['id_consultor']);
@@ -192,7 +214,8 @@ class ProcesarNotificacionesActas extends BaseCommand
                             (int) date('Y')
                         );
 
-                        CLI::write("  [ALERTA] Sin acta {$comite['codigo']} - {$cliente['nombre_cliente']}", 'yellow');
+                        $this->generados++;
+                        CLI::write("  [GENERADO] Sin acta {$comite['codigo']} - {$cliente['nombre_cliente']}", 'yellow');
                     }
                 }
             }
@@ -200,16 +223,16 @@ class ProcesarNotificacionesActas extends BaseCommand
     }
 
     /**
-     * Generar alertas de tareas vencidas
+     * Generar alertas de tareas vencidas y próximas a vencer
      */
     protected function generarAlertasTareasVencidas(): void
     {
-        CLI::write('Verificando tareas vencidas...', 'light_gray');
+        CLI::write('[TAREAS] Verificando tareas vencidas...', 'light_gray');
 
-        // Marcar tareas vencidas automaticamente
+        // Marcar tareas vencidas automáticamente
         $this->compromisosModel->marcarVencidos();
 
-        // Obtener tareas vencidas sin notificacion reciente
+        // Tareas vencidas sin notificación reciente (cada 7 días)
         $vencidas = $this->compromisosModel
             ->select('tbl_acta_compromisos.*, tbl_cliente.nombre_cliente')
             ->join('tbl_cliente', 'tbl_cliente.id_cliente = tbl_acta_compromisos.id_cliente')
@@ -235,15 +258,15 @@ class ProcesarNotificacionesActas extends BaseCommand
                     'total_notificaciones' => ($tarea['total_notificaciones'] ?? 0) + 1
                 ]);
 
-                CLI::write("  [VENCIDA] {$tarea['responsable_email']} - {$tarea['nombre_cliente']}", 'red');
+                $this->generados++;
+                CLI::write("  [GENERADO] Vencida: {$tarea['responsable_email']} - {$tarea['nombre_cliente']}", 'red');
             }
         }
 
-        // Alertas de tareas proximas a vencer
+        // Tareas próximas a vencer (7 días, notificar cada 3 días)
         $proximasVencer = $this->compromisosModel->getProximosAVencer(7);
 
         foreach ($proximasVencer as $tarea) {
-            // Solo notificar si no se ha notificado en los ultimos 3 dias
             if (!empty($tarea['ultima_notificacion_at']) &&
                 strtotime($tarea['ultima_notificacion_at']) > strtotime('-3 days')) {
                 continue;
@@ -263,69 +286,70 @@ class ProcesarNotificacionesActas extends BaseCommand
                     'ultima_notificacion_at' => date('Y-m-d H:i:s')
                 ]);
 
-                CLI::write("  [POR VENCER] {$tarea['responsable_email']}", 'yellow');
+                $this->generados++;
+                CLI::write("  [GENERADO] Por vencer: {$tarea['responsable_email']}", 'yellow');
             }
         }
     }
 
     /**
-     * Generar recordatorios de firma pendiente
+     * Enviar TODAS las notificaciones pendientes de la cola
+     * Se ejecuta DESPUÉS de generar, para incluir las recién creadas
      */
-    protected function generarRecordatoriosFirma(): void
+    protected function enviarNotificacionesPendientes(): void
     {
-        CLI::write('Verificando firmas pendientes...', 'light_gray');
+        CLI::newLine();
+        CLI::write('[ENVIO] Procesando cola de notificaciones...', 'light_gray');
 
-        $pendientes = $this->asistentesModel->getPendientesRecordatorio(48);
+        $pendientes = $this->notificacionModel->getPendientesEnvio(100);
 
-        foreach ($pendientes as $asistente) {
-            if (empty($asistente['email'])) {
-                continue;
-            }
+        if (empty($pendientes)) {
+            CLI::write('  Cola vacía - nada que enviar', 'light_gray');
+            return;
+        }
 
-            $acta = $this->actaModel->find($asistente['id_acta']);
+        CLI::write("  En cola: " . count($pendientes) . " notificación(es)", 'light_gray');
 
-            $this->notificacionModel->programarRecordatorioFirma(
-                $asistente['id_acta'],
-                $asistente['id_asistente'],
-                $asistente['email'],
-                $asistente['nombre_completo'],
-                $acta['id_cliente'],
-                $asistente['numero_acta']
+        foreach ($pendientes as $notif) {
+            $resultado = $this->enviarEmail(
+                $notif['destinatario_email'],
+                $notif['destinatario_nombre'],
+                $notif['asunto'],
+                $notif['cuerpo'],
+                $notif['tipo']
             );
 
-            $this->asistentesModel->update($asistente['id_asistente'], [
-                'recordatorio_enviado_at' => date('Y-m-d H:i:s')
-            ]);
-
-            CLI::write("  [RECORDATORIO FIRMA] {$asistente['email']}", 'cyan');
+            if ($resultado) {
+                $this->notificacionModel->marcarEnviada($notif['id_notificacion']);
+                $this->enviados++;
+                CLI::write("  [OK] {$notif['tipo']} -> {$notif['destinatario_email']}", 'green');
+            } else {
+                $this->notificacionModel->marcarFallida($notif['id_notificacion'], 'Error de envio SendGrid');
+                $this->errores++;
+                CLI::write("  [ERROR] {$notif['tipo']} -> {$notif['destinatario_email']}", 'red');
+            }
         }
     }
 
     /**
-     * Enviar resumen semanal a consultores (solo lunes)
+     * Enviar resumen semanal a consultores (solo lunes o con --resumen)
      */
     protected function enviarResumenSemanal(): void
     {
-        CLI::write('Generando resumenes semanales...', 'light_gray');
+        CLI::write('[RESUMEN] Generando resumenes semanales...', 'light_gray');
 
-        // Obtener consultores activos
         $consultorModel = new \App\Models\ConsultantModel();
         $consultores = $consultorModel->findAll();
 
         foreach ($consultores as $consultor) {
-            if (empty($consultor['correo_consultor'])) {
-                continue;
-            }
+            if (empty($consultor['correo_consultor'])) continue;
 
-            // Obtener clientes del consultor
             $clientes = $this->clienteModel
                 ->where('id_consultor', $consultor['id_consultor'])
                 ->where('estado', 'activo')
                 ->findAll();
 
-            if (empty($clientes)) {
-                continue;
-            }
+            if (empty($clientes)) continue;
 
             $resumenTotal = [
                 'actas_pendientes' => 0,
@@ -339,46 +363,44 @@ class ProcesarNotificacionesActas extends BaseCommand
                 $resumenTotal['tareas_por_vencer'] += count($this->compromisosModel->getProximosAVencer(7, $cliente['id_cliente']));
             }
 
-            // Solo enviar si hay algo que reportar
             if ($resumenTotal['actas_pendientes'] > 0 || $resumenTotal['tareas_vencidas'] > 0) {
                 $this->notificacionModel->programarResumenSemanal(
-                    $clientes[0]['id_cliente'], // Usar primer cliente como referencia
+                    $clientes[0]['id_cliente'],
                     $consultor['correo_consultor'],
                     $consultor['nombre_consultor'],
                     $resumenTotal
                 );
 
-                CLI::write("  [RESUMEN] {$consultor['correo_consultor']}", 'light_blue');
+                $this->generados++;
+                CLI::write("  [GENERADO] Resumen: {$consultor['correo_consultor']}", 'light_blue');
             }
         }
     }
 
     /**
-     * Enviar email usando SendGrid
+     * Enviar email usando SendGrid API
      */
     protected function enviarEmail(string $email, string $nombre, string $asunto, string $cuerpo, string $tipo): bool
     {
         if ($this->modoTest) {
-            CLI::write("    [TEST] Email a {$email}: {$asunto}", 'light_gray');
+            CLI::write("    [TEST] -> {$email}: {$asunto}", 'light_gray');
             return true;
         }
 
+        if (empty($this->sendgridApiKey)) {
+            CLI::write("    [WARN] SENDGRID_API_KEY no configurada en .env", 'yellow');
+            return false;
+        }
+
         try {
-            $apiKey = getenv('SENDGRID_API_KEY') ?: '';
-
-            if (empty($apiKey)) {
-                CLI::write("    [WARN] SENDGRID_API_KEY no configurada", 'yellow');
-                return false;
-            }
-
             $emailData = [
                 'personalizations' => [[
                     'to' => [['email' => $email, 'name' => $nombre]],
                     'subject' => $asunto
                 ]],
                 'from' => [
-                    'email' => 'notificaciones@enterprisesst.com',
-                    'name' => 'Enterprise SST'
+                    'email' => $this->sendgridFromEmail,
+                    'name' => $this->sendgridFromName
                 ],
                 'content' => [[
                     'type' => 'text/html',
@@ -392,62 +414,90 @@ class ProcesarNotificacionesActas extends BaseCommand
                 CURLOPT_POSTFIELDS => json_encode($emailData),
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_HTTPHEADER => [
-                    'Authorization: Bearer ' . $apiKey,
+                    'Authorization: Bearer ' . $this->sendgridApiKey,
                     'Content-Type: application/json'
-                ]
+                ],
+                CURLOPT_TIMEOUT => 30
             ]);
 
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
             curl_close($ch);
 
-            return $httpCode >= 200 && $httpCode < 300;
+            if (!empty($curlError)) {
+                CLI::write("    [CURL] {$curlError}", 'red');
+                return false;
+            }
+
+            if ($httpCode < 200 || $httpCode >= 300) {
+                CLI::write("    [SENDGRID] HTTP {$httpCode}: {$response}", 'red');
+                return false;
+            }
+
+            return true;
 
         } catch (\Exception $e) {
-            CLI::write("    [ERROR] " . $e->getMessage(), 'red');
+            CLI::write("    [EXCEPTION] " . $e->getMessage(), 'red');
             return false;
         }
     }
 
     /**
-     * Generar HTML del email
+     * Generar HTML del email con diseño profesional
      */
     protected function generarHtmlEmail(string $nombre, string $asunto, string $cuerpo, string $tipo): string
     {
         $color = match($tipo) {
-            'firma_solicitada', 'firma_recordatorio' => '#667eea',
-            'tarea_vencida' => '#dc3545',
-            'tarea_por_vencer' => '#ffc107',
-            'alerta_sin_acta' => '#fd7e14',
-            'resumen_semanal' => '#17a2b8',
-            default => '#6c757d'
+            'firma_solicitada', 'firma_recordatorio' => '#3B82F6',
+            'firma_completada' => '#10B981',
+            'acta_firmada_completa' => '#059669',
+            'tarea_vencida' => '#EF4444',
+            'tarea_por_vencer' => '#F59E0B',
+            'tarea_asignada' => '#8B5CF6',
+            'alerta_sin_acta' => '#F97316',
+            'resumen_semanal' => '#0EA5E9',
+            default => '#6B7280'
         };
+
+        $iconoTipo = match($tipo) {
+            'firma_solicitada', 'firma_recordatorio' => '✍️',
+            'firma_completada', 'acta_firmada_completa' => '✅',
+            'tarea_vencida' => '🚨',
+            'tarea_por_vencer' => '⏰',
+            'tarea_asignada' => '📋',
+            'alerta_sin_acta' => '⚠️',
+            'resumen_semanal' => '📊',
+            default => '📬'
+        };
+
+        $fecha = date('d/m/Y');
 
         return <<<HTML
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: {$color}; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
-        .footer { text-align: center; margin-top: 20px; color: #6c757d; font-size: 12px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h2 style="margin: 0;">{$asunto}</h2>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f3f4f6;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, {$color} 0%, {$color}dd 100%); padding: 25px; text-align: center; border-radius: 12px 12px 0 0;">
+            <div style="font-size: 32px; margin-bottom: 8px;">{$iconoTipo}</div>
+            <h2 style="margin: 0; color: white; font-size: 18px;">{$asunto}</h2>
+            <p style="margin: 5px 0 0; color: rgba(255,255,255,0.8); font-size: 12px;">{$fecha}</p>
         </div>
-        <div class="content">
-            <p>Hola {$nombre},</p>
-            <p>{$cuerpo}</p>
-            <p>Saludos,<br>Enterprise SST</p>
+        <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <p style="margin-top: 0;">Hola <strong>{$nombre}</strong>,</p>
+            <div style="margin: 20px 0;">{$cuerpo}</div>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
+            <p style="margin-bottom: 0; color: #6B7280; font-size: 13px;">
+                Saludos,<br>
+                <strong>Enterprise SST - Cycloid Talent</strong>
+            </p>
         </div>
-        <div class="footer">
-            <p>Este es un mensaje automatico. Por favor no responda a este correo.</p>
+        <div style="text-align: center; margin-top: 15px; color: #9CA3AF; font-size: 11px;">
+            <p>Este es un mensaje automático del sistema de gestión SST.<br>Por favor no responda a este correo.</p>
         </div>
     </div>
 </body>
