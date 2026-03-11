@@ -6,7 +6,25 @@
  * Ejecutar: php app/SQL/publicar_actas_firmadas_en_reportlist.php
  */
 
-$pdo = new PDO('mysql:host=localhost;dbname=empresas_sst;charset=utf8mb4', 'root', '');
+// Leer credenciales del .env de CodeIgniter
+$envFile = __DIR__ . '/../../.env';
+$dbHost = 'localhost';
+$dbName = 'empresas_sst';
+$dbUser = 'root';
+$dbPass = '';
+
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (str_starts_with(trim($line), '#')) continue;
+        if (str_contains($line, 'database.default.hostname')) $dbHost = trim(explode('=', $line, 2)[1] ?? $dbHost);
+        if (str_contains($line, 'database.default.database')) $dbName = trim(explode('=', $line, 2)[1] ?? $dbName);
+        if (str_contains($line, 'database.default.username')) $dbUser = trim(explode('=', $line, 2)[1] ?? $dbUser);
+        if (str_contains($line, 'database.default.password')) $dbPass = trim(explode('=', $line, 2)[1] ?? $dbPass);
+    }
+}
+
+$pdo = new PDO("mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4", $dbUser, $dbPass);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 echo "=== PUBLICAR ACTAS FIRMADAS EN REPORTLIST ===\n\n";
