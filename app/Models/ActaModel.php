@@ -330,7 +330,7 @@ class ActaModel extends Model
             $reporteModel = new ReporteModel();
             $reporteModel->save([
                 'titulo_reporte' => $tituloReporte,
-                'id_detailreport' => null,
+                'id_detailreport' => 2,
                 'id_report_type' => 1,
                 'id_cliente' => $acta['id_cliente'],
                 'estado' => 'activo',

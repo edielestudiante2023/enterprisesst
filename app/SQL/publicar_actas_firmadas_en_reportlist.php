@@ -90,7 +90,7 @@ foreach ($actasFirmadas as $acta) {
 
     $insert = $pdo->prepare("
         INSERT INTO tbl_reporte (titulo_reporte, id_detailreport, id_report_type, id_cliente, estado, observaciones, enlace, created_at, updated_at)
-        VALUES (?, NULL, 1, ?, 'activo', ?, ?, NOW(), NOW())
+        VALUES (?, 2, 1, ?, 'activo', ?, ?, NOW(), NOW())
     ");
 
     $observaciones = "Auto-publicado desde actas firmadas. Código verificación: " . ($acta['codigo_verificacion'] ?? 'N/A');
