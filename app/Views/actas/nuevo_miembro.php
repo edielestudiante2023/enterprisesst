@@ -164,7 +164,7 @@
                                 <select class="form-select" name="representacion" required>
                                     <option value="">Seleccione...</option>
                                     <option value="empleador">Empleador</option>
-                                    <option value="trabajadores">Trabajadores</option>
+                                    <option value="trabajador">Trabajadores</option>
                                 </select>
                                 <small class="text-muted">COPASST requiere paridad entre partes</small>
                             </div>
@@ -298,7 +298,7 @@
                     </p>
                     <?php
                     $empleador = count(array_filter($miembrosActuales ?? [], fn($m) => ($m['representacion'] ?? '') === 'empleador' && $m['tipo_miembro'] === 'principal'));
-                    $trabajadores = count(array_filter($miembrosActuales ?? [], fn($m) => ($m['representacion'] ?? '') === 'trabajadores' && $m['tipo_miembro'] === 'principal'));
+                    $trabajadores = count(array_filter($miembrosActuales ?? [], fn($m) => ($m['representacion'] ?? '') === 'trabajador' && $m['tipo_miembro'] === 'principal'));
                     ?>
                     <hr>
                     <div class="row text-center">

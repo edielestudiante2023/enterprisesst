@@ -99,7 +99,7 @@
                                 <select class="form-select" name="representacion" required>
                                     <option value="">Seleccione...</option>
                                     <option value="empleador" <?= ($miembro['representacion'] ?? '') === 'empleador' ? 'selected' : '' ?>>Empleador</option>
-                                    <option value="trabajadores" <?= ($miembro['representacion'] ?? '') === 'trabajadores' ? 'selected' : '' ?>>Trabajadores</option>
+                                    <option value="trabajador" <?= ($miembro['representacion'] ?? '') === 'trabajador' ? 'selected' : '' ?>>Trabajadores</option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
