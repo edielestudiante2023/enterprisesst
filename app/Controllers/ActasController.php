@@ -186,9 +186,24 @@ class ActasController extends BaseController
      */
     public function guardarComite(int $idCliente)
     {
+        $idTipo = $this->request->getPost('id_tipo');
+
+        // Verificar que no exista ya un comité activo del mismo tipo
+        $existente = $this->comiteModel
+            ->where('id_cliente', $idCliente)
+            ->where('id_tipo', $idTipo)
+            ->where('estado', 'activo')
+            ->first();
+
+        if ($existente) {
+            return redirect()->back()
+                ->with('error', 'Ya existe un comité activo de este tipo. No se puede crear otro.')
+                ->withInput();
+        }
+
         $data = [
             'id_cliente' => $idCliente,
-            'id_tipo' => $this->request->getPost('id_tipo'),
+            'id_tipo' => $idTipo,
             'fecha_conformacion' => $this->request->getPost('fecha_conformacion'),
             'lugar_habitual' => $this->request->getPost('lugar_habitual'),
             'dia_reunion_preferido' => $this->request->getPost('dia_reunion_preferido'),

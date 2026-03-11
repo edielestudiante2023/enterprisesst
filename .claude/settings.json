@@ -9,7 +9,8 @@
       "Bash(cp \"C:/xampp/htdocs/enterprisesstph/app/Models/InformeAvancesModel.php\" \"c:/xampp/htdocs/enterprisesst/app/Models/\")",
       "Bash(cp \"C:/xampp/htdocs/enterprisesstph/app/Models/HistorialEstandaresModel.php\" \"c:/xampp/htdocs/enterprisesst/app/Models/\")",
       "Bash(cp \"C:/xampp/htdocs/enterprisesstph/app/Models/HistorialPlanTrabajoModel.php\" \"c:/xampp/htdocs/enterprisesst/app/Models/\")",
-      "Read(//c//**)"
+      "Read(//c//**)",
+      "Bash(php -r ':*)"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\enterprisesstph\\app\\Libraries"

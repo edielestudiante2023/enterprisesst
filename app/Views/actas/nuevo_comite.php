@@ -31,10 +31,12 @@
                                 <select class="form-select" name="id_tipo" id="tipoComite" required>
                                     <option value="">Seleccione...</option>
                                     <?php foreach ($tiposComite as $tipo): ?>
+                                    <?php $yaUsado = in_array($tipo['id_tipo'], $tiposUsados ?? []); ?>
                                     <option value="<?= $tipo['id_tipo'] ?>"
                                             data-requiere-paridad="<?= !empty($tipo['requiere_paridad']) ? '1' : '0' ?>"
-                                            data-periodicidad="<?= $tipo['periodicidad_dias'] ?? 30 ?>">
-                                        <?= esc($tipo['nombre']) ?>
+                                            data-periodicidad="<?= $tipo['periodicidad_dias'] ?? 30 ?>"
+                                            <?= $yaUsado ? 'disabled' : '' ?>>
+                                        <?= esc($tipo['nombre']) ?><?= $yaUsado ? ' (ya creado)' : '' ?>
                                     </option>
                                     <?php endforeach; ?>
                                 </select>

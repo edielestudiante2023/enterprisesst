@@ -191,6 +191,9 @@ class ResponsablesSSTController extends BaseController
                 log_message('critical', "PASO 7: CREADO responsable ID {$nuevoIdResponsable}");
             }
 
+            // Sincronizar con tbl_miembros_comite si es rol de comité
+            $this->sincronizarMiembroComite($idCliente, $datos);
+
             // Crear usuario si se marcó la opción y hay email
             if ($crearUsuario && !empty($datos['email']) && !$idResponsable) {
                 log_message('critical', 'PASO 8: >>> ENTRO AL BLOQUE DE CREAR USUARIO <<<');
@@ -408,6 +411,92 @@ class ResponsablesSSTController extends BaseController
         }
 
         return $todos;
+    }
+
+    /**
+     * Sincroniza responsable SST con tbl_miembros_comite si tiene rol de comité
+     * Busca o crea el comité correspondiente y agrega al miembro
+     */
+    private function sincronizarMiembroComite(int $idCliente, array $datos): void
+    {
+        // Mapeo rol_responsable → tipo de comité
+        $mapeoTipo = [
+            'copasst_presidente' => 1, 'copasst_secretario' => 1,
+            'copasst_representante_empleador' => 1, 'copasst_representante_trabajadores' => 1,
+            'copasst_suplente_empleador' => 1, 'copasst_suplente_trabajadores' => 1,
+            'comite_convivencia_presidente' => 2, 'comite_convivencia_secretario' => 2,
+            'comite_convivencia_representante_empleador' => 2, 'comite_convivencia_representante_trabajadores' => 2,
+            'comite_convivencia_suplente_empleador' => 2, 'comite_convivencia_suplente_trabajadores' => 2,
+        ];
+
+        $tipoRol = $datos['tipo_rol'] ?? '';
+        if (!isset($mapeoTipo[$tipoRol])) {
+            return; // No es rol de comité
+        }
+
+        $idTipo = $mapeoTipo[$tipoRol];
+
+        // Buscar comité activo del tipo correspondiente
+        $comite = $this->db->table('tbl_comites')
+            ->where('id_cliente', $idCliente)
+            ->where('id_tipo', $idTipo)
+            ->where('estado', 'activo')
+            ->get()->getRowArray();
+
+        if (!$comite) {
+            return; // No hay comité creado aún
+        }
+
+        // Verificar si ya existe como miembro por email
+        if (!empty($datos['email'])) {
+            $existe = $this->db->table('tbl_miembros_comite')
+                ->where('id_comite', $comite['id_comite'])
+                ->where('email', $datos['email'])
+                ->get()->getRowArray();
+
+            if ($existe) {
+                // Actualizar datos del miembro existente
+                $this->db->table('tbl_miembros_comite')
+                    ->where('id_miembro', $existe['id_miembro'])
+                    ->update([
+                        'nombres' => $datos['nombre_completo'],
+                        'documento_identidad' => $datos['numero_documento'] ?? '',
+                        'cargo' => $datos['cargo'] ?? '',
+                        'telefono' => $datos['telefono'] ?? '',
+                        'representacion' => str_contains($tipoRol, 'empleador') || str_contains($tipoRol, 'presidente') ? 'empleador' : 'trabajador',
+                        'tipo_miembro' => str_contains($tipoRol, 'suplente') ? 'suplente' : 'principal',
+                        'rol_comite' => $this->mapearRolComite($tipoRol),
+                    ]);
+                return;
+            }
+        }
+
+        // Insertar nuevo miembro
+        $this->db->table('tbl_miembros_comite')->insert([
+            'id_comite' => $comite['id_comite'],
+            'nombres' => $datos['nombre_completo'],
+            'apellidos' => '',
+            'documento_identidad' => $datos['numero_documento'] ?? '',
+            'cargo' => $datos['cargo'] ?? '',
+            'email' => $datos['email'] ?? '',
+            'telefono' => $datos['telefono'] ?? '',
+            'representacion' => str_contains($tipoRol, 'empleador') || str_contains($tipoRol, 'presidente') ? 'empleador' : 'trabajador',
+            'tipo_miembro' => str_contains($tipoRol, 'suplente') ? 'suplente' : 'principal',
+            'rol_comite' => $this->mapearRolComite($tipoRol),
+            'estado' => 'activo',
+            'fecha_ingreso' => date('Y-m-d'),
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+    }
+
+    /**
+     * Mapea tipo_rol de responsable a rol_comite de miembro
+     */
+    private function mapearRolComite(string $tipoRol): string
+    {
+        if (str_contains($tipoRol, 'presidente')) return 'presidente';
+        if (str_contains($tipoRol, 'secretario')) return 'secretario';
+        return 'miembro';
     }
 
     /**
