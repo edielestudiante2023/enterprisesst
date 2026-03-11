@@ -85,8 +85,8 @@ foreach ($actasFirmadas as $acta) {
     $fechaFormateada = date('d/m/Y', strtotime($acta['fecha_reunion']));
     $tituloReporte = "{$codigoDoc} - Acta de Reunión #{$acta['consecutivo_anual']} - {$acta['tipo_nombre']} {$fechaFormateada} (Firmado)";
 
-    // URL al acta (vista web, no PDF estático)
-    $enlace = "https://dashboard.cycloidtalent.com/actas/comite/{$acta['id_comite']}/acta/{$acta['id_acta']}/ver";
+    // URL al PDF del acta (descarga directa)
+    $enlace = "https://dashboard.cycloidtalent.com/actas/pdf/{$acta['id_acta']}";
 
     $insert = $pdo->prepare("
         INSERT INTO tbl_reporte (titulo_reporte, id_detailreport, id_report_type, id_cliente, estado, observaciones, enlace, created_at, updated_at)
