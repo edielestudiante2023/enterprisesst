@@ -24,13 +24,13 @@
         </div>
     </div>
 
-    <!-- Info del miembro en este comité -->
+    <!-- Info del miembro + Estadísticas -->
     <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h6 class="text-muted mb-2">Mi participacion en este comite</h6>
-                    <div class="d-flex gap-2">
+                    <h6 class="text-muted mb-2">Mi participacion</h6>
+                    <div class="d-flex gap-2 flex-wrap">
                         <span class="badge bg-info"><?= ucfirst($miembroEnComite['rol_comite'] ?? 'Miembro') ?></span>
                         <span class="badge bg-<?= ($miembroEnComite['representacion'] ?? '') === 'empleador' ? 'primary' : 'success' ?>">
                             <?= ucfirst($miembroEnComite['representacion'] ?? '-') ?>
@@ -39,6 +39,38 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Cumplimiento <?= date('Y') ?></h6>
+                    <?php
+                    $cumplimiento = $estadisticas['cumplimiento'] ?? 0;
+                    $colorBarra = $cumplimiento >= 80 ? 'bg-success' : ($cumplimiento >= 50 ? 'bg-warning' : 'bg-danger');
+                    $periodosEsperados = $estadisticas['periodos_esperados'] ?? 0;
+                    $totalActas = $estadisticas['total'] ?? 0;
+                    ?>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="h4 mb-0"><?= $cumplimiento ?>%</span>
+                        <small class="text-muted align-self-end"><?= $totalActas ?> de <?= $periodosEsperados ?> posibles en <?= date('Y') ?></small>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar <?= $colorBarra ?>" style="width: <?= $cumplimiento ?>%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <a href="<?= base_url('miembro/comite/' . $comite['id_comite'] . '/compromisos') ?>" class="card border-0 shadow-sm h-100 text-decoration-none">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Compromisos</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="h4 mb-0 text-warning me-2"><?= count($compromisosPendientes ?? []) ?></div>
+                        <small class="text-muted">pendientes</small>
+                    </div>
+                    <small class="text-primary"><i class="bi bi-arrow-right me-1"></i>Ver todos los compromisos</small>
+                </div>
+            </a>
         </div>
     </div>
 

@@ -1458,6 +1458,7 @@ $routes->get('/matriz-comunicacion/descargar-muestra', 'MatrizComunicacionContro
 $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->get('dashboard', 'MiembroAuthController::dashboard');
     $routes->get('comite/(:num)', 'MiembroAuthController::verComite/$1');
+    $routes->get('comite/(:num)/compromisos', 'MiembroAuthController::compromisosComite/$1');
     $routes->get('comite/(:num)/nueva-acta', 'MiembroAuthController::nuevaActa/$1');
     $routes->post('comite/(:num)/guardar-acta', 'MiembroAuthController::guardarActa/$1');
     $routes->get('acta/(:num)', 'MiembroAuthController::verActa/$1');

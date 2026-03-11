@@ -122,12 +122,17 @@ class MiembroAuthController extends BaseController
             ->where('estado', 'activo')
             ->first();
 
+        $estadisticas = $this->actaModel->getEstadisticas($idComite, date('Y'));
+        $compromisosPendientes = $this->compromisosModel->getByComite($idComite, 'pendiente');
+
         return view('actas/miembro_auth/comite', [
             'miembro' => $miembro,
             'miembroEnComite' => $miembroEnComite,
             'cliente' => $cliente,
             'comite' => $comite,
-            'actas' => $actas
+            'actas' => $actas,
+            'estadisticas' => $estadisticas,
+            'compromisosPendientes' => $compromisosPendientes
         ]);
     }
 
@@ -242,6 +247,58 @@ class MiembroAuthController extends BaseController
             'miembro' => $miembro,
             'cliente' => $cliente,
             'compromisos' => $compromisos
+        ]);
+    }
+
+    /**
+     * Ver compromisos de un comité específico
+     */
+    public function compromisosComite(int $idComite)
+    {
+        $session = session();
+        $email = $session->get('email_miembro');
+        $idCliente = $session->get('user_id');
+
+        // Verificar que el miembro pertenece a este comité
+        $comites = $this->miembroModel->getComitesPorEmail($email, $idCliente);
+        $perteneceAlComite = false;
+
+        foreach ($comites as $c) {
+            if ($c['id_comite'] == $idComite) {
+                $perteneceAlComite = true;
+                break;
+            }
+        }
+
+        if (!$perteneceAlComite) {
+            return redirect()->to('/miembro/dashboard')->with('error', 'No tienes acceso a este comite');
+        }
+
+        $comite = $this->comiteModel->getConDetalles($idComite);
+
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($comite['id_cliente']);
+
+        $miembro = $this->miembroModel->getByEmailYCliente($email, $idCliente);
+
+        $compromisos = $this->compromisosModel->getByComite($idComite);
+        $miembros = $this->miembroModel->getActivosPorComite($idComite);
+
+        // Estadísticas
+        $stats = [
+            'pendientes' => count(array_filter($compromisos, fn($c) => $c['estado'] === 'pendiente')),
+            'en_progreso' => count(array_filter($compromisos, fn($c) => $c['estado'] === 'en_proceso')),
+            'completados' => count(array_filter($compromisos, fn($c) => $c['estado'] === 'cumplido' || $c['estado'] === 'completado')),
+            'vencidos' => count(array_filter($compromisos, fn($c) => $c['estado'] === 'vencido'))
+        ];
+
+        return view('actas/miembro_auth/compromisos_comite', [
+            'miembro' => $miembro,
+            'cliente' => $cliente,
+            'comite' => $comite,
+            'compromisos' => $compromisos,
+            'stats' => $stats,
+            'miembros' => $miembros
         ]);
     }
 
