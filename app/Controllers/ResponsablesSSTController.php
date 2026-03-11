@@ -205,11 +205,16 @@ class ResponsablesSSTController extends BaseController
                     $passwordTemp = $this->generarPasswordSeguro();
                     log_message('critical', 'PASO 11: Password generado = ' . $passwordTemp);
 
+                    // Roles de direccion crean usuario 'client' (acceso completo)
+                    // Roles de comite/brigada crean usuario 'miembro' (solo actas)
+                    $rolesCliente = ['representante_legal', 'responsable_sgsst'];
+                    $tipoUsuario = in_array($datos['tipo_rol'], $rolesCliente) ? 'client' : 'miembro';
+
                     $datosUsuario = [
                         'email' => $datos['email'],
                         'password' => $passwordTemp,
                         'nombre_completo' => $datos['nombre_completo'],
-                        'tipo_usuario' => 'client',
+                        'tipo_usuario' => $tipoUsuario,
                         'id_entidad' => $idCliente,
                         'estado' => 'activo'
                     ];
