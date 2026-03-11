@@ -435,9 +435,10 @@ class ResponsablesSSTController extends BaseController
         }
 
         $idTipo = $mapeoTipo[$tipoRol];
+        $db = \Config\Database::connect();
 
         // Buscar comité activo del tipo correspondiente
-        $comite = $this->db->table('tbl_comites')
+        $comite = $db->table('tbl_comites')
             ->where('id_cliente', $idCliente)
             ->where('id_tipo', $idTipo)
             ->where('estado', 'activo')
@@ -449,14 +450,14 @@ class ResponsablesSSTController extends BaseController
 
         // Verificar si ya existe como miembro por email
         if (!empty($datos['email'])) {
-            $existe = $this->db->table('tbl_miembros_comite')
+            $existe = $db->table('tbl_miembros_comite')
                 ->where('id_comite', $comite['id_comite'])
                 ->where('email', $datos['email'])
                 ->get()->getRowArray();
 
             if ($existe) {
                 // Actualizar datos del miembro existente
-                $this->db->table('tbl_miembros_comite')
+                $db->table('tbl_miembros_comite')
                     ->where('id_miembro', $existe['id_miembro'])
                     ->update([
                         'nombres' => $datos['nombre_completo'],
@@ -472,7 +473,7 @@ class ResponsablesSSTController extends BaseController
         }
 
         // Insertar nuevo miembro
-        $this->db->table('tbl_miembros_comite')->insert([
+        $db->table('tbl_miembros_comite')->insert([
             'id_comite' => $comite['id_comite'],
             'nombres' => $datos['nombre_completo'],
             'apellidos' => '',
