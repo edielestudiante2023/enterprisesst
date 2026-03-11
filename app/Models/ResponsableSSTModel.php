@@ -48,7 +48,7 @@ class ResponsableSSTModel extends Model
         'brigada_lider_evacuacion' => 'Brigada - Líder Evacuación',
         'brigada_lider_primeros_auxilios' => 'Brigada - Líder Primeros Auxilios',
         'brigada_lider_control_incendios' => 'Brigada - Líder Control Incendios',
-        'asesor_sst_externo' => 'Asesor SST Externo (Consultor)',
+        'asesor_sst_externo' => 'Consultor SST Cycloid Talent',
         'otro' => 'Otro'
     ];
 
