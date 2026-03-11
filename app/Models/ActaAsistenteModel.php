@@ -183,6 +183,11 @@ class ActaAsistenteModel extends Model
         $agregados = 0;
 
         foreach ($miembros as $miembro) {
+            // Saltar asesores virtuales — se agregan aparte con agregarAsesorExterno()
+            if (!empty($miembro['es_asesor_externo'])) {
+                continue;
+            }
+
             $this->insert([
                 'id_acta' => $idActa,
                 'id_miembro' => $miembro['id_miembro'],
@@ -201,6 +206,43 @@ class ActaAsistenteModel extends Model
         }
 
         return $agregados;
+    }
+
+    /**
+     * Agregar asesor SST externo como asistente del acta
+     * Se usa cuando el asesor fue marcado como presente en el formulario
+     */
+    public function agregarAsesorExterno(int $idActa, int $idResponsable): int|false
+    {
+        $db = \Config\Database::connect();
+        $asesor = $db->table('tbl_cliente_responsables_sst')
+            ->where('id_responsable', $idResponsable)
+            ->where('tipo_rol', 'asesor_sst_externo')
+            ->where('activo', 1)
+            ->get()->getRowArray();
+
+        if (!$asesor) {
+            return false;
+        }
+
+        // Obtener último orden de firma
+        $ultimo = $this->where('id_acta', $idActa)
+                       ->orderBy('orden_firma', 'DESC')
+                       ->first();
+        $orden = ($ultimo['orden_firma'] ?? 0) + 1;
+
+        return $this->insert([
+            'id_acta' => $idActa,
+            'id_miembro' => null,
+            'nombre_completo' => $asesor['nombre_completo'],
+            'numero_documento' => $asesor['numero_documento'] ?? '',
+            'cargo' => $asesor['cargo'] ?? 'Consultor SST',
+            'email' => $asesor['email'],
+            'tipo_asistente' => 'asesor',
+            'asistio' => 1,
+            'orden_firma' => $orden,
+            'estado_firma' => 'pendiente'
+        ]);
     }
 
     /**

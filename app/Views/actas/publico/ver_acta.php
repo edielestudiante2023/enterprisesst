@@ -119,7 +119,9 @@
                                 <td><?= esc($asist['nombre_completo']) ?></td>
                                 <td><?= esc($asist['cargo'] ?? '-') ?></td>
                                 <td>
-                                    <?php if (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
+                                    <?php if (($asist['tipo_asistente'] ?? '') === 'asesor'): ?>
+                                        <span class="badge bg-info">Consultor SST</span>
+                                    <?php elseif (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
                                         <span class="badge bg-warning text-dark"><?= ucfirst($asist['rol_comite']) ?></span>
                                     <?php else: ?>
                                         Miembro
@@ -261,7 +263,9 @@
                         <hr style="margin: 5px 30px;">
                         <strong class="d-block"><?= esc($asist['nombre_completo']) ?></strong>
                         <small class="text-muted"><?= esc($asist['cargo'] ?? '') ?></small>
-                        <?php if (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
+                        <?php if (($asist['tipo_asistente'] ?? '') === 'asesor'): ?>
+                            <br><small class="badge bg-info">Consultor SST</small>
+                        <?php elseif (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
                             <br><small class="badge bg-warning text-dark"><?= ucfirst($asist['rol_comite']) ?></small>
                         <?php endif; ?>
                     </div>

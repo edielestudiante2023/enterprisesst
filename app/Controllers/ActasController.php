@@ -737,14 +737,27 @@ class ActasController extends BaseController
         $idActa = $this->actaModel->crearActa($data);
 
         if ($idActa) {
-            // Agregar asistentes desde miembros
+            // Agregar asistentes desde miembros (excluye asesores virtuales)
             $this->asistentesModel->agregarDesdeMiembros($idActa, $idComite);
 
             // Procesar asistencia marcada
             $asistio = $this->request->getPost('asistio') ?? [];
+
+            // Agregar asesores SST externos si fueron marcados como asistentes
+            foreach ($asistio as $idMiembro) {
+                if (is_string($idMiembro) && str_starts_with($idMiembro, 'asesor_')) {
+                    $idResponsable = (int) str_replace('asesor_', '', $idMiembro);
+                    $this->asistentesModel->agregarAsesorExterno($idActa, $idResponsable);
+                }
+            }
+
             $asistentes = $this->asistentesModel->getByActa($idActa);
 
             foreach ($asistentes as $asistente) {
+                // Asesores se agregan solo si están marcados, siempre asistieron
+                if ($asistente['tipo_asistente'] === 'asesor') {
+                    continue;
+                }
                 if (!in_array($asistente['id_miembro'], $asistio)) {
                     $this->asistentesModel->marcarAusente($asistente['id_asistente']);
                 }
@@ -766,17 +779,32 @@ class ActasController extends BaseController
 
             foreach ($compDescripciones as $i => $descripcion) {
                 if (!empty($descripcion) && !empty($compResponsables[$i])) {
-                    // Obtener datos del miembro responsable
-                    $miembro = $this->miembroModel->find($compResponsables[$i]);
+                    $idResp = $compResponsables[$i];
+                    $nombreResp = '';
+                    $emailResp = '';
+
+                    // Manejar asesor externo (id_miembro = 'asesor_X')
+                    if (is_string($idResp) && str_starts_with($idResp, 'asesor_')) {
+                        $idResponsable = (int) str_replace('asesor_', '', $idResp);
+                        $db = \Config\Database::connect();
+                        $asesor = $db->table('tbl_cliente_responsables_sst')
+                            ->where('id_responsable', $idResponsable)->get()->getRowArray();
+                        $nombreResp = $asesor['nombre_completo'] ?? '';
+                        $emailResp = $asesor['email'] ?? '';
+                    } else {
+                        $miembro = $this->miembroModel->find($idResp);
+                        $nombreResp = $miembro['nombre_completo'] ?? '';
+                        $emailResp = $miembro['email'] ?? '';
+                    }
 
                     $this->compromisosModel->crearCompromiso([
                         'id_acta' => $idActa,
                         'id_comite' => $idComite,
                         'id_cliente' => $comite['id_cliente'],
                         'descripcion' => $descripcion,
-                        'responsable_nombre' => $miembro['nombre_completo'] ?? '',
-                        'responsable_email' => $miembro['email'] ?? '',
-                        'responsable_id_miembro' => $compResponsables[$i],
+                        'responsable_nombre' => $nombreResp,
+                        'responsable_email' => $emailResp,
+                        'responsable_id_miembro' => is_numeric($idResp) ? $idResp : null,
                         'fecha_compromiso' => $this->request->getPost('fecha_reunion'),
                         'fecha_vencimiento' => $compFechas[$i] ?? date('Y-m-d', strtotime('+30 days'))
                     ]);

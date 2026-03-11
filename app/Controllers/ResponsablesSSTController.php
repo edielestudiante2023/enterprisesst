@@ -432,12 +432,18 @@ class ResponsablesSSTController extends BaseController
         ];
 
         $tipoRol = $datos['tipo_rol'] ?? '';
+        $db = \Config\Database::connect();
+
+        // Asesor SST externo no se inserta en miembros — se inyecta dinámicamente
+        if ($tipoRol === 'asesor_sst_externo') {
+            return;
+        }
+
         if (!isset($mapeoTipo[$tipoRol])) {
             return; // No es rol de comité
         }
 
         $idTipo = $mapeoTipo[$tipoRol];
-        $db = \Config\Database::connect();
 
         // Buscar comité activo del tipo correspondiente
         $comite = $db->table('tbl_comites')
@@ -450,15 +456,27 @@ class ResponsablesSSTController extends BaseController
             return; // No hay comité creado aún
         }
 
+        $this->insertarOActualizarMiembro($db, $comite['id_comite'], $datos, $tipoRol);
+    }
+
+    /**
+     * Inserta o actualiza un miembro en tbl_miembros_comite
+     */
+    private function insertarOActualizarMiembro($db, int $idComite, array $datos, string $tipoRol): void
+    {
+        $esAsesor = $tipoRol === 'asesor_sst_externo';
+        $representacion = $esAsesor ? 'empleador' : (str_contains($tipoRol, 'empleador') || str_contains($tipoRol, 'presidente') ? 'empleador' : 'trabajador');
+        $tipoMiembro = $esAsesor ? 'principal' : (str_contains($tipoRol, 'suplente') ? 'suplente' : 'principal');
+        $rolComite = $esAsesor ? 'asesor' : $this->mapearRolComite($tipoRol);
+
         // Verificar si ya existe como miembro por email
         if (!empty($datos['email'])) {
             $existe = $db->table('tbl_miembros_comite')
-                ->where('id_comite', $comite['id_comite'])
+                ->where('id_comite', $idComite)
                 ->where('email', $datos['email'])
                 ->get()->getRowArray();
 
             if ($existe) {
-                // Actualizar datos del miembro existente
                 $db->table('tbl_miembros_comite')
                     ->where('id_miembro', $existe['id_miembro'])
                     ->update([
@@ -466,9 +484,9 @@ class ResponsablesSSTController extends BaseController
                         'documento_identidad' => $datos['numero_documento'] ?? '',
                         'cargo' => $datos['cargo'] ?? '',
                         'telefono' => $datos['telefono'] ?? '',
-                        'representacion' => str_contains($tipoRol, 'empleador') || str_contains($tipoRol, 'presidente') ? 'empleador' : 'trabajador',
-                        'tipo_miembro' => str_contains($tipoRol, 'suplente') ? 'suplente' : 'principal',
-                        'rol_comite' => $this->mapearRolComite($tipoRol),
+                        'representacion' => $representacion,
+                        'tipo_miembro' => $tipoMiembro,
+                        'rol_comite' => $rolComite,
                     ]);
                 return;
             }
@@ -476,16 +494,16 @@ class ResponsablesSSTController extends BaseController
 
         // Insertar nuevo miembro
         $db->table('tbl_miembros_comite')->insert([
-            'id_comite' => $comite['id_comite'],
+            'id_comite' => $idComite,
             'nombres' => $datos['nombre_completo'],
             'apellidos' => '',
             'documento_identidad' => $datos['numero_documento'] ?? '',
             'cargo' => $datos['cargo'] ?? '',
             'email' => $datos['email'] ?? '',
             'telefono' => $datos['telefono'] ?? '',
-            'representacion' => str_contains($tipoRol, 'empleador') || str_contains($tipoRol, 'presidente') ? 'empleador' : 'trabajador',
-            'tipo_miembro' => str_contains($tipoRol, 'suplente') ? 'suplente' : 'principal',
-            'rol_comite' => $this->mapearRolComite($tipoRol),
+            'representacion' => $representacion,
+            'tipo_miembro' => $tipoMiembro,
+            'rol_comite' => $rolComite,
             'estado' => 'activo',
             'fecha_ingreso' => date('Y-m-d'),
             'created_at' => date('Y-m-d H:i:s'),

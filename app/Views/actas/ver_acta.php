@@ -290,7 +290,9 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <strong><?= esc($asist['nombre_completo']) ?></strong>
-                                <?php if (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
+                                <?php if (($asist['tipo_asistente'] ?? '') === 'asesor'): ?>
+                                    <span class="badge bg-info">Consultor SST</span>
+                                <?php elseif (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
                                     <span class="badge bg-warning text-dark"><?= ucfirst($asist['rol_comite']) ?></span>
                                 <?php endif; ?>
                                 <br>

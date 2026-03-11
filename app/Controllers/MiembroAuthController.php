@@ -410,8 +410,18 @@ class MiembroAuthController extends BaseController
             $asistentes = $this->request->getPost('asistentes') ?? [];
             $asistio = $this->request->getPost('asistio') ?? [];
             $justificacion = $this->request->getPost('justificacion') ?? [];
+            $orden = 1;
 
             foreach ($asistentes as $idMiembro) {
+                // Manejar asesor SST externo (id virtual: 'asesor_X')
+                if (is_string($idMiembro) && str_starts_with($idMiembro, 'asesor_')) {
+                    if (isset($asistio[$idMiembro])) {
+                        $idResponsable = (int) str_replace('asesor_', '', $idMiembro);
+                        $this->asistentesModel->agregarAsesorExterno($idActa, $idResponsable);
+                    }
+                    continue;
+                }
+
                 $miembroData = $this->miembroModel->find($idMiembro);
                 if ($miembroData) {
                     $this->asistentesModel->insert([
@@ -420,12 +430,13 @@ class MiembroAuthController extends BaseController
                         'nombre_completo' => $miembroData['nombre_completo'],
                         'cargo' => $miembroData['cargo'],
                         'email' => $miembroData['email'],
-                        'tipo_miembro' => $miembroData['tipo_miembro'],
-                        'representacion' => $miembroData['representacion'],
-                        'rol_comite' => $miembroData['rol_comite'],
+                        'tipo_asistente' => 'miembro',
                         'asistio' => isset($asistio[$idMiembro]) ? 1 : 0,
-                        'justificacion_ausencia' => $justificacion[$idMiembro] ?? null
+                        'justificacion_ausencia' => $justificacion[$idMiembro] ?? null,
+                        'orden_firma' => $orden,
+                        'estado_firma' => 'pendiente'
                     ]);
+                    $orden++;
                 }
             }
 

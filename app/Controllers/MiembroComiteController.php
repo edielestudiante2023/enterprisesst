@@ -290,14 +290,26 @@ class MiembroComiteController extends BaseController
         $idActa = $this->actaModel->crearActa($data);
 
         if ($idActa) {
-            // Agregar asistentes
+            // Agregar asistentes (excluye asesores virtuales)
             $this->asistentesModel->agregarDesdeMiembros($idActa, $idComite);
 
             // Procesar asistencia
             $asistio = $this->request->getPost('asistio') ?? [];
+
+            // Agregar asesores SST externos si fueron marcados
+            foreach ($asistio as $idMiembro) {
+                if (is_string($idMiembro) && str_starts_with($idMiembro, 'asesor_')) {
+                    $idResponsable = (int) str_replace('asesor_', '', $idMiembro);
+                    $this->asistentesModel->agregarAsesorExterno($idActa, $idResponsable);
+                }
+            }
+
             $asistentes = $this->asistentesModel->getByActa($idActa);
 
             foreach ($asistentes as $asistente) {
+                if ($asistente['tipo_asistente'] === 'asesor') {
+                    continue;
+                }
                 if (!in_array($asistente['id_miembro'], $asistio)) {
                     $this->asistentesModel->marcarAusente($asistente['id_asistente']);
                 }

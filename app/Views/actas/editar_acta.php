@@ -275,8 +275,10 @@
 
                         <?php
                         $asistentesIds = array_column($asistentes, 'id_miembro');
+                        $asistentesEmails = array_column($asistentes, 'email');
                         $principales = array_filter($miembros, fn($m) => $m['tipo_miembro'] === 'principal');
                         $suplentes = array_filter($miembros, fn($m) => $m['tipo_miembro'] === 'suplente');
+                        $asesoresVirtuales = array_filter($miembros, fn($m) => ($m['tipo_miembro'] ?? '') === 'asesor');
                         ?>
 
                         <h6 class="text-muted mb-2">Principales</h6>
@@ -308,6 +310,24 @@
                                    <?= $acta['estado'] !== 'borrador' ? 'disabled' : '' ?>>
                             <label class="form-check-label" for="miembro_<?= $miembro['id_miembro'] ?>">
                                 <?= esc($miembro['nombre_completo']) ?>
+                                <br><small class="text-muted"><?= esc($miembro['cargo']) ?></small>
+                            </label>
+                        </div>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+
+                        <?php if (!empty($asesoresVirtuales)): ?>
+                        <h6 class="text-muted mb-2 mt-3">Consultor SST</h6>
+                        <?php foreach ($asesoresVirtuales as $miembro): ?>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input asistente-check" type="checkbox"
+                                   name="asistio[]" value="<?= $miembro['id_miembro'] ?>"
+                                   id="miembro_<?= $miembro['id_miembro'] ?>"
+                                   <?= in_array($miembro['email'], $asistentesEmails) ? 'checked' : '' ?>
+                                   <?= $acta['estado'] !== 'borrador' ? 'disabled' : '' ?>>
+                            <label class="form-check-label" for="miembro_<?= $miembro['id_miembro'] ?>">
+                                <?= esc($miembro['nombre_completo']) ?>
+                                <span class="badge bg-info">Asesor</span>
                                 <br><small class="text-muted"><?= esc($miembro['cargo']) ?></small>
                             </label>
                         </div>

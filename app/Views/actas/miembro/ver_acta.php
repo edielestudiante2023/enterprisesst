@@ -214,7 +214,9 @@
                                 <?php if ($asist['id_asistente'] == $miAsistente['id_asistente']): ?>
                                     <span class="badge bg-primary">Yo</span>
                                 <?php endif; ?>
-                                <?php if (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
+                                <?php if (($asist['tipo_asistente'] ?? '') === 'asesor'): ?>
+                                    <span class="badge bg-info">Consultor SST</span>
+                                <?php elseif (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
                                     <span class="badge bg-warning text-dark"><?= ucfirst($asist['rol_comite']) ?></span>
                                 <?php endif; ?>
                                 <br><small class="text-muted"><?= esc($asist['cargo'] ?? '') ?></small>

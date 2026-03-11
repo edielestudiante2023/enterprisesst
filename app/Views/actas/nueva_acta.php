@@ -211,6 +211,7 @@
                             <?php
                             $principales = array_filter($miembros, fn($m) => $m['tipo_miembro'] === 'principal');
                             $suplentes = array_filter($miembros, fn($m) => $m['tipo_miembro'] === 'suplente');
+                            $asesores = array_filter($miembros, fn($m) => ($m['tipo_miembro'] ?? '') === 'asesor');
                             ?>
 
                             <h6 class="text-muted mb-2">Principales</h6>
@@ -238,6 +239,22 @@
                                        id="miembro_<?= $miembro['id_miembro'] ?>">
                                 <label class="form-check-label" for="miembro_<?= $miembro['id_miembro'] ?>">
                                     <?= esc($miembro['nombre_completo']) ?>
+                                    <br><small class="text-muted"><?= esc($miembro['cargo']) ?></small>
+                                </label>
+                            </div>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
+
+                            <?php if (!empty($asesores)): ?>
+                            <h6 class="text-muted mb-2 mt-3">Consultor SST</h6>
+                            <?php foreach ($asesores as $miembro): ?>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input asistente-check" type="checkbox"
+                                       name="asistio[]" value="<?= $miembro['id_miembro'] ?>"
+                                       id="miembro_<?= $miembro['id_miembro'] ?>" checked>
+                                <label class="form-check-label" for="miembro_<?= $miembro['id_miembro'] ?>">
+                                    <?= esc($miembro['nombre_completo']) ?>
+                                    <span class="badge bg-info">Asesor</span>
                                     <br><small class="text-muted"><?= esc($miembro['cargo']) ?></small>
                                 </label>
                             </div>

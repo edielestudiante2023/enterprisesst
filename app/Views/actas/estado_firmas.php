@@ -101,7 +101,9 @@
                                 <tr>
                                     <td>
                                         <strong><?= esc($asist['nombre_completo']) ?></strong>
-                                        <?php if (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
+                                        <?php if (($asist['tipo_asistente'] ?? '') === 'asesor'): ?>
+                                            <br><span class="badge bg-info">Consultor SST</span>
+                                        <?php elseif (!empty($asist['rol_comite']) && $asist['rol_comite'] !== 'miembro'): ?>
                                             <br><span class="badge bg-warning text-dark"><?= ucfirst($asist['rol_comite']) ?></span>
                                         <?php endif; ?>
                                     </td>

@@ -38,15 +38,58 @@ class MiembroComiteModel extends Model
     protected $updatedField = 'updated_at';
 
     /**
-     * Obtener miembros activos de un comité
+     * Obtener miembros activos de un comité + asesores SST del cliente
      */
     public function getActivosPorComite(int $idComite): array
     {
-        return $this->where('id_comite', $idComite)
+        $miembros = $this->where('id_comite', $idComite)
                     ->where('estado', 'activo')
-                    ->orderBy('tipo_miembro', 'ASC') // Principales primero
-                    ->orderBy('rol_comite', 'ASC')   // Presidente, Secretario, Miembro
+                    ->orderBy('tipo_miembro', 'ASC')
+                    ->orderBy('rol_comite', 'ASC')
                     ->findAll();
+
+        // Agregar asesores SST externos del cliente (transversales a todos los comités)
+        $db = \Config\Database::connect();
+        $comite = $db->table('tbl_comites')->where('id_comite', $idComite)->get()->getRowArray();
+        if ($comite) {
+            $asesores = $db->table('tbl_cliente_responsables_sst')
+                ->where('id_cliente', $comite['id_cliente'])
+                ->where('tipo_rol', 'asesor_sst_externo')
+                ->where('activo', 1)
+                ->get()->getResultArray();
+
+            foreach ($asesores as $asesor) {
+                // Verificar que no esté ya como miembro (por email)
+                $yaExiste = false;
+                foreach ($miembros as $m) {
+                    if (!empty($m['email']) && $m['email'] === $asesor['email']) {
+                        $yaExiste = true;
+                        break;
+                    }
+                }
+                if (!$yaExiste) {
+                    $miembros[] = [
+                        'id_miembro' => 'asesor_' . $asesor['id_responsable'],
+                        'id_comite' => $idComite,
+                        'id_cliente' => $comite['id_cliente'],
+                        'nombre_completo' => $asesor['nombre_completo'],
+                        'nombres' => $asesor['nombre_completo'],
+                        'apellidos' => '',
+                        'documento_identidad' => $asesor['numero_documento'] ?? '',
+                        'cargo' => $asesor['cargo'] ?? 'Consultor SST',
+                        'email' => $asesor['email'] ?? '',
+                        'telefono' => $asesor['telefono'] ?? '',
+                        'representacion' => 'empleador',
+                        'tipo_miembro' => 'asesor',
+                        'rol_comite' => 'asesor',
+                        'estado' => 'activo',
+                        'es_asesor_externo' => true,
+                    ];
+                }
+            }
+        }
+
+        return $miembros;
     }
 
     /**
