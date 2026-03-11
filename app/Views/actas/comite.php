@@ -94,7 +94,7 @@
                         </div>
                         <div class="col-6">
                             <div class="h4 mb-0"><?= $estadisticas['cumplimiento'] ?>%</div>
-                            <small class="text-muted">Cumplimiento</small>
+                            <small class="text-muted"><?= $estadisticas['total'] ?> de <?= $estadisticas['periodos_esperados'] ?> posibles en <?= date('Y') ?></small>
                         </div>
                     </div>
 

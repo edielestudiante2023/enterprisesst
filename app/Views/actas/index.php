@@ -107,6 +107,12 @@
                                 ?>
                                 <div class="progress-bar <?= $colorBarra ?>" style="width: <?= $cumplimiento ?>%"></div>
                             </div>
+                            <?php
+                            $periodosEsperados = $comite['stats']['periodos_esperados'] ?? 0;
+                            $totalActas = $comite['stats']['total'] ?? 0;
+                            $label = $periodosEsperados == 1 ? 'reunión esperada' : 'reuniones esperadas';
+                            ?>
+                            <small class="text-muted"><?= $totalActas ?> de <?= $periodosEsperados ?> posibles en <?= $anioActual ?></small>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center">
