@@ -12,6 +12,7 @@ $dbHost = 'localhost';
 $dbName = 'empresas_sst';
 $dbUser = 'root';
 $dbPass = '';
+$dbPort = '3306';
 
 if (file_exists($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -21,11 +22,22 @@ if (file_exists($envFile)) {
         if (str_contains($line, 'database.default.database')) $dbName = trim(explode('=', $line, 2)[1] ?? $dbName);
         if (str_contains($line, 'database.default.username')) $dbUser = trim(explode('=', $line, 2)[1] ?? $dbUser);
         if (str_contains($line, 'database.default.password')) $dbPass = trim(explode('=', $line, 2)[1] ?? $dbPass);
+        if (str_contains($line, 'database.default.port')) $dbPort = trim(explode('=', $line, 2)[1] ?? $dbPort);
     }
 }
 
-$pdo = new PDO("mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4", $dbUser, $dbPass);
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+echo "Conectando a {$dbHost}:{$dbPort}/{$dbName} como {$dbUser}...\n";
+
+$dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbName};charset=utf8mb4";
+
+// SSL requerido para servidores remotos (DigitalOcean, etc.)
+$opciones = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION];
+if ($dbHost !== 'localhost' && $dbHost !== '127.0.0.1') {
+    $opciones[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+    $opciones[PDO::MYSQL_ATTR_SSL_CA] = '';
+}
+
+$pdo = new PDO($dsn, $dbUser, $dbPass, $opciones);
 
 echo "=== PUBLICAR ACTAS FIRMADAS EN REPORTLIST ===\n\n";
 
