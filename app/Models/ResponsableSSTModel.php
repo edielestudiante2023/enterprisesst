@@ -48,6 +48,7 @@ class ResponsableSSTModel extends Model
         'brigada_lider_evacuacion' => 'Brigada - Líder Evacuación',
         'brigada_lider_primeros_auxilios' => 'Brigada - Líder Primeros Auxilios',
         'brigada_lider_control_incendios' => 'Brigada - Líder Control Incendios',
+        'asesor_sst_externo' => 'Asesor SST Externo (Consultor)',
         'otro' => 'Otro'
     ];
 
@@ -113,6 +114,11 @@ class ResponsableSSTModel extends Model
             'brigada' => [
                 'titulo' => 'Brigada de Emergencias',
                 'roles' => ['brigada_coordinador', 'brigada_lider_evacuacion', 'brigada_lider_primeros_auxilios', 'brigada_lider_control_incendios'],
+                'items' => []
+            ],
+            'asesores' => [
+                'titulo' => 'Asesores Externos',
+                'roles' => ['asesor_sst_externo'],
                 'items' => []
             ],
             'otros' => [

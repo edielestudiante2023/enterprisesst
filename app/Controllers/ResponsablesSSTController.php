@@ -195,7 +195,9 @@ class ResponsablesSSTController extends BaseController
             $this->sincronizarMiembroComite($idCliente, $datos);
 
             // Crear usuario si se marcó la opción y hay email
-            if ($crearUsuario && !empty($datos['email']) && !$idResponsable) {
+            // El asesor externo (consultor) ya tiene su propio usuario - no crear duplicado
+            $rolesSinUsuario = ['asesor_sst_externo'];
+            if ($crearUsuario && !empty($datos['email']) && !$idResponsable && !in_array($datos['tipo_rol'], $rolesSinUsuario)) {
                 log_message('critical', 'PASO 8: >>> ENTRO AL BLOQUE DE CREAR USUARIO <<<');
 
                 $userModel = new UserModel();
