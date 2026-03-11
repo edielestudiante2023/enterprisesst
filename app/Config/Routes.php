@@ -1067,6 +1067,11 @@ $routes->post('/documentos-sst/(:num)/crear-asignacion-responsable-sst', 'Pzasig
 $routes->get('/documentos-sst/(:num)/asignacion-responsable-sst/(:num)', 'PzasignacionresponsableSstController::ver/$1/$2');
 $routes->post('/documentos-sst/(:num)/regenerar-asignacion-responsable-sst/(:num)', 'PzasignacionresponsableSstController::regenerar/$1/$2');
 
+// 1.1.5 Certificacion de No Alto Riesgo (Patron B - controlador independiente)
+$routes->post('/documentos-sst/(:num)/crear-certificacion-alto-riesgo', 'PzcertificacionAltoRiesgoController::crear/$1');
+$routes->get('/documentos-sst/(:num)/certificacion-alto-riesgo/(:num)', 'PzcertificacionAltoRiesgoController::ver/$1/$2');
+$routes->post('/documentos-sst/(:num)/regenerar-certificacion-alto-riesgo/(:num)', 'PzcertificacionAltoRiesgoController::regenerar/$1/$2');
+
 // 1.1.2 Responsabilidades en el SG-SST (4 documentos separados)
 // Responsabilidades del Representante Legal (firma digital)
 $routes->post('/documentos-sst/(:num)/crear-responsabilidades-rep-legal', 'PzresponsabilidadesRepLegalController::crear/$1');

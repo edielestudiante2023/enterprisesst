@@ -56,9 +56,20 @@ if (!empty($documentosSSTAprobados)) {
                                     <i class="bi bi-exclamation-diamond me-2 text-warning"></i>Procedimiento Identificacion Alto Riesgo
                                 </a>
                             </li>
-                            <?php endif; ?>
-                            <?php if (isset($docsExistentesTipos['identificacion_alto_riesgo'])): ?>
+                            <?php else: ?>
                             <li><span class="dropdown-item text-muted"><i class="bi bi-check-circle me-2"></i>Procedimiento creado <?= date('Y') ?></span></li>
+                            <?php endif; ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <?php if (!isset($docsExistentesTipos['certificacion_no_alto_riesgo'])): ?>
+                            <li>
+                                <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-certificacion-alto-riesgo') ?>" method="post" style="display:inline;">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-file-earmark-check me-2 text-success"></i>Certificacion No Alto Riesgo
+                                    </button>
+                                </form>
+                            </li>
+                            <?php else: ?>
+                            <li><span class="dropdown-item text-muted"><i class="bi bi-check-circle me-2"></i>Certificacion creada <?= date('Y') ?></span></li>
                             <?php endif; ?>
                         </ul>
                     </div>

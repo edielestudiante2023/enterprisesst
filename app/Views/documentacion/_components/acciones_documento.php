@@ -16,6 +16,7 @@ $mapaRutas = [
     'procedimiento_control_documental' => 'procedimiento-control-documental/' . $docSST['anio'],
     'presupuesto_sst' => 'presupuesto/preview/' . $docSST['anio'],
     'identificacion_alto_riesgo' => 'identificacion-alto-riesgo/' . $docSST['anio'],
+    'certificacion_no_alto_riesgo' => 'certificacion-alto-riesgo/' . $docSST['anio'],
     // 2.1.1 Políticas de SST
     'politica_sst_general' => 'politica-sst-general/' . $docSST['anio'],
     'politica_alcohol_drogas' => 'politica-alcohol-drogas/' . $docSST['anio'],

@@ -496,8 +496,8 @@ class DocumentacionController extends Controller
                 // 4.2.5: Mantenimiento Periodico
                 $queryDocs->where('tipo_documento', 'programa_mantenimiento_periodico');
             } elseif ($tipoCarpetaFases === 'identificacion_alto_riesgo') {
-                // 1.1.5: Identificación de trabajadores de alto riesgo
-                $queryDocs->where('tipo_documento', 'identificacion_alto_riesgo');
+                // 1.1.5: Identificación de trabajadores de alto riesgo + certificacion
+                $queryDocs->whereIn('tipo_documento', ['identificacion_alto_riesgo', 'certificacion_no_alto_riesgo']);
             } elseif ($tipoCarpetaFases === 'auditoria_anual') {
                 // 6.1.2: Procedimiento de Auditoria Anual del SG-SST
                 $queryDocs->where('tipo_documento', 'procedimiento_auditoria_anual');
