@@ -155,7 +155,9 @@
                                     </td>
                                     <td><?= esc($miembro['cargo'] ?? '-') ?></td>
                                     <td>
-                                        <?php if (!empty($miembro['representacion'])): ?>
+                                        <?php if (!empty($miembro['es_asesor_externo'])): ?>
+                                        <span class="badge bg-info">Asesor SST</span>
+                                        <?php elseif (!empty($miembro['representacion'])): ?>
                                         <span class="badge bg-<?= $miembro['representacion'] === 'empleador' ? 'primary' : 'success' ?>">
                                             <?= ucfirst($miembro['representacion']) ?>
                                         </span>
@@ -178,6 +180,11 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
+                                            <?php if (!empty($miembro['es_asesor_externo'])): ?>
+                                                <span class="text-muted small" title="Los asesores SST se gestionan desde Responsables SST">
+                                                    <i class="bi bi-lock"></i> Transversal
+                                                </span>
+                                            <?php else: ?>
                                             <a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/editar-miembro/' . $miembro['id_miembro']) ?>"
                                                class="btn btn-outline-primary" title="Editar miembro">
                                                 <i class="bi bi-pencil"></i>
@@ -192,6 +199,7 @@
                                                     onclick="retirarMiembro(<?= $miembro['id_miembro'] ?>, '<?= esc($miembro['nombre_completo']) ?>')">
                                                 <i class="bi bi-person-dash"></i>
                                             </button>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>

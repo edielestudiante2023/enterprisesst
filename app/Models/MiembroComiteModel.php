@@ -79,7 +79,7 @@ class MiembroComiteModel extends Model
                         'cargo' => $asesor['cargo'] ?? 'Consultor SST',
                         'email' => $asesor['email'] ?? '',
                         'telefono' => $asesor['telefono'] ?? '',
-                        'representacion' => 'empleador',
+                        'representacion' => '',
                         'tipo_miembro' => 'asesor',
                         'rol_comite' => 'asesor',
                         'estado' => 'activo',
