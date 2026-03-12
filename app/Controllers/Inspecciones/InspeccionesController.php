@@ -7,6 +7,7 @@ use App\Models\ActaVisitaModel;
 use App\Models\InspeccionLocativaModel;
 use App\Models\InspeccionExtintoresModel;
 use App\Models\InspeccionBotiquinModel;
+use App\Models\InspeccionSenalizacionModel;
 use App\Models\ClientModel;
 use App\Models\PendientesModel;
 use App\Models\VencimientosMantenimientoModel;
@@ -34,16 +35,22 @@ class InspeccionesController extends BaseController
         $pendientesBotiquin = $botiquinModel->getAllPendientes();
         $totalBotiquin = $botiquinModel->where('estado', 'completo')->countAllResults();
 
+        $senalizacionModel = new InspeccionSenalizacionModel();
+        $pendientesSenalizacion = $senalizacionModel->getAllPendientes();
+        $totalSenalizacion = $senalizacionModel->where('estado', 'completo')->countAllResults();
+
         $data = [
-            'title'                  => 'Inspecciones SST',
-            'pendientes'             => $pendientes,
-            'pendientesLocativas'    => $pendientesLocativas,
-            'pendientesExtintores'   => $pendientesExtintores,
-            'pendientesBotiquin'     => $pendientesBotiquin,
-            'totalActas'             => $totalActas,
-            'totalLocativas'         => $totalLocativas,
-            'totalExtintores'        => $totalExtintores,
-            'totalBotiquin'          => $totalBotiquin,
+            'title'                    => 'Inspecciones SST',
+            'pendientes'               => $pendientes,
+            'pendientesLocativas'      => $pendientesLocativas,
+            'pendientesExtintores'     => $pendientesExtintores,
+            'pendientesBotiquin'       => $pendientesBotiquin,
+            'pendientesSenalizacion'   => $pendientesSenalizacion,
+            'totalActas'               => $totalActas,
+            'totalLocativas'           => $totalLocativas,
+            'totalExtintores'          => $totalExtintores,
+            'totalBotiquin'            => $totalBotiquin,
+            'totalSenalizacion'        => $totalSenalizacion,
             'nombre'                 => session()->get('nombre_usuario'),
         ];
 

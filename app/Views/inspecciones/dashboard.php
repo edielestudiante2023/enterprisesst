@@ -133,6 +133,35 @@
     <?php endforeach; ?>
     <?php endif; ?>
 
+    <!-- Pendientes Senalizacion -->
+    <?php if (!empty($pendientesSenalizacion)): ?>
+    <div class="section-title">Pendientes Senalizacion</div>
+    <?php foreach ($pendientesSenalizacion as $doc): ?>
+    <div class="card card-inspeccion borrador">
+        <div class="card-body py-3 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>
+                        <i class="fas fa-edit text-warning"></i>
+                        Senalizacion - <?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>
+                    </strong>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= date('d/m/Y', strtotime($doc['fecha_inspeccion'])) ?>
+                        &middot;
+                        <span class="badge badge-borrador" style="font-size: 11px;">Borrador</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2">
+                <a href="/inspecciones/senalizacion/edit/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-dark">
+                    Continuar editando <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+    <?php endif; ?>
+
     <!-- Grid de inspecciones -->
     <div class="section-title">Inspecciones</div>
     <div class="grid-inspecciones mb-4">
@@ -155,6 +184,11 @@
             <i class="fas fa-first-aid"></i>
             <div><strong>Botiquin</strong></div>
             <div class="count">(<?= $totalBotiquin ?>)</div>
+        </a>
+        <a href="/inspecciones/senalizacion" class="card-tipo">
+            <i class="fas fa-sign"></i>
+            <div><strong>Senalizacion</strong></div>
+            <div class="count">(<?= $totalSenalizacion ?>)</div>
         </a>
     </div>
 </div>
