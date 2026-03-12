@@ -148,6 +148,11 @@ class PzcertificacionAltoRiesgoController extends Controller
         // Obtener firmas electronicas
         $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento']);
 
+        // Datos del Delegado SST
+        $delegadoNombre = trim($contexto['delegado_sst_nombre'] ?? '');
+        $delegadoCargo = trim($contexto['delegado_sst_cargo'] ?? 'Responsable del SG-SST');
+        $requiereDelegado = !empty($delegadoNombre);
+
         $data = [
             'titulo' => self::NOMBRE_DOCUMENTO . ' - ' . $cliente['nombre_cliente'],
             'cliente' => $cliente,
@@ -156,7 +161,10 @@ class PzcertificacionAltoRiesgoController extends Controller
             'anio' => $anio,
             'versiones' => $versiones,
             'contexto' => $contexto,
-            'firmasElectronicas' => $firmasElectronicas
+            'firmasElectronicas' => $firmasElectronicas,
+            'delegadoNombre' => $delegadoNombre,
+            'delegadoCargo' => $delegadoCargo,
+            'requiereDelegado' => $requiereDelegado
         ];
 
         return view('documentos_sst/certificacion_alto_riesgo', $data);
