@@ -78,9 +78,7 @@ $totalPasos = count($firmantes);
     </div>
     <?php endforeach; ?>
 
-    <?php if ($f['tipo'] === 'vigia' && !$f['firmado']): ?>
-    <!-- Nota: esto se maneja en el último panel del vigía si existe -->
-    <?php endif; ?>
+
 </div>
 
 <style>

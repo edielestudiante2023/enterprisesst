@@ -3,96 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <style>
+        @page { margin: 2cm 1.5cm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #333; line-height: 1.4; }
-
-        /* Encabezado */
-        .header-table { width: 100%; border-collapse: collapse; border: 1.5px solid #333; margin-bottom: 10px; }
-        .header-table td { border: 1px solid #333; padding: 4px 8px; vertical-align: middle; }
-        .header-logo { width: 80px; text-align: center; }
-        .header-logo img { max-width: 70px; max-height: 50px; }
-        .header-title { text-align: center; font-size: 10px; font-weight: bold; line-height: 1.3; }
-        .header-meta { width: 140px; font-size: 9px; }
-        .header-meta-row { border-bottom: 1px solid #ccc; padding: 2px 0; }
-
-        /* Título principal */
-        .titulo-principal { text-align: center; font-size: 13px; font-weight: bold; margin: 12px 0 8px; color: #1c2437; }
-
-        /* Datos del acta */
-        .datos-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .datos-table td { padding: 3px 8px; font-size: 11px; }
-        .datos-label { font-weight: bold; color: #555; width: 20%; }
+        body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10pt; line-height: 1.15; color: #333; }
+        br { line-height: 0.5; }
 
         /* Secciones */
-        .seccion { margin-bottom: 10px; }
-        .seccion-titulo { background: #1c2437; color: #fff; padding: 4px 10px; font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+        .seccion { margin-bottom: 8px; }
+        .seccion-titulo {
+            font-size: 11pt; font-weight: bold; color: #0d6efd;
+            border-bottom: 1px solid #e9ecef; padding-bottom: 3px;
+            margin-bottom: 5px; margin-top: 8px;
+        }
+        .seccion-contenido { text-align: justify; line-height: 1.2; }
+        .seccion-contenido p { margin: 3px 0; }
 
-        /* Tablas de contenido */
-        .tabla-contenido { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-        .tabla-contenido th { background: #e8e0d0; border: 1px solid #ccc; padding: 4px 8px; font-size: 10px; text-align: left; font-weight: bold; }
-        .tabla-contenido td { border: 1px solid #ccc; padding: 4px 8px; font-size: 10px; }
+        /* Tablas */
+        table.tabla-contenido { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9pt; }
+        table.tabla-contenido th, table.tabla-contenido td { border: 1px solid #999; padding: 5px 8px; }
+        table.tabla-contenido th { background-color: #0d6efd; color: white; font-weight: bold; text-align: center; }
 
-        /* Temas abiertos */
-        .tema-abierto { margin-bottom: 6px; }
-        .tema-abierto-titulo { font-weight: bold; font-size: 10px; color: #555; margin-bottom: 2px; }
-        .tema-abierto-ok { color: #28a745; font-size: 10px; }
-        .tema-abierto-item { font-size: 10px; padding-left: 12px; }
+        /* Tabla datos generales */
+        table.datos-general { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9pt; }
+        table.datos-general td { border: 1px solid #999; padding: 5px 8px; }
+        .datos-label { font-weight: bold; width: 15%; }
 
-        /* Firmas */
-        .firmas-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .firmas-table td { text-align: center; padding: 8px 10px; vertical-align: bottom; width: 33%; }
-        .firma-img { max-width: 150px; max-height: 60px; }
-        .firma-nombre { font-size: 9px; border-top: 1px solid #333; padding-top: 3px; margin-top: 4px; font-weight: bold; }
-        .firma-rol { font-size: 8px; color: #666; }
+        /* Listas */
+        .seccion-contenido ul { margin: 3px 0 3px 15px; padding-left: 0; }
+        .seccion-contenido li { margin-bottom: 2px; }
 
-        /* Lista de items */
-        .item-list { padding-left: 15px; margin: 4px 0; }
-        .item-list li { font-size: 10px; margin-bottom: 2px; }
+        /* Texto auxiliar */
+        .texto-ok { color: #28a745; font-size: 9pt; }
+        .texto-item { font-size: 9pt; padding-left: 12px; }
 
-        /* Texto general */
-        .texto-contenido { font-size: 10px; padding: 4px 8px; border: 1px solid #eee; background: #fafafa; }
-
-        .page-break { page-break-after: always; }
+        /* Pie de documento */
+        .pie-documento { margin-top: 15px; padding-top: 8px; border-top: 1px solid #ccc; text-align: center; font-size: 8pt; color: #666; }
     </style>
 </head>
 <body>
 
-    <!-- ENCABEZADO -->
-    <table class="header-table">
+    <!-- ENCABEZADO ESTANDAR -->
+    <table style="width:100%; border-collapse:collapse; margin-bottom:20px;" cellpadding="0" cellspacing="0">
         <tr>
-            <td class="header-logo" rowspan="3">
+            <td rowspan="2" style="width:100px; border:1px solid #333; padding:8px; text-align:center; vertical-align:middle; background:#fff;">
                 <?php if (!empty($logoBase64)): ?>
-                    <img src="<?= $logoBase64 ?>">
+                    <img src="<?= $logoBase64 ?>" style="max-width:80px; max-height:50px;">
                 <?php else: ?>
-                    <span style="font-size:8px; color:#999;">SIN LOGO</span>
+                    <div style="font-size:8pt; font-weight:bold;"><?= esc($cliente['nombre_cliente'] ?? '') ?></div>
                 <?php endif; ?>
             </td>
-            <td class="header-title" rowspan="3">
-                SISTEMA DE GESTION DE<br>
-                SEGURIDAD Y SALUD EN EL TRABAJO<br><br>
-                ACTA DE REUNION
+            <td style="border:1px solid #333; text-align:center; padding:6px 10px; vertical-align:middle;">
+                <div style="font-size:10pt; font-weight:bold; color:#333;">
+                    SISTEMA DE GESTION DE SEGURIDAD Y SALUD EN EL TRABAJO
+                </div>
             </td>
-            <td class="header-meta">
-                <div class="header-meta-row"><strong>Codigo:</strong> FT-SST-007</div>
+            <td rowspan="2" style="width:130px; border:1px solid #333; padding:0; vertical-align:middle;">
+                <table style="width:100%; border-collapse:collapse;" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="border-bottom:1px solid #333; padding:3px 6px; font-size:8pt;"><span style="font-weight:bold;">Codigo:</span> FT-SST-007</td>
+                    </tr>
+                    <tr>
+                        <td style="border-bottom:1px solid #333; padding:3px 6px; font-size:8pt;"><span style="font-weight:bold;">Version:</span> 001</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:3px 6px; font-size:8pt;"><span style="font-weight:bold;">Vigencia:</span> <?= date('d/m/Y', strtotime($acta['fecha_visita'])) ?></td>
+                    </tr>
+                </table>
             </td>
         </tr>
         <tr>
-            <td class="header-meta">
-                <div class="header-meta-row"><strong>Version:</strong> 001</div>
-            </td>
-        </tr>
-        <tr>
-            <td class="header-meta">
-                <div><strong>Fecha:</strong> <?= date('d/m/Y', strtotime($acta['fecha_visita'])) ?></div>
+            <td style="border:1px solid #333; text-align:center; padding:6px 10px; vertical-align:middle;">
+                <div style="font-size:10pt; font-weight:bold; color:#333;">
+                    ACTA DE VISITA Y SEGUIMIENTO AL SISTEMA
+                </div>
             </td>
         </tr>
     </table>
 
-    <!-- TITULO PRINCIPAL -->
-    <div class="titulo-principal">ACTA DE VISITA Y SEGUIMIENTO AL SISTEMA</div>
-
     <!-- DATOS DEL ACTA -->
-    <table class="datos-table">
+    <table class="datos-general">
         <tr>
             <td class="datos-label">MOTIVO:</td>
             <td><?= esc($acta['motivo']) ?></td>
@@ -126,13 +115,12 @@
                     <td style="text-align:center;">
                         <?php
                         $tipoFirma = null;
-                        if (strtoupper($integrante['rol']) === 'ADMINISTRADOR') $tipoFirma = 'administrador';
-                        elseif (stripos($integrante['rol'], 'VIG') !== false) $tipoFirma = 'vigia';
+                        if (strtoupper($integrante['rol']) === 'CLIENTE') $tipoFirma = 'administrador';
                         elseif (stripos($integrante['rol'], 'CONSULTOR') !== false) $tipoFirma = 'consultor';
 
                         if ($tipoFirma && !empty($firmas[$tipoFirma])):
                         ?>
-                            <img src="<?= $firmas[$tipoFirma] ?>" class="firma-img">
+                            <img src="<?= $firmas[$tipoFirma] ?>" style="max-height:56px; max-width:168px;">
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -144,28 +132,23 @@
     <!-- TEMAS ABIERTOS Y VENCIDOS -->
     <div class="seccion">
         <div class="seccion-titulo">TEMAS ABIERTOS Y VENCIDOS</div>
-
-        <!-- Mantenimientos -->
-        <div class="tema-abierto">
-            <div class="tema-abierto-titulo">MANTENIMIENTOS POR VENCER:</div>
+        <div class="seccion-contenido">
+            <p><strong>MANTENIMIENTOS POR VENCER:</strong></p>
             <?php if (empty($mantenimientos)): ?>
-                <div class="tema-abierto-ok">&#10003; Sin mantenimientos por vencer (proximos 30 dias)</div>
+                <p class="texto-ok">&#10003; Sin mantenimientos por vencer (proximos 30 dias)</p>
             <?php else: ?>
-                <ul class="item-list">
+                <ul>
                     <?php foreach ($mantenimientos as $m): ?>
                     <li><?= esc($m['descripcion_mantenimiento'] ?? 'Mantenimiento') ?> — Vence: <?= date('d/m/Y', strtotime($m['fecha_vencimiento'])) ?></li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>
-        </div>
 
-        <!-- Pendientes -->
-        <div class="tema-abierto">
-            <div class="tema-abierto-titulo">PENDIENTES ABIERTOS:</div>
+            <p><strong>PENDIENTES ABIERTOS:</strong></p>
             <?php if (empty($pendientesAbiertos)): ?>
-                <div class="tema-abierto-ok">&#10003; Sin pendientes abiertos</div>
+                <p class="texto-ok">&#10003; Sin pendientes abiertos</p>
             <?php else: ?>
-                <ul class="item-list">
+                <ul>
                     <?php foreach ($pendientesAbiertos as $p): ?>
                     <li><?= esc($p['tarea_actividad']) ?> — <?= esc($p['responsable'] ?? '') ?>
                         <?php if (!empty($p['fecha_asignacion'])): ?>
@@ -182,34 +165,34 @@
     <?php if (!empty($temas)): ?>
     <div class="seccion">
         <div class="seccion-titulo">2. TEMAS</div>
-        <?php foreach ($temas as $i => $tema): ?>
-            <div style="font-size:10px; padding:3px 8px;">
-                <strong>TEMA <?= $i + 1 ?>:</strong> <?= esc($tema['descripcion']) ?>
-            </div>
-        <?php endforeach; ?>
+        <div class="seccion-contenido">
+            <?php foreach ($temas as $i => $tema): ?>
+                <p><strong>TEMA <?= $i + 1 ?>:</strong> <?= esc($tema['descripcion']) ?></p>
+            <?php endforeach; ?>
+        </div>
     </div>
     <?php endif; ?>
 
     <!-- 4. OBSERVACIONES -->
     <?php if (!empty($acta['observaciones'])): ?>
     <div class="seccion">
-        <div class="seccion-titulo">4. OBSERVACIONES</div>
-        <div class="texto-contenido"><?= nl2br(esc($acta['observaciones'])) ?></div>
+        <div class="seccion-titulo">OBSERVACIONES</div>
+        <div class="seccion-contenido"><?= nl2br(esc($acta['observaciones'])) ?></div>
     </div>
     <?php endif; ?>
 
     <!-- 5. CARTERA -->
     <?php if (!empty($acta['cartera'])): ?>
     <div class="seccion">
-        <div class="seccion-titulo">5. CARTERA</div>
-        <div class="texto-contenido"><?= nl2br(esc($acta['cartera'])) ?></div>
+        <div class="seccion-titulo">CARTERA</div>
+        <div class="seccion-contenido"><?= nl2br(esc($acta['cartera'])) ?></div>
     </div>
     <?php endif; ?>
 
     <!-- 6. COMPROMISOS -->
     <?php if (!empty($compromisos)): ?>
     <div class="seccion">
-        <div class="seccion-titulo">6. COMPROMISOS</div>
+        <div class="seccion-titulo">COMPROMISOS</div>
         <table class="tabla-contenido">
             <thead>
                 <tr>
@@ -222,7 +205,7 @@
                 <?php foreach ($compromisos as $comp): ?>
                 <tr>
                     <td><?= esc($comp['tarea_actividad']) ?></td>
-                    <td><?= !empty($comp['fecha_cierre']) ? date('d/m/Y', strtotime($comp['fecha_cierre'])) : '—' ?></td>
+                    <td style="text-align:center;"><?= !empty($comp['fecha_cierre']) ? date('d/m/Y', strtotime($comp['fecha_cierre'])) : '—' ?></td>
                     <td><?= esc($comp['responsable'] ?? '—') ?></td>
                 </tr>
                 <?php endforeach; ?>
@@ -231,46 +214,76 @@
     </div>
     <?php endif; ?>
 
-    <!-- FIRMAS FINALES -->
-    <table class="firmas-table">
-        <tr>
-            <?php
-            $firmaSlots = [
-                ['tipo' => 'administrador', 'label' => 'ADMINISTRADOR'],
-                ['tipo' => 'vigia', 'label' => 'VIGIA SST'],
-                ['tipo' => 'consultor', 'label' => 'CONSULTOR'],
-            ];
-            foreach ($firmaSlots as $slot):
-                $tipoKey = $slot['tipo'];
-                // Buscar nombre del integrante con este rol
-                $nombreFirmante = '';
-                if ($tipoKey === 'consultor') {
-                    $nombreFirmante = $consultor['nombre_consultor'] ?? '';
-                } else {
-                    foreach ($integrantes as $int) {
-                        if ($tipoKey === 'administrador' && strtoupper($int['rol']) === 'ADMINISTRADOR') {
-                            $nombreFirmante = $int['nombre'];
-                            break;
-                        }
-                        if ($tipoKey === 'vigia' && stripos($int['rol'], 'VIG') !== false) {
-                            $nombreFirmante = $int['nombre'];
-                            break;
+    <!-- FIRMAS -->
+    <div style="margin-top: 25px;">
+        <div style="background-color: #198754; color: white; padding: 8px 12px; font-weight: bold; font-size: 10pt;">
+            FIRMAS DE APROBACION
+        </div>
+        <table class="tabla-contenido" style="width: 100%; margin-top: 0;">
+            <tr>
+                <?php
+                $firmaSlots = [
+                    ['tipo' => 'administrador', 'label' => 'CLIENTE'],
+                    ['tipo' => 'consultor', 'label' => 'CONSULTOR CYCLOID TALENT'],
+                ];
+                foreach ($firmaSlots as $slot):
+                    $tipoKey = $slot['tipo'];
+                    $nombreFirmante = '';
+                    if ($tipoKey === 'consultor') {
+                        $nombreFirmante = $consultor['nombre_consultor'] ?? '';
+                    } else {
+                        foreach ($integrantes as $int) {
+                            if (strtoupper($int['rol']) === 'CLIENTE') {
+                                $nombreFirmante = $int['nombre'];
+                                break;
+                            }
                         }
                     }
-                }
-            ?>
-            <td>
-                <?php if (!empty($firmas[$tipoKey])): ?>
-                    <img src="<?= $firmas[$tipoKey] ?>" class="firma-img"><br>
-                <?php else: ?>
-                    <div style="height:50px;"></div>
-                <?php endif; ?>
-                <div class="firma-nombre"><?= esc($nombreFirmante) ?></div>
-                <div class="firma-rol"><?= $slot['label'] ?></div>
-            </td>
-            <?php endforeach; ?>
-        </tr>
-    </table>
+                ?>
+                <th style="width: 50%; background-color: #e9ecef; color: #333;"><?= $slot['label'] ?></th>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <?php foreach ($firmaSlots as $slot):
+                    $tipoKey = $slot['tipo'];
+                    $nombreFirmante = '';
+                    if ($tipoKey === 'consultor') {
+                        $nombreFirmante = $consultor['nombre_consultor'] ?? '';
+                    } else {
+                        foreach ($integrantes as $int) {
+                            if (strtoupper($int['rol']) === 'CLIENTE') {
+                                $nombreFirmante = $int['nombre'];
+                                break;
+                            }
+                        }
+                    }
+                ?>
+                <td style="vertical-align: top; padding: 12px; height: 100px;">
+                    <div style="margin-bottom: 5px;"><strong>Nombre:</strong> <?= esc($nombreFirmante) ?></div>
+                    <div style="margin-bottom: 5px;"><strong>Cargo:</strong> <?= $slot['label'] ?></div>
+                </td>
+                <?php endforeach; ?>
+            </tr>
+            <tr>
+                <?php foreach ($firmaSlots as $slot): ?>
+                <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
+                    <?php if (!empty($firmas[$slot['tipo']])): ?>
+                        <img src="<?= $firmas[$slot['tipo']] ?>" style="max-height: 56px; max-width: 168px;"><br>
+                    <?php endif; ?>
+                    <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
+                        <small style="color: #666;">Firma</small>
+                    </div>
+                </td>
+                <?php endforeach; ?>
+            </tr>
+        </table>
+    </div>
+
+    <!-- PIE DE DOCUMENTO -->
+    <div class="pie-documento">
+        <p>Documento generado el <?= date('d/m/Y') ?> - Sistema de Gestion SST</p>
+        <p><?= esc($cliente['nombre_cliente'] ?? '') ?> - NIT: <?= esc($cliente['nit_cliente'] ?? '') ?></p>
+    </div>
 
 </body>
 </html>

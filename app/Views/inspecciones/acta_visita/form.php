@@ -98,7 +98,7 @@ $action = $isEdit ? '/inspecciones/acta-visita/update/' . $acta['id'] : '/inspec
                                     <div class="col-5">
                                         <select name="integrante_rol[]" class="form-select">
                                             <option value="">Rol...</option>
-                                            <?php foreach (['ADMINISTRADOR', 'ASISTENTE DE ADMINISTRACION', 'CONSULTOR CYCLOID', 'VIGIA SST', 'OTRO'] as $rol): ?>
+                                            <?php foreach (['CLIENTE', 'CONSULTOR CYCLOID TALENT'] as $rol): ?>
                                             <option value="<?= $rol ?>" <?= $integrante['rol'] === $rol ? 'selected' : '' ?>><?= $rol ?></option>
                                             <?php endforeach; ?>
                                         </select>
@@ -236,8 +236,14 @@ $action = $isEdit ? '/inspecciones/acta-visita/update/' . $acta['id'] : '/inspec
                         <?php endif; ?>
 
                         <label class="form-label">Agregar fotos</label>
-                        <input type="file" name="fotos[]" class="form-control" accept="image/*" capture="environment" multiple>
-                        <small class="text-muted">Puedes tomar fotos con la camara o seleccionar de la galeria</small>
+                        <div class="photo-input-group">
+                            <input type="file" name="fotos[]" class="file-preview" accept="image/*" style="display:none;" multiple>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary btn-photo-camera"><i class="fas fa-camera"></i> Camara</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-photo-gallery"><i class="fas fa-images"></i> Galeria</button>
+                            </div>
+                            <div class="preview-img mt-2 d-flex flex-wrap gap-2"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -370,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add integrante
     document.getElementById('btnAddIntegrante').addEventListener('click', function() {
-        const roles = ['ADMINISTRADOR', 'ASISTENTE DE ADMINISTRACION', 'CONSULTOR CYCLOID', 'VIGIA SST', 'OTRO'];
+        const roles = ['CLIENTE', 'CONSULTOR CYCLOID TALENT'];
         const options = roles.map(r => '<option value="' + r + '">' + r + '</option>').join('');
         const html = `
             <div class="row g-2 mb-2 integrante-row">
@@ -519,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.ubicacion_gps) document.getElementById('ubicacionGps').value = data.ubicacion_gps;
 
         // Integrantes
-        const roles = ['ADMINISTRADOR', 'ASISTENTE DE ADMINISTRACION', 'CONSULTOR CYCLOID', 'VIGIA SST', 'OTRO'];
+        const roles = ['CLIENTE', 'CONSULTOR CYCLOID TALENT'];
         const roleOpts = roles.map(r => '<option value="' + r + '">' + r + '</option>').join('');
         (data.integrantes || []).forEach(int => {
             const html = '<div class="row g-2 mb-2 integrante-row"><div class="col-5"><input type="text" name="integrante_nombre[]" class="form-control" placeholder="Nombre" value="' + (int.nombre||'').replace(/"/g,'&quot;') + '"></div><div class="col-5"><select name="integrante_rol[]" class="form-select"><option value="">Rol...</option>' + roleOpts + '</select></div><div class="col-2 text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" style="min-height:44px;"><i class="fas fa-times"></i></button></div></div>';
@@ -593,6 +599,44 @@ document.addEventListener('DOMContentLoaded', function() {
     // Limpiar localStorage al enviar formulario exitosamente
     document.getElementById('actaForm').addEventListener('submit', function() {
         localStorage.removeItem(STORAGE_KEY);
+    });
+
+    // --- Botones Camara / Galeria ---
+    document.addEventListener('click', function(e) {
+        var cameraBtn = e.target.closest('.btn-photo-camera');
+        var galleryBtn = e.target.closest('.btn-photo-gallery');
+        if (!cameraBtn && !galleryBtn) return;
+
+        var group = (cameraBtn || galleryBtn).closest('.photo-input-group');
+        var input = group.querySelector('input[type="file"]');
+
+        if (cameraBtn) {
+            input.setAttribute('capture', 'environment');
+        } else {
+            input.removeAttribute('capture');
+        }
+        input.click();
+    });
+
+    // --- Preview de fotos al seleccionar/tomar ---
+    document.addEventListener('change', function(e) {
+        if (!e.target.classList.contains('file-preview')) return;
+        var input = e.target;
+        var group = input.closest('.photo-input-group');
+        var previewDiv = group ? group.querySelector('.preview-img') : null;
+        if (!previewDiv) return;
+
+        previewDiv.innerHTML = '';
+        if (input.files) {
+            Array.from(input.files).forEach(function(file) {
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    previewDiv.insertAdjacentHTML('beforeend',
+                        '<img src="' + ev.target.result + '" class="img-fluid rounded" style="max-height:80px; object-fit:cover; border:2px solid #28a745;">');
+                };
+                reader.readAsDataURL(file);
+            });
+        }
     });
 });
 </script>
