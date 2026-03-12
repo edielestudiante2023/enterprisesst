@@ -196,7 +196,7 @@
         </div>
     <?php endif; ?>
 
-    <form action="<?= base_url('/reset-password-post') ?>" method="post" id="resetForm">
+    <form action="<?= base_url('/reset-password/' . $token) ?>" method="post" id="resetForm">
         <?= csrf_field() ?>
         <input type="hidden" name="token" value="<?= $token ?>">
 
