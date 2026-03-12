@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <style>
         @page { margin: 100px 70px 80px 90px; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10pt; line-height: 1.15; color: #333; }
+        body { margin: 0; padding: 0; font-family: DejaVu Sans, Arial, sans-serif; font-size: 10pt; line-height: 1.15; color: #333; }
+        p, h1, h2, h3, h4, h5, h6, table, div { margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
         br { line-height: 0.5; }
 
         .seccion { margin-bottom: 8px; }
