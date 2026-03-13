@@ -58,7 +58,7 @@ class ResumenPendientes extends BaseCommand
 
         // Obtener todos los pendientes ABIERTOS con datos del cliente
         $pendientes = $pendientesModel
-            ->select('tbl_pendientes.*, tbl_clientes.nombre_cliente, tbl_clientes.id_consultor')
+            ->select('tbl_pendientes.*, tbl_clientes.nombre_cliente, tbl_clientes.id_consultor, tbl_clientes.correo_cliente, tbl_clientes.id_cliente')
             ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_pendientes.id_cliente')
             ->where('tbl_pendientes.estado', 'ABIERTA')
             ->orderBy('tbl_clientes.nombre_cliente', 'ASC')
@@ -72,7 +72,53 @@ class ResumenPendientes extends BaseCommand
 
         CLI::write("Total pendientes ABIERTOS: " . count($pendientes), 'light_gray');
 
-        // Agrupar pendientes por consultor
+        // =============================================
+        // FASE 1: Email individual por CLIENTE
+        // =============================================
+        CLI::newLine();
+        CLI::write('[CLIENTES] Enviando emails individuales...', 'light_gray');
+
+        $porCliente = [];
+        foreach ($pendientes as $p) {
+            $idCliente = $p['id_cliente'] ?? 0;
+            if (!$idCliente) continue;
+            if (!isset($porCliente[$idCliente])) {
+                $porCliente[$idCliente] = [
+                    'nombre'  => $p['nombre_cliente'] ?? 'Cliente',
+                    'correo'  => $p['correo_cliente'] ?? '',
+                    'items'   => [],
+                ];
+            }
+            $porCliente[$idCliente]['items'][] = $p;
+        }
+
+        foreach ($porCliente as $idCliente => $datosCliente) {
+            if (empty($datosCliente['correo'])) {
+                CLI::write("  [SKIP] {$datosCliente['nombre']} - sin email", 'yellow');
+                continue;
+            }
+
+            $totalCliente = count($datosCliente['items']);
+            $asunto = "Pendientes ABIERTOS: {$totalCliente} tarea(s) requieren su atencion - " . date('d/m/Y');
+            $html   = $this->generarHtmlCliente($datosCliente['nombre'], $datosCliente['items']);
+
+            $ok = $this->enviarEmail($datosCliente['correo'], $datosCliente['nombre'], $asunto, $html);
+
+            if ($ok) {
+                $this->enviados++;
+                CLI::write("  [OK] {$datosCliente['correo']} - {$totalCliente} pendiente(s)", 'green');
+            } else {
+                $this->errores++;
+                CLI::write("  [ERROR] {$datosCliente['correo']}", 'red');
+            }
+        }
+
+        // =============================================
+        // FASE 2: Email consolidado por CONSULTOR
+        // =============================================
+        CLI::newLine();
+        CLI::write('[CONSULTORES] Enviando emails consolidados...', 'light_gray');
+
         $porConsultor = [];
         foreach ($pendientes as $p) {
             $idConsultor = $p['id_consultor'] ?? 0;
@@ -84,14 +130,10 @@ class ResumenPendientes extends BaseCommand
             $porConsultor[$idConsultor][] = $p;
         }
 
-        CLI::write("Consultores con pendientes: " . count($porConsultor), 'light_gray');
-        CLI::newLine();
-
-        // Enviar un email por consultor
         foreach ($porConsultor as $idConsultor => $pendientesConsultor) {
             $consultor = $consultorModel->find($idConsultor);
             if (!$consultor || empty($consultor['correo_consultor'])) {
-                CLI::write("[SKIP] Consultor #{$idConsultor} sin email", 'yellow');
+                CLI::write("  [SKIP] Consultor #{$idConsultor} sin email", 'yellow');
                 continue;
             }
 
@@ -106,10 +148,10 @@ class ResumenPendientes extends BaseCommand
 
             if ($ok) {
                 $this->enviados++;
-                CLI::write("[OK] {$email} - {$total} pendiente(s)", 'green');
+                CLI::write("  [OK] {$email} - {$total} pendiente(s)", 'green');
             } else {
                 $this->errores++;
-                CLI::write("[ERROR] {$email}", 'red');
+                CLI::write("  [ERROR] {$email}", 'red');
             }
         }
 
@@ -121,7 +163,97 @@ class ResumenPendientes extends BaseCommand
     }
 
     /**
-     * Genera el HTML del email con tabla de pendientes agrupados por cliente
+     * Genera el HTML del email individual para un CLIENTE
+     */
+    protected function generarHtmlCliente(string $nombreCliente, array $pendientes): string
+    {
+        $totalPendientes = count($pendientes);
+        $fecha = date('d/m/Y');
+
+        $tablaHtml = "
+        <table style='width: 100%; border-collapse: collapse; font-size: 13px; margin: 15px 0;'>
+            <thead>
+                <tr style='background: #1c2437; color: white;'>
+                    <th style='padding: 8px; text-align: left;'>Tarea / Actividad</th>
+                    <th style='padding: 8px; text-align: center; width: 90px;'>Responsable</th>
+                    <th style='padding: 8px; text-align: center; width: 85px;'>Asignada</th>
+                    <th style='padding: 8px; text-align: center; width: 60px;'>Dias</th>
+                </tr>
+            </thead>
+            <tbody>";
+
+        foreach ($pendientes as $i => $item) {
+            $bg = $i % 2 === 0 ? '#ffffff' : '#f9fafb';
+            $tarea = htmlspecialchars($item['tarea_actividad'] ?? '');
+            $responsable = htmlspecialchars($item['responsable'] ?? '-');
+            $fechaAsig = !empty($item['fecha_asignacion'])
+                ? date('d/m/Y', strtotime($item['fecha_asignacion']))
+                : '-';
+            $dias = intval($item['conteo_dias'] ?? 0);
+
+            if ($dias > 90) {
+                $colorDias = '#DC2626'; $bgDias = '#FEE2E2';
+            } elseif ($dias > 60) {
+                $colorDias = '#D97706'; $bgDias = '#FEF3C7';
+            } elseif ($dias > 30) {
+                $colorDias = '#2563EB'; $bgDias = '#DBEAFE';
+            } else {
+                $colorDias = '#059669'; $bgDias = '#D1FAE5';
+            }
+
+            $tablaHtml .= "
+                <tr style='background: {$bg};'>
+                    <td style='padding: 8px; border-bottom: 1px solid #e5e7eb;'>{$tarea}</td>
+                    <td style='padding: 8px; text-align: center; border-bottom: 1px solid #e5e7eb;'>{$responsable}</td>
+                    <td style='padding: 8px; text-align: center; border-bottom: 1px solid #e5e7eb;'>{$fechaAsig}</td>
+                    <td style='padding: 8px; text-align: center; border-bottom: 1px solid #e5e7eb; background: {$bgDias}; color: {$colorDias}; font-weight: bold;'>{$dias}</td>
+                </tr>";
+        }
+
+        $tablaHtml .= "
+            </tbody>
+        </table>";
+
+        $nombreClienteEsc = htmlspecialchars($nombreCliente);
+
+        return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f3f4f6;">
+    <div style="max-width: 700px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #1c2437 0%, #2d3748 100%); padding: 25px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h2 style="margin: 0; color: #bd9751; font-size: 20px;">Pendientes Abiertos</h2>
+            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.7); font-size: 13px;">{$fecha}</p>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <p style="margin-top: 0;">Estimado(a) <strong>{$nombreClienteEsc}</strong>,</p>
+            <p>Le informamos que tiene <strong style="color: #DC2626; font-size: 18px;">{$totalPendientes}</strong> pendiente(s) con estado <strong>ABIERTA</strong> que requieren su atencion:</p>
+
+            {$tablaHtml}
+
+            <p style="margin-top: 20px; color: #4B5563; font-size: 13px;">Le solicitamos gestionar las tareas listadas anteriormente. Si alguna ya fue resuelta, por favor informe a su consultor para actualizar el estado.</p>
+
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
+            <p style="margin-bottom: 0; color: #6B7280; font-size: 13px;">
+                Saludos,<br>
+                <strong>Enterprise SST - Cycloid Talent</strong>
+            </p>
+        </div>
+        <div style="text-align: center; margin-top: 15px; color: #9CA3AF; font-size: 11px;">
+            <p>Este recordatorio se envia los dias 1 y 16 de cada mes.<br>Por favor no responda a este correo.</p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+    }
+
+    /**
+     * Genera el HTML del email consolidado con tabla de pendientes agrupados por cliente (para CONSULTOR)
      */
     protected function generarHtmlResumen(string $nombre, array $pendientes): string
     {
