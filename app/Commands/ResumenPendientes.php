@@ -7,6 +7,7 @@ use CodeIgniter\CLI\CLI;
 use App\Models\PendientesModel;
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
+use App\Models\UserModel;
 
 /**
  * Comando para enviar resumen quincenal de pendientes ABIERTOS
@@ -73,43 +74,56 @@ class ResumenPendientes extends BaseCommand
         CLI::write("Total pendientes ABIERTOS: " . count($pendientes), 'light_gray');
 
         // =============================================
-        // FASE 1: Email individual por CLIENTE
+        // FASE 1: Email individual por usuario CLIENTE
+        // (tipo_usuario = 'client', NO 'miembro')
         // =============================================
         CLI::newLine();
         CLI::write('[CLIENTES] Enviando emails individuales...', 'light_gray');
 
-        $porCliente = [];
+        // Agrupar pendientes por id_cliente
+        $pendientesPorCliente = [];
         foreach ($pendientes as $p) {
             $idCliente = $p['id_cliente'] ?? 0;
             if (!$idCliente) continue;
-            if (!isset($porCliente[$idCliente])) {
-                $porCliente[$idCliente] = [
-                    'nombre'  => $p['nombre_cliente'] ?? 'Cliente',
-                    'correo'  => $p['correo_cliente'] ?? '',
-                    'items'   => [],
-                ];
-            }
-            $porCliente[$idCliente]['items'][] = $p;
+            $pendientesPorCliente[$idCliente][] = $p;
         }
 
-        foreach ($porCliente as $idCliente => $datosCliente) {
-            if (empty($datosCliente['correo'])) {
-                CLI::write("  [SKIP] {$datosCliente['nombre']} - sin email", 'yellow');
+        // Obtener usuarios tipo 'client' activos desde tbl_usuarios
+        $userModel = new UserModel();
+        $usuariosCliente = $userModel
+            ->where('tipo_usuario', 'client')
+            ->where('estado', 'activo')
+            ->findAll();
+
+        foreach ($usuariosCliente as $usuario) {
+            $idCliente = $usuario['id_entidad'] ?? 0;
+
+            // Solo si ese cliente tiene pendientes ABIERTOS
+            if (!$idCliente || !isset($pendientesPorCliente[$idCliente])) {
                 continue;
             }
 
-            $totalCliente = count($datosCliente['items']);
-            $asunto = "Pendientes ABIERTOS: {$totalCliente} tarea(s) requieren su atencion - " . date('d/m/Y');
-            $html   = $this->generarHtmlCliente($datosCliente['nombre'], $datosCliente['items']);
+            $emailUsuario = $usuario['email'] ?? '';
+            if (empty($emailUsuario)) {
+                CLI::write("  [SKIP] {$usuario['nombre_completo']} - sin email", 'yellow');
+                continue;
+            }
 
-            $ok = $this->enviarEmail($datosCliente['correo'], $datosCliente['nombre'], $asunto, $html);
+            $itemsCliente  = $pendientesPorCliente[$idCliente];
+            $totalCliente  = count($itemsCliente);
+            $nombreUsuario = $usuario['nombre_completo'];
+
+            $asunto = "Pendientes ABIERTOS: {$totalCliente} tarea(s) requieren su atencion - " . date('d/m/Y');
+            $html   = $this->generarHtmlCliente($nombreUsuario, $itemsCliente);
+
+            $ok = $this->enviarEmail($emailUsuario, $nombreUsuario, $asunto, $html);
 
             if ($ok) {
                 $this->enviados++;
-                CLI::write("  [OK] {$datosCliente['correo']} - {$totalCliente} pendiente(s)", 'green');
+                CLI::write("  [OK] {$emailUsuario} - {$totalCliente} pendiente(s)", 'green');
             } else {
                 $this->errores++;
-                CLI::write("  [ERROR] {$datosCliente['correo']}", 'red');
+                CLI::write("  [ERROR] {$emailUsuario}", 'red');
             }
         }
 
