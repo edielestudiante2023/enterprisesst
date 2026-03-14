@@ -30,7 +30,6 @@ class PdfUnificadoController extends Controller
         18 => ['policy_type_id' => 18, 'view' => 'client/sgsst/1planear/p2_1_1politicasst'],
         19 => ['policy_type_id' => 19, 'view' => 'client/sgsst/1planear/p2_1_2politicaalcohol'],
         20 => ['policy_type_id' => 20, 'view' => 'client/sgsst/1planear/p2_1_3politicaemergencias'],
-        21 => ['policy_type_id' => 21, 'view' => 'client/sgsst/1planear/p2_1_4politicaepps'],
         23 => ['policy_type_id' => 23, 'view' => 'client/sgsst/1planear/p2_1_6reghigsegind'],
         24 => ['policy_type_id' => 24, 'view' => 'client/sgsst/1planear/p2_2_1objetivos'],
         25 => ['policy_type_id' => 25, 'view' => 'client/sgsst/1planear/p2_5_1documentacion'],
@@ -147,16 +146,21 @@ class PdfUnificadoController extends Controller
                     continue;
                 }
 
-                $pdfContent = $this->generarPdfDirecto($idAcceso, $clientId, $client, $consultant, $firstContractDate);
+                try {
+                    $pdfContent = $this->generarPdfDirecto($idAcceso, $clientId, $client, $consultant, $firstContractDate);
 
-                if ($pdfContent) {
-                    $filename = 'doc_' . $idAcceso . '_' . uniqid() . '.pdf';
-                    $filepath = $tempDir . $filename;
-                    file_put_contents($filepath, $pdfContent);
-                    $pdfFiles[] = [
-                        'path'      => $filepath,
-                        'id_acceso' => $idAcceso,
-                    ];
+                    if ($pdfContent) {
+                        $filename = 'doc_' . $idAcceso . '_' . uniqid() . '.pdf';
+                        $filepath = $tempDir . $filename;
+                        file_put_contents($filepath, $pdfContent);
+                        $pdfFiles[] = [
+                            'path'      => $filepath,
+                            'id_acceso' => $idAcceso,
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    log_message('error', 'PdfUnificado: doc ' . $idAcceso . ' omitido: ' . $e->getMessage());
+                    continue;
                 }
             }
 

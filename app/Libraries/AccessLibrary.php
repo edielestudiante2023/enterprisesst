@@ -22,7 +22,6 @@ class AccessLibrary
         18 => ['name' => 'Política de SST',                     'dimension' => 'Planear',    'view' => 'client/sgsst/1planear/p2_1_1politicasst'],
         19 => ['name' => 'Política de Alcohol',                 'dimension' => 'Planear',    'view' => 'client/sgsst/1planear/p2_1_2politicaalcohol'],
         20 => ['name' => 'Política de Emergencias',             'dimension' => 'Planear',    'view' => 'client/sgsst/1planear/p2_1_3politicaemergencias'],
-        21 => ['name' => 'Política de EPPs',                    'dimension' => 'Planear',    'view' => 'client/sgsst/1planear/p2_1_4politicaepps'],
         23 => ['name' => 'Reglamento de Higiene',               'dimension' => 'Planear',    'view' => 'client/sgsst/1planear/p2_1_6reghigsegind'],
         24 => ['name' => 'Objetivos del SG-SST',                'dimension' => 'Planear',    'view' => 'client/sgsst/1planear/p2_2_1objetivos'],
         25 => ['name' => 'Documentos del SG-SST',               'dimension' => 'Planear',    'view' => 'client/sgsst/1planear/p2_5_1documentacion'],
