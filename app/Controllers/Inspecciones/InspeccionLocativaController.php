@@ -12,11 +12,13 @@ use Dompdf\Dompdf;
 use App\Libraries\InspeccionEmailNotifier;
 use App\Traits\AutosaveJsonTrait;
 use App\Traits\InspeccionVersionTrait;
+use App\Traits\ImagenCompresionTrait;
 
 class InspeccionLocativaController extends BaseController
 {
     use AutosaveJsonTrait;
     use InspeccionVersionTrait;
+    use ImagenCompresionTrait;
     protected InspeccionLocativaModel $inspeccionModel;
     protected HallazgoLocativoModel $hallazgoModel;
 
@@ -411,6 +413,7 @@ class InspeccionLocativaController extends BaseController
                 $file = $files['hallazgo_imagen'][$i];
                 $fileName = $file->getRandomName();
                 $file->move($dir, $fileName);
+                $this->comprimirImagen($dir . $fileName);
                 $imagenPath = 'uploads/inspecciones/locativas/hallazgos/' . $fileName;
             }
 
@@ -420,6 +423,7 @@ class InspeccionLocativaController extends BaseController
                 $file = $files['hallazgo_correccion'][$i];
                 $fileName = $file->getRandomName();
                 $file->move($dir, $fileName);
+                $this->comprimirImagen($dir . $fileName);
                 $correccionPath = 'uploads/inspecciones/locativas/hallazgos/' . $fileName;
             }
 
@@ -462,22 +466,20 @@ class InspeccionLocativaController extends BaseController
             }
         }
 
-        // Convertir fotos de hallazgos a base64
+        // Convertir fotos de hallazgos a base64 comprimido
         foreach ($hallazgos as &$h) {
             $h['imagen_base64'] = '';
             if (!empty($h['imagen'])) {
                 $fotoPath = FCPATH . $h['imagen'];
                 if (file_exists($fotoPath)) {
-                    $mime = mime_content_type($fotoPath);
-                    $h['imagen_base64'] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fotoPath));
+                    $h['imagen_base64'] = $this->fotoABase64ParaPdf($fotoPath);
                 }
             }
             $h['correccion_base64'] = '';
             if (!empty($h['imagen_correccion'])) {
                 $fotoPath = FCPATH . $h['imagen_correccion'];
                 if (file_exists($fotoPath)) {
-                    $mime = mime_content_type($fotoPath);
-                    $h['correccion_base64'] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fotoPath));
+                    $h['correccion_base64'] = $this->fotoABase64ParaPdf($fotoPath);
                 }
             }
         }

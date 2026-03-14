@@ -17,11 +17,13 @@ use App\Models\CicloVisitaModel;
 use Dompdf\Dompdf;
 use App\Traits\AutosaveJsonTrait;
 use App\Traits\InspeccionVersionTrait;
+use App\Traits\ImagenCompresionTrait;
 
 class ActaVisitaController extends BaseController
 {
     use AutosaveJsonTrait;
     use InspeccionVersionTrait;
+    use ImagenCompresionTrait;
     protected ActaVisitaModel $actaModel;
     protected ActaVisitaIntegranteModel $integranteModel;
     protected ActaVisitaTemaModel $temaModel;
@@ -588,6 +590,7 @@ class ActaVisitaController extends BaseController
             if ($file->isValid() && !$file->hasMoved()) {
                 $fileName = $file->getRandomName();
                 $file->move($dir, $fileName);
+                $this->comprimirImagen($dir . $fileName);
 
                 $fotoModel->insert([
                     'id_acta_visita' => $idActa,
@@ -667,9 +670,8 @@ class ActaVisitaController extends BaseController
         foreach ($fotos as $foto) {
             $fotoPath = FCPATH . $foto['ruta_archivo'];
             if (file_exists($fotoPath)) {
-                $mime = mime_content_type($fotoPath);
                 $fotosBase64[] = [
-                    'data'        => 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fotoPath)),
+                    'data'        => $this->fotoABase64ParaPdf($fotoPath),
                     'descripcion' => $foto['descripcion'] ?? '',
                     'tipo'        => $foto['tipo'] ?? 'foto',
                 ];

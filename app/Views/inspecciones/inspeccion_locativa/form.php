@@ -159,11 +159,11 @@ $action = $isEdit ? '/inspecciones/inspeccion-locativa/update/' . $inspeccion['i
         </div>
 
         <!-- Botones de accion -->
-        <div class="mt-3 mb-4">
-            <button type="submit" class="btn btn-pwa btn-pwa-outline">
+        <div class="d-grid gap-3 mt-3 mb-5 pb-3">
+            <button type="submit" class="btn btn-pwa btn-pwa-outline py-3" style="font-size:17px;">
                 <i class="fas fa-save"></i> Guardar borrador
             </button>
-            <button type="submit" name="finalizar" value="1" class="btn btn-pwa btn-pwa-primary" id="btnFinalizar">
+            <button type="submit" name="finalizar" value="1" class="btn btn-pwa btn-pwa-primary py-3" style="font-size:17px;" id="btnFinalizar">
                 <i class="fas fa-check-circle"></i> Finalizar inspeccion
             </button>
         </div>
@@ -309,11 +309,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const group = (cameraBtn || galleryBtn).closest('.photo-input-group');
         const input = group.querySelector('input[type="file"]');
 
-        if (cameraBtn) {
-            input.setAttribute('capture', 'environment');
-        } else {
-            input.removeAttribute('capture');
-        }
+        // No usar capture="environment": con ese atributo la foto NO se guarda en galeria del celular
+        input.removeAttribute('capture');
         input.click();
     });
 

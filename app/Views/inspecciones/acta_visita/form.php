@@ -256,11 +256,11 @@ $action = $isEdit ? '/inspecciones/acta-visita/update/' . $acta['id'] : '/inspec
         </div>
 
         <!-- Botones de accion -->
-        <div class="mt-1 mb-4">
-            <button type="submit" class="btn btn-pwa btn-pwa-outline">
+        <div class="d-grid gap-3 mt-3 mb-5 pb-3">
+            <button type="submit" class="btn btn-pwa btn-pwa-outline py-3" style="font-size:17px;">
                 <i class="fas fa-save"></i> Guardar borrador
             </button>
-            <button type="submit" name="ir_a_firmas" value="1" class="btn btn-pwa btn-pwa-primary" id="btnIrFirmas">
+            <button type="button" class="btn btn-pwa btn-pwa-primary py-3" style="font-size:17px;" id="btnIrFirmas">
                 <i class="fas fa-signature"></i> Guardar e ir a firmas
             </button>
         </div>
@@ -436,14 +436,16 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCounts();
     });
 
-    // --- Validacion minima antes de ir a firmas ---
-    document.getElementById('btnIrFirmas').addEventListener('click', function(e) {
+    // --- Validacion + submit independiente para "Guardar e ir a firmas" ---
+    // Usa type="button" para evitar doble-activacion con el otro submit
+    document.getElementById('btnIrFirmas').addEventListener('click', function() {
+        const btn = this;
+        const form = document.getElementById('actaForm');
         const cliente = document.getElementById('selectCliente').value;
         const temas = document.querySelectorAll('.tema-row').length;
         const integrantes = document.querySelectorAll('.integrante-row').length;
 
         if (!cliente || temas === 0 || integrantes === 0) {
-            e.preventDefault();
             Swal.fire({
                 icon: 'warning',
                 title: 'Datos incompletos',
@@ -453,7 +455,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     (temas === 0 ? '- Agregar al menos 1 tema<br>' : ''),
                 confirmButtonColor: '#bd9751',
             });
+            return;
         }
+
+        // Inyectar hidden input y deshabilitar solo este boton
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'ir_a_firmas';
+        hidden.value = '1';
+        form.appendChild(hidden);
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        form.requestSubmit();
     });
 
     // ============================================================
@@ -610,11 +624,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var group = (cameraBtn || galleryBtn).closest('.photo-input-group');
         var input = group.querySelector('input[type="file"]');
 
-        if (cameraBtn) {
-            input.setAttribute('capture', 'environment');
-        } else {
-            input.removeAttribute('capture');
-        }
+        // No usar capture="environment": con ese atributo la foto NO se guarda en galeria del celular
+        input.removeAttribute('capture');
         input.click();
     });
 

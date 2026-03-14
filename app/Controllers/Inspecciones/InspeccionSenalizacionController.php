@@ -9,9 +9,11 @@ use App\Models\ClientModel;
 use App\Models\ConsultantModel;
 use App\Models\ReporteModel;
 use Dompdf\Dompdf;
+use App\Traits\ImagenCompresionTrait;
 
 class InspeccionSenalizacionController extends BaseController
 {
+    use ImagenCompresionTrait;
     protected InspeccionSenalizacionModel $inspeccionModel;
     protected ItemSenalizacionModel $itemModel;
 
@@ -323,6 +325,7 @@ class InspeccionSenalizacionController extends BaseController
                 $file = $files['item_foto'][$i];
                 $fileName = $file->getRandomName();
                 $file->move($dir, $fileName);
+                $this->comprimirImagen($dir . $fileName);
                 $fotoPath = 'uploads/inspecciones/senalizacion/fotos/' . $fileName;
             }
 
@@ -404,8 +407,7 @@ class InspeccionSenalizacionController extends BaseController
             if (!empty($item['foto'])) {
                 $fotoPath = FCPATH . $item['foto'];
                 if (file_exists($fotoPath)) {
-                    $mime = mime_content_type($fotoPath);
-                    $item['foto_base64'] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fotoPath));
+                    $item['foto_base64'] = $this->fotoABase64ParaPdf($fotoPath);
                 }
             }
         }

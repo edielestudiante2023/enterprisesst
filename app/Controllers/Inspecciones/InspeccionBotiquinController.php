@@ -14,11 +14,13 @@ use Dompdf\Dompdf;
 use App\Libraries\InspeccionEmailNotifier;
 use App\Traits\AutosaveJsonTrait;
 use App\Traits\InspeccionVersionTrait;
+use App\Traits\ImagenCompresionTrait;
 
 class InspeccionBotiquinController extends BaseController
 {
     use AutosaveJsonTrait;
     use InspeccionVersionTrait;
+    use ImagenCompresionTrait;
     protected InspeccionBotiquinModel $inspeccionModel;
     protected ElementoBotiquinModel $elementoModel;
 
@@ -434,6 +436,7 @@ class InspeccionBotiquinController extends BaseController
 
         $fileName = $file->getRandomName();
         $file->move(FCPATH . $dir, $fileName);
+        $this->comprimirImagen(FCPATH . $dir . $fileName);
         return $dir . $fileName;
     }
 
@@ -546,7 +549,7 @@ class InspeccionBotiquinController extends BaseController
             }
         }
 
-        // Fotos a base64
+        // Fotos a base64 comprimido
         $fotosBase64 = [];
         $camposFoto = ['foto_1', 'foto_2', 'foto_tabla_espinal', 'foto_collares', 'foto_inmovilizadores'];
         foreach ($camposFoto as $campo) {
@@ -554,8 +557,7 @@ class InspeccionBotiquinController extends BaseController
             if (!empty($inspeccion[$campo])) {
                 $fotoPath = FCPATH . $inspeccion[$campo];
                 if (file_exists($fotoPath)) {
-                    $mime = mime_content_type($fotoPath);
-                    $fotosBase64[$campo] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fotoPath));
+                    $fotosBase64[$campo] = $this->fotoABase64ParaPdf($fotoPath);
                 }
             }
         }

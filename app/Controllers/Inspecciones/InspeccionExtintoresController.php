@@ -14,11 +14,13 @@ use Dompdf\Dompdf;
 use App\Libraries\InspeccionEmailNotifier;
 use App\Traits\AutosaveJsonTrait;
 use App\Traits\InspeccionVersionTrait;
+use App\Traits\ImagenCompresionTrait;
 
 class InspeccionExtintoresController extends BaseController
 {
     use AutosaveJsonTrait;
     use InspeccionVersionTrait;
+    use ImagenCompresionTrait;
     protected InspeccionExtintoresModel $inspeccionModel;
     protected ExtintorDetalleModel $detalleModel;
 
@@ -417,6 +419,7 @@ class InspeccionExtintoresController extends BaseController
                 $file = $files['ext_foto'][$i];
                 $fileName = $file->getRandomName();
                 $file->move($dir, $fileName);
+                $this->comprimirImagen($dir . $fileName);
                 $fotoPath = 'uploads/inspecciones/extintores/fotos/' . $fileName;
             }
 
@@ -464,14 +467,13 @@ class InspeccionExtintoresController extends BaseController
             }
         }
 
-        // Fotos de extintores a base64
+        // Fotos de extintores a base64 comprimido
         foreach ($extintores as &$ext) {
             $ext['foto_base64'] = '';
             if (!empty($ext['foto'])) {
                 $fotoPath = FCPATH . $ext['foto'];
                 if (file_exists($fotoPath)) {
-                    $mime = mime_content_type($fotoPath);
-                    $ext['foto_base64'] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fotoPath));
+                    $ext['foto_base64'] = $this->fotoABase64ParaPdf($fotoPath);
                 }
             }
         }
