@@ -24,11 +24,9 @@ class PdfUnificadoController extends Controller
         1  => ['policy_type_id' => 1,  'view' => 'client/sgsst/1planear/p1_1_1asignacion_responsable'],
         2  => ['policy_type_id' => 2,  'view' => 'client/sgsst/1planear/p1_1_2asignacion_responsabilidades'],
         3  => ['policy_type_id' => 3,  'view' => 'client/sgsst/1planear/p1_1_3vigia'],
-        4  => ['policy_type_id' => 4,  'view' => 'client/sgsst/1planear/p1_1_4exoneracion_cocolab'],
         5  => ['policy_type_id' => 5,  'view' => 'client/sgsst/1planear/p1_1_5registro_asistencia'],
         15 => ['policy_type_id' => 15, 'view' => 'client/sgsst/1planear/p1_2_1prgcapacitacion'],
         16 => ['policy_type_id' => 16, 'view' => 'client/sgsst/1planear/p1_2_2prginduccion'],
-        17 => ['policy_type_id' => 17, 'view' => 'client/sgsst/1planear/p1_2_3ftevaluacioninduccion'],
         18 => ['policy_type_id' => 18, 'view' => 'client/sgsst/1planear/p2_1_1politicasst'],
         19 => ['policy_type_id' => 19, 'view' => 'client/sgsst/1planear/p2_1_2politicaalcohol'],
         20 => ['policy_type_id' => 20, 'view' => 'client/sgsst/1planear/p2_1_3politicaemergencias'],
@@ -39,7 +37,6 @@ class PdfUnificadoController extends Controller
         26 => ['policy_type_id' => 26, 'view' => 'client/sgsst/1planear/p2_5_2rendiciondecuentas'],
         28 => ['policy_type_id' => 28, 'view' => 'client/sgsst/1planear/p2_5_4manproveedores'],
         31 => ['policy_type_id' => 31, 'view' => 'client/sgsst/1planear/h1_1_3repoaccidente'],
-        36 => ['policy_type_id' => 36, 'view' => 'client/sgsst/1planear/h1_1_7identfpeligriesg'],
     ];
 
     /**

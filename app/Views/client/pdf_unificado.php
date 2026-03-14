@@ -169,32 +169,32 @@
 
         <!-- Botón de generación -->
         <div class="main-card text-center">
-            <form id="formPdf" action="<?= base_url('/generarPdfUnificado') ?>" method="post" target="downloadFrame">
-                <input type="hidden" name="id_cliente" value="<?= $client['id_cliente'] ?>">
-                <?= csrf_field() ?>
+            <button type="button" id="btnGenerar" class="btn btn-generate">
+                <i class="fas fa-file-pdf me-2"></i> Generar y Descargar PDF Unificado
+            </button>
 
-                <button type="submit" id="btnGenerar" class="btn btn-generate">
-                    <i class="fas fa-file-pdf me-2"></i> Generar y Descargar PDF Unificado
-                </button>
-
-                <div class="progress-container" id="progressContainer">
-                    <div class="progress">
-                        <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%">0%</div>
-                    </div>
-                    <div class="status-msg text-muted" id="statusMsg">
-                        <i class="fas fa-spinner fa-spin me-1"></i> Generando documentos, por favor espere...
-                    </div>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%">0%</div>
                 </div>
-
-                <div id="successMsg" style="display:none;" class="mt-3">
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>
-                        PDF generado exitosamente. La descarga debería iniciar automáticamente.
-                    </div>
+                <div class="status-msg text-muted" id="statusMsg">
+                    <i class="fas fa-spinner fa-spin me-1"></i> Generando documentos, por favor espere...
                 </div>
-            </form>
+            </div>
 
-            <iframe name="downloadFrame" id="downloadFrame" style="display:none;"></iframe>
+            <div id="successMsg" style="display:none;" class="mt-3">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    PDF generado exitosamente.
+                </div>
+            </div>
+
+            <div id="errorMsg" style="display:none;" class="mt-3">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorText">Error al generar el PDF.</span>
+                </div>
+            </div>
         </div>
 
         <!-- Volver al dashboard -->
@@ -210,44 +210,68 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            let progressInterval;
-
-            $('#formPdf').on('submit', function(e) {
-                // Deshabilitar botón
-                const btn = $('#btnGenerar');
+            $('#btnGenerar').on('click', function() {
+                const btn = $(this);
                 btn.prop('disabled', true);
                 btn.html('<i class="fas fa-spinner fa-spin me-2"></i> Generando...');
 
-                // Mostrar barra de progreso
                 $('#progressContainer').slideDown();
-                $('#successMsg').hide();
+                $('#successMsg, #errorMsg').hide();
 
                 // Progreso simulado
                 let progress = 0;
-                progressInterval = setInterval(function() {
-                    if (progress < 95) {
-                        progress += Math.random() * 5 + 1;
-                        if (progress > 95) progress = 95;
+                const progressInterval = setInterval(function() {
+                    if (progress < 90) {
+                        progress += Math.random() * 4 + 1;
+                        if (progress > 90) progress = 90;
                         $('#progressBar').css('width', Math.round(progress) + '%').text(Math.round(progress) + '%');
                     }
-                }, 800);
+                }, 1000);
 
-                // Después de ~20 segundos asumir completado
-                setTimeout(function() {
+                // Fetch real con blob
+                const formData = new FormData();
+                formData.append('id_cliente', '<?= $client['id_cliente'] ?>');
+                formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+                fetch('<?= base_url('/generarPdfUnificado') ?>', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return response.text().then(function(text) { throw new Error(text); });
+                    }
+                    return response.blob();
+                })
+                .then(function(blob) {
                     clearInterval(progressInterval);
                     $('#progressBar').css('width', '100%').text('100%');
                     $('#statusMsg').html('<i class="fas fa-check-circle me-1 text-success"></i> Proceso completado.');
                     $('#successMsg').fadeIn();
 
-                    // Rehabilitar botón
+                    // Disparar descarga
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'SG-SST_<?= preg_replace('/[^a-zA-Z0-9]/', '_', $client['nombre_cliente']) ?>_<?= date('Y-m-d') ?>.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+
                     btn.prop('disabled', false);
                     btn.html('<i class="fas fa-file-pdf me-2"></i> Generar y Descargar PDF Unificado');
+                })
+                .catch(function(err) {
+                    clearInterval(progressInterval);
+                    $('#progressBar').css('width', '100%').addClass('bg-danger').text('Error');
+                    $('#statusMsg').html('<i class="fas fa-times-circle me-1 text-danger"></i> Error en la generación.');
+                    $('#errorText').text('Error: ' + err.message);
+                    $('#errorMsg').fadeIn();
 
-                    // Limpiar iframe después de 5s
-                    setTimeout(function() {
-                        $('#downloadFrame').attr('src', 'about:blank');
-                    }, 5000);
-                }, 20000);
+                    btn.prop('disabled', false);
+                    btn.html('<i class="fas fa-file-pdf me-2"></i> Generar y Descargar PDF Unificado');
+                });
             });
         });
     </script>
