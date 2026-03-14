@@ -441,13 +441,12 @@
                 </div>
             </div>
 
-            <?php /* COMENTADO - Dispositivos Documentales ya no se maneja
-            <!-- Título -->
+            <?php if (isset($client['estandares']) && in_array($client['estandares'], ['7E', '21E', '60E'])): ?>
+            <!-- Dispositivos Documentales - Solo para clientes 7E, 21E, 60E -->
             <h4 class="section-title fade-in-up">
                 <i class="fas fa-shield-alt"></i> Dispositivos Documentales Sistema de Gestión en Seguridad y Salud en el Trabajo
             </h4>
 
-            <!-- Acordeón de Accesos -->
             <div class="accordion custom-accordion fade-in-up" id="accessAccordion">
                 <?php
                 if (isset($accesos) && !empty($accesos)):
@@ -456,7 +455,6 @@
                     $dimension_items = [];
                     $dimension_count = [];
 
-                    // Primero agrupamos los accesos por dimensión
                     foreach ($accesos as $acceso) {
                         $dimension_items[$acceso['dimension']][] = $acceso;
                         if (!isset($dimension_count[$acceso['dimension']])) {
@@ -512,7 +510,7 @@
                 endif;
                 ?>
             </div>
-            FIN COMENTADO - Dispositivos Documentales */ ?>
+            <?php endif; ?>
 
             <!-- Botón de cerrar sesión -->
             <div class="text-center mt-4 fade-in-up">
