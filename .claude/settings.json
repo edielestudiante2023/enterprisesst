@@ -11,7 +11,9 @@
       "Bash(cp \"C:/xampp/htdocs/enterprisesstph/app/Models/HistorialPlanTrabajoModel.php\" \"c:/xampp/htdocs/enterprisesst/app/Models/\")",
       "Read(//c//**)",
       "Bash(php -r ':*)",
-      "Bash(php -r \"$pdo = new PDO\\(''mysql:host=127.0.0.1;dbname=empresas_sst'', ''root'', ''''\\); $cols = $pdo->query\\(''DESCRIBE tbl_acta_asistentes''\\)->fetchAll\\(PDO::FETCH_ASSOC\\); foreach\\($cols as $c\\) echo $c[''Field''] . '' | '' . $c[''Type''] . '' | '' . $c[''Null''] . '' | '' . $c[''Key''] . PHP_EOL;\")"
+      "Bash(php -r \"$pdo = new PDO\\(''mysql:host=127.0.0.1;dbname=empresas_sst'', ''root'', ''''\\); $cols = $pdo->query\\(''DESCRIBE tbl_acta_asistentes''\\)->fetchAll\\(PDO::FETCH_ASSOC\\); foreach\\($cols as $c\\) echo $c[''Field''] . '' | '' . $c[''Type''] . '' | '' . $c[''Null''] . '' | '' . $c[''Key''] . PHP_EOL;\")",
+      "Bash(2)",
+      "Bash(composer show:*)"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\enterprisesstph\\app\\Libraries"

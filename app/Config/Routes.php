@@ -1538,6 +1538,7 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('acta-visita/regenerar/(:num)', 'ActaVisitaController::regenerarPdf/$1');
     $routes->get('acta-visita/enviar-email/(:num)', 'ActaVisitaController::enviarEmail/$1');
     $routes->get('acta-visita/delete/(:num)', 'ActaVisitaController::delete/$1');
+    $routes->get('acta-visita/api/pta-actividades', 'ActaVisitaController::getPtaActividades');
 
     // Inspeccion Locativa
     $routes->get('inspeccion-locativa', 'InspeccionLocativaController::list');
@@ -1644,3 +1645,8 @@ $routes->group('ext-api/informe-avances', ['filter' => 'auth'], function($routes
     $routes->post('generar-y-enviar/(:num)', 'InformeAvancesController::apiGenerarYEnviar/$1');
     $routes->post('enviar/(:num)', 'InformeAvancesController::enviar/$1');
 });
+
+// PDF Unificado SG-SST
+$routes->get('/pdfUnificado', 'PdfUnificadoController::index');
+$routes->get('/pdfUnificado/(:num)', 'PdfUnificadoController::index/$1');
+$routes->post('/generarPdfUnificado', 'PdfUnificadoController::generarPdfUnificado');

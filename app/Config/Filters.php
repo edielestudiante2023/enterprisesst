@@ -134,6 +134,8 @@ class Filters extends BaseFilters
                 'comites-elecciones/*',
                 'acciones-correctivas/*',
                 'indicadores-sst/*',
+                'pdfUnificado*',
+                'generarPdfUnificado*',
             ],
         ],
     ];

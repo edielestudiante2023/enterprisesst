@@ -161,6 +161,20 @@ $action = $isEdit ? '/inspecciones/acta-visita/update/' . $acta['id'] : '/inspec
                 </div>
             </div>
 
+            <!-- ACTIVIDADES PTA DEL MES -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#secPta">
+                        Actividades PTA del Mes (<span id="countPta">0</span>)
+                    </button>
+                </h2>
+                <div id="secPta" class="accordion-collapse collapse" data-bs-parent="#accordionActa">
+                    <div class="accordion-body" id="ptaContent">
+                        <p class="text-muted" style="font-size:13px;">Selecciona un cliente y fecha para ver las actividades PTA.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- OBSERVACIONES -->
             <div class="accordion-item">
                 <h2 class="accordion-header">
@@ -297,10 +311,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Cargar temas abiertos al cambiar cliente
+    // Cargar temas abiertos y PTA al cambiar cliente
     $('#selectCliente').on('change', function() {
         const id = this.value;
-        if (id) loadTemasAbiertos(id);
+        if (id) {
+            loadTemasAbiertos(id);
+            loadPtaActividades();
+        }
+    });
+
+    // Recargar PTA al cambiar fecha
+    document.querySelector('[name="fecha_visita"]').addEventListener('change', function() {
+        loadPtaActividades();
     });
 
     function loadTemasAbiertos(idCliente) {
@@ -342,6 +364,178 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = html;
         });
     }
+
+    // --- PTA Actividades ---
+    const actaId = '<?= $acta['id'] ?? '' ?>';
+
+    function loadPtaActividades() {
+        const idCliente = document.getElementById('selectCliente').value;
+        const fechaVisita = document.querySelector('[name="fecha_visita"]').value;
+        const container = document.getElementById('ptaContent');
+
+        if (!idCliente || !fechaVisita) {
+            container.innerHTML = '<p class="text-muted" style="font-size:13px;">Selecciona un cliente y fecha para ver las actividades PTA.</p>';
+            document.getElementById('countPta').textContent = '0';
+            return;
+        }
+
+        container.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando actividades PTA...</p>';
+
+        let url = '/inspecciones/acta-visita/api/pta-actividades?id_cliente=' + idCliente + '&fecha_visita=' + fechaVisita;
+        if (actaId) url += '&id_acta=' + actaId;
+
+        fetch(url).then(r => r.json()).then(data => {
+            const actividades = data.actividades || [];
+            const links = data.links || {};
+
+            if (actividades.length === 0) {
+                container.innerHTML = '<p class="text-muted" style="font-size:13px;"><i class="fas fa-check-circle text-success"></i> No hay actividades PTA abiertas para este periodo.</p>';
+                document.getElementById('countPta').textContent = '0';
+                return;
+            }
+
+            document.getElementById('countPta').textContent = actividades.length;
+
+            let html = '<div class="list-group list-group-flush">';
+            actividades.forEach(act => {
+                const linkData = links[act.id_ptacliente];
+                const yaCerradaPrev = linkData && parseInt(linkData.cerrada) === 1;
+                const checkedAttr = yaCerradaPrev ? 'checked disabled' : '';
+                const badgeRezagada = act.rezagada ? ' <span class="badge bg-warning text-dark" style="font-size:10px;">REZAGADA</span>' : '';
+                const badgeCerrada = yaCerradaPrev ? ' <span class="badge bg-success" style="font-size:10px;">CERRADA</span>' : '';
+
+                html += '<label class="list-group-item d-flex align-items-start gap-2" style="font-size:13px; cursor:pointer;">';
+                html += '<input type="hidden" name="pta_actividad_id[]" value="' + act.id_ptacliente + '">';
+                html += '<input type="checkbox" name="pta_actividad_checked[]" value="' + act.id_ptacliente + '" class="form-check-input mt-1 pta-checkbox" ' + checkedAttr + ' style="min-width:18px;">';
+                html += '<div>';
+                html += '<strong>' + (act.numeral_plandetrabajo || '') + '</strong> ' + (act.actividad_plandetrabajo || '');
+                html += badgeRezagada + badgeCerrada;
+                html += '<br><small class="text-muted">Fecha propuesta: ' + act.fecha_propuesta + '</small>';
+                html += '</div>';
+                html += '</label>';
+            });
+            html += '</div>';
+            html += '<small class="text-muted d-block mt-2" style="font-size:11px;"><i class="fas fa-info-circle"></i> Marca las actividades que cerraste en esta visita. Las no marcadas pediran justificacion al guardar.</small>';
+
+            container.innerHTML = html;
+        }).catch(() => {
+            container.innerHTML = '<p class="text-danger" style="font-size:13px;"><i class="fas fa-exclamation-triangle"></i> Error cargando actividades PTA.</p>';
+        });
+    }
+
+    // Cargar PTA al inicio si ya hay cliente
+    if (clienteId) {
+        setTimeout(loadPtaActividades, 500);
+    }
+
+    /**
+     * SweetAlert encadenado: pide justificacion por cada actividad PTA no marcada
+     */
+    function askPtaJustifications(callback) {
+        const allIds = document.querySelectorAll('input[name="pta_actividad_id[]"]');
+        const checkedIds = Array.from(document.querySelectorAll('input[name="pta_actividad_checked[]"]:checked')).map(c => c.value);
+
+        // Filtrar solo las que no estan checked y no estan disabled (ya cerradas)
+        const unchecked = [];
+        allIds.forEach(input => {
+            const id = input.value;
+            const checkbox = input.nextElementSibling;
+            if (!checkedIds.includes(id) && !checkbox.disabled) {
+                const label = input.closest('label');
+                const texto = label ? label.querySelector('div').textContent.trim().split('\n')[0] : 'Actividad ' + id;
+                unchecked.push({ id, texto });
+            }
+        });
+
+        if (unchecked.length === 0) {
+            callback({});
+            return;
+        }
+
+        const justificaciones = {};
+        let index = 0;
+
+        function pedirSiguiente() {
+            if (index >= unchecked.length) {
+                callback(justificaciones);
+                return;
+            }
+
+            const item = unchecked[index];
+            Swal.fire({
+                title: 'Justificacion requerida',
+                html: '<div style="text-align:left; font-size:13px; margin-bottom:10px;"><strong>Actividad no cerrada:</strong><br>' + item.texto + '</div>',
+                input: 'textarea',
+                inputPlaceholder: 'Explica por que no se cerro esta actividad...',
+                inputAttributes: { 'aria-label': 'Justificacion' },
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: (index + 1) + '/' + unchecked.length + ' Siguiente',
+                confirmButtonColor: '#bd9751',
+                allowOutsideClick: false,
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) return 'La justificacion es obligatoria';
+                }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    justificaciones[item.id] = result.value.trim();
+                    index++;
+                    pedirSiguiente();
+                }
+                // Si cancela, no llama callback (el submit se aborta)
+            });
+        }
+
+        pedirSiguiente();
+    }
+
+    // --- Interceptor de submit para PTA justificaciones ---
+    const actaForm = document.getElementById('actaForm');
+    actaForm.addEventListener('submit', function(e) {
+        // Si ya procesamos PTA, dejar pasar
+        if (actaForm._ptaProcessed) {
+            actaForm._ptaProcessed = false;
+            return;
+        }
+
+        // Si no hay items PTA, dejar pasar
+        const ptaItems = document.querySelectorAll('input[name="pta_actividad_id[]"]');
+        if (ptaItems.length === 0) return;
+
+        // Verificar si hay items no checked (excluyendo disabled)
+        const checkedIds = Array.from(document.querySelectorAll('input[name="pta_actividad_checked[]"]:checked')).map(c => c.value);
+        let hayNoMarcadas = false;
+        ptaItems.forEach(input => {
+            const checkbox = input.nextElementSibling;
+            if (!checkedIds.includes(input.value) && !checkbox.disabled) {
+                hayNoMarcadas = true;
+            }
+        });
+
+        if (!hayNoMarcadas) return;
+
+        e.preventDefault();
+
+        askPtaJustifications(function(justificaciones) {
+            // Inyectar hidden inputs con justificaciones
+            Object.keys(justificaciones).forEach(id => {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'pta_justificacion[' + id + ']';
+                hidden.value = justificaciones[id];
+                actaForm.appendChild(hidden);
+            });
+
+            actaForm._ptaProcessed = true;
+            actaForm.requestSubmit();
+        });
+    });
+
+    // --- Interceptor "Ir a firmas" para PTA ---
+    const originalIrFirmasHandler = document.getElementById('btnIrFirmas');
+    // Sobreescribimos el handler del boton "Ir a firmas"
+    // El handler original ya esta definido, pero necesitamos interceptar PTA antes
+    // Lo hacemos redefiniendo el click handler
 
     // --- GPS ---
     if (navigator.geolocation && !document.getElementById('ubicacionGps').value) {
@@ -458,16 +652,45 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Inyectar hidden input y deshabilitar solo este boton
+        // Inyectar hidden input para ir a firmas
         const hidden = document.createElement('input');
         hidden.type = 'hidden';
         hidden.name = 'ir_a_firmas';
         hidden.value = '1';
         form.appendChild(hidden);
 
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-        form.requestSubmit();
+        function doSubmit() {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            form._ptaProcessed = true;
+            form.requestSubmit();
+        }
+
+        // Verificar si hay PTA no marcadas que necesitan justificacion
+        const ptaItems = document.querySelectorAll('input[name="pta_actividad_id[]"]');
+        const checkedIds = Array.from(document.querySelectorAll('input[name="pta_actividad_checked[]"]:checked')).map(c => c.value);
+        let hayNoMarcadas = false;
+        ptaItems.forEach(input => {
+            const checkbox = input.nextElementSibling;
+            if (!checkedIds.includes(input.value) && !checkbox.disabled) {
+                hayNoMarcadas = true;
+            }
+        });
+
+        if (ptaItems.length > 0 && hayNoMarcadas) {
+            askPtaJustifications(function(justificaciones) {
+                Object.keys(justificaciones).forEach(id => {
+                    const h = document.createElement('input');
+                    h.type = 'hidden';
+                    h.name = 'pta_justificacion[' + id + ']';
+                    h.value = justificaciones[id];
+                    form.appendChild(h);
+                });
+                doSubmit();
+            });
+        } else {
+            doSubmit();
+        }
     });
 
     // ============================================================

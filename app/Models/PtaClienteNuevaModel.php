@@ -60,4 +60,21 @@ class PtaClienteNuevaModel extends Model
 
         return $query->findAll();
     }
+
+    /**
+     * Actividades ABIERTAS de un cliente para el mes de la visita
+     * Incluye actividades rezagadas (meses anteriores del mismo año)
+     */
+    public function getAbiertosByClienteYMes(int $idCliente, string $fechaVisita): array
+    {
+        $mes = (int) date('m', strtotime($fechaVisita));
+        $anio = (int) date('Y', strtotime($fechaVisita));
+
+        return $this->where('id_cliente', $idCliente)
+            ->where('estado_actividad', 'ABIERTA')
+            ->where('YEAR(fecha_propuesta)', $anio)
+            ->where('MONTH(fecha_propuesta) <=', $mes)
+            ->orderBy('numeral_plandetrabajo', 'ASC')
+            ->findAll();
+    }
 }

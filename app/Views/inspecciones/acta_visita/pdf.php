@@ -132,7 +132,7 @@
 
     <!-- TEMAS ABIERTOS Y VENCIDOS -->
     <div class="seccion">
-        <div class="seccion-titulo">TEMAS ABIERTOS Y VENCIDOS</div>
+        <div class="seccion-titulo">2. TEMAS ABIERTOS Y VENCIDOS</div>
         <div class="seccion-contenido">
             <p><strong>MANTENIMIENTOS POR VENCER:</strong></p>
             <?php if (empty($mantenimientos)): ?>
@@ -165,7 +165,7 @@
     <!-- 2. TEMAS -->
     <?php if (!empty($temas)): ?>
     <div class="seccion">
-        <div class="seccion-titulo">2. TEMAS</div>
+        <div class="seccion-titulo">3. TEMAS</div>
         <div class="seccion-contenido">
             <?php foreach ($temas as $i => $tema): ?>
                 <p><strong>TEMA <?= $i + 1 ?>:</strong> <?= esc($tema['descripcion']) ?></p>
@@ -174,26 +174,53 @@
     </div>
     <?php endif; ?>
 
-    <!-- 4. OBSERVACIONES -->
+    <!-- ACTIVIDADES PTA GESTIONADAS -->
+    <?php if (!empty($ptaCerradas)): ?>
+    <div class="seccion">
+        <div class="seccion-titulo">4. ACTIVIDADES PTA GESTIONADAS</div>
+        <table class="tabla-contenido">
+            <thead>
+                <tr>
+                    <th style="width:15%;">NUMERAL</th>
+                    <th style="width:50%;">ACTIVIDAD</th>
+                    <th style="width:20%;">FECHA PROPUESTA</th>
+                    <th style="width:15%;">ESTADO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($ptaCerradas as $pta): ?>
+                <tr>
+                    <td style="text-align:center;"><?= esc($pta['numeral_plandetrabajo'] ?? '') ?></td>
+                    <td><?= esc($pta['actividad_plandetrabajo'] ?? '') ?></td>
+                    <td style="text-align:center;"><?= !empty($pta['fecha_propuesta']) ? date('d/m/Y', strtotime($pta['fecha_propuesta'])) : '—' ?></td>
+                    <td style="text-align:center; color:#28a745; font-weight:bold;">CERRADA</td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php endif; ?>
+
+    <!-- 5. OBSERVACIONES -->
     <?php if (!empty($acta['observaciones'])): ?>
     <div class="seccion">
-        <div class="seccion-titulo">OBSERVACIONES</div>
+        <div class="seccion-titulo">5. OBSERVACIONES</div>
         <div class="seccion-contenido"><?= nl2br(esc($acta['observaciones'])) ?></div>
     </div>
     <?php endif; ?>
 
-    <!-- 5. CARTERA -->
+    <!-- 6. CARTERA -->
     <?php if (!empty($acta['cartera'])): ?>
     <div class="seccion">
-        <div class="seccion-titulo">CARTERA</div>
+        <div class="seccion-titulo">6. CARTERA</div>
         <div class="seccion-contenido"><?= nl2br(esc($acta['cartera'])) ?></div>
     </div>
     <?php endif; ?>
 
-    <!-- 6. COMPROMISOS -->
+    <!-- 7. COMPROMISOS -->
     <?php if (!empty($compromisos)): ?>
     <div class="seccion">
-        <div class="seccion-titulo">COMPROMISOS</div>
+        <div class="seccion-titulo">7. COMPROMISOS</div>
         <table class="tabla-contenido">
             <thead>
                 <tr>

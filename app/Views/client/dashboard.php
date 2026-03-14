@@ -395,7 +395,7 @@
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <a href="<?= base_url('/report_dashboard/' . $client['id_cliente']) ?>" target="_blank" class="btn btn-danger w-100" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <a href="<?= base_url('/pdfUnificado/' . $client['id_cliente']) ?>" target="_blank" class="btn btn-danger w-100" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                             <i class="fas fa-file-pdf me-2"></i> PDF Unificado
                         </a>
                     </div>

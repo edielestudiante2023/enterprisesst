@@ -11,9 +11,12 @@ use App\Models\PendientesModel;
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
 use App\Models\ReporteModel;
+use App\Models\ActaVisitaPtaModel;
+use App\Models\PtaClienteNuevaModel;
 use App\Libraries\InspeccionEmailNotifier;
 use App\Models\VencimientosMantenimientoModel;
 use App\Models\CicloVisitaModel;
+use App\Services\PtaAuditService;
 use Dompdf\Dompdf;
 use App\Traits\AutosaveJsonTrait;
 use App\Traits\InspeccionVersionTrait;
@@ -130,6 +133,11 @@ class ActaVisitaController extends BaseController
         // Guardar fotos
         $this->saveFotos($idActa);
 
+        // Procesar checkboxes PTA (solo en submit real)
+        if (!$isAutosave) {
+            $this->savePtaActividades($idActa);
+        }
+
         if ($isAutosave) {
             return $this->autosaveJsonSuccess($idActa);
         }
@@ -155,6 +163,7 @@ class ActaVisitaController extends BaseController
             'temas'       => $this->temaModel->getByActa($id),
             'fotos'       => (new ActaVisitaFotoModel())->getByActa($id),
             'compromisos' => (new PendientesModel())->where('id_acta_visita', $id)->findAll(),
+            'ptaLinks'    => (new ActaVisitaPtaModel())->getByActa($id),
         ];
 
         return view('inspecciones/layout_pwa', [
@@ -197,6 +206,11 @@ class ActaVisitaController extends BaseController
         $this->saveCompromisos($id);
         $this->saveFotos($id);
 
+        // Procesar checkboxes PTA (solo en submit real)
+        if (!$this->isAutosaveRequest()) {
+            $this->savePtaActividades($id);
+        }
+
         if ($this->isAutosaveRequest()) {
             return $this->autosaveJsonSuccess((int)$id);
         }
@@ -226,6 +240,7 @@ class ActaVisitaController extends BaseController
             'temas'       => $this->temaModel->getByActa($id),
             'fotos'       => (new ActaVisitaFotoModel())->getByActa($id),
             'compromisos' => (new PendientesModel())->where('id_acta_visita', $id)->findAll(),
+            'ptaCerradas' => (new ActaVisitaPtaModel())->getCerradasByActa($id),
         ];
 
         return view('inspecciones/layout_pwa', [
@@ -506,6 +521,53 @@ class ActaVisitaController extends BaseController
         return redirect()->to("/inspecciones/acta-visita/view/{$id}")->with('error', $result['error']);
     }
 
+    /**
+     * Endpoint AJAX interno: carga actividades PTA abiertas para checkboxes
+     */
+    public function getPtaActividades()
+    {
+        $idCliente = (int) $this->request->getGet('id_cliente');
+        $fechaVisita = $this->request->getGet('fecha_visita');
+        $idActa = (int) $this->request->getGet('id_acta');
+
+        if (!$idCliente || !$fechaVisita) {
+            return $this->response->setJSON(['actividades' => [], 'links' => []]);
+        }
+
+        $ptaModel = new PtaClienteNuevaModel();
+        $actividades = $ptaModel->getAbiertosByClienteYMes($idCliente, $fechaVisita);
+
+        // Si estamos editando, traer estado previo de checkboxes
+        $links = [];
+        if ($idActa) {
+            $linkModel = new ActaVisitaPtaModel();
+            $existentes = $linkModel->getByActa($idActa);
+            foreach ($existentes as $link) {
+                $links[$link['id_ptacliente']] = $link;
+            }
+        }
+
+        // Determinar mes de visita para badge rezagada
+        $mesVisita = (int) date('m', strtotime($fechaVisita));
+
+        $result = [];
+        foreach ($actividades as $act) {
+            $mesPropuesta = (int) date('m', strtotime($act['fecha_propuesta']));
+            $result[] = [
+                'id_ptacliente'           => $act['id_ptacliente'],
+                'numeral_plandetrabajo'   => $act['numeral_plandetrabajo'],
+                'actividad_plandetrabajo' => $act['actividad_plandetrabajo'],
+                'fecha_propuesta'         => $act['fecha_propuesta'],
+                'rezagada'                => $mesPropuesta < $mesVisita,
+            ];
+        }
+
+        return $this->response->setJSON([
+            'actividades' => $result,
+            'links'       => $links,
+        ]);
+    }
+
     // ========== MÉTODOS PRIVADOS ==========
 
     /**
@@ -690,6 +752,7 @@ class ActaVisitaController extends BaseController
             'firmas'              => $firmas,
             'logoBase64'          => $logoBase64,
             'fotos'               => $fotosBase64,
+            'ptaCerradas'         => (new ActaVisitaPtaModel())->getCerradasByActa($id),
         ];
 
         $html = view('inspecciones/acta_visita/pdf', $data);
@@ -815,6 +878,95 @@ class ActaVisitaController extends BaseController
                 $estandar,
                 (int)$acta['id_consultor']
             );
+        }
+    }
+
+    /**
+     * Procesar checkboxes PTA del formulario:
+     * - Cerrar actividades marcadas en tbl_pta_cliente
+     * - Guardar justificaciones para las no marcadas
+     * - Registrar auditoría
+     */
+    private function savePtaActividades(int $idActa): void
+    {
+        $ptaIds = $this->request->getPost('pta_actividad_id') ?? [];
+        $checked = $this->request->getPost('pta_actividad_checked') ?? [];
+        $justificaciones = $this->request->getPost('pta_justificacion') ?? [];
+
+        if (empty($ptaIds)) {
+            return;
+        }
+
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta) {
+            return;
+        }
+
+        $ptaModel = new PtaClienteNuevaModel();
+        $linkModel = new ActaVisitaPtaModel();
+        $metodo = 'ActaVisitaController::savePtaActividades';
+
+        foreach ($ptaIds as $idPta) {
+            $idPta = (int) $idPta;
+            $ptaRecord = $ptaModel->find($idPta);
+
+            if (!$ptaRecord) {
+                continue;
+            }
+
+            // Validación de seguridad: verificar que la actividad pertenece al cliente del acta
+            if ((int) $ptaRecord['id_cliente'] !== (int) $acta['id_cliente']) {
+                continue;
+            }
+
+            $esCerrada = in_array((string) $idPta, $checked, true);
+
+            // Guardar vínculo en tbl_acta_visita_pta
+            $linkData = [
+                'id_acta_visita'          => $idActa,
+                'id_ptacliente'           => $idPta,
+                'cerrada'                 => $esCerrada ? 1 : 0,
+                'justificacion_no_cierre' => !$esCerrada ? ($justificaciones[$idPta] ?? null) : null,
+            ];
+
+            // Upsert: si ya existe el link, actualizar
+            $existente = $linkModel->where('id_acta_visita', $idActa)
+                ->where('id_ptacliente', $idPta)
+                ->first();
+
+            if ($existente) {
+                $linkModel->update($existente['id'], $linkData);
+            } else {
+                $linkModel->insert($linkData);
+            }
+
+            // Si está marcada como cerrada y aún está ABIERTA en PTA, cerrarla
+            if ($esCerrada && $ptaRecord['estado_actividad'] === 'ABIERTA') {
+                $ptaModel->update($idPta, [
+                    'estado_actividad'  => 'CERRADA',
+                    'porcentaje_avance' => 100,
+                    'fecha_cierre'      => $acta['fecha_visita'],
+                ]);
+
+                // Auditoría
+                PtaAuditService::log($idPta, 'UPDATE', 'estado_actividad', 'ABIERTA', 'CERRADA', $metodo, (int) $acta['id_cliente']);
+                PtaAuditService::log($idPta, 'UPDATE', 'porcentaje_avance', $ptaRecord['porcentaje_avance'], '100', $metodo, (int) $acta['id_cliente']);
+                PtaAuditService::log($idPta, 'UPDATE', 'fecha_cierre', $ptaRecord['fecha_cierre'], $acta['fecha_visita'], $metodo, (int) $acta['id_cliente']);
+            }
+
+            // Si NO está cerrada, concatenar justificación en observaciones de PTA
+            if (!$esCerrada && !empty($justificaciones[$idPta])) {
+                $justTexto = trim($justificaciones[$idPta]);
+                $prefijo = "[Acta Visita #{$idActa} - {$acta['fecha_visita']}] No cerrada: ";
+                $nuevaObs = $prefijo . $justTexto;
+
+                $obsActual = $ptaRecord['observaciones'] ?? '';
+                $obsFinal = $obsActual ? $obsActual . "\n" . $nuevaObs : $nuevaObs;
+
+                $ptaModel->update($idPta, ['observaciones' => $obsFinal]);
+
+                PtaAuditService::log($idPta, 'UPDATE', 'observaciones', $obsActual, $obsFinal, $metodo, (int) $acta['id_cliente']);
+            }
         }
     }
 }
