@@ -219,11 +219,21 @@ REGLAS ESTRICTAS:
    - INSERT / UPDATE / DELETE → usa tablas `tbl_*` directamente.
    - Si la vista no existe aún, usa la tabla `tbl_*` con los JOINs necesarios.
 3. ANTES DE EJECUTAR: si el usuario no especifica cliente, año, mes o rango de fechas, pregúntale primero. No asumas valores.
-4. Solo genera SELECT, INSERT, UPDATE o DELETE. Nunca DDL (CREATE, ALTER, DROP, TRUNCATE).
-5. TABLAS PROTEGIDAS (no modificar): {$tablasProtegidas}
-6. Nunca DELETE sin WHERE. Nunca UPDATE sin WHERE.
-7. LIMIT 100 en SELECT si el usuario no especifica cantidad.
-8. No expongas passwords, tokens ni datos de autenticación.
+4. BÚSQUEDA POR NOMBRE: NUNCA uses = para buscar por nombre. Siempre usa LIKE '%término%' (el usuario solo recuerda parte del nombre).
+5. ESTADOS — traduce lenguaje natural a ENUM exacto:
+   - "abiertas/pendientes/activas" en PTA → estado_actividad IN ('ABIERTA','GESTIONANDO')
+   - "cerradas" en PTA → estado_actividad IN ('CERRADA','CERRADA SIN EJECUCIÓN','CERRADA POR FIN CONTRATO')
+   - "abiertas/pendientes" en tbl_pendientes → estado = 'ABIERTA'
+   - "sin respuesta" en pendientes → estado = 'SIN RESPUESTA DEL CLIENTE'
+   - "por ejecutar/pendientes" en mantenimientos → estado_actividad = 'sin ejecutar'
+   - "programadas" en capacitaciones → estado IN ('PROGRAMADA','REPROGRAMADA')
+   - "firmados/aprobados" en documentos → estado IN ('firmado','aprobado')
+   - "activos" en contratos/clientes → estado = 'activo'
+6. Solo genera SELECT, INSERT, UPDATE o DELETE. Nunca DDL (CREATE, ALTER, DROP, TRUNCATE).
+7. TABLAS PROTEGIDAS (no modificar): {$tablasProtegidas}
+8. Nunca DELETE sin WHERE. Nunca UPDATE sin WHERE.
+9. LIMIT 100 en SELECT si el usuario no especifica cantidad.
+10. No expongas passwords, tokens ni datos de autenticación.
 
 FORMATO DE RESPUESTA:
 - Para ejecutar SQL, responde EXACTAMENTE así (sin mostrar el SQL al usuario):
@@ -261,8 +271,15 @@ REGLAS ESTRICTAS:
 3. JERARQUÍA: usa siempre vistas `v_*` para SELECT. Si la vista no existe, usa `tbl_*` con JOIN.
 4. SCOPE: toda consulta debe incluir WHERE {$condicion} (o AND {$condicion}) cuando la tabla tenga id_cliente.
 5. ANTES DE EJECUTAR: si falta año, mes o rango de fechas para acotar la consulta, pregunta primero.
-6. No expongas datos de otros clientes, passwords ni tokens.
-7. LIMIT 50 en SELECT.
+6. BÚSQUEDA POR NOMBRE: NUNCA uses = para buscar por nombre. Siempre LIKE '%término%'.
+7. ESTADOS — traduce lenguaje natural a ENUM exacto:
+   - "abiertas/pendientes" en PTA → estado_actividad IN ('ABIERTA','GESTIONANDO')
+   - "cerradas" en PTA → estado_actividad IN ('CERRADA','CERRADA SIN EJECUCIÓN','CERRADA POR FIN CONTRATO')
+   - "abiertas/pendientes" en pendientes → estado = 'ABIERTA'
+   - "por ejecutar" en mantenimientos → estado_actividad = 'sin ejecutar'
+   - "programadas" en capacitaciones → estado IN ('PROGRAMADA','REPROGRAMADA')
+8. No expongas datos de otros clientes, passwords ni tokens.
+9. LIMIT 50 en SELECT.
 
 FORMATO DE RESPUESTA:
 - Para ejecutar SQL:
