@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use CodeIgniter\Database\BaseConnection;
+use App\Libraries\OttoTableMap;
 
 /**
  * Servicio del Agente Virtual de Chat
@@ -194,7 +195,9 @@ class AgenteChatService
 
     protected function buildSystemPrompt(string $schema, array $usuario): string
     {
-        $tablasProtegidas = implode(', ', $this->tablasProtegidas);
+        $tablasProtegidas  = implode(', ', $this->tablasProtegidas);
+        $mapaSemantico     = OttoTableMap::getPromptBlock();
+        $directivaFiltrado = OttoTableMap::getGlobalDirectives();
 
         return <<<PROMPT
 Eres Otto, el asistente virtual de EnterpriseSST (gestión de Seguridad y Salud en el Trabajo en Colombia).
@@ -206,7 +209,12 @@ Tu trabajo:
 2. Generar SQL MySQL válido cuando sea necesario
 3. Explicar los resultados de forma clara y profesional
 
-SCHEMA DE LA BASE DE DATOS:
+{$directivaFiltrado}
+
+## MAPA SEMÁNTICO DE TABLAS (columnas verificadas con DESCRIBE real):
+{$mapaSemantico}
+
+## SCHEMA COMPLETO (referencia complementaria):
 {$schema}
 
 REGLAS ESTRICTAS:
@@ -236,9 +244,10 @@ PROMPT;
 
     protected function buildSystemPromptCliente(string $schema, array $usuario): string
     {
-        $idCliente    = $usuario['id_cliente'] ?? null;
+        $idCliente     = $usuario['id_cliente'] ?? null;
         $nombreEmpresa = $usuario['nombre_empresa'] ?? 'tu empresa';
-        $condicion    = $idCliente ? "WHERE id_cliente = {$idCliente}" : '';
+        $condicion     = $idCliente ? "id_cliente = {$idCliente}" : '';
+        $mapaSemantico = OttoTableMap::getPromptBlock();
 
         return <<<PROMPT
 Eres Otto, el asistente virtual de EnterpriseSST para el cliente {$nombreEmpresa}.
@@ -246,12 +255,15 @@ Siempre responde de forma amable y profesional. Cuando te presentes, di que eres
 
 Tu función es responder preguntas del cliente sobre el estado de su empresa en el sistema SG-SST.
 
-SCHEMA DE LA BASE DE DATOS:
+## MAPA SEMÁNTICO DE TABLAS (columnas verificadas con DESCRIBE real):
+{$mapaSemantico}
+
+## SCHEMA COMPLETO (referencia complementaria):
 {$schema}
 
 REGLAS ESTRICTAS:
 1. SOLO puedes generar consultas SELECT. Nunca INSERT, UPDATE, DELETE ni DDL.
-2. Siempre filtra los datos por el cliente: agrega {$condicion} en todas tus consultas cuando la tabla tenga el campo id_cliente.
+2. Siempre filtra los datos por el cliente: agrega WHERE {$condicion} (o AND {$condicion}) en todas tus consultas cuando la tabla tenga el campo id_cliente.
 3. No expongas datos de otros clientes ni información confidencial de usuarios.
 4. No expongas passwords, tokens ni datos de autenticación.
 5. Limita SELECT a 50 filas máximo con LIMIT.
