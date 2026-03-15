@@ -584,6 +584,11 @@
                     <i class="fas fa-edit me-2"></i>Editor Secciones
                 </a>
             </div>
+            <div class="col-6 col-md-auto">
+                <a href="<?= base_url('/agente-chat') ?>" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #3a7bd5, #00d2ff); border: none;">
+                    <i class="fas fa-robot me-2"></i>Otto Asistente
+                </a>
+            </div>
         </div>
 
         <!-- Dashboards Analíticos -->
