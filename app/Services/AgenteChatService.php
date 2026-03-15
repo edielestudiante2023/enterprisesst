@@ -46,15 +46,18 @@ class AgenteChatService
     }
 
     /**
-     * Procesa un mensaje del usuario y retorna la respuesta del agente
+     * Procesa un mensaje del usuario y retorna la respuesta del agente.
+     * $soloLectura = true: solo permite SELECT (modo cliente).
      */
-    public function procesarMensaje(string $mensaje, array $historial, array $usuario): array
+    public function procesarMensaje(string $mensaje, array $historial, array $usuario, bool $soloLectura = false): array
     {
         // 1. Obtener schema compacto de la BD
         $schema = $this->getSchemaCompacto();
 
         // 2. Construir prompts para GPT
-        $systemPrompt = $this->buildSystemPrompt($schema, $usuario);
+        $systemPrompt = $soloLectura
+            ? $this->buildSystemPromptCliente($schema, $usuario)
+            : $this->buildSystemPrompt($schema, $usuario);
         $messages = $this->buildMessages($systemPrompt, $historial, $mensaje);
 
         // 3. Llamar a GPT
@@ -72,6 +75,17 @@ class AgenteChatService
 
         // 5. Si hay SQL, validar y ejecutar (o pedir confirmación)
         if (!empty($parsed['sql'])) {
+            // En modo solo lectura rechazar cualquier escritura
+            if ($soloLectura) {
+                $tipoSQL = strtoupper(trim(explode(' ', trim($parsed['sql']))[0]));
+                if ($tipoSQL !== 'SELECT') {
+                    return [
+                        'success' => false,
+                        'mensaje' => 'Lo siento, en tu perfil de cliente solo puedo responder consultas de información (SELECT). No puedo realizar modificaciones en el sistema.',
+                        'tipo' => 'rechazado'
+                    ];
+                }
+            }
             return $this->procesarSQL($parsed, $usuario, $mensaje, $gptResponse['tokens'] ?? 0);
         }
 
@@ -217,6 +231,40 @@ Explicación de lo que hace la consulta.
 - Si el usuario pide algo peligroso o no permitido, explica por qué no puedes hacerlo.
 - Siempre responde en español.
 - Cuando muestres resultados de consultas, formátealos de forma legible.
+PROMPT;
+    }
+
+    protected function buildSystemPromptCliente(string $schema, array $usuario): string
+    {
+        $idCliente    = $usuario['id_cliente'] ?? null;
+        $nombreEmpresa = $usuario['nombre_empresa'] ?? 'tu empresa';
+        $condicion    = $idCliente ? "WHERE id_cliente = {$idCliente}" : '';
+
+        return <<<PROMPT
+Eres Otto, el asistente virtual de EnterpriseSST para el cliente {$nombreEmpresa}.
+Siempre responde de forma amable y profesional. Cuando te presentes, di que eres Otto.
+
+Tu función es responder preguntas del cliente sobre el estado de su empresa en el sistema SG-SST.
+
+SCHEMA DE LA BASE DE DATOS:
+{$schema}
+
+REGLAS ESTRICTAS:
+1. SOLO puedes generar consultas SELECT. Nunca INSERT, UPDATE, DELETE ni DDL.
+2. Siempre filtra los datos por el cliente: agrega {$condicion} en todas tus consultas cuando la tabla tenga el campo id_cliente.
+3. No expongas datos de otros clientes ni información confidencial de usuarios.
+4. No expongas passwords, tokens ni datos de autenticación.
+5. Limita SELECT a 50 filas máximo con LIMIT.
+
+FORMATO DE RESPUESTA:
+- Si necesitas ejecutar SQL, responde EXACTAMENTE así:
+```sql
+TU_QUERY_AQUÍ
+```
+Explicación clara del resultado.
+
+- Si no necesitas SQL, responde en texto normal.
+- Siempre responde en español de forma clara y amigable.
 PROMPT;
     }
 

@@ -7,7 +7,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1c2437">
     <title>Otto - Asistente Virtual SST</title>
-    <link rel="manifest" href="<?= base_url('agente-chat/manifest.json') ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -52,12 +51,7 @@
             padding: 0 16px;
         }
 
-        .navbar-logos {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
+        .navbar-logos { display: flex; align-items: center; gap: 10px; }
         .navbar-logos img { max-height: 44px; }
 
         .navbar-title {
@@ -92,19 +86,6 @@
 
         .btn-back:hover { background: var(--gold); color: white; }
 
-        .btn-new-session {
-            background: none;
-            border: 1px solid #ddd;
-            color: var(--primary);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-new-session:hover { background: var(--primary); color: white; border-color: var(--primary); }
-
         /* ─── Chat wrapper ─── */
         .chat-wrapper {
             flex: 1;
@@ -117,7 +98,6 @@
             overflow: hidden;
         }
 
-        /* ─── Messages ─── */
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -145,11 +125,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.12);
         }
 
-        .welcome-message h3 {
-            color: var(--primary);
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
+        .welcome-message h3 { color: var(--primary); font-weight: 600; margin-bottom: 8px; }
 
         .welcome-message p {
             font-size: 0.88rem;
@@ -227,13 +203,10 @@
         }
 
         .message.agent .msg-avatar img,
-        .message.error .msg-avatar img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-        }
+        .message.error .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         .msg-bubble {
-            max-width: 75%;
+            max-width: 78%;
             padding: 11px 15px;
             border-radius: 16px;
             font-size: 0.9rem;
@@ -260,13 +233,7 @@
             border-bottom-left-radius: 4px;
         }
 
-        .message.confirm .msg-bubble {
-            background: #fff9e6;
-            border: 1px solid #ffc107;
-            border-bottom-left-radius: 4px;
-        }
-
-        /* Markdown dentro de burbujas */
+        /* Markdown */
         .msg-bubble p { margin-bottom: 8px; }
         .msg-bubble p:last-child { margin-bottom: 0; }
         .msg-bubble ul, .msg-bubble ol { padding-left: 20px; margin-bottom: 8px; }
@@ -279,14 +246,7 @@
         .msg-bubble tr:nth-child(even) td { background: #f8f9fa; }
         .message.user .msg-bubble code { background: rgba(255,255,255,0.2); }
 
-        /* Timestamp */
-        .msg-time {
-            font-size: 0.65rem;
-            color: rgba(0,0,0,0.35);
-            margin-top: 4px;
-            text-align: right;
-        }
-
+        .msg-time { font-size: 0.65rem; color: rgba(0,0,0,0.35); margin-top: 4px; text-align: right; }
         .message.user .msg-time { color: rgba(255,255,255,0.6); }
 
         /* Tabla de datos */
@@ -295,40 +255,6 @@
         .data-table th { background: var(--primary); color: white; padding: 6px 8px; white-space: nowrap; }
         .data-table td { padding: 5px 8px; border-bottom: 1px solid #eee; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
         .data-table tr:nth-child(even) td { background: #f8f9fa; }
-
-        /* SQL block */
-        .sql-block {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-family: 'Consolas', monospace;
-            font-size: 0.76rem;
-            overflow-x: auto;
-            margin: 8px 0;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        /* Confirm buttons */
-        .confirm-area {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #e9ecef;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .btn-confirm { background: #198754; color: white; border: none; padding: 6px 14px; border-radius: 16px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
-        .btn-confirm:hover { background: #157347; }
-        .btn-cancel-op { background: #6c757d; color: white; border: none; padding: 6px 14px; border-radius: 16px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
-        .btn-cancel-op:hover { background: #565e64; }
-        .btn-delete-op { background: #dc3545; color: white; border: none; padding: 6px 14px; border-radius: 16px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
-        .btn-delete-op:hover { background: #bb2d3b; }
-
-        .aritm-input { width: 72px; text-align: center; font-size: 0.95rem; font-weight: bold; border: 1px solid #ddd; border-radius: 8px; padding: 4px 8px; }
 
         /* ─── Typing indicator ─── */
         .typing-indicator {
@@ -421,88 +347,10 @@
         .btn-send:hover { transform: scale(1.05); }
         .btn-send:disabled { background: #ccc; cursor: not-allowed; transform: none; }
 
-        /* ─── Schema FAB ─── */
-        .schema-fab {
-            position: fixed;
-            bottom: 90px;
-            right: 16px;
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: var(--gold);
-            border: none;
-            font-size: 1rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 100;
-            transition: transform 0.2s;
-        }
-
-        .schema-fab:hover { transform: scale(1.1); }
-
-        /* ─── Schema panel ─── */
-        .schema-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.3);
-            z-index: 200;
-        }
-
-        .schema-overlay.open { display: block; }
-
-        .schema-panel {
-            position: fixed;
-            right: -380px;
-            top: 0; bottom: 0;
-            width: 360px;
-            background: white;
-            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
-            z-index: 201;
-            transition: right 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .schema-panel.open { right: 0; }
-
-        .schema-panel-header {
-            background: var(--primary);
-            color: white;
-            padding: 16px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        .schema-panel-header h6 { margin: 0; font-weight: 600; }
-
-        .schema-panel-search { padding: 10px 12px; border-bottom: 1px solid #eee; }
-        .schema-panel-search input { width: 100%; padding: 7px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.85rem; outline: none; }
-
-        .schema-panel-body { flex: 1; overflow-y: auto; padding: 4px 0; }
-
-        .schema-table-item {
-            padding: 8px 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            border-bottom: 1px solid #f5f5f5;
-            font-size: 0.82rem;
-            transition: background 0.15s;
-        }
-
-        .schema-table-item:hover { background: #f0f4f8; }
-        .schema-table-item .tbl-name { font-family: monospace; color: var(--primary); }
-        .schema-table-item .tbl-rows { color: #888; font-size: 0.75rem; }
-
         /* Responsive */
         @media (max-width: 600px) {
             .navbar-logos img { max-height: 32px; }
             .msg-bubble { max-width: 88%; font-size: 0.86rem; }
-            .schema-panel { width: 100%; right: -100%; }
             .btn-back span { display: none; }
         }
     </style>
@@ -520,16 +368,10 @@
                 <img src="<?= base_url('img/otto/otto.png') ?>" alt="Otto">
                 Otto
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <button class="btn-new-session" onclick="nuevaSesion()" title="Nueva sesión">
-                    <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Nueva</span>
-                </button>
-                <a href="<?= base_url(session()->get('role') === 'consultant' ? 'consultor/dashboard' : 'admin/dashboard') ?>"
-                   class="btn-back">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Dashboard</span>
-                </a>
-            </div>
+            <a href="<?= base_url('client/dashboard') ?>" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Dashboard</span>
+            </a>
         </div>
     </nav>
 
@@ -540,13 +382,13 @@
             <div class="welcome-message" id="welcomeMessage">
                 <img src="<?= base_url('img/otto/otto.png') ?>" alt="Otto" class="welcome-avatar">
                 <h3>¡Hola! Soy Otto</h3>
-                <p>Tu asistente virtual de SST. Tengo acceso a todas las tablas del sistema. Puedo consultar datos, actualizar registros y ayudarte con lo que necesites.</p>
+                <p>Tu asistente virtual de SST para <b><?= esc($nombre_empresa) ?></b>. Puedo consultarte información sobre tus documentos, plan de trabajo, indicadores y más.</p>
                 <div class="suggestion-chips">
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Clientes activos</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Pendientes de firma hoy</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Documentos sin generar</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Últimas capacitaciones</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Tablas disponibles</div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Mis documentos pendientes</div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Mi plan de trabajo actual</div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Indicadores de mi empresa</div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Próximas visitas</div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Estado de mis firmas</div>
                 </div>
             </div>
 
@@ -564,7 +406,7 @@
         <!-- Input -->
         <div class="chat-input-area">
             <div class="input-container">
-                <textarea id="inputMsg" rows="1" placeholder="Pregúntale a Otto..."
+                <textarea id="inputMsg" rows="1" placeholder="Pregúntale a Otto sobre tu empresa..."
                           onkeydown="handleKeyDown(event)"
                           oninput="autoResize(this)"></textarea>
                 <button class="btn-send" id="btnSend" onclick="enviarMensaje()">
@@ -574,38 +416,6 @@
         </div>
     </div>
 
-    <!-- Schema FAB -->
-    <button class="schema-fab" onclick="toggleSchema()" title="Ver tablas">
-        <i class="fas fa-database"></i>
-    </button>
-
-    <!-- Schema panel -->
-    <div class="schema-overlay" id="schemaOverlay" onclick="toggleSchema()"></div>
-    <div class="schema-panel" id="schemaPanel">
-        <div class="schema-panel-header">
-            <h6><i class="fas fa-database me-2"></i>Tablas (<?= count($tablas) ?>)</h6>
-            <button onclick="toggleSchema()" style="background:none;border:none;color:white;font-size:1.1rem;cursor:pointer;">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="schema-panel-search">
-            <input type="text" id="searchTabla" placeholder="Buscar tabla..." oninput="filtrarTablas()">
-        </div>
-        <div class="schema-panel-body" id="tablesList">
-            <?php foreach ($tablas as $t): ?>
-            <div class="schema-table-item" onclick="insertarTabla('<?= esc($t) ?>')">
-                <span class="tbl-name"><?= esc($t) ?></span>
-                <i class="fas fa-plus tbl-rows" style="font-size:0.7rem;"></i>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-
-    <script src="<?= base_url('js/agente_chat.js') ?>"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('<?= base_url("agente-chat/sw.js") ?>').catch(() => {});
-        }
-    </script>
+    <script src="<?= base_url('js/cliente_chat.js') ?>"></script>
 </body>
 </html>

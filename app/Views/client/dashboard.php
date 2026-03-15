@@ -409,6 +409,11 @@
                             <i class="fas fa-clipboard-list me-2"></i> Actas de Comités
                         </a>
                     </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="<?= base_url('cliente/chat') ?>" class="btn w-100" style="background: linear-gradient(135deg, #1c2437 0%, #bd9751 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                            <i class="fas fa-robot me-2"></i> Otto Asistente
+                        </a>
+                    </div>
                 </div>
             </div>
 

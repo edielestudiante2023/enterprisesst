@@ -1651,10 +1651,14 @@ $routes->get('/pdfUnificado', 'PdfUnificadoController::index');
 $routes->get('/pdfUnificado/(:num)', 'PdfUnificadoController::index/$1');
 $routes->post('/generarPdfUnificado', 'PdfUnificadoController::generarPdfUnificado');
 
-// ─── Agente Virtual de Chat (PWA) ─────────────────────────────
+// ─── Agente Virtual de Chat - Consultor/Admin (PWA) ───────────
 $routes->get('agente-chat', 'AgenteChatController::index');
 $routes->get('agente-chat/manifest.json', 'AgenteChatController::manifest');
 $routes->get('agente-chat/sw.js', 'AgenteChatController::serviceWorker');
 $routes->post('agente-chat/api/mensaje', 'AgenteChatController::enviarMensaje');
 $routes->post('agente-chat/api/confirmar', 'AgenteChatController::confirmarOperacion');
 $routes->get('agente-chat/api/tabla/(:segment)', 'AgenteChatController::infoTabla/$1');
+
+// ─── Agente Virtual de Chat - Cliente (solo lectura) ──────────
+$routes->get('cliente/chat', 'ClienteChatController::index');
+$routes->post('cliente/chat/api/mensaje', 'ClienteChatController::enviarMensaje');
