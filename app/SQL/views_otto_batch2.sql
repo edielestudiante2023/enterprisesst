@@ -245,8 +245,7 @@ SELECT
     tc.codigo                   AS codigo_tipo_comite,
     cm.estado                   AS estado_comite,
     a.numero_acta,
-    a.codigo_documento,
-    a.version_documento,
+    -- codigo_documento / version_documento no existen en producción
     a.consecutivo_anual,
     a.anio,
     a.tipo_acta,
