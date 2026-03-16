@@ -16,7 +16,8 @@ class AgenteChatService
     protected string $apiKey;
     protected string $model;
     protected string $apiUrl = 'https://api.openai.com/v1/chat/completions';
-    protected BaseConnection $db;
+    protected BaseConnection $db;       // default — para logging
+    protected BaseConnection $dbExec;   // puede ser 'readonly' para el cliente
     protected array $schemaCache = [];
 
     /** Tablas que NUNCA se pueden modificar (DELETE/UPDATE) */
@@ -39,11 +40,12 @@ class AgenteChatService
         'tbl_recuperacion_password',
     ];
 
-    public function __construct()
+    public function __construct(string $dbGroup = 'default')
     {
-        $this->apiKey = env('OPENAI_API_KEY', '');
-        $this->model  = env('OTTO_MODEL', 'gpt-4o-mini');
-        $this->db     = \Config\Database::connect();
+        $this->apiKey   = env('OPENAI_API_KEY', '');
+        $this->model    = env('OTTO_MODEL', 'gpt-4o-mini');
+        $this->db       = \Config\Database::connect('default'); // siempre default para logging
+        $this->dbExec   = \Config\Database::connect($dbGroup);  // readonly para cliente
     }
 
     /**
@@ -495,7 +497,7 @@ PROMPT;
 
         try {
             if ($tipoOp === 'SELECT') {
-                $result = $this->db->query($sql);
+                $result = $this->dbExec->query($sql);
                 $rows = $result->getResultArray();
                 $numRows = count($rows);
 
@@ -520,8 +522,8 @@ PROMPT;
                 ];
             } else {
                 // INSERT, UPDATE, DELETE
-                $this->db->query($sql);
-                $affected = $this->db->affectedRows();
+                $this->dbExec->query($sql);
+                $affected = $this->dbExec->affectedRows();
 
                 $this->logOperacion($usuario, $mensajeOriginal, $sql, $tipoOp, $tablas, $affected, "Operación exitosa: {$affected} filas afectadas", $tokens, 'ok');
 
