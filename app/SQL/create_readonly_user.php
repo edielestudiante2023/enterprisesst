@@ -112,6 +112,13 @@ foreach ($roHosts as $roHost) {
         "CREATE USER"
     );
 
+    // Sincronizar contraseña — CREATE USER IF NOT EXISTS NO actualiza si ya existe
+    // Ref: aprendizaje #5 — siempre ALTER USER después para garantizar sincronización
+    runSQL($conn,
+        "ALTER USER 'empresas_readonly'@'{$roHost}' IDENTIFIED BY '{$escaped}'",
+        "ALTER USER (sync password)"
+    );
+
     // Revocar permisos previos (DigitalOcean: solo sobre la BD, no global)
     runSQL($conn,
         "REVOKE ALL ON `{$db}`.* FROM 'empresas_readonly'@'{$roHost}'",

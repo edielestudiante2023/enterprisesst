@@ -29,7 +29,22 @@ class ClienteChatController extends BaseController
     // ─── Vista principal ──────────────────────────────────────────
     public function index()
     {
-        if (session()->get('role') !== 'client') {
+        $role = session()->get('role');
+
+        // Consultor/admin puede previsualizar el chat de un cliente específico vía ?id_cliente=X
+        // Sin ese parámetro no tiene contexto — redirigir al dashboard
+        // Ref: aprendizaje #8 — consultor sin id_cliente → id_cliente=0 → guardrail bloquea todo
+        if (in_array($role, ['consultant', 'admin'])) {
+            $idParam = (int) $this->request->getGet('id_cliente');
+            if (!$idParam) {
+                return redirect()->to('/consultor/dashboard')
+                    ->with('error', 'Selecciona un cliente para abrir su chat con Otto.');
+            }
+            // Almacenar temporalmente en sesión para la previsuación
+            session()->set('preview_id_cliente', $idParam);
+        }
+
+        if (!in_array($role, ['client', 'consultant', 'admin'])) {
             return redirect()->to('/login')->with('error', 'Acceso no autorizado');
         }
 
@@ -99,7 +114,12 @@ class ClienteChatController extends BaseController
     // ─── Helper: obtener id y nombre del cliente logueado ─────────
     protected function resolverCliente(): array
     {
-        $idCliente = (int) (session()->get('id_cliente') ?? session()->get('user_id') ?? 0);
+        $role = session()->get('role');
+        if (in_array($role, ['consultant', 'admin'])) {
+            $idCliente = (int) (session()->get('preview_id_cliente') ?? 0);
+        } else {
+            $idCliente = (int) (session()->get('id_cliente') ?? session()->get('user_id') ?? 0);
+        }
 
         // Usar conexión default para leer datos del cliente (readonly no tiene acceso a tbl_cliente)
         $db            = \Config\Database::connect('default');

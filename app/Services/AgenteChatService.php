@@ -42,10 +42,50 @@ class AgenteChatService
 
     public function __construct(string $dbGroup = 'default')
     {
-        $this->apiKey   = env('OPENAI_API_KEY', '');
-        $this->model    = env('OTTO_MODEL', 'gpt-4o-mini');
-        $this->db       = \Config\Database::connect('default'); // siempre default para logging
-        $this->dbExec   = \Config\Database::connect($dbGroup);  // readonly para cliente
+        $this->apiKey = env('OPENAI_API_KEY', '');
+        $this->model  = env('OTTO_MODEL', 'gpt-4o-mini');
+        $this->db     = \Config\Database::connect('default');
+
+        // Capa 1 DB: para el cliente usamos config dinámica (evita PHP 8.2 "Constant expression"
+        // que ocurre con env() en inicializadores de propiedades de Database.php)
+        if ($dbGroup === 'readonly') {
+            $this->dbExec = \Config\Database::connect($this->buildReadonlyConfig());
+        } else {
+            $this->dbExec = \Config\Database::connect('default');
+        }
+    }
+
+    /**
+     * Construye la config de conexión readonly dinámicamente en tiempo de ejecución.
+     * NO puede estar en Database.php porque PHP 8.2 prohíbe env() en property initializers.
+     */
+    protected function buildReadonlyConfig(): array
+    {
+        return [
+            'DSN'          => '',
+            'hostname'     => env('readonly.hostname', 'localhost'),
+            'username'     => env('readonly.username', 'empresas_readonly'),
+            'password'     => env('readonly.password', 'EmpresasReadOnly2026!'),
+            'database'     => env('readonly.database', 'empresas_sst'),
+            'DBDriver'     => 'MySQLi',
+            'DBPrefix'     => '',
+            'pConnect'     => false,
+            'DBDebug'      => false,
+            'charset'      => 'utf8mb4',
+            'DBCollat'     => 'utf8mb4_general_ci',
+            'swapPre'      => '',
+            'encrypt'      => (bool) env('readonly.encrypt', false),
+            'compress'     => false,
+            'strictOn'     => false,
+            'failover'     => [],
+            'port'         => (int) env('readonly.port', 3306),
+            'numberNative' => false,
+            'dateFormat'   => [
+                'date'     => 'Y-m-d',
+                'datetime' => 'Y-m-d H:i:s',
+                'time'     => 'H:i:s',
+            ],
+        ];
     }
 
     /**
@@ -497,10 +537,16 @@ PROMPT;
 
         try {
             if ($tipoOp === 'SELECT') {
+                log_message('info', '[Otto] QUERY_START sql=' . substr($sql, 0, 120));
                 $result = $this->dbExec->query($sql);
-                $rows = $result->getResultArray();
+                $rows   = $result->getResultArray();
                 $numRows = count($rows);
 
+                // Sanitizar strings largos antes de enviar a OpenAI
+                // Evita: json_encode silencioso, megabytes innecesarios, exceder max_tokens
+                $rows = $this->sanitizarFilas($rows);
+
+                log_message('info', '[Otto] QUERY_OK rows=' . $numRows);
                 $this->logOperacion($usuario, $mensajeOriginal, $sql, $tipoOp, $tablas, $numRows, "Consulta exitosa: {$numRows} filas", $tokens, 'ok');
 
                 // Formatear resultados
@@ -570,6 +616,27 @@ PROMPT;
         } catch (\Exception $e) {
             log_message('error', 'AgenteChatService::logOperacion error: ' . $e->getMessage());
         }
+    }
+
+    // ─── Sanitización ──────────────────────────────────────────────
+
+    /**
+     * Sanitiza los rows antes de enviar a OpenAI.
+     * - Fuerza UTF-8 para evitar json_encode silencioso
+     * - Trunca strings > 800 chars (actividad_plandetrabajo, observaciones, etc.)
+     * Ref: aprendizaje #7 — SELECT * con TEXT largo causa fallos silenciosos
+     */
+    protected function sanitizarFilas(array $rows): array
+    {
+        array_walk_recursive($rows, function (&$value) {
+            if (is_string($value)) {
+                $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                if (mb_strlen($value) > 800) {
+                    $value = mb_substr($value, 0, 800) . '…';
+                }
+            }
+        });
+        return $rows;
     }
 
     // ─── Utilidades ────────────────────────────────────────────────
