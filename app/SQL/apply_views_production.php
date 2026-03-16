@@ -30,12 +30,19 @@ foreach ($batches as $file) {
     $sql   = file_get_contents($file);
     $stmts = array_filter(array_map('trim', explode(';', $sql)));
     foreach ($stmts as $s) {
-        if (str_starts_with($s, '--') || strlen($s) < 15) continue;
-        if (@mysqli_query($m, $s)) {
-            $ok++;
-        } else {
-            $e = mysqli_error($m);
-            echo "  ERR: $e\n  SQL: " . substr($s, 0, 80) . "...\n";
+        // Solo ejecutar sentencias que empiecen con CREATE (ignorar comentarios y fragmentos)
+        $clean = ltrim(preg_replace('/--[^\n]*\n?/', '', $s));
+        if (!preg_match('/^\s*CREATE\s/i', $clean)) continue;
+        try {
+            if (@mysqli_query($m, $clean)) {
+                $ok++;
+            } else {
+                $e = mysqli_error($m);
+                echo "  ERR: $e\n  SQL: " . substr($clean, 0, 100) . "...\n";
+                $err++;
+            }
+        } catch (Exception $ex) {
+            echo "  EXC: " . $ex->getMessage() . "\n";
             $err++;
         }
     }
