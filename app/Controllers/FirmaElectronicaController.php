@@ -39,6 +39,57 @@ class FirmaElectronicaController extends Controller
     }
 
     /**
+     * Refresca el email del firmante desde la fuente actual (contexto cliente o candidato/jurado).
+     * Actualiza tbl_doc_firma_solicitudes si el email cambió.
+     */
+    private function refrescarEmailFirmante(array $solicitud, ?array $documento): void
+    {
+        if (!$documento) return;
+
+        $idCliente = $documento['id_cliente'] ?? null;
+        $tipo = $solicitud['firmante_tipo'] ?? '';
+        $emailActual = null;
+
+        if ($tipo === 'representante_legal') {
+            $ctx = $this->db->table('tbl_cliente_contexto_sst')
+                ->select('representante_legal_email')
+                ->where('id_cliente', $idCliente)
+                ->get()->getRowArray();
+            $emailActual = $ctx['representante_legal_email'] ?? null;
+
+        } elseif ($tipo === 'delegado_sst') {
+            $ctx = $this->db->table('tbl_cliente_contexto_sst')
+                ->select('delegado_sst_email')
+                ->where('id_cliente', $idCliente)
+                ->get()->getRowArray();
+            $emailActual = $ctx['delegado_sst_email'] ?? null;
+
+        } elseif (preg_match('/^(empleador_principal|empleador_suplente|trabajador_principal|trabajador_suplente)_(\d+)$/', $tipo, $m)) {
+            $idCandidato = (int) $m[2];
+            $candidato = $this->db->table('tbl_candidatos_comite')
+                ->select('email')
+                ->where('id_candidato', $idCandidato)
+                ->get()->getRowArray();
+            $emailActual = $candidato['email'] ?? null;
+
+        } elseif (preg_match('/^jurado_(\d+)$/', $tipo, $m)) {
+            $idJurado = (int) $m[1];
+            $jurado = $this->db->table('tbl_jurados_proceso')
+                ->select('email')
+                ->where('id_jurado', $idJurado)
+                ->get()->getRowArray();
+            $emailActual = $jurado['email'] ?? null;
+        }
+
+        if ($emailActual && filter_var($emailActual, FILTER_VALIDATE_EMAIL)
+            && $emailActual !== $solicitud['firmante_email']) {
+            $this->db->table('tbl_doc_firma_solicitudes')
+                ->where('id_solicitud', $solicitud['id_solicitud'])
+                ->update(['firmante_email' => $emailActual]);
+        }
+    }
+
+    /**
      * Solicitar firma para un documento
      */
     public function solicitar($idDocumento)
@@ -896,6 +947,10 @@ class FirmaElectronicaController extends Controller
         // Obtener datos actualizados y documento
         $solicitudActualizada = $this->firmaModel->find($idSolicitud);
         $documento = $this->getDocumentoSST($solicitud['id_documento']);
+
+        // Refrescar email desde la fuente actual antes de enviar
+        $this->refrescarEmailFirmante($solicitudActualizada, $documento);
+        $solicitudActualizada = $this->firmaModel->find($idSolicitud);
 
         // Determinar email destino
         $emailDestino = $solicitudActualizada['firmante_email'];
