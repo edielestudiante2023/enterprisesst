@@ -2457,6 +2457,64 @@ class ComitesEleccionesController extends BaseController
     }
 
     /**
+     * Editar datos de un jurado (AJAX)
+     */
+    public function editarJurado(int $idJurado)
+    {
+        $jurado = $this->db->table('tbl_jurados_proceso')
+            ->where('id_jurado', $idJurado)
+            ->get()->getRowArray();
+
+        if (!$jurado) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Jurado no encontrado']);
+        }
+
+        $nombres   = trim($this->request->getPost('nombres') ?? '');
+        $apellidos = trim($this->request->getPost('apellidos') ?? '');
+        $cargo     = trim($this->request->getPost('cargo') ?? '');
+        $email     = trim($this->request->getPost('email') ?? '');
+        $telefono  = trim($this->request->getPost('telefono') ?? '');
+        $rol       = $this->request->getPost('rol') ?? $jurado['rol'];
+
+        if (empty($nombres) || empty($apellidos)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Nombres y apellidos son requeridos']);
+        }
+
+        // Si cambia a rol único (presidente/secretario), verificar que no exista otro
+        if (in_array($rol, ['presidente', 'secretario']) && $rol !== $jurado['rol']) {
+            $rolExiste = $this->db->table('tbl_jurados_proceso')
+                ->where('id_proceso', $jurado['id_proceso'])
+                ->where('rol', $rol)
+                ->where('estado', 'activo')
+                ->where('id_jurado !=', $idJurado)
+                ->get()->getRowArray();
+
+            if ($rolExiste) {
+                $label = $rol === 'presidente' ? 'Presidente' : 'Secretario';
+                return $this->response->setJSON(['success' => false, 'message' => "Ya existe un $label en este proceso"]);
+            }
+        }
+
+        $this->db->table('tbl_jurados_proceso')
+            ->where('id_jurado', $idJurado)
+            ->update([
+                'nombres'   => $nombres,
+                'apellidos' => $apellidos,
+                'cargo'     => $cargo,
+                'email'     => $email,
+                'telefono'  => $telefono,
+                'rol'       => $rol,
+            ]);
+
+        return $this->response->setJSON([
+            'success'        => true,
+            'message'        => 'Jurado actualizado',
+            'nombre_completo' => "$nombres $apellidos",
+            'rol'            => $rol,
+        ]);
+    }
+
+    /**
      * Buscar trabajador para agregar como jurado (AJAX)
      * Busca en votantes del proceso o en trabajadores del cliente
      */

@@ -1274,6 +1274,7 @@ $routes->post('/comites-elecciones/admin/cancelar-proceso', 'ComitesEleccionesCo
 $routes->post('/comites-elecciones/jurado/agregar', 'ComitesEleccionesController::agregarJurado');
 $routes->get('/comites-elecciones/proceso/(:num)/jurados', 'ComitesEleccionesController::obtenerJurados/$1');
 $routes->post('/comites-elecciones/jurado/(:num)/eliminar', 'ComitesEleccionesController::eliminarJurado/$1');
+$routes->post('/comites-elecciones/jurado/(:num)/editar', 'ComitesEleccionesController::editarJurado/$1');
 $routes->get('/comites-elecciones/proceso/(:num)/buscar-trabajador', 'ComitesEleccionesController::buscarTrabajadorJurado/$1');
 
 // Acta de Constitucion del Comite

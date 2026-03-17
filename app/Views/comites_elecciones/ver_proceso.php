@@ -997,9 +997,21 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
                                         </span>
                                     </small>
                                 </div>
-                                <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-jurado" data-id="<?= $j['id_jurado'] ?>" data-nombre="<?= esc($j['nombres'] . ' ' . $j['apellidos']) ?>">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-editar-jurado"
+                                        data-id="<?= $j['id_jurado'] ?>"
+                                        data-nombres="<?= esc($j['nombres']) ?>"
+                                        data-apellidos="<?= esc($j['apellidos']) ?>"
+                                        data-cargo="<?= esc($j['cargo'] ?? '') ?>"
+                                        data-email="<?= esc($j['email'] ?? '') ?>"
+                                        data-telefono="<?= esc($j['telefono'] ?? '') ?>"
+                                        data-rol="<?= esc($j['rol']) ?>">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-jurado" data-id="<?= $j['id_jurado'] ?>" data-nombre="<?= esc($j['nombres'] . ' ' . $j['apellidos']) ?>">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </li>
                             <?php endforeach; ?>
                         </ul>
@@ -1115,6 +1127,66 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
     </div>
 </div>
 
+<!-- Modal Editar Jurado -->
+<div class="modal fade" id="modalEditarJurado" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary bg-opacity-10">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil-square text-secondary me-2"></i>Editar Jurado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarJurado">
+                    <input type="hidden" id="editJuradoId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombres <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editJuradoNombres" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Apellidos <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editJuradoApellidos" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Rol</label>
+                            <select class="form-select" id="editJuradoRol">
+                                <option value="presidente">Presidente de Mesa</option>
+                                <option value="secretario">Secretario</option>
+                                <option value="escrutador">Escrutador</option>
+                                <option value="testigo">Testigo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cargo</label>
+                            <input type="text" class="form-control" id="editJuradoCargo">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editJuradoEmail">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefono</label>
+                            <input type="text" class="form-control" id="editJuradoTelefono">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarEdicionJurado">
+                    <i class="bi bi-check-lg me-1"></i>Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 function copiarEnlace() {
@@ -1218,6 +1290,54 @@ document.addEventListener('DOMContentLoaded', function() {
     modalJurado.addEventListener('hidden.bs.modal', function() {
         document.getElementById('formAgregarJurado').reset();
         document.getElementById('buscarDocumento').value = '';
+    });
+
+    // Editar jurado — abrir modal con datos
+    const bsModalEditarJurado = new bootstrap.Modal(document.getElementById('modalEditarJurado'));
+    document.querySelectorAll('.btn-editar-jurado').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('editJuradoId').value       = this.dataset.id;
+            document.getElementById('editJuradoNombres').value  = this.dataset.nombres;
+            document.getElementById('editJuradoApellidos').value = this.dataset.apellidos;
+            document.getElementById('editJuradoCargo').value    = this.dataset.cargo;
+            document.getElementById('editJuradoEmail').value    = this.dataset.email;
+            document.getElementById('editJuradoTelefono').value = this.dataset.telefono;
+            document.getElementById('editJuradoRol').value      = this.dataset.rol;
+            bsModalEditarJurado.show();
+        });
+    });
+
+    document.getElementById('btnGuardarEdicionJurado').addEventListener('click', function() {
+        const idJurado = document.getElementById('editJuradoId').value;
+        const nombres  = document.getElementById('editJuradoNombres').value.trim();
+        const apellidos = document.getElementById('editJuradoApellidos').value.trim();
+        if (!nombres || !apellidos) {
+            Swal.fire('', 'Nombres y apellidos son requeridos', 'warning');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('nombres',   nombres);
+        formData.append('apellidos', apellidos);
+        formData.append('cargo',     document.getElementById('editJuradoCargo').value);
+        formData.append('email',     document.getElementById('editJuradoEmail').value);
+        formData.append('telefono',  document.getElementById('editJuradoTelefono').value);
+        formData.append('rol',       document.getElementById('editJuradoRol').value);
+
+        fetch(`<?= base_url('comites-elecciones/jurado') ?>/${idJurado}/editar`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                bsModalEditarJurado.hide();
+                Swal.fire({ icon: 'success', title: 'Guardado', timer: 1500, showConfirmButton: false })
+                    .then(() => location.reload());
+            } else {
+                Swal.fire('Error', data.message, 'error');
+            }
+        })
+        .catch(() => Swal.fire('Error', 'Error al guardar', 'error'));
     });
 
     // Eliminar jurado
