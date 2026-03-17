@@ -170,3 +170,52 @@ function autoResize(el) {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
+
+// ─── Finalizar sesión / Email ─────────────────────────────────────
+const INACTIVITY_MS  = 10 * 60 * 1000;
+let inactivityTimer  = null;
+let sessionEmailSent = false;
+
+function sendSessionEmail() {
+    if (sessionEmailSent || historial.length === 0) return;
+    sessionEmailSent = true;
+    const payload = JSON.stringify({ history: historial });
+    if (navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: 'application/json' });
+        navigator.sendBeacon(BASE_URL + 'cliente/chat/end-session', blob);
+    } else {
+        fetch(BASE_URL + 'cliente/chat/end-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true
+        });
+    }
+}
+
+function resetInactivityTimer() {
+    sessionEmailSent = false;
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(sendSessionEmail, INACTIVITY_MS);
+}
+
+['keydown', 'mousedown', 'touchstart', 'click'].forEach(function(evt) {
+    document.addEventListener(evt, resetInactivityTimer, { passive: true });
+});
+
+window.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') sendSessionEmail();
+});
+window.addEventListener('beforeunload', sendSessionEmail);
+
+resetInactivityTimer();
+
+async function finalizarConversacion() {
+    if (historial.length === 0) {
+        window.location.href = BASE_URL + 'client/dashboard';
+        return;
+    }
+    if (!confirm('¿Finalizar la conversación con Otto?')) return;
+    sendSessionEmail();
+    window.location.href = BASE_URL + 'client/dashboard';
+}

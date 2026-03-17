@@ -1662,3 +1662,4 @@ $routes->get('agente-chat/api/tabla/(:segment)', 'AgenteChatController::infoTabl
 // ─── Agente Virtual de Chat - Cliente (solo lectura) ──────────
 $routes->get('cliente/chat', 'ClienteChatController::index');
 $routes->post('cliente/chat/api/mensaje', 'ClienteChatController::enviarMensaje');
+$routes->post('cliente/chat/end-session', 'ClienteChatController::endSession');

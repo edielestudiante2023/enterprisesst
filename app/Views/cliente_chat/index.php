@@ -368,10 +368,16 @@
                 <img src="<?= base_url('img/otto/otto.png') ?>" alt="Otto">
                 Otto
             </div>
-            <a href="<?= base_url('client/dashboard') ?>" class="btn-back">
-                <i class="fas fa-arrow-left"></i>
-                <span>Dashboard</span>
-            </a>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button onclick="finalizarConversacion()" style="background:#c0392b;color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                    <i class="fas fa-stop-circle"></i>
+                    <span>Finalizar</span>
+                </button>
+                <a href="<?= base_url('client/dashboard') ?>" class="btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
         </div>
     </nav>
 
