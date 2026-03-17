@@ -361,9 +361,8 @@ ADVERTENCIAS:
     {
         $prompts = json_decode($promptJson, true);
 
-        // Inyectar instrucción de vigencia en el prompt del usuario
-        $userPromptConVigencia = $prompts['user'] . "\n\n" .
-            "=== INSTRUCCIÓN CRÍTICA DE VIGENCIA NORMATIVA ===\n" .
+        $instruccionVigencia =
+            "\n\n=== INSTRUCCIÓN CRÍTICA DE VIGENCIA NORMATIVA ===\n" .
             "Año de referencia: " . date('Y') . ".\n" .
             "SOLO incluye normas VIGENTES en Colombia a la fecha actual.\n" .
             "NUNCA cites como vigentes normas derogadas. Si una norma fue derogada, " .
@@ -372,67 +371,92 @@ ADVERTENCIAS:
             "- Resolución 1111 de 2017 (derogada por Resolución 0312 de 2019)\n" .
             "- Resolución 652 de 2012 (derogada por Resolución 3461 de 2025)\n" .
             "- Resolución 1356 de 2012 (derogada por Resolución 3461 de 2025)\n" .
-            "Usa búsqueda web para verificar la vigencia actual de cada norma antes de citarla.";
+            "- Resolución 652 de 2012 (derogada por Resolución 3641 de 2026 para COCOLAB)";
 
-        $data = [
-            'model' => 'gpt-4o-mini-search-preview',
-            'tools' => [['type' => 'web_search_preview']],
-            'input' => [
-                ['role' => 'system', 'content' => $prompts['system']],
-                ['role' => 'user',   'content' => $userPromptConVigencia]
-            ]
-        ];
+        // Intentar primero con la Responses API (web search en tiempo real)
+        $modelos = ['gpt-4o-search-preview', 'gpt-4o-mini-search-preview'];
 
-        $ch = curl_init('https://api.openai.com/v1/responses');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_HTTPHEADER     => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $this->apiKey
-            ],
-            CURLOPT_POSTFIELDS     => json_encode($data),
-            CURLOPT_TIMEOUT        => 90,
-            CURLOPT_SSL_VERIFYPEER => false
-        ]);
+        foreach ($modelos as $modelo) {
+            $data = [
+                'model' => $modelo,
+                'tools' => [['type' => 'web_search_preview']],
+                'input' => [
+                    ['role' => 'system', 'content' => $prompts['system']],
+                    ['role' => 'user',   'content' => $prompts['user'] . $instruccionVigencia]
+                ]
+            ];
 
-        $response = curl_exec($ch);
-        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error     = curl_error($ch);
-        curl_close($ch);
+            $ch = curl_init('https://api.openai.com/v1/responses');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST           => true,
+                CURLOPT_HTTPHEADER     => [
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $this->apiKey
+                ],
+                CURLOPT_POSTFIELDS     => json_encode($data),
+                CURLOPT_TIMEOUT        => 90,
+                CURLOPT_SSL_VERIFYPEER => false
+            ]);
 
-        if ($error) {
-            log_message('error', "WebSearch marco legal curl error: {$error}");
-            return ['success' => false, 'error' => "Error de conexión: {$error}"];
-        }
+            $response = curl_exec($ch);
+            $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
 
-        $result = json_decode($response, true);
+            if ($curlError) {
+                log_message('error', "WebSearch [{$modelo}] curl error: {$curlError}");
+                continue;
+            }
 
-        if ($httpCode !== 200) {
-            $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
-            log_message('error', "WebSearch marco legal API error ({$httpCode}): {$errorMsg}");
-            return ['success' => false, 'error' => $errorMsg];
-        }
+            $result = json_decode($response, true);
 
-        // La Responses API devuelve output[] con items de tipo 'message'
-        if (!empty($result['output'])) {
-            foreach ($result['output'] as $item) {
-                if ($item['type'] === 'message' && !empty($item['content'])) {
-                    foreach ($item['content'] as $part) {
-                        if ($part['type'] === 'output_text' && !empty($part['text'])) {
-                            return [
-                                'success'   => true,
-                                'contenido' => trim($part['text']),
-                                'tokens'    => $result['usage']['total_tokens'] ?? 0
-                            ];
+            if ($httpCode !== 200) {
+                $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
+                log_message('warning', "WebSearch [{$modelo}] falló ({$httpCode}): {$errorMsg} — intentando siguiente modelo");
+                continue;
+            }
+
+            // Parsear respuesta Responses API
+            if (!empty($result['output'])) {
+                foreach ($result['output'] as $item) {
+                    if ($item['type'] === 'message' && !empty($item['content'])) {
+                        foreach ($item['content'] as $part) {
+                            if ($part['type'] === 'output_text' && !empty($part['text'])) {
+                                log_message('info', "WebSearch marco legal: OK con modelo {$modelo}");
+                                return [
+                                    'success'   => true,
+                                    'contenido' => trim($part['text']),
+                                    'tokens'    => $result['usage']['total_tokens'] ?? 0
+                                ];
+                            }
                         }
                     }
                 }
             }
+
+            log_message('warning', "WebSearch [{$modelo}]: respuesta inesperada, intentando siguiente");
         }
 
-        log_message('error', "WebSearch marco legal: respuesta inesperada: " . substr($response, 0, 500));
-        return ['success' => false, 'error' => 'Respuesta inesperada de la API web search'];
+        // Fallback: Chat Completions con gpt-4o-mini + instrucción de vigencia estática
+        log_message('warning', "WebSearch: ambos modelos fallaron, usando fallback gpt-4o-mini con normas estáticas");
+
+        $promptFallback = json_encode([
+            'system' => $prompts['system'],
+            'user'   => $prompts['user'] . $instruccionVigencia .
+                "\n\nNormas SST colombianas VIGENTES de referencia (verificadas):\n" .
+                "- Ley 9 de 1979 (Código Sanitario)\n" .
+                "- Decreto 1072 de 2015 (Decreto Único Reglamentario Sector Trabajo)\n" .
+                "- Resolución 0312 de 2019 (Estándares Mínimos SG-SST)\n" .
+                "- Ley 1562 de 2012 (Sistema General de Riesgos Laborales)\n" .
+                "- Decreto 1477 de 2014 (Tabla de Enfermedades Laborales)\n" .
+                "- Resolución 2400 de 1979 (Estatuto Seguridad Industrial)\n" .
+                "- Resolución 3461 de 2025 (COPASST — deroga 652/2012 y 1356/2012)\n" .
+                "- Resolución 3641 de 2026 (COCOLAB — vigente)\n" .
+                "Cita SOLO las que apliquen al tema específico del documento."
+        ]);
+
+        return $this->llamarAPI($promptFallback, $nombreSeccion);
     }
 
     /**
