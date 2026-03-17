@@ -1246,6 +1246,7 @@ $routes->post('/comites-elecciones/guardar-candidato', 'ComitesEleccionesControl
 $routes->get('/comites-elecciones/proceso/(:num)/candidatos', 'ComitesEleccionesController::listaCandidatos/$1');
 $routes->get('/comites-elecciones/candidato/(:num)/editar', 'ComitesEleccionesController::editarCandidato/$1');
 $routes->post('/comites-elecciones/candidato/(:num)/actualizar', 'ComitesEleccionesController::actualizarCandidato/$1');
+$routes->post('/comites-elecciones/candidato/(:num)/email', 'ComitesEleccionesController::actualizarEmailCandidato/$1');
 $routes->post('/comites-elecciones/candidato/(:num)/eliminar', 'ComitesEleccionesController::eliminarCandidato/$1');
 $routes->get('/comites-elecciones/candidato/(:num)', 'ComitesEleccionesController::verCandidato/$1');
 

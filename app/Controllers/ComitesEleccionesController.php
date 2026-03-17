@@ -978,6 +978,36 @@ class ComitesEleccionesController extends BaseController
             ->with('success', 'Candidato actualizado correctamente');
     }
 
+    /**
+     * Actualizar solo el email de un candidato (AJAX)
+     */
+    public function actualizarEmailCandidato(int $idCandidato)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Solo AJAX']);
+        }
+
+        $candidato = $this->db->table('tbl_candidatos_comite')
+            ->where('id_candidato', $idCandidato)
+            ->get()
+            ->getRowArray();
+
+        if (!$candidato) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Candidato no encontrado']);
+        }
+
+        $email = trim($this->request->getJSON(true)['email'] ?? '');
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->response->setStatusCode(422)->setJSON(['error' => 'Email invalido']);
+        }
+
+        $this->db->table('tbl_candidatos_comite')
+            ->where('id_candidato', $idCandidato)
+            ->update(['email' => $email, 'updated_at' => date('Y-m-d H:i:s')]);
+
+        return $this->response->setJSON(['success' => true, 'email' => $email]);
+    }
+
     // =========================================================================
     // FASE 3: SISTEMA DE VOTACION ELECTRONICA
     // =========================================================================
@@ -3013,6 +3043,7 @@ class ComitesEleccionesController extends BaseController
             $firmantesDisponibles[] = [
                 'grupo' => 'Miembros del Comité - Empleador (Principales)',
                 'tipo' => $tipoFirma,
+                'id_candidato' => $miembro['id_candidato'],
                 'nombre' => $miembro['nombres'] . ' ' . $miembro['apellidos'],
                 'cargo' => $miembro['cargo'] ?? 'Representante del Empleador',
                 'cedula' => $miembro['cedula'] ?? '',
@@ -3028,6 +3059,7 @@ class ComitesEleccionesController extends BaseController
             $firmantesDisponibles[] = [
                 'grupo' => 'Miembros del Comité - Empleador (Suplentes)',
                 'tipo' => $tipoFirma,
+                'id_candidato' => $miembro['id_candidato'],
                 'nombre' => $miembro['nombres'] . ' ' . $miembro['apellidos'],
                 'cargo' => $miembro['cargo'] ?? 'Representante del Empleador (Suplente)',
                 'cedula' => $miembro['cedula'] ?? '',
@@ -3043,6 +3075,7 @@ class ComitesEleccionesController extends BaseController
             $firmantesDisponibles[] = [
                 'grupo' => 'Miembros del Comité - Trabajadores (Principales)',
                 'tipo' => $tipoFirma,
+                'id_candidato' => $miembro['id_candidato'],
                 'nombre' => $miembro['nombres'] . ' ' . $miembro['apellidos'],
                 'cargo' => $miembro['cargo'] ?? 'Representante de los Trabajadores',
                 'cedula' => $miembro['cedula'] ?? '',
@@ -3058,6 +3091,7 @@ class ComitesEleccionesController extends BaseController
             $firmantesDisponibles[] = [
                 'grupo' => 'Miembros del Comité - Trabajadores (Suplentes)',
                 'tipo' => $tipoFirma,
+                'id_candidato' => $miembro['id_candidato'],
                 'nombre' => $miembro['nombres'] . ' ' . $miembro['apellidos'],
                 'cargo' => $miembro['cargo'] ?? 'Representante de los Trabajadores (Suplente)',
                 'cedula' => $miembro['cedula'] ?? '',

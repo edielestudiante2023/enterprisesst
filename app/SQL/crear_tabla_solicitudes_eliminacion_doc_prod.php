@@ -4,23 +4,14 @@
  * Ejecutar: php app/SQL/crear_tabla_solicitudes_eliminacion_doc_prod.php
  */
 
-$host   = getenv('DB_HOST_PROD') ?: getenv('DB_HOST') ?: '127.0.0.1';
-$user   = getenv('DB_USER_PROD') ?: getenv('DB_USER') ?: 'root';
-$pass   = getenv('DB_PASS_PROD') ?: getenv('DB_PASS') ?: '';
-$dbname = getenv('DB_NAME_PROD') ?: getenv('DB_NAME') ?: 'empresas_sst';
-$port   = getenv('DB_PORT_PROD') ?: 3306;
+$dsn  = 'mysql:host=db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com;port=25060;dbname=empresas_sst;charset=utf8mb4';
+$user = 'cycloid_userdb';
+$pass = 'AVNS_iDypWizlpMRwHIORJGG';
 
-$dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
-$opts = [PDO::MYSQL_ATTR_SSL_CA => true, PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false];
-
-try {
-    $pdo = new PDO($dsn, $user, $pass, $opts);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    // Fallback sin SSL
-    $pdo = new PDO($dsn, $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-}
+$pdo = new PDO($dsn, $user, $pass, [
+    PDO::ATTR_ERRMODE                  => PDO::ERRMODE_EXCEPTION,
+    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+]);
 
 $sql = "
 CREATE TABLE IF NOT EXISTS tbl_solicitudes_eliminacion_doc (

@@ -237,6 +237,7 @@ $tipoComiteNombre = [
                     $yasolicitado = $firmante['ya_solicitado'];
                     $firmado = $firmante['estado_firma'] === 'firmado';
                     $sinEmail = empty($firmante['email']);
+                    $idCandidato = $firmante['id_candidato'] ?? null;
                     $claseItem = $firmado ? 'firmado' : ($yasolicitado ? 'ya-solicitado' : '');
                 ?>
                 <div class="firmante-item <?= $claseItem ?>">
@@ -283,6 +284,11 @@ $tipoComiteNombre = [
                                 <span class="badge bg-warning text-dark badge-estado">
                                     <i class="fas fa-clock me-1"></i> Pendiente
                                 </span>
+                            <?php elseif ($sinEmail && $idCandidato): ?>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="abrirModalEmail(<?= (int)$idCandidato ?>, '<?= esc($firmante['nombre'], 'js') ?>')">
+                                    <i class="fas fa-envelope me-1"></i> Agregar email
+                                </button>
                             <?php elseif ($sinEmail): ?>
                                 <span class="email-warning">
                                     <i class="fas fa-envelope-open me-1"></i> Sin email
@@ -322,7 +328,85 @@ $tipoComiteNombre = [
     </form>
 </div>
 
+<!-- Modal agregar email -->
+<div class="modal fade" id="modalAgregarEmail" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="fas fa-envelope me-2"></i>Agregar email</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3" id="modalEmailNombre"></p>
+                <label class="form-label fw-bold">Correo electronico <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="inputEmailCandidato" placeholder="nombre@empresa.com">
+                <div class="invalid-feedback" id="emailError">Ingrese un email valido</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnGuardarEmail" onclick="guardarEmail()">
+                    <i class="fas fa-save me-1"></i>Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+let emailCandidatoId = null;
+const modalEmail = new bootstrap.Modal(document.getElementById('modalAgregarEmail'));
+
+function abrirModalEmail(idCandidato, nombre) {
+    emailCandidatoId = idCandidato;
+    document.getElementById('modalEmailNombre').textContent = nombre;
+    document.getElementById('inputEmailCandidato').value = '';
+    document.getElementById('inputEmailCandidato').classList.remove('is-invalid');
+    modalEmail.show();
+}
+
+function guardarEmail() {
+    const email = document.getElementById('inputEmailCandidato').value.trim();
+    const input = document.getElementById('inputEmailCandidato');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        input.classList.add('is-invalid');
+        return;
+    }
+    input.classList.remove('is-invalid');
+
+    const btn = document.getElementById('btnGuardarEmail');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
+
+    fetch(`<?= base_url('comites-elecciones/candidato/') ?>${emailCandidatoId}/email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': '<?= csrf_hash() ?>'
+        },
+        body: JSON.stringify({ email })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            modalEmail.hide();
+            location.reload();
+        } else {
+            input.classList.add('is-invalid');
+            document.getElementById('emailError').textContent = data.error || 'Error al guardar';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save me-1"></i>Guardar';
+        }
+    })
+    .catch(() => {
+        input.classList.add('is-invalid');
+        document.getElementById('emailError').textContent = 'Error de conexion';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save me-1"></i>Guardar';
+    });
+}
+
 function seleccionarTodos(seleccionar) {
     document.querySelectorAll('.checkbox-firmante').forEach(cb => {
         cb.checked = seleccionar;
