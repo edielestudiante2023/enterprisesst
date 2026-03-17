@@ -133,18 +133,11 @@ $subtitulo = $esEmpleador
                                 <div class="form-text mt-2">JPG, PNG. Max 2MB</div>
                             </div>
                             <div class="col-md-8">
-                                <!-- Nombres y Apellidos -->
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="nombres" class="form-label fw-bold">Nombres <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="nombres" name="nombres" required
-                                               value="<?= old('nombres') ?>" placeholder="Ej: Juan Carlos">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="apellidos" class="form-label fw-bold">Apellidos <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="apellidos" name="apellidos" required
-                                               value="<?= old('apellidos') ?>" placeholder="Ej: Perez Garcia">
-                                    </div>
+                                <!-- Nombre completo -->
+                                <div class="mb-3">
+                                    <label for="nombre_completo" class="form-label fw-bold">Nombre completo <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nombre_completo" name="nombre_completo" required
+                                           value="<?= old('nombre_completo') ?>" placeholder="Ej: Juan Carlos Perez Garcia">
                                 </div>
                                 <!-- Documento -->
                                 <div class="row">

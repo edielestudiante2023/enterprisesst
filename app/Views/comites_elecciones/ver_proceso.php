@@ -663,12 +663,18 @@ $permitirGestionCandidatos = true;
                                     <?php endif; ?>
                                     <?php if (!$esVistaHistorica): ?>
                                     <td>
-                                        <form action="<?= base_url('comites-elecciones/candidato/' . $e['id_candidato'] . '/eliminar') ?>" method="post" class="d-inline"
-                                              onsubmit="return confirm('¿Eliminar este representante?');">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="<?= base_url('comites-elecciones/candidato/' . $e['id_candidato'] . '/editar') ?>"
+                                               class="btn btn-outline-primary" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form action="<?= base_url('comites-elecciones/candidato/' . $e['id_candidato'] . '/eliminar') ?>" method="post" class="d-inline"
+                                                  onsubmit="return confirm('¿Eliminar este representante?');">
+                                                <button type="submit" class="btn btn-outline-danger" title="Eliminar">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                     <?php endif; ?>
                                 </tr>

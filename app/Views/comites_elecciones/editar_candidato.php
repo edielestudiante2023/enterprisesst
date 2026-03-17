@@ -90,17 +90,10 @@ $esEmpleador = $candidato['representacion'] === 'empleador';
                             </div>
                             <div class="col-md-8">
                                 <!-- Nombres y Apellidos -->
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="nombres" class="form-label fw-bold">Nombres <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="nombres" name="nombres" required
-                                               value="<?= esc($candidato['nombres']) ?>">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="apellidos" class="form-label fw-bold">Apellidos <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="apellidos" name="apellidos" required
-                                               value="<?= esc($candidato['apellidos']) ?>">
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="nombre_completo" class="form-label fw-bold">Nombre completo <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nombre_completo" name="nombre_completo" required
+                                           value="<?= esc(trim($candidato['nombres'] . ' ' . $candidato['apellidos'])) ?>">
                                 </div>
                                 <!-- Documento (solo lectura) -->
                                 <div class="row">

@@ -645,15 +645,7 @@ class ComitesEleccionesController extends BaseController
 
         $cliente = $this->clienteModel->find($proceso['id_cliente']);
 
-        // Validar estado (incluye votacion para permitir reemplazos durante votación)
-        $estadosPermitidos = ['inscripcion', 'configuracion', 'votacion'];
-        if ($representacion === 'empleador') {
-            $estadosPermitidos[] = 'designacion_empleador';
-        }
-
-        if (!in_array($proceso['estado'], $estadosPermitidos)) {
-            return redirect()->back()->with('error', 'El proceso no permite inscripciones en este estado');
-        }
+        // Sin restricción de estado — el consultor puede inscribir en cualquier fase
 
         // Validar documento único en el proceso
         $documentoIdentidad = $this->request->getPost('documento_identidad');
@@ -711,11 +703,12 @@ class ComitesEleccionesController extends BaseController
         }
 
         // Insertar candidato
+        $nombreCompleto = trim($this->request->getPost('nombre_completo') ?? '');
         $this->db->table('tbl_candidatos_comite')->insert([
             'id_proceso' => $idProceso,
             'id_cliente' => $proceso['id_cliente'],
-            'nombres' => $this->request->getPost('nombres'),
-            'apellidos' => $this->request->getPost('apellidos'),
+            'nombres'    => $nombreCompleto,
+            'apellidos'  => '',
             'documento_identidad' => $documentoIdentidad,
             'tipo_documento' => $this->request->getPost('tipo_documento') ?? 'CC',
             'cargo' => $this->request->getPost('cargo'),
@@ -967,11 +960,12 @@ class ComitesEleccionesController extends BaseController
         }
 
         // Actualizar datos
+        $nombreCompleto = trim($this->request->getPost('nombre_completo') ?? '');
         $this->db->table('tbl_candidatos_comite')
             ->where('id_candidato', $idCandidato)
             ->update([
-                'nombres' => $this->request->getPost('nombres'),
-                'apellidos' => $this->request->getPost('apellidos'),
+                'nombres'   => $nombreCompleto,
+                'apellidos' => '',
                 'cargo' => $this->request->getPost('cargo'),
                 'area' => $this->request->getPost('area'),
                 'email' => $this->request->getPost('email'),
