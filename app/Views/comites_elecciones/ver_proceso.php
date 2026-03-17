@@ -16,7 +16,8 @@ $faseVisualizar = $_GET['fase'] ?? $proceso['estado'];
 $esVistaHistorica = isset($_GET['fase']) && $_GET['fase'] !== $proceso['estado'];
 
 // Permitir gestionar candidatos desde inscripcion aunque el proceso este en votacion
-$permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscripcion' && $proceso['estado'] === 'votacion');
+// Permitir editar candidatos si estamos en la fase inscripcion (aunque el proceso esté más adelante)
+$permitirGestionCandidatos = !$esVistaHistorica || $faseVisualizar === 'inscripcion';
 ?>
 
 <div class="container-fluid py-4">

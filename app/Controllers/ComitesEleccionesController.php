@@ -912,11 +912,6 @@ class ComitesEleccionesController extends BaseController
             return redirect()->back()->with('error', 'Candidato no encontrado');
         }
 
-        // No permitir editar si ya fue elegido
-        if (in_array($candidato['estado'], ['elegido', 'no_elegido'])) {
-            return redirect()->back()->with('error', 'No se puede editar un candidato despues del escrutinio');
-        }
-
         $proceso = $this->db->table('tbl_procesos_electorales')
             ->where('id_proceso', $candidato['id_proceso'])
             ->get()
@@ -944,11 +939,6 @@ class ComitesEleccionesController extends BaseController
 
         if (!$candidato) {
             return redirect()->back()->with('error', 'Candidato no encontrado');
-        }
-
-        // No permitir editar si ya fue elegido
-        if (in_array($candidato['estado'], ['elegido', 'no_elegido'])) {
-            return redirect()->back()->with('error', 'No se puede editar un candidato despues del escrutinio');
         }
 
         $proceso = $this->db->table('tbl_procesos_electorales')
