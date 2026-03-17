@@ -1000,8 +1000,7 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
                                 <div class="d-flex gap-1">
                                     <button type="button" class="btn btn-sm btn-outline-secondary btn-editar-jurado"
                                         data-id="<?= $j['id_jurado'] ?>"
-                                        data-nombres="<?= esc($j['nombres']) ?>"
-                                        data-apellidos="<?= esc($j['apellidos']) ?>"
+                                        data-nombre="<?= esc(trim($j['nombres'] . ' ' . $j['apellidos'])) ?>"
                                         data-cargo="<?= esc($j['cargo'] ?? '') ?>"
                                         data-email="<?= esc($j['email'] ?? '') ?>"
                                         data-telefono="<?= esc($j['telefono'] ?? '') ?>"
@@ -1089,15 +1088,9 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="nombres" id="juradoNombres" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="apellidos" id="juradoApellidos" required>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre completo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="nombre_completo" id="juradoNombreCompleto" placeholder="Ej: María Fernanda López Gómez" required>
                     </div>
 
                     <div class="mb-3">
@@ -1140,15 +1133,9 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
             <div class="modal-body">
                 <form id="formEditarJurado">
                     <input type="hidden" id="editJuradoId">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="editJuradoNombres" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="editJuradoApellidos" required>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre completo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editJuradoNombreCompleto" required>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -1215,8 +1202,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success && data.encontrado) {
                     const t = data.trabajador;
                     document.getElementById('juradoDocumento').value = t.documento_identidad;
-                    document.getElementById('juradoNombres').value = t.nombres;
-                    document.getElementById('juradoApellidos').value = t.apellidos;
+                    document.getElementById('juradoNombreCompleto').value = (t.nombres + ' ' + (t.apellidos || '')).trim();
                     document.getElementById('juradoCargo').value = t.cargo || '';
                     document.getElementById('juradoEmail').value = t.email || '';
                     document.getElementById('juradoTelefono').value = t.telefono || '';
@@ -1251,10 +1237,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Validar campos requeridos
         const documento = formData.get('documento_identidad');
-        const nombres = formData.get('nombres');
-        const apellidos = formData.get('apellidos');
+        const nombres = formData.get('nombre_completo');
 
-        if (!documento || !nombres || !apellidos) {
+        if (!documento || !nombres) {
             Swal.fire('', 'Complete los campos requeridos', 'warning');
             return;
         }
@@ -1296,32 +1281,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const bsModalEditarJurado = new bootstrap.Modal(document.getElementById('modalEditarJurado'));
     document.querySelectorAll('.btn-editar-jurado').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.getElementById('editJuradoId').value       = this.dataset.id;
-            document.getElementById('editJuradoNombres').value  = this.dataset.nombres;
-            document.getElementById('editJuradoApellidos').value = this.dataset.apellidos;
-            document.getElementById('editJuradoCargo').value    = this.dataset.cargo;
-            document.getElementById('editJuradoEmail').value    = this.dataset.email;
-            document.getElementById('editJuradoTelefono').value = this.dataset.telefono;
-            document.getElementById('editJuradoRol').value      = this.dataset.rol;
+            document.getElementById('editJuradoId').value              = this.dataset.id;
+            document.getElementById('editJuradoNombreCompleto').value   = this.dataset.nombre;
+            document.getElementById('editJuradoCargo').value            = this.dataset.cargo;
+            document.getElementById('editJuradoEmail').value            = this.dataset.email;
+            document.getElementById('editJuradoTelefono').value         = this.dataset.telefono;
+            document.getElementById('editJuradoRol').value              = this.dataset.rol;
             bsModalEditarJurado.show();
         });
     });
 
     document.getElementById('btnGuardarEdicionJurado').addEventListener('click', function() {
         const idJurado = document.getElementById('editJuradoId').value;
-        const nombres  = document.getElementById('editJuradoNombres').value.trim();
-        const apellidos = document.getElementById('editJuradoApellidos').value.trim();
-        if (!nombres || !apellidos) {
+        const nombres = document.getElementById('editJuradoNombreCompleto').value.trim();
+        if (!nombres) {
             Swal.fire('', 'Nombres y apellidos son requeridos', 'warning');
             return;
         }
         const formData = new FormData();
-        formData.append('nombres',   nombres);
-        formData.append('apellidos', apellidos);
-        formData.append('cargo',     document.getElementById('editJuradoCargo').value);
-        formData.append('email',     document.getElementById('editJuradoEmail').value);
-        formData.append('telefono',  document.getElementById('editJuradoTelefono').value);
-        formData.append('rol',       document.getElementById('editJuradoRol').value);
+        formData.append('nombre_completo', nombres);
+        formData.append('cargo',           document.getElementById('editJuradoCargo').value);
+        formData.append('email',           document.getElementById('editJuradoEmail').value);
+        formData.append('telefono',        document.getElementById('editJuradoTelefono').value);
+        formData.append('rol',             document.getElementById('editJuradoRol').value);
 
         fetch(`<?= base_url('comites-elecciones/jurado') ?>/${idJurado}/editar`, {
             method: 'POST',

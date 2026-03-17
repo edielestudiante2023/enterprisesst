@@ -2319,22 +2319,25 @@ class ComitesEleccionesController extends BaseController
      */
     public function agregarJurado()
     {
-        $idProceso = $this->request->getPost('id_proceso');
-        $documento = trim($this->request->getPost('documento_identidad'));
-        $nombres = trim($this->request->getPost('nombres'));
-        $apellidos = trim($this->request->getPost('apellidos'));
-        $cargo = trim($this->request->getPost('cargo'));
-        $email = trim($this->request->getPost('email'));
-        $telefono = trim($this->request->getPost('telefono'));
-        $rol = $this->request->getPost('rol') ?? 'escrutador';
+        $idProceso      = $this->request->getPost('id_proceso');
+        $documento      = trim($this->request->getPost('documento_identidad'));
+        $nombreCompleto = trim($this->request->getPost('nombre_completo'));
+        $cargo          = trim($this->request->getPost('cargo'));
+        $email          = trim($this->request->getPost('email'));
+        $telefono       = trim($this->request->getPost('telefono'));
+        $rol            = $this->request->getPost('rol') ?? 'escrutador';
 
         // Validar campos requeridos
-        if (empty($idProceso) || empty($documento) || empty($nombres) || empty($apellidos)) {
+        if (empty($idProceso) || empty($documento) || empty($nombreCompleto)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Documento, nombres y apellidos son requeridos'
+                'message' => 'Documento y nombre completo son requeridos'
             ]);
         }
+
+        // Almacenar nombre completo en 'nombres', dejar apellidos vacío
+        $nombres   = $nombreCompleto;
+        $apellidos = '';
 
         // Obtener proceso
         $proceso = $this->db->table('tbl_procesos_electorales')
@@ -2469,16 +2472,18 @@ class ComitesEleccionesController extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Jurado no encontrado']);
         }
 
-        $nombres   = trim($this->request->getPost('nombres') ?? '');
-        $apellidos = trim($this->request->getPost('apellidos') ?? '');
-        $cargo     = trim($this->request->getPost('cargo') ?? '');
-        $email     = trim($this->request->getPost('email') ?? '');
-        $telefono  = trim($this->request->getPost('telefono') ?? '');
-        $rol       = $this->request->getPost('rol') ?? $jurado['rol'];
+        $nombreCompleto = trim($this->request->getPost('nombre_completo') ?? '');
+        $cargo          = trim($this->request->getPost('cargo') ?? '');
+        $email          = trim($this->request->getPost('email') ?? '');
+        $telefono       = trim($this->request->getPost('telefono') ?? '');
+        $rol            = $this->request->getPost('rol') ?? $jurado['rol'];
 
-        if (empty($nombres) || empty($apellidos)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Nombres y apellidos son requeridos']);
+        if (empty($nombreCompleto)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'El nombre completo es requerido']);
         }
+
+        $nombres   = $nombreCompleto;
+        $apellidos = '';
 
         // Si cambia a rol único (presidente/secretario), verificar que no exista otro
         if (in_array($rol, ['presidente', 'secretario']) && $rol !== $jurado['rol']) {
