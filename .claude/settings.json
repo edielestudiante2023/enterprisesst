@@ -13,7 +13,21 @@
       "Bash(php -r ':*)",
       "Bash(php -r \"$pdo = new PDO\\(''mysql:host=127.0.0.1;dbname=empresas_sst'', ''root'', ''''\\); $cols = $pdo->query\\(''DESCRIBE tbl_acta_asistentes''\\)->fetchAll\\(PDO::FETCH_ASSOC\\); foreach\\($cols as $c\\) echo $c[''Field''] . '' | '' . $c[''Type''] . '' | '' . $c[''Null''] . '' | '' . $c[''Key''] . PHP_EOL;\")",
       "Bash(2)",
-      "Bash(composer show:*)"
+      "Bash(composer show:*)",
+      "Bash(del \"c:\\\\xampp\\\\htdocs\\\\enterprisesst\\\\writable\\\\cache\\\\db_schema_chat.json\")",
+      "Bash(del test_otto.php)",
+      "Bash(DB_READONLY_PASS=\"EmpresasReadOnly2026!\" php create_readonly_user.php local)",
+      "Bash(DB_PROD_PASS=\"AVNS_iDypWizlpMRwHIORJGG\" DB_READONLY_PASS=\"EmpresasReadOnly2026!\" php create_readonly_user.php production)",
+      "Bash(ssh root@66.29.154.174 \"find /www/wwwroot -maxdepth 2 -name ''create_readonly_user.php'' 2>/dev/null; find /www/wwwroot -maxdepth 2 -type d -name ''enterprisesst'' 2>/dev/null\")",
+      "Bash(ssh root@66.29.154.174 \"grep -n ''readonly'' /www/wwwroot/dashboard/enterprisesst/.env\")",
+      "Bash(ssh root@66.29.154.174 \"cd /www/wwwroot/dashboard/enterprisesst && git pull origin main 2>&1 | tail -5\")",
+      "Bash(ssh root@66.29.154.174 \"cd /www/wwwroot/dashboard/enterprisesst && DB_PROD_PASS=''AVNS_iDypWizlpMRwHIORJGG'' php -r \"\":*)",
+      "Bash(ssh root@66.29.154.174 \"cd /www/wwwroot/dashboard/enterprisesst && git pull origin main --quiet && DB_PROD_PASS=''AVNS_iDypWizlpMRwHIORJGG'' php app/SQL/apply_views_production.php\")",
+      "Bash(ssh root@66.29.154.174 \"php --version | head -1 && grep -r ''PHP Fatal\\\\|readonly.*not a valid'' /www/wwwroot/dashboard/enterprisesst/writable/logs/ 2>/dev/null | tail -5\")",
+      "Bash(ssh root@66.29.154.174 \"cd /www/wwwroot/dashboard/enterprisesst && git pull origin main --quiet && echo ''pull OK''\")",
+      "Bash(ssh root@66.29.154.174 \"cd /www/wwwroot/dashboard/enterprisesst && git pull origin main --quiet && echo ''OK''\")",
+      "Bash(ssh root@66.29.154.174 \"ls /www/wwwroot/dashboard/enterprisesst/writable/logs/ | tail -5\")",
+      "Bash(ssh root@66.29.154.174 \"cd /www/wwwroot/dashboard/enterprisesst && git pull origin main 2>&1 | tail -3\")"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\enterprisesstph\\app\\Libraries"

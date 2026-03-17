@@ -9,6 +9,7 @@ $participacion = $totalVotantes > 0 ? round(($yaVotaron / $totalVotantes) * 100,
 
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 
 <div class="container-fluid py-4">
     <!-- Breadcrumb -->
@@ -191,7 +192,12 @@ $participacion = $totalVotantes > 0 ? round(($yaVotaron / $totalVotantes) * 100,
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Votantes Registrados</h5>
-                    <span class="badge bg-secondary" id="lblFiltroActivo">Todos: <?= $totalVotantes ?></span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary" id="lblFiltroActivo">Todos: <?= $totalVotantes ?></span>
+                        <button id="btnDescargarExcel" class="btn btn-success btn-sm">
+                            <i class="bi bi-file-earmark-excel me-1"></i>Descargar Excel
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <?php if (empty($votantes)): ?>
@@ -256,6 +262,7 @@ $participacion = $totalVotantes > 0 ? round(($yaVotaron / $totalVotantes) * 100,
 <?= $this->section('scripts') ?>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 var filtroActivo = 'todos';
 
@@ -298,6 +305,29 @@ function copiarEnlace(url) {
         setTimeout(() => btn.innerHTML = '<i class="bi bi-link-45deg"></i>', 1500);
     });
 }
+
+$('#btnDescargarExcel').on('click', function() {
+    var etiquetasFiltro = { todos: 'Todos', votaron: 'Votaron', pendientes: 'Pendientes' };
+    var nombreFiltro = etiquetasFiltro[filtroActivo] || 'Todos';
+    var nombreArchivo = 'Censo_Votantes_' + nombreFiltro + '_' + new Date().toISOString().slice(0,10) + '.xlsx';
+
+    var filas = [['Documento', 'Nombre', 'Cargo', 'Estado']];
+    tabla.rows({ search: 'applied' }).nodes().each(function(row) {
+        var $row = $(row);
+        var documento = $row.find('td:eq(0)').text().trim();
+        var nombre    = $row.find('td:eq(1)').text().trim();
+        var cargo     = $row.find('td:eq(2)').text().trim();
+        var estado    = $row.find('td:eq(3)').text().trim();
+        filas.push([documento, nombre, cargo, estado]);
+    });
+
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(filas);
+    // Ancho de columnas
+    ws['!cols'] = [{ wch: 15 }, { wch: 35 }, { wch: 25 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Censo');
+    XLSX.writeFile(wb, nombreArchivo);
+});
 </script>
 <?= $this->endSection() ?>
 
