@@ -390,12 +390,16 @@ class ComitesEleccionesController extends BaseController
             }
         }
 
-        // COCOLAB: Resolución 652 de 2012 / 3461 de 2025
+        // COCOLAB: Resolución 3461 de 2025 — misma escala que COPASST
         if ($tipoComite === 'COCOLAB') {
-            if ($numTrabajadores <= 19) {
+            if ($numTrabajadores >= 10 && $numTrabajadores <= 49) {
                 return ['principales' => 1, 'suplentes' => 1];
-            } else {
+            } elseif ($numTrabajadores >= 50 && $numTrabajadores <= 499) {
                 return ['principales' => 2, 'suplentes' => 2];
+            } elseif ($numTrabajadores >= 500 && $numTrabajadores <= 999) {
+                return ['principales' => 3, 'suplentes' => 3];
+            } elseif ($numTrabajadores >= 1000) {
+                return ['principales' => 4, 'suplentes' => 4];
             }
         }
 
