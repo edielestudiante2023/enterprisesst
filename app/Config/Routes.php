@@ -588,6 +588,8 @@ $routes->get('/admin/usage/chart-data', 'UsageController::chartData');
 // Monitor de Documentos SST
 $routes->get('admin/dashboard-documentos-sst', 'DashboardDocumentosSstController::index');
 $routes->get('admin/dashboard-documentos-sst/data', 'DashboardDocumentosSstController::getData');
+$routes->post('admin/dashboard-documentos-sst/solicitar-eliminacion', 'DashboardDocumentosSstController::solicitarEliminacion');
+$routes->get('admin/dashboard-documentos-sst/aprobar-eliminacion/(:segment)', 'DashboardDocumentosSstController::aprobarEliminacion/$1');
 
 // Editor de Secciones de Documentos (edición directa sin versionamiento)
 $routes->get('admin/editor-secciones', 'EditorSeccionesController::index');

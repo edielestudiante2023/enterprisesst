@@ -268,10 +268,45 @@
                     <th>Estado</th>
                     <th>Creacion</th>
                     <th>Actualizacion</th>
+                    <th class="no-export">Acciones</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
+    </div>
+</div>
+
+<!-- Modal Solicitar Eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-trash3 me-2"></i>Solicitar Eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning py-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Esta acción es <strong>irreversible</strong>. Se eliminará el documento junto con todas sus firmas y versiones. Requiere aprobación de Edison.
+                </div>
+                <div class="mb-3">
+                    <p class="mb-1"><strong id="modalDocTitulo"></strong></p>
+                    <small class="text-muted" id="modalDocCliente"></small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Motivo de eliminación <span class="text-danger">*</span></label>
+                    <textarea id="motivoEliminacion" class="form-control" rows="4" placeholder="Explica detalladamente por qué necesitas eliminar este documento..." minlength="10"></textarea>
+                    <div class="form-text">Mínimo 10 caracteres. Este motivo será enviado a Edison para su aprobación.</div>
+                </div>
+                <div id="alertaEliminar" class="alert d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
+                    <i class="bi bi-send me-1"></i>Enviar solicitud
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 <?= $this->endSection() ?>
@@ -349,6 +384,19 @@ $(document).ready(function() {
                 render: function(data) {
                     if (!data) return '-';
                     return data.substring(0, 10);
+                }
+            },
+            {
+                data: 'id_documento',
+                orderable: false,
+                searchable: false,
+                render: function(data, type, row) {
+                    return `<button class="btn btn-outline-danger btn-sm btn-eliminar"
+                                data-id="${data}"
+                                data-titulo="${row.codigo} — ${row.titulo}"
+                                data-cliente="${row.nombre_cliente}">
+                                <i class="bi bi-trash3"></i>
+                            </button>`;
                 }
             }
         ],
@@ -437,6 +485,48 @@ function cargarDatos() {
             console.error('Error cargando datos:', err);
         });
 }
+
+// ── Eliminar documento ──────────────────────────────────────────────────
+let idDocumentoAEliminar = null;
+
+$(document).on('click', '.btn-eliminar', function() {
+    idDocumentoAEliminar = $(this).data('id');
+    $('#modalDocTitulo').text($(this).data('titulo'));
+    $('#modalDocCliente').text($(this).data('cliente'));
+    $('#motivoEliminacion').val('');
+    $('#alertaEliminar').addClass('d-none').text('');
+    new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+});
+
+$('#btnConfirmarEliminar').on('click', function() {
+    const motivo = $('#motivoEliminacion').val().trim();
+    if (motivo.length < 10) {
+        $('#alertaEliminar').removeClass('d-none alert-success').addClass('alert-danger').text('El motivo debe tener al menos 10 caracteres.');
+        return;
+    }
+
+    const btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Enviando...');
+
+    fetch(`${BASE_URL}/admin/dashboard-documentos-sst/solicitar-eliminacion`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ id_documento: idDocumentoAEliminar, motivo: motivo })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.prop('disabled', false).html('<i class="bi bi-send me-1"></i>Enviar solicitud');
+        if (data.success) {
+            $('#alertaEliminar').removeClass('d-none alert-danger').addClass('alert-success').text(data.message);
+            setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('modalEliminar')).hide(), 2500);
+        } else {
+            $('#alertaEliminar').removeClass('d-none alert-success').addClass('alert-danger').text(data.message);
+        }
+    })
+    .catch(() => {
+        btn.prop('disabled', false).html('<i class="bi bi-send me-1"></i>Enviar solicitud');
+        $('#alertaEliminar').removeClass('d-none alert-success').addClass('alert-danger').text('Error de conexión. Intente nuevamente.');
+    });
+});
 
 function filtrarPorEstado(estado, element) {
     // Toggle active
