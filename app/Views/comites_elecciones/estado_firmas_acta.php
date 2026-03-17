@@ -343,6 +343,22 @@ $tipoComiteNombre = [
                                 <a href="<?= base_url("firma/audit-log/{$sol['id_solicitud']}") ?>" class="btn btn-sm btn-outline-secondary" target="_blank" title="Ver Audit Log">
                                     <i class="fas fa-history me-1"></i>Audit Log
                                 </a>
+                            <?php elseif ($sol['estado'] === 'expirado'): ?>
+                                <span class="badge bg-danger mb-2">Token expirado</span>
+                                <br>
+                                <form action="<?= base_url("firma/reenviar/{$sol['id_solicitud']}") ?>" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger me-1">
+                                        <i class="fas fa-arrow-rotate-right me-1"></i>Reenviar y reactivar token
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-warning me-1"
+                                        onclick="modalEmailAlternativo('<?= base_url("firma/reenviar/{$sol['id_solicitud']}") ?>', '<?= esc($sol['firmante_nombre']) ?>', '<?= esc($sol['firmante_email']) ?>')"
+                                        title="Enviar a email alternativo">
+                                    <i class="fas fa-at me-1"></i>Email alt.
+                                </button>
+                                <a href="<?= base_url("firma/audit-log/{$sol['id_solicitud']}") ?>" class="btn btn-sm btn-outline-secondary" target="_blank" title="Ver Audit Log">
+                                    <i class="fas fa-history me-1"></i>Audit Log
+                                </a>
                             <?php endif; ?>
                         </div>
                     </div>

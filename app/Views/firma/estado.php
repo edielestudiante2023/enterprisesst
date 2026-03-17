@@ -282,9 +282,15 @@
                                                     </button>
                                                     <?php if (in_array($sol['estado'], ['pendiente', 'expirado'])): ?>
                                                         <form action="<?= base_url('firma/reenviar/' . $sol['id_solicitud']) ?>" method="post" class="d-inline">
+                                                            <?php if ($sol['estado'] === 'expirado'): ?>
+                                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                                <i class="bi bi-arrow-clockwise me-1"></i>Reenviar y reactivar token
+                                                            </button>
+                                                            <?php else: ?>
                                                             <button type="submit" class="btn btn-sm btn-outline-primary">
                                                                 <i class="bi bi-send me-1"></i>Reenviar
                                                             </button>
+                                                            <?php endif; ?>
                                                         </form>
                                                         <button type="button" class="btn btn-sm btn-outline-warning"
                                                                 onclick="modalEmailAlternativo('<?= base_url('firma/reenviar/' . $sol['id_solicitud']) ?>', '<?= esc($sol['firmante_nombre']) ?>', '<?= esc($sol['firmante_email'] ?? '') ?>')">

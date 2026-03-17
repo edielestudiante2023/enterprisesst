@@ -309,11 +309,19 @@ $tipoComiteNombre = [
                                 ?>
                                 <span class="badge <?= $badgeClass ?> mb-2"><?= $badgeText ?></span>
                                 <br>
+                                <?php if ($sol['estado'] === 'expirado'): ?>
+                                <form action="<?= base_url('firma/reenviar/' . $sol['id_solicitud']) ?>" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-arrow-rotate-right me-1"></i>Reenviar y reactivar token
+                                    </button>
+                                </form>
+                                <?php else: ?>
                                 <a href="<?= base_url('comites-elecciones/firma/reenviar/' . $sol['id_solicitud']) ?>"
                                    class="btn btn-sm btn-outline-primary"
                                    onclick="return confirm('¿Reenviar correo de firma a <?= esc($sol['firmante_nombre']) ?>?')">
                                     <i class="fas fa-paper-plane me-1"></i> Reenviar
                                 </a>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
