@@ -287,88 +287,152 @@ ADVERTENCIAS:
     }
 
     /**
-     * Llama a la API de OpenAI
+     * Llama a la API de OpenAI.
+     * Para secciones de Marco Legal/Normativo usa gpt-4o-mini-search-preview (búsqueda web en tiempo real)
+     * para garantizar que solo se citen normas vigentes en Colombia.
      */
     protected function llamarAPI(string $promptJson, string $nombreSeccion = ''): array
     {
+        $seccionLower = strtolower($nombreSeccion);
+        $esMarcoLegal = strpos($seccionLower, 'marco') !== false &&
+                        (strpos($seccionLower, 'legal') !== false || strpos($seccionLower, 'normativ') !== false);
+
+        if ($esMarcoLegal) {
+            return $this->llamarAPIWebSearch($promptJson, $nombreSeccion);
+        }
+
         $prompts = json_decode($promptJson, true);
 
-        // Ajustar max_tokens según tipo de sección
-        // Marco Legal/Normativo requiere más tokens para listar todas las normas
-        $maxTokens = 2000; // Default
-        $seccionLower = strtolower($nombreSeccion);
-        if (strpos($seccionLower, 'marco') !== false &&
-            (strpos($seccionLower, 'legal') !== false || strpos($seccionLower, 'normativ') !== false)) {
-            $maxTokens = 3500; // Más tokens para marco legal/normativo
-        }
-
         $data = [
-            'model' => $this->model,
-            'messages' => [
+            'model'       => $this->model,
+            'messages'    => [
                 ['role' => 'system', 'content' => $prompts['system']],
-                ['role' => 'user', 'content' => $prompts['user']]
+                ['role' => 'user',   'content' => $prompts['user']]
             ],
             'temperature' => $this->temperature,
-            'max_tokens' => $maxTokens
+            'max_tokens'  => 2000
         ];
-
-        // DEBUG TEMPORAL: Loguear prompt cuando es Marco Legal
-        if (strpos($seccionLower, 'marco') !== false && strpos($seccionLower, 'legal') !== false) {
-            log_message('debug', "=== MARCO LEGAL DEBUG ===");
-            log_message('debug', "Sección: {$nombreSeccion}");
-            log_message('debug', "Max Tokens: {$maxTokens}");
-            log_message('debug', "SYSTEM PROMPT:\n" . $prompts['system']);
-            log_message('debug', "USER PROMPT:\n" . $prompts['user']);
-            log_message('debug', "=== FIN DEBUG ===");
-        }
 
         $ch = curl_init($this->apiUrl);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_HTTPHEADER => [
+            CURLOPT_POST           => true,
+            CURLOPT_HTTPHEADER     => [
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $this->apiKey
             ],
             CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_TIMEOUT => 60,
-            CURLOPT_SSL_VERIFYPEER => false // Para desarrollo local
+            CURLOPT_TIMEOUT    => 60,
+            CURLOPT_SSL_VERIFYPEER => false
         ]);
 
         $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
+        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error     = curl_error($ch);
         curl_close($ch);
 
         if ($error) {
+            return ['success' => false, 'error' => "Error de conexión: {$error}"];
+        }
+
+        $result = json_decode($response, true);
+
+        if ($httpCode !== 200) {
+            return ['success' => false, 'error' => $result['error']['message'] ?? 'Error HTTP ' . $httpCode];
+        }
+
+        if (isset($result['choices'][0]['message']['content'])) {
             return [
-                'success' => false,
-                'error' => "Error de conexión: {$error}"
+                'success'  => true,
+                'contenido' => trim($result['choices'][0]['message']['content']),
+                'tokens'   => $result['usage']['total_tokens'] ?? 0
             ];
+        }
+
+        return ['success' => false, 'error' => 'Respuesta inesperada de la API'];
+    }
+
+    /**
+     * Llama a la Responses API de OpenAI con búsqueda web en tiempo real.
+     * Exclusivo para secciones de Marco Legal/Normativo.
+     * Garantiza que solo se citen normas VIGENTES en Colombia.
+     */
+    protected function llamarAPIWebSearch(string $promptJson, string $nombreSeccion): array
+    {
+        $prompts = json_decode($promptJson, true);
+
+        // Inyectar instrucción de vigencia en el prompt del usuario
+        $userPromptConVigencia = $prompts['user'] . "\n\n" .
+            "=== INSTRUCCIÓN CRÍTICA DE VIGENCIA NORMATIVA ===\n" .
+            "Año de referencia: " . date('Y') . ".\n" .
+            "SOLO incluye normas VIGENTES en Colombia a la fecha actual.\n" .
+            "NUNCA cites como vigentes normas derogadas. Si una norma fue derogada, " .
+            "menciona ÚNICAMENTE la norma vigente que la reemplazó.\n" .
+            "Normas derogadas conocidas que NO debes citar como vigentes:\n" .
+            "- Resolución 1111 de 2017 (derogada por Resolución 0312 de 2019)\n" .
+            "- Resolución 652 de 2012 (derogada por Resolución 3461 de 2025)\n" .
+            "- Resolución 1356 de 2012 (derogada por Resolución 3461 de 2025)\n" .
+            "Usa búsqueda web para verificar la vigencia actual de cada norma antes de citarla.";
+
+        $data = [
+            'model' => 'gpt-4o-mini-search-preview',
+            'tools' => [['type' => 'web_search_preview']],
+            'input' => [
+                ['role' => 'system', 'content' => $prompts['system']],
+                ['role' => 'user',   'content' => $userPromptConVigencia]
+            ]
+        ];
+
+        $ch = curl_init('https://api.openai.com/v1/responses');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $this->apiKey
+            ],
+            CURLOPT_POSTFIELDS     => json_encode($data),
+            CURLOPT_TIMEOUT        => 90,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error     = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            log_message('error', "WebSearch marco legal curl error: {$error}");
+            return ['success' => false, 'error' => "Error de conexión: {$error}"];
         }
 
         $result = json_decode($response, true);
 
         if ($httpCode !== 200) {
             $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
-            return [
-                'success' => false,
-                'error' => $errorMsg
-            ];
+            log_message('error', "WebSearch marco legal API error ({$httpCode}): {$errorMsg}");
+            return ['success' => false, 'error' => $errorMsg];
         }
 
-        if (isset($result['choices'][0]['message']['content'])) {
-            return [
-                'success' => true,
-                'contenido' => trim($result['choices'][0]['message']['content']),
-                'tokens' => $result['usage']['total_tokens'] ?? 0
-            ];
+        // La Responses API devuelve output[] con items de tipo 'message'
+        if (!empty($result['output'])) {
+            foreach ($result['output'] as $item) {
+                if ($item['type'] === 'message' && !empty($item['content'])) {
+                    foreach ($item['content'] as $part) {
+                        if ($part['type'] === 'output_text' && !empty($part['text'])) {
+                            return [
+                                'success'   => true,
+                                'contenido' => trim($part['text']),
+                                'tokens'    => $result['usage']['total_tokens'] ?? 0
+                            ];
+                        }
+                    }
+                }
+            }
         }
 
-        return [
-            'success' => false,
-            'error' => 'Respuesta inesperada de la API'
-        ];
+        log_message('error', "WebSearch marco legal: respuesta inesperada: " . substr($response, 0, 500));
+        return ['success' => false, 'error' => 'Respuesta inesperada de la API web search'];
     }
 
     /**
