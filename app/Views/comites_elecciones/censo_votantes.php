@@ -309,9 +309,23 @@ function copiarEnlace(url) {
 $('#btnDescargarExcel').on('click', function() {
     var etiquetasFiltro = { todos: 'Todos', votaron: 'Votaron', pendientes: 'Pendientes' };
     var nombreFiltro = etiquetasFiltro[filtroActivo] || 'Todos';
-    var nombreArchivo = 'Censo_Votantes_' + nombreFiltro + '_' + new Date().toISOString().slice(0,10) + '.xlsx';
+    var fechaHoy = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    var nombreArchivo = 'Censo_<?= esc($proceso['tipo_comite']) ?>_<?= $proceso['id_proceso'] ?>_' + nombreFiltro + '_' + new Date().toISOString().slice(0,10) + '.xlsx';
 
-    var filas = [['Documento', 'Nombre', 'Cargo', 'Estado']];
+    // Filas de encabezado informativo
+    var filas = [
+        ['CENSO DE VOTANTES - <?= strtoupper(esc($proceso['tipo_comite'])) ?>'],
+        [],
+        ['Empresa:',    '<?= esc($cliente['nombre_cliente']) ?>'],
+        ['Comité:',     '<?= esc($proceso['tipo_comite']) ?>'],
+        ['Proceso N°:', '<?= $proceso['id_proceso'] ?>'],
+        ['Estado:',     '<?= ucfirst(esc($proceso['estado'])) ?>'],
+        ['Exportado:',  fechaHoy],
+        ['Filtro:',     etiquetasFiltro[filtroActivo] || 'Todos'],
+        [],
+        ['Documento', 'Nombre', 'Cargo', 'Estado']
+    ];
+
     tabla.rows({ search: 'applied' }).nodes().each(function(row) {
         var $row = $(row);
         var documento = $row.find('td:eq(0)').text().trim();
@@ -323,8 +337,7 @@ $('#btnDescargarExcel').on('click', function() {
 
     var wb = XLSX.utils.book_new();
     var ws = XLSX.utils.aoa_to_sheet(filas);
-    // Ancho de columnas
-    ws['!cols'] = [{ wch: 15 }, { wch: 35 }, { wch: 25 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 18 }, { wch: 38 }, { wch: 25 }, { wch: 14 }];
     XLSX.utils.book_append_sheet(wb, ws, 'Censo');
     XLSX.writeFile(wb, nombreArchivo);
 });
