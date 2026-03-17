@@ -216,6 +216,7 @@ $permitirGestionCandidatos = true;
                                     <th>Nombre</th>
                                     <th>Documento</th>
                                     <th>Cargo</th>
+                                    <th>Email</th>
                                     <?php if ($permitirGestionCandidatos): ?><th>Acciones</th><?php endif; ?>
                                 </tr>
                             </thead>
@@ -233,9 +234,16 @@ $permitirGestionCandidatos = true;
                                         </div>
                                         <?php endif; ?>
                                     </td>
-                                    <td><strong><?= esc($t['nombres'] . ' ' . $t['apellidos']) ?></strong></td>
+                                    <td><strong><?= esc(trim($t['nombres'] . ' ' . $t['apellidos'])) ?></strong></td>
                                     <td><?= esc($t['documento_identidad']) ?></td>
                                     <td><?= esc($t['cargo']) ?></td>
+                                    <td>
+                                        <?php if (!empty($t['email'])): ?>
+                                            <small><?= esc($t['email']) ?></small>
+                                        <?php else: ?>
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Sin email</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <?php if ($permitirGestionCandidatos): ?>
                                     <td>
                                         <div class="btn-group btn-group-sm">
@@ -612,13 +620,14 @@ $permitirGestionCandidatos = true;
                                     <th>Nombre</th>
                                     <th>Documento</th>
                                     <th>Cargo</th>
+                                    <th>Email</th>
                                     <?php if (!in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA'])): ?>
                                     <th>Plaza</th>
                                     <?php endif; ?>
                                     <?php if (in_array($proceso['tipo_comite'], ['COPASST', 'VIGIA'])): ?>
                                     <th>Cert. 50h</th>
                                     <?php endif; ?>
-                                    <?php if (!$esVistaHistorica): ?><th>Acciones</th><?php endif; ?>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -642,9 +651,16 @@ $permitirGestionCandidatos = true;
                                         </div>
                                         <?php endif; ?>
                                     </td>
-                                    <td><strong><?= esc($e['nombres'] . ' ' . $e['apellidos']) ?></strong></td>
+                                    <td><strong><?= esc(trim($e['nombres'] . ' ' . $e['apellidos'])) ?></strong></td>
                                     <td><?= esc($e['documento_identidad']) ?></td>
                                     <td><?= esc($e['cargo']) ?></td>
+                                    <td>
+                                        <?php if (!empty($e['email'])): ?>
+                                            <small><?= esc($e['email']) ?></small>
+                                        <?php else: ?>
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Sin email</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <?php if (!in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA'])): ?>
                                     <td>
                                         <span class="badge <?= $e['tipo_plaza'] === 'principal' ? 'bg-primary' : 'bg-secondary' ?>">
