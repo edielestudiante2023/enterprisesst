@@ -13,11 +13,9 @@ $iconoTipo = [
 
 // Fase a visualizar (puede venir por query param para consultores)
 $faseVisualizar = $_GET['fase'] ?? $proceso['estado'];
-$esVistaHistorica = isset($_GET['fase']) && $_GET['fase'] !== $proceso['estado'];
-
-// Permitir gestionar candidatos desde inscripcion aunque el proceso este en votacion
-// Permitir editar candidatos si estamos en la fase inscripcion (aunque el proceso esté más adelante)
-$permitirGestionCandidatos = !$esVistaHistorica || $faseVisualizar === 'inscripcion';
+// Solo muestra el badge "Vista histórica" en el encabezado; NO restringe acciones
+$esVistaHistorica = false;
+$permitirGestionCandidatos = true;
 ?>
 
 <div class="container-fluid py-4">
