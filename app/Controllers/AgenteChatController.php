@@ -92,6 +92,26 @@ class AgenteChatController extends BaseController
 
         $resultado = $this->service->procesarMensaje($mensaje, $historial, $usuario);
 
+        // Verificar que datos serializa correctamente — si falla, limpiar y reintentar
+        if (!empty($resultado['datos'])) {
+            $test = json_encode($resultado['datos']);
+            if ($test === false) {
+                // json_encode falló — forzar limpieza agresiva y reintentar
+                array_walk_recursive($resultado['datos'], function (&$v) {
+                    if (is_string($v)) {
+                        $v = mb_convert_encoding($v, 'UTF-8', 'UTF-8');
+                        $v = iconv('UTF-8', 'UTF-8//IGNORE', $v);
+                        if (mb_strlen($v) > 500) $v = mb_substr($v, 0, 500) . '…';
+                    }
+                });
+                if (json_encode($resultado['datos']) === false) {
+                    // Si sigue fallando, descartar datos y notificar
+                    $resultado['datos'] = [];
+                    $resultado['mensaje'] .= "\n\n_(Los datos tienen caracteres especiales que no se pudieron mostrar)_";
+                }
+            }
+        }
+
         return $this->response->setJSON($resultado);
     }
 

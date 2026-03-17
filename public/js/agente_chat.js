@@ -51,8 +51,13 @@ async function enviarMensaje() {
 
         if (data.tipo === 'confirmacion') {
             mostrarConfirmacion(data);
-        } else if (data.tipo === 'resultado' && data.datos?.length > 0) {
-            agregarMensajeConTabla(data.mensaje, data.datos, data.sql);
+        } else if (data.tipo === 'resultado') {
+            const filas = Array.isArray(data.datos) ? data.datos : Object.values(data.datos || {});
+            if (filas.length > 0) {
+                agregarMensajeConTabla(data.mensaje, filas, data.sql);
+            } else {
+                agregarMensajeAgente(data.mensaje);
+            }
             historial.push({ role: 'assistant', content: data.mensaje });
         } else if (data.tipo === 'modificacion') {
             agregarMensajeAgente(data.mensaje);
