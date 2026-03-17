@@ -1237,6 +1237,7 @@ $routes->post('/comites-elecciones/guardar-proceso', 'ComitesEleccionesControlle
 // Ver proceso específico
 $routes->get('/comites-elecciones/(:num)/proceso/(:num)', 'ComitesEleccionesController::verProceso/$1/$2');
 $routes->post('/comites-elecciones/proceso/(:num)/cambiar-estado/(:segment)', 'ComitesEleccionesController::cambiarEstado/$1/$2');
+$routes->post('/comites-elecciones/(:num)/proceso/(:num)/corregir-plazas', 'ComitesEleccionesController::corregirPlazas/$1/$2');
 
 // Fase 2: Inscripción de candidatos
 $routes->get('/comites-elecciones/proceso/(:num)/inscribir/(:segment)', 'ComitesEleccionesController::inscribirCandidato/$1/$2');

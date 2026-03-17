@@ -433,6 +433,29 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
                 <div class="card-body">
                     <p class="text-muted">Revise los resultados de la votacion y confirme los ganadores.</p>
 
+                    <?php if (!empty($alertaPlazas)): ?>
+                    <div class="alert alert-danger border border-danger mb-3">
+                        <div class="d-flex align-items-start gap-3">
+                            <i class="bi bi-exclamation-triangle-fill fs-4 text-danger mt-1"></i>
+                            <div class="flex-grow-1">
+                                <strong>Discrepancia en plazas detectada</strong><br>
+                                Las plazas almacenadas en este proceso (<strong><?= $alertaPlazas['almacenadas']['principales'] ?> principales + <?= $alertaPlazas['almacenadas']['suplentes'] ?> suplentes</strong>)
+                                no coinciden con la escala normativa vigente para <strong><?= $alertaPlazas['num_trabajadores'] ?> trabajadores</strong>
+                                (<?= $proceso['tipo_comite'] ?>): <strong><?= $alertaPlazas['esperadas']['principales'] ?> principales + <?= $alertaPlazas['esperadas']['suplentes'] ?> suplentes</strong>.
+                                <br><small class="text-muted">El escrutinio actual puede estar clasificando candidatos incorrectamente.</small>
+                            </div>
+                            <?php if (!$esVistaHistorica): ?>
+                            <form action="<?= base_url('comites-elecciones/' . $cliente['id_cliente'] . '/proceso/' . $proceso['id_proceso'] . '/corregir-plazas') ?>" method="post" class="flex-shrink-0">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Esto corregirá las plazas y recalculará el escrutinio automáticamente. ¿Continuar?')">
+                                    <i class="bi bi-wrench me-1"></i>Corregir ahora
+                                </button>
+                            </form>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <?php
                     // Usar candidatosTrabajadores (tabla nueva) o trabajadores (legacy)
                     $listaCandidatos = !empty($candidatosTrabajadores) ? $candidatosTrabajadores : $trabajadores;
@@ -931,6 +954,11 @@ $permitirGestionCandidatos = !$esVistaHistorica || ($faseVisualizar === 'inscrip
                         <li class="mb-2">
                             <small class="text-muted">Plazas:</small>
                             <br><strong><?= $proceso['plazas_principales'] ?> principales + <?= $proceso['plazas_suplentes'] ?> suplentes</strong>
+                            <?php if (!empty($alertaPlazas)): ?>
+                            <br><span class="badge bg-danger mt-1" title="Plazas incorrectas — esperado: <?= $alertaPlazas['esperadas']['principales'] ?>+<?= $alertaPlazas['esperadas']['suplentes'] ?>">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>Discrepancia
+                            </span>
+                            <?php endif; ?>
                         </li>
                         <li class="mb-2">
                             <small class="text-muted">Periodo:</small>

@@ -279,6 +279,26 @@ class ComitesEleccionesController extends BaseController
             ->get()
             ->getResultArray();
 
+        // Detectar discrepancia entre plazas almacenadas y escala normativa vigente
+        $alertaPlazas = null;
+        if (in_array($proceso['tipo_comite'], ['COPASST', 'COCOLAB', 'VIGIA'])) {
+            $numTrabajadores = (int)($cliente['total_trabajadores'] ?? 0);
+            if ($numTrabajadores > 0) {
+                $plazasEsperadas = $this->calcularPlazas($numTrabajadores, $proceso['tipo_comite']);
+                if ($plazasEsperadas['principales'] !== (int)$proceso['plazas_principales']
+                    || $plazasEsperadas['suplentes'] !== (int)$proceso['plazas_suplentes']) {
+                    $alertaPlazas = [
+                        'almacenadas' => [
+                            'principales' => (int)$proceso['plazas_principales'],
+                            'suplentes'   => (int)$proceso['plazas_suplentes'],
+                        ],
+                        'esperadas'       => $plazasEsperadas,
+                        'num_trabajadores' => $numTrabajadores,
+                    ];
+                }
+            }
+        }
+
         return view('comites_elecciones/ver_proceso', [
             'cliente' => $cliente,
             'proceso' => $proceso,
@@ -291,7 +311,8 @@ class ComitesEleccionesController extends BaseController
             'jurados' => $jurados,
             'voluntarios' => $voluntarios,
             'estadisticasVotacion' => $estadisticasVotacion,
-            'documentos' => $documentos
+            'documentos' => $documentos,
+            'alertaPlazas' => $alertaPlazas,
         ]);
     }
 
@@ -362,6 +383,60 @@ class ComitesEleccionesController extends BaseController
         return redirect()->back()->with('success', 'Estado actualizado a: ' . $nuevoEstado);
     }
 
+    /**
+     * Corregir plazas de un proceso y recalcular el escrutinio según escala normativa vigente.
+     * Se activa desde la alerta en la vista cuando hay discrepancia.
+     */
+    public function corregirPlazas(int $idCliente, int $idProceso)
+    {
+        $proceso = $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->where('id_cliente', $idCliente)
+            ->get()->getRowArray();
+
+        if (!$proceso) {
+            return redirect()->back()->with('error', 'Proceso no encontrado');
+        }
+
+        $cliente = $this->clienteModel->find($idCliente);
+        $numTrabajadores = (int)($cliente['total_trabajadores'] ?? 0);
+
+        if ($numTrabajadores === 0) {
+            return redirect()->back()->with('error', 'El cliente no tiene número de trabajadores registrado.');
+        }
+
+        $plazasCorrectas = $this->calcularPlazas($numTrabajadores, $proceso['tipo_comite']);
+
+        // Actualizar plazas en el proceso
+        $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->update([
+                'plazas_principales' => $plazasCorrectas['principales'],
+                'plazas_suplentes'   => $plazasCorrectas['suplentes'],
+                'updated_at'         => date('Y-m-d H:i:s'),
+            ]);
+
+        // Si el proceso está en escrutinio o posterior, recalcular elegidos
+        if (in_array($proceso['estado'], ['escrutinio', 'designacion_empleador'])) {
+            // Reset candidatos trabajadores a aprobado
+            $this->db->table('tbl_candidatos_comite')
+                ->where('id_proceso', $idProceso)
+                ->where('representacion', 'trabajador')
+                ->update(['estado' => 'aprobado', 'tipo_plaza' => null]);
+
+            // Recalcular con plazas correctas
+            $proceso['plazas_principales'] = $plazasCorrectas['principales'];
+            $proceso['plazas_suplentes']   = $plazasCorrectas['suplentes'];
+            $this->determinarElegidos($idProceso, $proceso);
+        }
+
+        $p = $plazasCorrectas['principales'];
+        $s = $plazasCorrectas['suplentes'];
+        return redirect()->back()->with('success',
+            "Plazas corregidas a {$p} principales + {$s} suplentes según normativa vigente. Escrutinio recalculado."
+        );
+    }
+
     // =========================================================================
     // MÉTODOS AUXILIARES
     // =========================================================================
@@ -390,16 +465,17 @@ class ComitesEleccionesController extends BaseController
             }
         }
 
-        // COCOLAB: Resolución 3461 de 2025 — misma escala que COPASST
+        // COCOLAB: Resolución 3641 de 2026, Art. 3
+        // < 5 trabajadores: 1 rep sin suplente
+        // 5-19 trabajadores: 1+1 con suplentes
+        // >= 20 trabajadores: 2+2 con suplentes
         if ($tipoComite === 'COCOLAB') {
-            if ($numTrabajadores >= 10 && $numTrabajadores <= 49) {
+            if ($numTrabajadores < 5) {
+                return ['principales' => 1, 'suplentes' => 0];
+            } elseif ($numTrabajadores < 20) {
                 return ['principales' => 1, 'suplentes' => 1];
-            } elseif ($numTrabajadores >= 50 && $numTrabajadores <= 499) {
+            } else {
                 return ['principales' => 2, 'suplentes' => 2];
-            } elseif ($numTrabajadores >= 500 && $numTrabajadores <= 999) {
-                return ['principales' => 3, 'suplentes' => 3];
-            } elseif ($numTrabajadores >= 1000) {
-                return ['principales' => 4, 'suplentes' => 4];
             }
         }
 
