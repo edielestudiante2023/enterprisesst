@@ -22,11 +22,13 @@ class OttoTableMap
      */
     public static function getGlobalDirectives(): string
     {
-        return 'FILTRADO POR DEFECTO: año actual. Estados activos por defecto (preguntar si piden históricos). '
-             . 'v_pta_cliente: ABIERTA|GESTIONANDO = activas. '
-             . 'v_pendientes: ABIERTA|SIN RESPUESTA DEL CLIENTE = abiertas. '
-             . 'v_vencimientos_mantenimientos: "sin ejecutar" = pendientes. '
-             . 'v_cronog_capacitacion: PROGRAMADA|REPROGRAMADA = activas.';
+        return 'FILTROS POR DEFECTO: '
+             . 'v_pta_cliente: estado_actividad IN (\'ABIERTA\',\'GESTIONANDO\') = activas. '
+             . 'v_pendientes: estado = \'ABIERTA\' = abiertas. '
+             . 'v_vencimientos_mantenimientos: estado_actividad = \'sin ejecutar\' = pendientes. '
+             . 'v_cronog_capacitacion: estado IN (\'PROGRAMADA\',\'REPROGRAMADA\') = activas. '
+             . 'v_indicadores_sst: activo = 1 (sin filtro de año — fecha_medicion puede ser NULL). '
+             . 'NO filtres por año si la tabla no tiene columna anio o fecha relevante.';
     }
 
     /**
@@ -70,7 +72,7 @@ class OttoTableMap
                 ],
                 [
                     'raw'   => 'tbl_consultor',
-                    'cols'  => ['id_consultor','nombre_consultor','email','telefono'],
+                    'cols'  => ['id_consultor','nombre_consultor','correo_consultor','telefono_consultor','rol'],
                     'desc'  => 'Consultores que atienden clientes',
                 ],
             ],
@@ -152,7 +154,7 @@ class OttoTableMap
                 ],
                 [
                     'raw'   => 'tbl_doc_tipo_configuracion',
-                    'cols'  => ['id_tipo','tipo_documento','nombre_documento','flujo','activo'],
+                    'cols'  => ['id_tipo_config','tipo_documento','nombre','flujo','activo'],
                     'desc'  => 'Catálogo de tipos de documentos SST configurados en el sistema',
                 ],
             ],
@@ -240,21 +242,22 @@ class OttoTableMap
                     'view'  => 'acc_hallazgos',
                     'table' => 'acc_hallazgos',
                     'cols'  => ['id_hallazgo','id_cliente','nombre_cliente','titulo','descripcion',
-                                'origen','estado','fecha_identificacion','responsable'],
-                    'desc'  => 'Hallazgos ACC: no conformidades, incidentes, riesgos identificados',
+                                'tipo_origen','severidad','estado','fecha_deteccion','fecha_limite_accion'],
+                    'desc'  => 'Hallazgos ACC: no conformidades, incidentes, riesgos [estados: abierto|en_tratamiento|en_verificacion|cerrado|cerrado_no_efectivo]',
                 ],
                 [
                     'view'  => 'acc_acciones',
                     'table' => 'acc_acciones',
                     'cols'  => ['id_accion','id_hallazgo','titulo_hallazgo','id_cliente','nombre_cliente',
-                                'tipo_accion','descripcion_accion','responsable','fecha_limite','estado'],
-                    'desc'  => 'Acciones correctivas, preventivas y de mejora por hallazgo',
+                                'tipo_accion','descripcion_accion','responsable_nombre','fecha_compromiso','fecha_cierre_real','estado'],
+                    'desc'  => 'Acciones correctivas, preventivas y de mejora [estados: borrador|asignada|en_ejecucion|cerrada_efectiva|cerrada_no_efectiva]',
                 ],
                 [
                     'view'  => 'acc_seguimientos',
                     'table' => 'acc_seguimientos',
-                    'cols'  => ['id_seguimiento','id_accion','tipo_accion','id_hallazgo','id_cliente',
-                                'nombre_cliente','descripcion_seguimiento','fecha_seguimiento','resultado','estado'],
+                    'cols'  => ['id_seguimiento','id_accion','tipo_accion','estado_accion','id_hallazgo',
+                                'titulo_hallazgo','id_cliente','nombre_cliente','tipo_seguimiento',
+                                'descripcion','porcentaje_avance','registrado_por_nombre','created_at'],
                     'desc'  => 'Seguimientos periódicos a acciones correctivas',
                 ],
             ],
@@ -265,27 +268,29 @@ class OttoTableMap
                     'view'  => 'actas_comite',
                     'table' => 'actas',
                     'cols'  => ['id_acta','id_cliente','nombre_cliente','id_comite','nombre_tipo_comite',
-                                'codigo_tipo_comite','numero_acta','fecha_acta','estado','tipo_reunion'],
-                    'desc'  => 'Actas de comités COPASST/COCOLAB/BRIGADA/VIGIA por cliente',
+                                'codigo_tipo_comite','numero_acta','anio','tipo_acta','fecha_reunion',
+                                'lugar','modalidad','estado','total_firmantes','firmantes_completados'],
+                    'desc'  => 'Actas de comités COPASST/COCOLAB/BRIGADA/VIGIA [estados: borrador|en_edicion|pendiente_firma|firmada|anulada]',
                 ],
                 [
                     'view'  => 'acta_compromisos',
                     'table' => 'acta_compromisos',
-                    'cols'  => ['id_compromiso','id_acta','numero_acta','id_cliente','nombre_cliente',
-                                'descripcion','responsable','fecha_limite','estado'],
-                    'desc'  => 'Compromisos adquiridos en actas de comité',
+                    'cols'  => ['id_compromiso','id_acta','numero_acta','fecha_reunion_acta','id_cliente','nombre_cliente',
+                                'descripcion','responsable_nombre','responsable_email','fecha_compromiso',
+                                'fecha_vencimiento','estado','porcentaje_avance','prioridad'],
+                    'desc'  => 'Compromisos adquiridos en actas de comité [estados: pendiente|en_proceso|cumplido|vencido|cancelado]',
                 ],
                 [
                     'view'  => 'comite_miembros',
                     'table' => 'comite_miembros',
                     'cols'  => ['id_miembro','id_comite','id_cliente','nombre_cliente','nombre_tipo_comite',
-                                'nombre_completo','cargo','rol','estado','fecha_inicio','fecha_fin'],
-                    'desc'  => 'Miembros activos de comités por cliente',
+                                'nombre_completo','cargo','representacion','rol_comite','estado','fecha_ingreso','fecha_retiro'],
+                    'desc'  => 'Miembros activos de comités por cliente [estados: activo|inactivo|retirado]',
                 ],
                 [
                     'raw'   => 'tbl_acta_asistentes',
-                    'cols'  => ['id','id_acta','nombre_asistente','cargo','firma','empresa'],
-                    'desc'  => 'Asistentes a actas de comité',
+                    'cols'  => ['id_asistente','id_acta','id_miembro','nombre_completo','cargo','email','tipo_asistente','asistio','estado_firma'],
+                    'desc'  => 'Asistentes registrados en actas de comité',
                 ],
                 [
                     'raw'   => 'tbl_tipos_comite',
