@@ -3407,8 +3407,17 @@ class ComitesEleccionesController extends BaseController
                     ->getRowArray();
                 $solicitudesCreadas[] = $solicitud;
 
-                // Enviar correo de firma
-                $this->enviarCorreoFirmaActa($solicitud, $documento, $data['proceso'], $data['cliente']);
+                // Enviar correo de firma y registrar en audit log
+                $enviado = $this->enviarCorreoFirmaActa($solicitud, $documento, $data['proceso'], $data['cliente']);
+                if ($enviado) {
+                    $this->db->table('tbl_doc_firma_audit_log')->insert([
+                        'id_solicitud' => $idSolicitud,
+                        'evento'       => 'correo_enviado',
+                        'fecha_hora'   => date('Y-m-d H:i:s'),
+                        'ip_address'   => $this->request->getIPAddress(),
+                        'detalles'     => json_encode(['via' => 'crear_solicitudes']),
+                    ]);
+                }
             }
         }
 
@@ -3639,6 +3648,17 @@ class ComitesEleccionesController extends BaseController
             }
         }
 
+        // Obtener historial de envíos por solicitud
+        $auditEnvios = [];
+        foreach ($solicitudes as $sol) {
+            $auditEnvios[$sol['id_solicitud']] = $this->db->table('tbl_doc_firma_audit_log')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->whereIn('evento', ['correo_enviado', 'recordatorio_enviado', 'token_reenviado'])
+                ->orderBy('fecha_hora', 'ASC')
+                ->get()
+                ->getResultArray();
+        }
+
         // Estadísticas
         $totalSolicitudes = count($solicitudes);
         $firmados = count(array_filter($solicitudes, fn($s) => $s['estado'] === 'firmado'));
@@ -3650,6 +3670,7 @@ class ComitesEleccionesController extends BaseController
             'documento' => $documento,
             'solicitudes' => $solicitudes,
             'evidencias' => $evidencias,
+            'auditEnvios' => $auditEnvios,
             'totalSolicitudes' => $totalSolicitudes,
             'firmados' => $firmados,
             'pendientes' => $pendientes,
@@ -4721,8 +4742,18 @@ class ComitesEleccionesController extends BaseController
             $solicitud['token'] = $nuevoToken;
             $enviado = $this->enviarCorreoFirmaActa($solicitud, $documento, $proceso, $cliente);
 
-            if ($enviado) $renovados++;
-            else          $errores++;
+            if ($enviado) {
+                $this->db->table('tbl_doc_firma_audit_log')->insert([
+                    'id_solicitud' => $solicitud['id_solicitud'],
+                    'evento'       => 'recordatorio_enviado',
+                    'fecha_hora'   => date('Y-m-d H:i:s'),
+                    'ip_address'   => $this->request->getIPAddress(),
+                    'detalles'     => json_encode(['via' => 'renovar_todos']),
+                ]);
+                $renovados++;
+            } else {
+                $errores++;
+            }
         }
 
         $msg = "Tokens renovados y correos reenviados: {$renovados}";

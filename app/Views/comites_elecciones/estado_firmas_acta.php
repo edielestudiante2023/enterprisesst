@@ -287,8 +287,39 @@ $tipoComiteNombre = [
                             <div class="timeline-firma">
                                 <div class="mb-1">
                                     <i class="fas fa-paper-plane text-primary"></i>
-                                    Enviado: <?= date('d/m/Y H:i', strtotime($sol['created_at'])) ?>
+                                    Creado: <?= date('d/m/Y H:i', strtotime($sol['created_at'])) ?>
                                 </div>
+                                <?php
+                                $logsEnvio = $auditEnvios[$sol['id_solicitud']] ?? [];
+                                $totalEnvios = count($logsEnvio);
+                                if ($totalEnvios > 0):
+                                    $ultimoEnvio = end($logsEnvio);
+                                ?>
+                                <div class="mb-1 text-primary">
+                                    <i class="fas fa-envelope"></i>
+                                    Envíos: <strong><?= $totalEnvios ?></strong>
+                                    &nbsp;<small class="text-muted">(último: <?= date('d/m/Y H:i', strtotime($ultimoEnvio['fecha_hora'])) ?>)</small>
+                                    <?php if ($totalEnvios > 1): ?>
+                                    <a href="#" class="ms-1 small text-secondary" data-bs-toggle="collapse"
+                                       data-bs-target="#hist-<?= $sol['id_solicitud'] ?>">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </a>
+                                    <div class="collapse mt-1" id="hist-<?= $sol['id_solicitud'] ?>">
+                                        <?php foreach ($logsEnvio as $log): ?>
+                                        <div class="small text-muted ps-2">
+                                            <i class="fas fa-circle" style="font-size:0.4rem; vertical-align:middle;"></i>
+                                            <?= date('d/m/Y H:i', strtotime($log['fecha_hora'])) ?>
+                                            <?php if ($log['evento'] === 'recordatorio_enviado'): ?>
+                                            <span class="badge bg-warning text-dark" style="font-size:0.6rem;">reenvío</span>
+                                            <?php elseif ($log['evento'] === 'token_reenviado'): ?>
+                                            <span class="badge bg-info text-dark" style="font-size:0.6rem;">reenvío individual</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endif; ?>
                                 <?php if ($sol['estado'] === 'firmado' && $sol['fecha_firma']): ?>
                                 <div class="text-success">
                                     <i class="fas fa-signature"></i>
