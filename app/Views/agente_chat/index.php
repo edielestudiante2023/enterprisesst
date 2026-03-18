@@ -543,36 +543,36 @@
                 <p>Tu asistente virtual de SST. Tengo acceso a todas las tablas del sistema. Puedo consultar datos, actualizar registros y ayudarte con lo que necesites.</p>
                 <div class="suggestion-chips">
                     <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Quiero ver el plan de trabajo de un cliente. ¿Para qué empresa lo busco?">
+                        📋 Plan de trabajo
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Quiero ver las capacitaciones de un cliente. ¿De qué empresa y qué estado?">
+                        🎓 Capacitaciones
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Quiero ver los pendientes de un cliente. ¿De qué empresa?">
+                        📌 Pendientes
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Quiero ver los indicadores SST de un cliente. ¿De qué empresa y qué año?">
+                        📊 Indicadores
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Quiero ver los documentos de un cliente. ¿De qué empresa y qué estado?">
+                        📄 Documentos
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Quiero ver los hallazgos o acciones correctivas de un cliente. ¿De qué empresa?">
+                        🔍 Hallazgos ACC
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
                          data-query="Lista los clientes activos con su ARL y nivel de riesgo">
                         🏢 Clientes activos
                     </div>
                     <div class="suggestion-chip" onclick="usarSugerencia(this)"
-                         data-query="Muéstrame las actividades abiertas del plan de trabajo">
-                        📋 Plan de trabajo
-                    </div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
-                         data-query="¿Qué capacitaciones están programadas o pendientes de ejecutar?">
-                        🎓 Capacitaciones
-                    </div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
-                         data-query="Muéstrame los pendientes abiertos de todos los clientes">
-                        📌 Pendientes
-                    </div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
-                         data-query="¿Qué documentos están pendientes de firma?">
+                         data-query="¿Qué documentos están pendientes de firma hoy?">
                         ✍️ Firmas pendientes
-                    </div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
-                         data-query="Muéstrame los indicadores SST de todos los clientes del año actual">
-                        📊 Indicadores
-                    </div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
-                         data-query="¿Cuáles son los hallazgos abiertos de ACC?">
-                        🔍 Hallazgos ACC
-                    </div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
-                         data-query="¿Qué vencimientos de mantenimientos están próximos?">
-                        🔧 Mantenimientos
                     </div>
                 </div>
             </div>

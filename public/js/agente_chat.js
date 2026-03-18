@@ -210,8 +210,6 @@ function agregarMensajeConTabla(texto, datos, sql) {
 
     let html = (typeof marked !== 'undefined' ? marked.parse(texto || '') : escHtml(texto));
 
-    if (sql) html += `<div class="sql-block">${escHtml(sql)}</div>`;
-
     if (datos.length > 0) {
         const cols = Object.keys(datos[0]);
         html += `<div class="data-table-wrapper"><table class="data-table">`;
