@@ -2041,6 +2041,13 @@ class ComitesEleccionesController extends BaseController
         }
 
         $cliente = $this->clienteModel->find($proceso['id_cliente']);
+
+        // Cargar contexto para CC a representante legal y delegado SST
+        $contexto = $this->db->table('tbl_cliente_contexto_sst')
+            ->where('id_cliente', $proceso['id_cliente'])
+            ->get()
+            ->getRowArray() ?? [];
+
         $enviados = 0;
         $sinEmail  = 0;
         $errores   = 0;
@@ -2050,7 +2057,7 @@ class ComitesEleccionesController extends BaseController
                 $sinEmail++;
                 continue;
             }
-            $ok = $this->enviarEmailNotificacionEleccion($candidato, $proceso, $cliente);
+            $ok = $this->enviarEmailNotificacionEleccion($candidato, $proceso, $cliente, $contexto);
             if ($ok) $enviados++;
             else      $errores++;
         }
@@ -2071,12 +2078,14 @@ class ComitesEleccionesController extends BaseController
     /**
      * Enviar correo de felicitacion a un candidato elegido
      */
-    private function enviarEmailNotificacionEleccion(array $candidato, array $proceso, array $cliente): bool
+    private function enviarEmailNotificacionEleccion(array $candidato, array $proceso, array $cliente, array $contexto = []): bool
     {
-        $tipoComite  = $proceso['tipo_comite'];
-        $tipoPlaza   = $candidato['tipo_plaza'] === 'principal' ? 'Principal' : 'Suplente';
+        $tipoComite    = $proceso['tipo_comite'];
+        $tipoPlaza     = $candidato['tipo_plaza'] === 'principal' ? 'Principal' : 'Suplente';
         $nombreCliente = $cliente['nombre_cliente'] ?? 'la empresa';
-        $anio        = $proceso['anio'];
+        $anio          = $proceso['anio'];
+        // nombre_completo se guarda en el campo 'nombres' (apellidos queda vacío)
+        $nombreCandidato = trim(($candidato['nombres'] ?? '') . ' ' . ($candidato['apellidos'] ?? ''));
 
         $tipoComiteLabel = match($tipoComite) {
             'COPASST' => 'COPASST (Comité Paritario de Seguridad y Salud en el Trabajo)',
@@ -2093,7 +2102,7 @@ class ComitesEleccionesController extends BaseController
                 <p style='color: #d4edda; margin: 5px 0 0 0;'>Resultado de la votacion {$tipoComite} {$anio}</p>
             </div>
             <div style='padding: 30px; background: #f8f9fa;'>
-                <p>Estimado/a <strong>{$candidato['nombre_completo']}</strong>,</p>
+                <p>Estimado/a <strong>{$nombreCandidato}</strong>,</p>
                 <p>Nos complace informarle que fue <strong>elegido/a</strong> como representante de los trabajadores en el proceso electoral del <strong>{$tipoComiteLabel}</strong> de <strong>{$nombreCliente}</strong>.</p>
 
                 <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;'>
@@ -2115,8 +2124,23 @@ class ComitesEleccionesController extends BaseController
             $email = new \SendGrid\Mail\Mail();
             $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
             $email->setSubject("¡Fue elegido/a! Resultado votacion {$tipoComite} {$anio} - {$nombreCliente}");
-            $email->addTo($candidato['email'], $candidato['nombre_completo']);
+            $email->addTo($candidato['email'], $nombreCandidato);
             $email->addContent("text/html", $mensaje);
+
+            // CC a Representante Legal
+            if (!empty($contexto['representante_legal_email'])) {
+                $email->addCc(
+                    $contexto['representante_legal_email'],
+                    $contexto['representante_legal_nombre'] ?? 'Representante Legal'
+                );
+            }
+            // CC a Delegado SST
+            if (!empty($contexto['delegado_sst_email'])) {
+                $email->addCc(
+                    $contexto['delegado_sst_email'],
+                    $contexto['delegado_sst_nombre'] ?? 'Delegado SST'
+                );
+            }
 
             $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
             $response = $sendgrid->send($email);

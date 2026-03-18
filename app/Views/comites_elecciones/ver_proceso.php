@@ -563,6 +563,82 @@ $permitirGestionCandidatos = true;
 
             <?php elseif ($faseVisualizar === 'designacion_empleador'): ?>
             <!-- Estado: Designacion Empleador / Brigada / Vigia -->
+
+            <?php
+            // Panel de notificacion a elegidos (solo COPASST y COCOLAB que tienen eleccion por voto)
+            $elegidosTrabajadores = array_values(array_filter($candidatosTrabajadores, fn($c) => $c['estado'] === 'elegido'));
+            $mostrarPanelNotif    = in_array($proceso['tipo_comite'], ['COPASST', 'COCOLAB']) && !empty($elegidosTrabajadores);
+            $notifEnviada         = !empty($proceso['notificacion_elegidos_at']);
+            ?>
+            <?php if ($mostrarPanelNotif && !$esVistaHistorica): ?>
+            <div class="card border-0 shadow-sm mb-4 border-start border-success border-4">
+                <div class="card-header <?= $notifEnviada ? 'bg-success' : 'bg-warning' ?> text-<?= $notifEnviada ? 'white' : 'dark' ?>">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope-check me-2"></i>
+                        <?= $notifEnviada ? 'Notificacion de eleccion enviada' : 'Paso 1: Notificar a los elegidos' ?>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <?php if ($notifEnviada): ?>
+                    <div class="alert alert-success mb-3">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        Correos de notificacion enviados el <strong><?= date('d/m/Y H:i', strtotime($proceso['notificacion_elegidos_at'])) ?></strong>.
+                    </div>
+                    <?php else: ?>
+                    <div class="alert alert-warning mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Antes de generar el acta</strong>, notifique a los elegidos que ganaron la votacion. Recibirán un correo de felicitacion con su cargo (Principal o Suplente).
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Lista de elegidos -->
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Cargo</th>
+                                    <th>Plaza</th>
+                                    <th>Correo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($elegidosTrabajadores as $el): ?>
+                                <tr>
+                                    <td><?= esc($el['nombre_completo']) ?></td>
+                                    <td><?= esc($el['cargo']) ?></td>
+                                    <td>
+                                        <?php if ($el['tipo_plaza'] === 'principal'): ?>
+                                            <span class="badge bg-primary">Principal</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary">Suplente</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($el['email'])): ?>
+                                            <small><?= esc($el['email']) ?></small>
+                                        <?php else: ?>
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Sin email</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/notificar-elegidos') ?>" method="post"
+                          onsubmit="return confirm('¿Enviar correo de notificacion a los <?= count($elegidosTrabajadores) ?> elegidos?');">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn <?= $notifEnviada ? 'btn-outline-success' : 'btn-success' ?>">
+                            <i class="bi bi-envelope-check me-1"></i>
+                            <?= $notifEnviada ? 'Reenviar Notificaciones' : 'Enviar Notificacion a Elegidos' ?>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <?php
             $tituloDesignacion = match($proceso['tipo_comite']) {
                 'BRIGADA' => 'Designacion de Brigadistas',
@@ -719,6 +795,68 @@ $permitirGestionCandidatos = true;
 
             <?php elseif ($faseVisualizar === 'firmas'): ?>
             <!-- Estado: Firmas -->
+
+            <?php
+            // Panel notificacion elegidos en fase firmas (COPASST/COCOLAB que pasan de designacion a firmas sin notificar)
+            $elegidosFirmas   = array_values(array_filter($candidatosTrabajadores, fn($c) => $c['estado'] === 'elegido'));
+            $notifEnviadaFirmas = !empty($proceso['notificacion_elegidos_at']);
+            if (in_array($proceso['tipo_comite'], ['COPASST', 'COCOLAB']) && !empty($elegidosFirmas)):
+            ?>
+            <div class="card border-0 shadow-sm mb-4 border-start border-4 <?= $notifEnviadaFirmas ? 'border-success' : 'border-danger' ?>">
+                <div class="card-header <?= $notifEnviadaFirmas ? 'bg-success' : 'bg-danger' ?> text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope-check me-2"></i>
+                        <?= $notifEnviadaFirmas ? 'Notificacion de eleccion enviada' : '¡Pendiente! Notificar a los elegidos' ?>
+                    </h5>
+                    <?php if (!$notifEnviadaFirmas): ?>
+                    <span class="badge bg-white text-danger fw-bold">REQUERIDO ANTES DE FIRMAS</span>
+                    <?php endif; ?>
+                </div>
+                <div class="card-body">
+                    <?php if ($notifEnviadaFirmas): ?>
+                    <div class="alert alert-success mb-3">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        Correos enviados el <strong><?= date('d/m/Y H:i', strtotime($proceso['notificacion_elegidos_at'])) ?></strong>.
+                        Con copia a Representante Legal y Delegado SST.
+                    </div>
+                    <?php else: ?>
+                    <div class="alert alert-danger mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Los elegidos aun no han sido notificados.</strong>
+                        Notifiquelos antes de enviar el acta a firmas para que sepan que ganaron la votacion.
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr><th>Nombre</th><th>Cargo</th><th>Plaza</th><th>Correo</th></tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($elegidosFirmas as $el): ?>
+                                <tr>
+                                    <td><?= esc(trim($el['nombres'].' '.$el['apellidos'])) ?></td>
+                                    <td><?= esc($el['cargo']) ?></td>
+                                    <td><?= $el['tipo_plaza'] === 'principal' ? '<span class="badge bg-primary">Principal</span>' : '<span class="badge bg-secondary">Suplente</span>' ?></td>
+                                    <td><?= !empty($el['email']) ? esc($el['email']) : '<span class="badge bg-warning text-dark">Sin email</span>' ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/notificar-elegidos') ?>" method="post"
+                          onsubmit="return confirm('¿Enviar correo de notificacion a los <?= count($elegidosFirmas) ?> elegidos?');">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn <?= $notifEnviadaFirmas ? 'btn-outline-success' : 'btn-success btn-lg' ?>">
+                            <i class="bi bi-envelope-check me-1"></i>
+                            <?= $notifEnviadaFirmas ? 'Reenviar Notificaciones' : 'Enviar Notificacion a Elegidos Ahora' ?>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0"><i class="bi bi-pen me-2"></i>Pendiente de Firmas</h5>
