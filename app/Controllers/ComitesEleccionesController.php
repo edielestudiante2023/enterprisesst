@@ -465,7 +465,7 @@ class ComitesEleccionesController extends BaseController
             }
         }
 
-        // COCOLAB: Resolución 3641 de 2026, Art. 3
+        // COCOLAB: Resolución 3461 de 2025, Art. 3 (deroga Res. 652 y 1356 de 2012)
         // < 5 trabajadores: 1 rep sin suplente
         // 5-19 trabajadores: 1+1 con suplentes
         // >= 20 trabajadores: 2+2 con suplentes
@@ -1387,6 +1387,7 @@ class ComitesEleccionesController extends BaseController
             // Formato: cedula;nombre;email;cargo;area
             $documento = trim($campos[0] ?? '');
             $nombres   = trim($campos[1] ?? '');
+            $apellidos = '';
             $email     = trim($campos[2] ?? '');
             $cargo     = trim($campos[3] ?? '');
             $area      = trim($campos[4] ?? '');
