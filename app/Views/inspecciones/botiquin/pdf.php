@@ -272,9 +272,45 @@
 
     <!-- PENDIENTES -->
     <?php if (!empty($inspeccion['pendientes_generados'])): ?>
+    <?php
+        $textoPend = $inspeccion['pendientes_generados'];
+        $sinPend   = ($textoPend === 'Sin pendientes - Botiquin completo');
+        $filasPend = $sinPend ? [] : array_filter(explode("\n", $textoPend));
+    ?>
     <div class="seccion">
         <div class="seccion-titulo">COMPRA DE ELEMENTOS REQUERIDOS / PENDIENTES</div>
-        <div class="seccion-contenido"><?= nl2br(esc($inspeccion['pendientes_generados'])) ?></div>
+        <?php if ($sinPend): ?>
+            <div class="seccion-contenido" style="color:#198754;">✓ Sin pendientes — Botiquín completo</div>
+        <?php else: ?>
+            <table style="width:100%; border-collapse:collapse; font-size:10px; margin-top:4px;">
+                <thead>
+                    <tr style="background:#c0392b; color:white;">
+                        <th style="padding:4px 6px; text-align:left; width:55%;">Elemento</th>
+                        <th style="padding:4px 6px; text-align:left;">Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($filasPend as $i => $fila):
+                    if (str_contains($fila, '|')) {
+                        [$col1, $col2] = explode('|', $fila, 2);
+                    } else {
+                        $col1 = $fila; $col2 = '';
+                    }
+                    $esNota = ($col1 === 'NOTA');
+                    $bg = $esNota ? '#fff8e1' : ($i % 2 === 0 ? '#fff' : '#fdf2f2');
+                ?>
+                    <tr style="background:<?= $bg ?>;">
+                        <?php if ($esNota): ?>
+                        <td colspan="2" style="padding:4px 6px; font-style:italic; color:#7c6310;"><?= esc($col2) ?></td>
+                        <?php else: ?>
+                        <td style="padding:4px 6px;"><?= esc($col1) ?></td>
+                        <td style="padding:4px 6px; color:#c0392b; font-weight:bold;"><?= esc($col2) ?></td>
+                        <?php endif; ?>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
 

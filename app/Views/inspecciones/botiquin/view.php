@@ -209,10 +209,46 @@ function estadoColor(string $estado): string {
 
     <!-- Pendientes generados -->
     <?php if (!empty($inspeccion['pendientes_generados'])): ?>
+    <?php
+        $textoPendientes = $inspeccion['pendientes_generados'];
+        $sinPendientes = ($textoPendientes === 'Sin pendientes - Botiquin completo');
+        $filasPendientes = $sinPendientes ? [] : array_filter(explode("\n", $textoPendientes));
+    ?>
     <div class="card mb-3">
-        <div class="card-body">
-            <h6 class="card-title" style="font-size:14px; color:#999;">PENDIENTES GENERADOS</h6>
-            <pre style="font-size:12px; margin:0; white-space:pre-wrap; font-family:inherit;"><?= esc($inspeccion['pendientes_generados']) ?></pre>
+        <div class="card-body p-2">
+            <h6 class="card-title" style="font-size:14px; color:#dc3545; font-weight:700;">
+                <i class="fas fa-exclamation-triangle me-1"></i>PENDIENTES GENERADOS
+            </h6>
+            <?php if ($sinPendientes): ?>
+                <span style="color:#198754; font-size:13px;"><i class="fas fa-check-circle me-1"></i>Sin pendientes — Botiquín completo</span>
+            <?php else: ?>
+                <table class="table table-sm table-bordered mb-0" style="font-size:12px;">
+                    <thead style="background:#dc3545; color:white;">
+                        <tr><th style="width:55%;">Elemento</th><th>Detalle</th></tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($filasPendientes as $fila):
+                        if (str_contains($fila, '|')) {
+                            [$col1, $col2] = explode('|', $fila, 2);
+                        } else {
+                            $col1 = $fila; $col2 = '';
+                        }
+                        $esNota = ($col1 === 'NOTA');
+                    ?>
+                        <?php if ($esNota): ?>
+                        <tr class="table-warning">
+                            <td colspan="2" style="font-size:11px; font-style:italic;"><?= esc($col2) ?></td>
+                        </tr>
+                        <?php else: ?>
+                        <tr>
+                            <td><?= esc($col1) ?></td>
+                            <td style="color:#dc3545; font-weight:600;"><?= esc($col2) ?></td>
+                        </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>

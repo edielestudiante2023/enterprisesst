@@ -165,6 +165,20 @@ $estadosEquipo = ['BUEN ESTADO', 'ESTADO REGULAR', 'MAL ESTADO'];
                     <div class="accordion-body p-2">
 
                     <?php if ($isInmovilizacion): ?>
+                        <?php
+                        // Detectar si el grupo está marcado como "no aplica"
+                        $noAplicaInmov = ($elementosData['tabla_espinal']['estado'] ?? '') === 'NO APLICA';
+                        ?>
+                        <!-- Checkbox "No aplica" para todo el grupo inmovilización -->
+                        <div class="form-check mb-2" style="background:#fff3cd; border-radius:6px; padding:6px 10px;">
+                            <input class="form-check-input" type="checkbox" id="chkNoAplicaInmov"
+                                   <?= $noAplicaInmov ? 'checked' : '' ?>
+                                   onchange="toggleInmovilizacion(this.checked)">
+                            <label class="form-check-label" for="chkNoAplicaInmov" style="font-size:12px; font-weight:600; color:#856404;">
+                                Este botiquín no cuenta con equipos de inmovilización (No aplica)
+                            </label>
+                        </div>
+                        <div id="secInmovilizacion" <?= $noAplicaInmov ? 'style="display:none"' : '' ?>>
                         <!-- Tabla espinal -->
                         <?php
                         $claveTE = 'tabla_espinal';
@@ -302,6 +316,15 @@ $estadosEquipo = ['BUEN ESTADO', 'ESTADO REGULAR', 'MAL ESTADO'];
                                 </div>
                             </div>
                         </div>
+                        </div><!-- /secInmovilizacion -->
+
+                        <!-- Inputs ocultos para NO APLICA cuando el grupo está desactivado -->
+                        <div id="secInmovilizacionHidden" <?= $noAplicaInmov ? '' : 'style="display:none"' ?>>
+                            <?php foreach (['tabla_espinal','collar_adulto','collar_nino','inmov_sup_adulto','inmov_inf_adulto','inmov_sup_nino','inmov_inf_nino'] as $_k): ?>
+                            <input type="hidden" name="elem_<?= $_k ?>_cantidad" value="0">
+                            <input type="hidden" name="elem_<?= $_k ?>_estado" value="NO APLICA">
+                            <?php endforeach; ?>
+                        </div>
 
                     <?php else: ?>
                         <!-- Elementos estándar del grupo -->
@@ -383,6 +406,11 @@ $estadosEquipo = ['BUEN ESTADO', 'ESTADO REGULAR', 'MAL ESTADO'];
 </div>
 
 <script>
+function toggleInmovilizacion(noAplica) {
+    document.getElementById('secInmovilizacion').style.display       = noAplica ? 'none' : '';
+    document.getElementById('secInmovilizacionHidden').style.display = noAplica ? ''     : 'none';
+}
+
 function openPhoto(src) {
     document.getElementById('photoModalImg').src = src;
     new bootstrap.Modal(document.getElementById('photoModal')).show();
