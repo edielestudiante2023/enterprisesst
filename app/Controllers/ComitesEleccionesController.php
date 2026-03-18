@@ -652,6 +652,7 @@ class ComitesEleccionesController extends BaseController
         $documentoIdentidad = trim($this->request->getPost('documento_identidad') ?? '');
         $cargo = trim($this->request->getPost('cargo') ?? '');
         $email = trim($this->request->getPost('email') ?? '');
+        $telefono = trim($this->request->getPost('telefono') ?? '');
 
         $errores = [];
         if (empty($nombreCompleto))    $errores[] = 'El nombre completo es obligatorio';
@@ -659,6 +660,7 @@ class ComitesEleccionesController extends BaseController
         if (empty($cargo))             $errores[] = 'El cargo es obligatorio';
         if (empty($email))             $errores[] = 'El correo electronico es obligatorio';
         elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errores[] = 'El correo electronico no es valido';
+        if (empty($telefono))          $errores[] = 'El telefono es obligatorio';
 
         if (!empty($errores)) {
             return redirect()->back()
@@ -2365,6 +2367,7 @@ class ComitesEleccionesController extends BaseController
         if (empty($cargo))                           $erroresJurado[] = 'Cargo es obligatorio';
         if (empty($email))                           $erroresJurado[] = 'Correo electronico es obligatorio';
         elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $erroresJurado[] = 'Correo electronico no es valido';
+        if (empty($telefono))                        $erroresJurado[] = 'Telefono es obligatorio';
 
         if (!empty($erroresJurado)) {
             return $this->response->setJSON([
