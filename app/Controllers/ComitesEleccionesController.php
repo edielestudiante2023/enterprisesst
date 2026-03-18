@@ -2057,6 +2057,21 @@ class ComitesEleccionesController extends BaseController
                 ->getRowArray();
         }
 
+        // Total votos emitidos en el proceso (suma de todos los candidatos trabajadores)
+        $totalVotos = (int) $this->db->table('tbl_candidatos_comite')
+            ->selectSum('votos_obtenidos', 'total')
+            ->where('id_proceso', $idProceso)
+            ->where('representacion', 'trabajador')
+            ->get()
+            ->getRow()->total;
+
+        // Total candidatos que participaron
+        $totalCandidatos = count($this->db->table('tbl_candidatos_comite')
+            ->where('id_proceso', $idProceso)
+            ->where('representacion', 'trabajador')
+            ->whereIn('estado', ['elegido', 'no_elegido', 'aprobado'])
+            ->get()->getResultArray());
+
         $enviados = 0;
         $sinEmail  = 0;
         $errores   = 0;
@@ -2066,7 +2081,7 @@ class ComitesEleccionesController extends BaseController
                 $sinEmail++;
                 continue;
             }
-            $ok = $this->enviarEmailNotificacionEleccion($candidato, $proceso, $cliente, $contexto, $consultor);
+            $ok = $this->enviarEmailNotificacionEleccion($candidato, $proceso, $cliente, $contexto, $consultor, $totalVotos, $totalCandidatos);
             if ($ok) $enviados++;
             else      $errores++;
         }
@@ -2087,14 +2102,16 @@ class ComitesEleccionesController extends BaseController
     /**
      * Enviar correo de felicitacion a un candidato elegido
      */
-    private function enviarEmailNotificacionEleccion(array $candidato, array $proceso, array $cliente, array $contexto = [], ?array $consultor = null): bool
+    private function enviarEmailNotificacionEleccion(array $candidato, array $proceso, array $cliente, array $contexto = [], ?array $consultor = null, int $totalVotos = 0, int $totalCandidatos = 0): bool
     {
         $tipoComite    = $proceso['tipo_comite'];
         $tipoPlaza     = $candidato['tipo_plaza'] === 'principal' ? 'Principal' : 'Suplente';
         $nombreCliente = $cliente['nombre_cliente'] ?? 'la empresa';
         $anio          = $proceso['anio'];
-        // nombre_completo se guarda en el campo 'nombres' (apellidos queda vacío)
         $nombreCandidato = trim(($candidato['nombres'] ?? '') . ' ' . ($candidato['apellidos'] ?? ''));
+        $votosObtenidos  = (int) ($candidato['votos_obtenidos'] ?? 0);
+        $posicion        = (int) ($candidato['posicion_votacion'] ?? 0);
+        $porcentaje      = $totalVotos > 0 ? round(($votosObtenidos / $totalVotos) * 100, 1) : 0;
 
         $tipoComiteLabel = match($tipoComite) {
             'COPASST' => 'COPASST (Comité Paritario de Seguridad y Salud en el Trabajo)',
@@ -2103,6 +2120,8 @@ class ComitesEleccionesController extends BaseController
             'VIGIA'   => 'Vigía de Seguridad y Salud en el Trabajo',
             default   => $tipoComite
         };
+
+        $posicionTexto = $posicion > 0 ? "Puesto #{$posicion} de {$totalCandidatos} candidatos" : '';
 
         $mensaje = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
@@ -2121,6 +2140,13 @@ class ComitesEleccionesController extends BaseController
                     <p style='margin: 5px 0;'><strong>Vigencia:</strong> {$anio}</p>
                 </div>
 
+                <div style='background: #e8f5e9; padding: 15px 20px; border-radius: 8px; margin: 20px 0; text-align: center;'>
+                    <p style='margin: 0 0 8px 0; font-size: 13px; color: #555;'>Resultado de su votacion</p>
+                    <p style='margin: 4px 0; font-size: 22px; font-weight: bold; color: #1e7e34;'>{$votosObtenidos} votos</p>
+                    <p style='margin: 4px 0; font-size: 13px; color: #555;'>de {$totalVotos} votos emitidos ({$porcentaje}%)</p>
+                    " . ($posicionTexto ? "<p style='margin: 8px 0 0 0; font-size: 13px; color: #1e7e34; font-weight: bold;'>{$posicionTexto}</p>" : "") . "
+                </div>
+
                 <p>En los proximos dias recibira un correo con el Acta de Constitucion del {$tipoComite} para su firma electronica.</p>
 
                 <hr style='border: none; border-top: 1px solid #dee2e6; margin: 20px 0;'>
@@ -2136,20 +2162,20 @@ class ComitesEleccionesController extends BaseController
             $email->addTo($candidato['email'], $nombreCandidato);
             $email->addContent("text/html", $mensaje);
 
-            // CC a Representante Legal
-            if (!empty($contexto['representante_legal_email'])) {
-                $email->addCc(
-                    $contexto['representante_legal_email'],
-                    $contexto['representante_legal_nombre'] ?? 'Representante Legal'
-                );
-            }
-            // CC a Delegado SST
-            if (!empty($contexto['delegado_sst_email'])) {
-                $email->addCc(
-                    $contexto['delegado_sst_email'],
-                    $contexto['delegado_sst_nombre'] ?? 'Delegado SST'
-                );
-            }
+            // CC a Representante Legal — PENDIENTE REVISION (comentado temporalmente)
+            // if (!empty($contexto['representante_legal_email'])) {
+            //     $email->addCc(
+            //         $contexto['representante_legal_email'],
+            //         $contexto['representante_legal_nombre'] ?? 'Representante Legal'
+            //     );
+            // }
+            // CC a Delegado SST — PENDIENTE REVISION (comentado temporalmente)
+            // if (!empty($contexto['delegado_sst_email'])) {
+            //     $email->addCc(
+            //         $contexto['delegado_sst_email'],
+            //         $contexto['delegado_sst_nombre'] ?? 'Delegado SST'
+            //     );
+            // }
             // CC al Consultor del proceso
             if (!empty($consultor['correo_consultor'])) {
                 $email->addCc(
@@ -2157,6 +2183,8 @@ class ComitesEleccionesController extends BaseController
                     $consultor['nombre_consultor'] ?? 'Consultor'
                 );
             }
+            // CC revision temporal — QUITAR UNA VEZ CONFIRMADO
+            $email->addCc('edison.cuervo@cycloidtalent.com', 'Edison Cuervo');
 
             $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
             $response = $sendgrid->send($email);
