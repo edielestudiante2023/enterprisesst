@@ -314,7 +314,7 @@ $subtitulo = $esEmpleador
                             </div>
                             <?php endif; ?>
                             <div class="flex-grow-1">
-                                <strong><?= esc($candidato['nombres'] . ' ' . $candidato['apellidos']) ?></strong>
+                                <strong><?= esc($candidato['nombre_completo']) ?></strong>
                                 <br>
                                 <small class="text-muted"><?= esc($candidato['cargo']) ?></small>
                                 <?php if ($esEmpleador): ?>

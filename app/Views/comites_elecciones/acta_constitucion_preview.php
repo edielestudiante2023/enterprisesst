@@ -434,7 +434,7 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                         ?>
                         <tr class="<?= $esPrincipal ? 'principal' : ($esSuplente ? 'suplente' : '') ?>">
                             <td class="text-center"><?= $pos ?></td>
-                            <td><?= $r['nombres'] ?> <?= $r['apellidos'] ?></td>
+                            <td><?= $r['nombre_completo'] ?></td>
                             <td class="text-center">
                                 <span class="badge bg-primary"><?= $r['votos_obtenidos'] ?></span>
                             </td>
@@ -486,14 +486,14 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                     <tbody>
                         <?php foreach ($empleadorPrincipales as $e): ?>
                         <tr class="principal">
-                            <td><?= $e['nombres'] ?> <?= $e['apellidos'] ?></td>
+                            <td><?= $e['nombre_completo'] ?></td>
                             <td><?= $e['cargo'] ?? '-' ?></td>
                             <td class="text-center"><span class="badge bg-success">Principal</span></td>
                         </tr>
                         <?php endforeach; ?>
                         <?php foreach ($empleadorSuplentes as $e): ?>
                         <tr class="suplente">
-                            <td><?= $e['nombres'] ?> <?= $e['apellidos'] ?></td>
+                            <td><?= $e['nombre_completo'] ?></td>
                             <td><?= $e['cargo'] ?? '-' ?></td>
                             <td class="text-center"><span class="badge bg-info">Suplente</span></td>
                         </tr>
@@ -516,14 +516,14 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                     <tbody>
                         <?php foreach ($principales as $t): ?>
                         <tr class="principal">
-                            <td><?= $t['nombres'] ?> <?= $t['apellidos'] ?></td>
+                            <td><?= $t['nombre_completo'] ?></td>
                             <td><?= $t['cargo'] ?? '-' ?></td>
                             <td class="text-center"><span class="badge bg-success">Principal</span></td>
                         </tr>
                         <?php endforeach; ?>
                         <?php foreach ($suplentes as $t): ?>
                         <tr class="suplente">
-                            <td><?= $t['nombres'] ?> <?= $t['apellidos'] ?></td>
+                            <td><?= $t['nombre_completo'] ?></td>
                             <td><?= $t['cargo'] ?? '-' ?></td>
                             <td class="text-center"><span class="badge bg-info">Suplente</span></td>
                         </tr>
@@ -766,7 +766,7 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                                 </span>
                             </div>
                             <div style="margin-bottom: 3px; font-size: 0.8rem;">
-                                <strong>Nombre:</strong> <?= $e['nombres'] ?> <?= $e['apellidos'] ?>
+                                <strong>Nombre:</strong> <?= $e['nombre_completo'] ?>
                             </div>
                             <div style="margin-bottom: 3px; font-size: 0.8rem;">
                                 <strong>C.C.:</strong> <?= $e['documento_identidad'] ?>
@@ -820,7 +820,7 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                                 </span>
                             </div>
                             <div style="margin-bottom: 3px; font-size: 0.8rem;">
-                                <strong>Nombre:</strong> <?= $t['nombres'] ?> <?= $t['apellidos'] ?>
+                                <strong>Nombre:</strong> <?= $t['nombre_completo'] ?>
                             </div>
                             <div style="margin-bottom: 3px; font-size: 0.8rem;">
                                 <strong>C.C.:</strong> <?= $t['documento_identidad'] ?>

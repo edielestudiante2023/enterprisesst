@@ -724,10 +724,11 @@ class ComitesEleccionesController extends BaseController
 
         // Insertar candidato
         $this->db->table('tbl_candidatos_comite')->insert([
-            'id_proceso' => $idProceso,
-            'id_cliente' => $proceso['id_cliente'],
-            'nombres'    => $nombreCompleto,
-            'apellidos'  => '',
+            'id_proceso'      => $idProceso,
+            'id_cliente'      => $proceso['id_cliente'],
+            'nombre_completo' => $nombreCompleto,
+            'nombres'         => $nombreCompleto,
+            'apellidos'       => '',
             'documento_identidad' => $documentoIdentidad,
             'tipo_documento' => $this->request->getPost('tipo_documento') ?? 'CC',
             'cargo' => $cargo,
@@ -983,8 +984,9 @@ class ComitesEleccionesController extends BaseController
         $this->db->table('tbl_candidatos_comite')
             ->where('id_candidato', $idCandidato)
             ->update([
-                'nombres'   => $nombreCompleto,
-                'apellidos' => '',
+                'nombre_completo' => $nombreCompleto,
+                'nombres'         => $nombreCompleto,
+                'apellidos'       => '',
                 'cargo' => $this->request->getPost('cargo'),
                 'area' => $this->request->getPost('area'),
                 'email' => $this->request->getPost('email'),
@@ -2112,7 +2114,7 @@ class ComitesEleccionesController extends BaseController
         $tipoPlaza     = $candidato['tipo_plaza'] === 'principal' ? 'Principal' : 'Suplente';
         $nombreCliente = $cliente['nombre_cliente'] ?? 'la empresa';
         $anio          = $proceso['anio'];
-        $nombreCandidato = trim(($candidato['nombres'] ?? '') . ' ' . ($candidato['apellidos'] ?? ''));
+        $nombreCandidato = $candidato['nombre_completo'] ?? '';
         $votosObtenidos  = (int) ($candidato['votos_obtenidos'] ?? 0);
         $posicion        = (int) ($candidato['posicion_calculada'] ?? $candidato['posicion_votacion'] ?? 0);
         $porcentaje      = $totalVotos > 0 ? round(($votosObtenidos / $totalVotos) * 100, 1) : 0;
@@ -3244,7 +3246,7 @@ class ComitesEleccionesController extends BaseController
                 'grupo' => 'Miembros del Comité - Empleador (Principales)',
                 'tipo' => $tipoFirma,
                 'id_candidato' => $miembro['id_candidato'],
-                'nombre' => $miembro['nombres'] . ' ' . $miembro['apellidos'],
+                'nombre' => $miembro['nombre_completo'] ?? '',
                 'cargo' => $miembro['cargo'] ?? 'Representante del Empleador',
                 'cedula' => $miembro['cedula'] ?? '',
                 'email' => $miembro['email'] ?? '',
@@ -3260,7 +3262,7 @@ class ComitesEleccionesController extends BaseController
                 'grupo' => 'Miembros del Comité - Empleador (Suplentes)',
                 'tipo' => $tipoFirma,
                 'id_candidato' => $miembro['id_candidato'],
-                'nombre' => $miembro['nombres'] . ' ' . $miembro['apellidos'],
+                'nombre' => $miembro['nombre_completo'] ?? '',
                 'cargo' => $miembro['cargo'] ?? 'Representante del Empleador (Suplente)',
                 'cedula' => $miembro['cedula'] ?? '',
                 'email' => $miembro['email'] ?? '',
@@ -3276,7 +3278,7 @@ class ComitesEleccionesController extends BaseController
                 'grupo' => 'Miembros del Comité - Trabajadores (Principales)',
                 'tipo' => $tipoFirma,
                 'id_candidato' => $miembro['id_candidato'],
-                'nombre' => $miembro['nombres'] . ' ' . $miembro['apellidos'],
+                'nombre' => $miembro['nombre_completo'] ?? '',
                 'cargo' => $miembro['cargo'] ?? 'Representante de los Trabajadores',
                 'cedula' => $miembro['cedula'] ?? '',
                 'email' => $miembro['email'] ?? '',
@@ -3292,7 +3294,7 @@ class ComitesEleccionesController extends BaseController
                 'grupo' => 'Miembros del Comité - Trabajadores (Suplentes)',
                 'tipo' => $tipoFirma,
                 'id_candidato' => $miembro['id_candidato'],
-                'nombre' => $miembro['nombres'] . ' ' . $miembro['apellidos'],
+                'nombre' => $miembro['nombre_completo'] ?? '',
                 'cargo' => $miembro['cargo'] ?? 'Representante de los Trabajadores (Suplente)',
                 'cedula' => $miembro['cedula'] ?? '',
                 'email' => $miembro['email'] ?? '',
@@ -3464,7 +3466,7 @@ class ComitesEleccionesController extends BaseController
         foreach ($data['empleadorPrincipales'] as $m) {
             $tipo = 'empleador_principal_' . $m['id_candidato'];
             $mapa[$tipo] = [
-                'nombre' => $m['nombres'] . ' ' . $m['apellidos'],
+                'nombre' => $m['nombre_completo'] ?? '',
                 'cargo' => $m['cargo'] ?? 'Representante del Empleador',
                 'cedula' => $m['cedula'] ?? '',
                 'email' => $m['email'] ?? ''
@@ -3475,7 +3477,7 @@ class ComitesEleccionesController extends BaseController
         foreach ($data['empleadorSuplentes'] as $m) {
             $tipo = 'empleador_suplente_' . $m['id_candidato'];
             $mapa[$tipo] = [
-                'nombre' => $m['nombres'] . ' ' . $m['apellidos'],
+                'nombre' => $m['nombre_completo'] ?? '',
                 'cargo' => $m['cargo'] ?? 'Representante del Empleador (Suplente)',
                 'cedula' => $m['cedula'] ?? '',
                 'email' => $m['email'] ?? ''
@@ -3486,7 +3488,7 @@ class ComitesEleccionesController extends BaseController
         foreach ($data['principales'] as $m) {
             $tipo = 'trabajador_principal_' . $m['id_candidato'];
             $mapa[$tipo] = [
-                'nombre' => $m['nombres'] . ' ' . $m['apellidos'],
+                'nombre' => $m['nombre_completo'] ?? '',
                 'cargo' => $m['cargo'] ?? 'Representante de los Trabajadores',
                 'cedula' => $m['cedula'] ?? '',
                 'email' => $m['email'] ?? ''
@@ -3497,7 +3499,7 @@ class ComitesEleccionesController extends BaseController
         foreach ($data['suplentes'] as $m) {
             $tipo = 'trabajador_suplente_' . $m['id_candidato'];
             $mapa[$tipo] = [
-                'nombre' => $m['nombres'] . ' ' . $m['apellidos'],
+                'nombre' => $m['nombre_completo'] ?? '',
                 'cargo' => $m['cargo'] ?? 'Representante de los Trabajadores (Suplente)',
                 'cedula' => $m['cedula'] ?? '',
                 'email' => $m['email'] ?? ''
@@ -3805,9 +3807,11 @@ class ComitesEleccionesController extends BaseController
         $idCandidatoEntrante = $this->request->getPost('id_candidato_entrante');
 
         // Datos del nuevo miembro (si es empleador o no hay candidatos)
+        $entranteNombreCompleto = trim($this->request->getPost('entrante_nombre_completo') ?? '');
         $entranteNuevo = [
-            'nombres' => $this->request->getPost('entrante_nombres'),
-            'apellidos' => $this->request->getPost('entrante_apellidos'),
+            'nombre_completo' => $entranteNombreCompleto,
+            'nombres'         => $entranteNombreCompleto,
+            'apellidos'       => '',
             'documento' => $this->request->getPost('entrante_documento'),
             'cargo' => $this->request->getPost('entrante_cargo'),
             'email' => $this->request->getPost('entrante_email'),
@@ -3852,10 +3856,11 @@ class ComitesEleccionesController extends BaseController
             // Si es designación de empleador y hay datos nuevos, crear candidato
             if ($tipoIngreso === 'designacion_empleador' && !empty($entranteNuevo['documento'])) {
                 $nuevoId = $this->db->table('tbl_candidatos_comite')->insert([
-                    'id_proceso' => $idProceso,
-                    'id_cliente' => $proceso['id_cliente'],
-                    'nombres' => $entranteNuevo['nombres'],
-                    'apellidos' => $entranteNuevo['apellidos'],
+                    'id_proceso'      => $idProceso,
+                    'id_cliente'      => $proceso['id_cliente'],
+                    'nombre_completo' => $entranteNuevo['nombre_completo'],
+                    'nombres'         => $entranteNuevo['nombres'],
+                    'apellidos'       => '',
                     'documento_identidad' => $entranteNuevo['documento'],
                     'cargo' => $entranteNuevo['cargo'],
                     'email' => $entranteNuevo['email'],
@@ -3882,8 +3887,8 @@ class ComitesEleccionesController extends BaseController
                 'fecha_efectiva_salida' => $fechaSalida ?: $fechaRecomposicion,
                 'id_candidato_entrante' => $idCandidatoEntrante,
                 'tipo_ingreso' => $tipoIngreso,
-                'entrante_nombres' => $entranteNuevo['nombres'],
-                'entrante_apellidos' => $entranteNuevo['apellidos'],
+                'entrante_nombres' => $entranteNuevo['nombre_completo'],
+                'entrante_apellidos' => '',
                 'entrante_documento' => $entranteNuevo['documento'],
                 'entrante_cargo' => $entranteNuevo['cargo'],
                 'entrante_email' => $entranteNuevo['email'],
@@ -4215,8 +4220,8 @@ class ComitesEleccionesController extends BaseController
 
         // 1. NUEVO INTEGRANTE (Obligatorio)
         $nombreEntrante = $data['entrante']
-            ? $data['entrante']['nombres'] . ' ' . $data['entrante']['apellidos']
-            : trim(($data['recomposicion']['entrante_nombres'] ?? '') . ' ' . ($data['recomposicion']['entrante_apellidos'] ?? ''));
+            ? ($data['entrante']['nombre_completo'] ?? '')
+            : ($data['recomposicion']['entrante_nombres'] ?? '');
         $cedulaEntrante = $data['entrante']
             ? $data['entrante']['documento_identidad']
             : ($data['recomposicion']['entrante_documento'] ?? '');
@@ -4823,7 +4828,7 @@ class ComitesEleccionesController extends BaseController
             $filasTabla = '';
             foreach ($candidatos as $pos => $c) {
                 $posNum  = $pos + 1;
-                $nombre  = $c['nombre_completo'] ?: trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? ''));
+                $nombre  = $c['nombre_completo'] ?? '';
                 $cargo   = esc($c['cargo'] ?? '');
                 $filasTabla .= "
                 <tr>
@@ -4878,7 +4883,7 @@ class ComitesEleccionesController extends BaseController
             $filasTabla = '';
             foreach ($candidatos as $pos => $c) {
                 $posNum    = $pos + 1;
-                $nombre    = trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? ''));
+                $nombre    = $c['nombre_completo'] ?? '';
                 $votos     = (int) $c['votos_obtenidos'];
                 $porcentaje = $totalVotos > 0 ? round(($votos / $totalVotos) * 100, 1) : 0;
 
@@ -5087,7 +5092,7 @@ class ComitesEleccionesController extends BaseController
         $tipoComite      = $proceso['tipo_comite'];
         $anio            = $proceso['anio'];
         $nombreCliente   = $cliente['nombre_cliente'] ?? 'la empresa';
-        $nombreCandidato = $candidato['nombre_completo'] ?: trim(($candidato['nombres'] ?? '') . ' ' . ($candidato['apellidos'] ?? ''));
+        $nombreCandidato = $candidato['nombre_completo'] ?? '';
         $cargo           = $candidato['cargo'] ?? '';
 
         $tipoComiteLabel = match($tipoComite) {

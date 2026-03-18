@@ -64,8 +64,8 @@
 
     // Datos del entrante
     $nombreEntrante = $entrante
-        ? trim($entrante['nombres'] . ' ' . $entrante['apellidos'])
-        : trim(($recomposicion['entrante_nombres'] ?? '') . ' ' . ($recomposicion['entrante_apellidos'] ?? ''));
+        ? ($entrante['nombre_completo'] ?? '')
+        : ($recomposicion['entrante_nombres'] ?? '');
     $documentoEntrante = $entrante
         ? $entrante['documento_identidad']
         : ($recomposicion['entrante_documento'] ?? '');
@@ -74,7 +74,7 @@
         : ($recomposicion['entrante_cargo'] ?? '');
 
     // Nombre y documento del saliente
-    $nombreSaliente = trim($saliente['nombres'] . ' ' . $saliente['apellidos']);
+    $nombreSaliente = $saliente['nombre_completo'] ?? '';
     $documentoSaliente = $saliente['documento_identidad'];
     $cargoSaliente = $saliente['cargo'];
     $representacionSaliente = $saliente['representacion'] === 'trabajador' ? 'los Trabajadores' : 'el Empleador';
@@ -533,7 +533,7 @@
             ?>
             <tr>
                 <td style="text-align: center;"><?= $contador++ ?></td>
-                <td><?= esc($m['nombres'] . ' ' . $m['apellidos']) ?></td>
+                <td><?= esc($m['nombre_completo']) ?></td>
                 <td style="text-align: center;">C.C. <?= esc($m['documento_identidad']) ?></td>
                 <td><?= esc($m['cargo']) ?></td>
                 <td style="text-align: center;"><?= ucfirst($m['tipo_plaza'] ?? 'Principal') ?></td>
@@ -560,7 +560,7 @@
             ?>
             <tr>
                 <td style="text-align: center;"><?= $contador++ ?></td>
-                <td><?= esc($m['nombres'] . ' ' . $m['apellidos']) ?></td>
+                <td><?= esc($m['nombre_completo']) ?></td>
                 <td style="text-align: center;">C.C. <?= esc($m['documento_identidad']) ?></td>
                 <td><?= esc($m['cargo']) ?></td>
                 <td style="text-align: center;"><?= ucfirst($m['tipo_plaza'] ?? 'Principal') ?></td>

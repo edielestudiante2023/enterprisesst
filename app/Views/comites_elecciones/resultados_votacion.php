@@ -115,7 +115,7 @@
                         <!-- Info -->
                         <div class="flex-grow-1">
                             <h5 class="mb-1">
-                                <?= esc($c['nombres'] . ' ' . $c['apellidos']) ?>
+                                <?= esc($c['nombre_completo']) ?>
                                 <?php if ($c['estado'] === 'elegido'): ?>
                                 <span class="badge bg-success ms-2">
                                     <i class="bi bi-check-circle me-1"></i>

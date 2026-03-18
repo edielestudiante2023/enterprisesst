@@ -147,7 +147,7 @@ $tipoComiteNombre = [
                              onclick="seleccionarSaliente(this)">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <strong><?= esc($m['nombres'] . ' ' . $m['apellidos']) ?></strong>
+                                    <strong><?= esc($m['nombre_completo']) ?></strong>
                                     <br>
                                     <small class="text-muted">
                                         C.C. <?= esc($m['documento_identidad']) ?> - <?= esc($m['cargo']) ?>
@@ -178,7 +178,7 @@ $tipoComiteNombre = [
                              onclick="seleccionarSaliente(this)">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <strong><?= esc($m['nombres'] . ' ' . $m['apellidos']) ?></strong>
+                                    <strong><?= esc($m['nombre_completo']) ?></strong>
                                     <br>
                                     <small class="text-muted">
                                         C.C. <?= esc($m['documento_identidad']) ?> - <?= esc($m['cargo']) ?>
@@ -275,7 +275,7 @@ $tipoComiteNombre = [
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <span class="posicion-votacion me-2">#<?= $idx + 1 ?></span>
-                                        <strong><?= esc($c['nombres'] . ' ' . $c['apellidos']) ?></strong>
+                                        <strong><?= esc($c['nombre_completo']) ?></strong>
                                         <br>
                                         <small class="text-muted ms-4">
                                             C.C. <?= esc($c['documento_identidad']) ?> - <?= esc($c['cargo']) ?>
@@ -299,13 +299,10 @@ $tipoComiteNombre = [
                                 Datos del Nuevo Miembro
                             </h6>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Nombres <span class="text-danger">*</span></label>
-                                    <input type="text" name="entrante_nombres" class="form-control campo-nuevo">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                                    <input type="text" name="entrante_apellidos" class="form-control campo-nuevo">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Nombre completo <span class="text-danger">*</span></label>
+                                    <input type="text" name="entrante_nombre_completo" class="form-control campo-nuevo"
+                                           placeholder="Ej: Juan Carlos Pérez García">
                                 </div>
                             </div>
                             <div class="row">

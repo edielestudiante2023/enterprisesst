@@ -234,7 +234,7 @@ $permitirGestionCandidatos = true;
                                         </div>
                                         <?php endif; ?>
                                     </td>
-                                    <td><strong><?= esc(trim($t['nombres'] . ' ' . $t['apellidos'])) ?></strong></td>
+                                    <td><strong><?= esc($t['nombre_completo']) ?></strong></td>
                                     <td><?= esc($t['documento_identidad']) ?></td>
                                     <td><?= esc($t['cargo']) ?></td>
                                     <td>
@@ -491,7 +491,7 @@ $permitirGestionCandidatos = true;
                                 $posicion = 1;
                                 $totalVotos = array_sum(array_column($listaCandidatos, 'votos_obtenidos'));
                                 foreach ($listaCandidatos as $t):
-                                    $nombre = $t['nombre_completo'] ?? ($t['nombres'] . ' ' . $t['apellidos']);
+                                    $nombre = $t['nombre_completo'];
                                     $votos = $t['votos_obtenidos'] ?? 0;
                                     $porcentaje = $totalVotos > 0 ? round(($votos / $totalVotos) * 100, 1) : 0;
                                 ?>
@@ -683,7 +683,7 @@ $permitirGestionCandidatos = true;
                             <tbody>
                                 <?php foreach ($candidatosEmpleador as $brig): ?>
                                 <tr>
-                                    <td><?= esc($brig['nombre_completo'] ?: trim($brig['nombres'] . ' ' . $brig['apellidos'])) ?></td>
+                                    <td><?= esc($brig['nombre_completo']) ?></td>
                                     <td><?= esc($brig['cargo'] ?? '') ?></td>
                                     <td>
                                         <?php if (!empty($brig['email'])): ?>
@@ -808,7 +808,7 @@ $permitirGestionCandidatos = true;
                                         </div>
                                         <?php endif; ?>
                                     </td>
-                                    <td><strong><?= esc(trim($e['nombres'] . ' ' . $e['apellidos'])) ?></strong></td>
+                                    <td><strong><?= esc($e['nombre_completo']) ?></strong></td>
                                     <td><?= esc($e['documento_identidad']) ?></td>
                                     <td><?= esc($e['cargo']) ?></td>
                                     <td>
@@ -916,7 +916,7 @@ $permitirGestionCandidatos = true;
                             <tbody>
                                 <?php foreach ($elegidosFirmas as $el): ?>
                                 <tr>
-                                    <td><?= esc(trim($el['nombres'].' '.$el['apellidos'])) ?></td>
+                                    <td><?= esc($el['nombre_completo']) ?></td>
                                     <td><?= esc($el['cargo']) ?></td>
                                     <td><?= $el['tipo_plaza'] === 'principal' ? '<span class="badge bg-primary">Principal</span>' : '<span class="badge bg-secondary">Suplente</span>' ?></td>
                                     <td><?= !empty($el['email']) ? esc($el['email']) : '<span class="badge bg-warning text-dark">Sin email</span>' ?></td>

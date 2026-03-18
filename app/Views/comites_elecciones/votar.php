@@ -144,8 +144,7 @@
                                 <?php endif; ?>
                             </div>
 
-                            <h5 class="card-title mb-1"><?= esc($c['nombres']) ?></h5>
-                            <h5 class="card-title"><?= esc($c['apellidos']) ?></h5>
+                            <h5 class="card-title mb-1"><?= esc($c['nombre_completo']) ?></h5>
 
                             <p class="text-muted mb-2"><?= esc($c['cargo']) ?></p>
 

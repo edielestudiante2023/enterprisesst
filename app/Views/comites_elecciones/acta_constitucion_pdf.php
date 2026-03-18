@@ -375,7 +375,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
             ?>
             <tr style="<?= $esPrincipal ? 'background-color: #d1e7dd;' : ($esSuplente ? 'background-color: #cfe2ff;' : '') ?>">
                 <td style="text-align: center;"><?= $pos ?></td>
-                <td><?= $r['nombres'] ?> <?= $r['apellidos'] ?></td>
+                <td><?= $r['nombre_completo'] ?></td>
                 <td style="text-align: center; font-weight: bold;"><?= $r['votos_obtenidos'] ?></td>
                 <td style="text-align: center;">
                     <?php if ($esPrincipal): ?>
@@ -433,14 +433,14 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
                 </tr>
                 <?php foreach ($empleadorPrincipales as $e): ?>
                 <tr style="background-color: #d1e7dd;">
-                    <td><?= $e['nombres'] ?> <?= $e['apellidos'] ?></td>
+                    <td><?= $e['nombre_completo'] ?></td>
                     <td style="text-align: center;">C.C. <?= $e['documento_identidad'] ?></td>
                     <td style="text-align: center; font-weight: bold;">Principal</td>
                 </tr>
                 <?php endforeach; ?>
                 <?php foreach ($empleadorSuplentes as $e): ?>
                 <tr style="background-color: #cfe2ff;">
-                    <td><?= $e['nombres'] ?> <?= $e['apellidos'] ?></td>
+                    <td><?= $e['nombre_completo'] ?></td>
                     <td style="text-align: center;">C.C. <?= $e['documento_identidad'] ?></td>
                     <td style="text-align: center;">Suplente</td>
                 </tr>
@@ -461,14 +461,14 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
                 </tr>
                 <?php foreach ($principales as $t): ?>
                 <tr style="background-color: #d1e7dd;">
-                    <td><?= $t['nombres'] ?> <?= $t['apellidos'] ?></td>
+                    <td><?= $t['nombre_completo'] ?></td>
                     <td style="text-align: center;">C.C. <?= $t['documento_identidad'] ?></td>
                     <td style="text-align: center; font-weight: bold;">Principal</td>
                 </tr>
                 <?php endforeach; ?>
                 <?php foreach ($suplentes as $t): ?>
                 <tr style="background-color: #cfe2ff;">
-                    <td><?= $t['nombres'] ?> <?= $t['apellidos'] ?></td>
+                    <td><?= $t['nombre_completo'] ?></td>
                     <td style="text-align: center;">C.C. <?= $t['documento_identidad'] ?></td>
                     <td style="text-align: center;">Suplente</td>
                 </tr>
@@ -681,7 +681,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
                         <?= strtoupper($e['tipo_plaza']) ?>
                     </span>
                 </div>
-                <div style="font-size: 8pt; margin-bottom: 3px;"><strong>Nombre:</strong> <?= $e['nombres'] ?> <?= $e['apellidos'] ?></div>
+                <div style="font-size: 8pt; margin-bottom: 3px;"><strong>Nombre:</strong> <?= $e['nombre_completo'] ?></div>
                 <div style="font-size: 8pt; margin-bottom: 3px;"><strong>C.C.:</strong> <?= $e['documento_identidad'] ?></div>
                 <div style="font-size: 8pt; margin-bottom: 3px;"><strong>Cargo:</strong> <?= $e['cargo'] ?? '-' ?></div>
             </td>
@@ -736,7 +736,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
                         <?= strtoupper($t['tipo_plaza']) ?>
                     </span>
                 </div>
-                <div style="font-size: 8pt; margin-bottom: 3px;"><strong>Nombre:</strong> <?= $t['nombres'] ?> <?= $t['apellidos'] ?></div>
+                <div style="font-size: 8pt; margin-bottom: 3px;"><strong>Nombre:</strong> <?= $t['nombre_completo'] ?></div>
                 <div style="font-size: 8pt; margin-bottom: 3px;"><strong>C.C.:</strong> <?= $t['documento_identidad'] ?></div>
                 <div style="font-size: 8pt; margin-bottom: 3px;"><strong>Cargo:</strong> <?= $t['cargo'] ?? '-' ?></div>
             </td>

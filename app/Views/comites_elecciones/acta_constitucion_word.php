@@ -327,7 +327,7 @@ function renderEncabezadoWord($logoBase64, $codigoDocumento, $versionDocumento, 
             ?>
             <tr style="<?= $esPrincipal ? 'background-color: #d1e7dd;' : ($esSuplente ? 'background-color: #cfe2ff;' : '') ?>">
                 <td style="text-align: center;"><?= $pos ?></td>
-                <td><?= $r['nombres'] ?> <?= $r['apellidos'] ?></td>
+                <td><?= $r['nombre_completo'] ?></td>
                 <td style="text-align: center; font-weight: bold;"><?= $r['votos_obtenidos'] ?></td>
                 <td style="text-align: center;">
                     <?php if ($esPrincipal): ?>
@@ -385,14 +385,14 @@ function renderEncabezadoWord($logoBase64, $codigoDocumento, $versionDocumento, 
                 </tr>
                 <?php foreach ($empleadorPrincipales as $e): ?>
                 <tr style="background-color: #d1e7dd;">
-                    <td><?= $e['nombres'] ?> <?= $e['apellidos'] ?></td>
+                    <td><?= $e['nombre_completo'] ?></td>
                     <td style="text-align: center;">C.C. <?= $e['documento_identidad'] ?></td>
                     <td style="text-align: center; font-weight: bold;">Principal</td>
                 </tr>
                 <?php endforeach; ?>
                 <?php foreach ($empleadorSuplentes as $e): ?>
                 <tr style="background-color: #cfe2ff;">
-                    <td><?= $e['nombres'] ?> <?= $e['apellidos'] ?></td>
+                    <td><?= $e['nombre_completo'] ?></td>
                     <td style="text-align: center;">C.C. <?= $e['documento_identidad'] ?></td>
                     <td style="text-align: center;">Suplente</td>
                 </tr>
@@ -413,14 +413,14 @@ function renderEncabezadoWord($logoBase64, $codigoDocumento, $versionDocumento, 
                 </tr>
                 <?php foreach ($principales as $t): ?>
                 <tr style="background-color: #d1e7dd;">
-                    <td><?= $t['nombres'] ?> <?= $t['apellidos'] ?></td>
+                    <td><?= $t['nombre_completo'] ?></td>
                     <td style="text-align: center;">C.C. <?= $t['documento_identidad'] ?></td>
                     <td style="text-align: center; font-weight: bold;">Principal</td>
                 </tr>
                 <?php endforeach; ?>
                 <?php foreach ($suplentes as $t): ?>
                 <tr style="background-color: #cfe2ff;">
-                    <td><?= $t['nombres'] ?> <?= $t['apellidos'] ?></td>
+                    <td><?= $t['nombre_completo'] ?></td>
                     <td style="text-align: center;">C.C. <?= $t['documento_identidad'] ?></td>
                     <td style="text-align: center;">Suplente</td>
                 </tr>
@@ -618,7 +618,7 @@ function renderEncabezadoWord($logoBase64, $codigoDocumento, $versionDocumento, 
                         <?= strtoupper($e['tipo_plaza']) ?>
                     </b>
                 </p>
-                <p style="margin: 2px 0;"><b>Nombre:</b> <?= $e['nombres'] ?> <?= $e['apellidos'] ?></p>
+                <p style="margin: 2px 0;"><b>Nombre:</b> <?= $e['nombre_completo'] ?></p>
                 <p style="margin: 2px 0;"><b>C.C.:</b> <?= $e['documento_identidad'] ?></p>
                 <p style="margin: 2px 0;"><b>Cargo:</b> <?= $e['cargo'] ?? '-' ?></p>
             </td>
@@ -666,7 +666,7 @@ function renderEncabezadoWord($logoBase64, $codigoDocumento, $versionDocumento, 
                         <?= strtoupper($t['tipo_plaza']) ?>
                     </b>
                 </p>
-                <p style="margin: 2px 0;"><b>Nombre:</b> <?= $t['nombres'] ?> <?= $t['apellidos'] ?></p>
+                <p style="margin: 2px 0;"><b>Nombre:</b> <?= $t['nombre_completo'] ?></p>
                 <p style="margin: 2px 0;"><b>C.C.:</b> <?= $t['documento_identidad'] ?></p>
                 <p style="margin: 2px 0;"><b>Cargo:</b> <?= $t['cargo'] ?? '-' ?></p>
             </td>

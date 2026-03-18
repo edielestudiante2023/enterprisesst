@@ -29,8 +29,8 @@ $tiposIngreso = [
 
 // Datos del entrante (puede venir de candidatos o de campos manuales)
 $nombreEntrante = $entrante
-    ? trim($entrante['nombres'] . ' ' . $entrante['apellidos'])
-    : trim(($recomposicion['entrante_nombres'] ?? '') . ' ' . ($recomposicion['entrante_apellidos'] ?? ''));
+    ? ($entrante['nombre_completo'] ?? '')
+    : ($recomposicion['entrante_nombres'] ?? '');
 $documentoEntrante = $entrante
     ? $entrante['documento_identidad']
     : ($recomposicion['entrante_documento'] ?? '');
@@ -175,7 +175,7 @@ $cargoEntrante = $entrante
                                     <i class="fas fa-user-minus"></i>
                                 </div>
                                 <span class="badge bg-danger mb-2">SALE</span>
-                                <h5 class="mb-1"><?= esc($saliente['nombres'] . ' ' . $saliente['apellidos']) ?></h5>
+                                <h5 class="mb-1"><?= esc($saliente['nombre_completo']) ?></h5>
                                 <p class="mb-1 text-muted">C.C. <?= esc($saliente['documento_identidad']) ?></p>
                                 <small class="text-muted"><?= esc($saliente['cargo']) ?></small>
                                 <hr>
@@ -270,7 +270,7 @@ $cargoEntrante = $entrante
                     <?php foreach ($trabajadores as $m): ?>
                     <div class="miembro-row d-flex justify-content-between align-items-center">
                         <div>
-                            <strong><?= esc($m['nombres'] . ' ' . $m['apellidos']) ?></strong>
+                            <strong><?= esc($m['nombre_completo']) ?></strong>
                             <?php if (isset($m['es_nuevo']) && $m['es_nuevo']): ?>
                                 <span class="badge bg-success ms-2">NUEVO (B)</span>
                             <?php else: ?>
@@ -293,7 +293,7 @@ $cargoEntrante = $entrante
                     <?php foreach ($empleadores as $m): ?>
                     <div class="miembro-row d-flex justify-content-between align-items-center">
                         <div>
-                            <strong><?= esc($m['nombres'] . ' ' . $m['apellidos']) ?></strong>
+                            <strong><?= esc($m['nombre_completo']) ?></strong>
                             <?php if (isset($m['es_nuevo']) && $m['es_nuevo']): ?>
                                 <span class="badge bg-success ms-2">NUEVO (B)</span>
                             <?php else: ?>

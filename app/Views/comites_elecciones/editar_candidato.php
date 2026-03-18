@@ -41,7 +41,7 @@ $esEmpleador = $candidato['representacion'] === 'empleador';
                 <i class="bi bi-pencil-square me-2"></i>
                 Editar <?= $esEmpleador ? 'Representante' : 'Candidato' ?>
             </h1>
-            <p class="text-muted mb-0"><?= esc($candidato['nombres'] . ' ' . $candidato['apellidos']) ?></p>
+            <p class="text-muted mb-0"><?= esc($candidato['nombre_completo']) ?></p>
         </div>
     </div>
 
@@ -93,7 +93,7 @@ $esEmpleador = $candidato['representacion'] === 'empleador';
                                 <div class="mb-3">
                                     <label for="nombre_completo" class="form-label fw-bold">Nombre completo <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="nombre_completo" name="nombre_completo" required
-                                           value="<?= esc(trim($candidato['nombres'] . ' ' . $candidato['apellidos'])) ?>">
+                                           value="<?= esc($candidato['nombre_completo']) ?>">
                                 </div>
                                 <!-- Documento (solo lectura) -->
                                 <div class="row">
