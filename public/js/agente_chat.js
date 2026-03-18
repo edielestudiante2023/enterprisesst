@@ -81,7 +81,7 @@ async function enviarMensaje() {
 }
 
 function usarSugerencia(el) {
-    inputMsg.value = el.textContent.trim();
+    inputMsg.value = el.dataset.query || el.textContent.trim();
     enviarMensaje();
 }
 

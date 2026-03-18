@@ -542,11 +542,38 @@
                 <h3>¡Hola! Soy Otto</h3>
                 <p>Tu asistente virtual de SST. Tengo acceso a todas las tablas del sistema. Puedo consultar datos, actualizar registros y ayudarte con lo que necesites.</p>
                 <div class="suggestion-chips">
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Clientes activos</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Pendientes de firma hoy</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Documentos sin generar</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Últimas capacitaciones</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Tablas disponibles</div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Lista los clientes activos con su ARL y nivel de riesgo">
+                        🏢 Clientes activos
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Muéstrame las actividades abiertas del plan de trabajo">
+                        📋 Plan de trabajo
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="¿Qué capacitaciones están programadas o pendientes de ejecutar?">
+                        🎓 Capacitaciones
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Muéstrame los pendientes abiertos de todos los clientes">
+                        📌 Pendientes
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="¿Qué documentos están pendientes de firma?">
+                        ✍️ Firmas pendientes
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Muéstrame los indicadores SST de todos los clientes del año actual">
+                        📊 Indicadores
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="¿Cuáles son los hallazgos abiertos de ACC?">
+                        🔍 Hallazgos ACC
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="¿Qué vencimientos de mantenimientos están próximos?">
+                        🔧 Mantenimientos
+                    </div>
                 </div>
             </div>
 

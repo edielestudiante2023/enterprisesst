@@ -390,11 +390,34 @@
                 <h3>¡Hola! Soy Otto</h3>
                 <p>Tu asistente virtual de SST para <b><?= esc($nombre_empresa) ?></b>. Puedo consultarte información sobre tus documentos, plan de trabajo, indicadores y más.</p>
                 <div class="suggestion-chips">
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Mis documentos pendientes</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Mi plan de trabajo actual</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Indicadores de mi empresa</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Próximas visitas</div>
-                    <div class="suggestion-chip" onclick="usarSugerencia(this)">Estado de mis firmas</div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Muéstrame las actividades abiertas de mi plan de trabajo">
+                        📋 Plan de trabajo
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Muéstrame el cronograma de capacitaciones de mi empresa">
+                        🎓 Capacitaciones
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="¿Cuál es la calificación de los estándares mínimos de mi empresa?">
+                        ⭐ Estándares mínimos
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Muéstrame los pendientes abiertos de mi empresa">
+                        📌 Pendientes
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="¿Qué documentos tiene cargados mi empresa?">
+                        📄 Documentos
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="Muéstrame los indicadores SST de mi empresa">
+                        📊 Indicadores
+                    </div>
+                    <div class="suggestion-chip" onclick="usarSugerencia(this)"
+                         data-query="¿Qué programas SST tiene registrados mi empresa?">
+                        📁 Programas
+                    </div>
                 </div>
             </div>
 
