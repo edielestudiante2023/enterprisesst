@@ -1289,6 +1289,7 @@ $routes->get('/comites-elecciones/proceso/(:num)/acta/word', 'ComitesEleccionesC
 $routes->get('/comites-elecciones/proceso/(:num)/firmas', 'ComitesEleccionesController::solicitarFirmasActa/$1');
 $routes->post('/comites-elecciones/proceso/crear-solicitudes-acta', 'ComitesEleccionesController::crearSolicitudesActa');
 $routes->get('/comites-elecciones/proceso/(:num)/firmas/estado', 'ComitesEleccionesController::estadoFirmasActa/$1');
+$routes->post('/comites-elecciones/proceso/(:num)/firmas/renovar-todos', 'ComitesEleccionesController::renovarTodosLosTokens/$1');
 
 // Recomposicion de Comites
 $routes->get('/comites-elecciones/proceso/(:num)/recomposiciones', 'ComitesEleccionesController::listarRecomposiciones/$1');

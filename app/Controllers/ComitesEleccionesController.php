@@ -2048,6 +2048,15 @@ class ComitesEleccionesController extends BaseController
             ->get()
             ->getRowArray() ?? [];
 
+        // Cargar consultor del proceso para CC
+        $consultor = null;
+        if (!empty($proceso['id_consultor'])) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_consultor', $proceso['id_consultor'])
+                ->get()
+                ->getRowArray();
+        }
+
         $enviados = 0;
         $sinEmail  = 0;
         $errores   = 0;
@@ -2057,7 +2066,7 @@ class ComitesEleccionesController extends BaseController
                 $sinEmail++;
                 continue;
             }
-            $ok = $this->enviarEmailNotificacionEleccion($candidato, $proceso, $cliente, $contexto);
+            $ok = $this->enviarEmailNotificacionEleccion($candidato, $proceso, $cliente, $contexto, $consultor);
             if ($ok) $enviados++;
             else      $errores++;
         }
@@ -2078,7 +2087,7 @@ class ComitesEleccionesController extends BaseController
     /**
      * Enviar correo de felicitacion a un candidato elegido
      */
-    private function enviarEmailNotificacionEleccion(array $candidato, array $proceso, array $cliente, array $contexto = []): bool
+    private function enviarEmailNotificacionEleccion(array $candidato, array $proceso, array $cliente, array $contexto = [], ?array $consultor = null): bool
     {
         $tipoComite    = $proceso['tipo_comite'];
         $tipoPlaza     = $candidato['tipo_plaza'] === 'principal' ? 'Principal' : 'Suplente';
@@ -2139,6 +2148,13 @@ class ComitesEleccionesController extends BaseController
                 $email->addCc(
                     $contexto['delegado_sst_email'],
                     $contexto['delegado_sst_nombre'] ?? 'Delegado SST'
+                );
+            }
+            // CC al Consultor del proceso
+            if (!empty($consultor['correo_consultor'])) {
+                $email->addCc(
+                    $consultor['correo_consultor'],
+                    $consultor['nombre_consultor'] ?? 'Consultor'
                 );
             }
 
@@ -4621,5 +4637,77 @@ class ComitesEleccionesController extends BaseController
         } else {
             return redirect()->back()->with('error', 'Error al reenviar el correo');
         }
+    }
+
+    /**
+     * Renovar todos los tokens expirados/pendientes de un proceso y reenviar correos
+     */
+    public function renovarTodosLosTokens(int $idProceso)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $proceso = $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->get()
+            ->getRowArray();
+
+        if (!$proceso) {
+            return redirect()->back()->with('error', 'Proceso no encontrado');
+        }
+
+        // Obtener el documento del acta del proceso
+        $data = $this->obtenerDatosActa($idProceso);
+        if (!$data) {
+            return redirect()->back()->with('error', 'No se encontraron datos del acta');
+        }
+        $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente'], $data);
+        $cliente   = $data['cliente'];
+
+        // Obtener todas las solicitudes pendientes o expiradas del documento
+        $solicitudes = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->whereIn('estado', ['pendiente', 'expirado'])
+            ->get()
+            ->getResultArray();
+
+        if (empty($solicitudes)) {
+            return redirect()->back()->with('error', 'No hay solicitudes pendientes o expiradas para renovar');
+        }
+
+        $nuevaExpiracion = date('Y-m-d H:i:s', strtotime('+30 days'));
+        $renovados = 0;
+        $errores   = 0;
+
+        foreach ($solicitudes as $solicitud) {
+            if (empty($solicitud['firmante_email'])) {
+                $errores++;
+                continue;
+            }
+
+            // Generar nuevo token y extender fecha
+            $nuevoToken = bin2hex(random_bytes(32));
+            $this->db->table('tbl_doc_firma_solicitudes')
+                ->where('id_solicitud', $solicitud['id_solicitud'])
+                ->update([
+                    'token'            => $nuevoToken,
+                    'estado'           => 'pendiente',
+                    'fecha_expiracion' => $nuevaExpiracion,
+                ]);
+
+            // Reenviar correo con el nuevo token
+            $solicitud['token'] = $nuevoToken;
+            $enviado = $this->enviarCorreoFirmaActa($solicitud, $documento, $proceso, $cliente);
+
+            if ($enviado) $renovados++;
+            else          $errores++;
+        }
+
+        $msg = "Tokens renovados y correos reenviados: {$renovados}";
+        if ($errores > 0) $msg .= ". Errores: {$errores}";
+
+        return redirect()->to("/comites-elecciones/proceso/{$idProceso}/firmas/estado")
+            ->with('success', $msg);
     }
 }

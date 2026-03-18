@@ -371,12 +371,29 @@ $tipoComiteNombre = [
     </div>
 
     <!-- Botones inferiores -->
-    <div class="d-flex justify-content-between mt-4">
+    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
         <a href="<?= base_url("comites-elecciones/{$cliente['id_cliente']}/proceso/{$proceso['id_proceso']}") ?>"
            class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-1"></i> Volver al Proceso
         </a>
-        <div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <?php
+            $expirados = count(array_filter($solicitudes, fn($s) => $s['estado'] === 'expirado'));
+            $pendientesSinFecha = count(array_filter($solicitudes, fn($s) => $s['estado'] === 'pendiente' && (empty($s['fecha_expiracion']) || $s['fecha_expiracion'] <= '1970-01-01')));
+            $hayQueRenovar = $expirados + $pendientesSinFecha;
+            ?>
+            <?php if ($hayQueRenovar > 0 || $pendientes > 0): ?>
+            <form action="<?= base_url("comites-elecciones/proceso/{$proceso['id_proceso']}/firmas/renovar-todos") ?>" method="post"
+                  onsubmit="return confirm('Esto renovará todos los tokens pendientes/expirados y reenviará los correos de firma. ¿Continuar?');">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-rotate me-1"></i>
+                    Renovar todos los tokens y reenviar correos
+                    <?php if ($hayQueRenovar > 0): ?><span class="badge bg-danger ms-1"><?= $hayQueRenovar ?> expirados</span><?php endif; ?>
+                </button>
+            </form>
+            <?php endif; ?>
+
             <?php if ($firmados === $totalSolicitudes && $totalSolicitudes > 0): ?>
             <div class="alert alert-success d-inline-block mb-0 py-2 px-3">
                 <i class="fas fa-check-circle me-2"></i>
