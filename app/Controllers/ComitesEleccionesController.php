@@ -4916,8 +4916,6 @@ class ComitesEleccionesController extends BaseController
                     $consultor['nombre_consultor'] ?? 'Consultor'
                 );
             }
-            // CC revision temporal — QUITAR UNA VEZ CONFIRMADO
-            $email->addCc('edison.cuervo@cycloidtalent.com', 'Edison Cuervo');
 
             $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
             $response = $sendgrid->send($email);
