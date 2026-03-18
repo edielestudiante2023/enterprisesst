@@ -437,11 +437,21 @@ PROMPT;
         $sql = '';
         $texto = $contenido;
 
-        // Extraer bloque SQL si existe
+        // Extraer bloque ```sql ... ```
         if (preg_match('/```sql\s*\n?(.*?)\n?```/si', $contenido, $matches)) {
             $sql = trim($matches[1]);
-            $texto = trim(preg_replace('/```sql\s*\n?.*?\n?```/si', '', $contenido));
         }
+
+        // Si no encontró ```sql, intentar extraer bloque genérico ``` ... ``` que parezca SQL
+        if (empty($sql) && preg_match('/```\s*\n?(SELECT|INSERT|UPDATE|DELETE|WITH).*?\n?```/si', $contenido, $matches2)) {
+            $sql = trim(preg_replace('/^```\w*\s*/i', '', preg_replace('/```\s*$/', '', $matches2[0])));
+        }
+
+        // Limpiar TODOS los bloques de código del texto visible (el usuario nunca debe ver SQL)
+        $texto = preg_replace('/```[\w]*\s*\n?.*?\n?```/si', '', $contenido);
+        // Limpiar también líneas sueltas que empiecen con SELECT/FROM/WHERE/JOIN/etc.
+        $texto = preg_replace('/^\s*(SELECT|FROM|WHERE|JOIN|LEFT|INNER|GROUP|ORDER|LIMIT|HAVING|AND\s+\w|OR\s+\w|INSERT|UPDATE|DELETE|WITH\s+\w).*/mi', '', $texto);
+        $texto = trim(preg_replace('/\n{3,}/', "\n\n", $texto));
 
         return ['sql' => $sql, 'texto' => $texto];
     }
