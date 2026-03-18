@@ -361,17 +361,7 @@ ADVERTENCIAS:
     {
         $prompts = json_decode($promptJson, true);
 
-        $instruccionVigencia =
-            "\n\n=== INSTRUCCIÓN CRÍTICA DE VIGENCIA NORMATIVA ===\n" .
-            "Año de referencia: " . date('Y') . ".\n" .
-            "SOLO incluye normas VIGENTES en Colombia a la fecha actual.\n" .
-            "NUNCA cites como vigentes normas derogadas. Si una norma fue derogada, " .
-            "menciona ÚNICAMENTE la norma vigente que la reemplazó.\n" .
-            "Normas derogadas conocidas que NO debes citar como vigentes:\n" .
-            "- Resolución 1111 de 2017 (derogada por Resolución 0312 de 2019)\n" .
-            "- Resolución 652 de 2012 (derogada por Resolución 3461 de 2025)\n" .
-            "- Resolución 1356 de 2012 (derogada por Resolución 3461 de 2025)\n" .
-            "- Resolución 652 de 2012 (derogada por Resolución 3641 de 2026 para COCOLAB)";
+        $instruccionVigencia = \App\Libraries\NormasVigentes::instruccionVigencia();
 
         // Intentar primero con la Responses API (web search en tiempo real)
         $modelos = ['gpt-4o-search-preview', 'gpt-4o-mini-search-preview'];
@@ -443,17 +433,7 @@ ADVERTENCIAS:
 
         $promptFallback = json_encode([
             'system' => $prompts['system'],
-            'user'   => $prompts['user'] . $instruccionVigencia .
-                "\n\nNormas SST colombianas VIGENTES de referencia (verificadas):\n" .
-                "- Ley 9 de 1979 (Código Sanitario)\n" .
-                "- Decreto 1072 de 2015 (Decreto Único Reglamentario Sector Trabajo)\n" .
-                "- Resolución 0312 de 2019 (Estándares Mínimos SG-SST)\n" .
-                "- Ley 1562 de 2012 (Sistema General de Riesgos Laborales)\n" .
-                "- Decreto 1477 de 2014 (Tabla de Enfermedades Laborales)\n" .
-                "- Resolución 2400 de 1979 (Estatuto Seguridad Industrial)\n" .
-                "- Resolución 3461 de 2025 (COPASST — deroga 652/2012 y 1356/2012)\n" .
-                "- Resolución 3641 de 2026 (COCOLAB — vigente)\n" .
-                "Cita SOLO las que apliquen al tema específico del documento."
+            'user'   => $prompts['user'] . $instruccionVigencia . \App\Libraries\NormasVigentes::listaFallback()
         ]);
 
         return $this->llamarAPI($promptFallback, $nombreSeccion);

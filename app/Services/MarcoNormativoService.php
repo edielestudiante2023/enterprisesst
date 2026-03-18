@@ -92,6 +92,8 @@ Necesito un listado completo y detallado. Incluye al menos 8 normas aplicables, 
 Para cada norma indica: nombre completo, año y qué regula específicamente para este tipo de documento.
 Formato: lista con viñetas, agrupada por categoría de mayor a menor relevancia.";
 
+        $prompt .= \App\Libraries\NormasVigentes::instruccionVigencia();
+
         if (!empty($contexto)) {
             $prompt .= "\n\nContexto adicional a considerar en la búsqueda: {$contexto}";
         }
