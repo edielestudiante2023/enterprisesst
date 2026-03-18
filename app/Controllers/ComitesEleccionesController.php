@@ -647,8 +647,26 @@ class ComitesEleccionesController extends BaseController
 
         // Sin restricción de estado — el consultor puede inscribir en cualquier fase
 
+        // Validar campos obligatorios
+        $nombreCompleto = trim($this->request->getPost('nombre_completo') ?? '');
+        $documentoIdentidad = trim($this->request->getPost('documento_identidad') ?? '');
+        $cargo = trim($this->request->getPost('cargo') ?? '');
+        $email = trim($this->request->getPost('email') ?? '');
+
+        $errores = [];
+        if (empty($nombreCompleto))    $errores[] = 'El nombre completo es obligatorio';
+        if (empty($documentoIdentidad)) $errores[] = 'El documento de identidad es obligatorio';
+        if (empty($cargo))             $errores[] = 'El cargo es obligatorio';
+        if (empty($email))             $errores[] = 'El correo electronico es obligatorio';
+        elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errores[] = 'El correo electronico no es valido';
+
+        if (!empty($errores)) {
+            return redirect()->back()
+                ->with('error', implode(' | ', $errores))
+                ->withInput();
+        }
+
         // Validar documento único en el proceso
-        $documentoIdentidad = $this->request->getPost('documento_identidad');
         $existente = $this->db->table('tbl_candidatos_comite')
             ->where('id_proceso', $idProceso)
             ->where('documento_identidad', $documentoIdentidad)
@@ -703,7 +721,6 @@ class ComitesEleccionesController extends BaseController
         }
 
         // Insertar candidato
-        $nombreCompleto = trim($this->request->getPost('nombre_completo') ?? '');
         $this->db->table('tbl_candidatos_comite')->insert([
             'id_proceso' => $idProceso,
             'id_cliente' => $proceso['id_cliente'],
@@ -711,9 +728,9 @@ class ComitesEleccionesController extends BaseController
             'apellidos'  => '',
             'documento_identidad' => $documentoIdentidad,
             'tipo_documento' => $this->request->getPost('tipo_documento') ?? 'CC',
-            'cargo' => $this->request->getPost('cargo'),
+            'cargo' => $cargo,
             'area' => $this->request->getPost('area'),
-            'email' => $this->request->getPost('email'),
+            'email' => $email,
             'telefono' => $this->request->getPost('telefono'),
             'foto' => $rutaFoto,
             'representacion' => $representacion,
@@ -2342,10 +2359,17 @@ class ComitesEleccionesController extends BaseController
         $rol            = $this->request->getPost('rol') ?? 'escrutador';
 
         // Validar campos requeridos
-        if (empty($idProceso) || empty($documento) || empty($nombreCompleto)) {
+        $erroresJurado = [];
+        if (empty($idProceso) || empty($documento)) $erroresJurado[] = 'Documento de identidad es obligatorio';
+        if (empty($nombreCompleto))                  $erroresJurado[] = 'Nombre completo es obligatorio';
+        if (empty($cargo))                           $erroresJurado[] = 'Cargo es obligatorio';
+        if (empty($email))                           $erroresJurado[] = 'Correo electronico es obligatorio';
+        elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $erroresJurado[] = 'Correo electronico no es valido';
+
+        if (!empty($erroresJurado)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Documento y nombre completo son requeridos'
+                'message' => implode(' | ', $erroresJurado)
             ]);
         }
 
