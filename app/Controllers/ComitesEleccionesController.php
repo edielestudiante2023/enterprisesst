@@ -2016,6 +2016,122 @@ class ComitesEleccionesController extends BaseController
     }
 
     /**
+     * Notificar por correo a los candidatos elegidos (representantes de trabajadores)
+     */
+    public function notificarElegidos(int $idProceso)
+    {
+        $proceso = $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->get()
+            ->getRowArray();
+
+        if (!$proceso) {
+            return redirect()->back()->with('error', 'Proceso no encontrado');
+        }
+
+        $elegidos = $this->db->table('tbl_candidatos_comite')
+            ->where('id_proceso', $idProceso)
+            ->where('representacion', 'trabajador')
+            ->where('estado', 'elegido')
+            ->get()
+            ->getResultArray();
+
+        if (empty($elegidos)) {
+            return redirect()->back()->with('error', 'No hay candidatos elegidos en este proceso');
+        }
+
+        $cliente = $this->clienteModel->find($proceso['id_cliente']);
+        $enviados = 0;
+        $sinEmail  = 0;
+        $errores   = 0;
+
+        foreach ($elegidos as $candidato) {
+            if (empty($candidato['email'])) {
+                $sinEmail++;
+                continue;
+            }
+            $ok = $this->enviarEmailNotificacionEleccion($candidato, $proceso, $cliente);
+            if ($ok) $enviados++;
+            else      $errores++;
+        }
+
+        // Registrar fecha de envio
+        $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->update(['notificacion_elegidos_at' => date('Y-m-d H:i:s')]);
+
+        $msg = "Notificaciones enviadas: {$enviados}";
+        if ($sinEmail > 0) $msg .= ". Sin email registrado: {$sinEmail}";
+        if ($errores  > 0) $msg .= ". Errores de envio: {$errores}";
+
+        return redirect()->to("/comites-elecciones/{$proceso['id_cliente']}/proceso/{$idProceso}")
+            ->with('success', $msg);
+    }
+
+    /**
+     * Enviar correo de felicitacion a un candidato elegido
+     */
+    private function enviarEmailNotificacionEleccion(array $candidato, array $proceso, array $cliente): bool
+    {
+        $tipoComite  = $proceso['tipo_comite'];
+        $tipoPlaza   = $candidato['tipo_plaza'] === 'principal' ? 'Principal' : 'Suplente';
+        $nombreCliente = $cliente['nombre_cliente'] ?? 'la empresa';
+        $anio        = $proceso['anio'];
+
+        $tipoComiteLabel = match($tipoComite) {
+            'COPASST' => 'COPASST (Comité Paritario de Seguridad y Salud en el Trabajo)',
+            'COCOLAB' => 'Comité de Convivencia Laboral',
+            'BRIGADA' => 'Brigada de Emergencias',
+            'VIGIA'   => 'Vigía de Seguridad y Salud en el Trabajo',
+            default   => $tipoComite
+        };
+
+        $mensaje = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #1e7e34 0%, #28a745 100%); padding: 20px; text-align: center;'>
+                <h2 style='color: white; margin: 0;'>¡Felicitaciones!</h2>
+                <p style='color: #d4edda; margin: 5px 0 0 0;'>Resultado de la votacion {$tipoComite} {$anio}</p>
+            </div>
+            <div style='padding: 30px; background: #f8f9fa;'>
+                <p>Estimado/a <strong>{$candidato['nombre_completo']}</strong>,</p>
+                <p>Nos complace informarle que fue <strong>elegido/a</strong> como representante de los trabajadores en el proceso electoral del <strong>{$tipoComiteLabel}</strong> de <strong>{$nombreCliente}</strong>.</p>
+
+                <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;'>
+                    <p style='margin: 5px 0;'><strong>Comite:</strong> {$tipoComiteLabel}</p>
+                    <p style='margin: 5px 0;'><strong>Cargo:</strong> Representante de los Trabajadores - {$tipoPlaza}</p>
+                    <p style='margin: 5px 0;'><strong>Empresa:</strong> {$nombreCliente}</p>
+                    <p style='margin: 5px 0;'><strong>Vigencia:</strong> {$anio}</p>
+                </div>
+
+                <p>En los proximos dias recibira un correo con el Acta de Constitucion del {$tipoComite} para su firma electronica.</p>
+
+                <hr style='border: none; border-top: 1px solid #dee2e6; margin: 20px 0;'>
+                <p style='color: #666; font-size: 11px;'>Este mensaje fue generado automaticamente por EnterpriseSST - Cycloid Talent.</p>
+            </div>
+        </div>
+        ";
+
+        try {
+            $email = new \SendGrid\Mail\Mail();
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setSubject("¡Fue elegido/a! Resultado votacion {$tipoComite} {$anio} - {$nombreCliente}");
+            $email->addTo($candidato['email'], $candidato['nombre_completo']);
+            $email->addContent("text/html", $mensaje);
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($email);
+
+            $statusCode = $response->statusCode();
+            log_message('info', "Email notificacion elegido enviado a {$candidato['email']} - Status: {$statusCode}");
+
+            return $statusCode >= 200 && $statusCode < 300;
+        } catch (\Exception $e) {
+            log_message('error', 'Error enviando email notificacion elegido: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Determinar elegidos según votos obtenidos
      */
     protected function determinarElegidos(int $idProceso, array $proceso): void
@@ -3219,6 +3335,7 @@ class ComitesEleccionesController extends BaseController
                 'orden_firma' => $orden++,
                 'estado' => 'pendiente',
                 'token' => $token,
+                'fecha_expiracion' => date('Y-m-d H:i:s', strtotime('+30 days')),
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
