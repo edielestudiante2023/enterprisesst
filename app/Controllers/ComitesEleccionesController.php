@@ -4999,10 +4999,6 @@ class ComitesEleccionesController extends BaseController
                     $consultor['nombre_consultor'] ?? 'Consultor'
                 );
             }
-            // CC temporal para revisión (BRIGADA)
-            if ($tipoComite === 'BRIGADA') {
-                $email->addCc('edison.cuervo@cycloidtalent.com', 'Edison Cuervo');
-            }
 
             $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
             $response = $sendgrid->send($email);
@@ -5145,9 +5141,6 @@ class ComitesEleccionesController extends BaseController
             $email->addContent("text/html", $mensaje);
 
             $email->addTo($candidato['email'], $nombreCandidato);
-
-            // CC temporal para revisión
-            $email->addCc('edison.cuervo@cycloidtalent.com', 'Edison Cuervo');
 
             // CC al consultor
             if (!empty($consultor['correo_consultor'])) {
