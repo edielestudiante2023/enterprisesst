@@ -1263,6 +1263,7 @@ $routes->post('/comites-elecciones/proceso/(:num)/enviar-enlaces-todos', 'Comite
 $routes->get('/comites-elecciones/proceso/(:num)/resultados', 'ComitesEleccionesController::resultadosVotacion/$1');
 $routes->post('/comites-elecciones/proceso/(:num)/finalizar-votacion', 'ComitesEleccionesController::finalizarVotacion/$1');
 $routes->post('/comites-elecciones/proceso/(:num)/notificar-elegidos', 'ComitesEleccionesController::notificarElegidos/$1');
+$routes->post('/comites-elecciones/proceso/(:num)/enviar-informe-proceso', 'ComitesEleccionesController::enviarInformeProceso/$1');
 
 // Fase 4: Completar Proceso
 $routes->post('/comites-elecciones/proceso/(:num)/completar', 'ComitesEleccionesController::completarProceso/$1');

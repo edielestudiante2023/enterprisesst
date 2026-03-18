@@ -627,14 +627,24 @@ $permitirGestionCandidatos = true;
                         </table>
                     </div>
 
-                    <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/notificar-elegidos') ?>" method="post"
-                          onsubmit="return confirm('¿Enviar correo de notificacion a los <?= count($elegidosTrabajadores) ?> elegidos?');">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn <?= $notifEnviada ? 'btn-outline-success' : 'btn-success' ?>">
-                            <i class="bi bi-envelope-check me-1"></i>
-                            <?= $notifEnviada ? 'Reenviar Notificaciones' : 'Enviar Notificacion a Elegidos' ?>
-                        </button>
-                    </form>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/notificar-elegidos') ?>" method="post"
+                              onsubmit="return confirm('¿Enviar correo de notificacion a los <?= count($elegidosTrabajadores) ?> elegidos?');">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn <?= $notifEnviada ? 'btn-outline-success' : 'btn-success' ?>">
+                                <i class="bi bi-envelope-check me-1"></i>
+                                <?= $notifEnviada ? 'Reenviar Notificaciones' : 'Enviar Notificacion a Elegidos' ?>
+                            </button>
+                        </form>
+                        <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/enviar-informe-proceso') ?>" method="post"
+                              onsubmit="return confirm('¿Enviar informe de resultados a la Alta Dirección y Jurados?');">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-file-earmark-bar-graph me-1"></i>
+                                Enviar informe de proceso a alta dirección y jurados
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
             <?php endif; ?>
@@ -845,14 +855,24 @@ $permitirGestionCandidatos = true;
                         </table>
                     </div>
 
-                    <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/notificar-elegidos') ?>" method="post"
-                          onsubmit="return confirm('¿Enviar correo de notificacion a los <?= count($elegidosFirmas) ?> elegidos?');">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn <?= $notifEnviadaFirmas ? 'btn-outline-success' : 'btn-success btn-lg' ?>">
-                            <i class="bi bi-envelope-check me-1"></i>
-                            <?= $notifEnviadaFirmas ? 'Reenviar Notificaciones' : 'Enviar Notificacion a Elegidos Ahora' ?>
-                        </button>
-                    </form>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/notificar-elegidos') ?>" method="post"
+                              onsubmit="return confirm('¿Enviar correo de notificacion a los <?= count($elegidosFirmas) ?> elegidos?');">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn <?= $notifEnviadaFirmas ? 'btn-outline-success' : 'btn-success btn-lg' ?>">
+                                <i class="bi bi-envelope-check me-1"></i>
+                                <?= $notifEnviadaFirmas ? 'Reenviar Notificaciones' : 'Enviar Notificacion a Elegidos Ahora' ?>
+                            </button>
+                        </form>
+                        <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/enviar-informe-proceso') ?>" method="post"
+                              onsubmit="return confirm('¿Enviar informe de resultados a la Alta Dirección y Jurados?');">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-file-earmark-bar-graph me-1"></i>
+                                Enviar informe de proceso a alta dirección y jurados
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
             <?php endif; ?>

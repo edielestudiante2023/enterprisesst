@@ -2166,20 +2166,6 @@ class ComitesEleccionesController extends BaseController
             $email->addTo($candidato['email'], $nombreCandidato);
             $email->addContent("text/html", $mensaje);
 
-            // CC a Representante Legal — PENDIENTE REVISION (comentado temporalmente)
-            // if (!empty($contexto['representante_legal_email'])) {
-            //     $email->addCc(
-            //         $contexto['representante_legal_email'],
-            //         $contexto['representante_legal_nombre'] ?? 'Representante Legal'
-            //     );
-            // }
-            // CC a Delegado SST — PENDIENTE REVISION (comentado temporalmente)
-            // if (!empty($contexto['delegado_sst_email'])) {
-            //     $email->addCc(
-            //         $contexto['delegado_sst_email'],
-            //         $contexto['delegado_sst_nombre'] ?? 'Delegado SST'
-            //     );
-            // }
             // CC al Consultor del proceso
             if (!empty($consultor['correo_consultor'])) {
                 $email->addCc(
@@ -2187,8 +2173,6 @@ class ComitesEleccionesController extends BaseController
                     $consultor['nombre_consultor'] ?? 'Consultor'
                 );
             }
-            // CC revision temporal — QUITAR UNA VEZ CONFIRMADO
-            $email->addCc('edison.cuervo@cycloidtalent.com', 'Edison Cuervo');
 
             $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
             $response = $sendgrid->send($email);
@@ -4741,5 +4725,210 @@ class ComitesEleccionesController extends BaseController
 
         return redirect()->to("/comites-elecciones/proceso/{$idProceso}/firmas/estado")
             ->with('success', $msg);
+    }
+
+    /**
+     * Enviar informe de resultados del proceso a alta dirección y jurados
+     */
+    public function enviarInformeProceso(int $idProceso)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $proceso = $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->get()
+            ->getRowArray();
+
+        if (!$proceso) {
+            return redirect()->back()->with('error', 'Proceso no encontrado');
+        }
+
+        $cliente  = $this->clienteModel->find($proceso['id_cliente']);
+        $contexto = $this->db->table('tbl_cliente_contexto_sst')
+            ->where('id_cliente', $proceso['id_cliente'])
+            ->get()
+            ->getRowArray() ?? [];
+
+        $consultor = null;
+        if (!empty($proceso['id_consultor'])) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_consultor', $proceso['id_consultor'])
+                ->get()
+                ->getRowArray();
+        }
+
+        // Todos los candidatos trabajadores ordenados por votos
+        $candidatos = $this->db->table('tbl_candidatos_comite')
+            ->where('id_proceso', $idProceso)
+            ->where('representacion', 'trabajador')
+            ->whereIn('estado', ['elegido', 'no_elegido', 'aprobado'])
+            ->orderBy('votos_obtenidos', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        // Jurados del proceso
+        $jurados = $this->db->table('tbl_jurados_proceso')
+            ->where('id_proceso', $idProceso)
+            ->where('estado', 'activo')
+            ->get()
+            ->getResultArray();
+
+        $totalVotos = (int) array_sum(array_column($candidatos, 'votos_obtenidos'));
+
+        $ok = $this->enviarEmailInformeProceso($proceso, $cliente, $contexto, $consultor, $candidatos, $jurados, $totalVotos);
+
+        if ($ok) {
+            return redirect()->back()->with('success', 'Informe de proceso enviado a la Alta Dirección y Jurados.');
+        }
+        return redirect()->back()->with('error', 'Error al enviar el informe. Verifique los correos del Representante Legal y Delegado SST en el contexto del cliente.');
+    }
+
+    /**
+     * Construir y enviar el email de informe a alta dirección y jurados
+     */
+    private function enviarEmailInformeProceso(array $proceso, array $cliente, array $contexto, ?array $consultor, array $candidatos, array $jurados, int $totalVotos): bool
+    {
+        $tipoComite    = $proceso['tipo_comite'];
+        $anio          = $proceso['anio'];
+        $nombreCliente = $cliente['nombre_cliente'] ?? 'la empresa';
+
+        $tipoComiteLabel = match($tipoComite) {
+            'COPASST' => 'COPASST (Comité Paritario de Seguridad y Salud en el Trabajo)',
+            'COCOLAB' => 'Comité de Convivencia Laboral',
+            'BRIGADA' => 'Brigada de Emergencias',
+            'VIGIA'   => 'Vigía de Seguridad y Salud en el Trabajo',
+            default   => $tipoComite
+        };
+
+        // Construir filas de la tabla de resultados
+        $filasTabla = '';
+        foreach ($candidatos as $pos => $c) {
+            $posNum    = $pos + 1;
+            $nombre    = trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? ''));
+            $votos     = (int) $c['votos_obtenidos'];
+            $porcentaje = $totalVotos > 0 ? round(($votos / $totalVotos) * 100, 1) : 0;
+
+            if ($c['estado'] === 'elegido') {
+                $plaza = $c['tipo_plaza'] === 'principal' ? 'Principal' : 'Suplente';
+                $badge = "<span style='background:#28a745;color:white;padding:2px 8px;border-radius:4px;font-size:11px;'>ELEGIDO - {$plaza}</span>";
+                $rowStyle = "background:#f0fff4;";
+            } else {
+                $badge    = "<span style='background:#6c757d;color:white;padding:2px 8px;border-radius:4px;font-size:11px;'>No elegido</span>";
+                $rowStyle = "";
+            }
+
+            $filasTabla .= "
+            <tr style='{$rowStyle}'>
+                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;font-weight:bold;'>{$posNum}</td>
+                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;'>{$nombre}</td>
+                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;font-weight:bold;color:#1e7e34;'>{$votos}</td>
+                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;color:#555;'>{$porcentaje}%</td>
+                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;'>{$badge}</td>
+            </tr>";
+        }
+
+        $mensaje = "
+        <div style='font-family: Arial, sans-serif; max-width: 680px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 25px; text-align: center;'>
+                <h2 style='color: white; margin: 0;'>Informe de Proceso Electoral</h2>
+                <p style='color: #cfe2ff; margin: 6px 0 0 0;'>{$tipoComiteLabel} — {$nombreCliente} — {$anio}</p>
+            </div>
+            <div style='padding: 30px; background: #f8f9fa;'>
+                <p>Estimados miembros de la Alta Dirección y honorables Jurados de votación,</p>
+                <p>Por medio del presente informe, les comunicamos los resultados del proceso electoral para la conformación del <strong>{$tipoComiteLabel}</strong> de <strong>{$nombreCliente}</strong>, correspondiente al año <strong>{$anio}</strong>.</p>
+
+                <h3 style='color:#1e3a5f; border-bottom:2px solid #1e3a5f; padding-bottom:6px;'>Resultados de la votación</h3>
+                <p style='color:#555; font-size:13px;'>Total de votos emitidos: <strong>{$totalVotos}</strong></p>
+
+                <table style='width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.1);'>
+                    <thead>
+                        <tr style='background:#1e3a5f; color:white;'>
+                            <th style='padding:10px 12px; text-align:center;'>Pos.</th>
+                            <th style='padding:10px 12px; text-align:left;'>Candidato</th>
+                            <th style='padding:10px 12px; text-align:center;'>Votos</th>
+                            <th style='padding:10px 12px; text-align:center;'>%</th>
+                            <th style='padding:10px 12px; text-align:center;'>Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {$filasTabla}
+                    </tbody>
+                </table>
+
+                <div style='background:#e8f5e9; padding:15px 20px; border-radius:8px; margin:25px 0; border-left:4px solid #28a745;'>
+                    <p style='margin:0; font-size:14px;'><strong>✓ Notificación a elegidos:</strong> Todos los representantes electos han sido notificados individualmente a sus correos electrónicos con los resultados de su votación.</p>
+                </div>
+
+                <div style='background:#fff3cd; padding:15px 20px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;'>
+                    <p style='margin:0; font-size:14px;'><strong>Próximo paso:</strong> El proceso avanza a la fase de firma electrónica del Acta de Constitución del {$tipoComite}. Los firmantes recibirán por correo el enlace para su firma electrónica.</p>
+                </div>
+
+                <hr style='border:none; border-top:1px solid #dee2e6; margin:25px 0;'>
+                <p style='color:#666; font-size:11px;'>Este informe fue generado automáticamente por EnterpriseSST - Cycloid Talent.<br>Fecha de envio: " . date('d/m/Y H:i') . "</p>
+            </div>
+        </div>
+        ";
+
+        try {
+            $email = new \SendGrid\Mail\Mail();
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setSubject("Informe de proceso electoral {$tipoComite} {$anio} - {$nombreCliente}");
+            $email->addContent("text/html", $mensaje);
+
+            $destinatarios = 0;
+
+            // Destinatarios principales: Representante Legal
+            if (!empty($contexto['representante_legal_email'])) {
+                $email->addTo(
+                    $contexto['representante_legal_email'],
+                    $contexto['representante_legal_nombre'] ?? 'Representante Legal'
+                );
+                $destinatarios++;
+            }
+            // Delegado SST
+            if (!empty($contexto['delegado_sst_email'])) {
+                $email->addTo(
+                    $contexto['delegado_sst_email'],
+                    $contexto['delegado_sst_nombre'] ?? 'Delegado SST'
+                );
+                $destinatarios++;
+            }
+
+            if ($destinatarios === 0) {
+                log_message('error', 'enviarEmailInformeProceso: sin destinatarios (RL y Delegado SST sin email)');
+                return false;
+            }
+
+            // CC a cada Jurado
+            foreach ($jurados as $jurado) {
+                $emailJurado = $jurado['email'] ?? '';
+                if (!empty($emailJurado)) {
+                    $nombreJurado = trim(($jurado['nombres'] ?? '') . ' ' . ($jurado['apellidos'] ?? ''));
+                    $email->addCc($emailJurado, $nombreJurado ?: 'Jurado');
+                }
+            }
+            // CC al Consultor
+            if (!empty($consultor['correo_consultor'])) {
+                $email->addCc(
+                    $consultor['correo_consultor'],
+                    $consultor['nombre_consultor'] ?? 'Consultor'
+                );
+            }
+            // CC revision temporal — QUITAR UNA VEZ CONFIRMADO
+            $email->addCc('edison.cuervo@cycloidtalent.com', 'Edison Cuervo');
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($email);
+
+            $statusCode = $response->statusCode();
+            log_message('info', "Informe proceso electoral enviado — proceso {$proceso['id_proceso']} — Status: {$statusCode}");
+
+            return $statusCode >= 200 && $statusCode < 300;
+        } catch (\Exception $e) {
+            log_message('error', 'Error enviando informe proceso: ' . $e->getMessage());
+            return false;
+        }
     }
 }
