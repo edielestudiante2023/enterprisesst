@@ -2029,16 +2029,31 @@ class ComitesEleccionesController extends BaseController
             return redirect()->back()->with('error', 'Proceso no encontrado');
         }
 
-        $elegidos = $this->db->table('tbl_candidatos_comite')
+        // Todos los candidatos trabajadores ordenados por votos DESC para calcular posicion
+        $todosCandidatos = $this->db->table('tbl_candidatos_comite')
             ->where('id_proceso', $idProceso)
             ->where('representacion', 'trabajador')
-            ->where('estado', 'elegido')
+            ->whereIn('estado', ['elegido', 'no_elegido', 'aprobado'])
+            ->orderBy('votos_obtenidos', 'DESC')
             ->get()
             ->getResultArray();
+
+        $elegidos = array_values(array_filter($todosCandidatos, fn($c) => $c['estado'] === 'elegido'));
 
         if (empty($elegidos)) {
             return redirect()->back()->with('error', 'No hay candidatos elegidos en este proceso');
         }
+
+        // Calcular posicion real por ranking de votos (posicion_votacion puede ser NULL)
+        $posicionMap = [];
+        foreach ($todosCandidatos as $pos => $c) {
+            $posicionMap[$c['id_candidato']] = $pos + 1;
+        }
+        // Inyectar posicion calculada en cada elegido
+        foreach ($elegidos as &$el) {
+            $el['posicion_calculada'] = $posicionMap[$el['id_candidato']] ?? 0;
+        }
+        unset($el);
 
         $cliente = $this->clienteModel->find($proceso['id_cliente']);
 
@@ -2057,20 +2072,9 @@ class ComitesEleccionesController extends BaseController
                 ->getRowArray();
         }
 
-        // Total votos emitidos en el proceso (suma de todos los candidatos trabajadores)
-        $totalVotos = (int) $this->db->table('tbl_candidatos_comite')
-            ->selectSum('votos_obtenidos', 'total')
-            ->where('id_proceso', $idProceso)
-            ->where('representacion', 'trabajador')
-            ->get()
-            ->getRow()->total;
-
-        // Total candidatos que participaron
-        $totalCandidatos = count($this->db->table('tbl_candidatos_comite')
-            ->where('id_proceso', $idProceso)
-            ->where('representacion', 'trabajador')
-            ->whereIn('estado', ['elegido', 'no_elegido', 'aprobado'])
-            ->get()->getResultArray());
+        // Total votos emitidos = suma de votos de todos los candidatos trabajadores
+        $totalVotos = (int) array_sum(array_column($todosCandidatos, 'votos_obtenidos'));
+        $totalCandidatos = count($todosCandidatos);
 
         $enviados = 0;
         $sinEmail  = 0;
@@ -2110,7 +2114,7 @@ class ComitesEleccionesController extends BaseController
         $anio          = $proceso['anio'];
         $nombreCandidato = trim(($candidato['nombres'] ?? '') . ' ' . ($candidato['apellidos'] ?? ''));
         $votosObtenidos  = (int) ($candidato['votos_obtenidos'] ?? 0);
-        $posicion        = (int) ($candidato['posicion_votacion'] ?? 0);
+        $posicion        = (int) ($candidato['posicion_calculada'] ?? $candidato['posicion_votacion'] ?? 0);
         $porcentaje      = $totalVotos > 0 ? round(($votosObtenidos / $totalVotos) * 100, 1) : 0;
 
         $tipoComiteLabel = match($tipoComite) {
