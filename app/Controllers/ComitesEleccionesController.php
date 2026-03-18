@@ -4823,7 +4823,7 @@ class ComitesEleccionesController extends BaseController
             $filasTabla = '';
             foreach ($candidatos as $pos => $c) {
                 $posNum  = $pos + 1;
-                $nombre  = $c['nombre_completo'] ?? '';
+                $nombre  = $c['nombre_completo'] ?: trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? ''));
                 $cargo   = esc($c['cargo'] ?? '');
                 $filasTabla .= "
                 <tr>
@@ -5087,7 +5087,7 @@ class ComitesEleccionesController extends BaseController
         $tipoComite      = $proceso['tipo_comite'];
         $anio            = $proceso['anio'];
         $nombreCliente   = $cliente['nombre_cliente'] ?? 'la empresa';
-        $nombreCandidato = $candidato['nombre_completo'] ?? '';
+        $nombreCandidato = $candidato['nombre_completo'] ?: trim(($candidato['nombres'] ?? '') . ' ' . ($candidato['apellidos'] ?? ''));
         $cargo           = $candidato['cargo'] ?? '';
 
         $tipoComiteLabel = match($tipoComite) {

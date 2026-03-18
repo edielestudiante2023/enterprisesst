@@ -683,7 +683,7 @@ $permitirGestionCandidatos = true;
                             <tbody>
                                 <?php foreach ($candidatosEmpleador as $brig): ?>
                                 <tr>
-                                    <td><?= esc($brig['nombre_completo'] ?? '') ?></td>
+                                    <td><?= esc($brig['nombre_completo'] ?: trim($brig['nombres'] . ' ' . $brig['apellidos'])) ?></td>
                                     <td><?= esc($brig['cargo'] ?? '') ?></td>
                                     <td>
                                         <?php if (!empty($brig['email'])): ?>
