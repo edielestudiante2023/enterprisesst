@@ -650,6 +650,77 @@ $permitirGestionCandidatos = true;
             <?php endif; ?>
 
             <?php
+            // Panel de notificacion para BRIGADA (sin votos, designados directamente)
+            $mostrarPanelBrigada = $proceso['tipo_comite'] === 'BRIGADA' && !empty($candidatosEmpleador);
+            $notifBrigadaEnviada = !empty($proceso['notificacion_elegidos_at']);
+            ?>
+            <?php if ($mostrarPanelBrigada && !$esVistaHistorica): ?>
+            <div class="card border-0 shadow-sm mb-4 border-start border-4 <?= $notifBrigadaEnviada ? 'border-success' : 'border-warning' ?>">
+                <div class="card-header <?= $notifBrigadaEnviada ? 'bg-success' : 'bg-warning' ?> text-<?= $notifBrigadaEnviada ? 'white' : 'dark' ?>">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope-check me-2"></i>
+                        <?= $notifBrigadaEnviada ? 'Notificacion de designacion enviada' : 'Paso 1: Notificar a los brigadistas designados' ?>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <?php if ($notifBrigadaEnviada): ?>
+                    <div class="alert alert-success mb-3">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        Correos de notificacion enviados el <strong><?= date('d/m/Y H:i', strtotime($proceso['notificacion_elegidos_at'])) ?></strong>.
+                    </div>
+                    <?php else: ?>
+                    <div class="alert alert-warning mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Antes de generar el acta</strong>, notifique a los brigadistas designados. Recibirán un correo informándoles su designación.
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr><th>Nombre</th><th>Cargo</th><th>Correo</th></tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($candidatosEmpleador as $brig): ?>
+                                <tr>
+                                    <td><?= esc(trim(($brig['nombres'] ?? '').' '.($brig['apellidos'] ?? ''))) ?></td>
+                                    <td><?= esc($brig['cargo'] ?? '') ?></td>
+                                    <td>
+                                        <?php if (!empty($brig['email'])): ?>
+                                            <small><?= esc($brig['email']) ?></small>
+                                        <?php else: ?>
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Sin email</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/notificar-designados') ?>" method="post"
+                              onsubmit="return confirm('¿Enviar correo de notificacion a los <?= count($candidatosEmpleador) ?> brigadistas designados?');">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn <?= $notifBrigadaEnviada ? 'btn-outline-success' : 'btn-success' ?>">
+                                <i class="bi bi-envelope-check me-1"></i>
+                                <?= $notifBrigadaEnviada ? 'Reenviar Notificaciones' : 'Notificar a brigadistas designados' ?>
+                            </button>
+                        </form>
+                        <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/enviar-informe-proceso') ?>" method="post"
+                              onsubmit="return confirm('¿Enviar informe de designacion a la Alta Dirección?');">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-file-earmark-bar-graph me-1"></i>
+                                Enviar informe a alta dirección
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <?php
             $tituloDesignacion = match($proceso['tipo_comite']) {
                 'BRIGADA' => 'Designacion de Brigadistas',
                 'VIGIA' => 'Designacion del Vigia SST',

@@ -4759,28 +4759,43 @@ class ComitesEleccionesController extends BaseController
                 ->getRowArray();
         }
 
-        // Todos los candidatos trabajadores ordenados por votos
-        $candidatos = $this->db->table('tbl_candidatos_comite')
-            ->where('id_proceso', $idProceso)
-            ->where('representacion', 'trabajador')
-            ->whereIn('estado', ['elegido', 'no_elegido', 'aprobado'])
-            ->orderBy('votos_obtenidos', 'DESC')
-            ->get()
-            ->getResultArray();
+        if ($proceso['tipo_comite'] === 'BRIGADA') {
+            // Para BRIGADA: designados del empleador, sin jurados ni votos
+            $candidatos = $this->db->table('tbl_candidatos_comite')
+                ->where('id_proceso', $idProceso)
+                ->where('representacion', 'empleador')
+                ->where('estado', 'designado')
+                ->get()
+                ->getResultArray();
+            $jurados    = [];
+            $totalVotos = 0;
+        } else {
+            // COPASST/COCOLAB: candidatos trabajadores ordenados por votos
+            $candidatos = $this->db->table('tbl_candidatos_comite')
+                ->where('id_proceso', $idProceso)
+                ->where('representacion', 'trabajador')
+                ->whereIn('estado', ['elegido', 'no_elegido', 'aprobado'])
+                ->orderBy('votos_obtenidos', 'DESC')
+                ->get()
+                ->getResultArray();
 
-        // Jurados del proceso
-        $jurados = $this->db->table('tbl_jurados_proceso')
-            ->where('id_proceso', $idProceso)
-            ->where('estado', 'activo')
-            ->get()
-            ->getResultArray();
+            // Jurados del proceso
+            $jurados = $this->db->table('tbl_jurados_proceso')
+                ->where('id_proceso', $idProceso)
+                ->where('estado', 'activo')
+                ->get()
+                ->getResultArray();
 
-        $totalVotos = (int) array_sum(array_column($candidatos, 'votos_obtenidos'));
+            $totalVotos = (int) array_sum(array_column($candidatos, 'votos_obtenidos'));
+        }
 
         $ok = $this->enviarEmailInformeProceso($proceso, $cliente, $contexto, $consultor, $candidatos, $jurados, $totalVotos);
 
         if ($ok) {
-            return redirect()->back()->with('success', 'Informe de proceso enviado a la Alta Dirección y Jurados.');
+            $msgOk = $proceso['tipo_comite'] === 'BRIGADA'
+                ? 'Informe de designación enviado a la Alta Dirección.'
+                : 'Informe de proceso enviado a la Alta Dirección y Jurados.';
+            return redirect()->back()->with('success', $msgOk);
         }
         return redirect()->back()->with('error', 'Error al enviar el informe. Verifique los correos del Representante Legal y Delegado SST en el contexto del cliente.');
     }
@@ -4802,79 +4817,142 @@ class ComitesEleccionesController extends BaseController
             default   => $tipoComite
         };
 
-        // Construir filas de la tabla de resultados
-        $filasTabla = '';
-        foreach ($candidatos as $pos => $c) {
-            $posNum    = $pos + 1;
-            $nombre    = trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? ''));
-            $votos     = (int) $c['votos_obtenidos'];
-            $porcentaje = $totalVotos > 0 ? round(($votos / $totalVotos) * 100, 1) : 0;
-
-            if ($c['estado'] === 'elegido') {
-                $plaza = $c['tipo_plaza'] === 'principal' ? 'Principal' : 'Suplente';
-                $badge = "<span style='background:#28a745;color:white;padding:2px 8px;border-radius:4px;font-size:11px;'>ELEGIDO - {$plaza}</span>";
-                $rowStyle = "background:#f0fff4;";
-            } else {
-                $badge    = "<span style='background:#6c757d;color:white;padding:2px 8px;border-radius:4px;font-size:11px;'>No elegido</span>";
-                $rowStyle = "";
+        // Construir cuerpo del email según tipo de comité
+        if ($tipoComite === 'BRIGADA') {
+            // Email para BRIGADA: lista de designados, sin votos
+            $filasTabla = '';
+            foreach ($candidatos as $pos => $c) {
+                $posNum  = $pos + 1;
+                $nombre  = trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? ''));
+                $cargo   = esc($c['cargo'] ?? '');
+                $filasTabla .= "
+                <tr>
+                    <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;font-weight:bold;'>{$posNum}</td>
+                    <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;'>{$nombre}</td>
+                    <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;'>{$cargo}</td>
+                    <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;'><span style='background:#e53935;color:white;padding:2px 8px;border-radius:4px;font-size:11px;'>DESIGNADO</span></td>
+                </tr>";
             }
 
-            $filasTabla .= "
-            <tr style='{$rowStyle}'>
-                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;font-weight:bold;'>{$posNum}</td>
-                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;'>{$nombre}</td>
-                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;font-weight:bold;color:#1e7e34;'>{$votos}</td>
-                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;color:#555;'>{$porcentaje}%</td>
-                <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;'>{$badge}</td>
-            </tr>";
+            $mensaje = "
+            <div style='font-family: Arial, sans-serif; max-width: 680px; margin: 0 auto;'>
+                <div style='background: linear-gradient(135deg, #7f1d1d 0%, #b71c1c 100%); padding: 25px; text-align: center;'>
+                    <h2 style='color: white; margin: 0;'>Informe de Conformación</h2>
+                    <p style='color: #fecaca; margin: 6px 0 0 0;'>{$tipoComiteLabel} — {$nombreCliente} — {$anio}</p>
+                </div>
+                <div style='padding: 30px; background: #f8f9fa;'>
+                    <p>Estimados miembros de la Alta Dirección,</p>
+                    <p>Por medio del presente informe, les comunicamos la conformación de la <strong>{$tipoComiteLabel}</strong> de <strong>{$nombreCliente}</strong>, correspondiente al año <strong>{$anio}</strong>.</p>
+
+                    <h3 style='color:#7f1d1d; border-bottom:2px solid #b71c1c; padding-bottom:6px;'>Integrantes designados</h3>
+
+                    <table style='width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.1);'>
+                        <thead>
+                            <tr style='background:#b71c1c; color:white;'>
+                                <th style='padding:10px 12px; text-align:center;'>#</th>
+                                <th style='padding:10px 12px; text-align:left;'>Nombre</th>
+                                <th style='padding:10px 12px; text-align:left;'>Cargo</th>
+                                <th style='padding:10px 12px; text-align:center;'>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {$filasTabla}
+                        </tbody>
+                    </table>
+
+                    <div style='background:#fef3c7; padding:15px 20px; border-radius:8px; margin:25px 0; border-left:4px solid #f59e0b;'>
+                        <p style='margin:0; font-size:14px;'><strong>✓ Notificación a brigadistas:</strong> Cada integrante designado ha sido notificado individualmente a su correo electrónico sobre su designación.</p>
+                    </div>
+
+                    <div style='background:#fff3cd; padding:15px 20px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;'>
+                        <p style='margin:0; font-size:14px;'><strong>Próximo paso:</strong> El proceso avanza a la fase de firma electrónica del Acta de Conformación de la Brigada. Los integrantes recibirán por correo el enlace para su firma electrónica.</p>
+                    </div>
+
+                    <hr style='border:none; border-top:1px solid #dee2e6; margin:25px 0;'>
+                    <p style='color:#666; font-size:11px;'>Este informe fue generado automáticamente por EnterpriseSST - Cycloid Talent.<br>Fecha de envío: " . date('d/m/Y H:i') . "</p>
+                </div>
+            </div>
+            ";
+        } else {
+            // COPASST / COCOLAB: tabla de resultados electorales
+            $filasTabla = '';
+            foreach ($candidatos as $pos => $c) {
+                $posNum    = $pos + 1;
+                $nombre    = trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? ''));
+                $votos     = (int) $c['votos_obtenidos'];
+                $porcentaje = $totalVotos > 0 ? round(($votos / $totalVotos) * 100, 1) : 0;
+
+                if ($c['estado'] === 'elegido') {
+                    $plaza    = $c['tipo_plaza'] === 'principal' ? 'Principal' : 'Suplente';
+                    $badge    = "<span style='background:#28a745;color:white;padding:2px 8px;border-radius:4px;font-size:11px;'>ELEGIDO - {$plaza}</span>";
+                    $rowStyle = "background:#f0fff4;";
+                } else {
+                    $badge    = "<span style='background:#6c757d;color:white;padding:2px 8px;border-radius:4px;font-size:11px;'>No elegido</span>";
+                    $rowStyle = "";
+                }
+
+                $filasTabla .= "
+                <tr style='{$rowStyle}'>
+                    <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;font-weight:bold;'>{$posNum}</td>
+                    <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;'>{$nombre}</td>
+                    <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;font-weight:bold;color:#1e7e34;'>{$votos}</td>
+                    <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;color:#555;'>{$porcentaje}%</td>
+                    <td style='padding:8px 12px;border-bottom:1px solid #dee2e6;text-align:center;'>{$badge}</td>
+                </tr>";
+            }
+
+            $mensaje = "
+            <div style='font-family: Arial, sans-serif; max-width: 680px; margin: 0 auto;'>
+                <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 25px; text-align: center;'>
+                    <h2 style='color: white; margin: 0;'>Informe de Proceso Electoral</h2>
+                    <p style='color: #cfe2ff; margin: 6px 0 0 0;'>{$tipoComiteLabel} — {$nombreCliente} — {$anio}</p>
+                </div>
+                <div style='padding: 30px; background: #f8f9fa;'>
+                    <p>Estimados miembros de la Alta Dirección y honorables Jurados de votación,</p>
+                    <p>Por medio del presente informe, les comunicamos los resultados del proceso electoral para la conformación del <strong>{$tipoComiteLabel}</strong> de <strong>{$nombreCliente}</strong>, correspondiente al año <strong>{$anio}</strong>.</p>
+
+                    <h3 style='color:#1e3a5f; border-bottom:2px solid #1e3a5f; padding-bottom:6px;'>Resultados de la votación</h3>
+                    <p style='color:#555; font-size:13px;'>Total de votos emitidos: <strong>{$totalVotos}</strong></p>
+
+                    <table style='width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.1);'>
+                        <thead>
+                            <tr style='background:#1e3a5f; color:white;'>
+                                <th style='padding:10px 12px; text-align:center;'>Pos.</th>
+                                <th style='padding:10px 12px; text-align:left;'>Candidato</th>
+                                <th style='padding:10px 12px; text-align:center;'>Votos</th>
+                                <th style='padding:10px 12px; text-align:center;'>%</th>
+                                <th style='padding:10px 12px; text-align:center;'>Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {$filasTabla}
+                        </tbody>
+                    </table>
+
+                    <div style='background:#e8f5e9; padding:15px 20px; border-radius:8px; margin:25px 0; border-left:4px solid #28a745;'>
+                        <p style='margin:0; font-size:14px;'><strong>✓ Notificación a elegidos:</strong> Todos los representantes electos han sido notificados individualmente a sus correos electrónicos con los resultados de su votación.</p>
+                    </div>
+
+                    <div style='background:#fff3cd; padding:15px 20px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;'>
+                        <p style='margin:0; font-size:14px;'><strong>Próximo paso:</strong> El proceso avanza a la fase de firma electrónica del Acta de Constitución del {$tipoComite}. Los firmantes recibirán por correo el enlace para su firma electrónica.</p>
+                    </div>
+
+                    <hr style='border:none; border-top:1px solid #dee2e6; margin:25px 0;'>
+                    <p style='color:#666; font-size:11px;'>Este informe fue generado automáticamente por EnterpriseSST - Cycloid Talent.<br>Fecha de envio: " . date('d/m/Y H:i') . "</p>
+                </div>
+            </div>
+            ";
         }
-
-        $mensaje = "
-        <div style='font-family: Arial, sans-serif; max-width: 680px; margin: 0 auto;'>
-            <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 25px; text-align: center;'>
-                <h2 style='color: white; margin: 0;'>Informe de Proceso Electoral</h2>
-                <p style='color: #cfe2ff; margin: 6px 0 0 0;'>{$tipoComiteLabel} — {$nombreCliente} — {$anio}</p>
-            </div>
-            <div style='padding: 30px; background: #f8f9fa;'>
-                <p>Estimados miembros de la Alta Dirección y honorables Jurados de votación,</p>
-                <p>Por medio del presente informe, les comunicamos los resultados del proceso electoral para la conformación del <strong>{$tipoComiteLabel}</strong> de <strong>{$nombreCliente}</strong>, correspondiente al año <strong>{$anio}</strong>.</p>
-
-                <h3 style='color:#1e3a5f; border-bottom:2px solid #1e3a5f; padding-bottom:6px;'>Resultados de la votación</h3>
-                <p style='color:#555; font-size:13px;'>Total de votos emitidos: <strong>{$totalVotos}</strong></p>
-
-                <table style='width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.1);'>
-                    <thead>
-                        <tr style='background:#1e3a5f; color:white;'>
-                            <th style='padding:10px 12px; text-align:center;'>Pos.</th>
-                            <th style='padding:10px 12px; text-align:left;'>Candidato</th>
-                            <th style='padding:10px 12px; text-align:center;'>Votos</th>
-                            <th style='padding:10px 12px; text-align:center;'>%</th>
-                            <th style='padding:10px 12px; text-align:center;'>Resultado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {$filasTabla}
-                    </tbody>
-                </table>
-
-                <div style='background:#e8f5e9; padding:15px 20px; border-radius:8px; margin:25px 0; border-left:4px solid #28a745;'>
-                    <p style='margin:0; font-size:14px;'><strong>✓ Notificación a elegidos:</strong> Todos los representantes electos han sido notificados individualmente a sus correos electrónicos con los resultados de su votación.</p>
-                </div>
-
-                <div style='background:#fff3cd; padding:15px 20px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;'>
-                    <p style='margin:0; font-size:14px;'><strong>Próximo paso:</strong> El proceso avanza a la fase de firma electrónica del Acta de Constitución del {$tipoComite}. Los firmantes recibirán por correo el enlace para su firma electrónica.</p>
-                </div>
-
-                <hr style='border:none; border-top:1px solid #dee2e6; margin:25px 0;'>
-                <p style='color:#666; font-size:11px;'>Este informe fue generado automáticamente por EnterpriseSST - Cycloid Talent.<br>Fecha de envio: " . date('d/m/Y H:i') . "</p>
-            </div>
-        </div>
-        ";
 
         try {
             $email = new \SendGrid\Mail\Mail();
             $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
-            $email->setSubject("Informe de proceso electoral {$tipoComite} {$anio} - {$nombreCliente}");
+
+            if ($tipoComite === 'BRIGADA') {
+                $email->setSubject("Informe de conformación Brigada de Emergencias {$anio} - {$nombreCliente}");
+            } else {
+                $email->setSubject("Informe de proceso electoral {$tipoComite} {$anio} - {$nombreCliente}");
+            }
             $email->addContent("text/html", $mensaje);
 
             $destinatarios = 0;
@@ -4901,7 +4979,7 @@ class ComitesEleccionesController extends BaseController
                 return false;
             }
 
-            // CC a cada Jurado
+            // CC a Jurados (solo COPASST/COCOLAB)
             foreach ($jurados as $jurado) {
                 $emailJurado = $jurado['email'] ?? '';
                 if (!empty($emailJurado)) {
@@ -4916,16 +4994,173 @@ class ComitesEleccionesController extends BaseController
                     $consultor['nombre_consultor'] ?? 'Consultor'
                 );
             }
+            // CC temporal para revisión (BRIGADA)
+            if ($tipoComite === 'BRIGADA') {
+                $email->addCc('edison.cuervo@cycloidtalent.com', 'Edison Cuervo');
+            }
 
             $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
             $response = $sendgrid->send($email);
 
             $statusCode = $response->statusCode();
-            log_message('info', "Informe proceso electoral enviado — proceso {$proceso['id_proceso']} — Status: {$statusCode}");
+            log_message('info', "Informe proceso {$tipoComite} enviado — proceso {$proceso['id_proceso']} — Status: {$statusCode}");
 
             return $statusCode >= 200 && $statusCode < 300;
         } catch (\Exception $e) {
             log_message('error', 'Error enviando informe proceso: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Notificar individualmente a cada brigadista designado (BRIGADA/VIGIA)
+     */
+    public function notificarDesignados(int $idProceso)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $proceso = $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->get()
+            ->getRowArray();
+
+        if (!$proceso) {
+            return redirect()->back()->with('error', 'Proceso no encontrado');
+        }
+
+        // Designados del empleador (para BRIGADA todos los candidatos son representacion=empleador)
+        $designados = $this->db->table('tbl_candidatos_comite')
+            ->where('id_proceso', $idProceso)
+            ->where('representacion', 'empleador')
+            ->where('estado', 'designado')
+            ->get()
+            ->getResultArray();
+
+        if (empty($designados)) {
+            return redirect()->back()->with('error', 'No hay integrantes designados en este proceso');
+        }
+
+        $cliente = $this->clienteModel->find($proceso['id_cliente']);
+
+        $consultor = null;
+        if (!empty($proceso['id_consultor'])) {
+            $consultor = $this->db->table('tbl_consultor')
+                ->where('id_consultor', $proceso['id_consultor'])
+                ->get()
+                ->getRowArray();
+        }
+
+        $enviados = 0;
+        $sinEmail = 0;
+        $errores  = 0;
+
+        foreach ($designados as $candidato) {
+            if (empty($candidato['email'])) {
+                $sinEmail++;
+                continue;
+            }
+            $ok = $this->enviarEmailNotificacionDesignacion($candidato, $proceso, $cliente, $consultor);
+            if ($ok) $enviados++;
+            else      $errores++;
+        }
+
+        // Registrar fecha de envío (reutilizamos notificacion_elegidos_at)
+        $this->db->table('tbl_procesos_electorales')
+            ->where('id_proceso', $idProceso)
+            ->update(['notificacion_elegidos_at' => date('Y-m-d H:i:s')]);
+
+        $msg = "Notificaciones enviadas: {$enviados}";
+        if ($sinEmail > 0) $msg .= ". Sin email registrado: {$sinEmail}";
+        if ($errores  > 0) $msg .= ". Errores de envío: {$errores}";
+
+        return redirect()->to("/comites-elecciones/{$proceso['id_cliente']}/proceso/{$idProceso}")
+            ->with('success', $msg);
+    }
+
+    /**
+     * Email de notificación de designación (Brigada / Vigía)
+     */
+    private function enviarEmailNotificacionDesignacion(array $candidato, array $proceso, array $cliente, ?array $consultor = null): bool
+    {
+        $tipoComite      = $proceso['tipo_comite'];
+        $anio            = $proceso['anio'];
+        $nombreCliente   = $cliente['nombre_cliente'] ?? 'la empresa';
+        $nombreCandidato = trim(($candidato['nombres'] ?? '') . ' ' . ($candidato['apellidos'] ?? ''));
+        $cargo           = $candidato['cargo'] ?? '';
+
+        $tipoComiteLabel = match($tipoComite) {
+            'BRIGADA' => 'Brigada de Emergencias',
+            'VIGIA'   => 'Vigía de Seguridad y Salud en el Trabajo',
+            default   => $tipoComite
+        };
+
+        $mensaje = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #7f1d1d 0%, #b71c1c 100%); padding: 20px; text-align: center;'>
+                <h2 style='color: white; margin: 0;'>Designación — {$tipoComiteLabel}</h2>
+                <p style='color: #fecaca; margin: 5px 0 0 0;'>{$nombreCliente} — {$anio}</p>
+            </div>
+            <div style='padding: 30px; background: #f8f9fa;'>
+                <p>Estimado/a <strong>{$nombreCandidato}</strong>,</p>
+                <p>Nos complace informarle que ha sido <strong>designado/a</strong> como integrante de la <strong>{$tipoComiteLabel}</strong> de <strong>{$nombreCliente}</strong> para el año <strong>{$anio}</strong>.</p>
+
+                <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #b71c1c;'>
+                    <table style='width:100%;'>
+                        <tr>
+                            <td style='color:#666; font-size:13px; width:40%; padding:4px 0;'>Organización:</td>
+                            <td style='font-weight:bold; padding:4px 0;'>{$nombreCliente}</td>
+                        </tr>
+                        <tr>
+                            <td style='color:#666; font-size:13px; padding:4px 0;'>Cargo:</td>
+                            <td style='padding:4px 0;'>{$cargo}</td>
+                        </tr>
+                        <tr>
+                            <td style='color:#666; font-size:13px; padding:4px 0;'>Año:</td>
+                            <td style='padding:4px 0;'>{$anio}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style='background:#fef3c7; padding:15px 20px; border-radius:8px; margin:20px 0; border-left:4px solid #f59e0b;'>
+                    <p style='margin:0; font-size:14px;'><strong>Próximo paso:</strong> Recibirá el enlace para la firma electrónica del Acta de Conformación de la Brigada.</p>
+                </div>
+
+                <hr style='border:none; border-top:1px solid #dee2e6; margin:25px 0;'>
+                <p style='color:#666; font-size:11px;'>Este correo fue generado automáticamente por EnterpriseSST - Cycloid Talent.</p>
+            </div>
+        </div>
+        ";
+
+        try {
+            $email = new \SendGrid\Mail\Mail();
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setSubject("Designación como integrante de la {$tipoComiteLabel} — {$nombreCliente} {$anio}");
+            $email->addContent("text/html", $mensaje);
+
+            $email->addTo($candidato['email'], $nombreCandidato);
+
+            // CC temporal para revisión
+            $email->addCc('edison.cuervo@cycloidtalent.com', 'Edison Cuervo');
+
+            // CC al consultor
+            if (!empty($consultor['correo_consultor'])) {
+                $email->addCc(
+                    $consultor['correo_consultor'],
+                    $consultor['nombre_consultor'] ?? 'Consultor'
+                );
+            }
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($email);
+
+            $statusCode = $response->statusCode();
+            log_message('info', "Email designacion {$tipoComite} enviado a {$candidato['email']} — Status: {$statusCode}");
+
+            return $statusCode >= 200 && $statusCode < 300;
+        } catch (\Exception $e) {
+            log_message('error', 'Error enviando email designacion: ' . $e->getMessage());
             return false;
         }
     }
