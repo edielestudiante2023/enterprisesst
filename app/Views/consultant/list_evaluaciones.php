@@ -322,6 +322,16 @@
   <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
 
   <script>
+    const EMPTY_FILTER_TOKEN = '__EMPTY__';
+
+    function normalizeCellValue(value) {
+      return value === null || value === undefined || String(value).trim() === '';
+    }
+
+    function getFilterLabel(value) {
+      return value === EMPTY_FILTER_TOKEN ? '-' : value;
+    }
+
     // Función para formatear la fila expandible (detalles)
     function format(rowData) {
       var html = '<table cellpadding="5" cellspacing="0" border="0" style="width: 60%; table-layout: auto; word-wrap: break-word;">';
@@ -390,9 +400,11 @@
         var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-select');
         if (filterElement.length && !filterElement.prop('disabled')) {
           filterElement.empty().append('<option value="">Todos</option>');
-          column.data().unique().sort().each(function (d) {
-            if (d && filterElement.find('option[value="' + d + '"]').length === 0) {
-              filterElement.append('<option value="' + d + '">' + d + '</option>');
+          column.cache('search').sort().unique().each(function (d) {
+            var optionValue = normalizeCellValue(d) ? EMPTY_FILTER_TOKEN : d;
+            var optionLabel = getFilterLabel(optionValue);
+            if (filterElement.find('option[value="' + optionValue + '"]').length === 0) {
+              filterElement.append('<option value="' + optionValue + '">' + optionLabel + '</option>');
             }
           });
           var search = column.search();
@@ -490,6 +502,14 @@ columns: [{
             data: 'item_del_estandar',
             className: 'item-estandar-cell',
             render: function (data, type, row) {
+              if (type === 'filter') {
+                return normalizeCellValue(data) ? EMPTY_FILTER_TOKEN : data;
+              }
+
+              if (normalizeCellValue(data)) {
+                return '-';
+              }
+
               if (type === 'display') {
                 return '<span data-bs-toggle="tooltip" title="' + data + '">' + data + '</span>';
               }
@@ -546,7 +566,7 @@ columns: [{
       $('tfoot').on('change', '.filter-select', function () {
         var columnIndex = $(this).closest('th').index();
         var value = $(this).val();
-        table.column(columnIndex).search(value).draw();
+        table.column(columnIndex).search(value === EMPTY_FILTER_TOKEN ? '^' + EMPTY_FILTER_TOKEN + '$' : value, value === EMPTY_FILTER_TOKEN, false).draw();
       });
 
       $('#toggleExpandItemEstandar').on('click', function () {
