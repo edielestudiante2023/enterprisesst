@@ -76,6 +76,19 @@
     tr.shown td.details-control {
       background: url('https://www.datatables.net/examples/resources/details_close.png') no-repeat center center;
     }
+
+    .item-estandar-cell {
+      max-width: 28ch;
+    }
+
+    body.expand-all-item-estandar #evaluacionesTable td.item-estandar-cell {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: initial;
+      height: auto;
+      max-width: 60ch;
+      word-break: break-word;
+    }
   </style>
 </head>
 
@@ -186,7 +199,10 @@
         </div>
       </div>
     </div>
-    <button id="clearState" class="btn btn-danger btn-sm mb-3">Restablecer Filtros</button>
+    <div class="d-flex gap-2 mb-3">
+      <button id="clearState" class="btn btn-danger btn-sm">Restablecer Filtros</button>
+      <button id="toggleExpandItemEstandar" class="btn btn-outline-primary btn-sm" type="button">Expandir Item del Estándar</button>
+    </div>
     <div id="buttonsContainer"></div>
     <div class="table-responsive">
       <table id="evaluacionesTable" class="table table-striped table-bordered nowrap" style="width:100%">
@@ -472,6 +488,7 @@ columns: [{
           },
           {
             data: 'item_del_estandar',
+            className: 'item-estandar-cell',
             render: function (data, type, row) {
               if (type === 'display') {
                 return '<span data-bs-toggle="tooltip" title="' + data + '">' + data + '</span>';
@@ -530,6 +547,12 @@ columns: [{
         var columnIndex = $(this).closest('th').index();
         var value = $(this).val();
         table.column(columnIndex).search(value).draw();
+      });
+
+      $('#toggleExpandItemEstandar').on('click', function () {
+        var expanded = $('body').toggleClass('expand-all-item-estandar').hasClass('expand-all-item-estandar');
+        $(this).text(expanded ? 'Contraer Item del Estándar' : 'Expandir Item del Estándar');
+        table.columns.adjust().draw(false);
       });
 
       // Evento para fila expandible (row child details)
