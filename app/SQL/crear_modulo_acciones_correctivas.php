@@ -1,18 +1,27 @@
 <?php
 /**
- * Script para crear el MÓDULO DE ACCIONES CORRECTIVAS
- * Numerales 7.1.1, 7.1.2, 7.1.3, 7.1.4 de la Resolución 0312 de 2019
+ * Script CLI para crear el MÓDULO DE ACCIONES CORRECTIVAS.
  *
- * Ejecuta cambios en LOCAL y PRODUCCIÓN simultáneamente
+ * Uso:
+ *   php app/SQL/crear_modulo_acciones_correctivas.php local
+ *   php app/SQL/crear_modulo_acciones_correctivas.php produccion
  *
- * Ejecutar: php app/SQL/crear_modulo_acciones_correctivas.php
- *
- * Crea las siguientes tablas:
- * - tbl_acc_hallazgos (Orígenes/problemas detectados)
- * - tbl_acc_acciones (Acciones CAPA: Correctivas, Preventivas, Mejora)
- * - tbl_acc_seguimientos (Evidencias y avances)
- * - tbl_acc_verificaciones (Evaluación de efectividad)
+ * Crea/asegura las siguientes tablas:
+ * - tbl_acc_hallazgos
+ * - tbl_acc_acciones
+ * - tbl_acc_seguimientos
+ * - tbl_acc_verificaciones
+ * - tbl_acc_catalogo_origenes
  */
+
+if (php_sapi_name() !== 'cli') {
+    die("Solo ejecución CLI.\n");
+}
+
+$entorno = $argv[1] ?? null;
+if (!in_array($entorno, ['local', 'produccion'], true)) {
+    die("Uso: php app/SQL/crear_modulo_acciones_correctivas.php [local|produccion]\n");
+}
 
 echo "=== MÓDULO DE ACCIONES CORRECTIVAS - NUMERALES 7.1.x ===\n";
 echo "Fecha: " . date('Y-m-d H:i:s') . "\n\n";
@@ -36,6 +45,8 @@ $conexiones = [
         'ssl' => true
     ]
 ];
+
+$config = $conexiones[$entorno];
 
 // ============================================================
 // SQL 1: Crear tabla de HALLAZGOS (Orígenes/Problemas)
@@ -358,88 +369,85 @@ function ejecutarSQL($pdo, $sql, $descripcion, $entorno) {
 }
 
 // ============================================================
-// Ejecutar en ambos entornos
+// Ejecutar en un único entorno
 // ============================================================
-$resultados = ['local' => [], 'produccion' => []];
+$resultados = [];
 
-foreach ($conexiones as $entorno => $config) {
-    echo "\n" . str_repeat("=", 60) . "\n";
-    echo "EJECUTANDO EN: " . strtoupper($entorno) . "\n";
-    echo str_repeat("=", 60) . "\n";
+echo "\n" . str_repeat("=", 60) . "\n";
+echo "EJECUTANDO EN: " . strtoupper($entorno) . "\n";
+echo str_repeat("=", 60) . "\n";
+
+try {
+    $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset=utf8mb4";
+
+    $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+    ];
+
+    if ($config['ssl']) {
+        $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        $options[PDO::MYSQL_ATTR_SSL_CA] = false;
+    }
+
+    $pdo = new PDO($dsn, $config['username'], $config['password'], $options);
+    echo "✅ Conexión establecida\n\n";
+
+    echo "--- Creando tablas ---\n";
+    $resultados['hallazgos'] = ejecutarSQL($pdo, $sqlHallazgos, "Crear tabla tbl_acc_hallazgos", $entorno);
+    $resultados['acciones'] = ejecutarSQL($pdo, $sqlAcciones, "Crear tabla tbl_acc_acciones", $entorno);
+    $resultados['seguimientos'] = ejecutarSQL($pdo, $sqlSeguimientos, "Crear tabla tbl_acc_seguimientos", $entorno);
+    $resultados['verificaciones'] = ejecutarSQL($pdo, $sqlVerificaciones, "Crear tabla tbl_acc_verificaciones", $entorno);
+    $resultados['catalogo'] = ejecutarSQL($pdo, $sqlCatalogoOrigenes, "Crear tabla tbl_acc_catalogo_origenes", $entorno);
+
+    echo "\n--- Insertando datos de catálogo ---\n";
+    $resultados['datos_catalogo'] = ejecutarSQL($pdo, $sqlInsertCatalogo, "Insertar catálogo de orígenes (14 tipos)", $entorno);
+
+    echo "\n--- Creando índices adicionales ---\n";
+    try {
+        $pdo->exec("CREATE INDEX idx_hallazgo_cliente_estado ON tbl_acc_hallazgos (id_cliente, estado, numeral_asociado)");
+        echo "  ✅ [$entorno] Índice idx_hallazgo_cliente_estado\n";
+        $resultados['idx_hallazgo_cliente_estado'] = true;
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'Duplicate') !== false || strpos($e->getMessage(), 'already exists') !== false) {
+            echo "  ⚠️ [$entorno] Índice idx_hallazgo_cliente_estado (ya existe)\n";
+            $resultados['idx_hallazgo_cliente_estado'] = true;
+        } else {
+            throw $e;
+        }
+    }
 
     try {
-        // Construir DSN
-        $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset=utf8mb4";
-
-        $options = [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
-        ];
-
-        // Agregar SSL para producción
-        if ($config['ssl']) {
-            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
-            $options[PDO::MYSQL_ATTR_SSL_CA] = false;
-        }
-
-        $pdo = new PDO($dsn, $config['username'], $config['password'], $options);
-        echo "✅ Conexión establecida\n\n";
-
-        // Ejecutar cada SQL
-        echo "--- Creando tablas ---\n";
-        $resultados[$entorno]['hallazgos'] = ejecutarSQL($pdo, $sqlHallazgos, "Crear tabla tbl_acc_hallazgos", $entorno);
-        $resultados[$entorno]['acciones'] = ejecutarSQL($pdo, $sqlAcciones, "Crear tabla tbl_acc_acciones", $entorno);
-        $resultados[$entorno]['seguimientos'] = ejecutarSQL($pdo, $sqlSeguimientos, "Crear tabla tbl_acc_seguimientos", $entorno);
-        $resultados[$entorno]['verificaciones'] = ejecutarSQL($pdo, $sqlVerificaciones, "Crear tabla tbl_acc_verificaciones", $entorno);
-        $resultados[$entorno]['catalogo'] = ejecutarSQL($pdo, $sqlCatalogoOrigenes, "Crear tabla tbl_acc_catalogo_origenes", $entorno);
-
-        echo "\n--- Insertando datos de catálogo ---\n";
-        $resultados[$entorno]['datos_catalogo'] = ejecutarSQL($pdo, $sqlInsertCatalogo, "Insertar catálogo de orígenes (14 tipos)", $entorno);
-
-        echo "\n--- Creando índices adicionales ---\n";
-        // Ejecutar índices por separado para mejor manejo de errores
-        try {
-            $pdo->exec("CREATE INDEX idx_hallazgo_cliente_estado ON tbl_acc_hallazgos (id_cliente, estado, numeral_asociado)");
-            echo "  ✅ [$entorno] Índice idx_hallazgo_cliente_estado\n";
-        } catch (PDOException $e) {
-            if (strpos($e->getMessage(), 'Duplicate') !== false) {
-                echo "  ⚠️ [$entorno] Índice idx_hallazgo_cliente_estado (ya existe)\n";
-            }
-        }
-
-        try {
-            $pdo->exec("CREATE INDEX idx_accion_vencimiento ON tbl_acc_acciones (fecha_compromiso, estado)");
-            echo "  ✅ [$entorno] Índice idx_accion_vencimiento\n";
-        } catch (PDOException $e) {
-            if (strpos($e->getMessage(), 'Duplicate') !== false) {
-                echo "  ⚠️ [$entorno] Índice idx_accion_vencimiento (ya existe)\n";
-            }
-        }
-
-        // Verificación final
-        echo "\n--- Verificación ---\n";
-
-        // Contar tablas creadas
-        $tablas = ['tbl_acc_hallazgos', 'tbl_acc_acciones', 'tbl_acc_seguimientos', 'tbl_acc_verificaciones', 'tbl_acc_catalogo_origenes'];
-        $tablasCreadas = 0;
-        foreach ($tablas as $tabla) {
-            $stmt = $pdo->query("SHOW TABLES LIKE '$tabla'");
-            if ($stmt->rowCount() > 0) {
-                $tablasCreadas++;
-            }
-        }
-        echo "📊 Tablas creadas: $tablasCreadas/" . count($tablas) . "\n";
-
-        // Verificar catálogo
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM tbl_acc_catalogo_origenes");
-        $row = $stmt->fetch();
-        echo "📊 Tipos de origen en catálogo: {$row['total']}\n";
-
+        $pdo->exec("CREATE INDEX idx_accion_vencimiento ON tbl_acc_acciones (fecha_compromiso, estado)");
+        echo "  ✅ [$entorno] Índice idx_accion_vencimiento\n";
+        $resultados['idx_accion_vencimiento'] = true;
     } catch (PDOException $e) {
-        echo "❌ Error de conexión: " . $e->getMessage() . "\n";
-        $resultados[$entorno]['conexion'] = false;
+        if (strpos($e->getMessage(), 'Duplicate') !== false || strpos($e->getMessage(), 'already exists') !== false) {
+            echo "  ⚠️ [$entorno] Índice idx_accion_vencimiento (ya existe)\n";
+            $resultados['idx_accion_vencimiento'] = true;
+        } else {
+            throw $e;
+        }
     }
+
+    echo "\n--- Verificación ---\n";
+    $tablas = ['tbl_acc_hallazgos', 'tbl_acc_acciones', 'tbl_acc_seguimientos', 'tbl_acc_verificaciones', 'tbl_acc_catalogo_origenes'];
+    $tablasCreadas = 0;
+    foreach ($tablas as $tabla) {
+        $stmt = $pdo->query("SHOW TABLES LIKE '$tabla'");
+        if ($stmt->rowCount() > 0) {
+            $tablasCreadas++;
+        }
+    }
+    echo "📊 Tablas creadas: $tablasCreadas/" . count($tablas) . "\n";
+
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM tbl_acc_catalogo_origenes");
+    $row = $stmt->fetch();
+    echo "📊 Tipos de origen en catálogo: {$row['total']}\n";
+} catch (PDOException $e) {
+    echo "❌ Error: " . $e->getMessage() . "\n";
+    exit(1);
 }
 
 // ============================================================
@@ -449,12 +457,10 @@ echo "\n" . str_repeat("=", 60) . "\n";
 echo "RESUMEN DE EJECUCIÓN\n";
 echo str_repeat("=", 60) . "\n";
 
-foreach ($resultados as $entorno => $resultado) {
-    $exitosos = count(array_filter($resultado));
-    $total = count($resultado);
-    $estado = ($exitosos >= 5) ? "✅ COMPLETO" : "⚠️ PARCIAL";
-    echo "$estado " . strtoupper($entorno) . ": $exitosos operaciones exitosas\n";
-}
+$exitosos = count(array_filter($resultados));
+$total = count($resultados);
+$estado = ($exitosos === $total) ? "✅ COMPLETO" : "⚠️ PARCIAL";
+echo "$estado " . strtoupper($entorno) . ": $exitosos/$total operaciones exitosas\n";
 
 echo "\n" . str_repeat("=", 60) . "\n";
 echo "ESTRUCTURA DE TABLAS CREADAS\n";

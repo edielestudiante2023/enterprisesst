@@ -266,7 +266,7 @@ class AccHallazgosModel extends Model
                     ->join('tbl_acc_catalogo_origenes cat', 'cat.tipo_origen = tbl_acc_hallazgos.tipo_origen', 'left')
                     ->where('tbl_acc_hallazgos.id_cliente', $idCliente)
                     ->whereNotIn('tbl_acc_hallazgos.estado', ['cerrado'])
-                    ->orderBy('FIELD(severidad, "critica", "alta", "media", "baja")', '', false)
+                    ->orderBy("FIELD(severidad, 'critica', 'alta', 'media', 'baja')", '', false)
                     ->orderBy('fecha_deteccion', 'DESC')
                     ->limit($limit)
                     ->findAll();
