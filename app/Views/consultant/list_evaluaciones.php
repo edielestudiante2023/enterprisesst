@@ -322,16 +322,14 @@
   <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
 
   <script>
-    const EMPTY_FILTER_TOKEN = '__EMPTY__';
     const ITEM_DEL_ESTANDAR_COLUMN_INDEX = 5;
-    let activeItemDelEstandarFilter = '';
 
     function normalizeCellValue(value) {
       return value === null || value === undefined || String(value).trim() === '';
     }
 
-    function getFilterLabel(value) {
-      return value === EMPTY_FILTER_TOKEN ? '-' : value;
+    function escapeRegex(value) {
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     // Función para formatear la fila expandible (detalles)
@@ -402,21 +400,16 @@
         var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-select');
         if (filterElement.length && !filterElement.prop('disabled')) {
           filterElement.empty().append('<option value="">Todos</option>');
-          column.data().sort().unique().each(function (d) {
-            var optionValue = normalizeCellValue(d) ? EMPTY_FILTER_TOKEN : String(d).trim();
-            var optionLabel = getFilterLabel(optionValue);
+          column.cache('search').sort().unique().each(function (d) {
+            var optionValue = normalizeCellValue(d) ? '-' : String(d).trim();
             if (filterElement.find('option[value="' + optionValue + '"]').length === 0) {
-              filterElement.append('<option value="' + optionValue + '">' + optionLabel + '</option>');
+              filterElement.append('<option value="' + optionValue + '">' + optionValue + '</option>');
             }
           });
 
-          if (headerIndex === ITEM_DEL_ESTANDAR_COLUMN_INDEX) {
-            filterElement.val(activeItemDelEstandarFilter);
-          } else {
-            var search = column.search();
-            if (search) {
-              filterElement.val(search);
-            }
+          var search = column.search();
+          if (search) {
+            filterElement.val(headerIndex === ITEM_DEL_ESTANDAR_COLUMN_INDEX ? search.replace(/^\^|\$$/g, '') : search);
           }
         }
       });
@@ -449,26 +442,6 @@
         error: function () {
           alert('Error al cargar la lista de clientes.');
         }
-      });
-
-      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, rowData) {
-        if (settings.nTable.id !== 'evaluacionesTable') {
-          return true;
-        }
-
-        if (!activeItemDelEstandarFilter) {
-          return true;
-        }
-
-        var rawValue = rowData && Object.prototype.hasOwnProperty.call(rowData, 'item_del_estandar')
-          ? rowData.item_del_estandar
-          : data[ITEM_DEL_ESTANDAR_COLUMN_INDEX];
-
-        if (activeItemDelEstandarFilter === EMPTY_FILTER_TOKEN) {
-          return normalizeCellValue(rawValue) || rawValue === '-';
-        }
-
-        return String(rawValue ?? '').trim() === activeItemDelEstandarFilter;
       });
 
       // Inicializar DataTable con fila expandible y render para inline editing
@@ -590,8 +563,7 @@ columns: [{
         var columnIndex = $(this).closest('th').index();
         var value = $(this).val();
         if (columnIndex === ITEM_DEL_ESTANDAR_COLUMN_INDEX) {
-          activeItemDelEstandarFilter = value;
-          table.column(columnIndex).search('').draw();
+          table.column(columnIndex).search(value ? '^' + escapeRegex(value) + '$' : '', !!value, false).draw();
           return;
         }
 
@@ -760,7 +732,6 @@ columns: [{
         $('tfoot .filter-select').each(function () {
           $(this).val('');
         });
-        activeItemDelEstandarFilter = '';
         table.columns().search('').draw();
         $("#clientSelect").val(null).trigger("change");
         $('#indicatorsRow').hide(); // Ocultar las tarjetas de indicadores
