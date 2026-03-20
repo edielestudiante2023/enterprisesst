@@ -502,6 +502,10 @@ columns: [{
             data: 'item_del_estandar',
             className: 'item-estandar-cell',
             render: function (data, type, row) {
+              if (type === 'filter') {
+                return normalizeCellValue(data) ? '-' : String(data).trim();
+              }
+
               if (normalizeCellValue(data)) {
                 return '-';
               }
@@ -516,7 +520,7 @@ columns: [{
             data: 'evaluacion_inicial',
             render: function (data, type, row) {
               if (type === 'filter') {
-                return data;
+                return normalizeCellValue(data) ? '-' : String(data).trim();
               }
               data = (data === null || data === "") ? "-" : data;
               var displayText = data || '&nbsp;';
@@ -542,7 +546,7 @@ columns: [{
             data: 'observaciones',
             render: function (data, type, row) {
               if (type === 'filter') {
-                return data;
+                return normalizeCellValue(data) ? '-' : String(data).trim();
               }
               data = (data === null || data === "") ? "-" : data;
               var displayText = data || '&nbsp;';
@@ -562,12 +566,7 @@ columns: [{
       $('tfoot').on('change', '.filter-select', function () {
         var columnIndex = $(this).closest('th').index();
         var value = $(this).val();
-        if (columnIndex === ITEM_DEL_ESTANDAR_COLUMN_INDEX) {
-          table.column(columnIndex).search(value ? '^' + escapeRegex(value) + '$' : '', !!value, false).draw();
-          return;
-        }
-
-        table.column(columnIndex).search(value).draw();
+        table.column(columnIndex).search(value ? '^' + escapeRegex(value) + '$' : '', !!value, false).draw();
       });
 
       $('#toggleExpandItemEstandar').on('click', function () {
