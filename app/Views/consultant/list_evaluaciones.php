@@ -323,6 +323,8 @@
 
   <script>
     const EMPTY_FILTER_TOKEN = '__EMPTY__';
+    const ITEM_DEL_ESTANDAR_COLUMN_INDEX = 5;
+    let activeItemDelEstandarFilter = '';
 
     function normalizeCellValue(value) {
       return value === null || value === undefined || String(value).trim() === '';
@@ -400,16 +402,21 @@
         var filterElement = $('tfoot tr.filters th').eq(headerIndex).find('.filter-select');
         if (filterElement.length && !filterElement.prop('disabled')) {
           filterElement.empty().append('<option value="">Todos</option>');
-          column.cache('search').sort().unique().each(function (d) {
-            var optionValue = normalizeCellValue(d) ? EMPTY_FILTER_TOKEN : d;
+          column.data().sort().unique().each(function (d) {
+            var optionValue = normalizeCellValue(d) ? EMPTY_FILTER_TOKEN : String(d).trim();
             var optionLabel = getFilterLabel(optionValue);
             if (filterElement.find('option[value="' + optionValue + '"]').length === 0) {
               filterElement.append('<option value="' + optionValue + '">' + optionLabel + '</option>');
             }
           });
-          var search = column.search();
-          if (search) {
-            filterElement.val(search);
+
+          if (headerIndex === ITEM_DEL_ESTANDAR_COLUMN_INDEX) {
+            filterElement.val(activeItemDelEstandarFilter);
+          } else {
+            var search = column.search();
+            if (search) {
+              filterElement.val(search);
+            }
           }
         }
       });
@@ -442,6 +449,26 @@
         error: function () {
           alert('Error al cargar la lista de clientes.');
         }
+      });
+
+      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, rowData) {
+        if (settings.nTable.id !== 'evaluacionesTable') {
+          return true;
+        }
+
+        if (!activeItemDelEstandarFilter) {
+          return true;
+        }
+
+        var rawValue = rowData && Object.prototype.hasOwnProperty.call(rowData, 'item_del_estandar')
+          ? rowData.item_del_estandar
+          : data[ITEM_DEL_ESTANDAR_COLUMN_INDEX];
+
+        if (activeItemDelEstandarFilter === EMPTY_FILTER_TOKEN) {
+          return normalizeCellValue(rawValue) || rawValue === '-';
+        }
+
+        return String(rawValue ?? '').trim() === activeItemDelEstandarFilter;
       });
 
       // Inicializar DataTable con fila expandible y render para inline editing
@@ -502,10 +529,6 @@ columns: [{
             data: 'item_del_estandar',
             className: 'item-estandar-cell',
             render: function (data, type, row) {
-              if (type === 'filter') {
-                return normalizeCellValue(data) ? EMPTY_FILTER_TOKEN : data;
-              }
-
               if (normalizeCellValue(data)) {
                 return '-';
               }
@@ -566,7 +589,13 @@ columns: [{
       $('tfoot').on('change', '.filter-select', function () {
         var columnIndex = $(this).closest('th').index();
         var value = $(this).val();
-        table.column(columnIndex).search(value === EMPTY_FILTER_TOKEN ? '^' + EMPTY_FILTER_TOKEN + '$' : value, value === EMPTY_FILTER_TOKEN, false).draw();
+        if (columnIndex === ITEM_DEL_ESTANDAR_COLUMN_INDEX) {
+          activeItemDelEstandarFilter = value;
+          table.column(columnIndex).search('').draw();
+          return;
+        }
+
+        table.column(columnIndex).search(value).draw();
       });
 
       $('#toggleExpandItemEstandar').on('click', function () {
@@ -731,6 +760,7 @@ columns: [{
         $('tfoot .filter-select').each(function () {
           $(this).val('');
         });
+        activeItemDelEstandarFilter = '';
         table.columns().search('').draw();
         $("#clientSelect").val(null).trigger("change");
         $('#indicatorsRow').hide(); // Ocultar las tarjetas de indicadores
