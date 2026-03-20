@@ -21,7 +21,13 @@ class PtaClienteNuevaController extends Controller
         $cliente     = $request->getGet('cliente');
         $fecha_desde = $request->getGet('fecha_desde');
         $fecha_hasta = $request->getGet('fecha_hasta');
+        $anio        = $request->getGet('anio');
         $estado      = $request->getGet('estado');
+        $anioActual  = (int) date('Y');
+
+        if ($anio === null || $anio === '') {
+            $anio = (string) $anioActual;
+        }
 
         $records = null;
 
@@ -45,8 +51,11 @@ class PtaClienteNuevaController extends Controller
                 $ptaModel->where('fecha_propuesta >=', $fecha_desde);
                 $ptaModel->where('fecha_propuesta <=', $fecha_hasta);
             } else {
-                // Sin fechas: mostrar TODOS los registros del cliente
+                // Sin fechas: filtrar por año seleccionado, salvo "todos"
                 $ptaModel->where('id_cliente', $cliente);
+                if ($anio !== 'todos') {
+                    $ptaModel->where('YEAR(fecha_propuesta)', (int) $anio);
+                }
                 $checkExtended = 0; // No aplicable en este caso
             }
 
@@ -92,13 +101,16 @@ class PtaClienteNuevaController extends Controller
             'cliente'     => $cliente,
             'fecha_desde' => $fecha_desde,
             'fecha_hasta' => $fecha_hasta,
+            'anio'        => $anio,
             'estado'      => $estado,
         ];
 
         $data = [
-            'clients' => $clients,
-            'records' => $records,
-            'filters' => $filters,
+            'clients'     => $clients,
+            'records'     => $records,
+            'filters'     => $filters,
+            'anioActual'  => $anioActual,
+            'aniosFiltro' => ['todos', '2025', '2026', '2027', '2028', '2029', '2030'],
         ];
 
         return view('consultant/list_pta_cliente_nueva', $data);
@@ -135,6 +147,7 @@ class PtaClienteNuevaController extends Controller
             'cliente'     => $this->request->getPost('filter_cliente'),
             'fecha_desde' => $this->request->getPost('filter_fecha_desde'),
             'fecha_hasta' => $this->request->getPost('filter_fecha_hasta'),
+            'anio'        => $this->request->getPost('filter_anio'),
             'estado'      => $this->request->getPost('filter_estado'),
         ];
 
@@ -183,6 +196,7 @@ class PtaClienteNuevaController extends Controller
             'cliente'     => $this->request->getPost('filter_cliente'),
             'fecha_desde' => $this->request->getPost('filter_fecha_desde'),
             'fecha_hasta' => $this->request->getPost('filter_fecha_hasta'),
+            'anio'        => $this->request->getPost('filter_anio'),
             'estado'      => $this->request->getPost('filter_estado'),
         ];
 
@@ -450,6 +464,8 @@ class PtaClienteNuevaController extends Controller
             if (!empty($filters['fecha_desde']) && !empty($filters['fecha_hasta'])) {
                 $ptaModel->where('fecha_propuesta >=', $filters['fecha_desde']);
                 $ptaModel->where('fecha_propuesta <=', $filters['fecha_hasta']);
+            } elseif (!empty($filters['anio']) && $filters['anio'] !== 'todos') {
+                $ptaModel->where('YEAR(fecha_propuesta)', (int) $filters['anio']);
             }
 
             // Aplicar filtro de estado si se proporciona

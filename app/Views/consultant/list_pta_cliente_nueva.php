@@ -454,6 +454,10 @@
 </head>
 
 <body>
+    <?php
+        $anioSeleccionado = $filters['anio'] ?? (string) ($anioActual ?? date('Y'));
+        $aniosFiltro = $aniosFiltro ?? ['todos', '2025', '2026', '2027', '2028', '2029', '2030'];
+    ?>
     <!-- Toast Stack -->
     <div class="toast-container position-fixed top-0 end-0 p-3" id="toastStack"></div>
 
@@ -652,7 +656,7 @@
                     <h6><i class="fas fa-filter"></i> Filtros de Búsqueda</h6>
                     <div class="row mb-3">
                         <!-- Cliente (Campo requerido) -->
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <label for="cliente" class="form-label">
                                 <i class="fas fa-user-tie"></i> Cliente *
                             </label>
@@ -669,8 +673,22 @@
                             </select>
                         </div>
 
+                        <!-- Año -->
+                        <div class="col-lg-3">
+                            <label for="anio" class="form-label">
+                                <i class="fas fa-calendar-alt"></i> Año
+                            </label>
+                            <select name="anio" id="anio" class="form-select">
+                                <?php foreach ($aniosFiltro as $anioOpcion): ?>
+                                    <option value="<?= esc($anioOpcion) ?>" <?= (string) $anioSeleccionado === (string) $anioOpcion ? 'selected' : '' ?>>
+                                        <?= $anioOpcion === 'todos' ? 'Todos' : esc($anioOpcion) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
                         <!-- Fecha Desde -->
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <label for="fecha_desde" class="form-label">
                                 <i class="fas fa-calendar-plus"></i> Fecha Desde
                             </label>
@@ -680,7 +698,7 @@
                         </div>
 
                         <!-- Fecha Hasta -->
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <label for="fecha_hasta" class="form-label">
                                 <i class="fas fa-calendar-minus"></i> Fecha Hasta
                             </label>
@@ -1158,6 +1176,7 @@
                 }
 
                 // Limpiar todos los filtros de fecha
+                $('#anio').val('todos');
                 $('#fecha_desde').val('');
                 $('#fecha_hasta').val('');
 
@@ -1174,6 +1193,7 @@
 
             $('#filterForm').on('submit', function(e) {
                 var cliente = $('#cliente').val();
+                var anio = $('#anio').val();
                 var fechaDesde = $('#fecha_desde').val();
                 var fechaHasta = $('#fecha_hasta').val();
 
@@ -1191,10 +1211,12 @@
                 // PERMITIR búsqueda si:
                 // 1. Viene del botón "Ver Todos"
                 // 2. Tiene fechas completas
-                var puedeEjecutar = esViaTodos || tieneFechas;
+                // 3. Tiene un año seleccionado
+                var tieneAnio = !!anio;
+                var puedeEjecutar = esViaTodos || tieneFechas || tieneAnio;
 
                 if (!puedeEjecutar) {
-                    showAlert('Debe especificar:\n• Rango de fechas (Fecha Desde y Fecha Hasta)\n• O hacer clic en "Ver Todos" para mostrar todos los registros del cliente', 'warning');
+                    showAlert('Debe especificar:\n• Año\n• O rango de fechas (Fecha Desde y Fecha Hasta)\n• O hacer clic en "Ver Todos" para mostrar todos los registros del cliente', 'warning');
                     e.preventDefault();
                     return false;
                 }
