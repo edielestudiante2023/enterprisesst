@@ -381,6 +381,7 @@
 </head>
 
 <body>
+  <?php $anioActual = (int) date('Y'); ?>
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
     <div class="container-fluid">
@@ -679,10 +680,19 @@
           <option value="">Seleccione un cliente</option>
         </select>
       </div>
+      <div class="col-md-2">
+        <label for="yearSelect">Año:</label>
+        <select id="yearSelect" class="form-select">
+          <option value="todos">Todos</option>
+          <?php for ($year = 2024; $year <= $anioActual + 2; $year++): ?>
+            <option value="<?= $year ?>" <?= $year === $anioActual ? 'selected' : '' ?>><?= $year ?></option>
+          <?php endfor; ?>
+        </select>
+      </div>
       <div class="col-md-2 align-self-end">
         <button id="loadData" class="btn btn-primary">Cargar Datos</button>
       </div>
-      <div class="col-md-7 align-self-end">
+      <div class="col-md-5 align-self-end">
         <button id="btnSocializarCronograma" class="btn btn-success btn-sm me-2 d-none">
           <i class="fas fa-envelope"></i> Socializar Cronograma
         </button>
@@ -909,6 +919,8 @@
     }
 
     $(document).ready(function() {
+      const currentYear = '<?= $anioActual ?>';
+
       // Variables globales para filtros activos
       var activeYear = null;
       var activeMonth = null;
@@ -918,6 +930,12 @@
       $('#clientSelect').select2({
         placeholder: 'Seleccione un cliente',
         allowClear: true,
+        width: '100%'
+      });
+
+      $('#yearSelect').select2({
+        placeholder: 'Seleccione un año',
+        allowClear: false,
         width: '100%'
       });
 
@@ -1008,6 +1026,7 @@
           url: "<?= base_url('/api/getCronogramasAjax') ?>",
           data: function(d) {
             d.cliente = $("#clientSelect").val();
+            d.anio = $("#yearSelect").val();
           },
           dataSrc: ''
         },
@@ -1642,6 +1661,17 @@
         }
       });
 
+      $('#yearSelect').on('change', function() {
+        var clientId = $('#clientSelect').val();
+        if (clientId) {
+          table.ajax.reload(function() {
+            updateStatusCounts();
+            updateMonthlyCounts();
+            generateYearCards();
+          });
+        }
+      });
+
       // Función para cargar información del contrato
       function loadContractInfo(clientId, clientName) {
         $.ajax({
@@ -1709,6 +1739,7 @@
           $(this).val('');
         });
         table.columns().search('').draw();
+        $("#yearSelect").val(currentYear).trigger("change");
         $("#clientSelect").val(null).trigger("change");
       });
 

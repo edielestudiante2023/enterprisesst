@@ -75,4 +75,36 @@ class CapacitacionController extends Controller
 
         return redirect()->to('/listCapacitaciones')->with('msg', 'Capacitación eliminada exitosamente');
     }
+
+    public function listcronogCapacitacion()
+    {
+        $request = service('request');
+        $cronogCapacitacionModel = new \App\Models\CronogCapacitacionModel();
+
+        $anioFiltro = $request->getGet('anio');
+        if ($anioFiltro === null || $anioFiltro === '') {
+            $anioFiltro = date('Y');
+        }
+
+        if ($anioFiltro !== 'todos') {
+            $cronogCapacitacionModel->where('YEAR(fecha_programada)', $anioFiltro);
+        }
+
+        $clienteFiltro = $request->getGet('cliente');
+        if (!empty($clienteFiltro)) {
+            $cronogCapacitacionModel->where('tbl_cronog_capacitacion.id_cliente', $clienteFiltro);
+        }
+
+        $cronogCapacitacionModel->select('tbl_cronog_capacitacion.*, tbl_cliente.nombre_cliente')
+                                ->join('tbl_cliente', 'tbl_cliente.id_cliente = tbl_cronog_capacitacion.id_cliente', 'left');
+
+        $data['records'] = $cronogCapacitacionModel->orderBy('fecha_programada', 'ASC')->findAll();
+        $data['anio_filtro'] = $anioFiltro;
+        $data['cliente_filtro'] = $clienteFiltro;
+
+        $clienteModel = new \App\Models\ClientModel();
+        $data['clientes'] = $clienteModel->orderBy('nombre_cliente', 'ASC')->findAll();
+
+        return view('consultant/list_cronog_capacitacion', $data);
+    }
 }

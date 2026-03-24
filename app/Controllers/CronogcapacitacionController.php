@@ -35,6 +35,7 @@ class CronogcapacitacionController extends Controller
     public function getCronogramasAjax()
     {
         $clienteID = $this->request->getGet('cliente');
+        $anio = $this->request->getGet('anio');
         $cronogModel = new CronogcapacitacionModel();
         $clientModel = new ClientModel();
         $capacitacionModel = new CapacitacionModel();
@@ -43,7 +44,19 @@ class CronogcapacitacionController extends Controller
             return $this->response->setJSON([]);
         }
 
-        $cronogramas = $cronogModel->where('id_cliente', $clienteID)->findAll();
+        if ($anio === null || $anio === '') {
+            $anio = date('Y');
+        }
+
+        $cronogModel->where('id_cliente', $clienteID);
+
+        if ($anio !== 'todos') {
+            $cronogModel->where('YEAR(fecha_programada)', (int) $anio);
+        }
+
+        $cronogramas = $cronogModel
+            ->orderBy('fecha_programada', 'ASC')
+            ->findAll();
 
         // Enriquecer cada registro con datos del cliente y capacitación
         foreach ($cronogramas as &$cronograma) {

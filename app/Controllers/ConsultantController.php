@@ -590,7 +590,6 @@ class ConsultantController extends Controller
             'cedula_rep_legal' => $this->request->getVar('cedula_rep_legal'),
             'fecha_fin_contrato' => $this->request->getVar('fecha_fin_contrato'),
             'ciudad_cliente' => $this->request->getVar('ciudad_cliente'),
-            'estado' => $this->request->getVar('estado'),
             'id_consultor' => $this->request->getVar('id_consultor'),
             'estandares' => $this->request->getVar('estandares'),
             'vendedor' => $this->request->getVar('vendedor'),
