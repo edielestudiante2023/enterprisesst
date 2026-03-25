@@ -537,34 +537,62 @@ class PtaClienteNuevaController extends Controller
         $phva = $this->request->getPost('phva');
         $numeral = $this->request->getPost('numeral');
         $actividad = $this->request->getPost('actividad');
+        $months = $this->request->getPost('months'); // array opcional de meses [1..12]
 
         if (empty($idCliente) || empty($actividad)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Cliente y actividad son requeridos']);
         }
 
+        // Mapeo PHVA: letra → palabra completa en mayúscula
+        $phvaMap = ['P' => 'PLANEAR', 'H' => 'HACER', 'V' => 'VERIFICAR', 'A' => 'ACTUAR'];
+        $phvaFull = $phvaMap[strtoupper(trim($phva ?? ''))] ?? strtoupper(trim($phva ?? ''));
+
         try {
             $planModel = new PlanModel();
-            $data = [
-                'id_cliente' => $idCliente,
-                'phva_plandetrabajo' => $phva ?? '',
-                'numeral_plandetrabajo' => $numeral ?? '',
-                'actividad_plandetrabajo' => $actividad,
-                'responsable_sugerido_plandetrabajo' => 'CONSULTOR CYCLOID',
-                'observaciones' => '',
-                'fecha_propuesta' => date('Y-m-d'),
-                'estado_actividad' => 'ABIERTA',
-                'porcentaje_avance' => 0,
-            ];
+            $year = (int) date('Y');
+            $inserted = 0;
 
-            if ($planModel->insert($data)) {
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Actividad insertada correctamente',
-                    'id' => $planModel->getInsertID()
-                ]);
+            // Si no hay meses seleccionados, insertar una sola fila con fecha de hoy
+            if (empty($months) || !is_array($months)) {
+                $months = [null];
             }
 
-            return $this->response->setJSON(['success' => false, 'message' => 'Error al insertar la actividad']);
+            foreach ($months as $month) {
+                if ($month !== null) {
+                    $m = (int) $month;
+                    $dt = new \DateTime("{$year}-{$m}-01");
+                    $dt->modify('last day of this month');
+                    $fechaPropuesta = $dt->format('Y-m-d');
+                } else {
+                    $fechaPropuesta = date('Y-m-d');
+                }
+
+                $data = [
+                    'id_cliente' => $idCliente,
+                    'phva_plandetrabajo' => $phvaFull,
+                    'numeral_plandetrabajo' => $numeral ?? '',
+                    'actividad_plandetrabajo' => $actividad,
+                    'responsable_sugerido_plandetrabajo' => 'CONSULTOR CYCLOID',
+                    'observaciones' => '',
+                    'fecha_propuesta' => $fechaPropuesta,
+                    'estado_actividad' => 'ABIERTA',
+                    'porcentaje_avance' => 0,
+                ];
+
+                if ($planModel->insert($data)) {
+                    $inserted++;
+                }
+            }
+
+            $msg = $inserted === 1
+                ? 'Actividad insertada correctamente'
+                : "{$inserted} actividad(es) insertada(s) en los meses seleccionados";
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => $msg,
+                'inserted' => $inserted
+            ]);
         } catch (\Exception $e) {
             return $this->response->setJSON(['success' => false, 'message' => $e->getMessage()]);
         }

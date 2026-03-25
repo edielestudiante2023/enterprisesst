@@ -2302,12 +2302,20 @@
 
             Swal.fire({
                 title: 'Confirmar ' + $opts.length + ($opts.length === 1 ? ' actividad' : ' actividades'),
-                html: '<ul style="text-align:left;max-height:200px;overflow-y:auto;">' + lista + '</ul>',
+                html: '<ul style="text-align:left;max-height:150px;overflow-y:auto;">' + lista + '</ul>' + buildMonthPanel(),
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Insertar',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#7c3aed'
+                confirmButtonColor: '#7c3aed',
+                preConfirm: () => {
+                    var months = getSelectedMonths();
+                    if ($('#swalMonthToggle').is(':checked') && months.length === 0) {
+                        Swal.showValidationMessage('Seleccione al menos un mes');
+                        return false;
+                    }
+                    return { months: months };
+                }
             }).then((result) => {
                 if (!result.isConfirmed) return;
 
@@ -2315,25 +2323,21 @@
                 $opts.each(function() {
                     items.push({ phva: $(this).data('phva'), numeral: $(this).data('numeral'), actividad: $(this).val() });
                 });
+                var months = result.value.months;
+                var totalInserted = 0;
 
                 var idx = 0;
                 function insertNext() {
                     if (idx >= items.length) {
                         $('#crearActividadIAModal').modal('hide');
-                        Swal.fire('Listo', items.length + ' actividad(es) insertada(s).', 'success').then(() => reloadWithFilters());
+                        var totalRows = months.length > 0 ? items.length * months.length : items.length;
+                        Swal.fire('Listo', totalRows + ' fila(s) insertada(s).', 'success').then(() => reloadWithFilters());
                         return;
                     }
                     var item = items[idx++];
-                    $.ajax({
-                        url: '<?= site_url('/pta-cliente-nueva/insertAiActivity') ?>',
-                        method: 'POST',
-                        data: { id_cliente: clienteId, phva: item.phva, numeral: item.numeral, actividad: item.actividad, [csrfName]: csrfHash },
-                        dataType: 'json',
-                        success: function(resp) {
-                            if (resp.success) { insertNext(); }
-                            else { Swal.fire('Error', resp.message, 'error'); }
-                        },
-                        error: function() { Swal.fire('Error', 'Error de comunicación', 'error'); }
+                    doInsertActivity(item.phva, item.numeral, item.actividad, months, function(resp) {
+                        totalInserted += (resp.inserted || 1);
+                        insertNext();
                     });
                 }
                 insertNext();
@@ -2376,6 +2380,65 @@
             });
         }
 
+        // HTML del panel de meses reutilizable
+        var monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        function buildMonthPanel() {
+            var html = '<div class="mt-3 text-start">' +
+                '<div class="form-check mb-2">' +
+                '<input type="checkbox" class="form-check-input" id="swalMonthToggle">' +
+                '<label class="form-check-label fw-bold" for="swalMonthToggle">Programar en meses específicos</label>' +
+                '</div>' +
+                '<div id="swalMonthGrid" style="display:none;">' +
+                '<small class="text-muted d-block mb-2">Se creará una fila por cada mes seleccionado (último día del mes)</small>' +
+                '<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">';
+            for (var i = 1; i <= 12; i++) {
+                html += '<button type="button" class="btn btn-sm btn-outline-secondary swal-month-btn" data-month="' + i + '">' + monthNames[i-1] + '</button>';
+            }
+            html += '</div></div></div>';
+            return html;
+        }
+
+        function getSelectedMonths() {
+            if (!$('#swalMonthToggle').is(':checked')) return [];
+            var months = [];
+            $('.swal-month-btn.btn-primary').each(function() { months.push($(this).data('month')); });
+            return months;
+        }
+
+        // Delegado para toggle y click de meses dentro de SweetAlert
+        $(document).on('change', '#swalMonthToggle', function() {
+            $('#swalMonthGrid').toggle($(this).is(':checked'));
+        });
+        $(document).on('click', '.swal-month-btn', function() {
+            $(this).toggleClass('btn-outline-secondary btn-primary text-white');
+        });
+
+        // Función para insertar actividad(es) con meses opcionales
+        function doInsertActivity(phva, numeral, actividad, months, callback) {
+            var sendData = { id_cliente: clienteId, phva: phva, numeral: numeral, actividad: actividad, [csrfName]: csrfHash };
+            if (months && months.length > 0) {
+                sendData.months = months;
+            }
+            $.ajax({
+                url: '<?= site_url('/pta-cliente-nueva/insertAiActivity') ?>',
+                method: 'POST',
+                data: sendData,
+                dataType: 'json',
+                success: function(resp) {
+                    if (resp.success) {
+                        if (callback) callback(resp);
+                        else {
+                            $('#crearActividadIAModal').modal('hide');
+                            Swal.fire('Insertada', resp.message, 'success').then(() => reloadWithFilters());
+                        }
+                    } else {
+                        Swal.fire('Error', resp.message, 'error');
+                    }
+                },
+                error: function() { Swal.fire('Error', 'Error de comunicación', 'error'); }
+            });
+        }
+
         $(document).on('click', '.ia-select-activity', function() {
             var phva = $(this).data('phva');
             var numeral = $(this).data('numeral');
@@ -2385,30 +2448,24 @@
                 title: 'Confirmar actividad',
                 html: '<p><strong>PHVA:</strong> ' + escHtml(phva) + '</p>' +
                       '<p><strong>Numeral:</strong> ' + escHtml(numeral) + '</p>' +
-                      '<p><strong>Actividad:</strong> ' + escHtml(actividad) + '</p>',
+                      '<p><strong>Actividad:</strong> ' + escHtml(actividad) + '</p>' +
+                      buildMonthPanel(),
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Insertar',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#7c3aed'
+                confirmButtonColor: '#7c3aed',
+                preConfirm: () => {
+                    var months = getSelectedMonths();
+                    if ($('#swalMonthToggle').is(':checked') && months.length === 0) {
+                        Swal.showValidationMessage('Seleccione al menos un mes');
+                        return false;
+                    }
+                    return { months: months };
+                }
             }).then((result) => {
                 if (!result.isConfirmed) return;
-
-                $.ajax({
-                    url: '<?= site_url('/pta-cliente-nueva/insertAiActivity') ?>',
-                    method: 'POST',
-                    data: { id_cliente: clienteId, phva: phva, numeral: numeral, actividad: actividad, [csrfName]: csrfHash },
-                    dataType: 'json',
-                    success: function(resp) {
-                        if (resp.success) {
-                            $('#crearActividadIAModal').modal('hide');
-                            Swal.fire('Insertada', resp.message, 'success').then(() => reloadWithFilters());
-                        } else {
-                            Swal.fire('Error', resp.message, 'error');
-                        }
-                    },
-                    error: function() { Swal.fire('Error', 'Error de comunicación', 'error'); }
-                });
+                doInsertActivity(phva, numeral, actividad, result.value.months);
             });
         });
 
