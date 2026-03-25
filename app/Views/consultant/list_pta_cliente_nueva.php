@@ -26,6 +26,25 @@
             text-align: right;
         }
 
+        .dt-button-collection {
+            padding: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .dt-button-collection .dt-button {
+            display: block !important;
+            padding: 6px 14px !important;
+            margin: 2px 0 !important;
+            width: 100%;
+            text-align: left;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .dt-button-collection .dt-button.active {
+            background: #4e73df !important;
+            color: #fff !important;
+        }
+
         td.editable {
             cursor: pointer;
         }
@@ -784,10 +803,10 @@
                             <th>Porcentaje Avance</th>
                             <th>Observaciones</th>
                             <th>Gestión Rápida</th>
-                            <th class="d-none">Responsable Definido</th>
-                            <th class="d-none">Semana</th>
-                            <th class="d-none">Created At</th>
-                            <th class="d-none">Updated At</th>
+                            <th>Responsable Definido</th>
+                            <th>Semana</th>
+                            <th>Created At</th>
+                            <th>Updated At</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -863,10 +882,10 @@
                                         <?php endfor; ?>
                                     </div>
                                 </td>
-                                <td class="d-none"><?= esc($row['responsable_definido_paralaactividad']) ?></td>
-                                <td class="d-none"><?= esc($row['semana']) ?></td>
-                                <td class="d-none"><?= esc($row['created_at']) ?></td>
-                                <td class="d-none"><?= esc($row['updated_at']) ?></td>
+                                <td><?= esc($row['responsable_definido_paralaactividad']) ?></td>
+                                <td><?= esc($row['semana']) ?></td>
+                                <td><?= esc($row['created_at']) ?></td>
+                                <td><?= esc($row['updated_at']) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -895,10 +914,10 @@
                             <th><input type="text" placeholder="Buscar Porcentaje Avance" class="form-control form-control-sm"></th>
                             <th><input type="text" placeholder="Buscar Observaciones" class="form-control form-control-sm"></th>
                             <th></th>
-                            <th class="d-none"></th>
-                            <th class="d-none"></th>
-                            <th class="d-none"></th>
-                            <th class="d-none"></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -934,6 +953,7 @@
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js"></script>
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- SweetAlert2 -->
@@ -1310,9 +1330,18 @@
                     ],
                     "dom": '<"row"<"col-sm-12"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
                     "columnDefs": [
-                        { "orderable": false, "targets": [0, 14] }
+                        { "visible": false, "targets": [0, 1, 2, 4, 15, 16, 17, 18] },
+                        { "orderable": false, "searchable": false, "targets": [0] },
+                        { "orderable": false, "targets": [14] }
                     ],
-                    "buttons": [{
+                    "buttons": [
+                    {
+                        extend: 'colvis',
+                        text: '<i class="fas fa-columns"></i> Columnas Visibles',
+                        className: 'btn btn-outline-primary',
+                        columns: ':not(:first-child):not(:last-child)'
+                    },
+                    {
                         extend: 'excel',
                         text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
                         className: 'btn btn-success',
@@ -1320,10 +1349,9 @@
                         charset: 'UTF-8',
                         bom: true,
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                            columns: ':visible',
                             format: {
                                 body: function(data, row, column, node) {
-                                    // Decode HTML entities
                                     return $('<div/>').html(data).text();
                                 }
                             }
