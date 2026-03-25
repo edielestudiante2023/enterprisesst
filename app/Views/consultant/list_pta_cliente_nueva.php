@@ -1028,6 +1028,16 @@
             var activeMonth = null;
             var activeStatus = null;
 
+            // Guardar filtros de tarjetas en sessionStorage antes de reload
+            function reloadWithFilters() {
+                sessionStorage.setItem('ptaCardFilters', JSON.stringify({
+                    year: activeYear,
+                    month: activeMonth,
+                    status: activeStatus
+                }));
+                reloadWithFilters();
+            }
+
             // Initialize Select2 on client dropdown
             $('#cliente').select2({
                 theme: 'bootstrap-5',
@@ -1452,7 +1462,32 @@
                 });
                 updateCardCounts();
                 updateMonthlyCounts();
-                generateYearCards(); // Generar tarjetas de año al inicializar
+                generateYearCards();
+
+                // Restaurar filtros de tarjetas desde sessionStorage (si venimos de un reload)
+                var savedFilters = sessionStorage.getItem('ptaCardFilters');
+                if (savedFilters) {
+                    sessionStorage.removeItem('ptaCardFilters');
+                    var f = JSON.parse(savedFilters);
+                    if (f.year) {
+                        activeYear = f.year;
+                        $('.card-year[data-year="' + f.year + '"]').addClass('active-filter');
+                    }
+                    if (f.month) {
+                        activeMonth = f.month;
+                        $('.card-month[data-month="' + f.month + '"]').addClass('active-filter');
+                    }
+                    if (f.status) {
+                        activeStatus = f.status;
+                        $('.card-status[data-status="' + f.status + '"]').addClass('active-filter');
+                    }
+                    if (f.year || f.month || f.status) {
+                        // Abrir el panel de filtros y aplicar
+                        $('#cardFiltersPanel').addClass('show');
+                        $('.filter-toggle-btn').removeClass('collapsed');
+                        applyFilters();
+                    }
+                }
 
                 // Helpers para construir HTML de badge y progress bar
                 function buildEstadoBadge(estado) {
@@ -1901,7 +1936,7 @@
                     success: function(response) {
                         if (response.success) {
                             alert(response.message);
-                            if (response.fixed > 0) location.reload();
+                            if (response.fixed > 0) reloadWithFilters();
                         } else {
                             alert('Error: ' + response.message);
                         }
@@ -2166,7 +2201,7 @@
                     dataType: 'json',
                     success: function(resp) {
                         if (resp.success) {
-                            Swal.fire('Listo', resp.message, 'success').then(() => location.reload());
+                            Swal.fire('Listo', resp.message, 'success').then(() => reloadWithFilters());
                         } else {
                             Swal.fire('Error', resp.message, 'error');
                         }
@@ -2196,7 +2231,7 @@
                 success: function(resp) {
                     if (resp.success) {
                         $('#regenerarPlanModal').modal('hide');
-                        Swal.fire('Plan Regenerado', resp.message, 'success').then(() => location.reload());
+                        Swal.fire('Plan Regenerado', resp.message, 'success').then(() => reloadWithFilters());
                     } else {
                         Swal.fire('Error', resp.message, 'error');
                     }
@@ -2285,7 +2320,7 @@
                 function insertNext() {
                     if (idx >= items.length) {
                         $('#crearActividadIAModal').modal('hide');
-                        Swal.fire('Listo', items.length + ' actividad(es) insertada(s).', 'success').then(() => location.reload());
+                        Swal.fire('Listo', items.length + ' actividad(es) insertada(s).', 'success').then(() => reloadWithFilters());
                         return;
                     }
                     var item = items[idx++];
@@ -2367,7 +2402,7 @@
                     success: function(resp) {
                         if (resp.success) {
                             $('#crearActividadIAModal').modal('hide');
-                            Swal.fire('Insertada', resp.message, 'success').then(() => location.reload());
+                            Swal.fire('Insertada', resp.message, 'success').then(() => reloadWithFilters());
                         } else {
                             Swal.fire('Error', resp.message, 'error');
                         }
