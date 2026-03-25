@@ -114,7 +114,8 @@ class PtaClienteNuevaController extends Controller
             'records'     => $records,
             'filters'     => $filters,
             'anioActual'  => $anioActual,
-            'aniosFiltro' => ['todos', '2025', '2026', '2027', '2028', '2029', '2030'],
+            'aniosFiltro' => array_merge(['todos'], array_map('strval', range($anioActual - 1, $anioActual + 4))),
+            'anioSeleccionado' => $anio,
         ];
 
         return view('consultant/list_pta_cliente_nueva', $data);

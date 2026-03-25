@@ -461,8 +461,7 @@
 
 <body>
     <?php
-        $anioSeleccionado = $filters['anio'] ?? (string) ($anioActual ?? date('Y'));
-        $aniosFiltro = $aniosFiltro ?? ['todos', '2025', '2026', '2027', '2028', '2029', '2030'];
+        $anioSeleccionado = $anioSeleccionado ?? $filters['anio'] ?? (string) date('Y');
     ?>
     <!-- Toast Stack -->
     <div class="toast-container position-fixed top-0 end-0 p-3" id="toastStack"></div>
