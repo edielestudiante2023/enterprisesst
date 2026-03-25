@@ -344,18 +344,36 @@
       font-size: 13px;
       border-bottom: 1px solid #e9ecef;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 200px;
     }
     #cronogramaTable tbody tr:hover td { background-color: #f0f4ff !important; }
     #cronogramaTable tbody tr:nth-child(even) td { background-color: #f8f9fc; }
-    /* Columnas con texto truncado: permitir wrap */
+
+    /* ============ SCROLL HORIZONTAL NATIVO ============ */
+    .table-scroll-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Columna de barra de progreso: no recortar */
+    .col-progress {
+      overflow: visible !important;
+      min-width: 130px !important;
+    }
+
+    /* Columnas con texto largo: permitir wrap */
     .col-truncate {
       white-space: normal !important;
       overflow: visible !important;
       text-overflow: unset !important;
       max-width: 250px !important;
+    }
+
+    /* Columna capacitación */
+    td.capacitacion-col, th.capacitacion-col {
+      max-width: 250px !important;
+      min-width: 180px;
+      white-space: normal !important;
+      word-wrap: break-word;
     }
 
     /* ============ ACORDEON DE FILTROS ============ */
@@ -701,7 +719,7 @@
       </div>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-scroll-wrapper">
       <table id="cronogramaTable" class="table table-striped table-bordered nowrap" style="width:100%">
         <thead class="table-light">
           <tr>
@@ -710,7 +728,7 @@
             <th>#</th>
             <th>Acciones</th>
             <th style="min-width: 200px;">Gestión Rápida</th>
-            <th>Capacitación</th>
+            <th class="capacitacion-col">Capacitación</th>
             <th>Objetivo</th>
             <th>Cliente</th>
             <th>*Fecha Programada</th>
@@ -1181,6 +1199,7 @@
           },
           {
             data: 'porcentaje_cobertura',
+            className: 'col-progress',
             render: function(data, type, row) {
               var asistentes = parseFloat(row.numero_de_asistentes_a_capacitacion) || 0;
               var programados = parseFloat(row.numero_total_de_personas_programadas) || 0;
