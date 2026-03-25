@@ -135,10 +135,10 @@
                                     <label for="phva_plandetrabajo" class="form-label">PHVA <span class="text-danger">*</span></label>
                                     <select name="phva_plandetrabajo" id="phva_plandetrabajo" class="form-select" required>
                                         <option value="">Seleccione...</option>
-                                        <option value="P">P - Planear</option>
-                                        <option value="H">H - Hacer</option>
-                                        <option value="V">V - Verificar</option>
-                                        <option value="A">A - Actuar</option>
+                                        <option value="PLANEAR">PLANEAR</option>
+                                        <option value="HACER">HACER</option>
+                                        <option value="VERIFICAR">VERIFICAR</option>
+                                        <option value="ACTUAR">ACTUAR</option>
                                     </select>
                                 </div>
                                 <!-- Numeral -->
@@ -182,7 +182,25 @@
 
                             <div class="mb-3">
                                 <label for="fecha_propuesta" class="form-label">Fecha Propuesta <span class="text-danger">*</span></label>
-                                <input type="date" name="fecha_propuesta" id="fecha_propuesta" class="form-control" required>
+                                <input type="date" name="fecha_propuesta" id="fecha_propuesta" class="form-control">
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="monthToggle">
+                                    <label class="form-check-label fw-bold" for="monthToggle">Programar en meses específicos</label>
+                                </div>
+                                <div id="monthGrid" style="display:none;" class="mt-2">
+                                    <small class="text-muted d-block mb-2">Se creará una fila por cada mes (último día del mes). La fecha propuesta de arriba se ignora.</small>
+                                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
+                                        <?php
+                                        $meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+                                        for ($i = 1; $i <= 12; $i++):
+                                        ?>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary month-btn" data-month="<?= $i ?>"><?= $meses[$i-1] ?></button>
+                                        <?php endfor; ?>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mb-0">
@@ -314,8 +332,10 @@
                     },
                     success: function(res) {
                         if (res.success && res.campos) {
-                            var phva = (res.campos.phva_plandetrabajo || '').charAt(0).toUpperCase();
-                            $('#phva_plandetrabajo').val(phva);
+                            var phvaMap = {'P':'PLANEAR','H':'HACER','V':'VERIFICAR','A':'ACTUAR'};
+                            var rawPhva = (res.campos.phva_plandetrabajo || '').toUpperCase().trim();
+                            var phvaFull = phvaMap[rawPhva.charAt(0)] || rawPhva;
+                            $('#phva_plandetrabajo').val(phvaFull);
                             $('#numeral_plandetrabajo').val(res.campos.numeral_plandetrabajo);
                             $('#actividad_plandetrabajo').val(res.campos.actividad_plandetrabajo);
                             $('#responsable_sugerido_plandetrabajo').val(res.campos.responsable_sugerido_plandetrabajo);
@@ -341,6 +361,39 @@
                         toggleIAButton();
                     }
                 });
+            });
+            // --- Panel de meses ---
+            $('#monthToggle').on('change', function() {
+                var checked = $(this).is(':checked');
+                $('#monthGrid').toggle(checked);
+                // Si activa meses, fecha_propuesta deja de ser required
+                $('#fecha_propuesta').prop('required', !checked);
+            });
+
+            $(document).on('click', '.month-btn', function() {
+                $(this).toggleClass('btn-outline-secondary btn-primary text-white');
+            });
+
+            // Interceptar submit para agregar months[] como hidden inputs
+            $('form').on('submit', function(e) {
+                // Remover hidden months previos
+                $(this).find('input[name="months[]"]').remove();
+
+                if ($('#monthToggle').is(':checked')) {
+                    var selectedMonths = [];
+                    $('.month-btn.btn-primary').each(function() {
+                        selectedMonths.push($(this).data('month'));
+                    });
+                    if (selectedMonths.length === 0) {
+                        e.preventDefault();
+                        alert('Seleccione al menos un mes.');
+                        return false;
+                    }
+                    var form = $(this);
+                    selectedMonths.forEach(function(m) {
+                        form.append('<input type="hidden" name="months[]" value="' + m + '">');
+                    });
+                }
             });
         });
     </script>

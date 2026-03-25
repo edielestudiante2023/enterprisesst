@@ -145,19 +145,52 @@ class PtaClienteNuevaController extends Controller
     {
         $ptaModel = new PtaClienteNuevaModel();
         $data = $this->request->getPost();
-        $ptaModel->insert($data);
+        $months = $this->request->getPost('months');
 
-        // Recuperar filtros enviados desde el formulario (campos ocultos)
+        // Recuperar filtros ANTES de limpiar
         $filters = [
-            'cliente'     => $this->request->getPost('filter_cliente'),
-            'fecha_desde' => $this->request->getPost('filter_fecha_desde'),
-            'fecha_hasta' => $this->request->getPost('filter_fecha_hasta'),
-            'anio'        => $this->request->getPost('filter_anio'),
-            'estado'      => $this->request->getPost('filter_estado'),
+            'cliente'     => $data['filter_cliente'] ?? '',
+            'fecha_desde' => $data['filter_fecha_desde'] ?? '',
+            'fecha_hasta' => $data['filter_fecha_hasta'] ?? '',
+            'anio'        => $data['filter_anio'] ?? '',
+            'estado'      => $data['filter_estado'] ?? '',
         ];
 
+        // Limpiar campos que no van a BD
+        unset($data['months']);
+        foreach (array_keys($data) as $k) {
+            if (strpos($k, 'filter_') === 0 || strpos($k, 'csrf') !== false) unset($data[$k]);
+        }
+
+        // Normalizar PHVA a mayúscula sostenida
+        $phvaMap = ['P' => 'PLANEAR', 'H' => 'HACER', 'V' => 'VERIFICAR', 'A' => 'ACTUAR'];
+        $raw = strtoupper(trim($data['phva_plandetrabajo'] ?? ''));
+        $data['phva_plandetrabajo'] = $phvaMap[$raw] ?? $raw;
+
+        $year = (int) date('Y');
+        $inserted = 0;
+
+        if (!empty($months) && is_array($months)) {
+            foreach ($months as $month) {
+                $m = (int) $month;
+                $dt = new \DateTime("{$year}-{$m}-01");
+                $dt->modify('last day of this month');
+                $rowData = $data;
+                $rowData['fecha_propuesta'] = $dt->format('Y-m-d');
+                $ptaModel->insert($rowData);
+                $inserted++;
+            }
+        } else {
+            $ptaModel->insert($data);
+            $inserted = 1;
+        }
+
+        $msg = $inserted === 1
+            ? 'Registro agregado correctamente.'
+            : "{$inserted} registros agregados (uno por cada mes seleccionado).";
+
         return redirect()->to('/pta-cliente-nueva/list?' . http_build_query($filters))
-            ->with('message', 'Registro agregado correctamente.');
+            ->with('message', $msg);
     }
 
     /**
