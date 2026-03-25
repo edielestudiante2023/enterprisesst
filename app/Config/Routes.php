@@ -554,6 +554,27 @@ $routes->post('/pta-cliente-nueva/updateDateByMonth', 'PtaClienteNuevaController
 // Asistente IA: completar campos de actividad PTA con IA
 $routes->post('/pta-cliente-nueva/completar-ia', 'PtaClienteNuevaController::completarConIA');
 
+// Eliminación múltiple vía AJAX
+$routes->post('/pta-cliente-nueva/deleteMultiple', 'PtaClienteNuevaController::deleteMultiplePtaClienteNuevaModel');
+
+// Fix CERRADA sin fecha_cierre
+$routes->post('/pta-cliente-nueva/fixCerradasSinFecha', 'PtaClienteNuevaController::fixCerradasSinFecha');
+
+// Eliminar todas las ABIERTA de un cliente
+$routes->post('/pta-cliente-nueva/deleteAbiertas', 'PtaClienteNuevaController::deleteAbiertas');
+
+// Regenerar plan desde CSV
+$routes->post('/pta-cliente-nueva/regenerarPlan', 'PtaClienteNuevaController::regenerarPlan');
+
+// Buscar actividades en inventario CSV
+$routes->post('/pta-cliente-nueva/searchActivities', 'PtaClienteNuevaController::searchActivities');
+
+// Generar actividad con IA
+$routes->post('/pta-cliente-nueva/generateAiActivity', 'PtaClienteNuevaController::generateAiActivity');
+
+// Insertar actividad IA/inventario
+$routes->post('/pta-cliente-nueva/insertAiActivity', 'PtaClienteNuevaController::insertAiActivity');
+
 // Ruta para socialización del Plan de Trabajo por email
 $routes->post('/socializacion/send-plan-trabajo', 'SocializacionEmailController::sendPlanTrabajo');
 // Ruta para socialización de Evaluación de Estándares Mínimos por email

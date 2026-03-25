@@ -59,4 +59,43 @@ class PtaAuditService
             'descripcion'      => $descripcion,
         ]) !== false;
     }
+
+    public static function logMultiple(
+        int $idPtaCliente,
+        array $datosAnteriores,
+        array $datosNuevos,
+        string $metodo,
+        ?int $idCliente = null
+    ): int {
+        $cambiosRegistrados = 0;
+        $camposIgnorar = ['updated_at', 'created_at', 'id_ptacliente'];
+
+        foreach ($datosNuevos as $campo => $valorNuevo) {
+            if (in_array($campo, $camposIgnorar)) continue;
+            if (strpos($campo, 'filter_') === 0) continue;
+            if (strpos($campo, 'csrf') !== false) continue;
+
+            $valorAnterior = $datosAnteriores[$campo] ?? null;
+
+            if ((string) $valorAnterior !== (string) $valorNuevo) {
+                if (self::log($idPtaCliente, 'UPDATE', $campo, $valorAnterior, $valorNuevo, $metodo, $idCliente)) {
+                    $cambiosRegistrados++;
+                }
+            }
+        }
+
+        return $cambiosRegistrados;
+    }
+
+    public static function logInsert(int $idPtaCliente, array $datos, string $metodo = 'addpostPtaClienteNuevaModel'): bool
+    {
+        $idCliente = $datos['id_cliente'] ?? null;
+        return self::log($idPtaCliente, 'INSERT', null, null, json_encode($datos), $metodo, $idCliente);
+    }
+
+    public static function logDelete(int $idPtaCliente, array $datosAnteriores, string $metodo = 'deletePtaClienteNuevaModel'): bool
+    {
+        $idCliente = $datosAnteriores['id_cliente'] ?? null;
+        return self::log($idPtaCliente, 'DELETE', null, json_encode($datosAnteriores), null, $metodo, $idCliente);
+    }
 }

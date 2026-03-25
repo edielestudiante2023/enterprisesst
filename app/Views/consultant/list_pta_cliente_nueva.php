@@ -14,6 +14,8 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
     <style>
         body {
             padding: 20px;
@@ -390,6 +392,10 @@
         .btn-action-delete:hover { background: #e04050; color: #fff; }
         .action-group { display: flex; gap: 4px; justify-content: center; }
 
+        .btn-purple { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; border: none; }
+        .btn-purple:hover { background: linear-gradient(135deg, #6d28d9, #9333ea); color: #fff; }
+        .text-purple { color: #7c3aed !important; }
+
         /* ============ FILAS COMPACTAS Y TABLA ESTILIZADA ============ */
         #ptaTable {
             border-collapse: separate;
@@ -462,8 +468,24 @@
     <div class="toast-container position-fixed top-0 end-0 p-3" id="toastStack"></div>
 
     <div class="container-fluid">
-        <!-- Enlace a Dashboard -->
-        <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm mb-3">Ir a DashBoard</a>
+        <!-- Enlaces de navegación -->
+        <div class="d-flex gap-2 mb-3">
+            <a href="<?= base_url('/dashboardconsultant') ?>" class="btn btn-primary btn-sm">Ir a DashBoard</a>
+            <?php if (!empty($filters['cliente'])): ?>
+            <button type="button" id="btnEliminarAbiertas" class="btn btn-danger btn-sm"
+                    title="Elimina TODAS las actividades en estado ABIERTA de este cliente. Requiere resolver 3 operaciones matemáticas para confirmar.">
+                <i class="fas fa-eraser"></i> Eliminar Abiertas
+            </button>
+            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#regenerarPlanModal"
+                    title="Agrega actividades faltantes desde la plantilla CSV sin tocar las existentes.">
+                <i class="fas fa-redo"></i> Regenerar Plan
+            </button>
+            <button type="button" class="btn btn-purple btn-sm" data-bs-toggle="modal" data-bs-target="#crearActividadIAModal"
+                    title="Crea una actividad nueva: busque en el inventario o describa lo que necesita y la IA propondrá opciones.">
+                <i class="fas fa-robot"></i> Crear con IA
+            </button>
+            <?php endif; ?>
+        </div>
 
         <!-- Mensaje informativo -->
         <div class="alert alert-info alert-dismissible fade show" role="alert">
@@ -711,8 +733,8 @@
 
                 <!-- Botones de Acción -->
                 <div class="btn-group-filters">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <div class="d-flex flex-wrap gap-2">
+                    <div class="row">
+                        <div class="col-md-8 d-flex flex-wrap gap-2 align-items-center">
                             <button type="submit" class="btn btn-primary" id="btnBuscar">
                                 <i class="fas fa-search"></i> Buscar
                             </button>
@@ -723,18 +745,19 @@
                                 <i class="fas fa-undo"></i> Limpiar
                             </button>
                         </div>
-                        <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-add-actividad">
-                            <i class="fas fa-plus-circle"></i> Adicionar Actividad a Plan de Trabajo
-                        </a>
-                        <div class="d-flex flex-wrap gap-2">
-                            <?php if (!empty($filters['cliente'])): ?>
-                            <button type="button" id="btnSocializarPlanTrabajo" class="btn btn-success">
-                                <i class="fas fa-envelope"></i> Socializar Plan
+                        <div class="col-md-4 text-end d-flex flex-wrap gap-2 justify-content-end align-items-center">
+                            <button type="button" id="btnDeleteSelected" class="btn btn-danger" style="display:none;">
+                                <i class="fas fa-trash-alt"></i> Eliminar Seleccionados (<span id="selectedCount">0</span>)
                             </button>
-                            <?php endif; ?>
                             <button type="button" id="btnCalificarCerradas" class="btn btn-warning">
                                 <i class="fas fa-check-double"></i> Calificar Cerradas
                             </button>
+                            <button type="button" id="btnFixCerradasSinFecha" class="btn btn-outline-warning" title="Asignar fecha propuesta como fecha de cierre a las actividades CERRADA sin fecha">
+                                <i class="fas fa-calendar-check"></i> Fix Cerradas sin Fecha
+                            </button>
+                            <a href="<?= base_url('/pta-cliente-nueva/add?' . http_build_query($filters)) ?>" class="btn btn-info">
+                                <i class="fas fa-plus"></i> Nuevo
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -747,6 +770,7 @@
                 <table id="ptaTable" class="table table-striped table-bordered" style="width:100%">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAll" title="Seleccionar todos"></th>
                             <th>Acciones</th>
                             <th>ID</th>
                             <th>Cliente</th>
@@ -770,10 +794,11 @@
                     <tbody>
                         <?php foreach ($records as $row): ?>
                             <tr>
+                                <td><input type="checkbox" class="row-select" value="<?= esc($row['id_ptacliente']) ?>"></td>
                                 <td>
                                     <div class="action-group">
                                         <a href="<?= base_url('/pta-cliente-nueva/edit/' . esc($row['id_ptacliente']) . '?' . http_build_query($filters)) ?>" class="btn-action btn-action-edit" title="Editar"><i class="fas fa-pen"></i></a>
-                                        <a href="<?= base_url('/pta-cliente-nueva/delete/' . esc($row['id_ptacliente']) . '?' . http_build_query($filters)) ?>" class="btn-action btn-action-delete" title="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este registro?')"><i class="fas fa-trash"></i></a>
+                                        <button type="button" class="btn-action btn-action-delete btn-delete-single" data-id="<?= esc($row['id_ptacliente']) ?>" title="Eliminar"><i class="fas fa-trash"></i></button>
                                     </div>
                                 </td>
                                 <td><?= esc($row['id_ptacliente']) ?></td>
@@ -848,7 +873,8 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th></th>
+                            <th></th><!-- checkbox -->
+                            <th></th><!-- acciones -->
                             <th><input type="text" placeholder="Buscar ID" class="form-control form-control-sm"></th>
                             <th><input type="text" placeholder="Buscar Cliente" class="form-control form-control-sm"></th>
                             <th><input type="text" placeholder="Buscar Fuente" class="form-control form-control-sm"></th>
@@ -911,6 +937,8 @@
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
             // ==========================================
@@ -1007,7 +1035,7 @@
                 // Contar actividades por año
                 table.rows({search: 'applied'}).every(function() {
                     var data = this.data();
-                    var fechaPropuesta = data[8]; // Columna "Fecha Propuesta"
+                    var fechaPropuesta = data[9]; // Columna "Fecha Propuesta" (shifted +1 by checkbox)
                     if (fechaPropuesta) {
                         var parts = fechaPropuesta.split("-");
                         if (parts.length >= 1) {
@@ -1046,8 +1074,8 @@
 
                 $.fn.dataTable.ext.search.push(
                     function(settings, data, dataIndex) {
-                        var fechaPropuesta = data[8] || ''; // Columna 8: Fecha Propuesta
-                        var estadoActividad = $('<div/>').html(data[10] || '').text().trim(); // Columna 10: Estado (strip HTML)
+                        var fechaPropuesta = data[9] || ''; // Columna 9: Fecha Propuesta (shifted +1)
+                        var estadoActividad = $('<div/>').html(data[11] || '').text().trim(); // Columna 11: Estado (shifted +1)
 
                         // Filtro por año
                         if (activeYear) {
@@ -1276,14 +1304,14 @@
                     "responsive": true,
                     "autoWidth": false,
                     "order": [
-                        [10, 'asc'],
-                        [8, 'asc'],
-                        [4, 'asc'],
-                        [6, 'asc']
+                        [11, 'asc'],
+                        [9, 'asc'],
+                        [5, 'asc'],
+                        [7, 'asc']
                     ],
                     "dom": '<"row"<"col-sm-12"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
                     "columnDefs": [
-                        { "orderable": false, "targets": 13 }
+                        { "orderable": false, "targets": [0, 14] }
                     ],
                     "buttons": [{
                         extend: 'excel',
@@ -1293,7 +1321,7 @@
                         charset: 'UTF-8',
                         bom: true,
                         exportOptions: {
-                            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                            columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
                             format: {
                                 body: function(data, row, column, node) {
                                     // Decode HTML entities
@@ -1309,7 +1337,7 @@
                             var input = $('input', column.footer());
                             if (select.length) {
                                 // Si la columna no es "Estado Actividad" (índice 10), agregamos las opciones
-                                if (column.index() !== 10) {
+                                if (column.index() !== 11) {
                                     column.data().unique().sort().each(function(d) {
                                         if (d) {
                                             select.append('<option value="' + d + '">' + d + '</option>');
@@ -1340,7 +1368,7 @@
 
                 // Función para actualizar los contadores de las tarjetas superiores
                 function updateCardCounts() {
-                    var data = table.column(10, {
+                    var data = table.column(11, {
                         search: 'applied'
                     }).data().toArray();
                     var countActivas = data.filter(function(x) {
@@ -1372,7 +1400,7 @@
                         search: 'applied'
                     }).data().toArray();
                     data.forEach(function(row) {
-                        var fechaPropuesta = row[8]; // Columna "Fecha Propuesta"
+                        var fechaPropuesta = row[9]; // Columna "Fecha Propuesta" (shifted +1)
                         if (fechaPropuesta) {
                             // Se asume formato YYYY-MM-DD
                             var parts = fechaPropuesta.split("-");
@@ -1427,38 +1455,36 @@
                     if ($td.find('input, select').length > 0) return;
                     var colIndex = table.cell($td).index().column;
                     var editableMapping = {
-                        4: 'phva_plandetrabajo',
-                        5: 'numeral_plandetrabajo',
-                        6: 'actividad_plandetrabajo',
-                        7: 'responsable_sugerido_plandetrabajo',
-                        8: 'fecha_propuesta',
-                        9: 'fecha_cierre',
-                        10: 'estado_actividad',
-                        11: 'porcentaje_avance',
-                        12: 'observaciones'
+                        5: 'phva_plandetrabajo',
+                        6: 'numeral_plandetrabajo',
+                        7: 'actividad_plandetrabajo',
+                        8: 'responsable_sugerido_plandetrabajo',
+                        9: 'fecha_propuesta',
+                        10: 'fecha_cierre',
+                        11: 'estado_actividad',
+                        12: 'porcentaje_avance',
+                        13: 'observaciones'
                     };
-                    var disallowed = [0, 1, 2, 3, 13, 14, 15, 16, 17];
+                    var disallowed = [0, 1, 2, 3, 4, 14, 15, 16, 17, 18];
                     if (disallowed.indexOf(colIndex) !== -1 || !editableMapping.hasOwnProperty(colIndex)) {
                         cell.data(originalHtml).draw();
                         return;
                     }
 
-                    // Extraer valor plano según la columna
                     var plainValue = stripHtml(originalHtml);
-                    // Para porcentaje, quitar el '%'
-                    if (colIndex === 11) plainValue = plainValue.replace('%', '').trim();
+                    if (colIndex === 12) plainValue = plainValue.replace('%', '').trim();
 
                     var inputElement;
-                    if (colIndex === 8 || colIndex === 9) {
+                    if (colIndex === 9 || colIndex === 10) {
                         inputElement = $('<input type="date" class="form-control form-control-sm" />').val(plainValue);
-                    } else if (colIndex === 10) {
+                    } else if (colIndex === 11) {
                         inputElement = $('<select class="form-select form-select-sm"></select>');
                         var options = ["ABIERTA", "CERRADA", "GESTIONANDO", "CERRADA SIN EJECUCIÓN"];
                         $.each(options, function(i, option) {
                             var selected = (plainValue === option) ? "selected" : "";
                             inputElement.append('<option value="' + option + '" ' + selected + '>' + option + '</option>');
                         });
-                    } else if (colIndex === 11) {
+                    } else if (colIndex === 12) {
                         inputElement = $('<input type="number" class="form-control form-control-sm" min="0" max="100" step="1" />').val(plainValue);
                     } else {
                         inputElement = $('<input type="text" class="form-control form-control-sm" />').val(plainValue);
@@ -1469,18 +1495,18 @@
 
                     inputElement.on('blur keydown', function(e) {
                         if (e.type === 'blur' || (e.type === 'keydown' && e.which === 13)) {
-                            var newValue = (colIndex === 10) ? inputElement.find("option:selected").val() : $(this).val();
+                            var newValue = (colIndex === 11) ? inputElement.find("option:selected").val() : $(this).val();
                             if (newValue === plainValue) {
                                 cell.data(originalHtml).draw();
                                 return;
                             }
                             var fieldName = editableMapping[colIndex];
                             var rowData = table.row($td.closest('tr')).data();
-                            var id = rowData[1];
+                            var id = rowData[2];
                             var dataToSend = { id: id };
                             dataToSend[fieldName] = newValue;
 
-                            if (colIndex === 9 && newValue && newValue.trim() !== '') {
+                            if (colIndex === 10 && newValue && newValue.trim() !== '') {
                                 dataToSend['estado_actividad'] = 'CERRADA';
                             }
 
@@ -1494,31 +1520,37 @@
                                 success: function(response) {
                                     if (response.status === 'success') {
                                         // Reconstruir HTML según la columna
-                                        if (colIndex === 10) {
+                                        if (colIndex === 11) {
                                             cell.data(buildEstadoBadge(newValue)).draw();
-                                        } else if (colIndex === 11) {
+                                        } else if (colIndex === 12) {
                                             cell.data(buildProgressBar(newValue)).draw();
-                                        } else if (colIndex === 6 || colIndex === 12) {
+                                        } else if (colIndex === 7 || colIndex === 13) {
                                             cell.data(buildTruncateCell(newValue)).draw();
                                         } else {
                                             cell.data(newValue).draw();
                                         }
 
                                         // Fecha cierre → estado CERRADA
-                                        if (colIndex === 9 && newValue && newValue.trim() !== '') {
-                                            var estadoCell = table.cell($td.closest('tr'), 10);
+                                        if (colIndex === 10 && newValue && newValue.trim() !== '') {
+                                            var estadoCell = table.cell($td.closest('tr'), 11);
                                             estadoCell.data(buildEstadoBadge('CERRADA')).draw();
                                         }
 
                                         // Estado cambió → actualizar porcentaje
                                         if (fieldName === 'estado_actividad' && response.porcentaje_avance !== undefined) {
-                                            var porcentajeCell = table.cell($td.closest('tr'), 11);
+                                            var porcentajeCell = table.cell($td.closest('tr'), 12);
                                             porcentajeCell.data(buildProgressBar(response.porcentaje_avance)).draw();
                                         }
 
+                                        // Estado cambió a CERRADA → actualizar fecha_cierre
+                                        if (fieldName === 'estado_actividad' && response.fecha_cierre !== undefined) {
+                                            var fechaCierreCell = table.cell($td.closest('tr'), 10);
+                                            fechaCierreCell.data(response.fecha_cierre).draw();
+                                        }
+
                                         // Fecha cierre → actualizar porcentaje
-                                        if (colIndex === 9 && response.porcentaje_avance !== undefined) {
-                                            var porcentajeCell = table.cell($td.closest('tr'), 11);
+                                        if (colIndex === 10 && response.porcentaje_avance !== undefined) {
+                                            var porcentajeCell = table.cell($td.closest('tr'), 12);
                                             porcentajeCell.data(buildProgressBar(response.porcentaje_avance)).draw();
                                         }
 
@@ -1556,8 +1588,8 @@
                 var ids = [];
                 table.rows().every(function() {
                     var data = this.data();
-                    if (stripHtml(data[10]) === 'CERRADA') {
-                        ids.push(data[1]);
+                    if (stripHtml(data[11]) === 'CERRADA') {
+                        ids.push(data[2]);
                     }
                 });
 
@@ -1577,8 +1609,8 @@
                         if (response.status === 'success') {
                             table.rows().every(function() {
                                 var data = this.data();
-                                if (stripHtml(data[10]) === 'CERRADA') {
-                                    data[11] = '<div class="mini-progress"><div class="mini-progress-bar"><div class="mini-progress-fill" style="width:100%;background:#1cc88a"></div></div><span class="mini-progress-text">100%</span></div>';
+                                if (stripHtml(data[11]) === 'CERRADA') {
+                                    data[12] = '<div class="mini-progress"><div class="mini-progress-bar"><div class="mini-progress-fill" style="width:100%;background:#1cc88a"></div></div><span class="mini-progress-text">100%</span></div>';
                                     this.data(data);
                                 }
                             });
@@ -1628,17 +1660,17 @@
                         if (response.success) {
                             // Actualizar la celda de fecha_propuesta en DataTables
                             var row = table.row(function(idx, data, node) {
-                                return data[1] == activityId;
+                                return data[2] == activityId;
                             });
 
                             if (row.length > 0) {
                                 var rowData = row.data();
-                                rowData[8]  = response.newDate;
+                                rowData[9]  = response.newDate;
                                 row.data(rowData);
                             }
 
                             // Reordenar por fecha_propuesta ASC y redibujar
-                            table.order([8, 'asc']).draw(false);
+                            table.order([9, 'asc']).draw(false);
 
                             // Tras el redraw, re-buscar botones en la fila nueva
                             if (row.length > 0) {
@@ -1708,6 +1740,151 @@
                 initTruncateButtons();
             }
 
+            // ===================================================================
+            // CHECKBOX SELECT ALL / BULK DELETE / SINGLE DELETE AJAX
+            // ===================================================================
+            function updateSelectedCount() {
+                var count = $('.row-select:checked').length;
+                $('#selectedCount').text(count);
+                if (count > 0) {
+                    $('#btnDeleteSelected').show();
+                } else {
+                    $('#btnDeleteSelected').hide();
+                }
+            }
+
+            $(document).on('change', '#selectAll', function() {
+                var checked = $(this).is(':checked');
+                table.rows({ search: 'applied' }).nodes().each(function() {
+                    $(this).find('.row-select').prop('checked', checked);
+                });
+                updateSelectedCount();
+            });
+
+            $(document).on('change', '.row-select', function() {
+                if (!$(this).is(':checked')) {
+                    $('#selectAll').prop('checked', false);
+                }
+                updateSelectedCount();
+            });
+
+            // Bulk delete
+            $('#btnDeleteSelected').on('click', function() {
+                var ids = [];
+                $('.row-select:checked').each(function() {
+                    ids.push($(this).val());
+                });
+                if (ids.length === 0) return;
+
+                if (!confirm('¿Seguro que deseas eliminar ' + ids.length + ' registro(s)? Esta acción no se puede deshacer.')) {
+                    return;
+                }
+
+                var $btn = $(this);
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Eliminando...');
+
+                $.ajax({
+                    url: '<?= site_url('/pta-cliente-nueva/deleteMultiple') ?>',
+                    method: 'POST',
+                    data: {
+                        ids: ids,
+                        '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('.row-select:checked').each(function() {
+                                var row = table.row($(this).closest('tr'));
+                                row.remove();
+                            });
+                            table.draw(false);
+                            $('#selectAll').prop('checked', false);
+                            updateSelectedCount();
+                            updateCardCounts();
+                            updateMonthlyCounts();
+                            generateYearCards();
+                            showAlert(response.message, 'success');
+                        } else {
+                            showAlert('Error: ' + response.message, 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        showAlert('Error en la comunicación: ' + error, 'error');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html('<i class="fas fa-trash-alt"></i> Eliminar Seleccionados (<span id="selectedCount">0</span>)');
+                        updateSelectedCount();
+                    }
+                });
+            });
+
+            // Single delete via AJAX
+            $(document).on('click', '.btn-delete-single', function() {
+                var $btn = $(this);
+                var id = $btn.data('id');
+
+                if (!confirm('¿Seguro que deseas eliminar este registro?')) return;
+
+                $btn.prop('disabled', true);
+
+                $.ajax({
+                    url: '<?= site_url('/pta-cliente-nueva/deleteMultiple') ?>',
+                    method: 'POST',
+                    data: {
+                        ids: [id],
+                        '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            var row = table.row($btn.closest('tr'));
+                            row.remove().draw(false);
+                            updateCardCounts();
+                            updateMonthlyCounts();
+                            generateYearCards();
+                            showAlert('Registro eliminado correctamente.', 'success');
+                        } else {
+                            showAlert('Error: ' + response.message, 'error');
+                            $btn.prop('disabled', false);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        showAlert('Error al eliminar: ' + error, 'error');
+                        $btn.prop('disabled', false);
+                    }
+                });
+            });
+
+            // Fix Cerradas sin Fecha
+            $('#btnFixCerradasSinFecha').click(function() {
+                var clienteId = '<?= esc($filters['cliente'] ?? '') ?>';
+                if (!clienteId) {
+                    alert('Primero seleccione un cliente');
+                    return;
+                }
+                if (!confirm('¿Asignar la fecha propuesta como fecha de cierre a todas las actividades CERRADA que no tengan fecha de cierre?')) return;
+
+                $.ajax({
+                    url: '<?= site_url('/pta-cliente-nueva/fixCerradasSinFecha') ?>',
+                    method: 'POST',
+                    data: {
+                        id_cliente: clienteId,
+                        '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            if (response.fixed > 0) location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Error en la comunicación con el servidor');
+                    }
+                });
+            });
+
             // Toggle botón acordeón (clase collapsed)
             $('#cardFiltersPanel').on('show.bs.collapse', function() {
                 $('.filter-toggle-btn').removeClass('collapsed');
@@ -1772,6 +1949,412 @@
                 });
             });
         });
+    </script>
+    <!-- Modal Regenerar Plan -->
+    <div class="modal fade" id="regenerarPlanModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="fas fa-redo"></i> Regenerar Plan de Trabajo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <small><i class="fas fa-info-circle"></i> Se insertarán actividades desde la plantilla CSV. Las actividades que ya existan en el año actual (cualquier estado) serán omitidas.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Año del SGSST <span class="text-danger">*</span></label>
+                        <select class="form-select" id="regenerar_year" required>
+                            <option value="">Seleccione...</option>
+                            <option value="1">Año 1</option>
+                            <option value="2">Año 2</option>
+                            <option value="3">Año 3</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Servicio <span class="text-danger">*</span></label>
+                        <select class="form-select" id="regenerar_service" required>
+                            <option value="">Seleccione...</option>
+                            <option value="mensual">Mensual</option>
+                            <option value="bimensual">Bimensual</option>
+                            <option value="trimestral">Trimestral</option>
+                            <option value="proyecto">Proyecto</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-info text-white" id="btnRegenerar"><i class="fas fa-redo"></i> Regenerar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Crear Actividad con IA -->
+    <div class="modal fade" id="crearActividadIAModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff;">
+                    <h5 class="modal-title"><i class="fas fa-robot"></i> Crear Actividad con IA</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Paso 1: Elegir modo -->
+                    <div id="iaStep1">
+                        <h6 class="mb-3">¿Cómo desea crear la actividad?</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card h-100 text-center p-4" id="iaOpcionInventario" style="cursor:pointer; border:2px solid #e3e6f0;">
+                                    <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                                    <h6>Del inventario existente</h6>
+                                    <small class="text-muted">Buscar en las actividades del Decreto 1072</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100 text-center p-4" id="iaOpcionNuevo" style="cursor:pointer; border:2px solid #e3e6f0;">
+                                    <i class="fas fa-magic fa-3x mb-3" style="color:#7c3aed;"></i>
+                                    <h6>Item nuevo con IA</h6>
+                                    <small class="text-muted">Describe lo que necesitas, la IA propone opciones</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paso 2A: Buscar en inventario -->
+                    <div id="iaStep2A" style="display:none;">
+                        <button class="btn btn-sm btn-outline-secondary mb-3" id="iaBackToStep1A"><i class="fas fa-arrow-left"></i> Volver</button>
+                        <div class="mb-3">
+                            <label class="form-label">Seleccione una o varias actividades:</label>
+                            <select id="iaInventarioSelect" class="form-select" style="width:100%;" multiple>
+                                <?php
+                                $csvPath = FCPATH . '../PTA2026.csv';
+                                if (file_exists($csvPath)) {
+                                    $csvFile = fopen($csvPath, 'r');
+                                    $first = true;
+                                    while (($row = fgetcsv($csvFile, 0, ';')) !== false) {
+                                        if ($first) { $first = false; continue; }
+                                        $phva     = trim($row[0] ?? '');
+                                        $numeral  = trim($row[1] ?? '');
+                                        $actividad = trim($row[2] ?? '');
+                                        if (!$phva || !$actividad) continue;
+                                        $label = '[' . htmlspecialchars($phva) . ' - ' . htmlspecialchars($numeral) . '] ' . htmlspecialchars($actividad);
+                                        echo '<option value="' . htmlspecialchars($actividad) . '" '
+                                            . 'data-phva="' . htmlspecialchars($phva) . '" '
+                                            . 'data-numeral="' . htmlspecialchars($numeral) . '">'
+                                            . $label . '</option>' . "\n";
+                                    }
+                                    fclose($csvFile);
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="iaInventarioAgregar" disabled><i class="fas fa-plus"></i> Agregar <span id="iaInventarioCount"></span></button>
+                    </div>
+
+                    <!-- Paso 2B: Crear con IA -->
+                    <div id="iaStep2B" style="display:none;">
+                        <button class="btn btn-sm btn-outline-secondary mb-3" id="iaBackToStep1B"><i class="fas fa-arrow-left"></i> Volver</button>
+                        <div class="mb-3">
+                            <label class="form-label">Describa la actividad que necesita:</label>
+                            <textarea class="form-control" id="iaDescripcion" rows="3" placeholder="Ej: necesito una actividad sobre pausas activas para trabajadores administrativos..."></textarea>
+                        </div>
+                        <button class="btn btn-purple text-white mb-3" id="iaGenerarBtn"><i class="fas fa-magic"></i> Generar opciones con IA</button>
+                        <div id="iaGenerating" style="display:none;" class="text-center my-3">
+                            <div class="spinner-border" role="status" style="color:#7c3aed;"></div>
+                            <p class="mt-2 text-muted">La IA está generando opciones...</p>
+                        </div>
+                        <div id="iaOptions" style="max-height:300px; overflow-y:auto;"></div>
+                        <div id="iaRefineSection" style="display:none;" class="mt-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="iaRefineInput" placeholder="Ajuste o realinee a la IA...">
+                                <button class="btn btn-outline-secondary" id="iaRefineBtn"><i class="fas fa-sync"></i> Refinar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        var clienteId = '<?= $filters['cliente'] ?? '' ?>';
+        var csrfName = '<?= csrf_token() ?>';
+        var csrfHash = '<?= csrf_hash() ?>';
+
+        // =====================================================================
+        // BOTÓN ELIMINAR ABIERTAS - Triple validación aritmética
+        // =====================================================================
+        $('#btnEliminarAbiertas').on('click', function() {
+            if (!clienteId) { alert('Seleccione un cliente primero.'); return; }
+
+            var ops = [];
+            for (var i = 0; i < 3; i++) {
+                var a = Math.floor(Math.random() * 50) + 10;
+                var b = Math.floor(Math.random() * 20) + 1;
+                var tipo = Math.random() > 0.5 ? '+' : '-';
+                var result = tipo === '+' ? a + b : a - b;
+                ops.push({ expr: a + ' ' + tipo + ' ' + b, result: result });
+            }
+
+            var htmlForm = '<div class="text-start">' +
+                '<div class="alert alert-danger"><strong>ADVERTENCIA:</strong> Esta acción eliminará TODAS las actividades en estado ABIERTA de este cliente. No se puede deshacer.</div>' +
+                '<p class="fw-bold">Resuelva las 3 operaciones para confirmar:</p>';
+            for (var i = 0; i < 3; i++) {
+                htmlForm += '<div class="mb-2"><label class="form-label">' + ops[i].expr + ' = </label>' +
+                    '<input type="number" class="form-control form-control-sm arith-input" data-idx="' + i + '" style="max-width:120px; display:inline-block; margin-left:10px;" /></div>';
+            }
+            htmlForm += '</div>';
+
+            Swal.fire({
+                title: 'Eliminar Actividades Abiertas',
+                html: htmlForm,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    var allCorrect = true;
+                    for (var i = 0; i < 3; i++) {
+                        var val = parseInt($('.arith-input[data-idx="' + i + '"]').val());
+                        if (val !== ops[i].result) { allCorrect = false; break; }
+                    }
+                    if (!allCorrect) {
+                        Swal.showValidationMessage('Una o más respuestas son incorrectas.');
+                        return false;
+                    }
+                    return true;
+                }
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                var $btn = $('#btnEliminarAbiertas');
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Eliminando...');
+
+                $.ajax({
+                    url: '<?= site_url('/pta-cliente-nueva/deleteAbiertas') ?>',
+                    method: 'POST',
+                    data: { id_cliente: clienteId, [csrfName]: csrfHash },
+                    dataType: 'json',
+                    success: function(resp) {
+                        if (resp.success) {
+                            Swal.fire('Listo', resp.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', resp.message, 'error');
+                        }
+                    },
+                    error: function() { Swal.fire('Error', 'Error de comunicación', 'error'); },
+                    complete: function() { $btn.prop('disabled', false).html('<i class="fas fa-eraser"></i> Eliminar Abiertas'); }
+                });
+            });
+        });
+
+        // =====================================================================
+        // BOTÓN REGENERAR PLAN
+        // =====================================================================
+        $('#btnRegenerar').on('click', function() {
+            var year = $('#regenerar_year').val();
+            var service = $('#regenerar_service').val();
+            if (!year || !service) { alert('Seleccione año y tipo de servicio.'); return; }
+
+            var $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Regenerando...');
+
+            $.ajax({
+                url: '<?= site_url('/pta-cliente-nueva/regenerarPlan') ?>',
+                method: 'POST',
+                data: { id_cliente: clienteId, year: year, service_type: service, [csrfName]: csrfHash },
+                dataType: 'json',
+                success: function(resp) {
+                    if (resp.success) {
+                        $('#regenerarPlanModal').modal('hide');
+                        Swal.fire('Plan Regenerado', resp.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', resp.message, 'error');
+                    }
+                },
+                error: function() { Swal.fire('Error', 'Error de comunicación', 'error'); },
+                complete: function() { $btn.prop('disabled', false).html('<i class="fas fa-redo"></i> Regenerar'); }
+            });
+        });
+
+        // =====================================================================
+        // CREAR ACTIVIDAD CON IA
+        // =====================================================================
+        var iaLastDescription = '';
+
+        $('#iaOpcionInventario').on('click', function() {
+            $('#iaStep1').hide(); $('#iaStep2A').show();
+        });
+        $('#iaOpcionNuevo').on('click', function() {
+            $('#iaStep1').hide(); $('#iaStep2B').show();
+            $('#iaDescripcion').focus();
+        });
+        $('#iaBackToStep1A, #iaBackToStep1B').on('click', function() {
+            $('#iaStep2A, #iaStep2B').hide(); $('#iaStep1').show();
+        });
+
+        $('#crearActividadIAModal').on('hidden.bs.modal', function() {
+            $('#iaStep2A, #iaStep2B').hide(); $('#iaStep1').show();
+            $('#iaOptions').empty();
+            $('#iaInventarioSelect').val(null).trigger('change');
+            $('#iaInventarioAgregar').prop('disabled', true);
+            $('#iaDescripcion, #iaRefineInput').val('');
+            $('#iaRefineSection').hide();
+        });
+
+        // Select2 inventario
+        $('#iaInventarioSelect').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Buscar y seleccionar actividades...',
+            allowClear: true,
+            closeOnSelect: false,
+            dropdownParent: $('#crearActividadIAModal'),
+            templateResult: function(opt) {
+                if (!opt.id) return opt.text;
+                var checked = $(opt.element).is(':selected') ? 'checked' : '';
+                return $('<span><input type="checkbox" ' + checked + ' style="margin-right:7px;pointer-events:none;">' + opt.text + '</span>');
+            },
+            templateSelection: function(opt) { return opt.text || opt.id; }
+        });
+
+        $('#iaInventarioSelect').on('select2:select select2:unselect', function() {
+            var search = $(this).data('select2').dropdown.$search || $(this).data('select2').selection.$search;
+            var term = search.val();
+            setTimeout(function() { search.val(term).trigger('input'); }, 0);
+        });
+
+        $('#iaInventarioSelect').on('change', function() {
+            var n = $(this).val() ? $(this).val().length : 0;
+            $('#iaInventarioAgregar').prop('disabled', n === 0);
+            $('#iaInventarioCount').text(n > 0 ? n + (n === 1 ? ' actividad' : ' actividades') : '');
+        });
+
+        $('#iaInventarioAgregar').on('click', function() {
+            var $opts = $('#iaInventarioSelect').find('option:selected');
+            if (!$opts.length) return;
+
+            var lista = '';
+            $opts.each(function() { lista += '<li>' + escHtml($(this).val()) + '</li>'; });
+
+            Swal.fire({
+                title: 'Confirmar ' + $opts.length + ($opts.length === 1 ? ' actividad' : ' actividades'),
+                html: '<ul style="text-align:left;max-height:200px;overflow-y:auto;">' + lista + '</ul>',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Insertar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#7c3aed'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                var items = [];
+                $opts.each(function() {
+                    items.push({ phva: $(this).data('phva'), numeral: $(this).data('numeral'), actividad: $(this).val() });
+                });
+
+                var idx = 0;
+                function insertNext() {
+                    if (idx >= items.length) {
+                        $('#crearActividadIAModal').modal('hide');
+                        Swal.fire('Listo', items.length + ' actividad(es) insertada(s).', 'success').then(() => location.reload());
+                        return;
+                    }
+                    var item = items[idx++];
+                    $.ajax({
+                        url: '<?= site_url('/pta-cliente-nueva/insertAiActivity') ?>',
+                        method: 'POST',
+                        data: { id_cliente: clienteId, phva: item.phva, numeral: item.numeral, actividad: item.actividad, [csrfName]: csrfHash },
+                        dataType: 'json',
+                        success: function(resp) {
+                            if (resp.success) { insertNext(); }
+                            else { Swal.fire('Error', resp.message, 'error'); }
+                        },
+                        error: function() { Swal.fire('Error', 'Error de comunicación', 'error'); }
+                    });
+                }
+                insertNext();
+            });
+        });
+
+        // Generar con IA
+        $('#iaGenerarBtn').on('click', function() { doAiGenerate($('#iaDescripcion').val().trim(), ''); });
+        $('#iaRefineBtn').on('click', function() { doAiGenerate(iaLastDescription, $('#iaRefineInput').val().trim()); });
+
+        function doAiGenerate(description, context) {
+            if (!description) { alert('Describa la actividad.'); return; }
+            iaLastDescription = description;
+
+            $('#iaGenerating').show();
+            $('#iaOptions').empty();
+            $('#iaRefineSection').hide();
+
+            $.ajax({
+                url: '<?= site_url('/pta-cliente-nueva/generateAiActivity') ?>',
+                method: 'POST',
+                data: { description: description, context: context, [csrfName]: csrfHash },
+                dataType: 'json',
+                success: function(resp) {
+                    $('#iaGenerating').hide();
+                    if (!resp.success) { Swal.fire('Error', resp.message, 'error'); return; }
+
+                    var html = '<div class="list-group">';
+                    resp.options.forEach(function(opt, idx) {
+                        html += '<button type="button" class="list-group-item list-group-item-action ia-select-activity" ' +
+                            'data-phva="' + escHtml(opt.phva) + '" data-numeral="' + escHtml(opt.numeral) + '" data-actividad="' + escHtml(opt.actividad) + '">' +
+                            '<span class="badge bg-primary me-2">Opción ' + (idx+1) + '</span>' +
+                            '<strong>[' + escHtml(opt.phva) + ' - ' + escHtml(opt.numeral) + ']</strong> ' + escHtml(opt.actividad) + '</button>';
+                    });
+                    html += '</div>';
+                    $('#iaOptions').html(html);
+                    $('#iaRefineSection').show();
+                },
+                error: function() { $('#iaGenerating').hide(); Swal.fire('Error', 'Error de comunicación', 'error'); }
+            });
+        }
+
+        $(document).on('click', '.ia-select-activity', function() {
+            var phva = $(this).data('phva');
+            var numeral = $(this).data('numeral');
+            var actividad = $(this).data('actividad');
+
+            Swal.fire({
+                title: 'Confirmar actividad',
+                html: '<p><strong>PHVA:</strong> ' + escHtml(phva) + '</p>' +
+                      '<p><strong>Numeral:</strong> ' + escHtml(numeral) + '</p>' +
+                      '<p><strong>Actividad:</strong> ' + escHtml(actividad) + '</p>',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Insertar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#7c3aed'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                $.ajax({
+                    url: '<?= site_url('/pta-cliente-nueva/insertAiActivity') ?>',
+                    method: 'POST',
+                    data: { id_cliente: clienteId, phva: phva, numeral: numeral, actividad: actividad, [csrfName]: csrfHash },
+                    dataType: 'json',
+                    success: function(resp) {
+                        if (resp.success) {
+                            $('#crearActividadIAModal').modal('hide');
+                            Swal.fire('Insertada', resp.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', resp.message, 'error');
+                        }
+                    },
+                    error: function() { Swal.fire('Error', 'Error de comunicación', 'error'); }
+                });
+            });
+        });
+
+        function escHtml(str) {
+            if (!str) return '';
+            return $('<div>').text(str).html();
+        }
+    });
     </script>
 </body>
 
