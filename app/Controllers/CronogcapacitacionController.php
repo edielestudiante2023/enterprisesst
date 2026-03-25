@@ -70,7 +70,7 @@ class CronogcapacitacionController extends Controller
             // Generar botones de acciones
             $cronograma['acciones'] = '<div class="action-group">'
                 . '<a href="' . base_url('/editcronogCapacitacion/' . $cronograma['id_cronograma_capacitacion']) . '" class="btn-action btn-action-edit" title="Editar"><i class="fas fa-pen"></i></a>'
-                . '<a href="' . base_url('/deletecronogCapacitacion/' . $cronograma['id_cronograma_capacitacion']) . '" class="btn-action btn-action-delete" title="Eliminar" onclick="return confirm(\'¿Estás seguro de eliminar este cronograma?\');"><i class="fas fa-trash"></i></a>'
+                . '<button type="button" class="btn-action btn-action-delete btn-delete-single" data-id="' . $cronograma['id_cronograma_capacitacion'] . '" title="Eliminar"><i class="fas fa-trash"></i></button>'
                 . '</div>';
         }
 
@@ -312,6 +312,42 @@ class CronogcapacitacionController extends Controller
         } else {
             return redirect()->back()->with('msg', 'Error al eliminar el cronograma');
         }
+    }
+
+    public function deletecronogCapacitacionAjax($id)
+    {
+        $cronogModel = new CronogcapacitacionModel();
+
+        if ($cronogModel->delete($id)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Cronograma eliminado exitosamente']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al eliminar el cronograma']);
+        }
+    }
+
+    public function deleteMultiplecronogCapacitacion()
+    {
+        $ids = $this->request->getPost('ids');
+
+        if (empty($ids) || !is_array($ids)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No se recibieron IDs para eliminar']);
+        }
+
+        $ids = array_filter(array_map('intval', $ids));
+
+        if (empty($ids)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'IDs inválidos']);
+        }
+
+        $cronogModel = new CronogcapacitacionModel();
+        $cronogModel->whereIn('id_cronograma_capacitacion', $ids)->delete();
+        $deleted = $cronogModel->db->affectedRows();
+
+        return $this->response->setJSON([
+            'success'  => true,
+            'deleted'  => $deleted,
+            'message'  => $deleted . ' registro(s) eliminado(s) exitosamente'
+        ]);
     }
 
     /**

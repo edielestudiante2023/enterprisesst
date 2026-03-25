@@ -340,6 +340,8 @@ $routes->post('/addcronogCapacitacionPost', 'CronogcapacitacionController::addcr
 $routes->get('/editcronogCapacitacion/(:num)', 'CronogcapacitacionController::editcronogCapacitacion/$1');
 $routes->post('/editcronogCapacitacionPost/(:num)', 'CronogcapacitacionController::editcronogCapacitacionPost/$1');
 $routes->get('/deletecronogCapacitacion/(:num)', 'CronogcapacitacionController::deletecronogCapacitacion/$1');
+$routes->post('/deletecronogCapacitacion/ajax/(:num)', 'CronogcapacitacionController::deletecronogCapacitacionAjax/$1');
+$routes->post('/deletecronogCapacitacion/bulk', 'CronogcapacitacionController::deleteMultiplecronogCapacitacion');
 // Rutas para generación automática y actualización de fechas
 $routes->post('/cronogCapacitacion/generate', 'CronogcapacitacionController::generate');
 $routes->post('/cronogCapacitacion/updateDateByMonth', 'CronogcapacitacionController::updateDateByMonth');
