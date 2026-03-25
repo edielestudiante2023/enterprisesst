@@ -61,6 +61,7 @@
             <input type="hidden" name="filter_cliente" value="<?= esc($filters['cliente'] ?? '') ?>">
             <input type="hidden" name="filter_fecha_desde" value="<?= esc($filters['fecha_desde'] ?? '') ?>">
             <input type="hidden" name="filter_fecha_hasta" value="<?= esc($filters['fecha_hasta'] ?? '') ?>">
+            <input type="hidden" name="filter_anio" value="<?= esc($filters['anio'] ?? '') ?>">
             <input type="hidden" name="filter_estado" value="<?= esc($filters['estado'] ?? '') ?>">
 
             <div class="row g-4">

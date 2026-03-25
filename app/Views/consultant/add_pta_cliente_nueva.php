@@ -81,7 +81,7 @@
                             <option value="">Seleccione un cliente...</option>
                             <?php if (isset($clients) && !empty($clients)): ?>
                                 <?php foreach ($clients as $client): ?>
-                                    <option value="<?= esc($client['id_cliente']) ?>">
+                                    <option value="<?= esc($client['id_cliente']) ?>" <?= (($filters['cliente'] ?? '') == $client['id_cliente']) ? 'selected' : '' ?>>
                                         <?= esc($client['nombre_cliente']) ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -106,6 +106,11 @@
         <!-- Formulario -->
         <form method="post" action="<?= site_url('/pta-cliente-nueva/addpost') ?>">
             <?= csrf_field() ?>
+            <input type="hidden" name="filter_cliente" value="<?= esc($filters['cliente'] ?? '') ?>">
+            <input type="hidden" name="filter_fecha_desde" value="<?= esc($filters['fecha_desde'] ?? '') ?>">
+            <input type="hidden" name="filter_fecha_hasta" value="<?= esc($filters['fecha_hasta'] ?? '') ?>">
+            <input type="hidden" name="filter_anio" value="<?= esc($filters['anio'] ?? '') ?>">
+            <input type="hidden" name="filter_estado" value="<?= esc($filters['estado'] ?? '') ?>">
 
             <div class="row g-4">
                 <!-- Columna izquierda: Datos principales -->
@@ -121,7 +126,7 @@
                                     <option value="">Seleccione un Cliente</option>
                                     <?php if (isset($clients) && !empty($clients)): ?>
                                         <?php foreach ($clients as $client): ?>
-                                            <option value="<?= esc($client['id_cliente']) ?>">
+                                            <option value="<?= esc($client['id_cliente']) ?>" <?= (($filters['cliente'] ?? '') == $client['id_cliente']) ? 'selected' : '' ?>>
                                                 <?= esc($client['nombre_cliente']) ?>
                                             </option>
                                         <?php endforeach; ?>
