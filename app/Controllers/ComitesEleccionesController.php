@@ -5037,8 +5037,7 @@ class ComitesEleccionesController extends BaseController
                 );
             }
 
-            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
 
             $statusCode = $response->statusCode();
             log_message('info', "Informe proceso {$tipoComite} enviado — proceso {$proceso['id_proceso']} — Status: {$statusCode}");
@@ -5187,8 +5186,7 @@ class ComitesEleccionesController extends BaseController
                 );
             }
 
-            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
 
             $statusCode = $response->statusCode();
             log_message('info', "Email designacion {$tipoComite} enviado a {$candidato['email']} — Status: {$statusCode}");

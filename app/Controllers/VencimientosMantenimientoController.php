@@ -302,9 +302,8 @@ class VencimientosMantenimientoController extends BaseController
             );
 
             // Intentar enviar el correo
-            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
             try {
-                $response = $sendgrid->send($email);
+                $response = \App\Libraries\SendGridMailer::send($email);
                 log_message('info', "Correo enviado con codigo: " . $response->statusCode());
             } catch (\Exception $e) {
                 log_message('error', "Error al enviar correo: " . $e->getMessage());
@@ -334,11 +333,9 @@ class VencimientosMantenimientoController extends BaseController
             return;
         }
 
-        $sendgrid = new \SendGrid($sendgridApiKey);
-
         try {
             // Enviar el correo
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
             log_message('debug', 'Correo enviado con exito. Status Code: ' . $response->statusCode());
         } catch (\Exception $e) {
             log_message('error', 'Error al enviar el correo: ' . $e->getMessage());
@@ -424,9 +421,8 @@ class VencimientosMantenimientoController extends BaseController
             "<p>El mantenimiento <strong>{$mantenimiento['detalle_mantenimiento']}</strong> esta proximo a vencer el <strong>{$vencimiento['fecha_vencimiento']}</strong>.</p>"
         );
 
-        $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
         try {
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
             log_message('info', 'SendGrid Response: ' . $response->body());
             return "Correo enviado. Codigo de estado: " . $response->statusCode() . "<br>Respuesta de SendGrid: " . $response->body();
         } catch (\Exception $e) {

@@ -144,10 +144,8 @@ class InspeccionEmailNotifier
             }
         }
 
-        $sendgrid = new \SendGrid($sendgridApiKey);
-
         try {
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
 
             if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
                 $destinatarios = array_filter([$correoCliente, $correoConsultor, $emailConsultorExterno]);

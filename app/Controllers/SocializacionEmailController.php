@@ -129,8 +129,7 @@ class SocializacionEmailController extends BaseController
             $email->addContent("text/html", $htmlContent);
 
             // Enviar con SendGrid
-            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
 
             if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
                 log_message('info', "Email de socialización PTA enviado a " . implode(', ', $destinatarios) . " para cliente ID: {$idCliente}");
@@ -390,8 +389,7 @@ class SocializacionEmailController extends BaseController
 
             $email->addContent("text/html", $htmlContent);
 
-            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
 
             if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
                 log_message('info', "Email de socialización Evaluación Estándares Mínimos enviado a " . implode(', ', $destinatarios) . " para cliente ID: {$idCliente}");

@@ -18,11 +18,11 @@ $configs = [
         'ssl'    => false,
     ],
     'prod' => [
-        'host'   => 'db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com',
-        'user'   => 'cycloid_userdb',
-        'pass'   => 'AVNS_MR2SLvzRh3i_7o9fEHN',
-        'db'     => 'empresas_sst',
-        'port'   => 25060,
+        'host'   => getenv('DB_PROD_HOST') ?: 'db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com',
+        'user'   => getenv('DB_PROD_USER') ?: 'cycloid_userdb',
+        'pass'   => getenv('DB_PROD_PASS') ?: '',
+        'db'     => getenv('DB_PROD_NAME') ?: 'empresas_sst',
+        'port'   => (int)(getenv('DB_PROD_PORT') ?: 25060),
         'ssl'    => true,
     ],
 ];
