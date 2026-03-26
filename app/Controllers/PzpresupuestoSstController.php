@@ -1567,6 +1567,12 @@ class PzpresupuestoSstController extends BaseController
             ],
             'content' => [
                 ['type' => 'text/html', 'value' => $htmlEmail]
+            ],
+            'tracking_settings' => [
+                'click_tracking' => [
+                    'enable' => false,
+                    'enable_text' => false
+                ]
             ]
         ];
 

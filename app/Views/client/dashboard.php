@@ -410,7 +410,7 @@
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <a href="<?= base_url('cliente/chat') ?>" class="btn w-100" style="background: linear-gradient(135deg, #1c2437 0%, #bd9751 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                        <a href="<?= base_url('cliente/chat?id_cliente=' . $client['id_cliente']) ?>" class="btn w-100" style="background: linear-gradient(135deg, #1c2437 0%, #bd9751 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
                             <i class="fas fa-robot me-2"></i> Otto Asistente
                         </a>
                     </div>
@@ -496,7 +496,12 @@
                         <div id="<?= $accordion_id ?>" class="accordion-collapse collapse <?= $show_class ?>">
                             <div class="accordion-body">
                                 <?php foreach ($items as $item): ?>
-                                    <a href="<?= base_url($item['url']) ?>" target="_blank" class="access-item">
+                                    <?php
+                                        $itemUrl = (strpos($item['url'], 'Config') === false && strpos($item['url'], 'list') === false)
+                                            ? $item['url'] . '/' . $client['id_cliente']
+                                            : $item['url'];
+                                    ?>
+                                    <a href="<?= base_url($itemUrl) ?>" target="_blank" class="access-item">
                                         <div class="item-icon">
                                             <i class="fas fa-file-alt"></i>
                                         </div>

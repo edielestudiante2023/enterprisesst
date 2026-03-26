@@ -1631,6 +1631,12 @@ class ComitesEleccionesController extends BaseController
             ],
             'content' => [
                 ['type' => 'text/html', 'value' => $htmlContent]
+            ],
+            'tracking_settings' => [
+                'click_tracking' => [
+                    'enable' => false,
+                    'enable_text' => false
+                ]
             ]
         ];
 
