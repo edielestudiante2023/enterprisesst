@@ -31,7 +31,6 @@ class PzprgcapacitacionController extends Controller
 
         // Obtener los datos del cliente
         $client = $clientModel->find($clientId);
-        log_message('error', 'DEBUG prgCapacitacion: urlClientId=' . var_export($urlClientId, true) . ' clientId=' . var_export($clientId, true) . ' role=' . session()->get('role') . ' user_id=' . session()->get('user_id') . ' client_keys=' . ($client ? implode(',', array_keys($client)) : 'NULL'));
         if (!$client) {
             return redirect()->to('/dashboardclient')->with('error', 'No se pudo encontrar la información del cliente');
         }
