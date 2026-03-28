@@ -319,6 +319,12 @@ class UserController extends Controller
                     'type' => 'text/html',
                     'value' => $this->getTempPasswordEmailTemplate($nombre, $tempPassword)
                 ]
+            ],
+            'tracking_settings' => [
+                'click_tracking' => [
+                    'enable' => false,
+                    'enable_text' => false
+                ]
             ]
         ];
 
@@ -409,6 +415,12 @@ class UserController extends Controller
                 [
                     'type' => 'text/html',
                     'value' => $this->getWelcomeEmailTemplate($nombre, $email, $password)
+                ]
+            ],
+            'tracking_settings' => [
+                'click_tracking' => [
+                    'enable' => false,
+                    'enable_text' => false
                 ]
             ]
         ];

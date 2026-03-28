@@ -281,8 +281,7 @@ class FirmaElectronicaController extends Controller
             $email->addTo($solicitud['firmante_email'], $solicitud['firmante_nombre']);
             $email->addContent("text/html", $mensaje);
 
-            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
 
             $statusCode = $response->statusCode();
             log_message('info', "SendGrid firma email enviado a {$solicitud['firmante_email']} - Status: {$statusCode}");
@@ -398,8 +397,7 @@ class FirmaElectronicaController extends Controller
             $email->addTo($consultor['correo_consultor'], $consultor['nombre_consultor']);
             $email->addContent("text/html", $mensaje);
 
-            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
 
             log_message('info', "Email firmas completas enviado a consultor {$consultor['correo_consultor']} - Status: {$response->statusCode()}");
 

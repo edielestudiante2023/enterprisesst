@@ -822,7 +822,12 @@
                                 <td><?= esc($row['id_ptacliente']) ?></td>
                                 <td class="editable"><?= esc($row['nombre_cliente']) ?></td>
                                 <td><?= esc($row['tipo_servicio']) ?></td>
-                                <td class="editable"><?= esc($row['phva_plandetrabajo']) ?></td>
+                                <?php
+                                    $phvaMap = ['P'=>'PLANEAR','H'=>'HACER','V'=>'VERIFICAR','A'=>'ACTUAR'];
+                                    $phvaRaw = strtoupper(trim($row['phva_plandetrabajo'] ?? ''));
+                                    $phvaDisplay = $phvaMap[$phvaRaw] ?? $phvaRaw;
+                                ?>
+                                <td class="editable"><?= esc($phvaDisplay) ?></td>
                                 <td class="editable"><?= esc($row['numeral_plandetrabajo']) ?></td>
                                 <td class="editable">
                                     <div class="cell-truncate"><?= esc($row['actividad_plandetrabajo']) ?></div>
@@ -1035,8 +1040,9 @@
                     month: activeMonth,
                     status: activeStatus
                 }));
-                reloadWithFilters();
+                location.reload();
             }
+
 
             // Initialize Select2 on client dropdown
             $('#cliente').select2({
@@ -1471,15 +1477,15 @@
                     var f = JSON.parse(savedFilters);
                     if (f.year) {
                         activeYear = f.year;
-                        $('.card-year[data-year="' + f.year + '"]').addClass('active-filter');
+                        $('.card-year[data-year="' + f.year + '"]').addClass('active');
                     }
                     if (f.month) {
                         activeMonth = f.month;
-                        $('.card-month[data-month="' + f.month + '"]').addClass('active-filter');
+                        $('.card-month[data-month="' + f.month + '"]').addClass('active');
                     }
                     if (f.status) {
                         activeStatus = f.status;
-                        $('.card-status[data-status="' + f.status + '"]').addClass('active-filter');
+                        $('.card-status[data-status="' + f.status + '"]').addClass('active');
                     }
                     if (f.year || f.month || f.status) {
                         // Abrir el panel de filtros y aplicar

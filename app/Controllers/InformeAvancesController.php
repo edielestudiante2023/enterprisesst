@@ -790,10 +790,8 @@ PROMPT;
         $pdfFilename = 'Informe_Avances_' . str_replace(' ', '_', $nombreCliente) . '_' . date('Y-m', strtotime($informe['fecha_hasta'])) . '.pdf';
         $email->addAttachment($pdfContent, 'application/pdf', $pdfFilename, 'attachment');
 
-        $sendgrid = new \SendGrid($sendgridApiKey);
-
         try {
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
 
             if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
                 log_message('info', "InformeAvances: Email enviado a {$cliente['correo_cliente']} para informe #{$id}");
@@ -968,8 +966,7 @@ PROMPT;
         );
 
         try {
-            $sendgrid = new \SendGrid($sendgridApiKey);
-            $response = $sendgrid->send($email);
+            $response = \App\Libraries\SendGridMailer::send($email);
 
             if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
                 return ['success' => true, 'destinatario' => $cliente['correo_cliente']];

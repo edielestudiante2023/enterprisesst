@@ -405,7 +405,13 @@ class ProcesarNotificacionesActas extends BaseCommand
                 'content' => [[
                     'type' => 'text/html',
                     'value' => $this->generarHtmlEmail($nombre, $asunto, $cuerpo, $tipo)
-                ]]
+                ]],
+                'tracking_settings' => [
+                    'click_tracking' => [
+                        'enable' => false,
+                        'enable_text' => false
+                    ]
+                ]
             ];
 
             $ch = curl_init('https://api.sendgrid.com/v3/mail/send');

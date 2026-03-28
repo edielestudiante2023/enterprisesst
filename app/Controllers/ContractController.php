@@ -1188,6 +1188,12 @@ class ContractController extends Controller
             ],
             'content' => [
                 ['type' => 'text/html', 'value' => $htmlEmail]
+            ],
+            'tracking_settings' => [
+                'click_tracking' => [
+                    'enable' => false,
+                    'enable_text' => false
+                ]
             ]
         ];
 

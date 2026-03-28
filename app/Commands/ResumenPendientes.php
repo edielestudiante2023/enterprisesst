@@ -466,7 +466,13 @@ HTML;
                 'content' => [[
                     'type'  => 'text/html',
                     'value' => $htmlBody
-                ]]
+                ]],
+                'tracking_settings' => [
+                    'click_tracking' => [
+                        'enable' => false,
+                        'enable_text' => false
+                    ]
+                ]
             ];
 
             $ch = curl_init('https://api.sendgrid.com/v3/mail/send');

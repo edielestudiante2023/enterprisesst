@@ -95,11 +95,12 @@
                                 <div class="col-md-4">
                                     <label for="phva_plandetrabajo" class="form-label">PHVA <span class="text-danger">*</span></label>
                                     <select name="phva_plandetrabajo" id="phva_plandetrabajo" class="form-select" required>
+                                        <?php $phva = strtoupper(trim($record['phva_plandetrabajo'] ?? '')); ?>
                                         <option value="">Seleccione...</option>
-                                        <option value="P" <?= ($record['phva_plandetrabajo'] == 'P') ? 'selected' : '' ?>>P - Planear</option>
-                                        <option value="H" <?= ($record['phva_plandetrabajo'] == 'H') ? 'selected' : '' ?>>H - Hacer</option>
-                                        <option value="V" <?= ($record['phva_plandetrabajo'] == 'V') ? 'selected' : '' ?>>V - Verificar</option>
-                                        <option value="A" <?= ($record['phva_plandetrabajo'] == 'A') ? 'selected' : '' ?>>A - Actuar</option>
+                                        <option value="PLANEAR" <?= in_array($phva, ['P','PLANEAR']) ? 'selected' : '' ?>>PLANEAR</option>
+                                        <option value="HACER" <?= in_array($phva, ['H','HACER']) ? 'selected' : '' ?>>HACER</option>
+                                        <option value="VERIFICAR" <?= in_array($phva, ['V','VERIFICAR']) ? 'selected' : '' ?>>VERIFICAR</option>
+                                        <option value="ACTUAR" <?= in_array($phva, ['A','ACTUAR']) ? 'selected' : '' ?>>ACTUAR</option>
                                     </select>
                                 </div>
                                 <!-- Numeral -->
