@@ -17,11 +17,11 @@ class PzformatodeasistenciaController extends Controller
 
 
 
-    public function formatoAsistencia()
+    public function formatoAsistencia($urlClientId = null)
     {
         // Obtener el ID del cliente desde la sesión
         $session = session();
-        $clientId = $session->get('user_id'); // Asegúrate de que este ID es el del cliente
+        $clientId = getEffectiveClientId($urlClientId);
 
         $clientModel = new ClientModel();
         $consultantModel = new ConsultantModel();
@@ -96,7 +96,7 @@ class PzformatodeasistenciaController extends Controller
 
         // Obtener los mismos datos que en la función policyNoAlcoholDrogas
         $session = session();
-        $clientId = $session->get('user_id');
+        $clientId = getEffectiveClientId($urlClientId);
 
         $clientModel = new ClientModel();
         $consultantModel = new ConsultantModel();

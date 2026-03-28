@@ -21,11 +21,11 @@ use App\Models\PolicyTypeModel;
 
 class kpitodoslosobjetivosController extends Controller
 {
-    public function todoslosKpi()
+    public function todoslosKpi($urlClientId = null)
     {
         // Obtener el ID del cliente desde la sesión
         $session = session();
-        $clientId = $session->get('user_id'); // Asegúrate de que este ID es el del cliente autenticado
+        $clientId = getEffectiveClientId($urlClientId);
 
         // Modelos que necesitamos para obtener los datos relacionados
         $clientKpiModel = new ClientKpiModel();
