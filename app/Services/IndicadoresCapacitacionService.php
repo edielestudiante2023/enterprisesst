@@ -226,10 +226,16 @@ ENFOQUE DE INDICADORES:
 1. INDICADORES GLOBALES del programa: miden el programa completo (ej: cumplimiento del cronograma, cobertura general, eficacia global de capacitaciones)
 2. INDICADORES POR FOCO/RIESGO: agrupan capacitaciones por tematica similar (ej: si hay varias capacitaciones de emergencias, UN solo indicador que las cubra; si hay de riesgo biomecanico, UN indicador para ese foco)
 
+INDICADORES QUE YA EXISTEN POR DEFECTO (NUNCA los sugieras, ya estan creados):
+- Cobertura de la capacitacion
+- Cumplimiento del plan de capacitacion
+- Eficacia de las capacitaciones
+Tu tarea es generar indicadores ADICIONALES y COMPLEMENTARIOS a estos 3.
+
 REGLAS OBLIGATORIAS:
-1. Genera entre {$min} y {$max} indicadores en total (NO uno por capacitacion)
-2. Siempre incluye al menos: cumplimiento del cronograma, cobertura de capacitaciones y eficacia
-3. Los indicadores por foco solo cuando haya 2+ capacitaciones del mismo tema/riesgo
+1. Genera entre {$min} y {$max} indicadores ADICIONALES (NO uno por capacitacion)
+2. NUNCA sugieras indicadores de cobertura, cumplimiento del cronograma o eficacia general (ya existen)
+3. Enfocate en indicadores por FOCO o RIESGO: agrupa capacitaciones por tematica y genera indicadores especificos
 4. Cada indicador debe ser MEDIBLE con datos reales del programa
 5. Marca todos como 'recomendado': true (ya estan dentro del rango optimo)
 6. NO repitas indicadores que ya existen en el sistema
