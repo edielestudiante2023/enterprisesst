@@ -307,7 +307,19 @@
                                                         <i class="bi bi-journal-text me-1"></i>Audit Log
                                                     </a>
                                                 </div>
-                                            <?php elseif ($sol['estado'] === 'firmado'): ?>
+                                            <?php endif; ?>
+                                            <?php if (in_array($sol['estado'], ['pendiente', 'esperando', 'expirado', 'cancelado']) && in_array($sol['firmante_tipo'], ['delegado_sst', 'representante_legal'])): ?>
+                                                <div class="mt-2 pt-2 border-top">
+                                                    <form action="<?= base_url('firma/reasignar/' . $sol['id_solicitud']) ?>" method="post" class="d-inline"
+                                                          onsubmit="return confirm('Esto actualizara el firmante con los datos actuales del modulo de contexto SST del cliente. ¿Continuar?')">
+                                                        <button type="submit" class="btn btn-sm btn-warning">
+                                                            <i class="bi bi-person-lines-fill me-1"></i>Reasignar desde contexto SST
+                                                        </button>
+                                                    </form>
+                                                    <small class="text-muted d-block mt-1">Toma nombre, email, cargo y cedula actuales del modulo de contexto del cliente.</small>
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if ($sol['estado'] === 'firmado'): ?>
                                                 <div class="mt-1">
                                                     <a href="<?= base_url('firma/audit-log/' . $sol['id_solicitud']) ?>" class="btn btn-sm btn-outline-secondary">
                                                         <i class="bi bi-journal-text me-1"></i>Ver Audit Log

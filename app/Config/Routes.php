@@ -780,6 +780,7 @@ $routes->post('/firma/procesar', 'FirmaElectronicaController::procesarFirma');
 $routes->get('/firma/confirmacion/(:any)', 'FirmaElectronicaController::confirmacion/$1');
 $routes->get('/firma/estado/(:num)', 'FirmaElectronicaController::estado/$1');
 $routes->post('/firma/reenviar/(:num)', 'FirmaElectronicaController::reenviar/$1');
+$routes->post('/firma/reasignar/(:num)', 'FirmaElectronicaController::reasignarFirmante/$1');
 $routes->post('/firma/cancelar/(:num)', 'FirmaElectronicaController::cancelar/$1');
 $routes->get('/firma/audit-log/(:num)', 'FirmaElectronicaController::auditLog/$1');
 $routes->get('/firma/verificar/(:any)', 'FirmaElectronicaController::verificar/$1');
