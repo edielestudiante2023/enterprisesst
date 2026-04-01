@@ -17,6 +17,25 @@ if (!function_exists('getAccessesByStandard')) {
     }
 }
 
+if (!function_exists('get_accesses_by_standard')) {
+    /**
+     * Retorna accesos completos (id_acceso, nombre, dimension) según el estándar.
+     */
+    function get_accesses_by_standard(string $standard = 'Mensual'): array
+    {
+        $all = AccessLibrary::getAll();
+        $result = [];
+        foreach ($all as $id => $access) {
+            $result[] = [
+                'id_acceso' => $id,
+                'nombre'    => $access['name'],
+                'dimension' => $access['dimension'],
+            ];
+        }
+        return $result;
+    }
+}
+
 if (!function_exists('getAccess')) {
     /**
      * Obtiene info de un acceso por su ID.
