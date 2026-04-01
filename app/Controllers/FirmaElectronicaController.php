@@ -90,6 +90,96 @@ class FirmaElectronicaController extends Controller
     }
 
     /**
+     * Reasigna un firmante: toma los datos actuales del contexto SST del cliente,
+     * actualiza nombre/email/cargo/cedula en la solicitud, regenera token y reenvía.
+     * Funciona con solicitudes canceladas, expiradas o pendientes.
+     */
+    public function reasignarFirmante($idSolicitud)
+    {
+        $solicitud = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_solicitud', $idSolicitud)
+            ->get()->getRowArray();
+
+        if (!$solicitud) {
+            return redirect()->back()->with('error', 'Solicitud no encontrada.');
+        }
+
+        $documento = $this->getDocumentoSST($solicitud['id_documento']);
+        if (!$documento) {
+            return redirect()->back()->with('error', 'Documento no encontrado.');
+        }
+
+        $idCliente = $documento['id_cliente'] ?? null;
+        $tipo = $solicitud['firmante_tipo'] ?? '';
+
+        $ctx = $this->db->table('tbl_cliente_contexto_sst')
+            ->where('id_cliente', $idCliente)
+            ->get()->getRowArray();
+
+        if (!$ctx) {
+            return redirect()->back()->with('error', 'No se encontró el contexto SST del cliente.');
+        }
+
+        $nuevosDatos = [];
+
+        if ($tipo === 'delegado_sst') {
+            $nuevosDatos = [
+                'firmante_nombre'    => $ctx['delegado_sst_nombre'] ?? '',
+                'firmante_email'     => $ctx['delegado_sst_email'] ?? '',
+                'firmante_cargo'     => $ctx['delegado_sst_cargo'] ?? 'Delegado SST',
+                'firmante_documento' => $ctx['delegado_sst_cedula'] ?? '',
+            ];
+        } elseif ($tipo === 'representante_legal') {
+            $nuevosDatos = [
+                'firmante_nombre'    => $ctx['representante_legal_nombre'] ?? '',
+                'firmante_email'     => $ctx['representante_legal_email'] ?? '',
+                'firmante_cargo'     => $ctx['representante_legal_cargo'] ?? 'Representante Legal',
+                'firmante_documento' => $ctx['representante_legal_cedula'] ?? '',
+            ];
+        } else {
+            return redirect()->back()->with('error', 'Solo se pueden reasignar firmantes de tipo delegado_sst o representante_legal.');
+        }
+
+        if (empty($nuevosDatos['firmante_email'])) {
+            return redirect()->back()->with('error', 'El nuevo firmante no tiene email configurado en el contexto SST.');
+        }
+
+        // Generar nuevo token y reactivar
+        $nuevoToken = bin2hex(random_bytes(32));
+        $nuevosDatos['token'] = $nuevoToken;
+        $nuevosDatos['estado'] = 'pendiente';
+        $nuevosDatos['fecha_expiracion'] = date('Y-m-d H:i:s', strtotime('+7 days'));
+        $nuevosDatos['recordatorios_enviados'] = 0;
+
+        $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_solicitud', $idSolicitud)
+            ->update($nuevosDatos);
+
+        // Registrar en audit log
+        $this->firmaModel->registrarAudit($idSolicitud, 'firmante_reasignado', [
+            'anterior_nombre' => $solicitud['firmante_nombre'],
+            'anterior_email'  => $solicitud['firmante_email'],
+            'nuevo_nombre'    => $nuevosDatos['firmante_nombre'],
+            'nuevo_email'     => $nuevosDatos['firmante_email'],
+            'ip' => $this->request->getIPAddress(),
+        ]);
+
+        // Recargar solicitud actualizada y enviar email
+        $solicitudActualizada = $this->firmaModel->find($idSolicitud);
+        $enviado = false;
+        if ($solicitudActualizada && $documento) {
+            $enviado = $this->enviarCorreoFirma($solicitudActualizada, $documento);
+        }
+
+        $nombreAnterior = $solicitud['firmante_nombre'];
+        $nombreNuevo = $nuevosDatos['firmante_nombre'];
+        $msg = "Firmante reasignado: {$nombreAnterior} → {$nombreNuevo}.";
+        $msg .= $enviado ? " Email enviado a {$nuevosDatos['firmante_email']}." : " Error al enviar email.";
+
+        return redirect()->back()->with($enviado ? 'success' : 'warning', $msg);
+    }
+
+    /**
      * Solicitar firma para un documento
      */
     public function solicitar($idDocumento)
