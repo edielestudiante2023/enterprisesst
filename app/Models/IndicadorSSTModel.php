@@ -965,8 +965,11 @@ class IndicadorSSTModel extends Model
 
         $total = count($indicadores);
 
-        // Minimo segun estandares (simplificado a 2)
-        $minimo = 2;
+        // Minimo segun nivel de estandares (trabajadores + riesgo ARL)
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+        $indicadoresService = new \App\Services\IndicadoresCapacitacionService();
+        $minimo = $indicadoresService->getMinimoIndicadores($contexto);
 
         return [
             'total' => $total,

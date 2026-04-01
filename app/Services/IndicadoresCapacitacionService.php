@@ -10,8 +10,8 @@ use App\Models\IndicadorSSTModel;
  *
  * PARTE 2 del modulo de 3 partes:
  * - CONSUME las capacitaciones de Parte 1 (tbl_cronog_capacitacion)
- * - La IA genera 1 indicador por capacitacion, rankeados por criticidad
- * - El consultor elige maximo la mitad
+ * - La IA genera indicadores CONSOLIDADOS (globales + por foco/riesgo)
+ * - La cantidad depende del nivel de estandares (trabajadores + riesgo ARL)
  * - Se guardan en tbl_indicadores_sst con categoria = 'capacitacion'
  */
 class IndicadoresCapacitacionService
@@ -29,12 +29,51 @@ class IndicadoresCapacitacionService
     }
 
     /**
-     * Maximo de indicadores = mitad de capacitaciones
-     * 4 cap -> 2 ind, 8 cap -> 4 ind, 12 cap -> 6 ind
+     * Rango de indicadores consolidados segun Resolucion 0312/2019.
+     * Depende del nivel de estandares (trabajadores + riesgo ARL):
+     *   7 estandares  (<=10 trab, riesgo I-III)  -> 2-3 indicadores
+     *  21 estandares  (11-50 trab, riesgo I-III)  -> 3-5 indicadores
+     *  60 estandares  (>50 trab o riesgo IV-V)    -> 5-8 indicadores
      */
-    public function getLimiteIndicadores(int $totalCapacitaciones): int
+    protected const RANGOS_INDICADORES = [
+        7  => ['min' => 2, 'max' => 3],
+        21 => ['min' => 3, 'max' => 5],
+        60 => ['min' => 5, 'max' => 8],
+    ];
+
+    public function getRangoIndicadores(?array $contexto = null): array
     {
-        return max(2, (int)ceil($totalCapacitaciones / 2));
+        $nivel = $this->calcularNivelEstandares($contexto);
+        return self::RANGOS_INDICADORES[$nivel] ?? self::RANGOS_INDICADORES[60];
+    }
+
+    public function getLimiteIndicadores(?array $contexto = null): int
+    {
+        return $this->getRangoIndicadores($contexto)['max'];
+    }
+
+    public function getMinimoIndicadores(?array $contexto = null): int
+    {
+        return $this->getRangoIndicadores($contexto)['min'];
+    }
+
+    /**
+     * Calcula nivel de estandares a partir del contexto del cliente
+     */
+    protected function calcularNivelEstandares(?array $contexto): int
+    {
+        if (!$contexto) {
+            return 60;
+        }
+        $trabajadores = (int)($contexto['total_trabajadores'] ?? 0);
+        $riesgo = $contexto['nivel_riesgo_arl'] ?? '';
+
+        if ($trabajadores <= 10 && in_array($riesgo, ['I', 'II', 'III'])) {
+            return 7;
+        } elseif ($trabajadores >= 11 && $trabajadores <= 50 && in_array($riesgo, ['I', 'II', 'III'])) {
+            return 21;
+        }
+        return 60;
     }
 
     /**
@@ -48,9 +87,9 @@ class IndicadoresCapacitacionService
             ->where('categoria', self::CATEGORIA)
             ->findAll();
 
-        // Calcular minimo basado en capacitaciones existentes
-        $resumenCap = $this->capacitacionService->getResumenCapacitaciones($idCliente, $anio);
-        $minimo = $this->getLimiteIndicadores($resumenCap['existentes']);
+        $contextoModel = new \App\Models\ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+        $minimo = $this->getMinimoIndicadores($contexto);
 
         $total = count($indicadores);
         $medidos = 0;
@@ -94,9 +133,9 @@ class IndicadoresCapacitacionService
     }
 
     /**
-     * Preview de indicadores generados por IA.
-     * La IA genera 1 indicador por capacitacion, rankeados por criticidad.
-     * Pre-selecciona la mitad mas critica.
+     * Preview de indicadores consolidados del Programa de Capacitacion.
+     * La IA genera indicadores globales y por foco/riesgo (NO 1 por capacitacion).
+     * La cantidad depende del nivel de estandares (trabajadores + riesgo ARL).
      */
     public function previewIndicadores(int $idCliente, int $anio, ?array $contexto = null, string $instrucciones = ''): array
     {
@@ -113,7 +152,7 @@ class IndicadoresCapacitacionService
 
         // Leer capacitaciones del cronograma (Parte 1)
         $capacitaciones = $this->capacitacionService->getCapacitacionesCliente($idCliente, $anio);
-        $limite = $this->getLimiteIndicadores(count($capacitaciones));
+        $rango = $this->getRangoIndicadores($contexto);
 
         // Leer indicadores existentes para no repetir
         $existentes = $this->getIndicadoresCliente($idCliente);
@@ -122,22 +161,24 @@ class IndicadoresCapacitacionService
         }, $existentes);
 
         // Generar con IA
-        $resultado = $this->generarConIA($capacitaciones, $nombresExistentes, $limite, $contexto, $instrucciones);
+        $resultado = $this->generarConIA($capacitaciones, $nombresExistentes, $rango, $contexto, $instrucciones);
 
         return [
             'indicadores' => $resultado['indicadores'],
             'total' => count($resultado['indicadores']),
-            'limite' => $limite,
+            'limite' => $rango['max'],
             'total_capacitaciones' => count($capacitaciones),
             'explicacion_ia' => $resultado['explicacion'] ?? ''
         ];
     }
 
     /**
-     * La IA genera 1 indicador por capacitacion, rankeados por criticidad.
-     * Pre-selecciona los mas criticos (hasta el limite).
+     * La IA genera indicadores CONSOLIDADOS del programa de capacitacion:
+     * - Indicadores globales (cumplimiento, cobertura, eficacia)
+     * - Indicadores por foco/riesgo (agrupando capacitaciones similares)
+     * La cantidad depende del nivel de estandares de la empresa.
      */
-    protected function generarConIA(array $capacitaciones, array $indicadoresExistentes, int $limite, ?array $contexto, string $instrucciones = ''): array
+    protected function generarConIA(array $capacitaciones, array $indicadoresExistentes, array $rango, ?array $contexto, string $instrucciones = ''): array
     {
         $apiKey = env('OPENAI_API_KEY', '');
         if (empty($apiKey)) {
@@ -166,19 +207,33 @@ class IndicadoresCapacitacionService
         }
 
         $totalCap = count($capacitaciones);
+        $min = $rango['min'];
+        $max = $rango['max'];
+        $nivel = $this->calcularNivelEstandares($contexto);
+        $trabajadores = (int)($contexto['total_trabajadores'] ?? 0);
+        $riesgoArl = $contexto['nivel_riesgo_arl'] ?? 'No especificado';
 
         $systemPrompt = "Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia, especializado en disenar indicadores de gestion para programas de capacitacion segun la Resolucion 0312 de 2019.
 
-Tu tarea es GENERAR indicadores para medir el impacto y cumplimiento de las capacitaciones programadas.
+Tu tarea es generar indicadores CONSOLIDADOS para medir el Programa de Capacitacion como un todo. NO generes un indicador por cada capacitacion individual.
+
+CONTEXTO DE LA EMPRESA:
+- Trabajadores: {$trabajadores}
+- Nivel de riesgo ARL: {$riesgoArl}
+- Estandares aplicables: {$nivel} (Resolucion 0312/2019)
+
+ENFOQUE DE INDICADORES:
+1. INDICADORES GLOBALES del programa: miden el programa completo (ej: cumplimiento del cronograma, cobertura general, eficacia global de capacitaciones)
+2. INDICADORES POR FOCO/RIESGO: agrupan capacitaciones por tematica similar (ej: si hay varias capacitaciones de emergencias, UN solo indicador que las cubra; si hay de riesgo biomecanico, UN indicador para ese foco)
 
 REGLAS OBLIGATORIAS:
-1. Genera EXACTAMENTE {$totalCap} indicadores (uno por cada capacitacion)
-2. Cada indicador debe medir si la capacitacion LOGRO SU OBJETIVO, no solo si se ejecuto
-3. Rankea los indicadores por CRITICIDAD: los mas importantes primero
-4. Marca como 'recomendado': true los {$limite} indicadores mas criticos (la mitad)
-5. Los demas marcalos como 'recomendado': false
+1. Genera entre {$min} y {$max} indicadores en total (NO uno por capacitacion)
+2. Siempre incluye al menos: cumplimiento del cronograma, cobertura de capacitaciones y eficacia
+3. Los indicadores por foco solo cuando haya 2+ capacitaciones del mismo tema/riesgo
+4. Cada indicador debe ser MEDIBLE con datos reales del programa
+5. Marca todos como 'recomendado': true (ya estan dentro del rango optimo)
 6. NO repitas indicadores que ya existen en el sistema
-7. Tipos permitidos: 'estructura' (recursos), 'proceso' (ejecucion), 'resultado' (impacto)
+7. SOLO genera indicadores de tipo 'proceso' (ejecucion/cumplimiento) y 'resultado' (impacto/eficacia). Los de 'estructura' ya los crea el aplicativo por defecto, NO los incluyas
 8. Periodicidad permitida: 'mensual', 'trimestral', 'semestral', 'anual'
 9. Si hay instrucciones del consultor, aplicalas con prioridad
 10. Responde SOLO en formato JSON valido
@@ -188,7 +243,7 @@ FORMATO DE RESPUESTA (JSON):
   \"indicadores\": [
     {
       \"nombre\": \"Nombre del indicador\",
-      \"tipo\": \"resultado\",
+      \"tipo\": \"proceso o resultado\",
       \"formula\": \"(Numerador / Denominador) x 100\",
       \"meta\": 90,
       \"unidad\": \"%\",
@@ -200,15 +255,15 @@ FORMATO DE RESPUESTA (JSON):
       \"cargo_responsable\": \"Quien mide el indicador\",
       \"cargos_conocer_resultado\": \"Quienes deben conocer el resultado\",
       \"recomendado\": true,
-      \"capacitacion_asociada\": \"Nombre de la capacitacion que mide\"
+      \"foco\": \"global | emergencias | riesgo_biomecanico | riesgo_quimico | etc\"
     }
   ],
-  \"explicacion\": \"Explicacion del criterio de priorizacion usado\"
+  \"explicacion\": \"Criterio de consolidacion y priorizacion usado\"
 }";
 
         $userPrompt = "CAPACITACIONES PROGRAMADAS ({$totalCap} en total):\n";
         $userPrompt .= $capTexto . "\n";
-        $userPrompt .= "MAXIMO RECOMENDADO: {$limite} indicadores (mitad de las capacitaciones)\n\n";
+        $userPrompt .= "RANGO DE INDICADORES: entre {$min} y {$max} indicadores consolidados\n\n";
 
         if (!empty($existentesTexto)) {
             $userPrompt .= $existentesTexto . "\n";
@@ -218,7 +273,7 @@ FORMATO DE RESPUESTA (JSON):
             $userPrompt .= "INSTRUCCIONES ADICIONALES DEL CONSULTOR:\n\"{$instrucciones}\"\n\n";
         }
 
-        $userPrompt .= "Genera {$totalCap} indicadores (uno por capacitacion), rankeados por criticidad. Marca los {$limite} mas criticos como recomendados.";
+        $userPrompt .= "Analiza las {$totalCap} capacitaciones, identifica focos/riesgos comunes, y genera entre {$min} y {$max} indicadores consolidados (globales + por foco). No generes uno por cada capacitacion.";
 
         $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey);
 
@@ -255,9 +310,9 @@ FORMATO DE RESPUESTA (JSON):
                 'origen_datos' => $ind['origen_datos'] ?? '',
                 'cargo_responsable' => $ind['cargo_responsable'] ?? 'Responsable del SG-SST',
                 'cargos_conocer_resultado' => $ind['cargos_conocer_resultado'] ?? '',
-                'recomendado' => $ind['recomendado'] ?? false,
-                'seleccionado' => $ind['recomendado'] ?? false,
-                'capacitacion_asociada' => $ind['capacitacion_asociada'] ?? '',
+                'recomendado' => $ind['recomendado'] ?? true,
+                'seleccionado' => $ind['recomendado'] ?? true,
+                'foco' => $ind['foco'] ?? 'global',
                 'origen' => 'ia',
                 'generado_por_ia' => true
             ];
@@ -281,7 +336,7 @@ FORMATO DE RESPUESTA (JSON):
                 ['role' => 'user', 'content' => $userPrompt]
             ],
             'temperature' => 0.3,
-            'max_tokens' => 3000
+            'max_tokens' => 4000
         ];
 
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
