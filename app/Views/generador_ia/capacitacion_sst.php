@@ -958,9 +958,9 @@
         let html = `
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <strong>${indicadoresData.length} indicadores</strong> (1 por capacitacion)
+                    <strong>${indicadoresData.length} indicadores</strong> consolidados (globales + por foco)
                     <span class="text-muted ms-2">|</span>
-                    <span class="ms-2 text-primary fw-bold">Recomendado: max ${limiteIndicadores}</span>
+                    <span class="ms-2 text-primary fw-bold">Max: ${limiteIndicadores}</span>
                 </div>
                 <div>
                     <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="seleccionarRecomendados()">
@@ -977,12 +977,11 @@
             ${explicacionHtml}
             <div class="alert alert-light small mb-3 border">
                 <i class="bi bi-info-circle me-1"></i>
-                La IA genero 1 indicador por cada capacitacion, <strong>rankeados por criticidad</strong>.
-                Se recomienda seleccionar maximo <strong>${limiteIndicadores}</strong> (la mitad) para evitar monitoreo excesivo.
+                Indicadores consolidados del Programa de Capacitacion: <strong>globales</strong> (cumplimiento, cobertura, eficacia) y <strong>por foco/riesgo</strong> (agrupando capacitaciones similares).
                 <div class="mt-2">
-                    <span class="badge bg-primary me-1">Proceso</span> Miden ejecucion de actividades
-                    <span class="badge bg-success ms-2 me-1">Resultado</span> Miden impacto en SST
-                    <span class="badge bg-warning text-dark ms-2 me-1"><i class="bi bi-star-fill"></i></span> Recomendado por criticidad
+                    <span class="badge bg-primary me-1">Proceso</span> Ejecucion y cumplimiento
+                    <span class="badge bg-success ms-2 me-1">Resultado</span> Impacto y eficacia
+                    <span class="text-muted ms-2"><i class="bi bi-info-circle me-1"></i>Los de estructura ya existen por defecto</span>
                 </div>
             </div>
             <div style="max-height: 60vh; overflow-y: auto;">`;
@@ -993,7 +992,7 @@
 
             const yaExiste = ind.ya_existe ? '<span class="badge bg-secondary ms-2">Ya existe</span>' : '';
             const recomendado = ind.recomendado ? '<span class="badge bg-warning text-dark ms-2"><i class="bi bi-star-fill me-1"></i>Recomendado</span>' : '';
-            const capAsociada = ind.capacitacion_asociada ? `<small class="text-muted d-block mt-1"><i class="bi bi-link-45deg me-1"></i>${escapeHtml(ind.capacitacion_asociada)}</small>` : '';
+            const focoLabel = ind.foco && ind.foco !== 'global' ? `<span class="badge bg-outline-secondary ms-2"><i class="bi bi-tag me-1"></i>${escapeHtml(ind.foco)}</span>` : '<span class="badge bg-dark ms-2">Global</span>';
             const checked = ind.seleccionado !== false && !ind.ya_existe ? 'checked' : '';
             const disabled = ind.ya_existe ? 'disabled' : '';
 
@@ -1026,11 +1025,9 @@
                                        data-idx="${idx}" value="${escapeHtml(ind.nombre)}"
                                        placeholder="Nombre del indicador" style="flex:1; margin-right:8px;" ${disabled}>
                                 <span class="badge bg-${tipoInfo.color}">${tipoInfo.label}</span>
-                                ${recomendado}
+                                ${focoLabel}
                                 ${yaExiste}
                             </div>
-
-                                            ${capAsociada}
 
                             <!-- FILA 2: Formula editable -->
                             <div class="mb-2">
