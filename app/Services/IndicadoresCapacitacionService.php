@@ -293,7 +293,8 @@ FORMATO DE RESPUESTA (JSON):
                 'Authorization: Bearer ' . $apiKey
             ],
             CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_TIMEOUT => 45,
+            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_TIMEOUT => 90,
             CURLOPT_SSL_VERIFYPEER => false
         ]);
 
