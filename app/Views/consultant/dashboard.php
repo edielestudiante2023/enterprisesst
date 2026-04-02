@@ -589,6 +589,11 @@
                     <i class="fas fa-robot me-2"></i>Otto Asistente
                 </a>
             </div>
+            <div class="col-6 col-md-auto">
+                <a href="<?= base_url('/informe-avances') ?>" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #00b894, #00cec9); border: none;">
+                    <i class="fas fa-file-chart-line me-2"></i>Informe de Avances
+                </a>
+            </div>
         </div>
 
         <!-- Dashboards Analíticos -->
