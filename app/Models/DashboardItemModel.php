@@ -8,5 +8,5 @@ class DashboardItemModel extends Model
 {
     protected $table      = 'dashboard_items';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['rol', 'tipo_proceso', 'detalle', 'descripcion', 'accion_url', 'orden'];
+    protected $allowedFields = ['rol', 'tipo_proceso', 'detalle', 'descripcion', 'accion_url', 'orden', 'categoria', 'icono', 'color_gradiente', 'target_blank', 'activo'];
 }
