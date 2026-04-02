@@ -811,6 +811,97 @@ class InformeAvancesController extends BaseController
             $ptaPeriodoTexto = "COMPROMISOS PTA PROGRAMADOS PARA ESTE PERIODO: No hay actividades con fecha propuesta en este rango.";
         }
 
+        // --- 6 MÓDULOS ADICIONALES ---
+
+        // Firma electrónica
+        $firmaData = $metricas['firma_electronica'] ?? [];
+        $firmaTexto = '';
+        if (!empty($firmaData) && ($firmaData['total_solicitudes'] ?? 0) > 0) {
+            $t = $firmaData;
+            $firmaTexto = "FIRMA ELECTRONICA EN EL PERIODO ({$t['total_solicitudes']} solicitudes):\n";
+            $firmaTexto .= "- Firmados: {$t['firmados']}\n";
+            $firmaTexto .= "- Pendientes: {$t['pendientes']}\n";
+            $firmaTexto .= "- Expirados: {$t['expirados']}\n";
+            $firmaTexto .= "- Tasa de firma: {$t['tasa_firma']}%\n";
+        } else {
+            $firmaTexto = "FIRMA ELECTRONICA EN EL PERIODO: Sin solicitudes.";
+        }
+
+        // Documentos SST
+        $docsSst = $metricas['documentos_sst'] ?? [];
+        $docsSstTexto = '';
+        if (!empty($docsSst) && ($docsSst['total_creados'] ?? 0) > 0) {
+            $docsSstTexto = "DOCUMENTOS SST CREADOS EN EL PERIODO ({$docsSst['total_creados']} documentos):\n";
+            foreach (($docsSst['por_tipo'] ?? []) as $dt) {
+                $tipo = str_replace('_', ' ', $dt['tipo_documento'] ?? '');
+                $docsSstTexto .= "- {$dt['cantidad']} {$tipo}\n";
+            }
+            $docsSstTexto .= "- Aprobados en el periodo: {$docsSst['aprobados_periodo']}\n";
+        } else {
+            $docsSstTexto = "DOCUMENTOS SST CREADOS EN EL PERIODO: Ninguno.";
+        }
+
+        // Indicadores SST
+        $indData = $metricas['indicadores_sst'] ?? [];
+        $indicadoresTexto = '';
+        if (!empty($indData) && ($indData['total_activos'] ?? 0) > 0) {
+            $indicadoresTexto = "INDICADORES SST ({$indData['total_activos']} activos):\n";
+            $indicadoresTexto .= "- Mediciones en el periodo: {$indData['medidos_periodo']}\n";
+            $indicadoresTexto .= "- Cumplen meta: {$indData['cumplen_meta']}\n";
+            $indicadoresTexto .= "- Porcentaje cumplimiento: {$indData['pct_cumplimiento']}%\n";
+        } else {
+            $indicadoresTexto = "INDICADORES SST: Sin indicadores activos.";
+        }
+
+        // Acciones correctivas
+        $accData = $metricas['acciones_correctivas'] ?? [];
+        $accionesTexto = '';
+        if (!empty($accData) && ($accData['acciones_total'] ?? 0) > 0) {
+            $kpis = $accData['kpis'] ?? [];
+            $accionesTexto = "ACCIONES CORRECTIVAS (anual):\n";
+            $accionesTexto .= "- Hallazgos totales: {$accData['hallazgos_total']} (abiertos: {$accData['hallazgos_abiertos']}, cerrados: {$accData['hallazgos_cerrados']})\n";
+            $accionesTexto .= "- Acciones totales: {$accData['acciones_total']}, vencidas: {$accData['acciones_vencidas']}\n";
+            $accionesTexto .= "- Cierre a tiempo: {$kpis['cierre_a_tiempo']}% (meta 85%)\n";
+            $accionesTexto .= "- Efectividad: {$kpis['efectividad']}% (meta 80%)\n";
+            $accionesTexto .= "- Días promedio cierre: {$kpis['dias_promedio']} (meta 30)\n";
+        } else {
+            $accionesTexto = "ACCIONES CORRECTIVAS: Sin acciones registradas.";
+        }
+
+        // Actas de comité
+        $actasData = $metricas['actas_comite'] ?? [];
+        $actasTexto = '';
+        if (!empty($actasData) && !empty($actasData['por_comite'])) {
+            $actasTexto = "ACTAS DE COMITE ({$actasData['reuniones_periodo']} reuniones en el periodo):\n";
+            foreach ($actasData['por_comite'] as $pc) {
+                $actasTexto .= "- {$pc['tipo_comite']}: {$pc['total_anio']} reuniones en el año de {$pc['esperadas']} esperadas ({$pc['cumplimiento']}% cumplimiento)\n";
+            }
+            $comp = $actasData['compromisos'] ?? [];
+            if (($comp['total'] ?? 0) > 0) {
+                $actasTexto .= "Compromisos: {$comp['total']} total, {$comp['cumplidos']} cumplidos, {$comp['pendientes']} pendientes, {$comp['vencidos']} vencidos ({$comp['pct']}% cumplimiento)\n";
+            }
+        } else {
+            $actasTexto = "ACTAS DE COMITE: Sin reuniones registradas.";
+        }
+
+        // Inspecciones
+        $inspData = $metricas['inspecciones'] ?? [];
+        $inspeccionesTexto = '';
+        if (!empty($inspData) && ($inspData['total_inspecciones'] ?? 0) > 0) {
+            $inspeccionesTexto = "INSPECCIONES EN EL PERIODO ({$inspData['total_inspecciones']} inspecciones, {$inspData['total_completadas']} completadas):\n";
+            foreach ($inspData['por_tipo'] as $tipo => $v) {
+                if ($v['total'] > 0) {
+                    $inspeccionesTexto .= "- {$tipo}: {$v['total']} ({$v['completadas']} completadas)\n";
+                }
+            }
+            $hall = $inspData['hallazgos'] ?? [];
+            if (($hall['total'] ?? 0) > 0) {
+                $inspeccionesTexto .= "Hallazgos locativos: {$hall['total']} encontrados, {$hall['corregidos']} corregidos, {$hall['pendientes']} pendientes\n";
+            }
+        } else {
+            $inspeccionesTexto = "INSPECCIONES EN EL PERIODO: Ninguna.";
+        }
+
         return <<<PROMPT
 Eres un consultor comercial y experto en Seguridad y Salud en el Trabajo (SG-SST) en Colombia. Tu objetivo es redactar un informe que transmita confianza al cliente, resaltando los logros y el valor del servicio de consultoría.
 
@@ -834,6 +925,18 @@ ACTIVIDADES CERRADAS EN EL PERIODO:
 {$evolucionTexto}
 {$vencimientosTexto}
 
+{$firmaTexto}
+
+{$docsSstTexto}
+
+{$indicadoresTexto}
+
+{$accionesTexto}
+
+{$actasTexto}
+
+{$inspeccionesTexto}
+
 ESTILO Y TONO:
 1. Tono positivo, comercial y orientado a resultados. El informe lo lee el cliente (administrador de propiedad horizontal) y debe sentir que su inversión en consultoría SST genera valor.
 2. IMPORTANTE: El resumen debe hablar EXCLUSIVAMENTE de lo que ocurrió en el periodo evaluado ({$desde} a {$hasta}). No menciones totales anuales ni actividades fuera de este periodo.
@@ -851,6 +954,10 @@ ESTILO Y TONO:
 14. No incluyas saludos ni despedidas.
 15. La calificación de estándares es un puntaje sobre 100, NO un porcentaje. No uses "%" para referirte a ella.
 16. No menciones ciclos PHVA con números crudos ni fórmulas. Si mencionas un ciclo, solo indica si va bien o necesita atención.
+17. Si hay firmas electrónicas completadas, menciónalas como avance en la formalización documental.
+18. Si hay indicadores SST medidos con cumplimiento de meta, resáltalos. Si hay indicadores sin medir, menciónalos como próximo paso.
+19. Si hay actas de comité e inspecciones realizadas, destácalas como evidencia de participación y cumplimiento normativo.
+20. Si hay acciones correctivas cerradas con alta efectividad, celébralo. Si hay vencidas, preséntalo como tema de seguimiento coordinado.
 PROMPT;
     }
 
@@ -1062,6 +1169,12 @@ PROMPT;
                 'desglose_plan_trabajo' => $metricas['desglose_plan_trabajo'] ?? [],
                 'desglose_capacitacion' => $metricas['desglose_capacitacion'] ?? [],
                 'desglose_pendientes'   => $metricas['desglose_pendientes'] ?? [],
+                'firma_electronica'     => $metricas['firma_electronica'] ?? [],
+                'documentos_sst'        => $metricas['documentos_sst'] ?? [],
+                'indicadores_sst'       => $metricas['indicadores_sst'] ?? [],
+                'acciones_correctivas'  => $metricas['acciones_correctivas'] ?? [],
+                'actas_comite'          => $metricas['actas_comite'] ?? [],
+                'inspecciones'          => $metricas['inspecciones'] ?? [],
             ], JSON_UNESCAPED_UNICODE),
             'estado'                       => 'borrador',
         ];
