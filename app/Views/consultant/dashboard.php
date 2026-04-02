@@ -6,13 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard Consultor 2025</title>
     <link rel="icon" href="<?= base_url('favicon.ico') ?>" type="image/x-icon">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -26,8 +21,6 @@
             --white-primary: #ffffff;
             --white-secondary: #f8f9fa;
             --gradient-bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            --logout-red: #ff4d4d;
-            --logout-red-hover: #e63939;
             --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.3);
             --shadow-medium: 0 5px 20px rgba(0, 0, 0, 0.15);
             --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -36,11 +29,7 @@
             --transition: all 0.3s ease;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: var(--gradient-bg);
@@ -50,42 +39,22 @@
             overflow-x: hidden;
         }
 
-        /* Animaciones */
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes shimmer {
-            0% {
-                background-position: -200% center;
-            }
-
-            100% {
-                background-position: 200% center;
-            }
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
         }
 
         @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
-        /* Navbar moderna */
+        /* Navbar */
         .navbar-custom {
             background: #fffafa;
             box-shadow: var(--shadow-deep);
@@ -115,14 +84,14 @@
             transform: translateY(-3px) scale(1.05);
         }
 
-        /* Content wrapper */
+        /* Content */
         .content-wrapper-custom {
             margin-top: 120px;
             padding: 0 15px;
             animation: fadeInUp 0.8s ease;
         }
 
-        /* Banner de bienvenida moderno */
+        /* Banner de bienvenida */
         .welcome-banner-custom {
             position: relative;
             overflow: hidden;
@@ -139,14 +108,9 @@
         .welcome-banner-custom::before {
             content: "";
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: repeating-conic-gradient(from 0deg at 50% 50%,
-                    transparent 0deg,
-                    rgba(255, 255, 255, 0.1) 10deg,
-                    transparent 20deg);
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.1) 10deg, transparent 20deg);
             animation: float 6s ease-in-out infinite;
             z-index: 1;
         }
@@ -154,19 +118,13 @@
         .welcome-banner-custom::after {
             content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(189, 151, 81, 0.1) 50%, transparent 70%);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(189,151,81,0.1) 50%, transparent 70%);
             animation: shimmer 3s ease-in-out infinite;
             z-index: 1;
         }
 
-        .welcome-banner-custom .content-custom {
-            position: relative;
-            z-index: 2;
-        }
+        .welcome-banner-custom .content-custom { position: relative; z-index: 2; }
 
         .welcome-banner-custom h3 {
             font-size: 2.5rem;
@@ -176,7 +134,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .welcome-banner-custom h4 {
@@ -192,332 +149,272 @@
             color: var(--white-primary);
         }
 
-        /* Contenedor de tabla moderno */
-        .table-container-custom {
+        /* Buscador */
+        .search-container {
+            max-width: 500px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border-radius: 50px;
+            border: 2px solid #e0e0e0;
+            font-size: 1rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow-light);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 0 3px rgba(189, 151, 81, 0.2);
+        }
+
+        .search-container .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        /* Sección de categoría */
+        .category-section {
+            margin-bottom: 28px;
+            animation: fadeInUp 0.5s ease both;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(189, 151, 81, 0.3);
+        }
+
+        .category-header h5 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+
+        .category-badge {
+            background: var(--primary-dark);
+            color: var(--gold-secondary);
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* Grid de tarjetas */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        /* Tarjeta individual */
+        .access-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
             background: var(--white-primary);
             border-radius: var(--border-radius);
-            box-shadow: var(--shadow-medium);
-            padding: 30px;
-            margin-bottom: 30px;
-            animation: fadeInUp 0.8s ease 0.4s both;
-            backdrop-filter: blur(10px);
-        }
-
-        .table-responsive {
-            border-radius: var(--border-radius);
-            overflow: hidden;
-        }
-
-        .table-custom {
-            width: 100% !important;
-            margin: 0;
-            border-radius: var(--border-radius);
-            overflow: hidden;
             box-shadow: var(--shadow-light);
-        }
-
-        .table-custom thead {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
-            color: var(--white-primary);
-        }
-
-        .table-custom thead th {
-            padding: 20px 15px;
-            font-weight: 600;
-            border: none;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.9rem;
-        }
-
-        .table-custom tbody td {
-            padding: 15px;
-            border-color: #e9ecef;
+            text-decoration: none;
+            color: var(--primary-dark);
             transition: var(--transition);
+            border-left: 4px solid transparent;
+            cursor: pointer;
         }
 
-        .table-custom tbody tr:hover {
-            background-color: rgba(189, 151, 81, 0.1);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-light);
-        }
-
-        /* Botón de acción mejorado */
-        .btn-action-custom {
-            background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary));
-            border: none;
-            color: var(--white-primary);
-            border-radius: 50px;
-            padding: 8px 15px;
-            font-weight: 500;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-action-custom::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: var(--transition);
-        }
-
-        .btn-action-custom:hover {
+        .access-card:hover {
             transform: translateY(-3px);
             box-shadow: var(--shadow-medium);
-            color: var(--white-primary);
+            color: var(--primary-dark);
+            text-decoration: none;
         }
 
-        .btn-action-custom:hover::before {
-            left: 100%;
+        .access-card .card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: white;
+            font-size: 1.1rem;
         }
 
-        /* Botón de Cerrar Sesión mejorado */
-        .logout-container-custom {
-            text-align: center;
-            animation: fadeInUp 0.8s ease 0.6s both;
+        .access-card .card-text { min-width: 0; }
+
+        .access-card .card-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 2px;
         }
+
+        .access-card .card-desc {
+            font-size: 0.72rem;
+            color: #6c757d;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Banner móvil */
+        .mobile-banner {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 9999;
+            background: linear-gradient(135deg, #1c2437 0%, #2c3e50 100%);
+            color: white;
+            padding: 16px 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            border-top: 3px solid #bd9751;
+        }
+
+        /* Botón logout */
+        .logout-container-custom { text-align: center; margin: 30px 0; }
 
         .btn-logout-custom {
-            background: linear-gradient(135deg, var(--logout-red), var(--logout-red-hover));
+            background: linear-gradient(135deg, #ff4d4d, #e63939);
             border: none;
-            color: var(--white-primary);
-            border-radius: var(--border-radius-large);
-            padding: 15px 40px;
+            color: white;
+            padding: 14px 40px;
+            border-radius: 50px;
             font-weight: 600;
             font-size: 1.1rem;
             transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn-logout-custom::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: var(--transition);
+            box-shadow: var(--shadow-light);
         }
 
         .btn-logout-custom:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-deep);
-            color: var(--white-primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-medium);
+            color: white;
         }
 
-        .btn-logout-custom:hover::before {
-            left: 100%;
-        }
-
-        /* Footer moderno */
+        /* Footer */
         .footer-custom {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
-            color: var(--white-primary);
-            padding: 40px 0;
-            margin-top: 50px;
+            background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark));
+            color: var(--white-secondary);
+            padding: 40px 0 20px;
+            margin-top: 40px;
             text-align: center;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .footer-custom a {
-            color: var(--gold-primary);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .footer-custom a:hover {
-            color: var(--gold-secondary);
-            text-decoration: underline;
-        }
+        .footer-custom a { color: var(--gold-secondary); text-decoration: none; }
+        .footer-custom a:hover { color: var(--gold-primary); }
 
         .social-icons-custom {
             display: flex;
             justify-content: center;
             gap: 20px;
-            margin-top: 20px;
-        }
-
-        .social-icons-custom a {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            text-decoration: none;
-        }
-
-        .social-icons-custom a:hover {
-            transform: translateY(-5px) scale(1.1);
-            box-shadow: var(--shadow-medium);
+            margin-top: 15px;
         }
 
         .social-icons-custom img {
-            width: 24px;
-            height: 24px;
-            filter: brightness(1.2);
-        }
-
-        /* DataTables personalizados */
-        .dataTables_wrapper .dataTables_length select,
-        .dataTables_wrapper .dataTables_filter input {
-            border: 2px solid var(--gold-primary);
-            border-radius: var(--border-radius);
-            padding: 8px 12px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
             transition: var(--transition);
         }
 
-        .dataTables_wrapper .dataTables_length select:focus,
-        .dataTables_wrapper .dataTables_filter input:focus {
-            outline: none;
-            border-color: var(--gold-secondary);
-            box-shadow: 0 0 0 3px rgba(189, 151, 81, 0.2);
+        .social-icons-custom img:hover { transform: scale(1.2); }
+
+        /* No results */
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            display: none;
         }
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary)) !important;
-            border: none !important;
-            color: var(--white-primary) !important;
-            border-radius: var(--border-radius) !important;
+        /* Modal selector de cliente */
+        #clienteSelectorModal .modal-header {
+            border-bottom: 2px solid var(--gold-primary);
         }
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark)) !important;
-            border: none !important;
-            color: var(--white-primary) !important;
+        #clienteSelectorModal .btn-ir-cliente {
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: var(--transition);
         }
 
-        /* Responsive design */
+        /* Responsive */
         @media (max-width: 768px) {
-            .header-logos-custom {
-                flex-direction: row;
-                gap: 8px;
-                justify-content: center;
-            }
-
-            .header-logos-custom img {
-                max-height: 32px;
-            }
-
-            .navbar-custom {
-                padding: 8px 0;
-            }
-
-            .content-wrapper-custom {
-                margin-top: 65px;
-                padding: 0 8px;
-            }
-
-            .welcome-banner-custom {
-                padding: 16px 14px;
-                border-radius: 14px;
-                margin-bottom: 16px;
-            }
-
-            .welcome-banner-custom h3 {
-                font-size: 1.1rem;
-                margin-bottom: 4px;
-            }
-
-            .welcome-banner-custom h4 {
-                font-size: 0.95rem;
-                margin-bottom: 2px;
-            }
-
-            .welcome-banner-custom p {
-                font-size: 0.85rem;
-            }
-
-            .btn-logout-custom {
-                padding: 10px 14px;
-                font-size: 0.8rem;
-                border-radius: 10px;
-                letter-spacing: 0;
-            }
-
-            .table-container-custom {
-                padding: 10px;
-            }
-
-            .social-icons-custom {
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-
-            .social-icons-custom a {
-                width: 38px;
-                height: 38px;
-            }
+            .welcome-banner-custom { padding: 25px 15px; }
+            .welcome-banner-custom h3 { font-size: 1.6rem; }
+            .welcome-banner-custom h4 { font-size: 1.2rem; }
+            .welcome-banner-custom p { font-size: 1rem; }
+            .cards-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+            .access-card { padding: 10px 12px; gap: 10px; }
+            .access-card .card-icon { width: 36px; height: 36px; font-size: 0.95rem; }
+            .access-card .card-title { font-size: 0.8rem; }
+            .access-card .card-desc { display: none; }
+            .header-logos-custom img { max-height: 45px; }
+            .content-wrapper-custom { margin-top: 90px; }
         }
 
         @media (max-width: 480px) {
-            .header-logos-custom img {
-                max-height: 26px;
-            }
-
-            .content-wrapper-custom {
-                margin-top: 55px;
-            }
-
-            .welcome-banner-custom {
-                padding: 12px 10px;
-            }
-
-            .welcome-banner-custom h3 {
-                font-size: 0.95rem;
-            }
-
-            .welcome-banner-custom h4 {
-                font-size: 0.85rem;
-            }
-
-            .welcome-banner-custom p {
-                font-size: 0.75rem;
-            }
-
-            .btn-logout-custom {
-                padding: 8px 10px;
-                font-size: 0.75rem;
-            }
-
-            .table-container-custom {
-                padding: 8px;
-            }
+            .cards-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .access-card .card-icon { width: 32px; height: 32px; font-size: 0.85rem; }
         }
     </style>
 </head>
 
 <body>
+    <!-- Banner móvil PWA Inspecciones -->
+    <div id="mobileBanner" class="mobile-banner">
+        <div style="display:flex; align-items:center; justify-content:space-between; max-width:600px; margin:0 auto;">
+            <div style="flex:1;">
+                <div style="font-weight:700; font-size:15px; margin-bottom:2px;">
+                    <i class="fas fa-mobile-alt me-2" style="color:#bd9751;"></i>App de Inspecciones
+                </div>
+                <div style="font-size:12px; opacity:0.8;">Accede a la version movil optimizada</div>
+            </div>
+            <a href="<?= base_url('/inspecciones') ?>" target="_blank" style="background:#bd9751; color:white; padding:10px 20px; border-radius:25px; text-decoration:none; font-weight:600; font-size:14px; white-space:nowrap; margin-left:12px;">
+                Abrir App <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+            <button onclick="document.getElementById('mobileBanner').style.display='none'" style="background:none; border:none; color:rgba(255,255,255,0.6); font-size:20px; padding:4px 8px; margin-left:8px; cursor:pointer;">&times;</button>
+        </div>
+    </div>
+    <script>
+    (function(){
+        if (/Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)) {
+            document.getElementById('mobileBanner').style.display = 'block';
+        }
+    })();
+    </script>
+
     <!-- Cabecera -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-custom">
             <div class="container">
                 <div class="header-logos-custom">
-                    <!-- Logo izquierdo -->
                     <div>
                         <a href="https://dashboard.cycloidtalent.com/login" target="_blank" rel="noopener noreferrer">
                             <img src="<?= base_url('uploads/logoenterprisesstblancoslogan.png') ?>" alt="Enterprisesst Logo">
                         </a>
                     </div>
-                    <!-- Logo centro -->
                     <div>
                         <a href="https://cycloidtalent.com/index.php/consultoria-sst" target="_blank" rel="noopener noreferrer">
                             <img src="<?= base_url('uploads/logosst.png') ?>" alt="SST Logo">
                         </a>
                     </div>
-                    <!-- Logo derecho -->
                     <div>
                         <a href="https://cycloidtalent.com/" target="_blank" rel="noopener noreferrer">
                             <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Cycloids Logo">
@@ -533,421 +430,90 @@
         <!-- Banner de Bienvenida -->
         <div class="welcome-banner-custom">
             <div class="content-custom">
-                <h3><i class="fas fa-shield-alt me-3"></i>Enterprisesst - PH // Consultor</h3>
-                <h4><i class="fas fa-users me-2"></i>Dash Board de Administración</h4>
+                <h3><i class="fas fa-shield-alt me-3"></i>Enterprisesst // Consultor</h3>
+                <?php if (isset($usuario) && $usuario): ?>
+                    <h4><i class="fas fa-user me-2"></i>Bienvenido, <strong><?= esc($usuario['nombre_completo'] ?? $usuario['email'] ?? 'Consultor') ?></strong></h4>
+                <?php else: ?>
+                    <h4><i class="fas fa-user me-2"></i>Bienvenido, <strong><?= session()->get('nombre_usuario') ?? 'Consultor' ?></strong></h4>
+                <?php endif; ?>
                 <p class="mb-0"><i class="fas fa-globe me-2"></i>Enterprisesst - Sistemas que Evolucionan</p>
             </div>
         </div>
 
-        <!-- Usuario en sesión -->
-        <?php if (isset($usuario) && $usuario): ?>
-        <div class="text-center mb-4">
-            <div class="d-inline-block px-4 py-2 rounded-pill" style="background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark)); box-shadow: var(--shadow-medium);">
-                <span class="text-white">
-                    <i class="fas fa-user-circle me-2"></i>
-                    <strong>Usuario:</strong> <?= esc($usuario['nombre_completo'] ?? $usuario['email']) ?>
-                    <span class="badge bg-warning text-dark ms-2"><?= ucfirst(esc($usuario['tipo_usuario'] ?? 'N/A')) ?></span>
-                </span>
-            </div>
-        </div>
-        <?php endif; ?>
-
-        <!-- Botones de Acceso Rápido -->
-        <div class="row justify-content-center mb-4 gx-2 gy-2 px-2">
-            <div class="col-6 col-md-auto">
-                <a href="<?= base_url('/inspecciones') ?>" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #1c2437, #bd9751); border: none;" title="Módulo PWA de Inspecciones SST">
-                    <i class="fas fa-hard-hat me-2"></i>Inspecciones SST
-                </a>
-            </div>
-            <div class="col-6 col-md-auto">
-                <a href="<?= base_url('/consultor/selector-cliente') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary)); border: none;">
-                    <i class="fas fa-eye me-2"></i>Vista del Cliente
-                </a>
-            </div>
-            <div class="col-6 col-md-auto">
-                <a href="<?= base_url('/admin/users') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none;">
-                    <i class="fas fa-users-cog me-2"></i>Gestión Usuarios
-                </a>
-            </div>
-            <div class="col-6 col-md-auto">
-                <a href="<?= base_url('/admin/usage') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #11998e, #38ef7d); border: none;">
-                    <i class="fas fa-chart-line me-2"></i>Consumo Plataforma
-                </a>
-            </div>
-            <div class="col-6 col-md-auto">
-                <a href="<?= base_url('/documentos/marco-normativo-dashboard') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #f093fb, #f5576c); border: none;">
-                    <i class="fas fa-book-open me-2"></i>Marcos Normativos IA
-                </a>
-            </div>
-            <div class="col-6 col-md-auto">
-                <a href="<?= base_url('/admin/editor-secciones') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #e44d26, #f16529); border: none;">
-                    <i class="fas fa-edit me-2"></i>Editor Secciones
-                </a>
-            </div>
-            <div class="col-6 col-md-auto">
-                <a href="<?= base_url('/agente-chat') ?>" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #3a7bd5, #00d2ff); border: none;">
-                    <i class="fas fa-robot me-2"></i>Otto Asistente
-                </a>
-            </div>
-            <div class="col-6 col-md-auto">
-                <a href="<?= base_url('/informe-avances') ?>" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #00b894, #00cec9); border: none;">
-                    <i class="fas fa-chart-line me-2"></i>Informe de Avances
-                </a>
-            </div>
-            <div class="col-6 col-md-auto">
-                <a href="<?= base_url('/quick-access') ?>" class="btn btn-logout-custom w-100" style="background: linear-gradient(135deg, #bd9751, #d4af37); border: none;">
-                    <i class="fas fa-bolt me-2"></i>Acceso Rapido
-                </a>
-            </div>
+        <!-- Buscador -->
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Buscar acceso..." autocomplete="off">
         </div>
 
-        <!-- Dashboards Analíticos -->
-        <div class="mb-5">
-            <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
-                <i class="fas fa-chart-bar me-2"></i>Dashboards Analíticos
-            </h4>
-            <div class="row justify-content-center">
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <a href="<?= base_url('consultant/dashboard-estandares') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-                        <i class="fas fa-chart-pie fa-lg mb-2 d-block"></i>
-                        Estándares Mínimos
-                    </a>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <a href="<?= base_url('consultant/dashboard-capacitaciones') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);">
-                        <i class="fas fa-graduation-cap fa-lg mb-2 d-block"></i>
-                        Capacitaciones
-                    </a>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <a href="<?= base_url('consultant/dashboard-plan-trabajo') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);">
-                        <i class="fas fa-tasks fa-lg mb-2 d-block"></i>
-                        Plan de Trabajo
-                    </a>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <a href="<?= base_url('consultant/dashboard-pendientes') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);">
-                        <i class="fas fa-clipboard-list fa-lg mb-2 d-block"></i>
-                        Pendientes
-                    </a>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <a href="<?= base_url('admin/dashboard-documentos-sst') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #0984e3 0%, #6c5ce7 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3); border-radius: 12px; transition: all 0.3s ease;">
-                        <i class="fas fa-file-alt fa-lg mb-2 d-block"></i>
-                        Monitor Documentos
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Módulo Documentación SST -->
-        <div class="mb-5">
-            <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
-                <i class="fas fa-folder-open me-2"></i>Documentación SST - Resolución 0312/2019
-            </h4>
-            <div class="row justify-content-center">
-                <div class="col-lg-2 col-md-4 mb-3">
-                    <a href="<?= base_url('documentacion/instructivo') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);">
-                        <i class="fas fa-book-reader fa-lg mb-2 d-block"></i>
-                        Instructivo SST
-                    </a>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-3">
-                    <a href="<?= base_url('contexto') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-                        <i class="fas fa-cog fa-lg mb-2 d-block"></i>
-                        Contexto Cliente
-                    </a>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-3">
-                    <a href="<?= base_url('estandares') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(242, 153, 74, 0.3);">
-                        <i class="fas fa-sync-alt fa-lg mb-2 d-block"></i>
-                        Cumplimiento PHVA
-                    </a>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-3">
-                    <a href="<?= base_url('documentacion') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);">
-                        <i class="fas fa-file-alt fa-lg mb-2 d-block"></i>
-                        Documentación
-                    </a>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-3">
-                    <a href="<?= base_url('estandares/catalogo') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);">
-                        <i class="fas fa-book fa-lg mb-2 d-block"></i>
-                        Catálogo 60 Estándares
-                    </a>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-3">
-                    <a href="<?= base_url('matriz-legal') ?>" target="_blank" class="btn w-100 py-3" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);">
-                        <i class="fas fa-balance-scale fa-lg mb-2 d-block"></i>
-                        Matriz Legal
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Módulo de Comités y Actas -->
-        <div class="mb-5">
-            <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
-                <i class="fas fa-users me-2"></i>Gestión de Comités y Actas
-            </h4>
-            <div class="row justify-content-center">
-                <!-- Card 1: Gestión de Actas -->
-                <div class="col-lg-5 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
-                        <div class="card-body p-4" style="background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);">
-                            <h5 class="text-white text-center mb-3">
-                                <i class="fas fa-clipboard-list me-2"></i>Actas de Reunión
-                            </h5>
-                            <div class="row align-items-center">
-                                <div class="col-12 mb-3">
-                                    <label class="text-white fw-bold mb-2">
-                                        <i class="fas fa-building me-2"></i>Seleccione un Cliente
-                                    </label>
-                                    <select id="selectClienteActas" class="form-select" style="width: 100%;">
-                                        <option value="">-- Buscar cliente --</option>
-                                        <?php foreach ($clientes ?? [] as $cliente): ?>
-                                            <option value="<?= esc($cliente['id_cliente']) ?>">
-                                                <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <button type="button" id="btnIrActas" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
-                                        <i class="fas fa-clipboard-list me-2"></i>Ir a Gestión de Actas
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+        <!-- Categorías con tarjetas -->
+        <div id="categoriesContainer">
+            <?php
+            $catIcons = [
+                'Operación por Cliente'          => 'fas fa-briefcase',
+                'Dashboards y Reportes'          => 'fas fa-chart-bar',
+                'Herramientas IA'                => 'fas fa-robot',
+                'Cumplimiento SST - Res. 0312'   => 'fas fa-gavel',
+                'Capacitación y Planificación'   => 'fas fa-calendar-alt',
+                'Gestión Documental'             => 'fas fa-folder-open',
+                'Carga Masiva CSV'               => 'fas fa-file-csv',
+                'Plataformas Colaborativas'      => 'fas fa-project-diagram',
+                'Administración del Sistema'     => 'fas fa-cogs',
+            ];
+            ?>
+            <?php foreach ($grouped as $categoria => $items): ?>
+                <div class="category-section" data-category="<?= esc($categoria) ?>">
+                    <div class="category-header">
+                        <i class="<?= $catIcons[$categoria] ?? 'fas fa-folder' ?>" style="color: var(--gold-primary); font-size: 1.2rem;"></i>
+                        <h5><?= esc($categoria) ?></h5>
+                        <span class="category-badge"><?= count($items) ?></span>
                     </div>
-                </div>
-                <!-- Card 2: Conformación de Comités (Elecciones) -->
-                <div class="col-lg-5 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
-                        <div class="card-body p-4" style="background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);">
-                            <h5 class="text-white text-center mb-3">
-                                <i class="fas fa-vote-yea me-2"></i>Conformación de Comités
-                            </h5>
-                            <div class="row align-items-center">
-                                <div class="col-12 mb-3">
-                                    <label class="text-white fw-bold mb-2">
-                                        <i class="fas fa-building me-2"></i>Seleccione un Cliente
-                                    </label>
-                                    <select id="selectClienteComites" class="form-select" style="width: 100%;">
-                                        <option value="">-- Buscar cliente --</option>
-                                        <?php foreach ($clientes ?? [] as $cliente): ?>
-                                            <option value="<?= esc($cliente['id_cliente']) ?>">
-                                                <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <button type="button" id="btnIrComites" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
-                                        <i class="fas fa-vote-yea me-2"></i>Ir a Conformación
-                                    </button>
-                                </div>
-                            </div>
-                            <small class="text-white-50 d-block text-center mt-2">
-                                COPASST, COCOLAB, Brigada, Vigía
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    <div class="cards-grid">
+                        <?php foreach ($items as $item):
+                            $colors = explode(',', $item['color_gradiente'] ?? '#6c757d,#495057');
+                            $color1 = trim($colors[0]);
+                            $color2 = trim($colors[1] ?? $colors[0]);
+                            $isModal = str_starts_with($item['accion_url'], '#');
+                            $needsClient = str_contains($item['accion_url'], '{id_cliente}');
+                            $target = (!$isModal && !$needsClient && $item['target_blank']) ? 'target="_blank"' : '';
 
-            <!-- Fila 2: Acciones Correctivas e Indicadores SST -->
-            <div class="row justify-content-center mt-3">
-                <!-- Card: Acciones Correctivas -->
-                <div class="col-lg-5 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
-                        <div class="card-body p-4" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
-                            <h5 class="text-white text-center mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>Acciones Correctivas, Preventivas y de Mejora
-                            </h5>
-                            <div class="row align-items-center">
-                                <div class="col-12 mb-3">
-                                    <label class="text-white fw-bold mb-2">
-                                        <i class="fas fa-building me-2"></i>Seleccione un Cliente
-                                    </label>
-                                    <select id="selectClienteAcciones" class="form-select" style="width: 100%;">
-                                        <option value="">-- Buscar cliente --</option>
-                                        <?php foreach ($clientes ?? [] as $cliente): ?>
-                                            <option value="<?= esc($cliente['id_cliente']) ?>">
-                                                <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
+                            if ($isModal) {
+                                $href = 'javascript:void(0)';
+                                $extraAttr = 'data-bs-toggle="modal" data-bs-target="' . esc($item['accion_url']) . '"';
+                            } elseif ($needsClient) {
+                                $href = 'javascript:void(0)';
+                                $extraAttr = 'data-client-url="' . esc($item['accion_url']) . '" data-card-title="' . esc($item['detalle']) . '" onclick="openClientSelector(this)"';
+                            } else {
+                                $href = base_url($item['accion_url']);
+                                $extraAttr = '';
+                            }
+                        ?>
+                            <a href="<?= $href ?>" <?= $target ?> <?= $extraAttr ?>
+                               class="access-card"
+                               style="border-left-color: <?= $color1 ?>;"
+                               data-search="<?= esc(strtolower($item['detalle'] . ' ' . $item['descripcion'] . ' ' . $categoria)) ?>">
+                                <div class="card-icon" style="background: linear-gradient(135deg, <?= $color1 ?>, <?= $color2 ?>);">
+                                    <i class="<?= esc($item['icono'] ?? 'fas fa-link') ?>"></i>
                                 </div>
-                                <div class="col-12">
-                                    <button type="button" id="btnIrAcciones" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
-                                        <i class="fas fa-tasks me-2"></i>Ir a Acciones Correctivas
-                                    </button>
+                                <div class="card-text">
+                                    <div class="card-title"><?= esc($item['detalle']) ?></div>
+                                    <div class="card-desc"><?= esc($item['descripcion']) ?></div>
                                 </div>
-                            </div>
-                            <small class="text-white-50 d-block text-center mt-2">
-                                Numerales 7.1.1, 7.1.2, 7.1.3, 7.1.4
-                            </small>
-                        </div>
-                    </div>
-                </div>
-                <!-- Card: Indicadores SST -->
-                <div class="col-lg-5 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
-                        <div class="card-body p-4" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
-                            <h5 class="text-white text-center mb-3">
-                                <i class="fas fa-chart-line me-2"></i>Indicadores del SG-SST
-                            </h5>
-                            <div class="row align-items-center">
-                                <div class="col-12 mb-3">
-                                    <label class="text-white fw-bold mb-2">
-                                        <i class="fas fa-building me-2"></i>Seleccione un Cliente
-                                    </label>
-                                    <select id="selectClienteIndicadores" class="form-select" style="width: 100%;">
-                                        <option value="">-- Buscar cliente --</option>
-                                        <?php foreach ($clientes ?? [] as $cliente): ?>
-                                            <option value="<?= esc($cliente['id_cliente']) ?>">
-                                                <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <button type="button" id="btnIrIndicadores" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
-                                        <i class="fas fa-chart-line me-2"></i>Ir a Indicadores SST
-                                    </button>
-                                </div>
-                            </div>
-                            <small class="text-white-50 d-block text-center mt-2">
-                                Estructura, Proceso y Resultado
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Módulos de Documentos SST y Firmas Electrónicas -->
-        <div class="mb-5">
-            <h4 class="text-center mb-4" style="color: var(--primary-dark); font-weight: 700;">
-                <i class="fas fa-file-alt me-2"></i>Gestión de Documentos y Firmas
-            </h4>
-            <div class="row">
-                <!-- Generación de Documentos SST -->
-                <div class="col-lg-6 mb-3">
-                    <div class="card shadow-sm border-0 h-100" style="border-radius: 15px; overflow: hidden;">
-                        <div class="card-body p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <h5 class="text-white text-center mb-3">
-                                <i class="fas fa-clipboard-check me-2"></i>Documentos SST por Cliente
-                            </h5>
-                            <div class="row align-items-center">
-                                <div class="col-12 mb-3">
-                                    <label class="text-white fw-bold mb-2">
-                                        <i class="fas fa-building me-2"></i>Seleccione un Cliente
-                                    </label>
-                                    <select id="selectClienteDocumentos" class="form-select" style="width: 100%;">
-                                        <option value="">-- Buscar cliente --</option>
-                                        <?php foreach ($clientes ?? [] as $cliente): ?>
-                                            <option value="<?= esc($cliente['id_cliente']) ?>">
-                                                <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <button type="button" id="btnIrDocumentos" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
-                                        <i class="fas fa-file-alt me-2"></i>Ir a Gestión de Documentos
-                                    </button>
-                                </div>
-                            </div>
-                            <small class="text-white-50 d-block text-center mt-2">
-                                36 documentos del SG-SST - Políticas, Programas, Procedimientos
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Firmas Electrónicas -->
-                <div class="col-lg-6 mb-3">
-                    <div class="card shadow-sm border-0 h-100" style="border-radius: 15px; overflow: hidden;">
-                        <div class="card-body p-4" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);">
-                            <h5 class="text-white text-center mb-3">
-                                <i class="fas fa-pen-nib me-2"></i>Gestión de Firmas
-                            </h5>
-                            <div class="row align-items-center">
-                                <div class="col-12 mb-3">
-                                    <label class="text-white fw-bold mb-2">
-                                        <i class="fas fa-building me-2"></i>Seleccione un Cliente
-                                    </label>
-                                    <select id="selectClienteFirmas" class="form-select" style="width: 100%;">
-                                        <option value="">-- Buscar cliente --</option>
-                                        <?php foreach ($clientes ?? [] as $cliente): ?>
-                                            <option value="<?= esc($cliente['id_cliente']) ?>">
-                                                <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <button type="button" id="btnIrFirmas" class="btn btn-light w-100 py-2 fw-bold" disabled style="border-radius: 10px;">
-                                        <i class="fas fa-pen-nib me-2"></i>Ir a Firmas del Cliente
-                                    </button>
-                                </div>
-                            </div>
-                            <small class="text-white-50 d-block text-center mt-2">
-                                Solicitudes de firma, estado y seguimiento
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabla a pantalla completa -->
-        <div class="table-container-custom">
-            <div class="table-responsive">
-                <table id="itemTable" class="table table-striped table-bordered table-custom">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-hashtag me-2"></i>ID</th>
-                            <th><i class="fas fa-cogs me-2"></i>Tipo de Proceso</th>
-                            <th><i class="fas fa-info-circle me-2"></i>Detalle</th>
-                            <th><i class="fas fa-file-alt me-2"></i>Descripción</th>
-                            <th><i class="fas fa-external-link-alt me-2"></i>Acción URL</th>
-                            <th><i class="fas fa-sort-numeric-up me-2"></i>Orden</th>
-                        </tr>
-                    </thead>
-                    <tfoot>
-                        <tr>
-                            <th>ID</th>
-                            <th>Tipo de Proceso</th>
-                            <th>Detalle</th>
-                            <th>Descripción</th>
-                            <th>Acción URL</th>
-                            <th>Orden</th>
-                        </tr>
-                    </tfoot>
-                    <tbody>
-                        <?php foreach ($items ?? [] as $item): ?>
-                            <tr>
-                                <td><?= esc($item['id']) ?></td>
-                                <td><i class="fas fa-tag me-2 text-primary"></i><?= esc($item['tipo_proceso']) ?></td>
-                                <td><i class="fas fa-bookmark me-2 text-warning"></i><?= esc($item['detalle']) ?></td>
-                                <td><?= esc($item['descripcion']) ?></td>
-                                <td>
-                                    <a href="<?= base_url($item['accion_url']) ?>" target="_blank" class="btn btn-action-custom" title="Ir a <?= esc($item['detalle']) ?>">
-                                        <i class="fas fa-external-link-alt me-1"></i>Acceder
-                                    </a>
-                                </td>
-                                <td><?= esc($item['orden']) ?></td>
-                            </tr>
+                            </a>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </div>
 
-        <!-- Botón de Cerrar Sesión -->
+        <!-- Sin resultados -->
+        <div class="no-results" id="noResults">
+            <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+            <h5>No se encontraron accesos</h5>
+            <p>Intenta con otro termino de busqueda</p>
+        </div>
+
+        <!-- Cerrar Sesión -->
         <div class="logout-container-custom">
             <a href="<?= base_url('/logout') ?>" rel="noopener noreferrer">
                 <button type="button" class="btn btn-logout-custom">
@@ -963,13 +529,12 @@
             <div class="row">
                 <div class="col-12">
                     <h5 class="fw-bold mb-3"><i class="fas fa-building me-2"></i>Cycloid Talent SAS</h5>
-                    <p class="mb-2">Todos los derechos reservados © <span id="currentYear"></span></p>
+                    <p class="mb-2">Todos los derechos reservados &copy; <span id="currentYear"></span></p>
                     <p class="mb-2"><i class="fas fa-id-card me-2"></i>NIT: 901.653.912</p>
                     <p class="mb-3">
                         <i class="fas fa-globe me-2"></i>Sitio oficial:
                         <a href="https://cycloidtalent.com/" target="_blank" rel="noopener noreferrer">https://cycloidtalent.com/</a>
                     </p>
-
                     <div class="mt-4">
                         <strong><i class="fas fa-share-alt me-2"></i>Nuestras Redes Sociales:</strong>
                         <div class="social-icons-custom">
@@ -992,189 +557,264 @@
         </div>
     </footer>
 
-    <!-- jQuery -->
+    <!-- Modal Selector de Cliente -->
+    <div class="modal fade" id="clienteSelectorModal" tabindex="-1" aria-labelledby="clienteSelectorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 15px; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark));">
+                    <h5 class="modal-title text-white" id="clienteSelectorModalLabel">
+                        <i class="fas fa-building me-2"></i><span id="modalTituloAcceso">Seleccionar Cliente</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <label class="form-label fw-bold mb-2">
+                        <i class="fas fa-search me-1"></i>Buscar cliente por nombre o NIT
+                    </label>
+                    <select id="modalSelectCliente" class="form-select" style="width: 100%;">
+                        <option value="">-- Seleccione un cliente --</option>
+                        <?php foreach ($clientes ?? [] as $cliente): ?>
+                            <option value="<?= esc($cliente['id_cliente']) ?>">
+                                <?= esc($cliente['nombre_cliente']) ?> - NIT: <?= esc($cliente['nit_cliente']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-ir-cliente" id="btnIrCliente" disabled
+                            style="background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary)); color: white; border: none;">
+                        <i class="fas fa-arrow-right me-1"></i>Ir al módulo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Reseteo del Ciclo PHVA -->
+    <div class="modal fade" id="resetPHVAModal" tabindex="-1" aria-labelledby="resetPHVAModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="resetPHVAModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Resetear Ciclo PHVA
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Advertencia:</strong> Esta acción reseteará las evaluaciones de estándares mínimos que se renuevan cada año en el ciclo PHVA.
+                    </div>
+                    <div class="mb-3">
+                        <label for="clienteResetSelect" class="form-label"><strong>Seleccione el Cliente:</strong></label>
+                        <select class="form-select" id="clienteResetSelect" required>
+                            <option value="">Cargando clientes...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarReset">
+                        <i class="fas fa-redo-alt me-1"></i>Continuar con el Reseteo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación Final Reset -->
+    <div class="modal fade" id="confirmResetModal" tabindex="-1" aria-labelledby="confirmResetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="confirmResetModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Reseteo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fas fa-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-danger">¿Está completamente seguro?</h4>
+                    <p class="mb-0">Esta acción <strong>NO SE PUEDE DESHACER</strong>.</p>
+                    <p class="mb-3">Se resetearán las evaluaciones del cliente:</p>
+                    <h5 id="clienteNombreConfirm" class="text-primary"></h5>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>No, Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger btn-lg" id="btnEjecutarReset">
+                        <i class="fas fa-check me-1"></i>Sí, Resetear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery + Bootstrap + Select2 -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#itemTable').DataTable({
-                dom: 'lfrtip', // length + filter + table + info + pagination
-                order: [
-                    [5, 'asc']
-                ], // orden inicial por la sexta columna
-                columnDefs: [{
-                        targets: [0, 5],
-                        visible: false
-                    } // oculta ID y Orden
-                ],
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
-                },
-                initComplete: function() {
-                    this.api().columns().every(function() {
-                        var column = this;
-                        if (!column.visible()) return;
-                        var footerCell = $(column.footer()).empty();
-
-                        // Aquí añadimos "Todos" como texto de la opción vacía
-                        var select = $(
-                                '<select class="form-select form-select-sm">' +
-                                '<option value="">Todos</option>' +
-                                '</select>'
-                            ).appendTo(footerCell)
-                            .on('change', function() {
-                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                column.search(val ? '^' + val + '$' : '', true, false).draw();
-                            });
-
-                        column.data().unique().sort().each(function(d) {
-                            if (d) select.append('<option>' + d + '</option>');
-                        });
-                    });
-                }
-
-            });
-        });
-    </script>
-
-    <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
-        $(document).ready(function() {
-            // Inicializar Select2 para selector de clientes - Actas
-            $('#selectClienteActas').select2({
-                theme: 'bootstrap-5',
-                placeholder: '-- Buscar cliente por nombre o NIT --',
-                allowClear: true,
-                width: '100%'
-            });
+        // Año actual
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-            // Inicializar Select2 para selector de clientes - Comités
-            $('#selectClienteComites').select2({
-                theme: 'bootstrap-5',
-                placeholder: '-- Buscar cliente por nombre o NIT --',
-                allowClear: true,
-                width: '100%'
-            });
+        // Buscador en tiempo real
+        var searchInput = document.getElementById('searchInput');
+        var categories = document.querySelectorAll('.category-section');
+        var noResults = document.getElementById('noResults');
 
-            // Habilitar/deshabilitar botón Actas según selección
-            $('#selectClienteActas').on('change', function() {
-                var clienteId = $(this).val();
-                $('#btnIrActas').prop('disabled', !clienteId);
-            });
+        searchInput.addEventListener('input', function() {
+            var term = this.value.toLowerCase().trim();
+            var anyVisible = false;
 
-            // Habilitar/deshabilitar botón Comités según selección
-            $('#selectClienteComites').on('change', function() {
-                var clienteId = $(this).val();
-                $('#btnIrComites').prop('disabled', !clienteId);
-            });
+            categories.forEach(function(section) {
+                var cards = section.querySelectorAll('.access-card');
+                var visibleCards = 0;
 
-            // Abrir página de actas en nueva pestaña
-            $('#btnIrActas').on('click', function() {
-                var clienteId = $('#selectClienteActas').val();
-                if (clienteId) {
-                    window.open('<?= base_url('actas/') ?>' + clienteId, '_blank');
+                cards.forEach(function(card) {
+                    var text = card.getAttribute('data-search');
+                    if (!term || text.indexOf(term) !== -1) {
+                        card.style.display = '';
+                        visibleCards++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (visibleCards > 0) {
+                    section.style.display = '';
+                    anyVisible = true;
+                } else {
+                    section.style.display = 'none';
                 }
             });
 
-            // Abrir página de conformación de comités en nueva pestaña
-            $('#btnIrComites').on('click', function() {
-                var clienteId = $('#selectClienteComites').val();
-                if (clienteId) {
-                    window.open('<?= base_url('comites-elecciones/') ?>' + clienteId, '_blank');
+            noResults.style.display = anyVisible ? 'none' : 'block';
+        });
+
+        // === Modal Selector de Cliente ===
+        var currentClientUrl = '';
+        var clienteSelectorModal = null;
+
+        function openClientSelector(el) {
+            currentClientUrl = el.getAttribute('data-client-url');
+            var title = el.getAttribute('data-card-title');
+            document.getElementById('modalTituloAcceso').textContent = title;
+            document.getElementById('btnIrCliente').disabled = true;
+
+            // Reset select
+            $('#modalSelectCliente').val('').trigger('change');
+
+            if (!clienteSelectorModal) {
+                clienteSelectorModal = new bootstrap.Modal(document.getElementById('clienteSelectorModal'));
+            }
+            clienteSelectorModal.show();
+
+            // Inicializar Select2 dentro del modal (con dropdownParent)
+            setTimeout(function() {
+                $('#modalSelectCliente').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: '-- Buscar cliente por nombre o NIT --',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#clienteSelectorModal')
+                });
+            }, 200);
+        }
+
+        // Habilitar botón cuando se selecciona cliente
+        $(document).on('change', '#modalSelectCliente', function() {
+            var val = $(this).val();
+            $('#btnIrCliente').prop('disabled', !val);
+        });
+
+        // Navegar al módulo con el cliente seleccionado
+        $('#btnIrCliente').on('click', function() {
+            var clienteId = $('#modalSelectCliente').val();
+            if (clienteId && currentClientUrl) {
+                var url = currentClientUrl.replace('{id_cliente}', clienteId);
+                window.open('<?= base_url() ?>' + url.replace(/^\//, ''), '_blank');
+                clienteSelectorModal.hide();
+            }
+        });
+
+        // === Reset PHVA Modal ===
+        document.getElementById('resetPHVAModal').addEventListener('show.bs.modal', function() {
+            var select = document.getElementById('clienteResetSelect');
+            select.innerHTML = '<option value="">Cargando clientes...</option>';
+
+            fetch('<?= base_url('/api/getClientesParaReseteo') ?>')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    select.innerHTML = '<option value="">Seleccione un cliente...</option>';
+                    data.forEach(function(cliente) {
+                        var option = document.createElement('option');
+                        option.value = cliente.id;
+                        option.textContent = cliente.nombre;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(function() {
+                    select.innerHTML = '<option value="">Error al cargar clientes</option>';
+                });
+        });
+
+        document.getElementById('btnConfirmarReset').addEventListener('click', function() {
+            var select = document.getElementById('clienteResetSelect');
+            var clienteId = select.value;
+            var clienteNombre = select.options[select.selectedIndex].textContent;
+
+            if (!clienteId) {
+                alert('Seleccione un cliente primero');
+                return;
+            }
+
+            document.getElementById('clienteNombreConfirm').textContent = clienteNombre;
+            var resetModal = bootstrap.Modal.getInstance(document.getElementById('resetPHVAModal'));
+            resetModal.hide();
+
+            var confirmModal = new bootstrap.Modal(document.getElementById('confirmResetModal'));
+            confirmModal.show();
+        });
+
+        document.getElementById('btnEjecutarReset').addEventListener('click', function() {
+            var clienteId = document.getElementById('clienteResetSelect').value;
+            var btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Procesando...';
+
+            fetch('<?= base_url('/api/resetearCicloPHVA') ?>', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_cliente: clienteId })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmResetModal'));
+                confirmModal.hide();
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check me-1"></i>Sí, Resetear';
+
+                if (data.success) {
+                    alert('Reseteo completado exitosamente. Se actualizaron ' + data.registros + ' registros.');
+                } else {
+                    alert('Error: ' + (data.message || 'Error desconocido'));
                 }
-            });
-
-            // Inicializar Select2 para selector de clientes - Acciones Correctivas
-            $('#selectClienteAcciones').select2({
-                theme: 'bootstrap-5',
-                placeholder: '-- Buscar cliente por nombre o NIT --',
-                allowClear: true,
-                width: '100%'
-            });
-
-            // Habilitar/deshabilitar botón Acciones según selección
-            $('#selectClienteAcciones').on('change', function() {
-                var clienteId = $(this).val();
-                $('#btnIrAcciones').prop('disabled', !clienteId);
-            });
-
-            // Abrir página de acciones correctivas en nueva pestaña
-            $('#btnIrAcciones').on('click', function() {
-                var clienteId = $('#selectClienteAcciones').val();
-                if (clienteId) {
-                    window.open('<?= base_url('acciones-correctivas/') ?>' + clienteId, '_blank');
-                }
-            });
-
-            // Inicializar Select2 para selector de clientes - Indicadores SST
-            $('#selectClienteIndicadores').select2({
-                theme: 'bootstrap-5',
-                placeholder: '-- Buscar cliente por nombre o NIT --',
-                allowClear: true,
-                width: '100%'
-            });
-
-            // Habilitar/deshabilitar botón Indicadores según selección
-            $('#selectClienteIndicadores').on('change', function() {
-                var clienteId = $(this).val();
-                $('#btnIrIndicadores').prop('disabled', !clienteId);
-            });
-
-            // Abrir página de indicadores SST en nueva pestaña
-            $('#btnIrIndicadores').on('click', function() {
-                var clienteId = $('#selectClienteIndicadores').val();
-                if (clienteId) {
-                    window.open('<?= base_url('indicadores-sst/') ?>' + clienteId, '_blank');
-                }
-            });
-
-            // === SELECTOR DE DOCUMENTOS SST ===
-            $('#selectClienteDocumentos').select2({
-                theme: 'bootstrap-5',
-                placeholder: '-- Buscar cliente por nombre o NIT --',
-                allowClear: true,
-                width: '100%'
-            });
-
-            $('#selectClienteDocumentos').on('change', function() {
-                var clienteId = $(this).val();
-                $('#btnIrDocumentos').prop('disabled', !clienteId);
-            });
-
-            $('#btnIrDocumentos').on('click', function() {
-                var clienteId = $('#selectClienteDocumentos').val();
-                if (clienteId) {
-                    window.open('<?= base_url('documentos-sst/lista/') ?>' + clienteId, '_blank');
-                }
-            });
-
-            // === SELECTOR DE FIRMAS ELECTRONICAS ===
-            $('#selectClienteFirmas').select2({
-                theme: 'bootstrap-5',
-                placeholder: '-- Buscar cliente por nombre o NIT --',
-                allowClear: true,
-                width: '100%'
-            });
-
-            $('#selectClienteFirmas').on('change', function() {
-                var clienteId = $(this).val();
-                $('#btnIrFirmas').prop('disabled', !clienteId);
-            });
-
-            $('#btnIrFirmas').on('click', function() {
-                var clienteId = $('#selectClienteFirmas').val();
-                if (clienteId) {
-                    window.open('<?= base_url('firma/dashboard/') ?>' + clienteId, '_blank');
-                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check me-1"></i>Sí, Resetear';
+                alert('Error de conexión al servidor');
             });
         });
     </script>
-
 </body>
 
 </html>
