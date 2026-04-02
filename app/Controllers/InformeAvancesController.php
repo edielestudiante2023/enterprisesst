@@ -26,13 +26,8 @@ class InformeAvancesController extends BaseController
         $userId = session()->get('user_id');
         $role = session()->get('role');
 
-        if ($role === 'admin') {
-            $informes = $this->informeModel->getByConsultor($userId);
-            $pendientes = $this->informeModel->getAllPendientes();
-        } else {
-            $informes = $this->informeModel->getByConsultor($userId);
-            $pendientes = $this->informeModel->getPendientesByConsultor($userId);
-        }
+        $informes = $this->informeModel->getAll();
+        $pendientes = $this->informeModel->getAllPendientes();
 
         return view('informe_avances/list', [
             'informes'   => $informes,
@@ -164,6 +159,13 @@ class InformeAvancesController extends BaseController
 
         $idCliente = (int) $informe['id_cliente'];
 
+        $metricasService = new MetricasInformeService();
+        $documentosCargados = $metricasService->getDocumentosCargados(
+            $idCliente,
+            $informe['fecha_desde'] ?? date('Y') . '-01-01',
+            $informe['fecha_hasta'] ?? date('Y-m-d')
+        );
+
         return view('informe_avances/view', [
             'informe'              => $informe,
             'cliente'              => $cliente,
@@ -171,6 +173,7 @@ class InformeAvancesController extends BaseController
             'vencimientos'         => $this->getVencimientosCliente($idCliente),
             'historialEstandares'  => $this->getHistorialEstandaresCliente($idCliente, (int) $informe['anio']),
             'historialPlan'        => $this->getHistorialPlanCliente($idCliente, (int) $informe['anio']),
+            'documentosCargados'   => $documentosCargados,
         ]);
     }
 
@@ -226,6 +229,26 @@ class InformeAvancesController extends BaseController
             ->setHeader('Content-Type', 'application/pdf')
             ->setHeader('Content-Disposition', 'inline; filename="informe_avances_' . $id . '.pdf"')
             ->setBody(file_get_contents($fullPath));
+    }
+
+    // ─── REGENERAR PDF (informe ya finalizado) ───
+    public function regenerarPdf($id)
+    {
+        $informe = $this->informeModel->find($id);
+        if (!$informe || ($informe['estado'] ?? '') !== 'completo') {
+            return redirect()->to('/informe-avances')->with('error', 'Solo se puede regenerar un informe finalizado.');
+        }
+
+        $pdfPath = $this->generarPdfInterno($id);
+        if (!$pdfPath) {
+            return redirect()->back()->with('error', 'Error al generar PDF');
+        }
+
+        $this->informeModel->update($id, ['ruta_pdf' => $pdfPath]);
+        $informe = $this->informeModel->find($id);
+        $this->uploadToReportes($informe, $pdfPath);
+
+        return redirect()->to('/informe-avances/view/' . $id)->with('msg', 'PDF regenerado exitosamente.');
     }
 
     // ─── DELETE ───
@@ -585,7 +608,7 @@ class InformeAvancesController extends BaseController
             ->like('observaciones', 'inf_avance_id:' . $informe['id'])
             ->first();
 
-        $destDir = ROOTPATH . 'public/uploads/' . $nitCliente;
+        $destDir = UPLOADS_PATH . $nitCliente;
         if (!is_dir($destDir)) {
             mkdir($destDir, 0755, true);
         }
@@ -602,20 +625,97 @@ class InformeAvancesController extends BaseController
             'id_cliente'      => $informe['id_cliente'],
             'estado'          => 'Activo',
             'observaciones'   => 'Generado automaticamente. inf_avance_id:' . $informe['id'],
-            'enlace'          => base_url('uploads/' . $nitCliente . '/' . $fileName),
+            'enlace'          => base_url(UPLOADS_URL_PREFIX . '/' . $nitCliente . '/' . $fileName),
             'updated_at'      => date('Y-m-d H:i:s'),
         ];
 
         if ($existente) {
-            return $reporteModel->update($existente['id_reporte'], $data);
+            $reporteModel->update($existente['id_reporte'], $data);
+        } else {
+            $data['created_at'] = date('Y-m-d H:i:s');
+            $reporteModel->save($data);
         }
 
-        $data['created_at'] = date('Y-m-d H:i:s');
-        return $reporteModel->save($data);
+        // Enviar email al cliente y consultores
+        $this->sendReportEmail($cliente, $data['titulo_reporte'], $data['enlace']);
+
+        return true;
+    }
+
+    // ─── PRIVATE: Email notificación al subir reporte ───
+    private function sendReportEmail(array $cliente, string $tituloReporte, string $enlace): void
+    {
+        if (env('DISABLE_REPORT_EMAILS', false)) {
+            log_message('info', 'Email desactivado (DISABLE_REPORT_EMAILS). Informe: ' . $tituloReporte);
+            return;
+        }
+
+        if (!filter_var($enlace, FILTER_VALIDATE_URL)) {
+            log_message('error', 'Enlace inválido para email informe: ' . $enlace);
+            return;
+        }
+
+        $nombreCliente = $cliente['nombre_cliente'] ?? 'Cliente';
+        $destinatarios = [];
+
+        // Cliente
+        if (!empty($cliente['correo_cliente'])) {
+            $destinatarios[$cliente['correo_cliente']] = $nombreCliente;
+        }
+
+        // Consultor interno
+        if (!empty($cliente['id_consultor'])) {
+            $consultorModel = new ConsultantModel();
+            $consultor = $consultorModel->find($cliente['id_consultor']);
+            if ($consultor && !empty($consultor['correo_consultor'])) {
+                $destinatarios[$consultor['correo_consultor']] = $consultor['nombre_consultor'];
+            }
+        }
+
+        // Consultor externo
+        if (!empty($cliente['email_consultor_externo'])) {
+            $destinatarios[$cliente['email_consultor_externo']] = $cliente['consultor_externo'] ?? 'Consultor Externo';
+        }
+
+        if (empty($destinatarios)) {
+            log_message('warning', 'No hay destinatarios para email de informe avances');
+            return;
+        }
+
+        $email = new \SendGrid\Mail\Mail();
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent");
+        $email->setSubject("Informe de Avances SG-SST - " . $nombreCliente);
+
+        foreach ($destinatarios as $correo => $nombre) {
+            $email->addTo($correo, $nombre);
+        }
+
+        $emailContent = "
+        <h3>Estimado/a {$nombreCliente}</h3>
+        <p style='text-align: justify;'>Nos complace informarle que hemos generado el <strong>{$tituloReporte}</strong> en su plataforma Enterprisesst. Este informe evidencia los avances de nuestra gestión en Seguridad y Salud en el Trabajo (SG-SST).</p>
+        <p style='text-align: justify;'>El documento ya está disponible para su consulta en la sección de documentos. Acceda a su plataforma siguiendo el enlace:</p>
+        <p style='text-align: center;'>
+            <a href='" . base_url() . "' target='_blank' style='display: inline-block; padding: 15px 25px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 25px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);'>
+                Ir a Enterprisesst
+            </a>
+        </p>
+        <p style='text-align: justify;'>En <strong>Cycloid Talent</strong>, nos distinguimos por ser aliados estratégicos en la administración del SG-SST. Nuestro compromiso es ofrecerle soluciones innovadoras y personalizadas que potencien la seguridad y el bienestar en su copropiedad.</p>
+        <p style='text-align: justify; font-size: 1.1em; font-weight: bold;'>Gracias por confiar en Cycloid Talent, donde su tranquilidad y éxito son nuestra prioridad.</p>
+        ";
+
+        $email->addContent("text/html", $emailContent);
+
+        $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+        try {
+            $response = $sendgrid->send($email);
+            log_message('info', 'Email informe avances enviado a: ' . implode(', ', array_keys($destinatarios)) . ' - Status: ' . $response->statusCode());
+        } catch (\Exception $e) {
+            log_message('error', 'Error email informe avances: ' . $e->getMessage());
+        }
     }
 
     // ─── PRIVATE: Construir prompt IA para resumen ───
-    private function buildResumenPrompt(string $nombreCliente, string $desde, string $hasta, array $actividades, array $metricas): string
+    private function buildResumenPrompt(string $nombreCliente, string $desde, string $hasta, array $actividades, array $metricas, array $historialEst = [], array $historialPlan = [], array $vencimientos = [], array $capacitaciones = [], array $ptaPeriodo = []): string
     {
         $actividadesTexto = empty($actividades) ? 'No se registraron actividades en el periodo.' : implode("\n", $actividades);
 
@@ -623,39 +723,134 @@ class InformeAvancesController extends BaseController
         $puntajeActual = $metricas['puntaje_actual'] ?? 0;
         $puntajeAnterior = $metricas['puntaje_anterior'] ?? 39.75;
         $diferencia = $metricas['diferencia_neta'] ?? 0;
-        $planTrabajo = $metricas['indicador_plan_trabajo'] ?? 0;
-        $capacitacion = $metricas['indicador_capacitacion'] ?? 0;
 
         // Desgloses por pilar
         $desgloseTexto = $this->formatDesgloseForPrompt($metricas);
 
+        // Documentos cargados en el periodo
+        $docs = $metricas['documentos_cargados_raw'] ?? [];
+        $documentosTexto = '';
+        if (!empty($docs)) {
+            $documentosTexto = "DOCUMENTOS CARGADOS A LA PLATAFORMA EN EL PERIODO (" . count($docs) . " documentos):\n";
+            foreach ($docs as $doc) {
+                $fecha = substr($doc['created_at'] ?? '', 0, 10);
+                $tipo = $doc['detail_report'] ?? 'Sin tipo';
+                $cat = $doc['report_type'] ?? 'Sin categoría';
+                $titulo = $doc['titulo_reporte'] ?? 'Sin título';
+                $documentosTexto .= "- [{$fecha}] {$titulo} (Tipo: {$tipo}, Categoría: {$cat})\n";
+            }
+        } else {
+            $documentosTexto = "DOCUMENTOS CARGADOS A LA PLATAFORMA EN EL PERIODO: Ninguno.";
+        }
+
+        // Evolución histórica
+        $mesesNombres = ['01'=>'Ene','02'=>'Feb','03'=>'Mar','04'=>'Abr','05'=>'May','06'=>'Jun',
+                         '07'=>'Jul','08'=>'Ago','09'=>'Sep','10'=>'Oct','11'=>'Nov','12'=>'Dic'];
+        $evolucionTexto = '';
+        if (!empty($historialEst)) {
+            $evolucionTexto .= "EVOLUCION HISTORICA DE CALIFICACION ESTANDARES (mes a mes):\n";
+            foreach ($historialEst as $h) {
+                $parts = explode('-', $h['mes']);
+                $mesNombre = ($mesesNombres[$parts[1] ?? ''] ?? $parts[1] ?? '') . ' ' . ($parts[0] ?? '');
+                $evolucionTexto .= "- {$mesNombre}: {$h['promedio']} de 100\n";
+            }
+            $evolucionTexto .= "\n";
+        }
+        if (!empty($historialPlan)) {
+            $evolucionTexto .= "EVOLUCION HISTORICA DE ACTIVIDADES ABIERTAS PTA (mes a mes):\n";
+            foreach ($historialPlan as $h) {
+                $parts = explode('-', $h['mes']);
+                $mesNombre = ($mesesNombres[$parts[1] ?? ''] ?? $parts[1] ?? '') . ' ' . ($parts[0] ?? '');
+                $evolucionTexto .= "- {$mesNombre}: {$h['promedio']} actividades abiertas\n";
+            }
+            $evolucionTexto .= "\n";
+        }
+
+        // Vencimientos
+        $vencimientosTexto = '';
+        if (!empty($vencimientos)) {
+            $hoy = date('Y-m-d');
+            $vencidos = 0;
+            $proximos = 0;
+            $vencimientosTexto = "ELEMENTOS CON VENCIMIENTO PROXIMO O VENCIDO (" . count($vencimientos) . " elementos):\n";
+            foreach ($vencimientos as $v) {
+                $estado_v = ($v['fecha_vencimiento'] <= $hoy) ? 'VENCIDO' : 'PROXIMO';
+                if ($estado_v === 'VENCIDO') $vencidos++; else $proximos++;
+                $vencimientosTexto .= "- {$v['detalle_mantenimiento']}: vence {$v['fecha_vencimiento']} ({$estado_v})\n";
+            }
+            $vencimientosTexto .= "Resumen: {$vencidos} vencidos, {$proximos} próximos a vencer.\n";
+        }
+
+        // Capacitaciones ejecutadas
+        $capacitacionesTexto = '';
+        if (!empty($capacitaciones)) {
+            $capacitacionesTexto = "CAPACITACIONES EJECUTADAS EN EL PERIODO (" . count($capacitaciones) . "):\n";
+            foreach ($capacitaciones as $cap) {
+                $fecha = $cap['fecha_de_realizacion'] ?: $cap['fecha_programada'];
+                $asistentes = $cap['numero_de_asistentes_a_capacitacion'] ?: '?';
+                $programados = $cap['numero_total_de_personas_programadas'] ?: '?';
+                $cobertura = $cap['porcentaje_cobertura'] ? $cap['porcentaje_cobertura'] . '%' : 'N/A';
+                $calificacion = $cap['promedio_de_calificaciones'] ?: 'N/A';
+                $horas = $cap['horas_de_duracion_de_la_capacitacion'] ?: '?';
+                $capacitacionesTexto .= "- [{$fecha}] {$cap['nombre_capacitacion']} — {$horas}h, {$asistentes}/{$programados} asistentes (cobertura: {$cobertura}), calificación promedio: {$calificacion}\n";
+            }
+        } else {
+            $capacitacionesTexto = "CAPACITACIONES EJECUTADAS EN EL PERIODO: Ninguna.";
+        }
+
+        // Compromisos PTA del periodo evaluado
+        $ptaPeriodoTexto = '';
+        if (!empty($ptaPeriodo) && $ptaPeriodo['total_periodo'] > 0) {
+            $ptaPeriodoTexto = "COMPROMISOS PTA PROGRAMADOS PARA ESTE PERIODO ({$desde} a {$hasta}):\n";
+            $ptaPeriodoTexto .= "- Total programados: {$ptaPeriodo['total_periodo']}\n";
+            $ptaPeriodoTexto .= "- Cerrados: {$ptaPeriodo['cerradas_periodo']}\n";
+            $ptaPeriodoTexto .= "- Aún abiertos: {$ptaPeriodo['abiertas_periodo']}\n";
+            $pctCump = $ptaPeriodo['total_periodo'] > 0 ? round(($ptaPeriodo['cerradas_periodo'] / $ptaPeriodo['total_periodo']) * 100, 1) : 0;
+            $ptaPeriodoTexto .= "- Cumplimiento del periodo: {$pctCump}%\n";
+        } else {
+            $ptaPeriodoTexto = "COMPROMISOS PTA PROGRAMADOS PARA ESTE PERIODO: No hay actividades con fecha propuesta en este rango.";
+        }
+
         return <<<PROMPT
-Eres un consultor senior de Seguridad y Salud en el Trabajo (SG-SST) en Colombia.
+Eres un consultor comercial y experto en Seguridad y Salud en el Trabajo (SG-SST) en Colombia. Tu objetivo es redactar un informe que transmita confianza al cliente, resaltando los logros y el valor del servicio de consultoría.
 
 Genera un resumen ejecutivo de avance del SG-SST para el cliente "{$nombreCliente}" correspondiente al periodo {$desde} a {$hasta}.
 
-INDICADORES PRINCIPALES:
-- Puntaje cumplimiento estándares mínimos actual: {$puntajeActual}%
-- Puntaje periodo anterior: {$puntajeAnterior}%
-- Diferencia neta: {$diferencia} puntos porcentuales
+DATOS DEL PERIODO:
+- Calificación estándares mínimos actual: {$puntajeActual} de 100
+- Calificación periodo anterior: {$puntajeAnterior} de 100
+- Diferencia neta: {$diferencia} puntos
 - Estado de avance: {$estado}
-- Indicador plan de trabajo anual: {$planTrabajo}%
-- Indicador programa de capacitación: {$capacitacion}%
 
-{$desgloseTexto}
-
-ACTIVIDADES REALIZADAS EN EL PERIODO:
+ACTIVIDADES CERRADAS EN EL PERIODO:
 {$actividadesTexto}
 
-INSTRUCCIONES:
-1. Escribe en tercera persona, tono profesional y técnico.
-2. Menciona las actividades más relevantes del periodo.
-3. Analiza los indicadores y su tendencia, identificando qué ciclo PHVA está más débil.
-4. Si hay avance, resáltalo. Si hay retroceso, indica las posibles causas y recomendaciones.
-5. Si hay compromisos abiertos con muchos días sin cerrar, menciónalos como punto de atención.
-6. Máximo 4 párrafos.
-7. No uses viñetas ni listas, solo prosa continua.
-8. No incluyas saludos ni despedidas.
+{$documentosTexto}
+
+{$capacitacionesTexto}
+
+{$ptaPeriodoTexto}
+
+{$evolucionTexto}
+{$vencimientosTexto}
+
+ESTILO Y TONO:
+1. Tono positivo, comercial y orientado a resultados. El informe lo lee el cliente (administrador de propiedad horizontal) y debe sentir que su inversión en consultoría SST genera valor.
+2. IMPORTANTE: El resumen debe hablar EXCLUSIVAMENTE de lo que ocurrió en el periodo evaluado ({$desde} a {$hasta}). No menciones totales anuales ni actividades fuera de este periodo.
+3. Resalta PRIMERO los logros del periodo: actividades cerradas, documentos generados, capacitaciones ejecutadas, avance en calificación.
+4. Usa los "COMPROMISOS PTA PROGRAMADOS PARA ESTE PERIODO" para hablar de lo que se debía hacer vs lo que se hizo. No mezcles con el total anual.
+5. Presenta las actividades pendientes del periodo como "próximos pasos" u "oportunidades de mejora", NUNCA como problemas.
+6. Si hay avance en la calificación, celébralo. Si no hay avance, enfócate en las actividades realizadas.
+7. Menciona los documentos cargados como evidencia tangible del trabajo realizado.
+8. Si hay capacitaciones ejecutadas, destácalas mencionando nombre, asistentes y cobertura como logros de formación.
+9. Si hay evolución histórica, menciona la tendencia positiva mes a mes.
+10. Si hay vencimientos próximos o vencidos, menciónalos como un tema que requiere coordinación, sin alarmar.
+11. Máximo 4 párrafos, concisos y contundentes.
+12. Prosa continua, sin viñetas ni listas.
+13. Tercera persona, profesional pero cercano.
+14. No incluyas saludos ni despedidas.
+15. La calificación de estándares es un puntaje sobre 100, NO un porcentaje. No uses "%" para referirte a ella.
+16. No menciones ciclos PHVA con números crudos ni fórmulas. Si mencionas un ciclo, solo indica si va bien o necesita atención.
 PROMPT;
     }
 
@@ -667,38 +862,14 @@ PROMPT;
         // Desglose Estándares por ciclo PHVA
         $est = $metricas['desglose_estandares'] ?? [];
         if (!empty($est)) {
-            $lines[] = 'DESGLOSE CUMPLIMIENTO POR CICLO PHVA:';
+            $lines[] = 'DESGLOSE CALIFICACION POR CICLO PHVA (puntaje logrado / puntaje maximo):';
             foreach ($est as $e) {
                 $ciclo = $e['ciclo'] ?? 'Sin ciclo';
-                $valor = floatval($e['total_valor'] ?? 0);
-                $posible = floatval($e['total_posible'] ?? 0);
-                $pct = $posible > 0 ? round(($valor / $posible) * 100, 1) : 0;
-                $lines[] = "- {$ciclo}: {$valor} / {$posible} ({$pct}%)";
+                $logrado = floatval($e['total_valor'] ?? 0);
+                $maximo = floatval($e['total_posible'] ?? 0);
+                $pct = $maximo > 0 ? round(($logrado / $maximo) * 100, 1) : 0;
+                $lines[] = "- {$ciclo}: {$logrado} de {$maximo} ({$pct}%)";
             }
-            $lines[] = '';
-        }
-
-        // Plan de trabajo por estado
-        $plan = $metricas['desglose_plan_trabajo'] ?? [];
-        if (!empty($plan)) {
-            $total = array_sum(array_column($plan, 'cantidad'));
-            $lines[] = 'ESTADO DEL PLAN DE TRABAJO ANUAL:';
-            foreach ($plan as $p) {
-                $lines[] = "- {$p['cantidad']} actividades {$p['estado_actividad']}";
-            }
-            $lines[] = "- Total: {$total} actividades";
-            $lines[] = '';
-        }
-
-        // Capacitación por estado
-        $cap = $metricas['desglose_capacitacion'] ?? [];
-        if (!empty($cap)) {
-            $total = array_sum(array_column($cap, 'cantidad'));
-            $lines[] = 'ESTADO DEL PROGRAMA DE CAPACITACIÓN:';
-            foreach ($cap as $c) {
-                $lines[] = "- {$c['cantidad']} {$c['estado']}";
-            }
-            $lines[] = "- Total: {$total} capacitaciones";
             $lines[] = '';
         }
 
@@ -791,7 +962,8 @@ PROMPT;
         $email->addAttachment($pdfContent, 'application/pdf', $pdfFilename, 'attachment');
 
         try {
-            $response = \App\Libraries\SendGridMailer::send($email);
+            $sendgrid = new \SendGrid($sendgridApiKey);
+            $response = $sendgrid->send($email);
 
             if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
                 log_message('info', "InformeAvances: Email enviado a {$cliente['correo_cliente']} para informe #{$id}");
@@ -856,8 +1028,13 @@ PROMPT;
         $resumen = '';
         try {
             $actividades = $service->recopilarActividadesPeriodo($idCliente, $fechaDesde, $fechaHasta);
+            $historialEst = $this->getHistorialEstandaresCliente($idCliente, $anio);
+            $historialPlan = $this->getHistorialPlanCliente($idCliente, $anio);
+            $vencimientos = $this->getVencimientosCliente($idCliente);
+            $capacitaciones = $service->getCapacitacionesEjecutadas($idCliente, $fechaDesde, $fechaHasta);
+            $ptaPeriodo = $service->getDesglosePtaPeriodo($idCliente, $fechaDesde, $fechaHasta);
             $iaService = new IADocumentacionService();
-            $prompt = $this->buildResumenPrompt($cliente['nombre_cliente'], $fechaDesde, $fechaHasta, $actividades, $metricas);
+            $prompt = $this->buildResumenPrompt($cliente['nombre_cliente'], $fechaDesde, $fechaHasta, $actividades, $metricas, $historialEst, $historialPlan, $vencimientos, $capacitaciones, $ptaPeriodo);
             $resumen = $iaService->generarContenido($prompt, 2000);
         } catch (\Exception $e) {
             $resumen = 'Resumen no disponible: ' . $e->getMessage();
@@ -966,7 +1143,8 @@ PROMPT;
         );
 
         try {
-            $response = \App\Libraries\SendGridMailer::send($email);
+            $sendgrid = new \SendGrid($sendgridApiKey);
+            $response = $sendgrid->send($email);
 
             if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
                 return ['success' => true, 'destinatario' => $cliente['correo_cliente']];
@@ -1000,7 +1178,7 @@ PROMPT;
         }
         $registros = $builder->orderBy('fecha_extraccion', 'ASC')->findAll();
 
-        return $this->agruparHistorialPorMes($registros, 'porcentaje_abiertas');
+        return $this->agruparHistorialPorMes($registros, 'actividades_abiertas');
     }
 
     // ─── Agrupar registros por mes, usando el ÚLTIMO valor del mes ───

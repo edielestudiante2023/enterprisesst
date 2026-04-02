@@ -92,3 +92,20 @@ define('EVENT_PRIORITY_NORMAL', 100);
  * @deprecated Use \CodeIgniter\Events\Events::PRIORITY_HIGH instead.
  */
 define('EVENT_PRIORITY_HIGH', 10);
+
+/*
+ |--------------------------------------------------------------------------
+ | Uploads dinámicos (fuera de git)
+ |--------------------------------------------------------------------------
+ | Ruta donde se almacenan los uploads de clientes.
+ | Producción: /www/soportes-clientes/
+ | Local XAMPP: c:/xampp/soportes-clientes/
+ |
+ | NUNCA debe estar dentro del repo git.
+ */
+defined('UPLOADS_PATH') || define('UPLOADS_PATH', WRITEPATH . 'soportes-clientes/');
+
+/*
+ | Prefijo de URL para servir archivos via FileServerController
+ */
+defined('UPLOADS_URL_PREFIX') || define('UPLOADS_URL_PREFIX', 'serve-file');

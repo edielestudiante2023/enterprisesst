@@ -170,6 +170,9 @@
                     $puedeEditar = in_array($presupuesto['estado'], ['borrador', 'aprobado', '', null]);
                     ?>
                     <?php if ($puedeEditar): ?>
+                        <button type="button" class="btn btn-warning btn-sm me-2" id="btnEjecutarLote" title="Marcar ejecutado = presupuestado para items y meses seleccionados">
+                            <i class="bi bi-check2-all me-1"></i>Ejecutar selec.
+                        </button>
                         <button type="button" class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalAgregarItem">
                             <i class="bi bi-plus-lg me-1"></i>Agregar Item
                         </button>
@@ -275,7 +278,10 @@
                     <table class="table table-bordered table-sm presupuesto-table mb-0" id="tablaPresupuesto">
                         <thead>
                             <tr>
-                                <th rowspan="2" class="sticky-col" style="width: 35px;">Item</th>
+                                <th rowspan="2" class="sticky-col" style="width: 35px;">
+                                    <input type="checkbox" id="chkAllRows" title="Selec. todos" style="margin-right:3px;">
+                                    Item
+                                </th>
                                 <th rowspan="2" class="sticky-col-2 item-actividad">Actividad</th>
                                 <th rowspan="2" class="sticky-col-3 item-descripcion">Descripcion</th>
                                 <?php foreach ($meses as $mes): ?>
@@ -289,7 +295,10 @@
                             <tr>
                                 <?php foreach ($meses as $mes): ?>
                                     <th class="sub-header" style="width: 90px;">Presup.</th>
-                                    <th class="sub-header" style="width: 90px;">Ejec.</th>
+                                    <th class="sub-header" style="width: 90px;">
+                                        <input type="checkbox" class="mes-check" data-mes="<?= $mes['numero'] ?>" title="Selec. <?= $mes['nombre'] ?>" style="margin-right:2px;">
+                                        Ejec.
+                                    </th>
                                 <?php endforeach; ?>
                                 <th class="sub-header" style="width: 90px;">Presup.</th>
                                 <th class="sub-header" style="width: 90px;">Ejec.</th>
@@ -316,7 +325,10 @@
 
                             <!-- Fila de item -->
                             <tr data-item-id="<?= $item['id_item'] ?>">
-                                <td class="sticky-col text-center"><?= esc($item['codigo_item']) ?></td>
+                                <td class="sticky-col text-center">
+                                    <input type="checkbox" class="row-check" data-item-id="<?= $item['id_item'] ?>" style="margin-right:3px;">
+                                    <?= esc($item['codigo_item']) ?>
+                                </td>
                                 <td class="sticky-col-2 item-actividad">
                                     <?php if ($puedeEditar): ?>
                                         <input type="text" class="form-control form-control-sm actividad-input"
@@ -1093,6 +1105,51 @@
             inputManual.classList.add('d-none');
             // Deseleccionar todos los meses
             document.querySelectorAll('.chk-mes').forEach(chk => chk.checked = false);
+        });
+
+        // ========================================
+        // EJECUTAR EN LOTE (checkboxes filas × meses)
+        // ========================================
+        // Checkbox maestro: seleccionar/deseleccionar todas las filas
+        document.getElementById('chkAllRows')?.addEventListener('change', function() {
+            document.querySelectorAll('.row-check').forEach(c => c.checked = this.checked);
+        });
+
+        // Boton ejecutar en lote
+        document.getElementById('btnEjecutarLote')?.addEventListener('click', function() {
+            const items = [...document.querySelectorAll('.row-check:checked')].map(c => c.dataset.itemId);
+            const meses = [...document.querySelectorAll('.mes-check:checked')].map(c => c.dataset.mes);
+
+            if (items.length === 0 || meses.length === 0) {
+                alert('Seleccione al menos un ítem (☑ fila) y un mes (☑ columna Ejec.)');
+                return;
+            }
+
+            if (!confirm(`¿Marcar ejecutado = presupuestado para ${items.length} ítem(s) × ${meses.length} mes(es)?`)) return;
+
+            const data = new FormData();
+            data.append('id_presupuesto', idPresupuesto);
+            data.append('items', JSON.stringify(items));
+            data.append('meses', JSON.stringify(meses));
+
+            fetch('<?= base_url("documentos-sst/presupuesto/ejecutar-lote") ?>', {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: data
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    alert('✓ ' + result.actualizados + ' registro(s) actualizados');
+                    window.location.reload();
+                } else {
+                    alert(result.message || 'Error al ejecutar');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            });
         });
 
         // ========================================

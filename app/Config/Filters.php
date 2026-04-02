@@ -16,6 +16,7 @@ use App\Filters\SessionTimeoutFilter;
 use App\Filters\AuthFilter;
 use App\Filters\MiembroFilter;
 use App\Filters\ClientFilter;
+use App\Filters\AuthOrApiKeyFilter;
 
 class Filters extends BaseFilters
 {
@@ -42,6 +43,7 @@ class Filters extends BaseFilters
         'auth'           => AuthFilter::class,
         'miembro'        => MiembroFilter::class,
         'clientfilter'   => ClientFilter::class,
+        'authOrApiKey'   => AuthOrApiKeyFilter::class,
     ];
 
     /**

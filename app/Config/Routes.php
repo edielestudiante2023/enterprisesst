@@ -10,6 +10,9 @@ use CodeIgniter\Router\RouteCollection;
     print_r($routes->getRoutes());
 });
 
+// Servir archivos desde UPLOADS_PATH (fuera de public/)
+$routes->get('serve-file/(.+)', 'FileServerController::serve/$1');
+
 $routes->get('/', 'AuthController::login');
 $routes->get('/login', 'AuthController::login');
 $routes->post('/loginPost', 'AuthController::loginPost');
@@ -1214,6 +1217,7 @@ $routes->post('/documentos-sst/presupuesto/agregar-item', 'PzpresupuestoSstContr
 $routes->post('/documentos-sst/presupuesto/actualizar-monto', 'PzpresupuestoSstController::actualizarMonto');
 $routes->post('/documentos-sst/presupuesto/actualizar-item', 'PzpresupuestoSstController::actualizarItem');
 $routes->post('/documentos-sst/presupuesto/eliminar-item', 'PzpresupuestoSstController::eliminarItem');
+$routes->post('/documentos-sst/presupuesto/ejecutar-lote', 'PzpresupuestoSstController::ejecutarLote');
 $routes->get('/documentos-sst/presupuesto/totales/(:num)', 'PzpresupuestoSstController::getTotales/$1');
 
 // Cambiar estado
@@ -1660,6 +1664,7 @@ $routes->group('informe-avances', ['filter' => 'auth'], function($routes) {
     $routes->post('update/(:num)', 'InformeAvancesController::update/$1');
     $routes->get('view/(:num)', 'InformeAvancesController::view/$1');
     $routes->get('pdf/(:num)', 'InformeAvancesController::generatePdf/$1');
+    $routes->get('regenerar-pdf/(:num)', 'InformeAvancesController::regenerarPdf/$1');
     $routes->post('finalizar/(:num)', 'InformeAvancesController::finalizar/$1');
     $routes->get('delete/(:num)', 'InformeAvancesController::delete/$1');
     $routes->post('generar-resumen', 'InformeAvancesController::generarResumen');
@@ -1671,8 +1676,8 @@ $routes->group('informe-avances', ['filter' => 'auth'], function($routes) {
     $routes->post('enviar/(:num)', 'InformeAvancesController::enviar/$1');
 });
 
-// Informe de Avances — API programatica (requiere sesion; cambiar a authOrApiKey cuando exista)
-$routes->group('ext-api/informe-avances', ['filter' => 'auth'], function($routes) {
+// Informe de Avances — API programática (OpenClaw, sesión OR API Key)
+$routes->group('ext-api/informe-avances', ['filter' => 'authOrApiKey'], function($routes) {
     $routes->get('clientes', 'InformeAvancesController::getClientes');
     $routes->get('clientes-con-visita', 'InformeAvancesController::getClientesConVisita');
     $routes->get('metricas/(:num)', 'InformeAvancesController::calcularMetricas/$1');
