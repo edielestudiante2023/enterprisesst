@@ -1351,6 +1351,11 @@
                 // Marcar que viene del botón "Ver Todos" para evitar validación de fechas
                 $('#filterForm').data('via-todos', true);
 
+                // Agregar campo oculto para que el backend sepa que es "Ver Todos"
+                if (!$('#verTodosFlag').length) {
+                    $('#filterForm').append('<input type="hidden" id="verTodosFlag" name="ver_todos" value="1">');
+                }
+
                 // Enviar automáticamente el formulario después de limpiar las fechas
                 setTimeout(function() {
                     $('#filterForm').submit();
@@ -1370,8 +1375,11 @@
                     return false;
                 }
 
-                // Validar filtros de búsqueda
+                // Quitar flag ver_todos si no viene del botón "Ver Todos"
                 var esViaTodos = $(this).data('via-todos') === true;
+                if (!esViaTodos) {
+                    $('#verTodosFlag').remove();
+                }
                 var tieneFechas = fechaDesde && fechaHasta;
 
                 // PERMITIR búsqueda si:

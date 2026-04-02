@@ -29,7 +29,13 @@ class PtaClienteNuevaController extends Controller
         $estado      = $request->getGet('estado');
         $anioActual  = (int) date('Y');
 
+        // Default: año actual. "todos" solo si el usuario lo pide explícitamente
+        // via el botón "Ver Todos" (se marca con parámetro ver_todos=1)
+        $verTodos = $request->getGet('ver_todos');
         if ($anio === null || $anio === '') {
+            $anio = (string) $anioActual;
+        }
+        if ($anio === 'todos' && $verTodos !== '1') {
             $anio = (string) $anioActual;
         }
 
@@ -114,7 +120,7 @@ class PtaClienteNuevaController extends Controller
             'records'     => $records,
             'filters'     => $filters,
             'anioActual'  => $anioActual,
-            'aniosFiltro' => array_merge(['todos'], array_map('strval', range($anioActual - 1, $anioActual + 4))),
+            'aniosFiltro' => array_merge(array_map('strval', range($anioActual - 1, $anioActual + 4)), ['todos']),
             'anioSeleccionado' => $anio,
         ];
 
