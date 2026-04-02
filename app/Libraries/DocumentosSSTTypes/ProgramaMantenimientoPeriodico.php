@@ -7,6 +7,9 @@ use App\Services\DocumentoConfigService;
 /**
  * Clase ProgramaMantenimientoPeriodico
  *
+ * Programa Tipo B (3 partes). Gold standard: ProgramaInspecciones.php
+ * Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+ *
  * Implementa el Programa de Mantenimiento Periodico de Instalaciones,
  * Equipos, Maquinas y Herramientas para el estandar 4.2.5 de la Resolucion 0312/2019.
  *

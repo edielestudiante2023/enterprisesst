@@ -7,6 +7,9 @@ use App\Services\DocumentoConfigService;
 /**
  * Clase ProgramaPromocionPrevencionSalud
  *
+ * Programa Tipo B (3 partes). Gold standard: ProgramaInspecciones.php
+ * Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+ *
  * Implementa la generación del Programa de Promoción y Prevención en Salud (3.1.2)
  * Este documento se alimenta de:
  * - Actividades de PyP Salud del Plan de Trabajo (Fase 1)
