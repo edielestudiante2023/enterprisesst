@@ -315,13 +315,91 @@
             </div>
             <?php endif; ?>
 
-            <!-- Enlaces opcionales -->
             <input type="hidden" name="enlace_dashboard" id="enlaceDashboard" value="<?= esc($informe['enlace_dashboard'] ?? '') ?>">
-            <div class="card card-section">
-                <div class="card-header py-3"><i class="fas fa-link me-2"></i>Enlaces</div>
+
+            <!-- 6 MODULOS ADICIONALES (se muestran al cargar metricas) -->
+
+            <!-- Firma Electronica -->
+            <div id="secFirma" class="card card-section d-none">
+                <div class="card-header py-3"><i class="fas fa-signature me-2"></i>Firma Electronica</div>
                 <div class="card-body">
-                    <label class="form-label">URL del Acta de Visita (opcional)</label>
-                    <input type="url" name="acta_visita_url" class="form-control" value="<?= esc($informe['acta_visita_url'] ?? '') ?>" placeholder="https://...">
+                    <div class="row g-3">
+                        <div class="col-md-3"><div class="metric-box"><div class="value" id="firmaTotal">0</div><div class="label">Solicitudes</div></div></div>
+                        <div class="col-md-3"><div class="metric-box"><div class="value text-success" id="firmaFirmados">0</div><div class="label">Firmados</div></div></div>
+                        <div class="col-md-3"><div class="metric-box"><div class="value text-warning" id="firmaPendientes">0</div><div class="label">Pendientes</div></div></div>
+                        <div class="col-md-3"><div class="metric-box"><div class="value text-danger" id="firmaExpirados">0</div><div class="label">Expirados</div></div></div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label small fw-bold">Tasa de firma</label>
+                        <div class="progress progress-custom"><div class="progress-bar bg-success" id="firmaProgress" style="width:0%">0%</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documentos SST -->
+            <div id="secDocsSst" class="card card-section d-none">
+                <div class="card-header py-3"><i class="fas fa-file-alt me-2"></i>Documentos SST Creados</div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4"><div class="metric-box"><div class="value" id="docsTotal">0</div><div class="label">Creados en periodo</div></div></div>
+                        <div class="col-md-4"><div class="metric-box"><div class="value text-success" id="docsAprobados">0</div><div class="label">Aprobados</div></div></div>
+                    </div>
+                    <div id="docsTabla"></div>
+                </div>
+            </div>
+
+            <!-- Indicadores SST -->
+            <div id="secIndicadores" class="card card-section d-none">
+                <div class="card-header py-3"><i class="fas fa-chart-bar me-2"></i>Indicadores SST</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3"><div class="metric-box"><div class="value" id="indActivos">0</div><div class="label">Activos</div></div></div>
+                        <div class="col-md-3"><div class="metric-box"><div class="value" id="indMedidos">0</div><div class="label">Medidos</div></div></div>
+                        <div class="col-md-3"><div class="metric-box"><div class="value text-success" id="indCumplen">0</div><div class="label">Cumplen meta</div></div></div>
+                        <div class="col-md-3"><div class="metric-box"><div class="value" id="indPct">0%</div><div class="label">Cumplimiento</div></div></div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="progress progress-custom"><div class="progress-bar bg-info" id="indProgress" style="width:0%">0%</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones Correctivas -->
+            <div id="secAcciones" class="card card-section d-none">
+                <div class="card-header py-3"><i class="fas fa-exclamation-triangle me-2"></i>Acciones Correctivas</div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3"><div class="metric-box"><div class="value" id="accCierre">0%</div><div class="label">Cierre a tiempo</div><div class="small text-muted">Meta: 85%</div></div></div>
+                        <div class="col-md-3"><div class="metric-box"><div class="value" id="accEfectividad">0%</div><div class="label">Efectividad</div><div class="small text-muted">Meta: 80%</div></div></div>
+                        <div class="col-md-3"><div class="metric-box"><div class="value" id="accDias">0</div><div class="label">Dias promedio</div><div class="small text-muted">Meta: 30</div></div></div>
+                        <div class="col-md-3"><div class="metric-box"><div class="value" id="accReincidencia">0%</div><div class="label">Reincidencia</div><div class="small text-muted">Meta: &le;10%</div></div></div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4"><div class="metric-box"><div class="value" id="accHallazgos">0</div><div class="label">Hallazgos</div></div></div>
+                        <div class="col-md-4"><div class="metric-box"><div class="value" id="accAcciones">0</div><div class="label">Acciones</div></div></div>
+                        <div class="col-md-4"><div class="metric-box"><div class="value text-danger" id="accVencidas">0</div><div class="label">Vencidas</div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actas de Comite -->
+            <div id="secActas" class="card card-section d-none">
+                <div class="card-header py-3"><i class="fas fa-gavel me-2"></i>Actas de Comite</div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4"><div class="metric-box"><div class="value" id="actasReuniones">0</div><div class="label">Reuniones en periodo</div></div></div>
+                    </div>
+                    <div id="actasTabla" class="mb-3"></div>
+                    <div id="actasCompromisos"></div>
+                </div>
+            </div>
+
+            <!-- Inspecciones -->
+            <div id="secInspecciones" class="card card-section d-none">
+                <div class="card-header py-3"><i class="fas fa-clipboard-check me-2"></i>Inspecciones</div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3" id="inspecTipos"></div>
+                    <div id="inspecHallazgos"></div>
                 </div>
             </div>
 
@@ -803,6 +881,9 @@
                     $('#fechaDesde').val(d.fecha_desde_sugerida);
                 }
 
+                // === 6 MODULOS ADICIONALES ===
+                renderModulosAdicionales(d);
+
             }).always(function() {
                 $('#metricasLoading').addClass('d-none');
             });
@@ -875,6 +956,104 @@
             var totalPend = pend.reduce(function(s, p) { return s + (parseInt(p.cantidad) || 0); }, 0);
             $('#metricPend').text(abiertosPend + ' / ' + totalPend);
             $('#detailPend').text(abiertosPend + ' abiertos' + (promDias > 0 ? ' (prom ' + promDias.toFixed(0) + ' dias)' : ''));
+        }
+
+        // === RENDER 6 MODULOS ADICIONALES ===
+        function renderModulosAdicionales(d) {
+            // Ocultar todos primero
+            $('#secFirma,#secDocsSst,#secIndicadores,#secAcciones,#secActas,#secInspecciones').addClass('d-none');
+
+            // 1. Firma Electronica
+            var fe = d.firma_electronica || {};
+            if (fe.total_solicitudes > 0) {
+                $('#secFirma').removeClass('d-none');
+                $('#firmaTotal').text(fe.total_solicitudes);
+                $('#firmaFirmados').text(fe.firmados || 0);
+                $('#firmaPendientes').text(fe.pendientes || 0);
+                $('#firmaExpirados').text(fe.expirados || 0);
+                var tasa = parseFloat(fe.tasa_firma || 0);
+                $('#firmaProgress').css('width', tasa + '%').text(tasa.toFixed(1) + '%');
+            }
+
+            // 2. Documentos SST
+            var ds = d.documentos_sst || {};
+            if ((ds.total_creados || 0) > 0) {
+                $('#secDocsSst').removeClass('d-none');
+                $('#docsTotal').text(ds.total_creados);
+                $('#docsAprobados').text(ds.aprobados_periodo || 0);
+                var pt = ds.por_tipo || [];
+                if (pt.length > 0) {
+                    var h = '<table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Tipo</th><th>Cantidad</th></tr></thead><tbody>';
+                    pt.forEach(function(t) { h += '<tr><td>' + esc((t.tipo_documento || '').replace(/_/g, ' ')) + '</td><td class="text-center">' + t.cantidad + '</td></tr>'; });
+                    h += '</tbody></table>';
+                    $('#docsTabla').html(h);
+                }
+            }
+
+            // 3. Indicadores SST
+            var ind = d.indicadores_sst || {};
+            if ((ind.total_activos || 0) > 0) {
+                $('#secIndicadores').removeClass('d-none');
+                $('#indActivos').text(ind.total_activos);
+                $('#indMedidos').text(ind.medidos_periodo || 0);
+                $('#indCumplen').text(ind.cumplen_meta || 0);
+                var pct = parseFloat(ind.pct_cumplimiento || 0);
+                $('#indPct').text(pct.toFixed(1) + '%');
+                $('#indProgress').css('width', pct + '%').text(pct.toFixed(1) + '%');
+            }
+
+            // 4. Acciones Correctivas
+            var ac = d.acciones_correctivas || {};
+            if ((ac.acciones_total || 0) > 0) {
+                $('#secAcciones').removeClass('d-none');
+                var kp = ac.kpis || {};
+                $('#accCierre').text((kp.cierre_a_tiempo || 0) + '%');
+                $('#accEfectividad').text((kp.efectividad || 0) + '%');
+                $('#accDias').text(kp.dias_promedio || 0);
+                $('#accReincidencia').text((kp.reincidencia || 0) + '%');
+                $('#accHallazgos').text(ac.hallazgos_total || 0);
+                $('#accAcciones').text(ac.acciones_total || 0);
+                $('#accVencidas').text(ac.acciones_vencidas || 0);
+            }
+
+            // 5. Actas de Comite
+            var at = d.actas_comite || {};
+            if ((at.reuniones_periodo || 0) > 0 || (at.compromisos && at.compromisos.total > 0)) {
+                $('#secActas').removeClass('d-none');
+                $('#actasReuniones').text(at.reuniones_periodo || 0);
+                var pc = at.por_comite || [];
+                if (pc.length > 0) {
+                    var h = '<table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Comite</th><th>Reuniones</th><th>Esperadas</th><th>Cumplimiento</th></tr></thead><tbody>';
+                    pc.forEach(function(c) { h += '<tr><td>' + esc(c.tipo_comite) + '</td><td class="text-center">' + c.total_anio + '</td><td class="text-center">' + c.esperadas + '</td><td class="text-center">' + c.cumplimiento + '%</td></tr>'; });
+                    h += '</tbody></table>';
+                    $('#actasTabla').html(h);
+                }
+                var comp = at.compromisos || {};
+                if (comp.total > 0) {
+                    $('#actasCompromisos').html('<div class="row g-3"><div class="col-md-3"><div class="metric-box"><div class="value">' + comp.total + '</div><div class="label">Total</div></div></div><div class="col-md-3"><div class="metric-box"><div class="value text-success">' + comp.cumplidos + '</div><div class="label">Cumplidos</div></div></div><div class="col-md-3"><div class="metric-box"><div class="value text-warning">' + comp.pendientes + '</div><div class="label">Pendientes</div></div></div><div class="col-md-3"><div class="metric-box"><div class="value text-danger">' + comp.vencidos + '</div><div class="label">Vencidos</div></div></div></div>');
+                }
+            }
+
+            // 6. Inspecciones
+            var ins = d.inspecciones || {};
+            if ((ins.total_inspecciones || 0) > 0) {
+                $('#secInspecciones').removeClass('d-none');
+                var pt = ins.por_tipo || {};
+                var nombres = {locativa:'Locativa', extintores:'Extintores', botiquin:'Botiquin', senalizacion:'Senalizacion'};
+                var colores = {locativa:'#0d6efd', extintores:'#dc3545', botiquin:'#198754', senalizacion:'#ffc107'};
+                var h = '';
+                Object.keys(nombres).forEach(function(k) {
+                    var v = pt[k] || {total:0, completadas:0};
+                    if (v.total > 0) {
+                        h += '<div class="col-md-3"><div class="metric-box" style="border-left:4px solid ' + colores[k] + '"><div class="value">' + v.completadas + '/' + v.total + '</div><div class="label">' + nombres[k] + '</div></div></div>';
+                    }
+                });
+                $('#inspecTipos').html(h);
+                var hall = ins.hallazgos || {};
+                if (hall.total > 0) {
+                    $('#inspecHallazgos').html('<div class="alert alert-info mb-0"><i class="fas fa-search me-2"></i>Hallazgos locativos: <strong>' + hall.total + '</strong> encontrados, <strong>' + hall.corregidos + '</strong> corregidos, <strong>' + hall.pendientes + '</strong> pendientes</div>');
+                }
+            }
         }
 
         // Generar resumen con IA
