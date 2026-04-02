@@ -10,7 +10,21 @@ Este instructivo describe el proceso paso a paso para agregar un **nuevo program
 | **Parte 2** | Indicadores de medicion | `tbl_indicadores_sst` | `categoria` |
 | **Parte 3** | Documento formal con IA | `tbl_documentos_sst` | `tipo_documento` |
 
-**Ejemplo de referencia**: PVE Riesgo Biomecanico (implementado en 4.2.3).
+**Gold Standard de referencia**: Programa de Inspecciones (estandar 4.2.4, `programa_inspecciones`).
+
+> **¿Por que este y no otro?** Inspecciones obtuvo 92/100 en completeness: patron mas limpio y replicable,
+> usa `GeneradorIAController` (como todos los demas), separacion clara de las 3 partes en Services/Handler/Vistas,
+> script SQL completo, y `getContextoBase()` bien implementado que consume actividades + indicadores reales.
+>
+> **Archivos del gold standard para copiar y adaptar:**
+> - Service Parte 1: `app/Services/ActividadesInspeccionesService.php` (511 lineas)
+> - Service Parte 2: `app/Services/IndicadoresInspeccionesService.php` (338 lineas)
+> - Handler Parte 3: `app/Libraries/DocumentosSSTTypes/ProgramaInspecciones.php` (222 lineas)
+> - Vista Parte 1:   `app/Views/generador_ia/programa_inspecciones.php`
+> - Vista Parte 2:   `app/Views/generador_ia/indicadores_programa_inspecciones.php`
+> - Script SQL:      `app/SQL/agregar_programa_inspecciones.php` (177 lineas)
+> - Controller:      `GeneradorIAController.php` metodos lineas 2289-2465 (7 metodos)
+> - Rutas:           `Routes.php` lineas 938-946 (7 rutas generador-ia) + 1047-1049 (2 rutas documentos-sst)
 
 ---
 
@@ -80,7 +94,7 @@ Antes de tocar codigo, definir los 6 identificadores del nuevo programa:
 
 **Crear**: `app/Services/Actividades{NombrePrograma}Service.php`
 
-**Referencia**: `app/Services/ActividadesPveBiomecanicoService.php`
+**Referencia (gold standard)**: `app/Services/ActividadesInspeccionesService.php`
 
 ### Estructura:
 
@@ -160,7 +174,7 @@ $data = [
 
 **Crear**: `app/Services/Indicadores{NombrePrograma}Service.php`
 
-**Referencia**: `app/Services/IndicadoresPveBiomecanicoService.php`
+**Referencia (gold standard)**: `app/Services/IndicadoresInspeccionesService.php`
 
 ### Estructura:
 
@@ -228,7 +242,7 @@ $data = [
 
 **Crear**: `app/Libraries/DocumentosSSTTypes/{NombrePrograma}.php`
 
-**Referencia**: `app/Libraries/DocumentosSSTTypes/PveRiesgoBiomecanico.php`
+**Referencia (gold standard)**: `app/Libraries/DocumentosSSTTypes/ProgramaInspecciones.php`
 
 ### Estructura minima:
 
@@ -478,7 +492,7 @@ public function adjuntarSoporte{Nombre}()
 1. `app/Views/generador_ia/{nombre_programa}.php` — Vista Part 1 (Actividades)
 2. `app/Views/generador_ia/indicadores_{nombre_programa}.php` — Vista Part 2 (Indicadores)
 
-**Referencia**: `app/Views/generador_ia/pve_riesgo_biomecanico.php` y `indicadores_pve_biomecanico.php`
+**Referencia (gold standard)**: `app/Views/generador_ia/programa_inspecciones.php` y `indicadores_programa_inspecciones.php`
 
 ### Elementos clave de la vista Part 1:
 
@@ -566,7 +580,7 @@ case '{codigo_numeral}':
 
 **Crear**: `app/SQL/agregar_{tipo_documento}.php`
 
-**Referencia**: `app/SQL/agregar_pve_riesgo_biomecanico.php`
+**Referencia (gold standard)**: `app/SQL/agregar_programa_inspecciones.php`
 
 Debe insertar en estas tablas:
 
@@ -669,11 +683,49 @@ app/
 
 ## Referencia Rapida: Programas Implementados
 
-| Programa | tipo_documento | tipo_servicio | categoria | Numeral |
-|----------|---------------|---------------|-----------|---------|
-| Capacitacion | `programa_capacitacion` | `Capacitacion SST` | `capacitacion` | 1.2.1 |
-| Promocion y Prevencion | `programa_promocion_prevencion_salud` | `Promocion y Prevencion en Salud` | `promocion_prevencion_salud` | 3.1.3 |
-| Estilos de Vida Saludable | `programa_estilos_vida_saludable` | `Estilos de Vida Saludable` | `estilos_vida_saludable` | 3.1.7 |
-| Evaluaciones Medicas | `programa_evaluaciones_medicas_ocupacionales` | `Evaluaciones Medicas Ocupacionales` | `evaluaciones_medicas_ocupacionales` | 3.1.4 |
-| PVE Biomecanico | `pve_riesgo_biomecanico` | `PVE Riesgo Biomecanico` | `pve_biomecanico` | 4.2.3 |
-| PVE Psicosocial | `pve_riesgo_psicosocial` | `PVE Riesgo Psicosocial` | `pve_psicosocial` | 4.2.3 |
+| Programa | tipo_documento | tipo_servicio | categoria | Numeral | flujo BD | Estado |
+|----------|---------------|---------------|-----------|---------|----------|--------|
+| **Inspecciones** (GOLD STANDARD) | `programa_inspecciones` | `Programa de Inspecciones` | `inspecciones` | 4.2.4 | `programa_con_pta` | OK |
+| Capacitacion | `programa_capacitacion` | `Programa Capacitación SST` | `capacitacion` | 3.1.1 | `programa_con_pta` | OK |
+| Induccion y Reinduccion | `programa_induccion_reinduccion` | `Programa Induccion y Reinduccion` | - | 1.2.2 | `programa_con_pta` | OK |
+| Plan Objetivos y Metas | `plan_objetivos_metas` | `Objetivos SG-SST` | - | 2.2.1 | `programa_con_pta` | OK |
+| Promocion y Prevencion | `programa_promocion_prevencion_salud` | `Programa PyP Salud` | `promocion_prevencion_salud` | 3.1.2 | `programa_con_pta` | OK |
+| PVE Biomecanico | `pve_riesgo_biomecanico` | `PVE Riesgo Biomecanico` | `pve_biomecanico` | 4.2.3 | `programa_con_pta` | OK |
+| PVE Psicosocial | `pve_riesgo_psicosocial` | `PVE Riesgo Psicosocial` | `pve_psicosocial` | 4.2.3 | `programa_con_pta` | OK |
+
+### Programas que generan actividades PTA pero NO son Tipo B (requieren regularizacion)
+
+> **ALERTA**: Estos programas tienen Service de Parte 1 (generan actividades en `tbl_pta_cliente`)
+> pero su `flujo` en `tbl_doc_tipo_configuracion` dice `secciones_ia` en vez de `programa_con_pta`.
+> Esto causa que el documento final NO consuma las actividades/indicadores como contexto de IA.
+
+| Programa | tipo_documento | tipo_servicio | flujo BD (incorrecto) | Deberia ser |
+|----------|---------------|---------------|-----------------------|-------------|
+| Estilos de Vida Saludable | `programa_estilos_vida_saludable` | `Estilos de Vida Saludable` | `secciones_ia` | `programa_con_pta` |
+| Evaluaciones Medicas | `programa_evaluaciones_medicas_ocupacionales` | `Evaluaciones Medicas Ocupacionales` | `secciones_ia` | `programa_con_pta` |
+| Mantenimiento Periodico | `programa_mantenimiento_periodico` | `Mantenimiento Periodico` | `secciones_ia` | `programa_con_pta` |
+
+### Generadores de actividades PTA sin documento asociado
+
+| Service | tipo_servicio | Proposito |
+|---------|---------------|-----------|
+| `PTAGeneratorService` | `Plan de Trabajo Anual` | Generador utilitario que llena PTA desde cronograma de capacitacion. No es documento. |
+
+---
+
+## Regla de Prevencion: Como evitar programas huerfanos
+
+> **REGLA**: Todo programa que tenga un Service `Actividades{X}Service.php` que inserte en `tbl_pta_cliente`
+> DEBE tener su registro en `tbl_doc_tipo_configuracion` con `flujo = 'programa_con_pta'`.
+>
+> Si un programa genera actividades PTA pero su flujo es `secciones_ia`, el documento se genera
+> sin consumir esas actividades como contexto — es decir, la Parte 1 y Parte 2 se desperdician.
+>
+> **Verificacion rapida en BD:**
+> ```sql
+> -- Buscar programas con Service de actividades pero flujo incorrecto
+> SELECT tipo_documento, nombre, flujo
+> FROM tbl_doc_tipo_configuracion
+> WHERE tipo_documento LIKE 'programa_%' AND flujo = 'secciones_ia';
+> ```
+> Si retorna filas, son candidatos a regularizar.

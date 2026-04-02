@@ -12,6 +12,9 @@ use App\Models\IndicadorSSTModel;
  * - IA genera indicadores personalizados usando contexto COMPLETO del cliente
  * - Consultor revisa y selecciona
  * - Se guardan en tbl_indicadores_sst con categoria = 'inspecciones'
+ *
+ * GOLD STANDARD — Usar como referencia para crear nuevos programas Tipo B (Parte 2).
+ * Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
  */
 class IndicadoresInspeccionesService
 {
