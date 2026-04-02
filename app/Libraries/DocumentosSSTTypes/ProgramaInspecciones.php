@@ -5,6 +5,9 @@ namespace App\Libraries\DocumentosSSTTypes;
 /**
  * Clase ProgramaInspecciones
  *
+ * GOLD STANDARD — Usar como referencia para crear nuevos programas Tipo B (Parte 3 - Handler).
+ * Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+ *
  * Implementa la generacion del Programa de Inspecciones a Instalaciones,
  * Maquinaria o Equipos (4.2.4) con participacion del COPASST.
  *

@@ -232,6 +232,20 @@
             min-height: 90px;
         }
 
+        .card-programa {
+            min-height: 70px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .card-programa.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.8), 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .bg-purple { background-color: #6f42c1 !important; }
+        .bg-teal { background-color: #20c997 !important; }
+        .bg-orange { background-color: #fd7e14 !important; color: #fff !important; }
+        .bg-indigo { background-color: #6610f2 !important; }
+        .bg-pink { background-color: #d63384 !important; }
+
         .section-title {
             font-size: 1.1rem;
             font-weight: 600;
@@ -578,6 +592,14 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Tarjetas de Programa / Fuente (clickeables) -->
+        <div class="section-title">
+            <i class="fas fa-project-diagram"></i> Filtrar por Programa
+        </div>
+        <div class="row mb-4" id="programaCards">
+            <!-- Se generarán dinámicamente con JavaScript -->
         </div>
 
         <!-- Tarjetas mensuales (clickeables) -->
@@ -1032,13 +1054,15 @@
             var activeYear = null;
             var activeMonth = null;
             var activeStatus = null;
+            var activePrograma = null;
 
             // Guardar filtros de tarjetas en sessionStorage antes de reload
             function reloadWithFilters() {
                 sessionStorage.setItem('ptaCardFilters', JSON.stringify({
                     year: activeYear,
                     month: activeMonth,
-                    status: activeStatus
+                    status: activeStatus,
+                    programa: activePrograma
                 }));
                 location.reload();
             }
@@ -1111,6 +1135,7 @@
                     function(settings, data, dataIndex) {
                         var fechaPropuesta = data[9] || ''; // Columna 9: Fecha Propuesta (shifted +1)
                         var estadoActividad = $('<div/>').html(data[11] || '').text().trim(); // Columna 11: Estado (shifted +1)
+                        var tipoServicio = (data[4] || '').trim(); // Columna 4: Fuente de la Actividad (tipo_servicio)
 
                         // Filtro por año
                         if (activeYear) {
@@ -1140,6 +1165,15 @@
                         if (activeStatus && activeStatus !== 'ALL') {
                             if (estadoActividad.trim() !== activeStatus) {
                                 return false;
+                            }
+                        }
+
+                        // Filtro por programa (tipo_servicio)
+                        if (activePrograma) {
+                            if (activePrograma === '__SIN_PROGRAMA__') {
+                                if (tipoServicio !== '') return false;
+                            } else {
+                                if (tipoServicio !== activePrograma) return false;
                             }
                         }
 
@@ -1207,17 +1241,77 @@
                 applyFilters();
             });
 
+            // Click en tarjetas de programa
+            $(document).on('click', '.card-programa', function() {
+                var programa = $(this).data('programa');
+
+                if ($(this).hasClass('active')) {
+                    $(this).removeClass('active');
+                    activePrograma = null;
+                } else {
+                    $('.card-programa').removeClass('active');
+                    $(this).addClass('active');
+                    activePrograma = programa;
+                }
+
+                applyFilters();
+            });
+
+            // Generar tarjetas de programa dinámicamente desde los datos de la tabla
+            function generateProgramaCards() {
+                if (!table) return;
+                var programaCounts = {};
+                var allData = table.column(4).data().toArray();
+                allData.forEach(function(val) {
+                    var key = (val || '').trim();
+                    if (key === '') key = '__SIN_PROGRAMA__';
+                    programaCounts[key] = (programaCounts[key] || 0) + 1;
+                });
+
+                var colores = [
+                    'bg-primary', 'bg-success', 'bg-info', 'bg-warning text-dark',
+                    'bg-danger', 'bg-purple', 'bg-teal', 'bg-orange',
+                    'bg-indigo', 'bg-pink', 'bg-secondary'
+                ];
+                var container = $('#programaCards');
+                container.empty();
+
+                // Ordenar: primero los que tienen nombre, al final "Sin programa"
+                var keys = Object.keys(programaCounts).sort(function(a, b) {
+                    if (a === '__SIN_PROGRAMA__') return 1;
+                    if (b === '__SIN_PROGRAMA__') return -1;
+                    return a.localeCompare(b);
+                });
+
+                if (keys.length === 0) return;
+
+                keys.forEach(function(key, idx) {
+                    var displayName = key === '__SIN_PROGRAMA__' ? 'Sin programa' : key;
+                    var colorClass = key === '__SIN_PROGRAMA__' ? 'bg-secondary' : colores[idx % colores.length];
+                    var isActive = activePrograma === key ? ' active' : '';
+                    var card = '<div class="col-6 col-md-2 mb-2">' +
+                        '<div class="card text-white ' + colorClass + ' card-clickable card-programa' + isActive + '" data-programa="' + key + '" style="cursor:pointer">' +
+                        '<div class="card-body p-2 text-center">' +
+                        '<h6 class="card-title mb-0" style="font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + displayName + '">' + displayName + '</h6>' +
+                        '<p class="card-text display-6 mb-0">' + programaCounts[key] + '</p>' +
+                        '</div></div></div>';
+                    container.append(card);
+                });
+            }
+
             // Botón para limpiar todos los filtros de tarjetas
             $('#btnClearCardFilters').on('click', function() {
                 // Limpiar estados
                 activeYear = null;
                 activeMonth = null;
                 activeStatus = null;
+                activePrograma = null;
 
                 // Remover clases activas
                 $('.card-year').removeClass('active');
                 $('.card-month').removeClass('active');
                 $('.card-status').removeClass('active');
+                $('.card-programa').removeClass('active');
 
                 // Limpiar filtros personalizados de DataTables
                 $.fn.dataTable.ext.search.pop();
@@ -1225,6 +1319,7 @@
                 if (table) {
                     table.draw();
                     generateYearCards(); // Regenerar tarjetas de año
+                    generateProgramaCards(); // Regenerar tarjetas de programa
                 }
 
                 showAlert('Filtros de tarjetas limpiados. Mostrando todos los registros.', 'info');
@@ -1469,6 +1564,7 @@
                 updateCardCounts();
                 updateMonthlyCounts();
                 generateYearCards();
+                generateProgramaCards();
 
                 // Restaurar filtros de tarjetas desde sessionStorage (si venimos de un reload)
                 var savedFilters = sessionStorage.getItem('ptaCardFilters');
@@ -1487,7 +1583,11 @@
                         activeStatus = f.status;
                         $('.card-status[data-status="' + f.status + '"]').addClass('active');
                     }
-                    if (f.year || f.month || f.status) {
+                    if (f.programa) {
+                        activePrograma = f.programa;
+                        $('.card-programa[data-programa="' + f.programa + '"]').addClass('active');
+                    }
+                    if (f.year || f.month || f.status || f.programa) {
                         // Abrir el panel de filtros y aplicar
                         $('#cardFiltersPanel').addClass('show');
                         $('.filter-toggle-btn').removeClass('collapsed');

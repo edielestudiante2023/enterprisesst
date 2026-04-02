@@ -1,5 +1,9 @@
 <?php
 /**
+ * GOLD STANDARD — Script SQL para agregar un programa Tipo B completo.
+ * Usar como referencia para crear nuevos programas.
+ * Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+ *
  * Script para agregar tipo de documento: Programa de Inspecciones
  * Estandar: 4.2.4
  * Ejecutar: php app/SQL/agregar_programa_inspecciones.php

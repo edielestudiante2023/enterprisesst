@@ -1,3 +1,8 @@
+<!--
+  GOLD STANDARD — Vista Parte 1 (Actividades) del Programa de Inspecciones.
+  Usar como referencia para crear nuevos programas Tipo B.
+  Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>

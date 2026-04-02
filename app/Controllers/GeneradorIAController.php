@@ -2283,6 +2283,11 @@ Mejora el indicador segun las instrucciones. Responde SOLO con el JSON.";
     // MÓDULO 4.2.4 - PROGRAMA DE INSPECCIONES
     // =========================================================================
 
+    // ══════════════════════════════════════════════════════════════════════
+    // PROGRAMA DE INSPECCIONES (4.2.4) — GOLD STANDARD para replicar
+    // Guia completa: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+    // ══════════════════════════════════════════════════════════════════════
+
     /**
      * Vista principal de Programa de Inspecciones (Parte 1 - Actividades)
      */

@@ -8,6 +8,9 @@ use App\Models\PtaclienteModel;
  * Servicio para generar actividades del Programa de Inspecciones
  * segun Resolucion 0312/2019 - Estandar 4.2.4
  *
+ * GOLD STANDARD — Usar como referencia para crear nuevos programas Tipo B (Parte 1).
+ * Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+ *
  * Programa de inspecciones a instalaciones, maquinaria o equipos
  * con participacion del COPASST o Vigia SST.
  */
