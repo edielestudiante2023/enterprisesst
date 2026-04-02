@@ -843,7 +843,7 @@
                                 </td>
                                 <td><?= esc($row['id_ptacliente']) ?></td>
                                 <td class="editable"><?= esc($row['nombre_cliente']) ?></td>
-                                <td><?= esc($row['tipo_servicio']) ?></td>
+                                <td class="editable"><?= esc($row['tipo_servicio']) ?></td>
                                 <?php
                                     $phvaMap = ['P'=>'PLANEAR','H'=>'HACER','V'=>'VERIFICAR','A'=>'ACTUAR'];
                                     $phvaRaw = strtoupper(trim($row['phva_plandetrabajo'] ?? ''));
@@ -1623,6 +1623,7 @@
                     if ($td.find('input, select').length > 0) return;
                     var colIndex = table.cell($td).index().column;
                     var editableMapping = {
+                        4: 'tipo_servicio',
                         5: 'phva_plandetrabajo',
                         6: 'numeral_plandetrabajo',
                         7: 'actividad_plandetrabajo',
@@ -1633,7 +1634,25 @@
                         12: 'porcentaje_avance',
                         13: 'observaciones'
                     };
-                    var disallowed = [0, 1, 2, 3, 4, 14, 15, 16, 17, 18];
+                    var disallowed = [0, 1, 2, 3, 14, 15, 16, 17, 18];
+
+                    // Opciones predefinidas para tipo_servicio (Fuente de la Actividad)
+                    var opcionesTipoServicio = [
+                        // Programas Tipo B (valores exactos que usan los Services)
+                        'Programa Capacitación SST',
+                        'Programa Induccion y Reinduccion',
+                        'Objetivos SG-SST',
+                        'Programa PyP Salud',
+                        'PVE Riesgo Biomecanico',
+                        'PVE Riesgo Psicosocial',
+                        'Programa de Inspecciones',
+                        'Estilos de Vida Saludable',
+                        'Evaluaciones Medicas Ocupacionales',
+                        'Mantenimiento Periodico',
+                        // Opciones generales
+                        'Plan de Trabajo Anual',
+                        'Gestion SG-SST',
+                    ];
                     if (disallowed.indexOf(colIndex) !== -1 || !editableMapping.hasOwnProperty(colIndex)) {
                         cell.data(originalHtml).draw();
                         return;
@@ -1643,7 +1662,26 @@
                     if (colIndex === 12) plainValue = plainValue.replace('%', '').trim();
 
                     var inputElement;
-                    if (colIndex === 9 || colIndex === 10) {
+                    if (colIndex === 4) {
+                        // Tipo servicio: select con opciones predefinidas + "Otro..."
+                        inputElement = $('<select class="form-select form-select-sm"></select>');
+                        inputElement.append('<option value="">-- Sin programa --</option>');
+                        $.each(opcionesTipoServicio, function(i, opt) {
+                            var selected = (plainValue === opt) ? 'selected' : '';
+                            inputElement.append('<option value="' + opt + '" ' + selected + '>' + opt + '</option>');
+                        });
+                        inputElement.append('<option value="__OTRO__"' + (plainValue && opcionesTipoServicio.indexOf(plainValue) === -1 && plainValue !== '' ? ' selected' : '') + '>Otro...</option>');
+                        // Si el valor actual no está en las opciones, mostrar input de texto
+                        if (plainValue && opcionesTipoServicio.indexOf(plainValue) === -1 && plainValue !== '') {
+                            var wrapper = $('<div class="d-flex gap-1"></div>');
+                            var customInput = $('<input type="text" class="form-control form-control-sm" />').val(plainValue);
+                            inputElement.css('width', '55%');
+                            customInput.css('width', '45%');
+                            wrapper.append(inputElement).append(customInput);
+                            inputElement = wrapper;
+                            inputElement._isWrapper = true;
+                        }
+                    } else if (colIndex === 9 || colIndex === 10) {
                         inputElement = $('<input type="date" class="form-control form-control-sm" />').val(plainValue);
                     } else if (colIndex === 11) {
                         inputElement = $('<select class="form-select form-select-sm"></select>');
@@ -1659,6 +1697,85 @@
                     }
 
                     $td.empty().append(inputElement);
+
+                    // Para columna tipo_servicio: manejar "Otro..." con input dinámico
+                    if (colIndex === 4) {
+                        var $select = inputElement._isWrapper ? inputElement.find('select') : inputElement;
+                        var $customInput = inputElement._isWrapper ? inputElement.find('input') : null;
+                        $select.focus();
+
+                        $select.on('change', function() {
+                            if ($(this).val() === '__OTRO__') {
+                                if (!$td.find('input[type="text"]').length) {
+                                    var ci = $('<input type="text" class="form-control form-control-sm mt-1" placeholder="Escriba el nombre..." />');
+                                    $td.append(ci);
+                                    ci.focus();
+                                    ci.on('blur keydown', function(ev) {
+                                        if (ev.type === 'blur' || (ev.type === 'keydown' && ev.which === 13)) {
+                                            ev.preventDefault();
+                                            var customVal = $(this).val().trim();
+                                            if (!customVal) { cell.data(originalHtml).draw(); return; }
+                                            guardarTipoServicio(customVal);
+                                        }
+                                        if (ev.type === 'keydown' && ev.which === 27) { cell.data(originalHtml).draw(); }
+                                    });
+                                }
+                            } else {
+                                $td.find('input[type="text"]').remove();
+                                var val = $(this).val();
+                                guardarTipoServicio(val);
+                            }
+                        });
+
+                        // Si ya es wrapper (valor custom existente), escuchar blur en el input
+                        if ($customInput) {
+                            $customInput.on('blur keydown', function(ev) {
+                                if (ev.type === 'blur' || (ev.type === 'keydown' && ev.which === 13)) {
+                                    ev.preventDefault();
+                                    var val = $select.val() === '__OTRO__' ? $(this).val().trim() : $select.val();
+                                    if (!val && $select.val() === '__OTRO__') { cell.data(originalHtml).draw(); return; }
+                                    guardarTipoServicio(val || '');
+                                }
+                                if (ev.type === 'keydown' && ev.which === 27) { cell.data(originalHtml).draw(); }
+                            });
+                        }
+
+                        // Escape para cancelar
+                        $select.on('keydown', function(ev) {
+                            if (ev.which === 27) { cell.data(originalHtml).draw(); }
+                        });
+
+                        function guardarTipoServicio(newVal) {
+                            if (newVal === plainValue) { cell.data(originalHtml).draw(); return; }
+                            var rowData = table.row($td.closest('tr')).data();
+                            var id = rowData[2];
+                            $.ajax({
+                                url: "<?= site_url('/pta-cliente-nueva/editinginline') ?>",
+                                method: "POST",
+                                data: {
+                                    id: id,
+                                    tipo_servicio: newVal,
+                                    "<?= csrf_token() ?>": getCsrfToken()
+                                },
+                                dataType: "json",
+                                success: function(response) {
+                                    if (response.status === 'success') {
+                                        cell.data(newVal).draw();
+                                        generateProgramaCards();
+                                    } else {
+                                        cell.data(originalHtml).draw();
+                                        showAlert('Error: ' + (response.message || 'No se pudo guardar'), 'danger');
+                                    }
+                                },
+                                error: function() {
+                                    cell.data(originalHtml).draw();
+                                    showAlert('Error de conexión', 'danger');
+                                }
+                            });
+                        }
+                        return; // No ejecutar el blur genérico de abajo
+                    }
+
                     inputElement.focus();
 
                     inputElement.on('blur keydown', function(e) {
