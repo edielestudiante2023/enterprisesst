@@ -167,6 +167,41 @@
             font-weight: 600;
         }
 
+        .badge-no-aplica {
+            background: linear-gradient(135deg, #636e72 0%, #b2bec3 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .row-no-aplica {
+            opacity: 0.55;
+        }
+
+        .btn-toggle-exclusion {
+            border: 1px solid #b2bec3;
+            background: transparent;
+            color: #636e72;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-toggle-exclusion:hover {
+            background: #636e72;
+            color: white;
+        }
+
+        .btn-toggle-exclusion.active {
+            background: #e17055;
+            border-color: #e17055;
+            color: white;
+        }
+
         .btn-generar {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
@@ -319,9 +354,14 @@
                     <div class="metric-label">Pendientes de Generar</div>
                 </div>
 
+                <div class="metric-card" style="background: linear-gradient(135deg, #636e72 0%, #b2bec3 100%);">
+                    <div class="metric-value"><?= $no_aplica ?></div>
+                    <div class="metric-label">No Aplica</div>
+                </div>
+
                 <div class="metric-card" style="background: linear-gradient(135deg, #3498db 0%, #5dade2 100%);">
-                    <div class="metric-value"><?= $total ?></div>
-                    <div class="metric-label">Total Disponibles</div>
+                    <div class="metric-value"><?= $total_aplicable ?></div>
+                    <div class="metric-label">Total Aplicables</div>
                 </div>
 
                 <div class="metric-card" style="background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);">
@@ -334,7 +374,7 @@
             <div class="mt-4">
                 <div class="progress" style="height: 30px; border-radius: 15px; background: #ecf0f1;">
                     <div class="progress-bar-custom" style="width: <?= $porcentaje ?>%;">
-                        <?= $generados ?> de <?= $total ?> documentos generados
+                        <?= $generados ?> de <?= $total_aplicable ?> documentos generados
                     </div>
                 </div>
             </div>
@@ -385,8 +425,9 @@
                     </label>
                     <select id="filtroEstado" class="form-select">
                         <option value="">Todos los estados</option>
-                        <option value="Generado">✅ Generado</option>
-                        <option value="No Generado">❌ No Generado</option>
+                        <option value="Generado">Generado</option>
+                        <option value="No Generado">No Generado</option>
+                        <option value="No Aplica">No Aplica</option>
                     </select>
                 </div>
 
@@ -427,7 +468,7 @@
                     </thead>
                     <tbody>
                         <?php foreach ($documentos as $doc): ?>
-                        <tr>
+                        <tr class="<?= $doc['estado_doc'] === 'no_aplica' ? 'row-no-aplica' : '' ?>">
                             <td>
                                 <span class="numeral-badge"><?= esc($doc['numeral']) ?></span>
                             </td>
@@ -436,6 +477,9 @@
                             </td>
                             <td>
                                 <strong><?= esc($doc['nombre']) ?></strong>
+                                <?php if ($doc['estado_doc'] === 'no_aplica' && $doc['motivo_exclusion']): ?>
+                                    <br><small class="text-muted"><?= esc($doc['motivo_exclusion']) ?></small>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <?php if ($doc['flujo'] === 'Tipo A'): ?>
@@ -447,7 +491,11 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php if ($doc['existe']): ?>
+                                <?php if ($doc['estado_doc'] === 'no_aplica'): ?>
+                                    <span class="badge-no-aplica">
+                                        <i class="fas fa-ban me-1"></i>No Aplica
+                                    </span>
+                                <?php elseif ($doc['existe']): ?>
                                     <span class="badge-generado">
                                         <i class="fas fa-check-circle me-1"></i>Generado
                                     </span>
@@ -468,7 +516,14 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php if ($doc['existe']): ?>
+                                <?php if ($doc['estado_doc'] === 'no_aplica'): ?>
+                                    <button class="btn-toggle-exclusion active"
+                                            data-tipo="<?= esc($doc['tipo']) ?>"
+                                            data-cliente="<?= esc($cliente['id_cliente']) ?>"
+                                            title="Reactivar documento">
+                                        <i class="fas fa-undo me-1"></i>Reactivar
+                                    </button>
+                                <?php elseif ($doc['existe']): ?>
                                     <div class="btn-group-vertical gap-1" role="group">
                                         <a href="<?= esc($doc['url_ver']) ?>"
                                            class="btn btn-ver btn-sm"
@@ -482,11 +537,19 @@
                                         </a>
                                     </div>
                                 <?php else: ?>
-                                    <a href="<?= esc($doc['url_generar']) ?>"
-                                       class="btn btn-generar btn-sm"
-                                       target="_blank">
-                                        <i class="fas fa-magic me-1"></i>Generar Documento
-                                    </a>
+                                    <div class="btn-group-vertical gap-1" role="group">
+                                        <a href="<?= esc($doc['url_generar']) ?>"
+                                           class="btn btn-generar btn-sm"
+                                           target="_blank">
+                                            <i class="fas fa-magic me-1"></i>Generar
+                                        </a>
+                                        <button class="btn-toggle-exclusion"
+                                                data-tipo="<?= esc($doc['tipo']) ?>"
+                                                data-cliente="<?= esc($cliente['id_cliente']) ?>"
+                                                title="Marcar como No Aplica">
+                                            <i class="fas fa-ban me-1"></i>No Aplica
+                                        </button>
+                                    </div>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -586,6 +649,46 @@
 
         // Búsqueda global de DataTable también funciona
         $('.dataTables_filter input').attr('placeholder', 'Buscar en toda la tabla...');
+
+        // Toggle exclusión (No Aplica)
+        $(document).on('click', '.btn-toggle-exclusion', function() {
+            var btn = $(this);
+            var tipo = btn.data('tipo');
+            var cliente = btn.data('cliente');
+            var esReactivar = btn.hasClass('active');
+
+            var mensaje = esReactivar
+                ? 'Reactivar este documento?'
+                : 'Marcar como No Aplica?';
+
+            if (esReactivar) {
+                // Reactivar directo
+                enviarToggle(tipo, cliente, '');
+            } else {
+                // Pedir motivo opcional
+                var motivo = prompt('Motivo (opcional):') || '';
+                enviarToggle(tipo, cliente, motivo);
+            }
+        });
+
+        function enviarToggle(tipo, cliente, motivo) {
+            $.post('<?= base_url('documentos-sst/toggle-exclusion') ?>', {
+                tipo_documento: tipo,
+                id_cliente: cliente,
+                motivo: motivo,
+                '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+            })
+            .done(function(resp) {
+                if (resp.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + resp.message);
+                }
+            })
+            .fail(function() {
+                alert('Error de conexión');
+            });
+        }
     });
     </script>
 </body>
