@@ -6994,7 +6994,7 @@ Se debe generar acta que registre:
                 ->select('version, updated_at, estado, id_documento')
                 ->where('tipo_documento', $tipo)
                 ->where('id_cliente', $idCliente)
-                ->whereIn('estado', ['borrador', 'generado', 'aprobado'])
+                ->whereIn('estado', ['borrador', 'generado', 'en_revision', 'pendiente_firma', 'aprobado', 'firmado'])
                 ->orderBy('updated_at', 'DESC')
                 ->get()
                 ->getRow();
