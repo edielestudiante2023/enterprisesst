@@ -1085,6 +1085,14 @@
                 }
             });
 
+            // Auto-submit al cambiar el año (si hay cliente seleccionado)
+            $('#anio').on('change', function() {
+                var cliente = $('#cliente').val();
+                if (cliente) {
+                    $('#filterForm').submit();
+                }
+            });
+
             // Generar tarjetas de años dinámicamente
             function generateYearCards() {
                 if (!table) return;
