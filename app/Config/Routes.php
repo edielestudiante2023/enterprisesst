@@ -1124,6 +1124,7 @@ $routes->get('/documentos/marco-normativo-dashboard', 'DocumentosSSTController::
 $routes->get('/documentos/marco-normativo/(:segment)', 'DocumentosSSTController::getMarcoNormativo/$1');
 $routes->post('/documentos/marco-normativo/guardar', 'DocumentosSSTController::guardarMarcoNormativo');
 $routes->post('/documentos/marco-normativo/consultar-ia', 'DocumentosSSTController::consultarMarcoNormativoIA');
+$routes->post('/documentos/reportar-norma-derogada', 'DocumentosSSTController::reportarNormaDerogada');
 
 // Dashboard de gestión de documentos SST por cliente
 $routes->get('/documentos-sst/lista/(:num)', 'DocumentosSSTController::listaDocumentos/$1');
@@ -1356,6 +1357,7 @@ $routes->get('/actas/comite/(:num)/editar-miembro/(:num)', 'ActasController::edi
 $routes->post('/actas/comite/(:num)/actualizar-miembro/(:num)', 'ActasController::actualizarMiembro/$1/$2');
 $routes->post('/actas/miembro/(:num)/retirar', 'ActasController::retirarMiembro/$1');
 $routes->post('/actas/miembro/(:num)/reenviar-acceso', 'ActasController::reenviarAccesoMiembro/$1');
+$routes->post('/actas/comite/(:num)/importar-miembros', 'ActasController::importarMiembrosComite/$1');
 
 // Actas - Consultor
 $routes->get('/actas/comite/(:num)/preparar-reunion', 'ActasController::prepararReunion/$1');

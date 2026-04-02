@@ -2,31 +2,60 @@
 
 namespace App\Libraries;
 
+use App\Models\NormaDerogadaModel;
+
 /**
  * Fuente única de verdad para vigencia normativa SST Colombia.
  * Usado por IADocumentacionService y MarcoNormativoService al construir prompts de Marco Legal.
  *
- * Cuando una nueva norma derogue a otra, actualizar SOLO este archivo.
+ * Las normas derogadas se leen de tbl_normas_derogadas (alimentada por consultores desde la UI).
  */
 class NormasVigentes
 {
+    /** Cache estático para evitar queries repetidas en la misma request */
+    private static ?array $normasCache = null;
+
+    /**
+     * Carga normas derogadas desde BD (con cache por request)
+     */
+    private static function cargarNormas(): array
+    {
+        if (self::$normasCache === null) {
+            $model = new NormaDerogadaModel();
+            self::$normasCache = $model->getActivas();
+        }
+        return self::$normasCache;
+    }
+
+    /**
+     * Limpia el cache (llamar después de insertar una nueva norma)
+     */
+    public static function limpiarCache(): void
+    {
+        self::$normasCache = null;
+    }
+
     /**
      * Instrucción de vigencia para inyectar en cualquier prompt de Marco Legal.
-     * Incluye lista negra de normas derogadas/compiladas.
+     * Construida dinámicamente desde tbl_normas_derogadas.
      */
     public static function instruccionVigencia(): string
     {
+        $normas = self::cargarNormas();
+
+        $listaNegra = '';
+        foreach ($normas as $n) {
+            $listaNegra .= "- {$n['norma_derogada']}: derogada/reemplazada por {$n['norma_reemplazo']}.\n";
+        }
+
         return
             "\n\n=== INSTRUCCIÓN CRÍTICA DE VIGENCIA NORMATIVA ===\n" .
             "Año de referencia: " . date('Y') . ".\n" .
             "SOLO incluye normas VIGENTES en Colombia a la fecha actual.\n" .
             "NUNCA cites como vigentes normas derogadas o compiladas.\n" .
             "Normas que NO debes citar como vigentes independientes:\n" .
-            "- Decreto 1443 de 2014: fue compilado en el Decreto 1072 de 2015. Cita únicamente el Decreto 1072 de 2015.\n" .
-            "- Resolución 1111 de 2017: derogada por Resolución 0312 de 2019.\n" .
-            "- Resolución 652 de 2012: derogada por Resolución 3461 de 2025.\n" .
-            "- Resolución 1356 de 2012: derogada por Resolución 3461 de 2025.\n" .
-            "Nota importante: La Ley 1010 de 2006 sigue vigente pero fue modificada por la Ley 2209 de 2022; menciona ambas cuando sea relevante.\n";
+            $listaNegra .
+            "SOLO incluye normas directamente relacionadas con el tema del documento. NO incluyas normas de temas tangenciales.\n";
     }
 
     /**

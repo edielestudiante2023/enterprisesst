@@ -1679,6 +1679,168 @@ class ActasController extends BaseController
     }
 
     /**
+     * Importar miembros desde Comités Elecciones al comité de Actas
+     */
+    public function importarMiembrosComite(int $idComite)
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->back()->with('error', 'Petición no válida');
+        }
+
+        $comite = $this->comiteModel->find($idComite);
+        if (!$comite) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Comité no encontrado']);
+        }
+
+        $idCliente = $comite['id_cliente'];
+        $tipoComite = strtoupper($comite['tipo_comite'] ?? '');
+        $db = \Config\Database::connect();
+
+        // Buscar proceso electoral completado para este cliente y tipo de comité
+        $proceso = $db->table('tbl_procesos_electorales')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_comite', $tipoComite)
+            ->where('estado', 'completado')
+            ->orderBy('fecha_completado', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        if (!$proceso) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No se encontró un proceso electoral completado para este tipo de comité'
+            ]);
+        }
+
+        // Obtener candidatos elegidos y designados
+        $candidatos = $db->table('tbl_candidatos_comite')
+            ->where('id_proceso', $proceso['id_proceso'])
+            ->whereIn('estado', ['elegido', 'designado'])
+            ->get()
+            ->getResultArray();
+
+        if (empty($candidatos)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No hay candidatos elegidos/designados en el proceso electoral'
+            ]);
+        }
+
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($idCliente);
+        $userModel = new UserModel();
+
+        $importados = 0;
+        $usuariosCreados = 0;
+        $yaExistian = 0;
+        $sinEmail = 0;
+        $erroresEmail = [];
+
+        foreach ($candidatos as $candidato) {
+            $nombreCompleto = trim(($candidato['nombres'] ?? '') . ' ' . ($candidato['apellidos'] ?? ''));
+            $numDocumento = $candidato['documento_identidad'] ?? '';
+
+            // Verificar si ya existe en tbl_comite_miembros por documento + comité
+            $existeMiembro = $this->miembroModel
+                ->where('id_comite', $idComite)
+                ->where('numero_documento', $numDocumento)
+                ->first();
+
+            if ($existeMiembro) {
+                $yaExistian++;
+                continue;
+            }
+
+            // Insertar miembro
+            $dataMiembro = [
+                'id_comite'        => $idComite,
+                'id_cliente'       => $idCliente,
+                'nombre_completo'  => $nombreCompleto,
+                'tipo_documento'   => $candidato['tipo_documento'] ?? 'CC',
+                'numero_documento' => $numDocumento,
+                'cargo'            => $candidato['cargo'] ?? '',
+                'area_dependencia' => $candidato['area'] ?? '',
+                'email'            => $candidato['email'] ?? '',
+                'telefono'         => $candidato['telefono'] ?? '',
+                'representacion'   => $candidato['representacion'] ?? '',
+                'tipo_miembro'     => $candidato['tipo_plaza'] ?? 'principal',
+                'rol_comite'       => 'miembro',
+                'estado'           => 'activo',
+                'fecha_ingreso'    => date('Y-m-d'),
+            ];
+
+            $idMiembro = $this->miembroModel->insert($dataMiembro, true);
+
+            if (!$idMiembro) {
+                continue;
+            }
+
+            $importados++;
+
+            // Crear usuario si tiene email
+            $emailCandidato = trim($candidato['email'] ?? '');
+            if (empty($emailCandidato)) {
+                $sinEmail++;
+                continue;
+            }
+
+            $existeUsuario = $userModel->findByEmail($emailCandidato);
+            if ($existeUsuario) {
+                continue;
+            }
+
+            $passwordTemp = $this->generarPasswordSeguro();
+
+            $datosUsuario = [
+                'email'           => $emailCandidato,
+                'password'        => $passwordTemp,
+                'nombre_completo' => $nombreCompleto,
+                'tipo_usuario'    => 'miembro',
+                'id_entidad'      => $idCliente,
+                'estado'          => 'activo',
+            ];
+
+            $idUsuario = $userModel->createUser($datosUsuario);
+
+            if ($idUsuario) {
+                $usuariosCreados++;
+
+                $emailEnviado = $this->enviarCredencialesMiembro(
+                    $emailCandidato,
+                    $nombreCompleto,
+                    $passwordTemp,
+                    $cliente['nombre_cliente'] ?? 'la empresa',
+                    $comite['tipo_nombre'] ?? 'Comité SST'
+                );
+
+                if (!$emailEnviado) {
+                    $erroresEmail[] = $emailCandidato;
+                }
+            }
+        }
+
+        $mensaje = "{$importados} miembros importados, {$usuariosCreados} usuarios creados";
+        if ($yaExistian > 0) {
+            $mensaje .= ", {$yaExistian} ya existían";
+        }
+        if ($sinEmail > 0) {
+            $mensaje .= ", {$sinEmail} sin email (no se creó usuario)";
+        }
+        if (!empty($erroresEmail)) {
+            $mensaje .= ". Error enviando email a: " . implode(', ', $erroresEmail);
+        }
+
+        return $this->response->setJSON([
+            'success'         => true,
+            'message'         => $mensaje,
+            'importados'      => $importados,
+            'usuarios_creados' => $usuariosCreados,
+            'ya_existian'     => $yaExistian,
+            'sin_email'       => $sinEmail,
+        ]);
+    }
+
+    /**
      * Obtener imagen de firma de un asistente
      */
     public function firmaImagen(int $idAsistente)

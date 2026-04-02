@@ -359,84 +359,144 @@ ADVERTENCIAS:
      */
     protected function llamarAPIWebSearch(string $promptJson, string $nombreSeccion): array
     {
+        $startTotal = microtime(true);
         $prompts = json_decode($promptJson, true);
+        if (!$prompts) {
+            return ['success' => false, 'error' => 'Prompt JSON inválido'];
+        }
 
         $instruccionVigencia = \App\Libraries\NormasVigentes::instruccionVigencia();
 
-        // Intentar primero con la Responses API (web search en tiempo real)
-        $modelos = ['gpt-4o-search-preview', 'gpt-4o-mini-search-preview'];
+        // Modelo configurable desde .env (evita hardcodear modelos que OpenAI puede deprecar)
+        $modelo = env('OPENAI_MODEL_WEBSEARCH', $this->model);
 
-        foreach ($modelos as $modelo) {
-            $data = [
-                'model' => $modelo,
-                'tools' => [['type' => 'web_search_preview']],
-                'input' => [
-                    ['role' => 'system', 'content' => $prompts['system']],
-                    ['role' => 'user',   'content' => $prompts['user'] . $instruccionVigencia]
-                ]
-            ];
+        $data = [
+            'model' => $modelo,
+            'tools' => [['type' => 'web_search_preview']],
+            'input' => [
+                ['role' => 'system', 'content' => $prompts['system']],
+                ['role' => 'user',   'content' => $prompts['user'] . $instruccionVigencia]
+            ]
+        ];
 
-            $ch = curl_init('https://api.openai.com/v1/responses');
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST           => true,
-                CURLOPT_HTTPHEADER     => [
-                    'Content-Type: application/json',
-                    'Authorization: Bearer ' . $this->apiKey
-                ],
-                CURLOPT_POSTFIELDS     => json_encode($data),
-                CURLOPT_TIMEOUT        => 90,
-                CURLOPT_SSL_VERIFYPEER => false
-            ]);
+        $ch = curl_init('https://api.openai.com/v1/responses');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $this->apiKey
+            ],
+            CURLOPT_POSTFIELDS     => json_encode($data),
+            CURLOPT_TIMEOUT        => 120,
+            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
 
-            $response = curl_exec($ch);
-            $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
+        $response = curl_exec($ch);
+        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
 
-            if ($curlError) {
-                log_message('error', "WebSearch [{$modelo}] curl error: {$curlError}");
-                continue;
-            }
+        $elapsed = round(microtime(true) - $startTotal, 2);
 
-            $result = json_decode($response, true);
+        if ($curlError) {
+            log_message('error', "[WebSearch] [{$modelo}] CURL error en {$elapsed}s: {$curlError}");
+            return $this->fallbackMarcoLegal($prompts, $instruccionVigencia, $startTotal);
+        }
 
-            if ($httpCode !== 200) {
-                $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
-                log_message('warning', "WebSearch [{$modelo}] falló ({$httpCode}): {$errorMsg} — intentando siguiente modelo");
-                continue;
-            }
+        $result = json_decode($response, true);
 
-            // Parsear respuesta Responses API
-            if (!empty($result['output'])) {
-                foreach ($result['output'] as $item) {
-                    if ($item['type'] === 'message' && !empty($item['content'])) {
-                        foreach ($item['content'] as $part) {
-                            if ($part['type'] === 'output_text' && !empty($part['text'])) {
-                                log_message('info', "WebSearch marco legal: OK con modelo {$modelo}");
-                                return [
-                                    'success'   => true,
-                                    'contenido' => trim($part['text']),
-                                    'tokens'    => $result['usage']['total_tokens'] ?? 0
-                                ];
-                            }
+        if ($httpCode !== 200) {
+            $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
+            log_message('error', "[WebSearch] [{$modelo}] HTTP {$httpCode} en {$elapsed}s: {$errorMsg}");
+            return $this->fallbackMarcoLegal($prompts, $instruccionVigencia, $startTotal);
+        }
+
+        // Parsear respuesta Responses API
+        if (!empty($result['output'])) {
+            foreach ($result['output'] as $item) {
+                if ($item['type'] === 'message' && !empty($item['content'])) {
+                    foreach ($item['content'] as $part) {
+                        if ($part['type'] === 'output_text' && !empty($part['text'])) {
+                            log_message('info', "[WebSearch] OK con {$modelo} en {$elapsed}s");
+                            return [
+                                'success'   => true,
+                                'contenido' => trim($part['text']),
+                                'tokens'    => $result['usage']['total_tokens'] ?? 0
+                            ];
                         }
                     }
                 }
             }
-
-            log_message('warning', "WebSearch [{$modelo}]: respuesta inesperada, intentando siguiente");
         }
 
-        // Fallback: Chat Completions con gpt-4o-mini + instrucción de vigencia estática
-        log_message('warning', "WebSearch: ambos modelos fallaron, usando fallback gpt-4o-mini con normas estáticas");
+        log_message('error', "[WebSearch] [{$modelo}] Respuesta inesperada en {$elapsed}s, usando fallback");
+        return $this->fallbackMarcoLegal($prompts, $instruccionVigencia, $startTotal);
+    }
 
-        $promptFallback = json_encode([
-            'system' => $prompts['system'],
-            'user'   => $prompts['user'] . $instruccionVigencia . \App\Libraries\NormasVigentes::listaFallback()
+    /**
+     * Fallback para Marco Legal: Chat Completions estándar + normas estáticas.
+     * Separado para evitar recursión (llamarAPI detecta "marco" y redirige a llamarAPIWebSearch).
+     */
+    protected function fallbackMarcoLegal(array $prompts, string $instruccionVigencia, float $startTotal): array
+    {
+        log_message('warning', "[WebSearch] Usando fallback Chat Completions con normas estáticas");
+
+        $data = [
+            'model'       => $this->model,
+            'messages'    => [
+                ['role' => 'system', 'content' => $prompts['system']],
+                ['role' => 'user',   'content' => $prompts['user'] . $instruccionVigencia . \App\Libraries\NormasVigentes::listaFallback()]
+            ],
+            'temperature' => $this->temperature,
+            'max_tokens'  => 2000
+        ];
+
+        $ch = curl_init($this->apiUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $this->apiKey
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT    => 120,
+            CURLOPT_SSL_VERIFYPEER => false
         ]);
 
-        return $this->llamarAPI($promptFallback, $nombreSeccion);
+        $response = curl_exec($ch);
+        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error     = curl_error($ch);
+        curl_close($ch);
+
+        $totalElapsed = round(microtime(true) - $startTotal, 2);
+
+        if ($error) {
+            log_message('error', "[WebSearch fallback] CURL error en {$totalElapsed}s: {$error}");
+            return ['success' => false, 'error' => "Error de conexión: {$error}"];
+        }
+
+        $result = json_decode($response, true);
+
+        if ($httpCode !== 200) {
+            $errorMsg = $result['error']['message'] ?? 'Error HTTP ' . $httpCode;
+            log_message('error', "[WebSearch fallback] HTTP {$httpCode} en {$totalElapsed}s: {$errorMsg}");
+            return ['success' => false, 'error' => $errorMsg];
+        }
+
+        if (isset($result['choices'][0]['message']['content'])) {
+            log_message('info', "[WebSearch fallback] OK en {$totalElapsed}s");
+            return [
+                'success'  => true,
+                'contenido' => trim($result['choices'][0]['message']['content']),
+                'tokens'   => $result['usage']['total_tokens'] ?? 0
+            ];
+        }
+
+        log_message('error', "[WebSearch fallback] Respuesta inesperada en {$totalElapsed}s");
+        return ['success' => false, 'error' => 'Respuesta inesperada de la API'];
     }
 
     /**
