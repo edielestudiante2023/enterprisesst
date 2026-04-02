@@ -594,9 +594,9 @@
             </div>
         </div>
 
-        <!-- Tarjetas de Programa / Fuente (clickeables) -->
+        <!-- Tarjetas de Fuente de Actividad (clickeables) -->
         <div class="section-title">
-            <i class="fas fa-project-diagram"></i> Filtrar por Programa
+            <i class="fas fa-project-diagram"></i> Filtrar por Fuente de la Actividad
         </div>
         <div class="row mb-4" id="programaCards">
             <!-- Se generarán dinámicamente con JavaScript -->
