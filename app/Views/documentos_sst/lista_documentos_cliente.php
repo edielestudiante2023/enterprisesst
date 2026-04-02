@@ -353,20 +353,17 @@
                     </label>
                     <select id="filtroCategoria" class="form-select">
                         <option value="">Todas las categorías</option>
-                        <option value="Requisitos Legales y Básicos">Requisitos Legales y Básicos</option>
-                        <option value="Políticas de SST">Políticas de SST</option>
-                        <option value="Planificación">Planificación</option>
-                        <option value="Comunicación">Comunicación</option>
-                        <option value="Adquisiciones">Adquisiciones</option>
-                        <option value="Gestión del Cambio">Gestión del Cambio</option>
-                        <option value="Control Documental">Control Documental</option>
-                        <option value="Promoción y Prevención">Promoción y Prevención</option>
-                        <option value="Investigación de Incidentes">Investigación de Incidentes</option>
-                        <option value="Identificación de Peligros">Identificación de Peligros</option>
-                        <option value="Programas de Vigilancia">Programas de Vigilancia</option>
-                        <option value="Comités y Brigadas">Comités y Brigadas</option>
-                        <option value="Actas de Constitución">Actas de Constitución</option>
-                        <option value="Actas de Recomposición">Actas de Recomposición</option>
+                        <?php
+                            $categorias = array_unique(array_column($documentos, 'categoria'));
+                            sort($categorias);
+                            foreach ($categorias as $cat):
+                                if ($cat):
+                        ?>
+                            <option value="<?= esc($cat) ?>"><?= esc($cat) ?></option>
+                        <?php
+                                endif;
+                            endforeach;
+                        ?>
                     </select>
                 </div>
 
@@ -543,22 +540,22 @@
             allowClear: true
         });
 
-        // Filtro por Categoría
+        // Filtro por Categoría (regex exacto)
         $('#filtroCategoria').on('change', function() {
             var valor = $(this).val();
-            table.column(1).search(valor).draw();
+            table.column(1).search(valor ? '^' + $.fn.dataTable.util.escapeRegex(valor) + '$' : '', true, false).draw();
         });
 
-        // Filtro por Tipo
+        // Filtro por Tipo (regex exacto)
         $('#filtroTipo').on('change', function() {
             var valor = $(this).val();
-            table.column(3).search(valor).draw();
+            table.column(3).search(valor ? '^' + $.fn.dataTable.util.escapeRegex(valor) + '$' : '', true, false).draw();
         });
 
-        // Filtro por Estado
+        // Filtro por Estado (regex exacto para evitar "Generado" matchee "No Generado")
         $('#filtroEstado').on('change', function() {
             var valor = $(this).val();
-            table.column(4).search(valor).draw();
+            table.column(4).search(valor ? '^' + $.fn.dataTable.util.escapeRegex(valor) + '$' : '', true, false).draw();
         });
 
         // Filtro por Numeral (búsqueda en tiempo real)
