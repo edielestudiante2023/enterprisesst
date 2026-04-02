@@ -13,6 +13,9 @@ use CodeIgniter\Router\RouteCollection;
 // Servir archivos desde UPLOADS_PATH (fuera de public/)
 $routes->get('serve-file/(.+)', 'FileServerController::serve/$1');
 
+// Quick Access Dashboard
+$routes->get('/quick-access', 'QuickAccessDashboardController::index');
+
 $routes->get('/', 'AuthController::login');
 $routes->get('/login', 'AuthController::login');
 $routes->post('/loginPost', 'AuthController::loginPost');
