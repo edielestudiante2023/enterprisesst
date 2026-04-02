@@ -378,6 +378,76 @@ class MetricasInformeService
             'desglose_plan_trabajo'    => $this->getDesglosePlanTrabajo($idCliente, $anio),
             'desglose_capacitacion'    => $this->getDesgloseCapacitacion($idCliente, $anio),
             'desglose_pendientes'      => $this->getDesglosePendientes($idCliente, $anio),
+            // Documentos cargados en el periodo
+            'documentos_cargados_raw'  => $this->getDocumentosCargados($idCliente, $fechaDesde, $fechaHasta),
         ];
+    }
+
+    /**
+     * Desglose PTA del periodo: actividades programadas para el periodo y su estado
+     */
+    public function getDesglosePtaPeriodo(int $idCliente, string $desde, string $hasta): array
+    {
+        $programadas = $this->db->table('tbl_pta_cliente')
+            ->select("estado_actividad, COUNT(*) as cantidad")
+            ->where('id_cliente', $idCliente)
+            ->where('fecha_propuesta >=', $desde)
+            ->where('fecha_propuesta <=', $hasta)
+            ->groupBy('estado_actividad')
+            ->get()
+            ->getResultArray();
+
+        $total = 0;
+        $cerradas = 0;
+        $abiertas = 0;
+        foreach ($programadas as $p) {
+            $cant = intval($p['cantidad']);
+            $total += $cant;
+            if (in_array($p['estado_actividad'], ['CERRADA', 'CERRADA SIN EJECUCIÓN', 'CERRADA POR FIN CONTRATO'])) {
+                $cerradas += $cant;
+            } elseif ($p['estado_actividad'] === 'ABIERTA') {
+                $abiertas += $cant;
+            }
+        }
+
+        return [
+            'total_periodo' => $total,
+            'cerradas_periodo' => $cerradas,
+            'abiertas_periodo' => $abiertas,
+            'desglose' => $programadas,
+        ];
+    }
+
+    /**
+     * Capacitaciones ejecutadas en el periodo con detalle
+     */
+    public function getCapacitacionesEjecutadas(int $idCliente, string $desde, string $hasta): array
+    {
+        return $this->db->table('tbl_cronog_capacitacion')
+            ->select('fecha_programada, fecha_de_realizacion, nombre_capacitacion, objetivo_capacitacion, perfil_de_asistentes, nombre_del_capacitador, horas_de_duracion_de_la_capacitacion, numero_de_asistentes_a_capacitacion, numero_total_de_personas_programadas, porcentaje_cobertura, promedio_de_calificaciones, observaciones')
+            ->where('id_cliente', $idCliente)
+            ->where('estado', 'EJECUTADA')
+            ->where('fecha_programada >=', $desde)
+            ->where('fecha_programada <=', $hasta)
+            ->orderBy('fecha_programada', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    /**
+     * Documentos cargados en tbl_reporte para un cliente en el periodo
+     */
+    public function getDocumentosCargados(int $idCliente, string $fechaDesde, string $fechaHasta): array
+    {
+        return $this->db->table('tbl_reporte')
+            ->select('tbl_reporte.titulo_reporte, tbl_reporte.created_at, tbl_reporte.enlace, detail_report.detail_report, report_type_table.report_type')
+            ->join('detail_report', 'detail_report.id_detailreport = tbl_reporte.id_detailreport', 'left')
+            ->join('report_type_table', 'report_type_table.id_report_type = tbl_reporte.id_report_type', 'left')
+            ->where('tbl_reporte.id_cliente', $idCliente)
+            ->where('tbl_reporte.created_at >=', $fechaDesde . ' 00:00:00')
+            ->where('tbl_reporte.created_at <=', $fechaHasta . ' 23:59:59')
+            ->orderBy('tbl_reporte.created_at', 'ASC')
+            ->get()
+            ->getResultArray();
     }
 }

@@ -49,6 +49,14 @@ class InformeAvancesModel extends Model
             ->findAll();
     }
 
+    public function getAll()
+    {
+        return $this->select('tbl_informe_avances.*, tbl_clientes.nombre_cliente')
+            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_informe_avances.id_cliente', 'left')
+            ->orderBy('tbl_informe_avances.fecha_hasta', 'DESC')
+            ->findAll();
+    }
+
     public function getAllPendientes()
     {
         return $this->select('tbl_informe_avances.*, tbl_clientes.nombre_cliente')

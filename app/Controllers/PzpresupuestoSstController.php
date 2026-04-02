@@ -754,6 +754,42 @@ class PzpresupuestoSstController extends BaseController
     }
 
     /**
+     * AJAX: Ejecutar en lote - copiar presupuestado → ejecutado para items × meses seleccionados
+     */
+    public function ejecutarLote()
+    {
+        $idPresupuesto = $this->request->getPost('id_presupuesto');
+        $items = json_decode($this->request->getPost('items'), true) ?? [];
+        $meses = json_decode($this->request->getPost('meses'), true) ?? [];
+
+        if (!$idPresupuesto || empty($items) || empty($meses)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Seleccione ítems y meses']);
+        }
+
+        $items = array_map('intval', $items);
+        $meses = array_map('intval', $meses);
+        $actualizados = 0;
+
+        foreach ($items as $idItem) {
+            foreach ($meses as $mes) {
+                $detalle = $this->db->table('tbl_presupuesto_detalle')
+                    ->where('id_item', $idItem)
+                    ->where('mes', $mes)
+                    ->get()->getRowArray();
+
+                if ($detalle && floatval($detalle['presupuestado']) > 0) {
+                    $this->db->table('tbl_presupuesto_detalle')
+                        ->where('id_detalle', $detalle['id_detalle'])
+                        ->update(['ejecutado' => $detalle['presupuestado']]);
+                    $actualizados++;
+                }
+            }
+        }
+
+        return $this->response->setJSON(['success' => true, 'actualizados' => $actualizados]);
+    }
+
+    /**
      * AJAX: Actualizar ítem (actividad/descripción)
      */
     public function actualizarItem()
