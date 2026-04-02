@@ -17,10 +17,10 @@ if ($env === 'production') {
     $db->options(MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, false);
     $db->real_connect(
         'db-mysql-cycloid-do-user-18794030-0.h.db.ondigitalocean.com',
-        'cycloid_userdb', $pass, 'propiedad_horizontal', 25060, NULL, MYSQLI_CLIENT_SSL
+        'cycloid_userdb', $pass, 'empresas_sst', 25060, NULL, MYSQLI_CLIENT_SSL
     );
 } else {
-    $db = new mysqli('localhost', 'root', '', 'propiedad_horizontal');
+    $db = new mysqli('localhost', 'root', '', 'empresas_sst');
 }
 
 if ($db->connect_error) { echo "ERROR conexión: {$db->connect_error}\n"; exit(1); }

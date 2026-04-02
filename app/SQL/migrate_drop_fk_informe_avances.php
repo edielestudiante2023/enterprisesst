@@ -14,7 +14,7 @@ $configs = [
         'host' => 'localhost',
         'user' => 'root',
         'pass' => '',
-        'db'   => 'propiedad_horizontal',
+        'db'   => 'empresas_sst',
         'ssl'  => false,
     ],
     'production' => [
@@ -22,7 +22,7 @@ $configs = [
         'port' => 25060,
         'user' => 'cycloid_userdb',
         'pass' => getenv('DB_PROD_PASS') ?: '',
-        'db'   => 'propiedad_horizontal',
+        'db'   => 'empresas_sst',
         'ssl'  => true,
     ],
 ];
