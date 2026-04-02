@@ -450,6 +450,132 @@
     </tr>
 </table>
 
+<!-- 6 MODULOS ADICIONALES -->
+<?php
+    $feData = $desglose['firma_electronica'] ?? [];
+    $dsData = $desglose['documentos_sst'] ?? [];
+    $indData = $desglose['indicadores_sst'] ?? [];
+    $acData = $desglose['acciones_correctivas'] ?? [];
+    $atData = $desglose['actas_comite'] ?? [];
+    $insData = $desglose['inspecciones'] ?? [];
+?>
+
+<?php if (!empty($feData) && ($feData['total_solicitudes'] ?? 0) > 0): ?>
+<div class="section-title">FIRMA ELECTRONICA</div>
+<table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
+    <tr>
+        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= $feData['total_solicitudes'] ?></div><div style="font-size:7px;color:#666;">Solicitudes</div></td>
+        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#198754;"><?= $feData['firmados'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Firmados</div></td>
+        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#ffc107;"><?= $feData['pendientes'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Pendientes</div></td>
+        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#dc3545;"><?= $feData['expirados'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Expirados</div></td>
+    </tr>
+</table>
+<?php endif; ?>
+
+<?php if (!empty($dsData) && ($dsData['total_creados'] ?? 0) > 0): ?>
+<div class="section-title">DOCUMENTOS SST CREADOS</div>
+<table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
+    <tr>
+        <td style="border:1px solid #ddd; padding:8px; width:50%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= $dsData['total_creados'] ?></div><div style="font-size:7px;color:#666;">Creados en periodo</div></td>
+        <td style="border:1px solid #ddd; padding:8px; width:50%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#198754;"><?= $dsData['aprobados_periodo'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Aprobados</div></td>
+    </tr>
+    <?php if (!empty($dsData['por_tipo'])): ?>
+    <tr><td colspan="2" style="border:1px solid #ddd; padding:6px;">
+        <?php foreach ($dsData['por_tipo'] as $t): ?>
+            <span style="font-size:7px;display:inline-block;margin-right:8px;"><strong><?= $t['cantidad'] ?></strong> <?= esc(str_replace('_',' ',$t['tipo_documento'] ?? '')) ?></span>
+        <?php endforeach; ?>
+    </td></tr>
+    <?php endif; ?>
+</table>
+<?php endif; ?>
+
+<?php if (!empty($indData) && ($indData['total_activos'] ?? 0) > 0): ?>
+<div class="section-title">INDICADORES SST</div>
+<table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
+    <tr>
+        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= $indData['total_activos'] ?></div><div style="font-size:7px;color:#666;">Activos</div></td>
+        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= $indData['medidos_periodo'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Medidos</div></td>
+        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#198754;"><?= $indData['cumplen_meta'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Cumplen meta</div></td>
+        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= number_format($indData['pct_cumplimiento'] ?? 0, 1) ?>%</div><div style="font-size:7px;color:#666;">Cumplimiento</div></td>
+    </tr>
+</table>
+<?php endif; ?>
+
+<?php if (!empty($acData) && ($acData['acciones_total'] ?? 0) > 0): ?>
+<?php $kp = $acData['kpis'] ?? []; ?>
+<div class="section-title">ACCIONES CORRECTIVAS</div>
+<table style="width:100%; border-collapse:collapse; margin-bottom:4px;">
+    <tr>
+        <td style="border:1px solid #ddd; padding:6px; width:25%; text-align:center;"><div style="font-size:16px;font-weight:bold;"><?= $kp['cierre_a_tiempo'] ?? 0 ?>%</div><div style="font-size:7px;color:#666;">Cierre a tiempo (85%)</div></td>
+        <td style="border:1px solid #ddd; padding:6px; width:25%; text-align:center;"><div style="font-size:16px;font-weight:bold;"><?= $kp['efectividad'] ?? 0 ?>%</div><div style="font-size:7px;color:#666;">Efectividad (80%)</div></td>
+        <td style="border:1px solid #ddd; padding:6px; width:25%; text-align:center;"><div style="font-size:16px;font-weight:bold;"><?= $kp['dias_promedio'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Dias promedio (30)</div></td>
+        <td style="border:1px solid #ddd; padding:6px; width:25%; text-align:center;"><div style="font-size:16px;font-weight:bold;"><?= $kp['reincidencia'] ?? 0 ?>%</div><div style="font-size:7px;color:#666;">Reincidencia (&le;10%)</div></td>
+    </tr>
+</table>
+<table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
+    <tr>
+        <td style="border:1px solid #ddd; padding:6px; width:33%; text-align:center;"><strong><?= $acData['hallazgos_total'] ?? 0 ?></strong><div style="font-size:7px;color:#666;">Hallazgos</div></td>
+        <td style="border:1px solid #ddd; padding:6px; width:33%; text-align:center;"><strong><?= $acData['acciones_total'] ?? 0 ?></strong><div style="font-size:7px;color:#666;">Acciones</div></td>
+        <td style="border:1px solid #ddd; padding:6px; width:33%; text-align:center;"><strong style="color:#dc3545;"><?= $acData['acciones_vencidas'] ?? 0 ?></strong><div style="font-size:7px;color:#666;">Vencidas</div></td>
+    </tr>
+</table>
+<?php endif; ?>
+
+<?php if (!empty($atData) && (($atData['reuniones_periodo'] ?? 0) > 0 || ($atData['compromisos']['total'] ?? 0) > 0)): ?>
+<div class="section-title">ACTAS DE COMITE</div>
+<table style="width:100%; border-collapse:collapse; margin-bottom:4px;">
+    <tr style="background:#f8f9fa;">
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold;">Comite</td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold; text-align:center;">Reuniones</td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold; text-align:center;">Esperadas</td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold; text-align:center;">Cumplimiento</td>
+    </tr>
+    <?php foreach (($atData['por_comite'] ?? []) as $c): ?>
+    <tr>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px;"><?= esc($c['tipo_comite']) ?></td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; text-align:center;"><?= $c['total_anio'] ?></td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; text-align:center;"><?= $c['esperadas'] ?></td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; text-align:center;"><?= $c['cumplimiento'] ?>%</td>
+    </tr>
+    <?php endforeach; ?>
+</table>
+<?php $comp = $atData['compromisos'] ?? []; if (($comp['total'] ?? 0) > 0): ?>
+<table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
+    <tr>
+        <td style="border:1px solid #ddd; padding:6px; width:25%; text-align:center;"><strong><?= $comp['total'] ?></strong><div style="font-size:7px;color:#666;">Total</div></td>
+        <td style="border:1px solid #ddd; padding:6px; width:25%; text-align:center;"><strong style="color:#198754;"><?= $comp['cumplidos'] ?? 0 ?></strong><div style="font-size:7px;color:#666;">Cumplidos</div></td>
+        <td style="border:1px solid #ddd; padding:6px; width:25%; text-align:center;"><strong style="color:#ffc107;"><?= $comp['pendientes'] ?? 0 ?></strong><div style="font-size:7px;color:#666;">Pendientes</div></td>
+        <td style="border:1px solid #ddd; padding:6px; width:25%; text-align:center;"><strong style="color:#dc3545;"><?= $comp['vencidos'] ?? 0 ?></strong><div style="font-size:7px;color:#666;">Vencidos</div></td>
+    </tr>
+</table>
+<?php endif; ?>
+<?php endif; ?>
+
+<?php if (!empty($insData) && ($insData['total_inspecciones'] ?? 0) > 0): ?>
+<div class="section-title">INSPECCIONES</div>
+<table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
+    <tr>
+        <?php
+        $nombres = ['locativa'=>'Locativa','extintores'=>'Extintores','botiquin'=>'Botiquin','senalizacion'=>'Senalizacion'];
+        $coloresInsp = ['locativa'=>'#0d6efd','extintores'=>'#dc3545','botiquin'=>'#198754','senalizacion'=>'#ffc107'];
+        foreach ($nombres as $k => $n):
+            $v = $insData['por_tipo'][$k] ?? ['total'=>0,'completadas'=>0];
+            if ($v['total'] > 0):
+        ?>
+        <td style="border:1px solid #ddd; padding:6px; text-align:center; border-left:3px solid <?= $coloresInsp[$k] ?>;">
+            <div style="font-size:16px;font-weight:bold;"><?= $v['completadas'] ?>/<?= $v['total'] ?></div>
+            <div style="font-size:7px;color:#666;"><?= $n ?></div>
+        </td>
+        <?php endif; endforeach; ?>
+    </tr>
+</table>
+<?php $hall = $insData['hallazgos'] ?? []; if (($hall['total'] ?? 0) > 0): ?>
+<div style="background:#e8f4fd;padding:6px 10px;border-radius:4px;font-size:8px;margin-bottom:8px;">
+    Hallazgos locativos: <strong><?= $hall['total'] ?></strong> encontrados, <strong><?= $hall['corregidos'] ?? 0 ?></strong> corregidos, <strong><?= $hall['pendientes'] ?? 0 ?></strong> pendientes
+</div>
+<?php endif; ?>
+<?php endif; ?>
+
 <!-- EVOLUCION HISTORICA DEL CLIENTE -->
 <?php if (!empty($quickChartEstandares) || !empty($quickChartPlan)): ?>
 <div class="section-title">EVOLUCION HISTORICA DEL CLIENTE</div>

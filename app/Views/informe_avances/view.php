@@ -146,6 +146,141 @@
             </div>
         </div>
 
+        <!-- 6 MODULOS ADICIONALES -->
+        <?php
+            $desglose = json_decode($informe['metricas_desglose_json'] ?? '{}', true) ?: [];
+            $feData = $desglose['firma_electronica'] ?? [];
+            $dsData = $desglose['documentos_sst'] ?? [];
+            $indData = $desglose['indicadores_sst'] ?? [];
+            $acData = $desglose['acciones_correctivas'] ?? [];
+            $atData = $desglose['actas_comite'] ?? [];
+            $insData = $desglose['inspecciones'] ?? [];
+        ?>
+
+        <?php if (!empty($feData) && ($feData['total_solicitudes'] ?? 0) > 0): ?>
+        <div class="card card-section">
+            <div class="card-header py-3"><i class="fas fa-signature me-2"></i>Firma Electronica</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $feData['total_solicitudes'] ?></div><div class="label">Solicitudes</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value text-success"><?= $feData['firmados'] ?? 0 ?></div><div class="label">Firmados</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value text-warning"><?= $feData['pendientes'] ?? 0 ?></div><div class="label">Pendientes</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value text-danger"><?= $feData['expirados'] ?? 0 ?></div><div class="label">Expirados</div></div></div>
+                </div>
+                <div class="mt-3">
+                    <div class="progress progress-custom"><div class="progress-bar bg-success" style="width:<?= $feData['tasa_firma'] ?? 0 ?>%"><?= number_format($feData['tasa_firma'] ?? 0, 1) ?>% firmados</div></div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($dsData) && ($dsData['total_creados'] ?? 0) > 0): ?>
+        <div class="card card-section">
+            <div class="card-header py-3"><i class="fas fa-file-alt me-2"></i>Documentos SST Creados</div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4"><div class="metric-box"><div class="value"><?= $dsData['total_creados'] ?></div><div class="label">Creados en periodo</div></div></div>
+                    <div class="col-md-4"><div class="metric-box"><div class="value text-success"><?= $dsData['aprobados_periodo'] ?? 0 ?></div><div class="label">Aprobados</div></div></div>
+                </div>
+                <?php if (!empty($dsData['por_tipo'])): ?>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light"><tr><th>Tipo</th><th class="text-center">Cantidad</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($dsData['por_tipo'] as $t): ?>
+                        <tr><td><?= esc(str_replace('_', ' ', $t['tipo_documento'] ?? '')) ?></td><td class="text-center"><?= $t['cantidad'] ?></td></tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($indData) && ($indData['total_activos'] ?? 0) > 0): ?>
+        <div class="card card-section">
+            <div class="card-header py-3"><i class="fas fa-chart-bar me-2"></i>Indicadores SST</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $indData['total_activos'] ?></div><div class="label">Activos</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $indData['medidos_periodo'] ?? 0 ?></div><div class="label">Medidos</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value text-success"><?= $indData['cumplen_meta'] ?? 0 ?></div><div class="label">Cumplen meta</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= number_format($indData['pct_cumplimiento'] ?? 0, 1) ?>%</div><div class="label">Cumplimiento</div></div></div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($acData) && ($acData['acciones_total'] ?? 0) > 0): ?>
+        <div class="card card-section">
+            <div class="card-header py-3"><i class="fas fa-exclamation-triangle me-2"></i>Acciones Correctivas</div>
+            <div class="card-body">
+                <?php $kp = $acData['kpis'] ?? []; ?>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $kp['cierre_a_tiempo'] ?? 0 ?>%</div><div class="label">Cierre a tiempo</div><div class="small text-muted">Meta: 85%</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $kp['efectividad'] ?? 0 ?>%</div><div class="label">Efectividad</div><div class="small text-muted">Meta: 80%</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $kp['dias_promedio'] ?? 0 ?></div><div class="label">Dias promedio</div><div class="small text-muted">Meta: 30</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $kp['reincidencia'] ?? 0 ?>%</div><div class="label">Reincidencia</div><div class="small text-muted">Meta: &le;10%</div></div></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4"><div class="metric-box"><div class="value"><?= $acData['hallazgos_total'] ?? 0 ?></div><div class="label">Hallazgos</div></div></div>
+                    <div class="col-md-4"><div class="metric-box"><div class="value"><?= $acData['acciones_total'] ?? 0 ?></div><div class="label">Acciones</div></div></div>
+                    <div class="col-md-4"><div class="metric-box"><div class="value text-danger"><?= $acData['acciones_vencidas'] ?? 0 ?></div><div class="label">Vencidas</div></div></div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($atData) && (($atData['reuniones_periodo'] ?? 0) > 0 || ($atData['compromisos']['total'] ?? 0) > 0)): ?>
+        <div class="card card-section">
+            <div class="card-header py-3"><i class="fas fa-gavel me-2"></i>Actas de Comite</div>
+            <div class="card-body">
+                <div class="metric-box mb-3" style="display:inline-block;padding:10px 25px;"><div class="value"><?= $atData['reuniones_periodo'] ?? 0 ?></div><div class="label">Reuniones en periodo</div></div>
+                <?php if (!empty($atData['por_comite'])): ?>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light"><tr><th>Comite</th><th class="text-center">Reuniones</th><th class="text-center">Esperadas</th><th class="text-center">Cumplimiento</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($atData['por_comite'] as $c): ?>
+                        <tr><td><?= esc($c['tipo_comite']) ?></td><td class="text-center"><?= $c['total_anio'] ?></td><td class="text-center"><?= $c['esperadas'] ?></td><td class="text-center"><?= $c['cumplimiento'] ?>%</td></tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php endif; ?>
+                <?php $comp = $atData['compromisos'] ?? []; ?>
+                <?php if (($comp['total'] ?? 0) > 0): ?>
+                <div class="row g-3">
+                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $comp['total'] ?></div><div class="label">Total</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value text-success"><?= $comp['cumplidos'] ?? 0 ?></div><div class="label">Cumplidos</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value text-warning"><?= $comp['pendientes'] ?? 0 ?></div><div class="label">Pendientes</div></div></div>
+                    <div class="col-md-3"><div class="metric-box"><div class="value text-danger"><?= $comp['vencidos'] ?? 0 ?></div><div class="label">Vencidos</div></div></div>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($insData) && ($insData['total_inspecciones'] ?? 0) > 0): ?>
+        <div class="card card-section">
+            <div class="card-header py-3"><i class="fas fa-clipboard-check me-2"></i>Inspecciones</div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <?php
+                    $nombres = ['locativa'=>'Locativa','extintores'=>'Extintores','botiquin'=>'Botiquin','senalizacion'=>'Senalizacion'];
+                    $colores = ['locativa'=>'#0d6efd','extintores'=>'#dc3545','botiquin'=>'#198754','senalizacion'=>'#ffc107'];
+                    foreach ($nombres as $k => $n):
+                        $v = $insData['por_tipo'][$k] ?? ['total'=>0,'completadas'=>0];
+                        if ($v['total'] > 0):
+                    ?>
+                    <div class="col-md-3"><div class="metric-box" style="border-left:4px solid <?= $colores[$k] ?>"><div class="value"><?= $v['completadas'] ?>/<?= $v['total'] ?></div><div class="label"><?= $n ?></div></div></div>
+                    <?php endif; endforeach; ?>
+                </div>
+                <?php $hall = $insData['hallazgos'] ?? []; ?>
+                <?php if (($hall['total'] ?? 0) > 0): ?>
+                <div class="alert alert-info mb-0"><i class="fas fa-search me-2"></i>Hallazgos locativos: <strong><?= $hall['total'] ?></strong> encontrados, <strong><?= $hall['corregidos'] ?? 0 ?></strong> corregidos, <strong><?= $hall['pendientes'] ?? 0 ?></strong> pendientes</div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Evolución Histórica -->
         <?php if (!empty($historialEstandares) || !empty($historialPlan)): ?>
         <div class="card card-section">
