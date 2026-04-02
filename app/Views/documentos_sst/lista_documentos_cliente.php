@@ -540,41 +540,48 @@
             allowClear: true
         });
 
-        // Filtro por Categoría (regex exacto)
-        $('#filtroCategoria').on('change', function() {
-            var valor = $(this).val();
-            table.column(1).search(valor ? '^' + $.fn.dataTable.util.escapeRegex(valor) + '$' : '', true, false).draw();
+        // Filtro custom global con $.fn.dataTable.ext.search
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            // data[] contiene el texto visible de cada columna (HTML stripped)
+            var filtroCategoria = $('#filtroCategoria').val() || '';
+            var filtroTipo = $('#filtroTipo').val() || '';
+            var filtroEstado = $('#filtroEstado').val() || '';
+            var filtroNumeral = $('#filtroNumeral').val() || '';
+
+            var categoria = data[1].trim();
+            var tipo = data[3].trim();
+            var estado = data[4].trim();
+            var numeral = data[0].trim();
+
+            // Categoría: match exacto
+            if (filtroCategoria && categoria !== filtroCategoria) return false;
+
+            // Tipo: match exacto
+            if (filtroTipo && tipo !== filtroTipo) return false;
+
+            // Estado: match exacto
+            if (filtroEstado && estado !== filtroEstado) return false;
+
+            // Numeral: match parcial (startsWith)
+            if (filtroNumeral && numeral.indexOf(filtroNumeral) !== 0) return false;
+
+            return true;
         });
 
-        // Filtro por Tipo (regex exacto)
-        $('#filtroTipo').on('change', function() {
-            var valor = $(this).val();
-            table.column(3).search(valor ? '^' + $.fn.dataTable.util.escapeRegex(valor) + '$' : '', true, false).draw();
+        // Redibujar tabla al cambiar cualquier filtro
+        $('#filtroCategoria, #filtroTipo, #filtroEstado').on('change', function() {
+            table.draw();
         });
 
-        // Filtro por Estado (regex exacto para evitar "Generado" matchee "No Generado")
-        $('#filtroEstado').on('change', function() {
-            var valor = $(this).val();
-            table.column(4).search(valor ? '^' + $.fn.dataTable.util.escapeRegex(valor) + '$' : '', true, false).draw();
-        });
-
-        // Filtro por Numeral (búsqueda en tiempo real)
         $('#filtroNumeral').on('keyup', function() {
-            table.column(0).search(this.value).draw();
+            table.draw();
         });
 
         // Limpiar todos los filtros
         $('#btnLimpiarFiltros').on('click', function() {
-            // Limpiar selects
-            $('#filtroCategoria, #filtroTipo, #filtroEstado').val(null).trigger('change');
-
-            // Limpiar input
+            $('#filtroCategoria, #filtroTipo, #filtroEstado').val(null).trigger('change.select2');
             $('#filtroNumeral').val('');
-
-            // Limpiar búsqueda de DataTable
-            table.search('').columns().search('').draw();
-
-            console.log('Filtros limpiados');
+            table.draw();
         });
 
         // Búsqueda global de DataTable también funciona
