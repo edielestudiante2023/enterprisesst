@@ -6972,24 +6972,44 @@ Se debe generar acta que registre:
      */
     public function listaDocumentos(int $idCliente)
     {
-        // Verificar que el cliente existe
         $cliente = $this->clienteModel->find($idCliente);
         if (!$cliente) {
             return redirect()->back()->with('error', 'Cliente no encontrado');
         }
 
-        // Obtener metadata completa de todos los documentos
         $documentosMetadata = $this->getDocumentosMetadata();
 
-        // Para cada documento, verificar si existe versión para este cliente
+        // Cargar exclusiones del cliente
+        $exclusionesRaw = $this->db->table('tbl_doc_exclusiones_cliente')
+            ->select('tipo_documento, motivo')
+            ->where('id_cliente', $idCliente)
+            ->get()
+            ->getResultArray();
+        $exclusiones = array_column($exclusionesRaw, 'motivo', 'tipo_documento');
+
         $documentos = [];
         $generados = 0;
         $noGenerados = 0;
+        $noAplica = 0;
 
         foreach ($documentosMetadata as $metadata) {
             $tipo = $metadata['tipo'];
 
-            // Verificar si existe en la BD
+            // Verificar si está excluido
+            if (isset($exclusiones[$tipo])) {
+                $doc = $metadata;
+                $doc['existe'] = false;
+                $doc['version'] = null;
+                $doc['fecha_modificacion'] = null;
+                $doc['estado_doc'] = 'no_aplica';
+                $doc['motivo_exclusion'] = $exclusiones[$tipo];
+                $doc['url_generar'] = null;
+                $doc['url_ver'] = null;
+                $documentos[] = $doc;
+                $noAplica++;
+                continue;
+            }
+
             $documento = $this->db->table('tbl_documentos_sst')
                 ->select('version, updated_at, estado, id_documento')
                 ->where('tipo_documento', $tipo)
@@ -7001,14 +7021,13 @@ Se debe generar acta que registre:
 
             $existe = ($documento !== null);
 
-            // Preparar datos del documento
             $doc = $metadata;
             $doc['existe'] = $existe;
             $doc['version'] = $documento ? $documento->version : null;
             $doc['fecha_modificacion'] = $documento ? $documento->updated_at : null;
             $doc['estado_doc'] = $documento ? $documento->estado : 'no_generado';
+            $doc['motivo_exclusion'] = null;
 
-            // URLs dinámicas
             try {
                 $instancia = DocumentoSSTFactory::crear($tipo);
                 $doc['url_generar'] = $instancia->getUrlEditor($idCliente);
@@ -7021,7 +7040,6 @@ Se debe generar acta que registre:
 
             $documentos[] = $doc;
 
-            // Contadores
             if ($existe) {
                 $generados++;
             } else {
@@ -7029,20 +7047,70 @@ Se debe generar acta que registre:
             }
         }
 
-        // Calcular métricas
-        $total = count($documentos);
-        $porcentaje = $total > 0 ? round(($generados / $total) * 100, 1) : 0;
+        // Métricas: "No Aplica" no cuenta en el total aplicable
+        $totalAplicable = $generados + $noGenerados;
+        $porcentaje = $totalAplicable > 0 ? round(($generados / $totalAplicable) * 100, 1) : 0;
 
         $data = [
             'cliente' => $cliente,
             'documentos' => $documentos,
-            'total' => $total,
+            'total' => count($documentos),
+            'total_aplicable' => $totalAplicable,
             'generados' => $generados,
             'no_generados' => $noGenerados,
+            'no_aplica' => $noAplica,
             'porcentaje' => $porcentaje
         ];
 
         return view('documentos_sst/lista_documentos_cliente', $data);
+    }
+
+    /**
+     * Toggle exclusión de documento para un cliente (AJAX)
+     */
+    public function toggleExclusionDocumento()
+    {
+        $idCliente = $this->request->getPost('id_cliente');
+        $tipoDocumento = $this->request->getPost('tipo_documento');
+        $motivo = $this->request->getPost('motivo') ?? '';
+
+        if (!$idCliente || !$tipoDocumento) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Faltan parámetros']);
+        }
+
+        // Verificar si ya existe la exclusión
+        $existe = $this->db->table('tbl_doc_exclusiones_cliente')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', $tipoDocumento)
+            ->countAllResults();
+
+        if ($existe > 0) {
+            // Quitar exclusión
+            $this->db->table('tbl_doc_exclusiones_cliente')
+                ->where('id_cliente', $idCliente)
+                ->where('tipo_documento', $tipoDocumento)
+                ->delete();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'accion' => 'habilitado',
+                'message' => 'Documento habilitado nuevamente'
+            ]);
+        } else {
+            // Agregar exclusión
+            $this->db->table('tbl_doc_exclusiones_cliente')->insert([
+                'id_cliente' => $idCliente,
+                'tipo_documento' => $tipoDocumento,
+                'motivo' => $motivo,
+                'created_by' => session()->get('id_usuario')
+            ]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'accion' => 'excluido',
+                'message' => 'Documento marcado como No Aplica'
+            ]);
+        }
     }
 
     /**
