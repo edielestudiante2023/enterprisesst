@@ -141,6 +141,7 @@
                                 <th>Firmantes</th>
                                 <th>Progreso</th>
                                 <th>Estado Firma</th>
+                                <th>Ultima Firma</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
@@ -197,6 +198,13 @@
                                 </td>
                                 <td>
                                     <span class="badge badge-estado <?= $estadoClass ?>"><?= $estadoLabel ?></span>
+                                </td>
+                                <td>
+                                    <?php if (!empty($doc['ultima_firma'])): ?>
+                                        <small><?= date('d/m/Y H:i', strtotime($doc['ultima_firma'])) ?></small>
+                                    <?php else: ?>
+                                        <small class="text-muted">—</small>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="text-center">
                                     <a href="<?= base_url('firma/estado/' . $doc['id_documento']) ?>"
