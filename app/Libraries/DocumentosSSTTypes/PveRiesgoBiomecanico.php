@@ -5,6 +5,9 @@ namespace App\Libraries\DocumentosSSTTypes;
 /**
  * Clase PveRiesgoBiomecanico
  *
+ * Programa Tipo B (3 partes). Gold standard: ProgramaInspecciones.php
+ * Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+ *
  * Implementa la generación del PVE de Riesgo Biomecánico (4.2.3)
  * Este documento se alimenta de:
  * - Actividades PVE Biomecánico del Plan de Trabajo (Fase 1)

@@ -7,6 +7,9 @@ use App\Services\DocumentoConfigService;
 /**
  * Clase PlanObjetivosMetas
  *
+ * Programa Tipo B (3 partes). Gold standard: ProgramaInspecciones.php
+ * Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+ *
  * Implementa la generación del Plan de Objetivos y Metas del SG-SST (Estándar 2.2.1)
  *
  * PARTE 3 del módulo de 3 partes:

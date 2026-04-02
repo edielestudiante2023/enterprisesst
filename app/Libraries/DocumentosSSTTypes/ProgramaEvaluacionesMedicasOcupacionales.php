@@ -7,6 +7,9 @@ use App\Services\DocumentoConfigService;
 /**
  * Clase ProgramaEvaluacionesMedicasOcupacionales
  *
+ * Programa Tipo B (3 partes). Gold standard: ProgramaInspecciones.php
+ * Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+ *
  * Implementa el Programa de Evaluaciones Medicas Ocupacionales
  * para el estandar 3.1.4 de la Resolucion 0312/2019.
  *
