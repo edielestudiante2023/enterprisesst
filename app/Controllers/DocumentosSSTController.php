@@ -7046,328 +7046,72 @@ Se debe generar acta que registre:
     }
 
     /**
-     * Obtiene la metadata completa de todos los documentos disponibles
-     * Incluye: numeral, categoría, nombre, tipo de flujo, etc.
+     * Obtiene la metadata de documentos desde BD (tbl_doc_tipo_configuracion + tbl_doc_plantillas)
      */
     private function getDocumentosMetadata(): array
     {
-        return [
-            // 1.1 - Requisitos Legales y Básicos
-            [
-                'tipo' => 'identificacion_alto_riesgo',
-                'numeral' => '1.1.5',
-                'categoria' => 'Requisitos Legales y Básicos',
-                'nombre' => 'Identificación de Trabajadores de Alto Riesgo',
-                'flujo' => 'Tipo A',
-                'orden' => 1
-            ],
+        $documentos = [];
 
-            // 2.1 - Políticas de SST
-            [
-                'tipo' => 'politica_sst_general',
-                'numeral' => '2.1.1',
-                'categoria' => 'Políticas de SST',
-                'nombre' => 'Política de Seguridad y Salud en el Trabajo',
-                'flujo' => 'Tipo A',
-                'orden' => 2
-            ],
-            [
-                'tipo' => 'politica_alcohol_drogas',
-                'numeral' => '2.1.2',
-                'categoria' => 'Políticas de SST',
-                'nombre' => 'Política de Prevención del Consumo de Alcohol y Drogas',
-                'flujo' => 'Tipo A',
-                'orden' => 3
-            ],
-            [
-                'tipo' => 'politica_acoso_laboral',
-                'numeral' => '2.1.3',
-                'categoria' => 'Políticas de SST',
-                'nombre' => 'Política de Prevención del Acoso Laboral',
-                'flujo' => 'Tipo A',
-                'orden' => 4
-            ],
-            [
-                'tipo' => 'politica_violencias_genero',
-                'numeral' => '2.1.4',
-                'categoria' => 'Políticas de SST',
-                'nombre' => 'Política de Prevención de Violencias de Género',
-                'flujo' => 'Tipo A',
-                'orden' => 5
-            ],
-            [
-                'tipo' => 'politica_discriminacion',
-                'numeral' => '2.1.5',
-                'categoria' => 'Políticas de SST',
-                'nombre' => 'Política de No Discriminación',
-                'flujo' => 'Tipo A',
-                'orden' => 6
-            ],
-            [
-                'tipo' => 'politica_prevencion_emergencias',
-                'numeral' => '2.1.6',
-                'categoria' => 'Políticas de SST',
-                'nombre' => 'Política de Prevención y Preparación ante Emergencias',
-                'flujo' => 'Tipo A',
-                'orden' => 7
-            ],
+        // 1. Documentos configurados en tbl_doc_tipo_configuracion
+        $configs = $this->db->table('tbl_doc_tipo_configuracion')
+            ->select('tipo_documento, nombre, estandar, flujo, categoria, orden')
+            ->where('activo', 1)
+            ->orderBy('orden', 'ASC')
+            ->get()
+            ->getResultArray();
 
-            // 2.2 - Planificación
-            [
-                'tipo' => 'plan_objetivos_metas',
-                'numeral' => '2.2.1',
-                'categoria' => 'Planificación',
-                'nombre' => 'Plan de Objetivos y Metas del SG-SST',
-                'flujo' => 'Tipo A',
-                'orden' => 8
-            ],
-            [
-                'tipo' => 'programa_capacitacion',
-                'numeral' => '2.2.2',
-                'categoria' => 'Planificación',
-                'nombre' => 'Programa de Capacitación en SST',
-                'flujo' => 'Tipo B',
-                'orden' => 9
-            ],
+        foreach ($configs as $config) {
+            // Mapear flujo técnico a flujo display
+            $flujoDisplay = 'Tipo A';
+            if ($config['flujo'] === 'programa_con_pta') {
+                $flujoDisplay = 'Tipo B';
+            }
 
-            // 2.8 - Comunicación
-            [
-                'tipo' => 'mecanismos_comunicacion_sgsst',
-                'numeral' => '2.8.1',
-                'categoria' => 'Comunicación',
-                'nombre' => 'Mecanismos de Comunicación del SG-SST',
-                'flujo' => 'Tipo A',
-                'orden' => 10
-            ],
+            $documentos[] = [
+                'tipo' => $config['tipo_documento'],
+                'numeral' => $config['estandar'] ?? '',
+                'categoria' => $config['categoria'] ?? '',
+                'nombre' => $config['nombre'],
+                'flujo' => $flujoDisplay,
+                'orden' => (int)$config['orden'],
+            ];
+        }
 
-            // 2.9 - Adquisiciones
-            [
-                'tipo' => 'procedimiento_adquisiciones',
-                'numeral' => '2.9.1',
-                'categoria' => 'Adquisiciones',
-                'nombre' => 'Procedimiento de Adquisiciones en SST',
-                'flujo' => 'Tipo A',
-                'orden' => 11
-            ],
-            [
-                'tipo' => 'procedimiento_evaluacion_proveedores',
-                'numeral' => '2.10.1',
-                'categoria' => 'Adquisiciones',
-                'nombre' => 'Procedimiento de Evaluación de Proveedores',
-                'flujo' => 'Tipo A',
-                'orden' => 12
-            ],
+        // 2. Actas de constitución/recomposición desde tbl_doc_plantillas
+        $actas = $this->db->table('tbl_doc_plantillas')
+            ->select('tipo_documento, nombre, codigo_sugerido, orden')
+            ->where('activo', 1)
+            ->where("(tipo_documento LIKE 'acta_constitucion_%' OR tipo_documento LIKE 'acta_recomposicion_%')")
+            ->orderBy('orden', 'ASC')
+            ->get()
+            ->getResultArray();
 
-            // 2.11 - Gestión del Cambio
-            [
-                'tipo' => 'procedimiento_gestion_cambio',
-                'numeral' => '2.11.1',
-                'categoria' => 'Gestión del Cambio',
-                'nombre' => 'Procedimiento de Gestión del Cambio',
-                'flujo' => 'Tipo A',
-                'orden' => 13
-            ],
+        foreach ($actas as $acta) {
+            $categoria = strpos($acta['tipo_documento'], 'acta_constitucion_') === 0
+                ? 'Actas de Constitución'
+                : 'Actas de Recomposición';
 
-            // 2.5 - Control Documental
-            [
-                'tipo' => 'procedimiento_control_documental',
-                'numeral' => '2.5.1',
-                'categoria' => 'Control Documental',
-                'nombre' => 'Procedimiento de Control Documental del SG-SST',
-                'flujo' => 'Tipo A',
-                'orden' => 14
-            ],
-            [
-                'tipo' => 'procedimiento_matriz_legal',
-                'numeral' => '2.5.2',
-                'categoria' => 'Control Documental',
-                'nombre' => 'Procedimiento de Matriz Legal',
-                'flujo' => 'Tipo A',
-                'orden' => 15
-            ],
+            $numeral = '1.1.1';
+            if (strpos($acta['tipo_documento'], '_cocolab') !== false) {
+                $numeral = '1.1.8';
+            } elseif (strpos($acta['tipo_documento'], '_brigada') !== false) {
+                $numeral = '1.1.2';
+            }
 
-            // 3.1 - Promoción y Prevención
-            [
-                'tipo' => 'programa_promocion_prevencion_salud',
-                'numeral' => '3.1.1',
-                'categoria' => 'Promoción y Prevención',
-                'nombre' => 'Programa de Promoción y Prevención de la Salud',
-                'flujo' => 'Tipo A',
-                'orden' => 16
-            ],
-            [
-                'tipo' => 'programa_induccion_reinduccion',
-                'numeral' => '3.1.2',
-                'categoria' => 'Promoción y Prevención',
-                'nombre' => 'Programa de Inducción y Reinducción en SST',
-                'flujo' => 'Tipo A',
-                'orden' => 17
-            ],
-            [
-                'tipo' => 'procedimiento_evaluaciones_medicas',
-                'numeral' => '3.1.3',
-                'categoria' => 'Promoción y Prevención',
-                'nombre' => 'Procedimiento de Evaluaciones Médicas Ocupacionales',
-                'flujo' => 'Tipo A',
-                'orden' => 18
-            ],
-            [
-                'tipo' => 'programa_evaluaciones_medicas_ocupacionales',
-                'numeral' => '3.1.4',
-                'categoria' => 'Promoción y Prevención',
-                'nombre' => 'Programa de Evaluaciones Médicas Ocupacionales',
-                'flujo' => 'Tipo A',
-                'orden' => 19
-            ],
-            [
-                'tipo' => 'programa_estilos_vida_saludable',
-                'numeral' => '3.1.7',
-                'categoria' => 'Promoción y Prevención',
-                'nombre' => 'Programa de Estilos de Vida Saludable',
-                'flujo' => 'Tipo A',
-                'orden' => 20
-            ],
-
-            // 3.2 - Investigación de Incidentes
-            [
-                'tipo' => 'procedimiento_investigacion_accidentes',
-                'numeral' => '3.2.1',
-                'categoria' => 'Investigación de Incidentes',
-                'nombre' => 'Procedimiento de Investigación de Accidentes de Trabajo',
-                'flujo' => 'Tipo A',
-                'orden' => 21
-            ],
-            [
-                'tipo' => 'procedimiento_investigacion_incidentes',
-                'numeral' => '3.2.2',
-                'categoria' => 'Investigación de Incidentes',
-                'nombre' => 'Procedimiento de Investigación de Incidentes',
-                'flujo' => 'Tipo A',
-                'orden' => 22
-            ],
-
-            // 4.1 - Identificación de Peligros
-            [
-                'tipo' => 'metodologia_identificacion_peligros',
-                'numeral' => '4.1.1',
-                'categoria' => 'Identificación de Peligros',
-                'nombre' => 'Metodología de Identificación de Peligros',
-                'flujo' => 'Tipo A',
-                'orden' => 23
-            ],
-            [
-                'tipo' => 'identificacion_sustancias_cancerigenas',
-                'numeral' => '4.1.3',
-                'categoria' => 'Identificación de Peligros',
-                'nombre' => 'Identificación de Sustancias Cancerígenas',
-                'flujo' => 'Tipo A',
-                'orden' => 24
-            ],
-
-            // 4.2 - Programas de Vigilancia
-            [
-                'tipo' => 'pve_riesgo_biomecanico',
-                'numeral' => '4.2.3',
-                'categoria' => 'Programas de Vigilancia',
-                'nombre' => 'PVE Riesgo Biomecánico',
-                'flujo' => 'Tipo A',
-                'orden' => 25
-            ],
-            [
-                'tipo' => 'pve_riesgo_psicosocial',
-                'numeral' => '4.2.4',
-                'categoria' => 'Programas de Vigilancia',
-                'nombre' => 'PVE Riesgo Psicosocial',
-                'flujo' => 'Tipo A',
-                'orden' => 26
-            ],
-            [
-                'tipo' => 'programa_mantenimiento_periodico',
-                'numeral' => '4.2.5',
-                'categoria' => 'Programas de Vigilancia',
-                'nombre' => 'Programa de Mantenimiento Periódico',
-                'flujo' => 'Tipo A',
-                'orden' => 27
-            ],
-
-            // 1.1.8 - Comités
-            [
-                'tipo' => 'manual_convivencia_laboral',
-                'numeral' => '1.1.8',
-                'categoria' => 'Comités y Brigadas',
-                'nombre' => 'Manual de Convivencia Laboral',
-                'flujo' => 'Tipo A',
-                'orden' => 28
-            ],
-
-            // Actas de Constitución
-            [
-                'tipo' => 'acta_constitucion_copasst',
-                'numeral' => '1.1.1',
-                'categoria' => 'Actas de Constitución',
-                'nombre' => 'Acta de Constitución COPASST',
+            $documentos[] = [
+                'tipo' => $acta['tipo_documento'],
+                'numeral' => $numeral,
+                'categoria' => $categoria,
+                'nombre' => $acta['nombre'],
                 'flujo' => 'Electoral',
-                'orden' => 29
-            ],
-            [
-                'tipo' => 'acta_constitucion_cocolab',
-                'numeral' => '1.1.8',
-                'categoria' => 'Actas de Constitución',
-                'nombre' => 'Acta de Constitución COCOLAB',
-                'flujo' => 'Electoral',
-                'orden' => 30
-            ],
-            [
-                'tipo' => 'acta_constitucion_brigada',
-                'numeral' => '1.1.2',
-                'categoria' => 'Actas de Constitución',
-                'nombre' => 'Acta de Constitución Brigada de Emergencia',
-                'flujo' => 'Electoral',
-                'orden' => 31
-            ],
-            [
-                'tipo' => 'acta_constitucion_vigia',
-                'numeral' => '1.1.1',
-                'categoria' => 'Actas de Constitución',
-                'nombre' => 'Acta de Constitución Vigía SST',
-                'flujo' => 'Electoral',
-                'orden' => 32
-            ],
+                'orden' => 100 + (int)$acta['orden'],
+            ];
+        }
 
-            // Actas de Recomposición
-            [
-                'tipo' => 'acta_recomposicion_copasst',
-                'numeral' => '1.1.1',
-                'categoria' => 'Actas de Recomposición',
-                'nombre' => 'Acta de Recomposición COPASST',
-                'flujo' => 'Electoral',
-                'orden' => 33
-            ],
-            [
-                'tipo' => 'acta_recomposicion_cocolab',
-                'numeral' => '1.1.8',
-                'categoria' => 'Actas de Recomposición',
-                'nombre' => 'Acta de Recomposición COCOLAB',
-                'flujo' => 'Electoral',
-                'orden' => 34
-            ],
-            [
-                'tipo' => 'acta_recomposicion_brigada',
-                'numeral' => '1.1.2',
-                'categoria' => 'Actas de Recomposición',
-                'nombre' => 'Acta de Recomposición Brigada de Emergencia',
-                'flujo' => 'Electoral',
-                'orden' => 35
-            ],
-            [
-                'tipo' => 'acta_recomposicion_vigia',
-                'numeral' => '1.1.1',
-                'categoria' => 'Actas de Recomposición',
-                'nombre' => 'Acta de Recomposición Vigía SST',
-                'flujo' => 'Electoral',
-                'orden' => 36
-            ],
-        ];
+        // Ordenar por orden
+        usort($documentos, fn($a, $b) => $a['orden'] <=> $b['orden']);
+
+        return $documentos;
     }
 
     // =========================================================================
