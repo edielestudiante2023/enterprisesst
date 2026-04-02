@@ -1771,7 +1771,7 @@
                                 data: {
                                     id: id,
                                     tipo_servicio: newVal,
-                                    "<?= csrf_token() ?>": getCsrfToken()
+                                    "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
                                 },
                                 dataType: "json",
                                 success: function(response) {
