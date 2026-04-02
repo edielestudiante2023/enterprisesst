@@ -594,6 +594,22 @@
 
                     <label class="form-label small fw-bold mb-1">Marco Normativo:</label>
                     <textarea class="form-control" id="marcoNormativoTexto" rows="12" placeholder="El marco normativo aparecera aqui. Usa el boton 'Consultar con IA' para obtenerlo automaticamente, o pegalo manualmente desde ChatGPT, Gemini, Claude, etc."></textarea>
+
+                    <!-- Reportar Norma Derogada -->
+                    <div class="mt-3 p-3 border rounded bg-light">
+                        <label class="form-label small fw-bold mb-1">
+                            <i class="bi bi-exclamation-triangle me-1 text-warning"></i>¿Encontraste una norma derogada? Ayudanos a estar actualizados:
+                        </label>
+                        <div class="input-group">
+                            <textarea class="form-control" id="textoNormaDerogada" rows="2"
+                                placeholder="Ej: La Resolucion 2404 de 2019 fue derogada por la Resolucion 2764 de 2022"
+                                style="font-size: 0.9rem;"></textarea>
+                            <button type="button" class="btn btn-warning" id="btnReportarNormaDerogada">
+                                <i class="bi bi-flag me-1"></i>Reportar
+                            </button>
+                        </div>
+                        <small class="text-muted">Escribe en texto libre. La IA extraera automaticamente la norma derogada y su reemplazo.</small>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -1056,6 +1072,24 @@
         console.log('Event listeners agregados a', document.querySelectorAll('.btn-generar').length, 'botones');
 
         async function generarSeccion(seccionKey, modo = 'completo') {
+            // Verificar si hay cambios sin guardar en Marco Normativo
+            if (marcoModificadoSinGuardar && !modoBatch) {
+                const result = await Swal.fire({
+                    icon: 'warning',
+                    title: 'Marco Normativo sin guardar',
+                    html: 'Modificaste el Marco Normativo pero <b>no lo guardaste</b>.<br>La generacion usara el marco anterior.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Abrir modal y guardar',
+                    cancelButtonText: 'Generar con el anterior',
+                    confirmButtonColor: '#198754',
+                    allowOutsideClick: false
+                });
+                if (result.isConfirmed) {
+                    modalMarco?.show();
+                    return;
+                }
+            }
+
             const btn = document.querySelector(`.btn-generar[data-seccion="${seccionKey}"]`);
             const textarea = document.getElementById('contenido-' + seccionKey);
             const card = document.getElementById('seccion-' + seccionKey);
@@ -1406,6 +1440,24 @@
                 verificacionConfirmada = true; // No volver a mostrar
             }
             } // cierre del else (verificacionConfirmada)
+
+            // Verificar si hay cambios sin guardar en Marco Normativo
+            if (marcoModificadoSinGuardar) {
+                const marcoSinGuardar = await Swal.fire({
+                    icon: 'warning',
+                    title: 'Marco Normativo sin guardar',
+                    html: 'Modificaste el Marco Normativo pero <b>no lo guardaste</b>.<br>Debes guardarlo antes de generar todas las secciones.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Abrir modal y guardar',
+                    cancelButtonText: 'Cancelar generacion',
+                    confirmButtonColor: '#198754',
+                    allowOutsideClick: false
+                });
+                if (marcoSinGuardar.isConfirmed) {
+                    modalMarco?.show();
+                }
+                return; // Siempre detener: debe guardar primero
+            }
 
             // Opcion 3: Verificar marco normativo antes de generar todo
             const marcoOk = await new Promise(resolve => {
@@ -1808,6 +1860,9 @@
                     // Actualizar textarea del modal si esta abierto
                     const textarea = document.getElementById('marcoNormativoTexto');
                     if (textarea) textarea.value = data.texto;
+                    // La IA ya guardó el marco, resetear tracking de cambios
+                    marcoTextoOriginal = data.texto || '';
+                    marcoModificadoSinGuardar = false;
                     // Recargar info del panel
                     await cargarMarcoNormativo();
                 } else {
@@ -1911,6 +1966,8 @@
                 const data = await resp.json();
 
                 if (data.success) {
+                    marcoModificadoSinGuardar = false;
+                    marcoTextoOriginal = document.getElementById('marcoNormativoTexto').value;
                     mostrarToast('success', 'Guardado', 'Marco normativo guardado correctamente.');
                     modalMarco?.hide();
                     await cargarMarcoNormativo();
@@ -1923,6 +1980,96 @@
 
             this.disabled = false;
             this.innerHTML = '<i class="bi bi-save me-1"></i>Guardar Marco Normativo';
+        });
+
+        // Reportar norma derogada
+        document.getElementById('btnReportarNormaDerogada')?.addEventListener('click', async function() {
+            const texto = document.getElementById('textoNormaDerogada').value.trim();
+            if (!texto) {
+                Swal.fire('Campo vacio', 'Escribe la norma que fue derogada', 'warning');
+                return;
+            }
+
+            const result = await Swal.fire({
+                title: 'Confirmar reporte',
+                text: 'Vas a reportar: "' + texto + '"',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Reportar',
+                cancelButtonText: 'Cancelar'
+            });
+            if (!result.isConfirmed) return;
+
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Procesando...';
+
+            try {
+                const resp = await fetch('<?= base_url("documentos/reportar-norma-derogada") ?>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: 'texto_libre=' + encodeURIComponent(texto)
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Norma registrada',
+                        html: '<b>Derogada:</b> ' + data.norma_derogada + '<br><b>Reemplazada por:</b> ' + data.norma_reemplazo,
+                        confirmButtonText: 'OK'
+                    });
+                    document.getElementById('textoNormaDerogada').value = '';
+                } else {
+                    Swal.fire('Error', data.error || 'No se pudo procesar', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Error', 'Error de conexion: ' + e.message, 'error');
+            }
+
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-flag me-1"></i>Reportar';
+        });
+
+        // Detectar cambios sin guardar en el textarea de Marco Normativo
+        let marcoTextoOriginal = '';
+        let marcoModificadoSinGuardar = false;
+
+        // Capturar el texto original al abrir el modal
+        document.getElementById('modalMarcoNormativo')?.addEventListener('shown.bs.modal', function() {
+            marcoTextoOriginal = document.getElementById('marcoNormativoTexto').value;
+            marcoModificadoSinGuardar = false;
+        });
+
+        // Detectar cambios en el textarea
+        document.getElementById('marcoNormativoTexto')?.addEventListener('input', function() {
+            marcoModificadoSinGuardar = (this.value !== marcoTextoOriginal);
+        });
+
+        // Al cerrar modal sin guardar, marcar como pendiente
+        document.getElementById('modalMarcoNormativo')?.addEventListener('hidden.bs.modal', function() {
+            if (marcoModificadoSinGuardar) {
+                mostrarToast('warning', 'Sin guardar', 'Modificaste el Marco Normativo pero no lo guardaste.');
+            }
+        });
+
+        // Resetear flag al guardar exitosamente (interceptar el boton guardar)
+        const btnGuardarMarcoOriginal = document.getElementById('btnGuardarMarco');
+        if (btnGuardarMarcoOriginal) {
+            const observerGuardar = new MutationObserver(function() {
+                // Cuando el botón vuelve a su estado normal después de guardar, resetear flag
+                if (btnGuardarMarcoOriginal.innerHTML.includes('Guardar Marco') && !btnGuardarMarcoOriginal.disabled) {
+                    // Se resetea en el evento de éxito del fetch, más abajo
+                }
+            });
+        }
+
+        // También al hacer clic en "Actualizar con IA", resetear el tracking
+        document.getElementById('btnConsultarIAModal')?.addEventListener('click', function() {
+            // La IA va a reemplazar el contenido, el nuevo texto será el "original"
+            setTimeout(() => {
+                marcoTextoOriginal = document.getElementById('marcoNormativoTexto').value;
+                marcoModificadoSinGuardar = false;
+            }, 2000);
         });
 
         // Opcion 3: Verificar marco normativo antes de generar (una sola vez por sesion)

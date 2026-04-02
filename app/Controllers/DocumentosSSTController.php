@@ -6883,6 +6883,28 @@ Se debe generar acta que registre:
     }
 
     /**
+     * Recibe texto libre del consultor, parsea con IA y guarda la norma derogada
+     */
+    public function reportarNormaDerogada()
+    {
+        $textoLibre = $this->request->getPost('texto_libre');
+
+        if (empty(trim($textoLibre ?? ''))) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error' => 'El texto es requerido'
+            ]);
+        }
+
+        $reportadoPor = session()->get('nombre') ?? session()->get('name') ?? 'Consultor';
+
+        $service = new \App\Services\NormaDerogadaService();
+        $resultado = $service->parsearYGuardar($textoLibre, $reportadoPor);
+
+        return $this->response->setJSON($resultado);
+    }
+
+    /**
      * Dashboard consolidado de marcos normativos
      * Muestra todos los tipos de documentos con su marco normativo
      */

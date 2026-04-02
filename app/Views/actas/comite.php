@@ -121,9 +121,14 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-people me-2"></i>Miembros del Comite</h5>
-                    <a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/nuevo-miembro') ?>" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-plus-lg me-1"></i>Agregar
-                    </a>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="importarMiembrosComite()" title="Importar miembros desde Comites Elecciones">
+                            <i class="bi bi-download me-1"></i>Importar desde Elecciones
+                        </button>
+                        <a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/nuevo-miembro') ?>" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-lg me-1"></i>Agregar
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <?php if (empty($miembros)): ?>
@@ -386,6 +391,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 // Inicializar tooltips
 document.addEventListener('DOMContentLoaded', function() {
@@ -467,6 +473,71 @@ function reenviarAcceso(idMiembro, nombre, email) {
         btn.disabled = false;
         console.error('Error:', error);
         alert('Error de conexion');
+    });
+}
+
+function importarMiembrosComite() {
+    // Generar 3 operaciones aritmeticas
+    var ops = [];
+    for (var i = 0; i < 3; i++) {
+        var a = Math.floor(Math.random() * 10) + 1;
+        var b = Math.floor(Math.random() * 10) + 1;
+        var opSym = ['+', '-', '*'][Math.floor(Math.random() * 3)];
+        ops.push({ expr: a + ' ' + opSym + ' ' + b, result: eval(a + opSym + b) });
+    }
+
+    var htmlForm = '<div class="alert alert-warning text-start">' +
+        '<p class="fw-bold mb-2">Se importaran los miembros elegidos/designados del ultimo proceso electoral completado de <strong><?= esc($comite['tipo_nombre']) ?></strong>.</p>' +
+        '<p class="mb-3">Resuelva las 3 operaciones para confirmar:</p>';
+    for (var i = 0; i < 3; i++) {
+        htmlForm += '<div class="mb-2 d-flex align-items-center gap-2"><label class="form-label mb-0 fw-bold">' + ops[i].expr + ' = </label>' +
+            '<input type="number" class="form-control form-control-sm arith-input" data-idx="' + i + '" style="max-width:100px;" /></div>';
+    }
+    htmlForm += '</div>';
+
+    Swal.fire({
+        title: 'Importar miembros desde Elecciones',
+        html: htmlForm,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        confirmButtonText: '<i class="bi bi-download me-1"></i> Importar',
+        cancelButtonText: 'Cancelar',
+        preConfirm: () => {
+            for (var i = 0; i < 3; i++) {
+                var val = parseInt(document.querySelector('.arith-input[data-idx="' + i + '"]').value);
+                if (val !== ops[i].result) {
+                    Swal.showValidationMessage('Una o mas respuestas son incorrectas');
+                    return false;
+                }
+            }
+            return true;
+        }
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        Swal.fire({ title: 'Importando...', text: 'Creando miembros y enviando credenciales', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        fetch('<?= base_url("actas/comite/" . $comite["id_comite"] . "/importar-miembros") ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Importacion completada', html: '<p>' + data.message + '</p>', confirmButtonText: 'Aceptar' })
+                    .then(() => location.reload());
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({ icon: 'error', title: 'Error de conexion', text: 'No se pudo completar la importacion' });
+        });
     });
 }
 </script>
