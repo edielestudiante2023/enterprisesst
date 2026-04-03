@@ -17,17 +17,36 @@ class ConsultorTablaItemsController extends Controller
         $model = new DashboardItemModel();
         $clientModel = new ClientModel();
 
-        $data['items'] = $model->where('orden >=', 1)
-            ->where('orden <=', 5)
-            ->findAll();
+        $items = $model->where('activo', 1)
+                       ->orderBy('categoria ASC, orden ASC')
+                       ->findAll();
 
-        // Obtener todos los clientes activos para los selectores
+        $grouped = [];
+        foreach ($items as $item) {
+            $cat = $item['categoria'] ?? 'Sin categoría';
+            $grouped[$cat][] = $item;
+        }
+
+        $ordenCategorias = [
+            'Operación por Cliente', 'Dashboards y Reportes', 'Herramientas IA',
+            'Cumplimiento SST - Res. 0312', 'Capacitación y Planificación',
+            'Gestión Documental', 'Carga Masiva CSV', 'Plataformas Colaborativas',
+            'Administración del Sistema',
+        ];
+
+        $sortedGrouped = [];
+        foreach ($ordenCategorias as $cat) {
+            if (isset($grouped[$cat])) $sortedGrouped[$cat] = $grouped[$cat];
+        }
+        foreach ($grouped as $cat => $catItems) {
+            if (!isset($sortedGrouped[$cat])) $sortedGrouped[$cat] = $catItems;
+        }
+
         $data['clientes'] = $clientModel->where('estado', 'activo')->findAll();
+        $data['grouped'] = $sortedGrouped;
 
-        // Obtener datos del usuario en sesión
         $userModel = new \App\Models\UserModel();
         $data['usuario'] = null;
-
         if ($session->get('id_usuario')) {
             $data['usuario'] = $userModel->find($session->get('id_usuario'));
         }
