@@ -433,7 +433,7 @@
                             $color2 = trim($colors[1] ?? $colors[0]);
                             $isModal = str_starts_with($item['accion_url'], '#');
                             $needsClient = str_contains($item['accion_url'], '{id_cliente}');
-                            $target = (!$isModal && !$needsClient && $item['target_blank']) ? 'target="_blank"' : '';
+                            $target = (!$isModal && !$needsClient) ? 'target="_blank"' : '';
 
                             if ($isModal) {
                                 $href = 'javascript:void(0)';
