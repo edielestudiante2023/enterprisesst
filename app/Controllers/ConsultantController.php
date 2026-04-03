@@ -24,15 +24,44 @@ class ConsultantController extends Controller
         $clientModel = new ClientModel();
         $dashboardItemModel = new DashboardItemModel();
 
-        // Obtener todos los clientes activos para el selector de actas
         $clientes = $clientModel->where('estado', 'activo')->findAll();
 
-        // Obtener todos los items del dashboard para la tabla (sin filtrar por rol)
-        $items = $dashboardItemModel->findAll();
+        $items = $dashboardItemModel->where('activo', 1)
+                    ->orderBy('categoria ASC, orden ASC')
+                    ->findAll();
+
+        $grouped = [];
+        foreach ($items as $item) {
+            $cat = $item['categoria'] ?? 'Sin categoría';
+            $grouped[$cat][] = $item;
+        }
+
+        $ordenCategorias = [
+            'Operación por Cliente', 'Dashboards y Reportes', 'Herramientas IA',
+            'Cumplimiento SST - Res. 0312', 'Capacitación y Planificación',
+            'Gestión Documental', 'Carga Masiva CSV', 'Plataformas Colaborativas',
+            'Administración del Sistema',
+        ];
+
+        $sortedGrouped = [];
+        foreach ($ordenCategorias as $cat) {
+            if (isset($grouped[$cat])) $sortedGrouped[$cat] = $grouped[$cat];
+        }
+        foreach ($grouped as $cat => $catItems) {
+            if (!isset($sortedGrouped[$cat])) $sortedGrouped[$cat] = $catItems;
+        }
+
+        $session = session();
+        $userModel = new UserModel();
+        $usuario = null;
+        if ($session->get('id_usuario')) {
+            $usuario = $userModel->find($session->get('id_usuario'));
+        }
 
         return view('consultant/dashboard', [
             'clientes' => $clientes,
-            'items' => $items
+            'grouped' => $sortedGrouped,
+            'usuario' => $usuario,
         ]);
     }
 
