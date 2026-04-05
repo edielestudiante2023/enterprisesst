@@ -1,0 +1,84 @@
+name: Cutover to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate PHP + Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PHP syntax
+        run: |
+          find app/ -name "*.php" -print0 | xargs -0 -n1 php -l 2>&1 | grep "Parse error" && exit 1 || exit 0
+      - name: Scan for hardcoded credentials
+        run: |
+          FOUND=0
+          grep -rn "SG\.[a-zA-Z0-9_-]\{20,\}" app/ --include="*.php" && FOUND=1 || true
+          grep -rn "sk-proj-[a-zA-Z0-9_-]\{20,\}" app/ --include="*.php" && FOUND=1 || true
+          grep -rn "sk-[a-zA-Z0-9]\{40,\}" app/ --include="*.php" && FOUND=1 || true
+          grep -rn "AVNS_[a-zA-Z0-9_-]\{10,\}" app/ --include="*.php" && FOUND=1 || true
+          if [ $FOUND -eq 1 ]; then
+            echo "CRITICAL: Hardcoded credentials found! Aborting deploy."
+            exit 1
+          fi
+
+  trivy:
+    name: Vulnerability Scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - name: Scan dependencies
+        run: |
+          trivy fs --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed composer.lock
+
+  semgrep:
+    name: Static Security Analysis (Semgrep)
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Semgrep
+        run: pip install semgrep
+      - name: Run Semgrep
+        run: |
+          semgrep scan --config "p/php" --config "p/secrets" --config "p/security-audit" --error app/
+
+  deploy-production:
+    name: Deploy to Production (Hetzner)
+    runs-on: ubuntu-latest
+    needs: [trivy, semgrep]
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PROD_PATH }}
+            git pull origin main
+            composer install --no-dev --optimize-autoloader
+            php spark cache:clear 2>/dev/null || true
+            echo "Production deploy completed at $(date)"
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+              echo "Post-deploy verification: OK (HTTP $HTTP_CODE)"
+            else
+              echo "WARNING: Post-deploy verification returned HTTP $HTTP_CODE"
+              exit 1
+            fi
