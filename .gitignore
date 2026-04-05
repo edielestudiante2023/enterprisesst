@@ -131,12 +131,11 @@ nb-configuration.xml
 /results/
 /phpunit*.xml
 
-# Ignorar archivos de configuración específicos
+# Ignorar archivos de configuración específicos del entorno
 app/Config/App.php
 app/Config/Database.php
-composer.json
-composer.lock
 SYNC_LOCAL_PRODUCCION.md
 docs/SYNC_LOCAL_PRODUCCION.md
-nul
-nul
+
+# Claude Code
+.claude/
