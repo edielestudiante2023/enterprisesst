@@ -1,68 +1,173 @@
-# CodeIgniter 4 Application Starter
+# Enterprise SST
 
-## What is CodeIgniter?
+**Sistema de Gestion de Seguridad y Salud en el Trabajo (SG-SST) para empresas**
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+Plataforma web que permite a empresas cumplir la normatividad colombiana (Decreto 1072, Resolucion 0312) mediante gestion documental, evaluaciones, planes de trabajo, indicadores y generacion automatica de documentos con IA.
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+**Empresa:** Cycloid Talent
+**Repositorio:** github.com/edielestudiante2023/enterprisesst
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+---
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## Stack tecnologico
 
-## Installation & updates
+| Componente | Tecnologia |
+|------------|-----------|
+| Backend | PHP 8.2 + CodeIgniter 4.6 |
+| Base de datos | MySQL 8 (DigitalOcean Managed, SSL required) |
+| Servidor web | Nginx (Ubuntu 24.04) — Hetzner LXC |
+| Email | SendGrid API v3 |
+| PDF | TCPDF + DOMPDF 3.1 |
+| Excel | PhpSpreadsheet 3.9 |
+| IA | OpenAI GPT-4o / GPT-4o-mini (generacion de documentos, chat Otto) |
+| QR | chillerlan/php-qrcode 5.0 |
+| Markdown | Parsedown 1.7 |
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+---
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+## Modulos principales (18)
 
-## Setup
+| Modulo | Descripcion |
+|--------|-------------|
+| Documentos SGSST | 34+ documentos normativos generados con IA (politicas, programas, formatos) |
+| Plan de Trabajo Anual (PTA) | Actividades PHVA por cliente, edicion inline, exportacion Excel |
+| Evaluacion Estandares Minimos | Decreto 1072 / Res. 0312, evaluacion por ciclo, historial de puntajes |
+| Indicadores SST | 17 indicadores (frecuencia, severidad, ausentismo, cobertura, etc.) |
+| Actas de Visita | Registro con fotos, firma, PDF, notificaciones |
+| Actas de Reunion | Comites, asistentes, compromisos, votaciones, firma digital |
+| Contratos | Ciclo completo: creacion, firma digital, PDF |
+| Capacitaciones | Cronograma, asistencia, induccion por etapas |
+| Matriz Legal | Marco normativo con generacion IA |
+| Matriz de Comunicacion | Planificacion de comunicaciones SST |
+| Firmas Digitales | Firma electronica via token por email |
+| Comites Electorales | Procesos electorales COPASST/CCL con votacion electronica |
+| Inspecciones | Locativa, extintores, botiquin, senalizacion |
+| KPIs | 17 KPIs con definiciones, variables, periodos de medicion |
+| Pendientes | Compromisos con conteo de dias |
+| Presupuesto SST | Categorias, items, detalle de ejecucion |
+| Mantenimientos | Control de mantenimientos y vencimientos |
+| Chat Otto (IA) | Asistente IA con consultas SQL readonly |
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+---
 
-## Important Change with index.php
+## Roles de usuario
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+| Rol | Acceso |
+|-----|--------|
+| admin | Todo el sistema + gestion de usuarios + configuracion |
+| consultant | Gestion de clientes asignados + generacion de documentos + chat IA |
+| client | Portal readonly + chat Otto (solo SELECT) |
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+---
 
-**Please** read the user guide for a better explanation of how CI4 works!
+## Estructura del proyecto
 
-## Repository Management
+```
+enterprisesst/
+├── app/
+│   ├── Commands/          # 2 comandos CLI (cron jobs)
+│   ├── Config/            # Routes.php, Database.php, Filters.php, Security.php
+│   ├── Controllers/       # ~201 controladores
+│   ├── Database/          # Migraciones y seeders
+│   ├── Filters/           # AuthFilter, ApiKeyFilter, AuthOrApiKeyFilter
+│   ├── Helpers/           # Funciones auxiliares
+│   ├── Libraries/         # 13 librerias de logica de negocio
+│   ├── Models/            # ~98 modelos
+│   ├── Services/          # 37+ servicios (IA, indicadores, documentos)
+│   ├── SQL/               # Scripts de migracion
+│   ├── Traits/            # Traits reutilizables
+│   └── Views/             # Vistas PHP
+├── docs/                  # Documentacion tecnica (24+ archivos)
+├── public/                # Punto de entrada web (index.php)
+├── scripts/               # Scripts utilitarios
+├── sql/                   # Scripts SQL adicionales
+├── tests/                 # Tests PHPUnit
+├── translations/          # Archivos de traduccion
+├── writable/              # Logs, cache, sesiones, uploads
+├── .env                   # Variables de entorno (NO commitear)
+├── .env.example           # Template de variables (SI commitear)
+├── CONTRIBUTING.md        # Guia de contribucion
+├── README.md              # Este archivo
+├── composer.json          # Dependencias PHP
+└── spark                  # CLI de CodeIgniter
+```
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+---
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+## Requisitos previos
 
-## Server Requirements
+- PHP 8.2+ con extensiones: intl, mbstring, mysqlnd, curl, gd, openssl
+- MySQL 8.0+
+- Composer 2.x
+- Servidor web (Apache/Nginx)
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+---
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+## Instalacion local
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/edielestudiante2023/enterprisesst.git
+cd enterprisesst
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+# 2. Instalar dependencias
+composer install
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+# 3. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales locales
+
+# 4. Configurar base de datos
+# Crear BD 'empresas_sst' en MySQL y ejecutar migraciones
+
+# 5. Iniciar servidor de desarrollo
+php spark serve
+# Acceder en http://localhost:8080
+```
+
+---
+
+## Variables de entorno
+
+| Variable | Descripcion |
+|----------|-------------|
+| `CI_ENVIRONMENT` | Entorno (development / production) |
+| `app.baseURL` | URL base de la aplicacion |
+| `database.default.*` | Conexion BD principal (hostname, database, username, password, port) |
+| `readonly.*` | Conexion BD readonly para Chat Otto |
+| `SENDGRID_API_KEY` | API Key de SendGrid para email transaccional |
+| `SENDGRID_FROM_EMAIL` | Email remitente |
+| `SENDGRID_FROM_NAME` | Nombre remitente |
+| `OPENAI_API_KEY` | API Key de OpenAI |
+| `OPENAI_MODEL` | Modelo principal (gpt-4o) |
+| `OTTO_MODEL` | Modelo para Chat Otto (gpt-4o-mini) |
+| `APP_API_KEY` | Token de acceso programatico a la API |
+
+---
+
+## Cron jobs (2 tareas programadas)
+
+| Comando | Frecuencia | Descripcion |
+|---------|-----------|-------------|
+| `php spark notificaciones:procesar-actas` | Diario | Procesa notificaciones de actas pendientes |
+| `php spark pendientes:resumen` | Periodico | Genera resumen de pendientes y envia por email |
+
+---
+
+## Deploy
+
+El deploy se realiza via SSH al servidor de produccion (Hetzner LXC).
+
+```bash
+# Deploy manual
+ssh root@<servidor> "cd /www/wwwroot/<proyecto> && git pull origin main && composer install --no-dev"
+```
+
+Pipeline CI/CD disponible en `.gitea/workflows/` para automatizar validacion y deploy.
+
+---
+
+## Documentacion adicional
+
+- [docs/](docs/) — Documentacion tecnica del proyecto
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Guia de contribucion

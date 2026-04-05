@@ -1,0 +1,87 @@
+name: Validate & Deploy to Dev/QA
+
+on:
+  push:
+    branches: [develop, 'feature/**']
+  pull_request:
+    branches: [develop]
+
+jobs:
+  test:
+    name: PHP Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PHP syntax
+        run: |
+          find app/ -name "*.php" -print0 | xargs -0 -n1 php -l 2>&1 | grep -v "No syntax errors" || true
+          find app/ -name "*.php" -print0 | xargs -0 -n1 php -l 2>&1 | grep "Parse error" && exit 1 || exit 0
+
+  trivy:
+    name: Vulnerability Scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - name: Scan dependencies
+        run: |
+          trivy fs --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed composer.lock
+
+  semgrep:
+    name: Static Security Analysis (Semgrep)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Semgrep
+        run: pip install semgrep
+      - name: Run Semgrep
+        run: |
+          semgrep scan --config "p/php" --config "p/secrets" --config "p/security-audit" --error app/
+
+  secrets-scan:
+    name: Secrets Scan
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for hardcoded credentials
+        run: |
+          echo "Scanning for hardcoded API keys and credentials..."
+          FOUND=0
+          # SendGrid
+          grep -rn "SG\.[a-zA-Z0-9_-]\{20,\}" app/ --include="*.php" && FOUND=1 || true
+          # OpenAI
+          grep -rn "sk-proj-[a-zA-Z0-9_-]\{20,\}" app/ --include="*.php" && FOUND=1 || true
+          grep -rn "sk-[a-zA-Z0-9]\{40,\}" app/ --include="*.php" && FOUND=1 || true
+          # Generic passwords
+          grep -rn "password.*=.*['\"][^'\"]\{8,\}['\"]" app/ --include="*.php" | grep -v "getenv\|env(" && FOUND=1 || true
+          # Database credentials
+          grep -rn "AVNS_[a-zA-Z0-9_-]\{10,\}" app/ --include="*.php" && FOUND=1 || true
+          if [ $FOUND -eq 1 ]; then
+            echo "CRITICAL: Hardcoded credentials found!"
+            exit 1
+          fi
+          echo "No hardcoded credentials found."
+
+  deploy-qa:
+    name: Deploy to Dev/QA
+    runs-on: ubuntu-latest
+    needs: [trivy, semgrep, secrets-scan]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.QA_HOST }}
+          username: ${{ secrets.QA_USER }}
+          key: ${{ secrets.QA_SSH_KEY }}
+          script: |
+            cd ${{ secrets.QA_PATH }}
+            git pull origin develop
+            composer install --no-dev --optimize-autoloader
+            php spark cache:clear 2>/dev/null || true
+            echo "Deploy to QA completed at $(date)"
