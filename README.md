@@ -15,7 +15,7 @@ Plataforma web que permite a empresas cumplir la normatividad colombiana (Decret
 |------------|-----------|
 | Backend | PHP 8.2 + CodeIgniter 4.6 |
 | Base de datos | MySQL 8 (DigitalOcean Managed, SSL required) |
-| Servidor web | Nginx (Ubuntu 24.04) — Hetzner LXC |
+| Servidor web | Nginx (Ubuntu 24.04) — aaPanel (66.29.154.174) |
 | Email | SendGrid API v3 |
 | PDF | TCPDF + DOMPDF 3.1 |
 | Excel | PhpSpreadsheet 3.9 |

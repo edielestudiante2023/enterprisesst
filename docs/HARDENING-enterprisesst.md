@@ -28,7 +28,7 @@
 |------------|-----------|
 | Backend | PHP 8.2 + CodeIgniter 4.6 |
 | Base de datos | MySQL 8.0.45 (DigitalOcean Managed, SSL required) |
-| Servidor web | Nginx (Ubuntu 24.04) — Hetzner LXC |
+| Servidor web | Nginx (Ubuntu 24.04) — aaPanel (66.29.154.174) |
 | Email | SendGrid API v3 |
 | PDF | TCPDF 6.10 + DOMPDF 3.1 |
 | Excel | PhpSpreadsheet 3.9 |
@@ -353,7 +353,7 @@ git push → Gitea → Runner → Tests + Trivy + Semgrep + Secrets → Deploy S
 **Trigger:** Push a main (despues de merge de PR desde develop)
 
 ```
-PR develop → main → Validacion → Trivy + Semgrep (paralelo) → Deploy SSH → Hetzner LXC
+PR develop → main → Validacion → Trivy + Semgrep (paralelo) → Deploy SSH → aaPanel
                                                                           → Verificacion HTTP
 ```
 
@@ -362,7 +362,7 @@ PR develop → main → Validacion → Trivy + Semgrep (paralelo) → Deploy SSH
 | validate | Sintaxis PHP + busqueda de credenciales |
 | trivy | Escaneo vulnerabilidades (paralelo con semgrep) |
 | semgrep | Analisis estatico seguridad (paralelo con trivy) |
-| deploy-production | SSH al Hetzner + deploy + verificacion HTTP post-deploy |
+| deploy-production | SSH al aaPanel (66.29.154.174) + deploy + verificacion HTTP post-deploy |
 
 **Todo por pipeline, nada manual.**
 
@@ -382,7 +382,7 @@ feature/xxx → push → Validacion → PR a develop → Validacion → merge
                                                                  ↓
                                           PR develop → main → Validacion → merge
                                                                              ↓
-                                                     Cutover automatico a Hetzner LXC
+                                                     Cutover automatico a aaPanel
                                                                              ↓
                                                           Verificacion post-deploy
                                                                              ↓
@@ -452,7 +452,7 @@ feature/xxx → push → Validacion → PR a develop → Validacion → merge
 
 ### Estado del deploy en produccion
 
-El aplicativo enterprisesst **NO esta desplegado en el servidor Hetzner (66.29.154.174) actualmente**. Los aplicativos existentes en /www/wwwroot/ son: cycloidtalent, tat_cycloid, heroicos, psirysk, cycloidmanagement, auditorias, kpi — ninguno usa la BD `empresas_sst`.
+El aplicativo enterprisesst **NO esta desplegado en el servidor aaPanel (66.29.154.174) (66.29.154.174) actualmente**. Los aplicativos existentes en /www/wwwroot/ son: cycloidtalent, tat_cycloid, heroicos, psirysk, cycloidmanagement, auditorias, kpi — ninguno usa la BD `empresas_sst`.
 
 ---
 
@@ -474,7 +474,7 @@ El aplicativo enterprisesst **NO esta desplegado en el servidor Hetzner (66.29.1
 | 5 | Push de rama develop al remoto | Cliente |
 | 6 | Configurar proteccion de ramas en Gitea | Consultor |
 | 7 | Configurar secrets en Gitea para pipelines CI/CD | Consultor |
-| 8 | Desplegar aplicativo en servidor Hetzner | Consultor/Cliente |
+| 8 | Desplegar aplicativo en servidor aaPanel (66.29.154.174) | Consultor/Cliente |
 | 9 | Agregar `.claude/` y patrones temporales al .gitignore | Cliente |
 
 ### Prioridad MEDIA
