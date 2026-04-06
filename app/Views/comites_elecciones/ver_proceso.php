@@ -860,13 +860,15 @@ $permitirGestionCandidatos = true;
                     <?php if (!$esVistaHistorica): ?>
                     <hr>
                     <?php
-                    $plazasRequeridas = $proceso['plazas_principales'] + $proceso['plazas_suplentes'];
                     $plazasCubiertas = count($candidatosEmpleador ?? []);
+                    // Brigada: flexible, solo requiere al menos 1. Otros comités: exigen cubrir plazas_principales.
+                    $minimoRequerido = ($proceso['tipo_comite'] === 'BRIGADA') ? 1 : $proceso['plazas_principales'];
+                    $puedeAvanzar = $plazasCubiertas >= $minimoRequerido;
                     ?>
                     <form action="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/cambiar-estado/firmas') ?>" method="post">
                         <button type="submit" class="btn btn-warning"
-                                <?= $plazasCubiertas < $proceso['plazas_principales'] ? 'disabled' : '' ?>
-                                title="<?= $plazasCubiertas < $proceso['plazas_principales'] ? 'Se requieren al menos ' . $proceso['plazas_principales'] . ' representantes principales' : '' ?>">
+                                <?= !$puedeAvanzar ? 'disabled' : '' ?>
+                                title="<?= !$puedeAvanzar ? 'Se requiere al menos ' . $minimoRequerido . ' representante(s)' : '' ?>">
                             <i class="bi bi-pen me-1"></i>Continuar a Firmas
                         </button>
                     </form>
