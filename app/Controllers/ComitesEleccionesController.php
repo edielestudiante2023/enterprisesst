@@ -3121,25 +3121,19 @@ class ComitesEleccionesController extends BaseController
             mkdir($uploadDir, 0755, true);
         }
 
-        // Buscar registro existente en tbl_reporte
+        // Buscar registro existente en tbl_reporte — busqueda exacta por tipo de comite
         $tipoComite = $proceso['tipo_comite'];
         $idCliente = $documento['id_cliente'];
 
-        // Buscar por "Acta de Constitucion {TIPO}" en el titulo - cubre todos los casos
         $reporteExistente = $this->db->query(
             "SELECT * FROM tbl_reporte
              WHERE id_cliente = ?
-             AND (titulo_reporte LIKE ? OR titulo_reporte LIKE ? OR titulo_reporte LIKE ?)
+             AND titulo_reporte LIKE ?
              ORDER BY created_at DESC LIMIT 1",
-            [
-                $idCliente,
-                '%Acta de Constitucion ' . $tipoComite . '%',
-                '%Acta%Constitucion%' . $tipoComite . '%',
-                '%' . ($documento['codigo'] ?? '') . '%Constitucion%'
-            ]
+            [$idCliente, '%Constitucion ' . $tipoComite . '%']
         )->getRowArray();
 
-        log_message('info', "ACTUALIZAR_REPO: tipoComite={$tipoComite}, idCliente={$idCliente}, reporteExistente=" . ($reporteExistente ? $reporteExistente['id_reporte'] . ':' . $reporteExistente['titulo_reporte'] : 'NO'));
+        log_message('info', "ACTUALIZAR_REPO: tipoComite={$tipoComite}, idCliente={$idCliente}, reporteExistente=" . ($reporteExistente ? $reporteExistente['id_reporte'] . ':' . substr($reporteExistente['titulo_reporte'], 0, 60) : 'NO'));
 
         if ($reporteExistente) {
             // Eliminar archivo anterior si existe
