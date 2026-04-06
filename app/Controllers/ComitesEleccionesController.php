@@ -3151,12 +3151,18 @@ class ComitesEleccionesController extends BaseController
             file_put_contents($filePath, $pdfOutput);
             $enlace = base_url('uploads/' . $nit . '/' . $fileName);
 
-            // Actualizar registro existente
+            // Actualizar registro existente — titulo tambien se actualiza con codigo correcto
+            $codigoActual = $documento['codigo'] ?? 'FT-SST-013';
+            $tituloActualizado = $codigoActual . ' - ' . $documento['titulo']
+                . ' (v' . ($documento['version'] ?? 1) . ' - Firmado)'
+                . ' - Actualizado ' . date('d/m/Y H:i');
+
             $this->db->table('tbl_reporte')
                 ->where('id_reporte', $reporteExistente['id_reporte'])
                 ->update([
+                    'titulo_reporte' => $tituloActualizado,
                     'enlace' => $enlace,
-                    'observaciones' => 'PDF actualizado el ' . date('d/m/Y H:i') . '. ' . ($reporteExistente['observaciones'] ?? ''),
+                    'observaciones' => 'PDF actualizado el ' . date('d/m/Y H:i'),
                     'updated_at' => date('Y-m-d H:i:s')
                 ]);
 
