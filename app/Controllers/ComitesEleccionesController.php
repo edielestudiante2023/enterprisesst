@@ -3129,25 +3129,20 @@ class ComitesEleccionesController extends BaseController
         log_message('info', "ACTUALIZAR_REPO: codigoBusqueda={$codigoBusqueda}, reporteExistente=" . ($reporteExistente ? $reporteExistente['id_reporte'] : 'NO'));
 
         if ($reporteExistente) {
-            // Extraer ruta relativa del enlace anterior (uploads/nit/archivo.pdf)
+            // Eliminar archivo anterior si existe
             $enlaceAnterior = $reporteExistente['enlace'] ?? '';
-            $rutaRelativa = '';
             if (preg_match('#(uploads/.+\.pdf)#i', $enlaceAnterior, $matches)) {
-                $rutaRelativa = $matches[1];
+                $pathAnterior = FCPATH . $matches[1];
+                if (file_exists($pathAnterior)) {
+                    @unlink($pathAnterior);
+                }
             }
-            $pathAnterior = $rutaRelativa ? FCPATH . $rutaRelativa : '';
 
-            if ($pathAnterior && file_exists($pathAnterior)) {
-                // Sobreescribir el mismo archivo
-                file_put_contents($pathAnterior, $pdfOutput);
-                $enlace = $enlaceAnterior;
-            } else {
-                // Crear nuevo archivo
-                $fileName = time() . '_' . url_title(($documento['codigo'] ?? 'DOC') . '_' . $documento['titulo'], '-', true) . '.pdf';
-                $filePath = $uploadDir . '/' . $fileName;
-                file_put_contents($filePath, $pdfOutput);
-                $enlace = base_url('uploads/' . $nit . '/' . $fileName);
-            }
+            // Crear archivo nuevo con timestamp para evitar caché
+            $fileName = time() . '_' . url_title(($documento['codigo'] ?? 'DOC') . '_' . $documento['titulo'], '-', true) . '.pdf';
+            $filePath = $uploadDir . '/' . $fileName;
+            file_put_contents($filePath, $pdfOutput);
+            $enlace = base_url('uploads/' . $nit . '/' . $fileName);
 
             // Actualizar registro existente
             $this->db->table('tbl_reporte')
