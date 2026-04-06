@@ -594,15 +594,20 @@ $esDesignacionDirecta = in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA']);
                     <li>Servir como organismo de coordinacion entre empleador y trabajadores en SST.</li>
                 </ol>
                 <?php elseif ($proceso['tipo_comite'] === 'COCOLAB'): ?>
-                <p>De conformidad con la Resolucion 652 de 2012, son funciones del Comite de Convivencia Laboral:</p>
+                <p>De conformidad con la Resolucion 3461 de 2025 del Ministerio del Trabajo, son funciones del Comite de Convivencia Laboral:</p>
                 <ol>
-                    <li>Recibir y dar tramite a las quejas de acoso laboral.</li>
-                    <li>Examinar de manera confidencial los casos de acoso laboral.</li>
-                    <li>Escuchar a las partes involucradas de manera individual.</li>
-                    <li>Adelantar reuniones para crear un espacio de dialogo.</li>
-                    <li>Formular planes de mejora y hacer seguimiento.</li>
-                    <li>Presentar a la alta direccion recomendaciones preventivas.</li>
+                    <li>Recibir y dar tramite a las quejas presentadas en las que se describan situaciones que puedan constituir acoso laboral, dentro de los <strong>5 dias calendario</strong> siguientes a su recepcion.</li>
+                    <li>Examinar de manera confidencial los casos de acoso laboral, dentro de los <strong>5 dias calendario</strong> siguientes, ampliables hasta un maximo de <strong>15 dias</strong>.</li>
+                    <li>Escuchar a las partes involucradas de manera individual sobre los hechos que dieron lugar a la queja, dentro de los <strong>5 dias calendario</strong> siguientes.</li>
+                    <li>Adelantar reuniones de dialogo para promover compromisos mutuos y formular planes de mejora, entre <strong>5 y maximo 15 dias calendario</strong> despues de las entrevistas individuales.</li>
+                    <li>Realizar seguimiento mensual a los compromisos adquiridos por las partes.</li>
+                    <li>En caso de no lograrse acuerdo o persistir la conducta, remitir a las autoridades competentes (Procuraduria en sector publico o informar a la alta direccion en sector privado) dentro de los <strong>15 dias calendario</strong> siguientes.</li>
+                    <li>Presentar recomendaciones a la alta direccion para la adopcion de medidas preventivas y correctivas, entre <strong>5 y 10 dias calendario</strong>.</li>
+                    <li>Realizar vigilancia mensual al cumplimiento de las recomendaciones dadas por el Comite.</li>
+                    <li>Elaborar informes trimestrales y anuales sobre la gestion del Comite, incluyendo estadisticas de las quejas recibidas.</li>
+                    <li>Presentar informe anual de resultados de la gestion del Comite.</li>
                 </ol>
+                <p><small class="text-muted"><em>Nota: El procedimiento preventivo de tramite de quejas no podra exceder de <strong>65 dias calendario</strong> desde su recepcion. La Resolucion 3461 de 2025 derogo las Resoluciones 652 y 1356 de 2012.</em></small></p>
                 <?php elseif ($proceso['tipo_comite'] === 'BRIGADA'): ?>
                 <p>De conformidad con el Decreto 1072 de 2015 y la normatividad vigente, son funciones de la Brigada de Emergencias:</p>
                 <ol>
