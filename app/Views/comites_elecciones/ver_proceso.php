@@ -857,7 +857,7 @@ $permitirGestionCandidatos = true;
                     </div>
                     <?php endif; ?>
 
-                    <?php if (!$esVistaHistorica): ?>
+                    <?php if (!$esVistaHistorica && $proceso['estado'] === 'designacion_empleador'): ?>
                     <hr>
                     <?php
                     $plazasCubiertas = count($candidatosEmpleador ?? []);
