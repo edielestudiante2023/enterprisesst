@@ -699,7 +699,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
 <!-- Representantes del Empleador -->
 <div style="margin-top: 25px;">
     <div style="background-color: #198754; color: white; padding: 8px 12px; font-weight: bold; font-size: 10pt;">
-        FIRMAS DE MIEMBROS - REPRESENTANTES DEL EMPLEADOR
+        FIRMAS DE MIEMBROS - <?= $esDesignacionDirecta ? 'INTEGRANTES DESIGNADOS' : 'REPRESENTANTES DEL EMPLEADOR' ?>
     </div>
     <table class="tabla-contenido" style="width: 100%; margin-top: 0;">
         <tr>
@@ -751,6 +751,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
     </table>
 </div>
 
+<?php if (!$esDesignacionDirecta): ?>
 <!-- Representantes de Trabajadores -->
 <div style="margin-top: 25px;">
     <div style="background-color: #0d6efd; color: white; padding: 8px 12px; font-weight: bold; font-size: 10pt;">
@@ -805,6 +806,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
         <?php endforeach; ?>
     </table>
 </div>
+<?php endif; ?>
 
 <!-- PIE DE DOCUMENTO -->
 <div class="pie-documento">
