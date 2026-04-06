@@ -3121,11 +3121,16 @@ class ComitesEleccionesController extends BaseController
             mkdir($uploadDir, 0755, true);
         }
 
-        $codigoBusqueda = $documento['codigo'] ?? $documento['titulo'];
+        // Buscar registro existente en tbl_reporte por titulo del documento o codigo (actual o anterior FT-SST-013)
+        $tituloBusqueda = $documento['titulo'] ?? '';
+        $codigoBusqueda = $documento['codigo'] ?? '';
 
-        // Buscar registro existente en tbl_reporte
         $reporteExistente = $this->db->table('tbl_reporte')
-            ->where("titulo_reporte COLLATE utf8mb4_general_ci LIKE '%" . $this->db->escapeLikeString($codigoBusqueda) . "%'", null, false)
+            ->groupStart()
+                ->like('titulo_reporte', $this->db->escapeLikeString($tituloBusqueda), 'both', null, true)
+                ->orLike('titulo_reporte', $this->db->escapeLikeString($codigoBusqueda), 'both', null, true)
+                ->orLike('titulo_reporte', 'Acta de Constitucion ' . $proceso['tipo_comite'], 'both', null, true)
+            ->groupEnd()
             ->where('id_cliente', $documento['id_cliente'])
             ->orderBy('created_at', 'DESC')
             ->get()
