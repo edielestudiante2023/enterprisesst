@@ -334,9 +334,6 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
      SECCION 2: REGISTRO DE VOTANTES
      ===================================== -->
 
-<div class="page-break"></div>
-<?php renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $cliente, $tipoComiteNombre); ?>
-
 <div class="seccion">
     <div class="seccion-titulo">2. REGISTRO DE VOTANTES</div>
     <div class="seccion-contenido">
@@ -370,9 +367,6 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
 <!-- =====================================
      SECCION 3: ACTA DE CIERRE DE VOTACIONES
      ===================================== -->
-
-<div class="page-break"></div>
-<?php renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $cliente, $tipoComiteNombre); ?>
 
 <div class="seccion">
     <div class="seccion-titulo">3. ACTA DE CIERRE DE VOTACIONES</div>
@@ -445,9 +439,6 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
 <!-- =====================================
      SECCION 5: CONFORMACION DEL COMITE (COPASST/COCOLAB)
      ===================================== -->
-
-<div class="page-break"></div>
-<?php renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $cliente, $tipoComiteNombre); ?>
 
 <div class="seccion">
     <div class="seccion-titulo">5. CONFORMACION DEL <?= $proceso['tipo_comite'] ?></div>
@@ -602,7 +593,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
      ===================================== -->
 
 <?php if (!empty($jurados)): ?>
-<div class="page-break"></div>
+<?php if (!$esDesignacionDirecta): ?><div class="page-break"></div><?php endif; ?>
 <?php renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $cliente, $tipoComiteNombre); ?>
 
 <div style="margin-top: 25px;">
