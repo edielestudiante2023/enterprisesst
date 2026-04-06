@@ -95,38 +95,6 @@ $action = $isEdit ? '/inspecciones/extintores/update/' . $inspeccion['id'] : '/i
                                 <input type="number" name="cantidad_agua" class="form-control form-control-sm" min="0" value="<?= $inspeccion['cantidad_agua'] ?? 0 ?>">
                             </div>
                         </div>
-                        <hr style="margin:8px 0;">
-                        <small class="text-muted d-block mb-2" style="font-size:11px;">Distribucion por ubicacion:</small>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <label class="form-label" style="font-size:12px;">Unidades residenciales</label>
-                                <input type="number" name="cantidad_unidades_residenciales" class="form-control form-control-sm" min="0" value="<?= $inspeccion['cantidad_unidades_residenciales'] ?? 0 ?>">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label" style="font-size:12px;">Porteria</label>
-                                <input type="number" name="cantidad_porteria" class="form-control form-control-sm" min="0" value="<?= $inspeccion['cantidad_porteria'] ?? 0 ?>">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label" style="font-size:12px;">Oficina admin</label>
-                                <input type="number" name="cantidad_oficina_admin" class="form-control form-control-sm" min="0" value="<?= $inspeccion['cantidad_oficina_admin'] ?? 0 ?>">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label" style="font-size:12px;">Shut basuras</label>
-                                <input type="number" name="cantidad_shut_basuras" class="form-control form-control-sm" min="0" value="<?= $inspeccion['cantidad_shut_basuras'] ?? 0 ?>">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label" style="font-size:12px;">Salones comunales</label>
-                                <input type="number" name="cantidad_salones_comunales" class="form-control form-control-sm" min="0" value="<?= $inspeccion['cantidad_salones_comunales'] ?? 0 ?>">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label" style="font-size:12px;">Cuarto bombas</label>
-                                <input type="number" name="cantidad_cuarto_bombas" class="form-control form-control-sm" min="0" value="<?= $inspeccion['cantidad_cuarto_bombas'] ?? 0 ?>">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label" style="font-size:12px;">Planta electrica</label>
-                                <input type="number" name="cantidad_planta_electrica" class="form-control form-control-sm" min="0" value="<?= $inspeccion['cantidad_planta_electrica'] ?? 0 ?>">
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -388,8 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Inventario
         ['numero_extintores_totales','cantidad_abc','cantidad_co2','cantidad_solkaflam','cantidad_agua',
-         'capacidad_libras','cantidad_unidades_residenciales','cantidad_porteria','cantidad_oficina_admin',
-         'cantidad_shut_basuras','cantidad_salones_comunales','cantidad_cuarto_bombas','cantidad_planta_electrica'
+         'capacidad_libras'
         ].forEach(f => { data[f] = document.querySelector('[name="'+f+'"]')?.value || ''; });
 
         // Extintores
@@ -428,8 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Inventario
         ['numero_extintores_totales','cantidad_abc','cantidad_co2','cantidad_solkaflam','cantidad_agua',
-         'capacidad_libras','cantidad_unidades_residenciales','cantidad_porteria','cantidad_oficina_admin',
-         'cantidad_shut_basuras','cantidad_salones_comunales','cantidad_cuarto_bombas','cantidad_planta_electrica'
+         'capacidad_libras'
         ].forEach(f => {
             const el = document.querySelector('[name="'+f+'"]');
             if (el && data[f]) el.value = data[f];

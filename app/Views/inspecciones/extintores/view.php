@@ -35,16 +35,6 @@
                 <div class="col-12 mb-1"><span class="text-muted">Capacidad:</span> <?= esc($inspeccion['capacidad_libras']) ?></div>
                 <?php endif; ?>
             </div>
-            <hr style="margin:6px 0;">
-            <div class="row" style="font-size:12px;">
-                <div class="col-6 mb-1"><span class="text-muted">Und. residenciales:</span> <?= $inspeccion['cantidad_unidades_residenciales'] ?? 0 ?></div>
-                <div class="col-6 mb-1"><span class="text-muted">Porteria:</span> <?= $inspeccion['cantidad_porteria'] ?? 0 ?></div>
-                <div class="col-6 mb-1"><span class="text-muted">Oficina admin:</span> <?= $inspeccion['cantidad_oficina_admin'] ?? 0 ?></div>
-                <div class="col-6 mb-1"><span class="text-muted">Shut basuras:</span> <?= $inspeccion['cantidad_shut_basuras'] ?? 0 ?></div>
-                <div class="col-6 mb-1"><span class="text-muted">Salones comunales:</span> <?= $inspeccion['cantidad_salones_comunales'] ?? 0 ?></div>
-                <div class="col-6 mb-1"><span class="text-muted">Cuarto bombas:</span> <?= $inspeccion['cantidad_cuarto_bombas'] ?? 0 ?></div>
-                <div class="col-6 mb-1"><span class="text-muted">Planta electrica:</span> <?= $inspeccion['cantidad_planta_electrica'] ?? 0 ?></div>
-            </div>
         </div>
     </div>
 

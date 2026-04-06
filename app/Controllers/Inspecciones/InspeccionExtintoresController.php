@@ -115,13 +115,6 @@ class InspeccionExtintoresController extends BaseController
             'cantidad_solkaflam'            => (int)$this->request->getPost('cantidad_solkaflam'),
             'cantidad_agua'                 => (int)$this->request->getPost('cantidad_agua'),
             'capacidad_libras'              => $this->request->getPost('capacidad_libras'),
-            'cantidad_unidades_residenciales' => (int)$this->request->getPost('cantidad_unidades_residenciales'),
-            'cantidad_porteria'             => (int)$this->request->getPost('cantidad_porteria'),
-            'cantidad_oficina_admin'        => (int)$this->request->getPost('cantidad_oficina_admin'),
-            'cantidad_shut_basuras'         => (int)$this->request->getPost('cantidad_shut_basuras'),
-            'cantidad_salones_comunales'    => (int)$this->request->getPost('cantidad_salones_comunales'),
-            'cantidad_cuarto_bombas'        => (int)$this->request->getPost('cantidad_cuarto_bombas'),
-            'cantidad_planta_electrica'     => (int)$this->request->getPost('cantidad_planta_electrica'),
             'recomendaciones_generales'     => $this->request->getPost('recomendaciones_generales'),
             'estado'                        => 'borrador',
         ];
@@ -180,13 +173,6 @@ class InspeccionExtintoresController extends BaseController
             'cantidad_solkaflam'            => (int)$this->request->getPost('cantidad_solkaflam'),
             'cantidad_agua'                 => (int)$this->request->getPost('cantidad_agua'),
             'capacidad_libras'              => $this->request->getPost('capacidad_libras'),
-            'cantidad_unidades_residenciales' => (int)$this->request->getPost('cantidad_unidades_residenciales'),
-            'cantidad_porteria'             => (int)$this->request->getPost('cantidad_porteria'),
-            'cantidad_oficina_admin'        => (int)$this->request->getPost('cantidad_oficina_admin'),
-            'cantidad_shut_basuras'         => (int)$this->request->getPost('cantidad_shut_basuras'),
-            'cantidad_salones_comunales'    => (int)$this->request->getPost('cantidad_salones_comunales'),
-            'cantidad_cuarto_bombas'        => (int)$this->request->getPost('cantidad_cuarto_bombas'),
-            'cantidad_planta_electrica'     => (int)$this->request->getPost('cantidad_planta_electrica'),
             'recomendaciones_generales'     => $this->request->getPost('recomendaciones_generales'),
         ]);
 

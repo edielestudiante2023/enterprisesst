@@ -145,32 +145,6 @@
                 <td style="text-align:center;"><?= $inspeccion['cantidad_agua'] ?? 0 ?></td>
             </tr>
         </table>
-        <table class="datos-general" style="margin-top:0;">
-            <tr>
-                <td class="datos-label">Unidades residenciales</td>
-                <td style="text-align:center;"><?= $inspeccion['cantidad_unidades_residenciales'] ?? 0 ?></td>
-                <td class="datos-label">Porteria</td>
-                <td style="text-align:center;"><?= $inspeccion['cantidad_porteria'] ?? 0 ?></td>
-            </tr>
-            <tr>
-                <td class="datos-label">Oficina administracion</td>
-                <td style="text-align:center;"><?= $inspeccion['cantidad_oficina_admin'] ?? 0 ?></td>
-                <td class="datos-label">Shut de basuras</td>
-                <td style="text-align:center;"><?= $inspeccion['cantidad_shut_basuras'] ?? 0 ?></td>
-            </tr>
-            <tr>
-                <td class="datos-label">Salones comunales</td>
-                <td style="text-align:center;"><?= $inspeccion['cantidad_salones_comunales'] ?? 0 ?></td>
-                <td class="datos-label">Cuarto de bombas</td>
-                <td style="text-align:center;"><?= $inspeccion['cantidad_cuarto_bombas'] ?? 0 ?></td>
-            </tr>
-            <tr>
-                <td class="datos-label">Planta electrica</td>
-                <td style="text-align:center;"><?= $inspeccion['cantidad_planta_electrica'] ?? 0 ?></td>
-                <td class="datos-label">&nbsp;</td>
-                <td>&nbsp;</td>
-            </tr>
-        </table>
     </div>
 
     <!-- EXTINTORES INSPECCIONADOS -->
