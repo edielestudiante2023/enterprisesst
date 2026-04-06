@@ -933,28 +933,39 @@ function actualizarRepositorio() {
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Actualizando...';
 
-    fetch('<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/acta/actualizar-repositorio') ?>', {
+    const url = '<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/acta/actualizar-repositorio') ?>';
+    console.log('ACTUALIZAR_REPO URL:', url);
+
+    fetch(url, {
         method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/json',
-            '<?= csrf_header() ?>': '<?= csrf_hash() ?>'
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(r => r.json())
-    .then(data => {
+    .then(r => {
+        console.log('ACTUALIZAR_REPO status:', r.status);
+        return r.text();
+    })
+    .then(text => {
+        console.log('ACTUALIZAR_REPO response:', text);
         btn.disabled = false;
         btn.innerHTML = textoOriginal;
-        if (data.success) {
-            Swal.fire({icon: 'success', title: 'Actualizado', text: data.message, timer: 3000, showConfirmButton: false});
-        } else {
-            Swal.fire({icon: 'error', title: 'Error', text: data.message});
+        try {
+            const data = JSON.parse(text);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({icon: data.success ? 'success' : 'error', title: data.success ? 'Actualizado' : 'Error', text: data.message});
+            } else {
+                alert(data.message);
+            }
+        } catch(e) {
+            alert('Respuesta inesperada: ' + text.substring(0, 200));
         }
     })
-    .catch(() => {
+    .catch(err => {
+        console.error('ACTUALIZAR_REPO error:', err);
         btn.disabled = false;
         btn.innerHTML = textoOriginal;
-        Swal.fire({icon: 'error', title: 'Error', text: 'Error de conexión al actualizar'});
+        alert('Error de conexión: ' + err.message);
     });
 }
 </script>
