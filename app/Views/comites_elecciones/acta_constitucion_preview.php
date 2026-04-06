@@ -223,6 +223,9 @@ $esDesignacionDirecta = in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA']);
                 <button onclick="window.print()" class="btn btn-secondary btn-sm">
                     <i class="bi bi-printer me-1"></i>Imprimir
                 </button>
+                <button onclick="actualizarRepositorio()" class="btn btn-warning btn-sm" id="btnActualizarRepo">
+                    <i class="bi bi-arrow-repeat me-1"></i>Actualizar Repositorio
+                </button>
             </div>
         </div>
     </div>
@@ -922,5 +925,38 @@ $esDesignacionDirecta = in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA']);
 
     </div>
 </div>
+
+<script>
+function actualizarRepositorio() {
+    const btn = document.getElementById('btnActualizarRepo');
+    const textoOriginal = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Actualizando...';
+
+    fetch('<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/acta/actualizar-repositorio') ?>', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+            '<?= csrf_header() ?>': '<?= csrf_hash() ?>'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+        if (data.success) {
+            Swal.fire({icon: 'success', title: 'Actualizado', text: data.message, timer: 3000, showConfirmButton: false});
+        } else {
+            Swal.fire({icon: 'error', title: 'Error', text: data.message});
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+        Swal.fire({icon: 'error', title: 'Error', text: 'Error de conexión al actualizar'});
+    });
+}
+</script>
 
 <?= $this->endSection() ?>

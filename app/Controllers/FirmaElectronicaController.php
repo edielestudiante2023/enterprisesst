@@ -597,7 +597,13 @@ class FirmaElectronicaController extends Controller
             ];
 
             // Renderizar HTML y generar PDF
-            $html = view('documentos_sst/pdf_template', $data);
+            // Para actas de constitución, usar la vista específica con datos reales del proceso
+            if (str_starts_with($doc['tipo_documento'], 'acta_constitucion_')) {
+                $html = $this->renderActaConstitucionPdf($doc);
+            } else {
+                $html = view('documentos_sst/pdf_template', $data);
+            }
+
             $dompdf = new \Dompdf\Dompdf();
             $dompdf->loadHtml($html);
             $dompdf->setPaper('letter', 'portrait');
@@ -671,6 +677,39 @@ class FirmaElectronicaController extends Controller
         } catch (\Exception $e) {
             log_message('error', 'Error publicando documento firmado: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Renderizar HTML del acta de constitución usando la vista específica con datos reales del proceso
+     */
+    private function renderActaConstitucionPdf(array $doc): string
+    {
+        // Extraer tipo de comité del tipo_documento (ej: acta_constitucion_cocolab → COCOLAB)
+        $tipoComite = strtoupper(str_replace('acta_constitucion_', '', $doc['tipo_documento']));
+
+        // Buscar el proceso electoral
+        $proceso = $this->db->table('tbl_procesos_electorales')
+            ->where('id_cliente', $doc['id_cliente'])
+            ->where('tipo_comite', $tipoComite)
+            ->where('anio', $doc['anio'])
+            ->orderBy('id_proceso', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        if (!$proceso) {
+            log_message('warning', "No se encontró proceso electoral para acta {$doc['tipo_documento']}, usando template genérico");
+            return view('documentos_sst/pdf_template', ['documento' => $doc, 'contenido' => json_decode($doc['contenido'], true)]);
+        }
+
+        $comitesController = new \App\Controllers\ComitesEleccionesController();
+        $data = $comitesController->obtenerDatosActa($proceso['id_proceso']);
+
+        if (!$data) {
+            log_message('warning', "No se pudieron obtener datos del acta para proceso {$proceso['id_proceso']}");
+            return view('documentos_sst/pdf_template', ['documento' => $doc, 'contenido' => json_decode($doc['contenido'], true)]);
+        }
+
+        return view('comites_elecciones/acta_constitucion_pdf', $data);
     }
 
     /**

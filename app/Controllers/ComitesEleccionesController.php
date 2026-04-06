@@ -3078,9 +3078,101 @@ class ComitesEleccionesController extends BaseController
     }
 
     /**
+     * Actualizar PDF del acta en el repositorio (tbl_reporte)
+     */
+    public function actualizarRepositorio(int $idProceso)
+    {
+        $data = $this->obtenerDatosActa($idProceso);
+
+        if (!$data) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Proceso no encontrado']);
+        }
+
+        $proceso = $data['proceso'];
+        $cliente = $data['cliente'];
+        $documento = $data['documento'] ?? null;
+
+        if (!$documento) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No existe documento del acta para este proceso']);
+        }
+
+        // Generar PDF con la vista actual
+        $html = view('comites_elecciones/acta_constitucion_pdf', $data);
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('isHtml5ParserEnabled', true);
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->render();
+        $pdfOutput = $dompdf->output();
+
+        // Guardar archivo en uploads/{nit}/
+        $nit = $cliente['nit_cliente'] ?? $documento['id_cliente'];
+        $uploadDir = FCPATH . 'uploads/' . $nit;
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $codigoBusqueda = $documento['codigo'] ?? $documento['titulo'];
+
+        // Buscar registro existente en tbl_reporte
+        $reporteExistente = $this->db->table('tbl_reporte')
+            ->where("titulo_reporte COLLATE utf8mb4_general_ci LIKE '%" . $this->db->escapeLikeString($codigoBusqueda) . "%'", null, false)
+            ->where('id_cliente', $documento['id_cliente'])
+            ->orderBy('created_at', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        if ($reporteExistente) {
+            // Sobreescribir el archivo existente si podemos extraer la ruta
+            $enlaceAnterior = $reporteExistente['enlace'] ?? '';
+            $pathAnterior = str_replace(base_url(), FCPATH, $enlaceAnterior);
+            $pathAnterior = str_replace('/', DIRECTORY_SEPARATOR, $pathAnterior);
+
+            if (file_exists($pathAnterior)) {
+                // Sobreescribir el mismo archivo
+                file_put_contents($pathAnterior, $pdfOutput);
+                $enlace = $enlaceAnterior;
+            } else {
+                // Crear nuevo archivo
+                $fileName = time() . '_' . url_title(($documento['codigo'] ?? 'DOC') . '_' . $documento['titulo'], '-', true) . '.pdf';
+                $filePath = $uploadDir . '/' . $fileName;
+                file_put_contents($filePath, $pdfOutput);
+                $enlace = base_url('uploads/' . $nit . '/' . $fileName);
+            }
+
+            // Actualizar registro existente
+            $this->db->table('tbl_reporte')
+                ->where('id_reporte', $reporteExistente['id_reporte'])
+                ->update([
+                    'enlace' => $enlace,
+                    'observaciones' => 'PDF actualizado el ' . date('d/m/Y H:i') . '. ' . ($reporteExistente['observaciones'] ?? ''),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+
+            // Actualizar enlace en versión vigente
+            $this->db->table('tbl_doc_versiones_sst')
+                ->where('id_documento', $documento['id_documento'])
+                ->where('estado', 'vigente')
+                ->update(['archivo_pdf' => $enlace]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'PDF actualizado en el repositorio exitosamente'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No se encontró el documento en el repositorio. Primero debe completar las firmas para que se publique automaticamente.'
+            ]);
+        }
+    }
+
+    /**
      * Obtener todos los datos necesarios para el Acta de Constitución
      */
-    private function obtenerDatosActa(int $idProceso): ?array
+    public function obtenerDatosActa(int $idProceso): ?array
     {
         // Proceso
         $proceso = $this->db->table('tbl_procesos_electorales')

@@ -1319,6 +1319,7 @@ $routes->get('/comites-elecciones/proceso/(:num)/acta', 'ComitesEleccionesContro
 $routes->get('/comites-elecciones/proceso/(:num)/acta/pdf', 'ComitesEleccionesController::generarActaConstitucionPDF/$1');
 $routes->get('/comites-elecciones/proceso/(:num)/acta/descargar', 'ComitesEleccionesController::descargarActaConstitucion/$1');
 $routes->get('/comites-elecciones/proceso/(:num)/acta/word', 'ComitesEleccionesController::exportarActaWord/$1');
+$routes->post('/comites-elecciones/proceso/(:num)/acta/actualizar-repositorio', 'ComitesEleccionesController::actualizarRepositorio/$1');
 
 // Firmas electronicas del Acta de Constitucion
 $routes->get('/comites-elecciones/proceso/(:num)/firmas', 'ComitesEleccionesController::solicitarFirmasActa/$1');
