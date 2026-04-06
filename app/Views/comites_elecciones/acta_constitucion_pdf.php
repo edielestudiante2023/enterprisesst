@@ -35,6 +35,10 @@
     $periodoInicio = fechaLargaPdf($proceso['fecha_inicio_periodo'] ?? date('Y-m-d'));
     $periodoFin = fechaLargaPdf($proceso['fecha_fin_periodo'] ?? date('Y-m-d', strtotime('+2 years')));
     $fechaEleccion = fechaLargaPdf($proceso['fecha_inicio_votacion'] ?? date('Y-m-d'));
+    $fechaDesignacion = fechaLargaPdf($proceso['created_at'] ?? date('Y-m-d'));
+
+    // Brigada y Vigia no tienen votacion, son designacion directa
+    $esDesignacionDirecta = in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA']);
 
     // Logo en base64 (requerido para DOMPDF)
     $logoPath = FCPATH . 'uploads/' . ($cliente['logo'] ?? '');
@@ -251,8 +255,42 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
 }
 ?>
 
+<?php if ($esDesignacionDirecta): ?>
 <!-- =====================================
-     SECCION 1: ACTA DE APERTURA DE ELECCIONES
+     SECCION 1: ACTA DE DESIGNACION (Brigada/Vigia)
+     ===================================== -->
+
+<?php renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $cliente, $tipoComiteNombre); ?>
+
+<div class="seccion">
+    <div class="seccion-titulo">1. ACTA DE DESIGNACION</div>
+    <div class="seccion-contenido">
+        <p>
+            En las instalaciones de <strong><?= esc($cliente['nombre_cliente']) ?></strong>,
+            NIT <?= esc($cliente['nit_cliente']) ?>, ubicada en <?= esc($cliente['direccion_cliente'] ?? 'la ciudad') ?>,
+            el dia <strong><?= $fechaDesignacion ?></strong>,
+            el representante legal de la empresa procedio a designar los integrantes
+            de la <strong><?= $tipoComiteCorto ?></strong> para el periodo
+            <strong><?= $periodoInicio ?></strong> al <strong><?= $periodoFin ?></strong>,
+            en cumplimiento de la normatividad vigente en materia de Seguridad y Salud en el Trabajo.
+        </p>
+    </div>
+</div>
+
+<!-- =====================================
+     SECCION 2: CONFORMACION (Brigada/Vigia)
+     ===================================== -->
+
+<div class="seccion">
+    <div class="seccion-titulo">2. CONFORMACION DE LA <?= $proceso['tipo_comite'] ?></div>
+    <div class="seccion-contenido">
+        <p>
+            La <strong><?= $tipoComiteCorto ?></strong> queda conformada de la siguiente manera:
+        </p>
+
+<?php else: ?>
+<!-- =====================================
+     SECCION 1: ACTA DE APERTURA DE ELECCIONES (COPASST/COCOLAB)
      ===================================== -->
 
 <?php renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $cliente, $tipoComiteNombre); ?>
@@ -405,7 +443,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
 </div>
 
 <!-- =====================================
-     SECCION 5: CONFORMACION DEL COMITE
+     SECCION 5: CONFORMACION DEL COMITE (COPASST/COCOLAB)
      ===================================== -->
 
 <div class="page-break"></div>
@@ -419,11 +457,12 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
             el <strong><?= $tipoComiteCorto ?></strong> queda conformado de la siguiente manera para el periodo
             <strong><?= $periodoInicio ?></strong> al <strong><?= $periodoFin ?></strong>:
         </p>
+<?php endif; ?>
 
         <!-- Representantes del Empleador -->
         <div style="margin-top: 15px;">
             <div style="background-color: #198754; color: white; padding: 6px 10px; font-weight: bold; font-size: 9pt;">
-                REPRESENTANTES DEL EMPLEADOR
+                <?= $esDesignacionDirecta ? 'INTEGRANTES DESIGNADOS' : 'REPRESENTANTES DEL EMPLEADOR' ?>
             </div>
             <table class="tabla-contenido" style="margin-top: 0;">
                 <tr>
@@ -448,6 +487,7 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
             </table>
         </div>
 
+        <?php if (!$esDesignacionDirecta): ?>
         <!-- Representantes de Trabajadores -->
         <div style="margin-top: 15px;">
             <div style="background-color: #0d6efd; color: white; padding: 6px 10px; font-weight: bold; font-size: 9pt;">
@@ -475,15 +515,17 @@ function renderEncabezadoPdf($logoBase64, $codigoDocumento, $versionDocumento, $
                 <?php endforeach; ?>
             </table>
         </div>
+        <?php endif; ?>
     </div>
 </div>
 
 <!-- =====================================
-     SECCION 6: FUNCIONES DEL COMITE
+     SECCION <?= $esDesignacionDirecta ? '3' : '6' ?>: FUNCIONES DEL COMITE
      ===================================== -->
 
+<?php $numSeccionPdf = $esDesignacionDirecta ? 3 : 6; ?>
 <div class="seccion">
-    <div class="seccion-titulo">6. FUNCIONES DEL <?= $proceso['tipo_comite'] ?></div>
+    <div class="seccion-titulo"><?= $numSeccionPdf ?>. FUNCIONES DEL <?= $proceso['tipo_comite'] ?></div>
     <div class="seccion-contenido">
         <?php if ($proceso['tipo_comite'] === 'COPASST'): ?>
         <p>De conformidad con el Articulo 11 de la Resolucion 2013 de 1986 y el Decreto 1072 de 2015, son funciones del COPASST:</p>

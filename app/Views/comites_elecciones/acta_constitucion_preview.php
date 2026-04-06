@@ -33,6 +33,10 @@ $tipoComiteCorto = [
 $periodoInicio = fechaLargaActa($proceso['fecha_inicio_periodo'] ?? date('Y-m-d'));
 $periodoFin = fechaLargaActa($proceso['fecha_fin_periodo'] ?? date('Y-m-d', strtotime('+2 years')));
 $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d'));
+$fechaDesignacion = fechaLargaActa($proceso['created_at'] ?? date('Y-m-d'));
+
+// Brigada y Vigia no tienen votacion, son designacion directa
+$esDesignacionDirecta = in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA']);
 ?>
 
 <style>
@@ -243,6 +247,7 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                     <small class="opacity-75"><?= esc($cliente['nombre_cliente']) ?></small>
                 </div>
                 <div class="col-md-4 text-end">
+                    <?php if (!$esDesignacionDirecta): ?>
                     <div class="d-flex justify-content-end gap-2">
                         <span class="badge bg-light text-dark">
                             <i class="bi bi-people me-1"></i><?= $totalVotantes ?> votantes
@@ -251,6 +256,11 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                             <i class="bi bi-check2-all me-1"></i><?= $participacion ?>% participacion
                         </span>
                     </div>
+                    <?php else: ?>
+                    <span class="badge bg-light text-dark">
+                        <i class="bi bi-person-check me-1"></i>Designacion directa
+                    </span>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -310,7 +320,37 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
             </tr>
         </table>
 
-        <!-- SECCION 1: ACTA DE APERTURA -->
+        <?php if ($esDesignacionDirecta): ?>
+        <!-- SECCION 1: ACTA DE DESIGNACION (Brigada/Vigia) -->
+        <div class="seccion">
+            <div class="seccion-titulo">
+                <i class="bi bi-play-circle me-2"></i>1. ACTA DE DESIGNACION
+            </div>
+            <div class="seccion-contenido">
+                <p>
+                    En las instalaciones de <strong><?= esc($cliente['nombre_cliente']) ?></strong>,
+                    NIT <?= esc($cliente['nit_cliente']) ?>, ubicada en <?= esc($cliente['direccion_cliente'] ?? 'la ciudad') ?>,
+                    el dia <strong><?= $fechaDesignacion ?></strong>,
+                    el representante legal de la empresa procedio a designar los integrantes
+                    de la <strong><?= $tipoComiteCorto ?></strong> para el periodo
+                    <strong><?= $periodoInicio ?></strong> al <strong><?= $periodoFin ?></strong>,
+                    en cumplimiento de la normatividad vigente en materia de Seguridad y Salud en el Trabajo.
+                </p>
+            </div>
+        </div>
+
+        <!-- SECCION 2: CONFORMACION (Brigada/Vigia) -->
+        <div class="seccion">
+            <div class="seccion-titulo">
+                <i class="bi bi-people me-2"></i>2. CONFORMACION DE LA <?= $proceso['tipo_comite'] ?>
+            </div>
+            <div class="seccion-contenido">
+                <p>
+                    La <strong><?= $tipoComiteCorto ?></strong> queda conformada de la siguiente manera:
+                </p>
+
+        <?php else: ?>
+        <!-- SECCION 1: ACTA DE APERTURA (COPASST/COCOLAB) -->
         <div class="seccion">
             <div class="seccion-titulo">
                 <i class="bi bi-play-circle me-2"></i>1. ACTA DE APERTURA DE ELECCIONES
@@ -459,7 +499,7 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
             </div>
         </div>
 
-        <!-- SECCION 5: CONFORMACION DEL COMITE -->
+        <!-- SECCION 5: CONFORMACION DEL COMITE (COPASST/COCOLAB) -->
         <div class="seccion">
             <div class="seccion-titulo">
                 <i class="bi bi-people me-2"></i>5. CONFORMACION DEL <?= $proceso['tipo_comite'] ?>
@@ -470,10 +510,11 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                     el <strong><?= $tipoComiteCorto ?></strong> queda conformado de la siguiente manera para el periodo
                     <strong><?= $periodoInicio ?></strong> al <strong><?= $periodoFin ?></strong>:
                 </p>
+        <?php endif; ?>
 
-                <!-- Representantes del Empleador -->
+                <!-- Representantes del Empleador / Integrantes Brigada -->
                 <h6 class="mt-4 mb-3" style="color: #198754;">
-                    <i class="bi bi-building me-2"></i>REPRESENTANTES DEL EMPLEADOR
+                    <i class="bi bi-<?= $esDesignacionDirecta ? 'fire' : 'building' ?> me-2"></i><?= $esDesignacionDirecta ? 'INTEGRANTES DESIGNADOS' : 'REPRESENTANTES DEL EMPLEADOR' ?>
                 </h6>
                 <table class="tabla-miembros">
                     <thead>
@@ -501,6 +542,7 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                     </tbody>
                 </table>
 
+                <?php if (!$esDesignacionDirecta): ?>
                 <!-- Representantes de Trabajadores -->
                 <h6 class="mt-4 mb-3" style="color: #0d6efd;">
                     <i class="bi bi-person-check me-2"></i>REPRESENTANTES DE LOS TRABAJADORES
@@ -530,13 +572,15 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                <?php endif; ?>
             </div>
         </div>
 
-        <!-- SECCION 6: FUNCIONES DEL COMITE -->
+        <?php $numSeccion = $esDesignacionDirecta ? 3 : 6; ?>
+        <!-- SECCION <?= $numSeccion ?>: FUNCIONES DEL COMITE -->
         <div class="seccion">
             <div class="seccion-titulo">
-                <i class="bi bi-list-task me-2"></i>6. FUNCIONES DEL <?= $proceso['tipo_comite'] ?>
+                <i class="bi bi-list-task me-2"></i><?= $numSeccion ?>. FUNCIONES DEL <?= $proceso['tipo_comite'] ?>
             </div>
             <div class="seccion-contenido">
                 <?php if ($proceso['tipo_comite'] === 'COPASST'): ?>
@@ -559,13 +603,31 @@ $fechaEleccion = fechaLargaActa($proceso['fecha_inicio_votacion'] ?? date('Y-m-d
                     <li>Formular planes de mejora y hacer seguimiento.</li>
                     <li>Presentar a la alta direccion recomendaciones preventivas.</li>
                 </ol>
+                <?php elseif ($proceso['tipo_comite'] === 'BRIGADA'): ?>
+                <p>De conformidad con el Decreto 1072 de 2015 y la normatividad vigente, son funciones de la Brigada de Emergencias:</p>
+                <ol>
+                    <li>Actuar como primer respondiente en caso de emergencia.</li>
+                    <li>Participar en simulacros y entrenamientos periodicos.</li>
+                    <li>Verificar el estado de los equipos de emergencia.</li>
+                    <li>Apoyar la evacuacion del personal en caso de emergencia.</li>
+                    <li>Prestar primeros auxilios cuando sea necesario.</li>
+                    <li>Reportar condiciones de riesgo identificadas.</li>
+                </ol>
                 <?php else: ?>
-                <p>Las funciones del comite seran las establecidas en la normatividad vigente aplicable.</p>
+                <p>De conformidad con la Resolucion 0312 de 2019, son funciones del Vigia de SST:</p>
+                <ol>
+                    <li>Proponer y participar en actividades de capacitacion en SST.</li>
+                    <li>Vigilar el desarrollo de las actividades del SG-SST.</li>
+                    <li>Colaborar en el analisis de accidentes de trabajo.</li>
+                    <li>Realizar inspecciones periodicas a las instalaciones.</li>
+                    <li>Proponer medidas preventivas y correctivas.</li>
+                </ol>
                 <?php endif; ?>
             </div>
         </div>
 
-        <!-- SECCION 7: CONTROL DE CAMBIOS -->
+        <?php $numSeccion++; ?>
+        <!-- SECCION <?= $numSeccion ?>: CONTROL DE CAMBIOS -->
         <div class="seccion" style="page-break-inside: avoid; margin-top: 40px;">
             <div class="seccion-titulo" style="background: linear-gradient(90deg, #0d6efd, #6610f2); color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 0; border: none;">
                 <i class="bi bi-journal-text me-2"></i>CONTROL DE CAMBIOS
