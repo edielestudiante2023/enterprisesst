@@ -851,15 +851,32 @@ class ComitesEleccionesController extends BaseController
             return redirect()->back()->with('error', 'Candidato no encontrado');
         }
 
-        // Solo permitir eliminar si no ha sido elegido
-        if (in_array($candidato['estado'], ['elegido', 'designado'])) {
-            return redirect()->back()->with('error', 'No se puede eliminar un candidato elegido o designado');
-        }
-
         $proceso = $this->db->table('tbl_procesos_electorales')
             ->where('id_proceso', $candidato['id_proceso'])
             ->get()
             ->getRowArray();
+
+        // Elegidos por votación no se pueden eliminar
+        if ($candidato['estado'] === 'elegido') {
+            return redirect()->back()->with('error', 'No se puede eliminar un candidato elegido por votación');
+        }
+
+        // Designados solo se pueden eliminar en fases designacion_empleador o firmas
+        if ($candidato['estado'] === 'designado') {
+            if (!in_array($proceso['estado'], ['designacion_empleador', 'firmas'])) {
+                return redirect()->back()->with('error', 'No se puede eliminar un candidato designado en esta fase del proceso');
+            }
+
+            // Limpiar solicitud de firma si existe
+            $this->limpiarFirmaCandidatoEliminado($candidato, $proceso);
+
+            // Si estaba en firmas, retroceder a designacion_empleador
+            if ($proceso['estado'] === 'firmas') {
+                $this->db->table('tbl_procesos_electorales')
+                    ->where('id_proceso', $proceso['id_proceso'])
+                    ->update(['estado' => 'designacion_empleador']);
+            }
+        }
 
         // Si el candidato tiene votos, limpiarlos antes de eliminar
         if (!empty($candidato['votos_obtenidos']) && $candidato['votos_obtenidos'] > 0) {
@@ -888,7 +905,56 @@ class ComitesEleccionesController extends BaseController
             ->delete();
 
         return redirect()->to("/comites-elecciones/{$proceso['id_cliente']}/proceso/{$proceso['id_proceso']}")
-            ->with('success', 'Candidato eliminado');
+            ->with('success', 'Candidato eliminado exitosamente');
+    }
+
+    /**
+     * Limpiar solicitud de firma asociada a un candidato que se va a eliminar
+     */
+    private function limpiarFirmaCandidatoEliminado(array $candidato, array $proceso): void
+    {
+        // Determinar el firmante_tipo según representación y tipo_plaza
+        $tipoPlaza = $candidato['tipo_plaza'] ?? 'principal';
+        $firmanteTipo = $candidato['representacion'] . '_' . $tipoPlaza . '_' . $candidato['id_candidato'];
+
+        // Buscar el documento del acta de constitución
+        $tipoDocumento = 'acta_constitucion_' . strtolower($proceso['tipo_comite']);
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $proceso['id_cliente'])
+            ->where('tipo_documento', $tipoDocumento)
+            ->where('anio', $proceso['anio'])
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return;
+        }
+
+        // Buscar la solicitud de firma del candidato
+        $solicitud = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('firmante_tipo', $firmanteTipo)
+            ->get()
+            ->getRowArray();
+
+        if (!$solicitud) {
+            return;
+        }
+
+        $idSolicitud = $solicitud['id_solicitud'];
+
+        // Eliminar en orden: audit_log → evidencias → solicitud
+        $this->db->table('tbl_doc_firma_audit_log')
+            ->where('id_solicitud', $idSolicitud)
+            ->delete();
+
+        $this->db->table('tbl_doc_firma_evidencias')
+            ->where('id_solicitud', $idSolicitud)
+            ->delete();
+
+        $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_solicitud', $idSolicitud)
+            ->delete();
     }
 
     /**
