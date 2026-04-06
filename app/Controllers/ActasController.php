@@ -1687,16 +1687,14 @@ class ActasController extends BaseController
             return redirect()->back()->with('error', 'Petición no válida');
         }
 
-        $comite = $this->comiteModel->find($idComite);
+        $comite = $this->comiteModel->getConDetalles($idComite);
         if (!$comite) {
             return $this->response->setJSON(['success' => false, 'message' => 'Comité no encontrado']);
         }
 
         $idCliente = $comite['id_cliente'];
-        $tipoComite = strtoupper($comite['tipo_comite'] ?? '');
+        $tipoComite = strtoupper($comite['codigo'] ?? $comite['tipo_codigo'] ?? '');
         $db = \Config\Database::connect();
-
-        log_message('error', "IMPORTAR_ELECCIONES: idComite={$idComite}, idCliente={$idCliente}, tipoComite={$tipoComite}");
 
         // Buscar proceso electoral completado para este cliente y tipo de comité
         $proceso = $db->table('tbl_procesos_electorales')
@@ -1708,17 +1706,9 @@ class ActasController extends BaseController
             ->getRowArray();
 
         if (!$proceso) {
-            // Debug: buscar cualquier proceso para este cliente
-            $todosProc = $db->table('tbl_procesos_electorales')
-                ->where('id_cliente', $idCliente)
-                ->select('id_proceso, tipo_comite, estado')
-                ->get()
-                ->getResultArray();
-            log_message('error', "IMPORTAR_ELECCIONES: No encontrado. Procesos existentes: " . json_encode($todosProc));
-
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'No se encontró un proceso electoral completado para este tipo de comité. Debug: idCliente=' . $idCliente . ', tipoComite=' . $tipoComite
+                'message' => 'No se encontró un proceso electoral completado para este tipo de comité'
             ]);
         }
 
