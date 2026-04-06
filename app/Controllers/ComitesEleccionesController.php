@@ -3121,22 +3121,25 @@ class ComitesEleccionesController extends BaseController
             mkdir($uploadDir, 0755, true);
         }
 
-        // Buscar registro existente en tbl_reporte por titulo del documento o codigo (actual o anterior FT-SST-013)
-        $tituloBusqueda = $documento['titulo'] ?? '';
-        $codigoBusqueda = $documento['codigo'] ?? '';
+        // Buscar registro existente en tbl_reporte
+        $tipoComite = $proceso['tipo_comite'];
+        $idCliente = $documento['id_cliente'];
 
-        $reporteExistente = $this->db->table('tbl_reporte')
-            ->groupStart()
-                ->like('titulo_reporte', $this->db->escapeLikeString($tituloBusqueda), 'both', null, true)
-                ->orLike('titulo_reporte', $this->db->escapeLikeString($codigoBusqueda), 'both', null, true)
-                ->orLike('titulo_reporte', 'Acta de Constitucion ' . $proceso['tipo_comite'], 'both', null, true)
-            ->groupEnd()
-            ->where('id_cliente', $documento['id_cliente'])
-            ->orderBy('created_at', 'DESC')
-            ->get()
-            ->getRowArray();
+        // Buscar por "Acta de Constitucion {TIPO}" en el titulo - cubre todos los casos
+        $reporteExistente = $this->db->query(
+            "SELECT * FROM tbl_reporte
+             WHERE id_cliente = ?
+             AND (titulo_reporte LIKE ? OR titulo_reporte LIKE ? OR titulo_reporte LIKE ?)
+             ORDER BY created_at DESC LIMIT 1",
+            [
+                $idCliente,
+                '%Acta de Constitucion ' . $tipoComite . '%',
+                '%Acta%Constitucion%' . $tipoComite . '%',
+                '%' . ($documento['codigo'] ?? '') . '%Constitucion%'
+            ]
+        )->getRowArray();
 
-        log_message('info', "ACTUALIZAR_REPO: codigoBusqueda={$codigoBusqueda}, reporteExistente=" . ($reporteExistente ? $reporteExistente['id_reporte'] : 'NO'));
+        log_message('info', "ACTUALIZAR_REPO: tipoComite={$tipoComite}, idCliente={$idCliente}, reporteExistente=" . ($reporteExistente ? $reporteExistente['id_reporte'] . ':' . $reporteExistente['titulo_reporte'] : 'NO'));
 
         if ($reporteExistente) {
             // Eliminar archivo anterior si existe
@@ -3174,9 +3177,41 @@ class ComitesEleccionesController extends BaseController
                 'message' => 'PDF actualizado en el repositorio exitosamente'
             ]);
         } else {
+            // No existe en repositorio — crear nuevo registro
+            $fileName = time() . '_' . url_title(($documento['codigo'] ?? 'DOC') . '_' . $documento['titulo'], '-', true) . '.pdf';
+            $filePath = $uploadDir . '/' . $fileName;
+            file_put_contents($filePath, $pdfOutput);
+            $enlace = base_url('uploads/' . $nit . '/' . $fileName);
+
+            $detailReport = $this->db->table('detail_report')
+                ->where('detail_report', 'Documento SG-SST')
+                ->get()
+                ->getRowArray();
+
+            $tituloReporte = ($documento['codigo'] ?? '') . ' - ' . $documento['titulo']
+                . ' (v' . ($documento['version'] ?? 1) . ' - Firmado)'
+                . ' - Pub. #1 ' . date('d/m/Y H:i');
+
+            $this->db->table('tbl_reporte')->insert([
+                'titulo_reporte' => $tituloReporte,
+                'id_detailreport' => $detailReport['id_detailreport'] ?? 2,
+                'id_report_type' => 12,
+                'id_cliente' => $documento['id_cliente'],
+                'enlace' => $enlace,
+                'estado' => 'CERRADO',
+                'observaciones' => 'Publicado manualmente via Actualizar Repositorio. Año: ' . $documento['anio'],
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+            $this->db->table('tbl_doc_versiones_sst')
+                ->where('id_documento', $documento['id_documento'])
+                ->where('estado', 'vigente')
+                ->update(['archivo_pdf' => $enlace]);
+
             return $this->response->setJSON([
-                'success' => false,
-                'message' => 'No se encontró el documento en el repositorio. Primero debe completar las firmas para que se publique automaticamente.'
+                'success' => true,
+                'message' => 'PDF creado y publicado en el repositorio exitosamente'
             ]);
         }
     }
