@@ -67,7 +67,7 @@ abstract class AbstractActaConstitucion extends AbstractDocumentoSST
 
     public function getCodigoBase(): string
     {
-        return 'FT-SST-013';
+        return 'FT-SST-013'; // COPASST por defecto, las hijas sobrescriben
     }
 
     public function getVistaPath(): string

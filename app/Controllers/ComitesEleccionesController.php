@@ -2939,7 +2939,12 @@ class ComitesEleccionesController extends BaseController
 
         // Crear nuevo documento
         $titulo = 'Acta de Constitucion ' . $proceso['tipo_comite'] . ' ' . $anio;
-        $codigo = 'FT-SST-013';
+        $codigo = match(strtoupper($proceso['tipo_comite'])) {
+            'COCOLAB' => 'FT-SST-015',
+            'BRIGADA' => 'FT-SST-016',
+            'VIGIA'   => 'FT-SST-017',
+            default   => 'FT-SST-013', // COPASST
+        };
 
         $nuevoDocumento = [
             'id_cliente' => $idCliente,
@@ -3324,7 +3329,12 @@ class ComitesEleccionesController extends BaseController
             'documento' => $documento,
             'firmasElectronicas' => $firmasElectronicas,
             'fechaActual' => date('Y-m-d'),
-            'codigoDocumento' => 'FT-SST-013',
+            'codigoDocumento' => match(strtoupper($proceso['tipo_comite'])) {
+                'COCOLAB' => 'FT-SST-015',
+                'BRIGADA' => 'FT-SST-016',
+                'VIGIA'   => 'FT-SST-017',
+                default   => 'FT-SST-013',
+            },
             'versionDocumento' => '1'
         ];
     }

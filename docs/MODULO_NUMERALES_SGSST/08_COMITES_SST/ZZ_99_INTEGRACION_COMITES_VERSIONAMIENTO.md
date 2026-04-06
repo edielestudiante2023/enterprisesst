@@ -37,9 +37,9 @@ Lo mismo aplicaba para `obtenerOCrearDocumentoRecomposicion()`.
 | tipo_documento | Comite | Estandar | Codigo |
 |---|---|---|---|
 | `acta_constitucion_copasst` | COPASST | 1.1.6 | FT-SST-013 |
-| `acta_constitucion_cocolab` | Comite Convivencia Laboral | 1.1.8 | FT-SST-013 |
-| `acta_constitucion_brigada` | Brigada de Emergencias | - | FT-SST-013 |
-| `acta_constitucion_vigia` | Vigia SST | 1.1.6 | FT-SST-013 |
+| `acta_constitucion_cocolab` | Comite Convivencia Laboral | 1.1.8 | FT-SST-015 |
+| `acta_constitucion_brigada` | Brigada de Emergencias | - | FT-SST-016 |
+| `acta_constitucion_vigia` | Vigia SST | 1.1.6 | FT-SST-017 |
 
 ### Actas de Recomposicion (cambio de miembros en comite vigente)
 

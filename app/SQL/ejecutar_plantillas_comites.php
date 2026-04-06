@@ -36,9 +36,9 @@ try {
 
     $plantillas = [
         ['acta_constitucion_copasst', 'Acta de Constitucion COPASST', 'FT-SST-013', 'Acta de constitucion del Comite Paritario de Seguridad y Salud en el Trabajo'],
-        ['acta_constitucion_cocolab', 'Acta de Constitucion Comite Convivencia Laboral', 'FT-SST-013', 'Acta de constitucion del Comite de Convivencia Laboral'],
-        ['acta_constitucion_brigada', 'Acta de Constitucion Brigada Emergencias', 'FT-SST-013', 'Acta de constitucion de la Brigada de Emergencias'],
-        ['acta_constitucion_vigia', 'Acta de Constitucion Vigia SST', 'FT-SST-013', 'Acta de constitucion del Vigia de Seguridad y Salud en el Trabajo'],
+        ['acta_constitucion_cocolab', 'Acta de Constitucion Comite Convivencia Laboral', 'FT-SST-015', 'Acta de constitucion del Comite de Convivencia Laboral'],
+        ['acta_constitucion_brigada', 'Acta de Constitucion Brigada Emergencias', 'FT-SST-016', 'Acta de constitucion de la Brigada de Emergencias'],
+        ['acta_constitucion_vigia', 'Acta de Constitucion Vigia SST', 'FT-SST-017', 'Acta de constitucion del Vigia de Seguridad y Salud en el Trabajo'],
         ['acta_recomposicion_copasst', 'Acta de Recomposicion COPASST', 'FT-SST-156', 'Acta de recomposicion del COPASST por cambio de miembros'],
         ['acta_recomposicion_cocolab', 'Acta de Recomposicion Comite Convivencia Laboral', 'FT-SST-155', 'Acta de recomposicion del Comite de Convivencia Laboral por cambio de miembros'],
         ['acta_recomposicion_brigada', 'Acta de Recomposicion Brigada Emergencias', 'FT-SST-156', 'Acta de recomposicion de la Brigada de Emergencias por cambio de miembros'],

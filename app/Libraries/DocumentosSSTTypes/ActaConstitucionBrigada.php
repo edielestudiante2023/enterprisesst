@@ -15,4 +15,9 @@ class ActaConstitucionBrigada extends AbstractActaConstitucion
     {
         return 'acta_constitucion_brigada';
     }
+
+    public function getCodigoBase(): string
+    {
+        return 'FT-SST-016';
+    }
 }

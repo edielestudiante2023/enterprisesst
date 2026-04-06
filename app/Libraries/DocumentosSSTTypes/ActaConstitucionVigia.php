@@ -15,4 +15,9 @@ class ActaConstitucionVigia extends AbstractActaConstitucion
     {
         return 'acta_constitucion_vigia';
     }
+
+    public function getCodigoBase(): string
+    {
+        return 'FT-SST-017';
+    }
 }

@@ -15,4 +15,9 @@ class ActaConstitucionCocolab extends AbstractActaConstitucion
     {
         return 'acta_constitucion_cocolab';
     }
+
+    public function getCodigoBase(): string
+    {
+        return 'FT-SST-015';
+    }
 }

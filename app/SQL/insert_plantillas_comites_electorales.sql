@@ -8,9 +8,9 @@
 INSERT INTO tbl_doc_plantillas (tipo_documento, nombre, codigo_sugerido, descripcion, activo)
 VALUES
 ('acta_constitucion_copasst', 'Acta de Constitucion COPASST', 'FT-SST-013', 'Acta de constitucion del Comite Paritario de Seguridad y Salud en el Trabajo', 1),
-('acta_constitucion_cocolab', 'Acta de Constitucion Comite Convivencia Laboral', 'FT-SST-013', 'Acta de constitucion del Comite de Convivencia Laboral', 1),
-('acta_constitucion_brigada', 'Acta de Constitucion Brigada Emergencias', 'FT-SST-013', 'Acta de constitucion de la Brigada de Emergencias', 1),
-('acta_constitucion_vigia', 'Acta de Constitucion Vigia SST', 'FT-SST-013', 'Acta de constitucion del Vigia de Seguridad y Salud en el Trabajo', 1);
+('acta_constitucion_cocolab', 'Acta de Constitucion Comite Convivencia Laboral', 'FT-SST-015', 'Acta de constitucion del Comite de Convivencia Laboral', 1),
+('acta_constitucion_brigada', 'Acta de Constitucion Brigada Emergencias', 'FT-SST-016', 'Acta de constitucion de la Brigada de Emergencias', 1),
+('acta_constitucion_vigia', 'Acta de Constitucion Vigia SST', 'FT-SST-017', 'Acta de constitucion del Vigia de Seguridad y Salud en el Trabajo', 1);
 
 -- Actas de Recomposicion
 INSERT INTO tbl_doc_plantillas (tipo_documento, nombre, codigo_sugerido, descripcion, activo)
