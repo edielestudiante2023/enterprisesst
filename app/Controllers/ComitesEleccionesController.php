@@ -3092,6 +3092,8 @@ class ComitesEleccionesController extends BaseController
         $cliente = $data['cliente'];
         $documento = $data['documento'] ?? null;
 
+        log_message('info', "ACTUALIZAR_REPO: proceso={$idProceso}, documento=" . ($documento['id_documento'] ?? 'NULL'));
+
         if (!$documento) {
             return $this->response->setJSON(['success' => false, 'message' => 'No existe documento del acta para este proceso']);
         }
@@ -3124,13 +3126,18 @@ class ComitesEleccionesController extends BaseController
             ->get()
             ->getRowArray();
 
-        if ($reporteExistente) {
-            // Sobreescribir el archivo existente si podemos extraer la ruta
-            $enlaceAnterior = $reporteExistente['enlace'] ?? '';
-            $pathAnterior = str_replace(base_url(), FCPATH, $enlaceAnterior);
-            $pathAnterior = str_replace('/', DIRECTORY_SEPARATOR, $pathAnterior);
+        log_message('info', "ACTUALIZAR_REPO: codigoBusqueda={$codigoBusqueda}, reporteExistente=" . ($reporteExistente ? $reporteExistente['id_reporte'] : 'NO'));
 
-            if (file_exists($pathAnterior)) {
+        if ($reporteExistente) {
+            // Extraer ruta relativa del enlace anterior (uploads/nit/archivo.pdf)
+            $enlaceAnterior = $reporteExistente['enlace'] ?? '';
+            $rutaRelativa = '';
+            if (preg_match('#(uploads/.+\.pdf)#i', $enlaceAnterior, $matches)) {
+                $rutaRelativa = $matches[1];
+            }
+            $pathAnterior = $rutaRelativa ? FCPATH . $rutaRelativa : '';
+
+            if ($pathAnterior && file_exists($pathAnterior)) {
                 // Sobreescribir el mismo archivo
                 file_put_contents($pathAnterior, $pdfOutput);
                 $enlace = $enlaceAnterior;
