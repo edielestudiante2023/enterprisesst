@@ -238,6 +238,41 @@ class ObjetivosSgsstService
             }
         }
 
+        // Horarios y jornada laboral
+        if (!empty($contexto['horario_lunes_viernes'])) {
+            $texto .= "- Horario L-V: {$contexto['horario_lunes_viernes']}\n";
+        }
+        if (!empty($contexto['descripcion_turnos'])) {
+            $texto .= "- Detalle turnos: {$contexto['descripcion_turnos']}\n";
+        }
+
+        // Seguridad social
+        if (!empty($contexto['eps_principales'])) $texto .= "- EPS: {$contexto['eps_principales']}\n";
+        if (!empty($contexto['manejo_incapacidades'])) $texto .= "- Manejo incapacidades: {$contexto['manejo_incapacidades']}\n";
+
+        // Datos operacionales
+        if (!empty($contexto['actividades_alto_riesgo'])) {
+            $act = is_array($contexto['actividades_alto_riesgo']) ? $contexto['actividades_alto_riesgo'] : json_decode($contexto['actividades_alto_riesgo'], true);
+            if (is_array($act) && !empty($act)) {
+                $texto .= "- Actividades alto riesgo: " . implode(', ', $act) . "\n";
+            }
+        }
+        if (!empty($contexto['epp_por_cargo'])) $texto .= "- EPP por cargo: {$contexto['epp_por_cargo']}\n";
+        if (!empty($contexto['vehiculos_maquinaria'])) $texto .= "- Vehiculos/maquinaria: {$contexto['vehiculos_maquinaria']}\n";
+
+        // Historial SST
+        if (!empty($contexto['accidentes_ultimo_anio']) && $contexto['accidentes_ultimo_anio'] > 0) {
+            $texto .= "- Accidentes ultimo ano: {$contexto['accidentes_ultimo_anio']}\n";
+        }
+        if (!empty($contexto['tasa_ausentismo'])) $texto .= "- Tasa ausentismo: {$contexto['tasa_ausentismo']}%\n";
+        if (!empty($contexto['enfermedades_laborales_activas'])) $texto .= "- Enfermedades laborales: {$contexto['enfermedades_laborales_activas']}\n";
+
+        // Infraestructura fisica
+        if (!empty($contexto['numero_pisos']) && $contexto['numero_pisos'] > 1) {
+            $texto .= "- Pisos: {$contexto['numero_pisos']}\n";
+        }
+        if (!empty($contexto['sustancias_quimicas'])) $texto .= "- Sustancias quimicas: {$contexto['sustancias_quimicas']}\n";
+
         // CONTEXTO Y OBSERVACIONES (campo clave para personalización)
         if (!empty($contexto['observaciones_contexto'])) {
             $texto .= "\nCONTEXTO Y OBSERVACIONES DEL CONSULTOR:\n";

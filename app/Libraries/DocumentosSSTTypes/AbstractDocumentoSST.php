@@ -33,6 +33,26 @@ abstract class AbstractDocumentoSST implements DocumentoSSTInterface
             default => 'avanzado (más de 50 trabajadores o riesgo IV y V)'
         };
 
+        // Campos nuevos del contexto ampliado
+        $horarioLV = $contexto['horario_lunes_viernes'] ?? '';
+        $descTurnos = $contexto['descripcion_turnos'] ?? '';
+        $eps = $contexto['eps_principales'] ?? '';
+        $manejoIncap = $contexto['manejo_incapacidades'] ?? '';
+        $eppCargo = $contexto['epp_por_cargo'] ?? '';
+        $accidentes = $contexto['accidentes_ultimo_anio'] ?? 0;
+        $pisos = $contexto['numero_pisos'] ?? 1;
+        $sustancias = $contexto['sustancias_quimicas'] ?? '';
+
+        $extra = '';
+        if ($horarioLV) $extra .= "- Horario L-V: {$horarioLV}\n";
+        if ($descTurnos) $extra .= "- Turnos: {$descTurnos}\n";
+        if ($eps) $extra .= "- EPS: {$eps}\n";
+        if ($manejoIncap) $extra .= "- Manejo incapacidades: {$manejoIncap}\n";
+        if ($eppCargo) $extra .= "- EPP por cargo: {$eppCargo}\n";
+        if ($accidentes > 0) $extra .= "- Accidentes último año: {$accidentes}\n";
+        if ($pisos > 1) $extra .= "- Pisos: {$pisos}\n";
+        if ($sustancias) $extra .= "- Sustancias químicas: {$sustancias}\n";
+
         return "CONTEXTO DE LA EMPRESA:
 - Nombre: {$nombreEmpresa}
 - NIT: {$nit}
@@ -40,7 +60,7 @@ abstract class AbstractDocumentoSST implements DocumentoSSTInterface
 - Nivel de riesgo: {$nivelRiesgo}
 - Número de trabajadores: {$numTrabajadores}
 - Estándares aplicables: {$estandares} ({$nivelTexto})
-
+{$extra}
 INSTRUCCIONES DE GENERACIÓN:
 - Personaliza el contenido para esta empresa específica
 - Ajusta la extensión y complejidad según el nivel de estándares

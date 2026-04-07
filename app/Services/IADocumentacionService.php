@@ -188,6 +188,69 @@ ADVERTENCIAS:
         if ($numeroSedes) $userPrompt .= "- Número de sedes: {$numeroSedes}\n";
         if ($turnosTexto) $userPrompt .= "- Turnos de trabajo: {$turnosTexto}\n";
 
+        // Horarios y jornada laboral
+        $horarioLV = $contexto['horario_lunes_viernes'] ?? '';
+        $horarioSab = $contexto['horario_sabado'] ?? '';
+        $domingosFest = $contexto['trabaja_domingos_festivos'] ?? '';
+        $descTurnos = $contexto['descripcion_turnos'] ?? '';
+        if ($horarioLV) $userPrompt .= "- Horario L-V: {$horarioLV}\n";
+        if ($horarioSab) $userPrompt .= "- Horario sábado: {$horarioSab}\n";
+        if ($domingosFest && $domingosFest !== 'no') $userPrompt .= "- Domingos/festivos: {$domingosFest}\n";
+        if ($descTurnos) $userPrompt .= "- Detalle turnos: {$descTurnos}\n";
+
+        // Seguridad social
+        $eps = $contexto['eps_principales'] ?? '';
+        $afp = $contexto['afp_principales'] ?? '';
+        $caja = $contexto['caja_compensacion'] ?? '';
+        $tasaCotArl = $contexto['tasa_cotizacion_arl'] ?? '';
+        $manejoIncap = $contexto['manejo_incapacidades'] ?? '';
+        if ($eps || $afp || $caja || $manejoIncap) {
+            $userPrompt .= "\nSEGURIDAD SOCIAL:\n";
+            if ($eps) $userPrompt .= "- EPS: {$eps}\n";
+            if ($afp) $userPrompt .= "- AFP: {$afp}\n";
+            if ($caja) $userPrompt .= "- Caja de Compensación: {$caja}\n";
+            if ($tasaCotArl) $userPrompt .= "- Tasa cotización ARL: {$tasaCotArl}%\n";
+            if ($manejoIncap) $userPrompt .= "- Manejo incapacidades: {$manejoIncap}\n";
+        }
+
+        // Datos operacionales
+        $eppCargo = $contexto['epp_por_cargo'] ?? '';
+        $vehiculos = $contexto['vehiculos_maquinaria'] ?? '';
+        $actAltoRiesgo = $contexto['actividades_alto_riesgo'] ?? '';
+        if ($eppCargo || $vehiculos || $actAltoRiesgo) {
+            $userPrompt .= "\nDATOS OPERACIONALES:\n";
+            if (!empty($actAltoRiesgo)) {
+                $actArr = is_array($actAltoRiesgo) ? $actAltoRiesgo : json_decode($actAltoRiesgo, true);
+                if (is_array($actArr) && count($actArr) > 0) {
+                    $userPrompt .= "- Actividades alto riesgo: " . implode(', ', $actArr) . "\n";
+                }
+            }
+            if ($eppCargo) $userPrompt .= "- EPP por cargo: {$eppCargo}\n";
+            if ($vehiculos) $userPrompt .= "- Vehículos/maquinaria: {$vehiculos}\n";
+        }
+
+        // Historial SST
+        $accidentes = $contexto['accidentes_ultimo_anio'] ?? 0;
+        $ausentismo = $contexto['tasa_ausentismo'] ?? '';
+        $enfLaborales = $contexto['enfermedades_laborales_activas'] ?? '';
+        if ($accidentes > 0 || $ausentismo || $enfLaborales) {
+            $userPrompt .= "\nHISTORIAL SST:\n";
+            if ($accidentes > 0) $userPrompt .= "- Accidentes último año: {$accidentes}\n";
+            if ($ausentismo) $userPrompt .= "- Tasa ausentismo: {$ausentismo}%\n";
+            if ($enfLaborales) $userPrompt .= "- Enfermedades laborales activas: {$enfLaborales}\n";
+        }
+
+        // Infraestructura
+        $pisos = $contexto['numero_pisos'] ?? 1;
+        $ascensor = $contexto['tiene_ascensor'] ?? 0;
+        $sustancias = $contexto['sustancias_quimicas'] ?? '';
+        if ($pisos > 1 || $ascensor || $sustancias) {
+            $userPrompt .= "\nINFRAESTRUCTURA:\n";
+            if ($pisos > 1) $userPrompt .= "- Número de pisos: {$pisos}\n";
+            if ($ascensor) $userPrompt .= "- Tiene ascensor: Sí\n";
+            if ($sustancias) $userPrompt .= "- Sustancias químicas: {$sustancias}\n";
+        }
+
         // Comités y estructuras
         $userPrompt .= "\nESTRUCTURAS SST:\n";
         $userPrompt .= "- " . ($tieneCopasst ? "Tiene COPASST" : ($tieneVigia ? "Tiene Vigía SST (empresa < 10 trabajadores)" : "Sin COPASST/Vigía")) . "\n";
