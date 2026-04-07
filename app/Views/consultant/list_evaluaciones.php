@@ -145,6 +145,9 @@
         <button id="btnResetCalificacion" class="btn btn-warning" title="Resetear Calificación y Evaluación Inicial a cero">
           <i class="fas fa-undo"></i> Reset Calificación
         </button>
+        <button id="btnCargarEstandares" class="btn btn-info mt-1" style="display:none" title="Cargar estándares mínimos desde CSV maestro">
+          <i class="fas fa-file-csv"></i> Cargar Estándares
+        </button>
       </div>
     </div>
 
@@ -437,6 +440,7 @@
           if (storedClient) {
             $("#clientSelect").val(storedClient).trigger('change');
             loadClientIndicators(storedClient);
+            checkEstandaresCliente(storedClient);
           }
         },
         error: function () {
@@ -706,6 +710,7 @@ columns: [{
         if (clientId) {
           localStorage.setItem('selectedClient', clientId);
           loadClientIndicators(clientId);
+          checkEstandaresCliente(clientId);
           table.ajax.reload();
         } else {
           alert('Por favor, seleccione un cliente.');
@@ -717,9 +722,11 @@ columns: [{
         if (clientId) {
           localStorage.setItem('selectedClient', clientId);
           loadClientIndicators(clientId);
+          checkEstandaresCliente(clientId);
           table.ajax.reload();
         } else {
           $('#indicatorsRow').hide();
+          $('#btnCargarEstandares').hide();
         }
       });
 
@@ -790,6 +797,58 @@ columns: [{
           },
           complete: function() {
             $btn.prop('disabled', false).html('<i class="fas fa-envelope"></i> Socializar Evaluación');
+          }
+        });
+      });
+
+      // Verificar si el cliente tiene estándares cargados
+      function checkEstandaresCliente(clienteId) {
+        if (!clienteId) {
+          $('#btnCargarEstandares').hide();
+          return;
+        }
+        $.getJSON('<?= base_url('/api/checkEstandaresCliente') ?>', { id_cliente: clienteId }, function(resp) {
+          if (resp.success && !resp.tiene_estandares) {
+            $('#btnCargarEstandares').show();
+          } else {
+            $('#btnCargarEstandares').hide();
+          }
+        });
+      }
+
+      // Botón Cargar Estándares desde CSV
+      $('#btnCargarEstandares').on('click', function() {
+        var clienteId = $('#clientSelect').val();
+        if (!clienteId) return;
+
+        if (!confirm('¿Cargar los estándares mínimos (Res. 0312) para este cliente desde el CSV maestro?')) return;
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Cargando...');
+
+        $.ajax({
+          url: '<?= base_url('/api/cargarEstandaresCSV') ?>',
+          method: 'POST',
+          data: {
+            id_cliente: clienteId,
+            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+          },
+          dataType: 'json',
+          success: function(response) {
+            if (response.success) {
+              alert(response.message);
+              $btn.hide();
+              table.ajax.reload(null, false);
+              loadClientIndicators(clienteId);
+            } else {
+              alert('Error: ' + response.message);
+            }
+          },
+          error: function(xhr, status, error) {
+            alert('Error al comunicarse con el servidor: ' + error);
+          },
+          complete: function() {
+            $btn.prop('disabled', false).html('<i class="fas fa-file-csv"></i> Cargar Estándares');
           }
         });
       });

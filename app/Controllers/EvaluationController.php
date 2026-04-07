@@ -3,7 +3,9 @@
 namespace App\Controllers;
 
 use App\Models\EvaluationModel;
+use App\Models\SimpleEvaluationModel;
 use App\Models\ClientModel;
+use App\Libraries\StandardsLibrary;
 use CodeIgniter\Controller;
 
 class EvaluationController extends Controller
@@ -343,5 +345,70 @@ class EvaluationController extends Controller
             'indicador_no_aplica' => $indicador_no_aplica
         ]);
     }
-    
+
+    /**
+     * API: Verifica si un cliente tiene estándares cargados
+     */
+    public function checkEstandaresCliente()
+    {
+        $clienteId = $this->request->getGet('id_cliente');
+
+        if (empty($clienteId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ID de cliente requerido']);
+        }
+
+        $model = new EvaluationModel();
+        $count = $model->where('id_cliente', $clienteId)->countAllResults();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'tiene_estandares' => $count > 0,
+            'total' => $count
+        ]);
+    }
+
+    /**
+     * API: Carga los estándares mínimos desde el CSV para un cliente que no los tiene
+     */
+    public function cargarEstandaresCSV()
+    {
+        $clienteId = $this->request->getPost('id_cliente');
+
+        if (empty($clienteId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ID de cliente requerido']);
+        }
+
+        // Verificar que el cliente no tenga estándares ya cargados
+        $model = new SimpleEvaluationModel();
+        $existentes = $model->where('id_cliente', $clienteId)->countAllResults(false);
+
+        if ($existentes > 0) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Este cliente ya tiene ' . $existentes . ' estándares cargados']);
+        }
+
+        try {
+            $library = new StandardsLibrary();
+            $standards = $library->getStandards((int) $clienteId);
+
+            if (empty($standards)) {
+                return $this->response->setJSON(['success' => false, 'message' => 'No se encontraron estándares en el CSV']);
+            }
+
+            $insertedCount = 0;
+            foreach ($standards as $standard) {
+                if ($model->insert($standard)) {
+                    $insertedCount++;
+                }
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => $insertedCount . ' estándares cargados exitosamente',
+                'insertados' => $insertedCount
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
 }

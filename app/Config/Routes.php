@@ -510,6 +510,8 @@ $routes->get('api/getClientes', 'EvaluationController::getClientes');
 $routes->get('api/getEvaluaciones', 'EvaluationController::getEvaluaciones');
 $routes->post('api/updateEvaluacion', 'EvaluationController::updateEvaluacion');
 $routes->post('api/resetCalificacionEvaluaciones', 'EvaluationController::resetCalificacion');
+$routes->get('api/checkEstandaresCliente', 'EvaluationController::checkEstandaresCliente');
+$routes->post('api/cargarEstandaresCSV', 'EvaluationController::cargarEstandaresCSV');
 $routes->get('listEvaluacionesAjax', 'EvaluationController::listEvaluacionesAjax');
 
 $routes->get('api/getClientes', 'CronogcapacitacionController::getClientes');
