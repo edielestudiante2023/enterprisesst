@@ -1076,6 +1076,7 @@ $routes->get('/documentos-sst/(:num)/plan-emergencias/(:num)', 'DocumentosSSTCon
 // 2.1 Políticas de SST (adicionales)
 $routes->get('/documentos-sst/(:num)/politica-alcohol-drogas/(:num)', 'DocumentosSSTController::politicaAlcoholDrogas/$1/$2');
 $routes->get('/documentos-sst/(:num)/politica-acoso-laboral/(:num)', 'DocumentosSSTController::politicaAcosoLaboral/$1/$2');
+$routes->get('/documentos-sst/(:num)/politica-acoso-sexual/(:num)', 'DocumentosSSTController::politicaAcosoSexual/$1/$2');
 $routes->get('/documentos-sst/(:num)/politica-violencias-genero/(:num)', 'DocumentosSSTController::politicaViolenciasGenero/$1/$2');
 $routes->get('/documentos-sst/(:num)/politica-discriminacion/(:num)', 'DocumentosSSTController::politicaDiscriminacion/$1/$2');
 $routes->get('/documentos-sst/(:num)/politica-desconexion-laboral/(:num)', 'DocumentosSSTController::politicaDesconexionLaboral/$1/$2');
