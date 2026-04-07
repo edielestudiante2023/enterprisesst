@@ -43,7 +43,8 @@ class CapacitacionSSTService
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 60;
 
-        $minimo = $this->getMinimoCapacitaciones($estandares);
+        $totalTrabajadores = (int)($contexto['total_trabajadores'] ?? 0);
+        $minimo = $this->getMinimoCapacitaciones($estandares, $totalTrabajadores);
 
         $existentes = $this->cronogramaModel
             ->where('id_cliente', $idCliente)
@@ -58,16 +59,27 @@ class CapacitacionSSTService
     }
 
     /**
-     * Determina el minimo de capacitaciones segun estandares
+     * Determina el minimo de capacitaciones segun estandares y tamaño empresa
      */
-    protected function getMinimoCapacitaciones(int $estandares): int
+    protected function getMinimoCapacitaciones(int $estandares, int $totalTrabajadores = 0): int
     {
+        // Mínimo base por estándares
         if ($estandares <= 7) {
-            return 4;
+            $minimo = 4;
         } elseif ($estandares <= 21) {
-            return 8;
+            $minimo = 8;
+        } else {
+            $minimo = 12;
         }
-        return 12;
+
+        // Cap por tamaño de empresa
+        if ($totalTrabajadores > 0 && $totalTrabajadores <= 10) {
+            $minimo = min($minimo, 6);
+        } elseif ($totalTrabajadores > 0 && $totalTrabajadores <= 50) {
+            $minimo = min($minimo, 8);
+        }
+
+        return $minimo;
     }
 
     /**
