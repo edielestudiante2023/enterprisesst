@@ -19,7 +19,7 @@
 <body>
 <div class="text-center text-white p-4">
     <i class="fas fa-times-circle fa-4x mb-3" style="opacity:0.8;"></i>
-    <h5><?= esc($mensaje ?? 'Enlace no valido') ?></h5>
+    <h5><?= esc($mensaje ?? 'Enlace no valido o expirado') ?></h5>
     <p style="font-size:13px; opacity:0.85;">Solicite un nuevo enlace al consultor por WhatsApp.</p>
 </div>
 </body>

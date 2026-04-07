@@ -622,7 +622,7 @@ class ActaVisitaController extends BaseController
         }
 
         $token     = bin2hex(random_bytes(32));
-        $expiracion = date('Y-m-d H:i:s', strtotime('+24 hours'));
+        $expiracion = date('Y-m-d H:i:s', strtotime('+7 days'));
 
         $this->actaModel->update($id, [
             'token_firma_remota'     => $token,
@@ -649,7 +649,7 @@ class ActaVisitaController extends BaseController
 
         if (strtotime($acta['token_firma_expiracion']) < time()) {
             return view('inspecciones/acta_visita/firma_remota_error', [
-                'mensaje' => 'Este enlace ha expirado. Pida uno nuevo al consultor.'
+                'mensaje' => 'Este enlace ha expirado (7 dias). Pida uno nuevo al consultor.'
             ]);
         }
 

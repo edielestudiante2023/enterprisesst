@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: 'Enviar enlace de firma',
                 html: '<p style="font-size:14px;">Se generara un enlace para que <strong>'
                       + tipoLabel + '</strong> firme desde su celular.<br>'
-                      + '<small class="text-muted">El enlace expira en 24 horas.</small></p>',
+                      + '<small class="text-muted">El enlace expira en 7 dias.</small></p>',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: '<i class="fab fa-whatsapp"></i> Generar enlace',
