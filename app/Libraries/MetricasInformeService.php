@@ -213,13 +213,15 @@ class MetricasInformeService
     public function calcularEstadoAvance(float $diferencia): string
     {
         if ($diferencia > 5) {
-            return 'AVANCE SIGNIFICATIVO';
+            return 'Avance significativo';
         } elseif ($diferencia >= 1) {
-            return 'AVANCE MODERADO';
+            return 'Avance moderado';
+        } elseif ($diferencia > 0) {
+            return 'Avance leve';
         } elseif ($diferencia == 0) {
-            return 'ESTABLE';
+            return 'Estable';
         } else {
-            return 'REINICIO DE CICLO PHVA - BAJA PUNTAJE';
+            return 'Requiere atención - puntaje disminuyó';
         }
     }
 
