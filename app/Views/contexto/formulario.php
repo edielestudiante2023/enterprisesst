@@ -380,10 +380,10 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold">Horario Lunes a Viernes</label>
+                                    <label class="form-label fw-bold">Horario Laboral</label>
                                     <input type="text" name="horario_lunes_viernes" class="form-control"
                                            value="<?= esc($contexto['horario_lunes_viernes'] ?? '') ?>"
-                                           placeholder="Ej: 7:00 - 17:00">
+                                           placeholder="Ej: L-J 7:00-17:00, V 7:00-16:00">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold">Horario Sabado</label>
