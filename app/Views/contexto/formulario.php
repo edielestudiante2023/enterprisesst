@@ -369,12 +369,217 @@
                         </div>
                     </div>
 
-                    <!-- Seccion 5: Peligros Identificados -->
+                    <!-- Seccion 5: Horarios y Jornada Laboral -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clock me-2 text-primary"></i>
+                                5. Horarios y Jornada Laboral
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Horario Lunes a Viernes</label>
+                                    <input type="text" name="horario_lunes_viernes" class="form-control"
+                                           value="<?= esc($contexto['horario_lunes_viernes'] ?? '') ?>"
+                                           placeholder="Ej: 7:00 - 17:00">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Horario Sabado</label>
+                                    <input type="text" name="horario_sabado" class="form-control"
+                                           value="<?= esc($contexto['horario_sabado'] ?? '') ?>"
+                                           placeholder="Ej: 8:00 - 13:00 (vacio si no aplica)">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Trabaja Domingos/Festivos</label>
+                                    <select name="trabaja_domingos_festivos" class="form-select">
+                                        <option value="no" <?= ($contexto['trabaja_domingos_festivos'] ?? 'no') === 'no' ? 'selected' : '' ?>>No</option>
+                                        <option value="ocasional" <?= ($contexto['trabaja_domingos_festivos'] ?? '') === 'ocasional' ? 'selected' : '' ?>>Ocasional</option>
+                                        <option value="si" <?= ($contexto['trabaja_domingos_festivos'] ?? '') === 'si' ? 'selected' : '' ?>>Si, habitual</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Descripcion detallada de turnos</label>
+                                    <textarea name="descripcion_turnos" class="form-control" rows="3"
+                                              placeholder="Ej: Vigilancia 3 turnos rotativos (6am-2pm, 2pm-10pm, 10pm-6am). Aseo turno unico 6am-2pm. Administracion 8am-5pm."
+                                    ><?= esc($contexto['descripcion_turnos'] ?? '') ?></textarea>
+                                    <small class="text-muted">Complementa los turnos seleccionados arriba con el detalle real de la operacion.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seccion 6: Seguridad Social -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-hospital me-2 text-success"></i>
+                                6. Seguridad Social
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">EPS Principales</label>
+                                    <input type="text" name="eps_principales" class="form-control"
+                                           value="<?= esc($contexto['eps_principales'] ?? '') ?>"
+                                           placeholder="Ej: Sura, Sanitas, Nueva EPS">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">AFP Principales</label>
+                                    <input type="text" name="afp_principales" class="form-control"
+                                           value="<?= esc($contexto['afp_principales'] ?? '') ?>"
+                                           placeholder="Ej: Porvenir, Proteccion">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Caja de Compensacion</label>
+                                    <input type="text" name="caja_compensacion" class="form-control"
+                                           value="<?= esc($contexto['caja_compensacion'] ?? '') ?>"
+                                           placeholder="Ej: Compensar">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Tasa Cotizacion ARL (%)</label>
+                                    <input type="number" name="tasa_cotizacion_arl" class="form-control"
+                                           value="<?= esc($contexto['tasa_cotizacion_arl'] ?? '') ?>"
+                                           placeholder="Ej: 0.522" step="0.001" min="0" max="10">
+                                    <small class="text-muted">Porcentaje real que pagan (ej: 0.522%)</small>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Manejo de Incapacidades</label>
+                                    <textarea name="manejo_incapacidades" class="form-control" rows="3"
+                                              placeholder="Ej: Empresa asume primeros 2 dias. EPS paga desde dia 3. Incapacidades >180 dias se remiten a AFP para calificacion de PCL."
+                                    ><?= esc($contexto['manejo_incapacidades'] ?? '') ?></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seccion 7: Datos Operacionales -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-gear me-2 text-warning"></i>
+                                7. Datos Operacionales
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Actividades de Alto Riesgo</label>
+                                    <div class="row">
+                                        <?php
+                                        $actividadesAltoRiesgo = [
+                                            'trabajo_alturas' => 'Trabajo en alturas',
+                                            'espacios_confinados' => 'Espacios confinados',
+                                            'manejo_electrico' => 'Manejo electrico (alta/baja tension)',
+                                            'trabajo_caliente' => 'Trabajo en caliente (soldadura, corte)',
+                                            'manejo_quimicos' => 'Manejo de quimicos peligrosos',
+                                            'excavaciones' => 'Excavaciones',
+                                            'izaje_cargas' => 'Izaje de cargas',
+                                            'radiaciones' => 'Exposicion a radiaciones',
+                                        ];
+                                        $actGuardadas = json_decode($contexto['actividades_alto_riesgo'] ?? '[]', true) ?: [];
+                                        foreach ($actividadesAltoRiesgo as $clave => $nombre): ?>
+                                        <div class="col-md-4 col-6">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input"
+                                                       name="actividades_alto_riesgo[]" value="<?= $clave ?>"
+                                                       id="act_<?= $clave ?>"
+                                                       <?= in_array($clave, $actGuardadas) ? 'checked' : '' ?>>
+                                                <label class="form-check-label" for="act_<?= $clave ?>"><?= $nombre ?></label>
+                                            </div>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">EPP por Cargo</label>
+                                    <textarea name="epp_por_cargo" class="form-control" rows="3"
+                                              placeholder="Ej: Vigilantes: chaleco reflectivo, botas. Aseo: guantes nitrilo, tapabocas, botas antideslizantes. Mantenimiento: casco, arnes, gafas."
+                                    ><?= esc($contexto['epp_por_cargo'] ?? '') ?></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Vehiculos y Maquinaria</label>
+                                    <textarea name="vehiculos_maquinaria" class="form-control" rows="2"
+                                              placeholder="Ej: 2 vehiculos administrativos, 1 montacargas, 1 pulidora industrial"
+                                    ><?= esc($contexto['vehiculos_maquinaria'] ?? '') ?></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seccion 8: Historial SST -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-graph-down me-2 text-danger"></i>
+                                8. Historial SST
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Accidentes ultimo ano</label>
+                                    <input type="number" name="accidentes_ultimo_anio" class="form-control"
+                                           value="<?= esc($contexto['accidentes_ultimo_anio'] ?? '0') ?>"
+                                           min="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Tasa de Ausentismo (%)</label>
+                                    <input type="number" name="tasa_ausentismo" class="form-control"
+                                           value="<?= esc($contexto['tasa_ausentismo'] ?? '') ?>"
+                                           placeholder="Ej: 3.5" step="0.01" min="0" max="100">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Enfermedades Laborales Activas</label>
+                                    <textarea name="enfermedades_laborales_activas" class="form-control" rows="2"
+                                              placeholder="Ej: 1 caso tunel carpiano area administrativa, 2 casos lumbalgia area operativa"
+                                    ><?= esc($contexto['enfermedades_laborales_activas'] ?? '') ?></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seccion 9: Infraestructura -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-building me-2 text-info"></i>
+                                9. Infraestructura
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Numero de Pisos</label>
+                                    <input type="number" name="numero_pisos" class="form-control"
+                                           value="<?= esc($contexto['numero_pisos'] ?? '1') ?>"
+                                           min="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Tiene Ascensor</label>
+                                    <select name="tiene_ascensor" class="form-select">
+                                        <option value="0" <?= empty($contexto['tiene_ascensor']) ? 'selected' : '' ?>>No</option>
+                                        <option value="1" <?= !empty($contexto['tiene_ascensor']) ? 'selected' : '' ?>>Si</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Sustancias Quimicas Almacenadas</label>
+                                    <textarea name="sustancias_quimicas" class="form-control" rows="2"
+                                              placeholder="Ej: Hipoclorito de sodio, detergentes industriales, pintura acrilica, thinner"
+                                    ><?= esc($contexto['sustancias_quimicas'] ?? '') ?></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seccion 10: Peligros Identificados -->
                     <div class="card section-card mb-4 shadow-sm">
                         <div class="card-header bg-white">
                             <h5 class="mb-0">
                                 <i class="bi bi-exclamation-triangle text-primary me-2"></i>
-                                5. Peligros Identificados
+                                10. Peligros Identificados
                             </h5>
                         </div>
                         <div class="card-body">
@@ -430,7 +635,7 @@
                         <div class="card-header bg-white">
                             <h5 class="mb-0">
                                 <i class="bi bi-journal-text text-primary me-2"></i>
-                                6. Contexto y Observaciones
+                                11. Contexto y Observaciones
                             </h5>
                         </div>
                         <div class="card-body">
@@ -504,7 +709,7 @@
                         <div class="card-header bg-white">
                             <h5 class="mb-0">
                                 <i class="bi bi-pen text-primary me-2"></i>
-                                7. Firmantes de Documentos
+                                12. Firmantes de Documentos
                             </h5>
                         </div>
                         <div class="card-body">
@@ -696,13 +901,28 @@
                                     4. Informacion SST
                                 </a>
                                 <a href="#" class="list-group-item list-group-item-action py-2">
-                                    5. Peligros Identificados
+                                    5. Horarios y Jornada
                                 </a>
                                 <a href="#" class="list-group-item list-group-item-action py-2">
-                                    6. Contexto y Observaciones
+                                    6. Seguridad Social
                                 </a>
                                 <a href="#" class="list-group-item list-group-item-action py-2">
-                                    7. Firmantes de Documentos
+                                    7. Datos Operacionales
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action py-2">
+                                    8. Historial SST
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action py-2">
+                                    9. Infraestructura
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action py-2">
+                                    10. Peligros Identificados
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action py-2">
+                                    11. Contexto y Observaciones
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action py-2">
+                                    12. Firmantes de Documentos
                                 </a>
                             </div>
                         </div>

@@ -106,9 +106,13 @@ class FirmanteService
                 $firmante['cargo'] = 'Representante Legal';
                 $firmante['cedula'] = $cliente['cedula_rep_legal'] ?? '';
 
-                // Firma electrónica
+                // Firma electrónica - solo si la cédula coincide con el rep legal actual
                 if (!empty($firmasElectronicas['representante_legal']['evidencia']['firma_imagen'])) {
-                    $firmante['firma_imagen'] = $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'];
+                    $cedulaFirma = $firmasElectronicas['representante_legal']['solicitud']['firmante_documento'] ?? '';
+                    $cedulaActual = $contexto['representante_legal_cedula'] ?? $cliente['cedula_rep_legal'] ?? '';
+                    if ($cedulaFirma === $cedulaActual) {
+                        $firmante['firma_imagen'] = $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'];
+                    }
                 }
                 break;
 
@@ -126,8 +130,13 @@ class FirmanteService
                 $firmante['cargo'] = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
                 $firmante['cedula'] = $contexto['delegado_sst_cedula'] ?? '';
 
+                // Solo usar firma electrónica si la cédula coincide con el delegado actual
                 if (!empty($firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'])) {
-                    $firmante['firma_imagen'] = $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'];
+                    $cedulaFirma = $firmasElectronicas['delegado_sst']['solicitud']['firmante_documento'] ?? '';
+                    $cedulaActual = $contexto['delegado_sst_cedula'] ?? '';
+                    if ($cedulaFirma === $cedulaActual) {
+                        $firmante['firma_imagen'] = $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'];
+                    }
                 }
                 break;
 
@@ -199,8 +208,13 @@ class FirmanteService
                             ?? $cliente['nombre_rep_legal']
                             ?? $cliente['representante_legal'] ?? '';
                         $firmante['cargo'] = 'Representante Legal';
+                        // Solo usar firma si la cédula coincide con el rep legal actual
                         if (!empty($firmasElectronicas['representante_legal']['evidencia']['firma_imagen'])) {
-                            $firmante['firma_imagen'] = $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'];
+                            $cedulaFirma = $firmasElectronicas['representante_legal']['solicitud']['firmante_documento'] ?? '';
+                            $cedulaActual = $contexto['representante_legal_cedula'] ?? $cliente['cedula_rep_legal'] ?? '';
+                            if ($cedulaFirma === $cedulaActual) {
+                                $firmante['firma_imagen'] = $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'];
+                            }
                         }
                         break;
 
@@ -217,8 +231,13 @@ class FirmanteService
                         $firmante['columna_encabezado'] = 'Revisó / Delegado SST';
                         $firmante['nombre'] = $contexto['delegado_sst_nombre'] ?? '';
                         $firmante['cargo'] = $contexto['delegado_sst_cargo'] ?? 'Delegado SST';
+                        // Solo usar firma si la cédula coincide con el delegado actual
                         if (!empty($firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'])) {
-                            $firmante['firma_imagen'] = $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'];
+                            $cedulaFirma = $firmasElectronicas['delegado_sst']['solicitud']['firmante_documento'] ?? '';
+                            $cedulaActual = $contexto['delegado_sst_cedula'] ?? '';
+                            if ($cedulaFirma === $cedulaActual) {
+                                $firmante['firma_imagen'] = $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'];
+                            }
                         }
                         break;
                 }
@@ -277,7 +296,10 @@ class FirmanteService
                     'cedula' => $contexto['delegado_sst_cedula'] ?? '',
                     'licencia' => '',
                     'firma_archivo' => null,
-                    'firma_imagen' => $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'] ?? null,
+                    'firma_imagen' => (
+                        !empty($firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'])
+                        && ($firmasElectronicas['delegado_sst']['solicitud']['firmante_documento'] ?? '') === ($contexto['delegado_sst_cedula'] ?? '')
+                    ) ? $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'] : null,
                     'mostrar_licencia' => false,
                     'orden' => 2
                 ];
@@ -309,7 +331,10 @@ class FirmanteService
             'cedula' => $cliente['cedula_rep_legal'] ?? '',
             'licencia' => '',
             'firma_archivo' => null,
-            'firma_imagen' => $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'] ?? null,
+            'firma_imagen' => (
+                !empty($firmasElectronicas['representante_legal']['evidencia']['firma_imagen'])
+                && ($firmasElectronicas['representante_legal']['solicitud']['firmante_documento'] ?? '') === ($contexto['representante_legal_cedula'] ?? $cliente['cedula_rep_legal'] ?? '')
+            ) ? $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'] : null,
             'mostrar_licencia' => false,
             'orden' => count($firmantes) + 1
         ];

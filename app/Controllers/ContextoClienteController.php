@@ -150,6 +150,29 @@ class ContextoClienteController extends Controller
             'peligros_identificados' => json_encode($this->request->getPost('peligros') ?? []),
             // Contexto y observaciones (información cualitativa para IA)
             'observaciones_contexto' => $this->request->getPost('observaciones_contexto'),
+            // Horarios y jornada laboral
+            'horario_lunes_viernes' => $this->request->getPost('horario_lunes_viernes'),
+            'horario_sabado' => $this->request->getPost('horario_sabado'),
+            'trabaja_domingos_festivos' => $this->request->getPost('trabaja_domingos_festivos') ?: 'no',
+            'descripcion_turnos' => $this->request->getPost('descripcion_turnos'),
+            // Seguridad social
+            'eps_principales' => $this->request->getPost('eps_principales'),
+            'afp_principales' => $this->request->getPost('afp_principales'),
+            'caja_compensacion' => $this->request->getPost('caja_compensacion'),
+            'tasa_cotizacion_arl' => $this->request->getPost('tasa_cotizacion_arl') ?: null,
+            'manejo_incapacidades' => $this->request->getPost('manejo_incapacidades'),
+            // Datos operacionales
+            'actividades_alto_riesgo' => json_encode($this->request->getPost('actividades_alto_riesgo') ?? []),
+            'epp_por_cargo' => $this->request->getPost('epp_por_cargo'),
+            'vehiculos_maquinaria' => $this->request->getPost('vehiculos_maquinaria'),
+            // Historial SST
+            'accidentes_ultimo_anio' => (int) ($this->request->getPost('accidentes_ultimo_anio') ?? 0),
+            'tasa_ausentismo' => $this->request->getPost('tasa_ausentismo') ?: null,
+            'enfermedades_laborales_activas' => $this->request->getPost('enfermedades_laborales_activas'),
+            // Infraestructura
+            'numero_pisos' => (int) ($this->request->getPost('numero_pisos') ?? 1),
+            'tiene_ascensor' => $this->request->getPost('tiene_ascensor') ? 1 : 0,
+            'sustancias_quimicas' => $this->request->getPost('sustancias_quimicas'),
             // Firmantes de documentos
             'requiere_delegado_sst' => $this->request->getPost('requiere_delegado_sst') ? 1 : 0,
             'delegado_sst_nombre' => $this->request->getPost('delegado_sst_nombre'),
@@ -162,10 +185,28 @@ class ContextoClienteController extends Controller
             'representante_legal_cedula' => $this->request->getPost('representante_legal_cedula')
         ];
 
+        // Detectar cambio de delegado SST o representante legal (por cédula)
+        $cambioDelegado = false;
+        $cambioRepLegal = false;
+        if ($contextoAnterior) {
+            $cedulaDelegadoAnterior = trim($contextoAnterior['delegado_sst_cedula'] ?? '');
+            $cedulaDelegadoNuevo = trim($datos['delegado_sst_cedula'] ?? '');
+            $cambioDelegado = !empty($cedulaDelegadoAnterior) && $cedulaDelegadoAnterior !== $cedulaDelegadoNuevo;
+
+            $cedulaRepAnterior = trim($contextoAnterior['representante_legal_cedula'] ?? '');
+            $cedulaRepNuevo = trim($datos['representante_legal_cedula'] ?? '');
+            $cambioRepLegal = !empty($cedulaRepAnterior) && $cedulaRepAnterior !== $cedulaRepNuevo;
+        }
+
         // Guardar contexto
         $resultado = $this->contextoModel->saveContexto($idCliente, $datos);
 
         if ($resultado) {
+            // Si cambió delegado o rep legal, cancelar solicitudes de firma pendientes/esperando
+            if ($cambioDelegado || $cambioRepLegal) {
+                $this->invalidarFirmasPorCambioFirmante($idCliente, $cambioDelegado, $cambioRepLegal, $contextoAnterior);
+            }
+
             // Guardar historial si hubo cambio de nivel
             if ($cambioNivel['cambio_detectado']) {
                 $this->guardarHistorialCambio($idCliente, $cambioNivel);
@@ -238,6 +279,34 @@ class ContextoClienteController extends Controller
             ],
             'peligros' => json_decode($contexto['peligros_identificados'] ?? '[]', true),
             'observaciones_contexto' => $contexto['observaciones_contexto'] ?? '',
+            'horarios' => [
+                'lunes_viernes' => $contexto['horario_lunes_viernes'] ?? '',
+                'sabado' => $contexto['horario_sabado'] ?? '',
+                'domingos_festivos' => $contexto['trabaja_domingos_festivos'] ?? 'no',
+                'descripcion_turnos' => $contexto['descripcion_turnos'] ?? '',
+            ],
+            'seguridad_social' => [
+                'eps' => $contexto['eps_principales'] ?? '',
+                'afp' => $contexto['afp_principales'] ?? '',
+                'caja_compensacion' => $contexto['caja_compensacion'] ?? '',
+                'tasa_cotizacion_arl' => $contexto['tasa_cotizacion_arl'] ?? '',
+                'manejo_incapacidades' => $contexto['manejo_incapacidades'] ?? '',
+            ],
+            'operacional' => [
+                'actividades_alto_riesgo' => json_decode($contexto['actividades_alto_riesgo'] ?? '[]', true),
+                'epp_por_cargo' => $contexto['epp_por_cargo'] ?? '',
+                'vehiculos_maquinaria' => $contexto['vehiculos_maquinaria'] ?? '',
+            ],
+            'historial_sst' => [
+                'accidentes_ultimo_anio' => (int) ($contexto['accidentes_ultimo_anio'] ?? 0),
+                'tasa_ausentismo' => $contexto['tasa_ausentismo'] ?? '',
+                'enfermedades_laborales' => $contexto['enfermedades_laborales_activas'] ?? '',
+            ],
+            'infraestructura' => [
+                'numero_pisos' => (int) ($contexto['numero_pisos'] ?? 1),
+                'tiene_ascensor' => (bool) ($contexto['tiene_ascensor'] ?? false),
+                'sustancias_quimicas' => $contexto['sustancias_quimicas'] ?? '',
+            ],
             'sedes' => array_map(function($sede) {
                 return [
                     'nombre' => $sede['nombre_sede'],
@@ -265,6 +334,59 @@ class ContextoClienteController extends Controller
                   ->orderBy('nombre_sede', 'ASC')
                   ->get()
                   ->getResultArray();
+    }
+
+    /**
+     * Invalidar solicitudes de firma pendientes cuando cambia delegado o rep legal.
+     * Las firmas ya completadas (estado='firmado') se mantienen en BD como historial,
+     * pero FirmanteService ya no las usa si la cédula no coincide con el firmante actual.
+     */
+    private function invalidarFirmasPorCambioFirmante(int $idCliente, bool $cambioDelegado, bool $cambioRepLegal, array $contextoAnterior): void
+    {
+        $db = \Config\Database::connect();
+
+        // Obtener todos los documentos del cliente
+        $documentos = $db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->select('id_documento')
+            ->get()
+            ->getResultArray();
+
+        if (empty($documentos)) return;
+
+        $idsDocumentos = array_column($documentos, 'id_documento');
+
+        $tiposACancelar = [];
+        if ($cambioDelegado) $tiposACancelar[] = 'delegado_sst';
+        if ($cambioRepLegal) $tiposACancelar[] = 'representante_legal';
+
+        // Cancelar solicitudes pendientes o en espera del firmante anterior
+        $db->table('tbl_doc_firma_solicitudes')
+            ->whereIn('id_documento', $idsDocumentos)
+            ->whereIn('firmante_tipo', $tiposACancelar)
+            ->whereIn('estado', ['pendiente', 'esperando'])
+            ->update([
+                'estado' => 'cancelado',
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+        // Registrar en audit log
+        $solicitudesCanceladas = $db->table('tbl_doc_firma_solicitudes')
+            ->whereIn('id_documento', $idsDocumentos)
+            ->whereIn('firmante_tipo', $tiposACancelar)
+            ->where('estado', 'cancelado')
+            ->select('id_solicitud, firmante_tipo')
+            ->get()
+            ->getResultArray();
+
+        $firmaModel = new \App\Models\DocFirmaModel();
+        foreach ($solicitudesCanceladas as $sol) {
+            $firmaModel->registrarAudit($sol['id_solicitud'], 'firmante_cambio_invalidado', [
+                'razon' => 'Cambio de ' . $sol['firmante_tipo'] . ' en contexto del cliente',
+                'delegado_anterior' => $cambioDelegado ? ($contextoAnterior['delegado_sst_nombre'] ?? '') : null,
+                'rep_legal_anterior' => $cambioRepLegal ? ($contextoAnterior['representante_legal_nombre'] ?? '') : null,
+            ]);
+        }
     }
 
     /**

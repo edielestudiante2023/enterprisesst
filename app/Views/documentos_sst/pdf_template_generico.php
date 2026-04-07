@@ -393,12 +393,19 @@ if (!function_exists('renderizarTablaPdfGen')) {
                     ];
                     break;
                 case 'delegado_sst':
+                    $firmaDelegado = null;
+                    if (!empty($firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'])) {
+                        $cedulaFirma = $firmasElectronicas['delegado_sst']['solicitud']['firmante_documento'] ?? '';
+                        if ($cedulaFirma === ($contexto['delegado_sst_cedula'] ?? '')) {
+                            $firmaDelegado = $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'];
+                        }
+                    }
                     $firmantesParaPdf[] = [
                         'tipo' => 'delegado_sst',
                         'columna_encabezado' => 'Revisó / Delegado SST',
                         'nombre' => $contexto['delegado_sst_nombre'] ?? '',
                         'cargo' => $contexto['delegado_sst_cargo'] ?? 'Delegado SST',
-                        'firma_imagen' => $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'] ?? null
+                        'firma_imagen' => $firmaDelegado
                     ];
                     break;
                 case 'vigia_sst':
@@ -411,12 +418,20 @@ if (!function_exists('renderizarTablaPdfGen')) {
                     ];
                     break;
                 case 'representante_legal':
+                    $firmaRepLegal = null;
+                    if (!empty($firmasElectronicas['representante_legal']['evidencia']['firma_imagen'])) {
+                        $cedulaFirma = $firmasElectronicas['representante_legal']['solicitud']['firmante_documento'] ?? '';
+                        $cedulaActual = $contexto['representante_legal_cedula'] ?? $cliente['cedula_rep_legal'] ?? '';
+                        if ($cedulaFirma === $cedulaActual) {
+                            $firmaRepLegal = $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'];
+                        }
+                    }
                     $firmantesParaPdf[] = [
                         'tipo' => 'representante_legal',
                         'columna_encabezado' => 'Aprobó / Representante Legal',
                         'nombre' => $contexto['representante_legal_nombre'] ?? $cliente['nombre_rep_legal'] ?? '',
                         'cargo' => 'Representante Legal',
-                        'firma_imagen' => $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'] ?? null
+                        'firma_imagen' => $firmaRepLegal
                     ];
                     break;
             }

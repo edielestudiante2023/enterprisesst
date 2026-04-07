@@ -16,6 +16,16 @@ class ClienteContextoSstModel extends Model
         'id_consultor_responsable',
         'tiene_copasst', 'tiene_vigia_sst', 'tiene_comite_convivencia', 'tiene_brigada_emergencias',
         'peligros_identificados', 'observaciones_contexto', 'estandares_aplicables',
+        // Horarios y jornada laboral
+        'horario_lunes_viernes', 'horario_sabado', 'trabaja_domingos_festivos', 'descripcion_turnos',
+        // Seguridad social
+        'eps_principales', 'afp_principales', 'caja_compensacion', 'tasa_cotizacion_arl', 'manejo_incapacidades',
+        // Datos operacionales
+        'actividades_alto_riesgo', 'epp_por_cargo', 'vehiculos_maquinaria',
+        // Historial SST
+        'accidentes_ultimo_anio', 'tasa_ausentismo', 'enfermedades_laborales_activas',
+        // Infraestructura
+        'numero_pisos', 'tiene_ascensor', 'sustancias_quimicas',
         // Campos de firmantes
         'requiere_delegado_sst',
         'delegado_sst_nombre', 'delegado_sst_cargo', 'delegado_sst_email', 'delegado_sst_cedula',
