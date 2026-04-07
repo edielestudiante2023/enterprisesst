@@ -395,8 +395,9 @@ if (!function_exists('renderizarTablaPdfGen')) {
                 case 'delegado_sst':
                     $firmaDelegado = null;
                     if (!empty($firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'])) {
-                        $cedulaFirma = $firmasElectronicas['delegado_sst']['solicitud']['firmante_documento'] ?? '';
-                        if ($cedulaFirma === ($contexto['delegado_sst_cedula'] ?? '')) {
+                        $cedulaFirma = trim($firmasElectronicas['delegado_sst']['solicitud']['firmante_documento'] ?? '');
+                        $cedulaActual = trim($contexto['delegado_sst_cedula'] ?? '');
+                        if (!empty($cedulaFirma) && !empty($cedulaActual) && $cedulaFirma === $cedulaActual) {
                             $firmaDelegado = $firmasElectronicas['delegado_sst']['evidencia']['firma_imagen'];
                         }
                     }
@@ -420,9 +421,9 @@ if (!function_exists('renderizarTablaPdfGen')) {
                 case 'representante_legal':
                     $firmaRepLegal = null;
                     if (!empty($firmasElectronicas['representante_legal']['evidencia']['firma_imagen'])) {
-                        $cedulaFirma = $firmasElectronicas['representante_legal']['solicitud']['firmante_documento'] ?? '';
-                        $cedulaActual = $contexto['representante_legal_cedula'] ?? $cliente['cedula_rep_legal'] ?? '';
-                        if ($cedulaFirma === $cedulaActual) {
+                        $cedulaFirma = trim($firmasElectronicas['representante_legal']['solicitud']['firmante_documento'] ?? '');
+                        $cedulaActual = trim($contexto['representante_legal_cedula'] ?? $cliente['cedula_rep_legal'] ?? '');
+                        if (!empty($cedulaFirma) && !empty($cedulaActual) && $cedulaFirma === $cedulaActual) {
                             $firmaRepLegal = $firmasElectronicas['representante_legal']['evidencia']['firma_imagen'];
                         }
                     }
