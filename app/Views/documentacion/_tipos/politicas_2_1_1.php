@@ -71,6 +71,7 @@ $totalEsperado = 9; // 9 políticas (incluye Acoso Sexual separado - Ley 2365/20
                                 <?php if ($yaExiste): ?>
                                     <a href="<?= $url ?>" class="dropdown-item" target="_blank">
                                         <i class="bi bi-arrow-repeat me-2 text-success"></i>Nueva versión: <?= esc($info['nombre']) ?>
+                                        <i class="bi bi-check-circle-fill text-success ms-2"></i>
                                     </a>
                                 <?php else: ?>
                                     <a href="<?= $url ?>" class="dropdown-item" target="_blank">
