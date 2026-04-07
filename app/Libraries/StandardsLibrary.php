@@ -17,7 +17,7 @@ class StandardsLibrary
     /**
      * Ruta al archivo CSV maestro con todos los estándares mínimos
      */
-    private const CSV_PATH = WRITABLE . 'uploads/csv/csvevaluacionestandaresminimos.csv';
+    private const CSV_PATH = WRITEPATH . 'uploads/csv/csvevaluacionestandaresminimos.csv';
 
     /**
      * Obtiene todos los estándares mínimos listos para un cliente
