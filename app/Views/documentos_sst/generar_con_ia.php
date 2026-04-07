@@ -51,8 +51,8 @@
         }
         .sidebar {
             position: sticky;
-            top: 20px;
-            max-height: calc(100vh - 40px);
+            top: 80px;
+            max-height: calc(100vh - 100px);
             overflow-y: auto;
             scrollbar-width: auto;
             scrollbar-color: #764ba2 #f0e6f6;
@@ -145,7 +145,7 @@
     <div class="toast-container position-fixed top-0 end-0 p-3" id="toastStack"></div>
 
     <!-- Header -->
-    <div class="bg-dark text-white py-3">
+    <div class="bg-dark text-white py-3 sticky-top" style="z-index: 1030;">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
