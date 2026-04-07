@@ -111,27 +111,28 @@ if (!isset($fasesInfo) || !$fasesInfo || !$fasesInfo['tiene_fases']) {
                     <?php endif; ?>
                 <?php elseif ($fasesInfo['todas_completas']): ?>
                     <?php
+                    // Mapeo tipoCarpetaFases → tipo_documento para URL de Parte 3
+                    // TODAS las URLs deben apuntar a /documentos/generar/{tipo_documento}/{id}
+                    // porque el panel de fases confirma que Parte 1 y 2 están completas
+                    // Gold standard: ProgramaInspecciones.php
+                    // Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+                    $mapaCrearIA = [
+                        'capacitacion_sst'          => 'programa_capacitacion',
+                        'promocion_prevencion_salud' => 'programa_promocion_prevencion_salud',
+                        'induccion_reinduccion'      => 'programa_induccion_reinduccion',
+                        'plan_objetivos_metas'       => 'plan_objetivos_metas',
+                        'evaluaciones_medicas'       => 'programa_evaluaciones_medicas_ocupacionales',
+                        'estilos_vida_saludable'     => 'programa_estilos_vida_saludable',
+                        'mantenimiento_periodico'    => 'programa_mantenimiento_periodico',
+                        'programa_inspecciones'      => 'programa_inspecciones',
+                    ];
+
                     if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsables_sst') {
                         // Documento auto-generado, no usa IA
-                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'capacitacion_sst') {
-                        $urlCrearIA = base_url('generador-ia/' . $cliente['id_cliente'] . '/capacitacion-sst');
-                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'promocion_prevencion_salud') {
-                        $urlCrearIA = base_url('generador-ia/' . $cliente['id_cliente'] . '/pyp-salud');
-                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'induccion_reinduccion') {
-                        $urlCrearIA = base_url('documentos/generar/programa_induccion_reinduccion/' . $cliente['id_cliente']);
-                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'plan_objetivos_metas') {
-                        $urlCrearIA = base_url('generador-ia/' . $cliente['id_cliente'] . '/objetivos-sgsst');
-                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'evaluaciones_medicas') {
-                        $urlCrearIA = base_url('documentos/generar/programa_evaluaciones_medicas_ocupacionales/' . $cliente['id_cliente']);
-                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'estilos_vida_saludable') {
-                        $urlCrearIA = base_url('documentos/generar/programa_estilos_vida_saludable/' . $cliente['id_cliente']);
-                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'mantenimiento_periodico') {
-                        $urlCrearIA = base_url('documentos/generar/programa_mantenimiento_periodico/' . $cliente['id_cliente']);
-                    } elseif (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'programa_inspecciones') {
-                        $urlCrearIA = base_url('documentos/generar/programa_inspecciones/' . $cliente['id_cliente']);
+                    } elseif (isset($tipoCarpetaFases) && isset($mapaCrearIA[$tipoCarpetaFases])) {
+                        $urlCrearIA = base_url('documentos/generar/' . $mapaCrearIA[$tipoCarpetaFases] . '/' . $cliente['id_cliente']);
                     } else {
-                        // Fallback genérico — si caes aquí, falta registrar el programa arriba
-                        // Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+                        // Fallback genérico — si caes aquí, falta registrar el programa en $mapaCrearIA
                         $urlCrearIA = base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta'] . '&ia=1');
                     }
                     ?>
