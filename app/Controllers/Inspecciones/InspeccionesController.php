@@ -8,6 +8,7 @@ use App\Models\InspeccionLocativaModel;
 use App\Models\InspeccionExtintoresModel;
 use App\Models\InspeccionBotiquinModel;
 use App\Models\InspeccionSenalizacionModel;
+use App\Models\RegistroAsistenciaModel;
 use App\Models\ClientModel;
 use App\Models\PendientesModel;
 use App\Models\VencimientosMantenimientoModel;
@@ -39,6 +40,10 @@ class InspeccionesController extends BaseController
         $pendientesSenalizacion = $senalizacionModel->getAllPendientes();
         $totalSenalizacion = $senalizacionModel->where('estado', 'completo')->countAllResults();
 
+        $registroAsistModel = new RegistroAsistenciaModel();
+        $pendientesAsistencia = $registroAsistModel->getAllPendientes();
+        $totalAsistencia = $registroAsistModel->where('estado', 'completo')->countAllResults();
+
         $data = [
             'title'                    => 'Inspecciones SST',
             'pendientes'               => $pendientes,
@@ -46,11 +51,13 @@ class InspeccionesController extends BaseController
             'pendientesExtintores'     => $pendientesExtintores,
             'pendientesBotiquin'       => $pendientesBotiquin,
             'pendientesSenalizacion'   => $pendientesSenalizacion,
+            'pendientesAsistencia'     => $pendientesAsistencia,
             'totalActas'               => $totalActas,
             'totalLocativas'           => $totalLocativas,
             'totalExtintores'          => $totalExtintores,
             'totalBotiquin'            => $totalBotiquin,
             'totalSenalizacion'        => $totalSenalizacion,
+            'totalAsistencia'          => $totalAsistencia,
             'nombre'                 => session()->get('nombre_usuario'),
         ];
 

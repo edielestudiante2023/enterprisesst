@@ -215,7 +215,7 @@ class ActaVisitaController extends BaseController
             return $this->autosaveJsonSuccess((int)$id);
         }
 
-        $redirect = $this->request->getPost('ir_a_firmas') ? '/inspecciones/acta-visita/firma/' . $id : '/inspecciones/acta-visita/edit/' . $id;
+        $redirect = $this->request->getPost('ir_a_firmas') ? '/inspecciones/acta-visita/pta/' . $id : '/inspecciones/acta-visita/edit/' . $id;
 
         return redirect()->to($redirect)->with('msg', 'Acta actualizada');
     }
@@ -247,6 +247,91 @@ class ActaVisitaController extends BaseController
             'content' => view('inspecciones/acta_visita/view', $data),
             'title'   => 'Ver Acta',
         ]);
+    }
+
+    /**
+     * Vista intermedia PTA: cerrar actividades y agregar observaciones grupales
+     */
+    public function pta($id)
+    {
+        $acta = $this->actaModel->find($id);
+        if (!$acta) {
+            return redirect()->to('/inspecciones/acta-visita')->with('error', 'Acta no encontrada');
+        }
+
+        // Si ya confirmo PTA, redirigir directo a firmas (una sola oportunidad)
+        if (!empty($acta['pta_confirmado'])) {
+            return redirect()->to('/inspecciones/acta-visita/firma/' . $id);
+        }
+
+        $ptaModel = new PtaClienteNuevaModel();
+        $actividades = $ptaModel->getAbiertosByClienteYMes((int) $acta['id_cliente'], $acta['fecha_visita']);
+
+        // Cargar estado previo
+        $linkModel = new ActaVisitaPtaModel();
+        $prevLinks = [];
+        $links = $linkModel->where('id_acta_visita', $id)->findAll();
+        foreach ($links as $link) {
+            $prevLinks[$link['id_ptacliente']] = [
+                'cerrada'       => (bool) $link['cerrada'],
+                'justificacion' => $link['justificacion_no_cierre'] ?? '',
+            ];
+        }
+
+        // Incluir actividades ya cerradas en esta acta (para mostrar checked+disabled)
+        $cerradasEnActa = $linkModel->select('tbl_acta_visita_pta.*, tbl_pta_cliente.actividad_plandetrabajo, tbl_pta_cliente.numeral_plandetrabajo, tbl_pta_cliente.fecha_propuesta, tbl_pta_cliente.estado_actividad')
+            ->join('tbl_pta_cliente', 'tbl_pta_cliente.id_ptacliente = tbl_acta_visita_pta.id_ptacliente', 'left')
+            ->where('tbl_acta_visita_pta.id_acta_visita', $id)
+            ->where('tbl_acta_visita_pta.cerrada', 1)
+            ->findAll();
+
+        $idsAbiertas = array_column($actividades, 'id_ptacliente');
+        foreach ($cerradasEnActa as $ca) {
+            if (!in_array($ca['id_ptacliente'], $idsAbiertas)) {
+                $actividades[] = [
+                    'id_ptacliente'            => $ca['id_ptacliente'],
+                    'actividad_plandetrabajo'  => $ca['actividad_plandetrabajo'],
+                    'numeral_plandetrabajo'    => $ca['numeral_plandetrabajo'],
+                    'fecha_propuesta'          => $ca['fecha_propuesta'],
+                    'estado_actividad'         => $ca['estado_actividad'],
+                    '_ya_cerrada'              => true,
+                ];
+            }
+        }
+
+        $clientModel = new ClientModel();
+        $cliente = $clientModel->find($acta['id_cliente']);
+
+        $data = [
+            'title'       => 'Actividades PTA',
+            'acta'        => $acta,
+            'cliente'     => $cliente,
+            'actividades' => $actividades,
+            'prevLinks'   => $prevLinks,
+        ];
+
+        return view('inspecciones/layout_pwa', [
+            'content' => view('inspecciones/acta_visita/pta', $data),
+            'title'   => 'Actividades PTA',
+        ]);
+    }
+
+    /**
+     * Guardar PTA desde vista intermedia y redirigir a firmas
+     */
+    public function savePta($id)
+    {
+        $acta = $this->actaModel->find($id);
+        if (!$acta) {
+            return redirect()->to('/inspecciones/acta-visita')->with('error', 'Acta no encontrada');
+        }
+
+        $this->savePtaActividades($id);
+
+        // Marcar como confirmado (una sola oportunidad)
+        $this->actaModel->update($id, ['pta_confirmado' => 1]);
+
+        return redirect()->to('/inspecciones/acta-visita/firma/' . $id)->with('msg', 'Actividades PTA guardadas');
     }
 
     /**

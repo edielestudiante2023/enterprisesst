@@ -654,6 +654,8 @@ $routes->group('client/inspecciones', ['filter' => 'auth'], function($routes) {
     $routes->get('botiquin/(:num)', 'ClientInspeccionesController::viewBotiquin/$1');
     $routes->get('locativas', 'ClientInspeccionesController::listLocativas');
     $routes->get('locativas/(:num)', 'ClientInspeccionesController::viewLocativa/$1');
+    $routes->get('registro-asistencia', 'ClientInspeccionesController::listRegistroAsistencia');
+    $routes->get('registro-asistencia/(:num)', 'ClientInspeccionesController::viewRegistroAsistencia/$1');
 });
 
 // Consultor
@@ -1575,6 +1577,8 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('acta-visita/edit/(:num)', 'ActaVisitaController::edit/$1');
     $routes->post('acta-visita/update/(:num)', 'ActaVisitaController::update/$1');
     $routes->get('acta-visita/view/(:num)', 'ActaVisitaController::view/$1');
+    $routes->get('acta-visita/pta/(:num)', 'ActaVisitaController::pta/$1');
+    $routes->post('acta-visita/save-pta/(:num)', 'ActaVisitaController::savePta/$1');
     $routes->get('acta-visita/firma/(:num)', 'ActaVisitaController::firma/$1');
     $routes->post('acta-visita/save-firma/(:num)', 'ActaVisitaController::saveFirma/$1');
     $routes->get('acta-visita/pdf/(:num)', 'ActaVisitaController::generatePdf/$1');
@@ -1647,6 +1651,26 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('senalizacion/pdf/(:num)', 'InspeccionSenalizacionController::generatePdf/$1');
     $routes->post('senalizacion/finalizar/(:num)', 'InspeccionSenalizacionController::finalizar/$1');
     $routes->get('senalizacion/delete/(:num)', 'InspeccionSenalizacionController::delete/$1');
+
+    // Registro de Asistencia (transversal)
+    $routes->get('registro-asistencia', 'RegistroAsistenciaController::list');
+    $routes->get('registro-asistencia/create', 'RegistroAsistenciaController::create');
+    $routes->get('registro-asistencia/create/(:num)', 'RegistroAsistenciaController::create/$1');
+    $routes->post('registro-asistencia/store', 'RegistroAsistenciaController::store');
+    $routes->get('registro-asistencia/edit/(:num)', 'RegistroAsistenciaController::edit/$1');
+    $routes->post('registro-asistencia/update/(:num)', 'RegistroAsistenciaController::update/$1');
+    $routes->get('registro-asistencia/view/(:num)', 'RegistroAsistenciaController::view/$1');
+    $routes->get('registro-asistencia/registrar/(:num)', 'RegistroAsistenciaController::registrar/$1');
+    $routes->post('registro-asistencia/store-asistente/(:num)', 'RegistroAsistenciaController::storeAsistente/$1');
+    $routes->post('registro-asistencia/delete-asistente/(:num)', 'RegistroAsistenciaController::deleteAsistente/$1');
+    $routes->get('registro-asistencia/firmas/(:num)', 'RegistroAsistenciaController::firmas/$1');
+    $routes->post('registro-asistencia/guardar-firma/(:num)', 'RegistroAsistenciaController::guardarFirma/$1');
+    $routes->post('registro-asistencia/finalizar/(:num)', 'RegistroAsistenciaController::finalizar/$1');
+    $routes->get('registro-asistencia/pdf/(:num)', 'RegistroAsistenciaController::generatePdf/$1');
+    $routes->get('registro-asistencia/regenerar/(:num)', 'RegistroAsistenciaController::regenerarPdf/$1');
+    $routes->get('registro-asistencia/enviar-email/(:num)', 'RegistroAsistenciaController::enviarEmail/$1');
+    $routes->get('registro-asistencia/delete/(:num)', 'RegistroAsistenciaController::delete/$1');
+    $routes->post('registro-asistencia/generar-objetivo', 'RegistroAsistenciaController::generarObjetivo');
 
     // API endpoints AJAX
     $routes->get('api/clientes', 'InspeccionesController::getClientes');

@@ -17,6 +17,9 @@ use App\Models\ElementoBotiquinModel;
 use App\Controllers\Inspecciones\InspeccionBotiquinController;
 use App\Models\InspeccionLocativaModel;
 use App\Models\HallazgoLocativoModel;
+use App\Models\RegistroAsistenciaModel;
+use App\Models\RegistroAsistenciaAsistenteModel;
+use App\Controllers\Inspecciones\RegistroAsistenciaController;
 use CodeIgniter\Controller;
 
 class ClientInspeccionesController extends Controller
@@ -289,6 +292,62 @@ class ClientInspeccionesController extends Controller
             'client'  => $clientModel->find($clientId),
             'title'   => 'Inspección Locativa',
             'content' => view('client/inspecciones/locativa_view', $data),
+        ]);
+    }
+
+    // ─── REGISTRO DE ASISTENCIA ────────────────────────────
+
+    public function listRegistroAsistencia()
+    {
+        $clientId = $this->getClientId();
+        if (!$clientId) {
+            return redirect()->to('/login')->with('error', 'Acceso no autorizado.');
+        }
+
+        $model = new RegistroAsistenciaModel();
+        $registros = $model->getByCliente((int)$clientId);
+
+        $clientModel = new ClientModel();
+
+        return view('client/inspecciones/layout', [
+            'client'  => $clientModel->find($clientId),
+            'title'   => 'Registro de Asistencia',
+            'content' => view('client/inspecciones/registro_asistencia_list', [
+                'registros'    => $registros,
+                'tiposReunion' => RegistroAsistenciaController::TIPOS_REUNION,
+            ]),
+        ]);
+    }
+
+    public function viewRegistroAsistencia($id)
+    {
+        $clientId = $this->getClientId();
+        if (!$clientId) {
+            return redirect()->to('/login')->with('error', 'Acceso no autorizado.');
+        }
+
+        $model = new RegistroAsistenciaModel();
+        $registro = $model->find($id);
+        if (!$registro || (int)$registro['id_cliente'] !== (int)$clientId) {
+            return redirect()->to('/client/inspecciones')->with('error', 'Registro no encontrado.');
+        }
+
+        $clientModel = new ClientModel();
+        $consultantModel = new ConsultantModel();
+        $asistenteModel = new RegistroAsistenciaAsistenteModel();
+
+        $data = [
+            'inspeccion'   => $registro,
+            'cliente'      => $clientModel->find($registro['id_cliente']),
+            'consultor'    => $consultantModel->find($registro['id_consultor']),
+            'asistentes'   => $asistenteModel->getByAsistencia($id),
+            'tiposReunion' => RegistroAsistenciaController::TIPOS_REUNION,
+        ];
+
+        return view('client/inspecciones/layout', [
+            'client'  => $clientModel->find($clientId),
+            'title'   => 'Registro de Asistencia',
+            'content' => view('client/inspecciones/registro_asistencia_view', $data),
         ]);
     }
 }
