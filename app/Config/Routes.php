@@ -1139,6 +1139,7 @@ $routes->post('/documentos/reportar-norma-derogada', 'DocumentosSSTController::r
 
 // Dashboard de gestión de documentos SST por cliente
 $routes->get('/documentos-sst/lista/(:num)', 'DocumentosSSTController::listaDocumentos/$1');
+$routes->get('/documentos-sst/(:num)/lista', 'DocumentosSSTController::listaDocumentos/$1');
 $routes->post('/documentos-sst/toggle-exclusion', 'DocumentosSSTController::toggleExclusionDocumento');
 
 // Generador de documentos por secciones con IA
