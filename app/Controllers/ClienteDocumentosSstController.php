@@ -327,7 +327,7 @@ class ClienteDocumentosSstController extends Controller
             '1.2.2' => 'induccion_reinduccion',
             '1.2.3' => 'responsables_curso_50h',
             '1.2.4' => 'reglamento_hsi',
-            '2.1.1' => 'politica_sst',
+            '2.1.1' => 'politicas_2_1_1',
             '2.3.1' => 'evaluacion_prioridades',
             '2.4.1' => 'plan_trabajo_anual',
             '2.5.1' => 'archivo_documental',
