@@ -80,10 +80,39 @@ class ClienteDocumentosSstController extends Controller
                 ->getResultArray();
         }
 
-        // Construir arbol de carpetas con conteo de documentos
+        // Precargar TODAS las carpetas del cliente en 1 sola query
+        $todasCarpetas = $this->db->table('tbl_doc_carpetas')
+            ->where('id_cliente', $idCliente)
+            ->where('visible', 1)
+            ->orderBy('orden', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // Indexar por id y agrupar por padre
+        $carpetasPorId = [];
+        $hijosPorPadre = [];
+        foreach ($todasCarpetas as $c) {
+            $carpetasPorId[$c['id_carpeta']] = $c;
+            $hijosPorPadre[$c['id_carpeta_padre'] ?? 0][] = $c;
+        }
+
+        // Precargar conteo de documentos por tipo en 1 sola query
+        $docsPorTipo = [];
+        $docsResult = $this->db->table('tbl_documentos_sst')
+            ->select('tipo_documento, COUNT(*) as total')
+            ->where('id_cliente', $idCliente)
+            ->whereIn('estado', $this->getEstadosVisibles())
+            ->groupBy('tipo_documento')
+            ->get()
+            ->getResultArray();
+        foreach ($docsResult as $d) {
+            $docsPorTipo[$d['tipo_documento']] = (int) $d['total'];
+        }
+
+        // Construir arbol en memoria (0 queries adicionales)
         $arbolCarpetas = [];
         foreach ($carpetasPHVA as $phva) {
-            $arbolCarpetas[] = $this->construirArbolConDocumentos($phva, $idCliente);
+            $arbolCarpetas[] = $this->construirArbolEnMemoria($phva, $hijosPorPadre, $docsPorTipo);
         }
 
         // Obtener documentos del cliente filtrados por rol
@@ -94,9 +123,24 @@ class ClienteDocumentosSstController extends Controller
             ->get()
             ->getResultArray();
 
-        // Agregar archivo firmado a cada documento
+        // Precargar archivos firmados en 1 sola query
+        $idsDocs = array_column($todosDocumentos, 'id_documento');
+        $archivosFirmados = [];
+        if (!empty($idsDocs)) {
+            $firmados = $this->db->table('tbl_doc_versiones_sst')
+                ->select('id_documento, archivo_pdf')
+                ->whereIn('id_documento', $idsDocs)
+                ->where('estado', 'vigente')
+                ->where('archivo_pdf IS NOT NULL')
+                ->where('archivo_pdf !=', '')
+                ->get()
+                ->getResultArray();
+            foreach ($firmados as $f) {
+                $archivosFirmados[$f['id_documento']] = $f['archivo_pdf'];
+            }
+        }
         foreach ($todosDocumentos as &$doc) {
-            $doc['archivo_firmado'] = $this->obtenerArchivoFirmado($doc['id_documento']);
+            $doc['archivo_firmado'] = $archivosFirmados[$doc['id_documento']] ?? null;
         }
 
         // Total de documentos del cliente
@@ -373,6 +417,108 @@ class ClienteDocumentosSstController extends Controller
     /**
      * Construye el arbol de carpetas con conteo de documentos
      */
+    /**
+     * Construye arbol de carpetas en memoria (0 queries adicionales)
+     */
+    protected function construirArbolEnMemoria(array $carpeta, array &$hijosPorPadre, array &$docsPorTipo): array
+    {
+        $idCarpeta = $carpeta['id_carpeta'];
+        $hijos = $hijosPorPadre[$idCarpeta] ?? [];
+
+        $carpeta['hijos'] = [];
+        $carpeta['total_docs'] = $this->contarDocsEnMemoria($carpeta, $hijosPorPadre, $docsPorTipo);
+
+        foreach ($hijos as $hijo) {
+            $carpeta['hijos'][] = $this->construirArbolEnMemoria($hijo, $hijosPorPadre, $docsPorTipo);
+        }
+
+        return $carpeta;
+    }
+
+    /**
+     * Cuenta documentos de una carpeta usando datos precargados (0 queries)
+     */
+    protected function contarDocsEnMemoria(array $carpeta, array &$hijosPorPadre, array &$docsPorTipo): int
+    {
+        $total = 0;
+        $tipoCarpetaFases = $this->determinarTipoCarpetaFases($carpeta);
+
+        if ($tipoCarpetaFases) {
+            // Usar el mismo mapeo de filtros que obtenerDocumentosSSTCarpeta pero sin query
+            $filtros = $this->getFiltrosTipoCarpeta();
+            if (isset($filtros[$tipoCarpetaFases])) {
+                if ($filtros[$tipoCarpetaFases] === null) {
+                    // archivo_documental: todos los docs
+                    $total = array_sum($docsPorTipo);
+                } else {
+                    foreach ($filtros[$tipoCarpetaFases] as $tipo) {
+                        $total += $docsPorTipo[$tipo] ?? 0;
+                    }
+                }
+            }
+        }
+
+        // Contar recursivamente en subcarpetas (en memoria)
+        $hijos = $hijosPorPadre[$carpeta['id_carpeta']] ?? [];
+        foreach ($hijos as $sub) {
+            $total += $this->contarDocsEnMemoria($sub, $hijosPorPadre, $docsPorTipo);
+        }
+
+        return $total;
+    }
+
+    /**
+     * Retorna el mapeo de filtros tipo_carpeta -> tipo_documento[]
+     */
+    protected function getFiltrosTipoCarpeta(): array
+    {
+        return [
+            'archivo_documental' => null,
+            'responsabilidades_sgsst' => ['responsabilidades_rep_legal_sgsst', 'responsabilidades_responsable_sgsst', 'responsabilidades_trabajadores_sgsst'],
+            'presupuesto_sst' => ['presupuesto_sst'],
+            'afiliacion_srl' => ['planilla_afiliacion_srl'],
+            'responsables_sst' => ['asignacion_responsable_sgsst'],
+            'identificacion_alto_riesgo' => ['identificacion_alto_riesgo', 'listado_trabajadores_alto_riesgo'],
+            'conformacion_copasst' => ['soporte_conformacion_copasst', 'acta_constitucion_copasst'],
+            'capacitacion_copasst' => ['soporte_capacitacion_copasst'],
+            'comite_convivencia' => ['soporte_comite_convivencia', 'manual_convivencia_laboral', 'acta_constitucion_cocolab', 'acta_recomposicion_cocolab', 'politica_acoso_laboral'],
+            'capacitacion_sst' => ['programa_capacitacion'],
+            'induccion_reinduccion' => ['programa_induccion_reinduccion'],
+            'responsables_curso_50h' => ['soporte_curso_50h'],
+            'reglamento_hsi' => ['reglamento_hsi'],
+            'politica_sst' => ['politica_sst_general'],
+            'politicas_2_1_1' => [
+                'politica_sst_general', 'politica_alcohol_drogas', 'politica_acoso_laboral',
+                'politica_acoso_sexual', 'politica_violencias_genero', 'politica_discriminacion',
+                'politica_prevencion_emergencias', 'politica_incapacidades_licencias', 'politica_desconexion_laboral'
+            ],
+            'evaluacion_prioridades' => ['soporte_evaluacion_prioridades'],
+            'plan_trabajo_anual' => ['soporte_plan_trabajo_anual', 'soporte_plan_objetivos'],
+            'plan_objetivos_metas' => ['soporte_plan_objetivos', 'plan_objetivos_metas'],
+            'documentos_externos' => ['soporte_documento_externo'],
+            'rendicion_desempeno' => ['soporte_rendicion_desempeno'],
+            'matriz_legal' => ['procedimiento_matriz_legal', 'soporte_matriz_legal'],
+            'mecanismos_comunicacion_sgsst' => ['mecanismos_comunicacion_sgsst'],
+            'matriz_comunicacion_sst' => ['procedimiento_matriz_comunicacion'],
+            'diagnostico_condiciones_salud' => ['soporte_diagnostico_salud'],
+            'promocion_prevencion_salud' => ['programa_promocion_prevencion_salud'],
+            'informacion_medico_perfiles' => ['soporte_perfiles_medico'],
+            'evaluaciones_medicas' => ['soporte_evaluaciones_medicas'],
+            'custodia_historias_clinicas' => ['soporte_custodia_hc'],
+            'agua_servicios_sanitarios' => ['soporte_agua_servicios'],
+            'eliminacion_residuos' => ['soporte_eliminacion_residuos'],
+            'mediciones_ambientales' => ['soporte_mediciones_ambientales'],
+            'medidas_prevencion_control' => ['soporte_medidas_prevencion_control'],
+            'verificacion_medidas_prevencion' => ['soporte_verificacion_medidas'],
+            'entrega_epp' => ['soporte_entrega_epp'],
+            'plan_emergencias' => ['soporte_plan_emergencias'],
+            'brigada_emergencias' => ['soporte_brigada_emergencias', 'acta_constitucion_brigada'],
+            'indicadores_sgsst' => ['ficha_tecnica_ind_24', 'ficha_tecnica_ind_32'],
+            'revision_direccion' => ['soporte_revision_direccion'],
+            'planificacion_auditorias_copasst' => ['soporte_planificacion_auditoria'],
+        ];
+    }
+
     protected function construirArbolConDocumentos(array $carpeta, int $idCliente): array
     {
         $hijos = $this->db->table('tbl_doc_carpetas')
