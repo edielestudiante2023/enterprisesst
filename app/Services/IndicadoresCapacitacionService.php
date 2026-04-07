@@ -279,6 +279,28 @@ FORMATO DE RESPUESTA (JSON):
             $userPrompt .= "INSTRUCCIONES ADICIONALES DEL CONSULTOR:\n\"{$instrucciones}\"\n\n";
         }
 
+        // Campos ampliados del contexto
+        if ($contexto) {
+            $camposExtra = "";
+            if (!empty($contexto['horario_lunes_viernes'])) $camposExtra .= "- Horario L-V: {$contexto['horario_lunes_viernes']}\n";
+            if (!empty($contexto['descripcion_turnos'])) $camposExtra .= "- Detalle turnos: {$contexto['descripcion_turnos']}\n";
+            if (!empty($contexto['eps_principales'])) $camposExtra .= "- EPS: {$contexto['eps_principales']}\n";
+            if (!empty($contexto['manejo_incapacidades'])) $camposExtra .= "- Manejo incapacidades: {$contexto['manejo_incapacidades']}\n";
+            if (!empty($contexto['epp_por_cargo'])) $camposExtra .= "- EPP por cargo: {$contexto['epp_por_cargo']}\n";
+            if (!empty($contexto['vehiculos_maquinaria'])) $camposExtra .= "- Vehiculos/maquinaria: {$contexto['vehiculos_maquinaria']}\n";
+            if (!empty($contexto['actividades_alto_riesgo'])) {
+                $actArr = is_array($contexto['actividades_alto_riesgo']) ? $contexto['actividades_alto_riesgo'] : json_decode($contexto['actividades_alto_riesgo'], true);
+                if (is_array($actArr) && !empty($actArr)) $camposExtra .= "- Actividades alto riesgo: " . implode(', ', $actArr) . "\n";
+            }
+            if (!empty($contexto['accidentes_ultimo_anio']) && $contexto['accidentes_ultimo_anio'] > 0) $camposExtra .= "- Accidentes ultimo ano: {$contexto['accidentes_ultimo_anio']}\n";
+            if (!empty($contexto['enfermedades_laborales_activas'])) $camposExtra .= "- Enfermedades laborales: {$contexto['enfermedades_laborales_activas']}\n";
+            if (!empty($contexto['numero_pisos']) && $contexto['numero_pisos'] > 1) $camposExtra .= "- Pisos: {$contexto['numero_pisos']}\n";
+            if (!empty($contexto['sustancias_quimicas'])) $camposExtra .= "- Sustancias quimicas: {$contexto['sustancias_quimicas']}\n";
+            if (!empty($camposExtra)) {
+                $userPrompt .= "CONTEXTO ADICIONAL DE LA EMPRESA:\n" . $camposExtra . "\n";
+            }
+        }
+
         $userPrompt .= "Analiza las {$totalCap} capacitaciones, identifica focos/riesgos comunes, y genera entre {$min} y {$max} indicadores consolidados (globales + por foco). No generes uno por cada capacitacion.";
 
         $response = $this->llamarOpenAI($systemPrompt, $userPrompt, $apiKey);

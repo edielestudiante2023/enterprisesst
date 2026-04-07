@@ -328,7 +328,34 @@ REGLAS ESTRICTAS:
 - Peligros identificados: {$peligrosTexto}
 - Estructuras organizacionales: {$estructurasTexto}
 - Observaciones: " . ($contexto['observaciones'] ?: 'Ninguna') . "
+";
+        // Horarios y jornada
+        if (!empty($contexto['horario_lunes_viernes'])) $userPrompt .= "- Horario L-V: {$contexto['horario_lunes_viernes']}\n";
+        if (!empty($contexto['descripcion_turnos'])) $userPrompt .= "- Detalle turnos: {$contexto['descripcion_turnos']}\n";
+        if (!empty($contexto['trabaja_domingos_festivos']) && $contexto['trabaja_domingos_festivos'] !== 'no') $userPrompt .= "- Domingos/festivos: {$contexto['trabaja_domingos_festivos']}\n";
+        // Seguridad social
+        if (!empty($contexto['eps_principales'])) $userPrompt .= "- EPS: {$contexto['eps_principales']}\n";
+        if (!empty($contexto['afp_principales'])) $userPrompt .= "- AFP: {$contexto['afp_principales']}\n";
+        if (!empty($contexto['caja_compensacion'])) $userPrompt .= "- Caja compensacion: {$contexto['caja_compensacion']}\n";
+        if (!empty($contexto['tasa_cotizacion_arl'])) $userPrompt .= "- Tasa cotizacion ARL: {$contexto['tasa_cotizacion_arl']}%\n";
+        if (!empty($contexto['manejo_incapacidades'])) $userPrompt .= "- Manejo incapacidades: {$contexto['manejo_incapacidades']}\n";
+        // Datos operacionales
+        if (!empty($contexto['actividades_alto_riesgo'])) {
+            $actArr = is_array($contexto['actividades_alto_riesgo']) ? $contexto['actividades_alto_riesgo'] : json_decode($contexto['actividades_alto_riesgo'], true);
+            if (is_array($actArr) && !empty($actArr)) $userPrompt .= "- Actividades alto riesgo: " . implode(', ', $actArr) . "\n";
+        }
+        if (!empty($contexto['epp_por_cargo'])) $userPrompt .= "- EPP por cargo: {$contexto['epp_por_cargo']}\n";
+        if (!empty($contexto['vehiculos_maquinaria'])) $userPrompt .= "- Vehiculos/maquinaria: {$contexto['vehiculos_maquinaria']}\n";
+        // Historial SST
+        if (!empty($contexto['accidentes_ultimo_anio']) && $contexto['accidentes_ultimo_anio'] > 0) $userPrompt .= "- Accidentes ultimo ano: {$contexto['accidentes_ultimo_anio']}\n";
+        if (!empty($contexto['tasa_ausentismo'])) $userPrompt .= "- Tasa ausentismo: {$contexto['tasa_ausentismo']}%\n";
+        if (!empty($contexto['enfermedades_laborales_activas'])) $userPrompt .= "- Enfermedades laborales: {$contexto['enfermedades_laborales_activas']}\n";
+        // Infraestructura
+        if (!empty($contexto['numero_pisos']) && $contexto['numero_pisos'] > 1) $userPrompt .= "- Pisos: {$contexto['numero_pisos']}\n";
+        if (!empty($contexto['tiene_ascensor'])) $userPrompt .= "- Tiene ascensor: Si\n";
+        if (!empty($contexto['sustancias_quimicas'])) $userPrompt .= "- Sustancias quimicas: {$contexto['sustancias_quimicas']}\n";
 
+        $userPrompt .= "
 INDICADORES EXISTENTES (NO duplicar estos nombres):
 " . implode("\n", array_map(fn($n) => "- {$n}", $nombresExistentes)) . "
 

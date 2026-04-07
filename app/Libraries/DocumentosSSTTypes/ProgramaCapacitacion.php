@@ -53,7 +53,7 @@ class ProgramaCapacitacion extends AbstractDocumentoSST
         $indicadoresTexto = $this->obtenerIndicadoresCapacitacion($idCliente);
 
         // Construir contexto completo
-        return "CONTEXTO DE LA EMPRESA:
+        $contextoTexto = "CONTEXTO DE LA EMPRESA:
 - Nombre: {$nombreEmpresa}
 - NIT: {$nit}
 - Actividad económica: {$actividadEconomica}
@@ -84,7 +84,25 @@ INSTRUCCIONES DE GENERACIÓN:
 - Ajusta la extensión y complejidad según el nivel de estándares
 - Usa terminología de la normativa colombiana (Resolución 0312/2019, Decreto 1072/2015)
 - NO uses tablas Markdown a menos que se indique específicamente
-- Mantén un tono profesional y técnico";
+- Mantén un tono profesional y técnico\n";
+
+        // Campos ampliados del contexto
+        if (!empty($contexto['horario_lunes_viernes'])) $contextoTexto .= "- Horario L-V: {$contexto['horario_lunes_viernes']}\n";
+        if (!empty($contexto['descripcion_turnos'])) $contextoTexto .= "- Detalle turnos: {$contexto['descripcion_turnos']}\n";
+        if (!empty($contexto['eps_principales'])) $contextoTexto .= "- EPS: {$contexto['eps_principales']}\n";
+        if (!empty($contexto['manejo_incapacidades'])) $contextoTexto .= "- Manejo incapacidades: {$contexto['manejo_incapacidades']}\n";
+        if (!empty($contexto['epp_por_cargo'])) $contextoTexto .= "- EPP por cargo: {$contexto['epp_por_cargo']}\n";
+        if (!empty($contexto['vehiculos_maquinaria'])) $contextoTexto .= "- Vehiculos/maquinaria: {$contexto['vehiculos_maquinaria']}\n";
+        if (!empty($contexto['actividades_alto_riesgo'])) {
+            $actArr = is_array($contexto['actividades_alto_riesgo']) ? $contexto['actividades_alto_riesgo'] : json_decode($contexto['actividades_alto_riesgo'], true);
+            if (is_array($actArr) && !empty($actArr)) $contextoTexto .= "- Actividades alto riesgo: " . implode(', ', $actArr) . "\n";
+        }
+        if (!empty($contexto['accidentes_ultimo_anio']) && $contexto['accidentes_ultimo_anio'] > 0) $contextoTexto .= "- Accidentes ultimo ano: {$contexto['accidentes_ultimo_anio']}\n";
+        if (!empty($contexto['enfermedades_laborales_activas'])) $contextoTexto .= "- Enfermedades laborales: {$contexto['enfermedades_laborales_activas']}\n";
+        if (!empty($contexto['numero_pisos']) && $contexto['numero_pisos'] > 1) $contextoTexto .= "- Pisos: {$contexto['numero_pisos']}\n";
+        if (!empty($contexto['sustancias_quimicas'])) $contextoTexto .= "- Sustancias quimicas: {$contexto['sustancias_quimicas']}\n";
+
+        return $contextoTexto;
     }
 
     /**
