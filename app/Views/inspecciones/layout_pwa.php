@@ -269,6 +269,32 @@
             margin: 20px 16px 8px;
         }
 
+        /* Floating home button */
+        .fab-home {
+            position: fixed;
+            bottom: 80px;
+            left: 16px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-dark);
+            color: var(--gold-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 999;
+            text-decoration: none;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .fab-home:hover, .fab-home:active {
+            background: var(--gold-primary);
+            color: white;
+            transform: scale(1.1);
+        }
+
         /* Responsive adjustments */
         @media (max-width: 380px) {
             .grid-inspecciones {
@@ -291,6 +317,13 @@
     <div class="pwa-main">
         <?= $content ?>
     </div>
+
+    <!-- Floating Home Button -->
+    <a href="https://dashboard.cycloidtalent.com/index.php/consultor/dashboard"
+       class="fab-home"
+       title="Ir al Dashboard">
+        <i class="fas fa-home"></i>
+    </a>
 
     <!-- Bottom Navigation -->
     <div class="pwa-bottomnav">
