@@ -249,7 +249,7 @@
 
             <!-- SECCION 4: Actividades Cerradas en el Periodo -->
             <div class="card card-section">
-                <div class="card-header py-3"><i class="fas fa-check-circle me-2"></i>4. Actividades PTA Cerradas en el Periodo</div>
+                <div class="card-header py-3"><i class="fas fa-check-circle me-2"></i>4. Actividades Plan de Trabajo Anual Cerradas en el Periodo</div>
                 <div class="card-body">
                     <div id="tablaCerradas" class="mb-2"></div>
                     <textarea name="actividades_cerradas_periodo" id="actividadesCerradas" class="d-none"><?= esc($informe['actividades_cerradas_periodo'] ?? '') ?></textarea>
@@ -258,7 +258,7 @@
 
             <!-- SECCION 4b: Actividades PTA No Cerradas -->
             <div class="card card-section">
-                <div class="card-header py-3"><i class="fas fa-clock me-2"></i>Actividades PTA No Cerradas en el Periodo</div>
+                <div class="card-header py-3"><i class="fas fa-clock me-2"></i>Actividades Plan de Trabajo Anual No Cerradas en el Periodo</div>
                 <div class="card-body">
                     <textarea name="actividades_no_cerradas_pta" id="actividadesNoCerradasPta" class="form-control" rows="5" placeholder="Se auto-pobla al cargar metricas..."><?= esc($informe['actividades_no_cerradas_pta'] ?? '') ?></textarea>
                 </div>
@@ -821,7 +821,7 @@
                     chartHistEst = makeLineChart('chartHistEstandares', toLabels(est), toValues(est), '% Estándares', '#667eea');
                 }
                 if (plan.length > 0) {
-                    chartHistPlan = makeLineChart('chartHistPlan', toLabels(plan), toValues(plan), '% Abiertas PTA', '#f093fb');
+                    chartHistPlan = makeLineChart('chartHistPlan', toLabels(plan), toValues(plan), '% Abiertas Plan de Trabajo', '#f093fb');
                 }
             });
         }
