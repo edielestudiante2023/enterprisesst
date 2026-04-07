@@ -1344,6 +1344,10 @@ $routes->post('/comites-elecciones/proceso/crear-solicitudes-recomposicion', 'Co
 $routes->get('/comites-elecciones/proceso/(:num)/recomposicion/(:num)/firmas/estado', 'ComitesEleccionesController::estadoFirmasRecomposicion/$1/$2');
 $routes->get('/comites-elecciones/firma/reenviar/(:num)', 'ComitesEleccionesController::reenviarFirmaRecomposicion/$1');
 
+// Rutas PUBLICAS de firma remota acta de visita (sin autenticacion)
+$routes->get('acta-visita/firmar-remoto/(:any)', 'Inspecciones\ActaVisitaController::firmarRemoto/$1');
+$routes->post('acta-visita/procesar-firma-remota', 'Inspecciones\ActaVisitaController::procesarFirmaRemota');
+
 // Rutas PUBLICAS de votacion (sin autenticacion)
 $routes->get('/votar/(:alphanum)', 'ComitesEleccionesController::votarAcceso/$1');
 $routes->post('/votar/validar', 'ComitesEleccionesController::validarVotante');
@@ -1588,6 +1592,7 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('acta-visita/enviar-email/(:num)', 'ActaVisitaController::enviarEmail/$1');
     $routes->get('acta-visita/delete/(:num)', 'ActaVisitaController::delete/$1');
     $routes->get('acta-visita/api/pta-actividades', 'ActaVisitaController::getPtaActividades');
+    $routes->post('acta-visita/generar-token-firma/(:num)', 'ActaVisitaController::generarTokenFirma/$1');
 
     // Inspeccion Locativa
     $routes->get('inspeccion-locativa', 'InspeccionLocativaController::list');

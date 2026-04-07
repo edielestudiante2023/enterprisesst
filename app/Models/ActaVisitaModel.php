@@ -14,6 +14,7 @@ class ActaVisitaModel extends Model
         'cartera', 'observaciones',
         'proxima_reunion_fecha', 'proxima_reunion_hora',
         'firma_administrador', 'firma_vigia', 'firma_consultor',
+        'token_firma_remota', 'token_firma_tipo', 'token_firma_expiracion',
         'soporte_lavado_tanques', 'soporte_plagas',
         'ruta_pdf', 'estado', 'agenda_id', 'pta_confirmado', 'id_documento_sst',
         'created_at', 'updated_at',

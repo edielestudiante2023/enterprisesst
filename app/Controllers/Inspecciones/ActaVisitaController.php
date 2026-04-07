@@ -607,6 +607,166 @@ class ActaVisitaController extends BaseController
     }
 
     /**
+     * AJAX (auth): genera token de firma remota y devuelve URL para compartir por WhatsApp
+     */
+    public function generarTokenFirma(int $id)
+    {
+        $tipo = $this->request->getPost('tipo');
+        if (!in_array($tipo, ['administrador', 'vigia', 'consultor'])) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Tipo invalido']);
+        }
+
+        $acta = $this->actaModel->find($id);
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+        }
+
+        $token     = bin2hex(random_bytes(32));
+        $expiracion = date('Y-m-d H:i:s', strtotime('+24 hours'));
+
+        $this->actaModel->update($id, [
+            'token_firma_remota'     => $token,
+            'token_firma_tipo'       => $tipo,
+            'token_firma_expiracion' => $expiracion,
+        ]);
+
+        $url = base_url("acta-visita/firmar-remoto/{$token}");
+        return $this->response->setJSON(['success' => true, 'url' => $url, 'tipo' => $tipo]);
+    }
+
+    /**
+     * Pagina publica: canvas de firma para el firmante remoto (sin auth)
+     */
+    public function firmarRemoto(string $token)
+    {
+        $acta = $this->actaModel->where('token_firma_remota', $token)->first();
+
+        if (!$acta) {
+            return view('inspecciones/acta_visita/firma_remota_error', [
+                'mensaje' => 'Este enlace no es valido o ya fue usado.'
+            ]);
+        }
+
+        if (strtotime($acta['token_firma_expiracion']) < time()) {
+            return view('inspecciones/acta_visita/firma_remota_error', [
+                'mensaje' => 'Este enlace ha expirado. Pida uno nuevo al consultor.'
+            ]);
+        }
+
+        $campoFirma = 'firma_' . $acta['token_firma_tipo'];
+        if (!empty($acta[$campoFirma])) {
+            return view('inspecciones/acta_visita/firma_remota_error', [
+                'mensaje' => 'Esta firma ya fue registrada.'
+            ]);
+        }
+
+        $clientModel = new ClientModel();
+        $cliente = $clientModel->find($acta['id_cliente']);
+
+        $integrantes = $this->integranteModel->getByActa($acta['id']);
+        $nombreFirmante = '';
+        foreach ($integrantes as $integrante) {
+            $rol  = strtoupper($integrante['rol']);
+            $tipo = $acta['token_firma_tipo'];
+            if ($tipo === 'administrador' && strpos($rol, 'ADMIN') !== false) {
+                $nombreFirmante = $integrante['nombre'];
+                break;
+            }
+            if ($tipo === 'administrador' && strtoupper($integrante['rol']) === 'CLIENTE') {
+                $nombreFirmante = $integrante['nombre'];
+                break;
+            }
+            if ($tipo === 'vigia' && strpos($rol, 'VIG') !== false) {
+                $nombreFirmante = $integrante['nombre'];
+                break;
+            }
+            if ($tipo === 'consultor' && strpos($rol, 'CONSULTOR') !== false) {
+                $nombreFirmante = $integrante['nombre'];
+                break;
+            }
+        }
+
+        $temas       = $this->temaModel->getByActa($acta['id']);
+        $compromisos = (new PendientesModel())->where('id_acta_visita', $acta['id'])->findAll();
+
+        $pendientesAbiertos = (new PendientesModel())
+            ->where('id_cliente', $acta['id_cliente'])
+            ->where('estado', 'ABIERTA')
+            ->groupStart()
+                ->where('id_acta_visita IS NULL', null, false)
+                ->orWhere('id_acta_visita !=', $acta['id'])
+            ->groupEnd()
+            ->findAll();
+
+        $dateThreshold = date('Y-m-d', strtotime('+30 days'));
+        $mantenimientos = [];
+        try {
+            $mantenimientos = (new VencimientosMantenimientoModel())
+                ->select('tbl_vencimientos_mantenimientos.*, tbl_mantenimientos.detalle_mantenimiento')
+                ->join('tbl_mantenimientos', 'tbl_mantenimientos.id_mantenimiento = tbl_vencimientos_mantenimientos.id_mantenimiento', 'left')
+                ->where('tbl_vencimientos_mantenimientos.id_cliente', $acta['id_cliente'])
+                ->where('tbl_vencimientos_mantenimientos.estado_actividad', 'sin ejecutar')
+                ->where('tbl_vencimientos_mantenimientos.fecha_vencimiento <=', $dateThreshold)
+                ->orderBy('tbl_vencimientos_mantenimientos.fecha_vencimiento', 'ASC')
+                ->findAll();
+        } catch (\Exception $e) {
+            // Tabla puede no existir aun
+        }
+
+        return view('inspecciones/acta_visita/firma_remota', [
+            'token'              => $token,
+            'acta'               => $acta,
+            'cliente'            => $cliente,
+            'tipo'               => $acta['token_firma_tipo'],
+            'nombreFirmante'     => $nombreFirmante,
+            'integrantes'        => $integrantes,
+            'temas'              => $temas,
+            'compromisos'        => $compromisos,
+            'pendientesAbiertos' => $pendientesAbiertos,
+            'mantenimientos'     => $mantenimientos,
+        ]);
+    }
+
+    /**
+     * AJAX publico: recibe y guarda la firma remota (sin auth, token es la autenticacion)
+     */
+    public function procesarFirmaRemota()
+    {
+        $token       = $this->request->getPost('token');
+        $firmaBase64 = $this->request->getPost('firma_imagen');
+
+        $acta = $this->actaModel->where('token_firma_remota', $token)->first();
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Enlace invalido']);
+        }
+
+        if (strtotime($acta['token_firma_expiracion']) < time()) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Enlace expirado']);
+        }
+
+        $tipo = $acta['token_firma_tipo'];
+        $firmaData    = explode(',', $firmaBase64);
+        $firmaDecoded = base64_decode(end($firmaData));
+
+        $dir = FCPATH . 'uploads/inspecciones/firmas/';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        $nombreArchivo = "firma_{$tipo}_{$acta['id']}_" . time() . '.png';
+        file_put_contents($dir . $nombreArchivo, $firmaDecoded);
+
+        $campo = "firma_{$tipo}";
+        $this->actaModel->update($acta['id'], [
+            $campo                   => "uploads/inspecciones/firmas/{$nombreArchivo}",
+            'token_firma_remota'     => null,
+            'token_firma_tipo'       => null,
+            'token_firma_expiracion' => null,
+        ]);
+
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    /**
      * Endpoint AJAX interno: carga actividades PTA abiertas para checkboxes
      */
     public function getPtaActividades()
