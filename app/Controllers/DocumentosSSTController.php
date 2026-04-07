@@ -4442,6 +4442,7 @@ Se debe generar acta que registre:
             'consultor' => $consultor,
             'vigia' => $vigia,
             'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento']),
             'tipoDocumento' => 'politica_sst_general'
         ];
 
@@ -4476,11 +4477,7 @@ Se debe generar acta que registre:
             $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_prevencion_emergencias');
         }
 
-        $versiones = $this->db->table('tbl_doc_versiones_sst')
-            ->where('id_documento', $documento['id_documento'])
-            ->orderBy('fecha_autorizacion', 'ASC')
-            ->get()
-            ->getResultArray();
+        $versiones = array_reverse($this->versionService->obtenerHistorial($documento['id_documento']));
 
         $responsableModel = new ResponsableSSTModel();
         $responsables = $responsableModel->getByCliente($idCliente);
@@ -4494,6 +4491,10 @@ Se debe generar acta que registre:
             $consultorModel = new \App\Models\ConsultantModel();
             $consultor = $consultorModel->find($idConsultor);
         }
+
+        $vigia = null;
+        $vigiaModel = new \App\Models\VigiaModel();
+        $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
         $firmasElectronicas = [];
         $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
@@ -4523,7 +4524,9 @@ Se debe generar acta que registre:
             'responsables' => $responsables,
             'contexto' => $contexto,
             'consultor' => $consultor,
+            'vigia' => $vigia,
             'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento']),
             'tipoDocumento' => 'politica_prevencion_emergencias'
         ];
 
@@ -5072,11 +5075,7 @@ Se debe generar acta que registre:
             $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'politica_discriminacion');
         }
 
-        $versiones = $this->db->table('tbl_doc_versiones_sst')
-            ->where('id_documento', $documento['id_documento'])
-            ->orderBy('fecha_autorizacion', 'ASC')
-            ->get()
-            ->getResultArray();
+        $versiones = array_reverse($this->versionService->obtenerHistorial($documento['id_documento']));
 
         $responsableModel = new ResponsableSSTModel();
         $responsables = $responsableModel->getByCliente($idCliente);
@@ -5090,6 +5089,10 @@ Se debe generar acta que registre:
             $consultorModel = new \App\Models\ConsultantModel();
             $consultor = $consultorModel->find($idConsultor);
         }
+
+        $vigia = null;
+        $vigiaModel = new \App\Models\VigiaModel();
+        $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
         $firmasElectronicas = [];
         $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
@@ -5119,6 +5122,7 @@ Se debe generar acta que registre:
             'responsables' => $responsables,
             'contexto' => $contexto,
             'consultor' => $consultor,
+            'vigia' => $vigia,
             'firmasElectronicas' => $firmasElectronicas,
             'firmantesDefinidos' => $this->configService->obtenerFirmantes($documento['tipo_documento']),
             'tipoDocumento' => 'politica_discriminacion'
