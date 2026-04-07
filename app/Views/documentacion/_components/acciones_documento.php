@@ -21,8 +21,11 @@ $mapaRutas = [
     'politica_sst_general' => 'politica-sst-general/' . $docSST['anio'],
     'politica_alcohol_drogas' => 'politica-alcohol-drogas/' . $docSST['anio'],
     'politica_acoso_laboral' => 'politica-acoso-laboral/' . $docSST['anio'],
+    'politica_acoso_sexual' => 'politica-acoso-sexual/' . $docSST['anio'],
     'politica_violencias_genero' => 'politica-violencias-genero/' . $docSST['anio'],
     'politica_discriminacion' => 'politica-discriminacion/' . $docSST['anio'],
+    'politica_desconexion_laboral' => 'politica-desconexion-laboral/' . $docSST['anio'],
+    'politica_incapacidades_licencias' => 'politica-incapacidades-licencias/' . $docSST['anio'],
     'politica_prevencion_emergencias' => 'politica-prevencion-emergencias/' . $docSST['anio'],
     // 2.2.1 Plan de Objetivos y Metas
     'plan_objetivos_metas' => 'plan-objetivos-metas/' . $docSST['anio'],
@@ -100,8 +103,14 @@ if ($tipoDoc === 'programa_capacitacion') {
     $urlEditar = base_url('documentos/generar/politica_acoso_laboral/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 } elseif ($tipoDoc === 'politica_violencias_genero') {
     $urlEditar = base_url('documentos/generar/politica_violencias_genero/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'politica_acoso_sexual') {
+    $urlEditar = base_url('documentos/generar/politica_acoso_sexual/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 } elseif ($tipoDoc === 'politica_discriminacion') {
     $urlEditar = base_url('documentos/generar/politica_discriminacion/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'politica_desconexion_laboral') {
+    $urlEditar = base_url('documentos/generar/politica_desconexion_laboral/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'politica_incapacidades_licencias') {
+    $urlEditar = base_url('documentos/generar/politica_incapacidades_licencias/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 } elseif ($tipoDoc === 'programa_promocion_prevencion_salud') {
     $urlEditar = base_url('generador-ia/' . $cliente['id_cliente'] . '/pyp-salud');
 } elseif ($tipoDoc === 'programa_induccion_reinduccion') {
