@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         var pixeles = 0;
         for (var i = 3; i < imgData.data.length; i += 4) {
-            if (imgData[i] > 128) pixeles++;
+            if (imgData.data[i] > 128) pixeles++;
         }
         if (pixeles < 100) {
             Swal.fire('Firma requerida', 'Por favor dibuje su firma en el recuadro.', 'warning');
