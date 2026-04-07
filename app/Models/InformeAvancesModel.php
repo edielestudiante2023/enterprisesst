@@ -15,7 +15,7 @@ class InformeAvancesModel extends Model
         'indicador_plan_trabajo', 'indicador_capacitacion',
         'img_cumplimiento_estandares', 'img_indicador_plan_trabajo', 'img_indicador_capacitacion',
         'metricas_desglose_json',
-        'resumen_avance', 'observaciones', 'actividades_abiertas', 'actividades_cerradas_periodo',
+        'resumen_avance', 'observaciones', 'actividades_abiertas', 'actividades_cerradas_periodo', 'actividades_no_cerradas_pta',
         'enlace_dashboard', 'acta_visita_url',
         'soporte_1_texto', 'soporte_1_imagen',
         'soporte_2_texto', 'soporte_2_imagen',

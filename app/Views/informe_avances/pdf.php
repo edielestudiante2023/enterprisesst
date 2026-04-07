@@ -607,6 +607,12 @@
 <div class="content-text"><?= nl2br(esc($informe['actividades_cerradas_periodo'])) ?></div>
 <?php endif; ?>
 
+<!-- ACTIVIDADES PTA NO CERRADAS EN EL PERIODO -->
+<?php if (!empty($informe['actividades_no_cerradas_pta'])): ?>
+<div class="section-title">ACTIVIDADES PTA NO CERRADAS EN EL PERIODO</div>
+<div class="content-text"><?= nl2br(esc($informe['actividades_no_cerradas_pta'])) ?></div>
+<?php endif; ?>
+
 <!-- ACTIVIDADES ABIERTAS -->
 <?php if (!empty($informe['actividades_abiertas'])): ?>
 <div class="section-title">ACTIVIDADES Y COMPROMISOS ABIERTOS</div>

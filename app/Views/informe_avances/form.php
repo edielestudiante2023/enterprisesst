@@ -256,6 +256,14 @@
                 </div>
             </div>
 
+            <!-- SECCION 4b: Actividades PTA No Cerradas -->
+            <div class="card card-section">
+                <div class="card-header py-3"><i class="fas fa-clock me-2"></i>Actividades PTA No Cerradas en el Periodo</div>
+                <div class="card-body">
+                    <textarea name="actividades_no_cerradas_pta" id="actividadesNoCerradasPta" class="form-control" rows="5" placeholder="Se auto-pobla al cargar metricas..."><?= esc($informe['actividades_no_cerradas_pta'] ?? '') ?></textarea>
+                </div>
+            </div>
+
             <!-- SECCION 5: Actividades Abiertas -->
             <div class="card card-section">
                 <div class="card-header py-3"><i class="fas fa-exclamation-triangle me-2"></i>5. Actividades Abiertas (Compromisos)</div>
@@ -863,6 +871,9 @@
                 }
                 if (!$('#actividadesCerradas').val()) {
                     $('#actividadesCerradas').val(d.actividades_cerradas_periodo);
+                }
+                if (!$('#actividadesNoCerradasPta').val()) {
+                    $('#actividadesNoCerradasPta').val(d.actividades_no_cerradas_pta || '');
                 }
 
                 // Tabla cerradas

@@ -458,6 +458,7 @@ class MetricasInformeService
             'acciones_correctivas'     => $this->getAccionesCorrectivasPeriodo($idCliente, $anio),
             'actas_comite'             => $this->getActasComitePeriodo($idCliente, $fechaDesde, $fechaHasta, $anio),
             'inspecciones'             => $this->getInspeccionesPeriodo($idCliente, $fechaDesde, $fechaHasta),
+            'actividades_no_cerradas_pta' => $this->getActividadesNoCerradasPta($idCliente, $fechaDesde, $fechaHasta),
         ];
     }
 
@@ -785,5 +786,38 @@ class MetricasInformeService
                 'pendientes' => $totalHallazgos - $corregidos,
             ],
         ];
+    }
+
+    /**
+     * Actividades PTA no cerradas en el periodo, con estado y observación
+     */
+    public function getActividadesNoCerradasPta(int $idCliente, string $desde, string $hasta): string
+    {
+        $estadosCerradas = ['CERRADA', 'CERRADA SIN EJECUCIÓN', 'CERRADA POR FIN CONTRATO'];
+
+        $rows = $this->db->table('tbl_pta_cliente')
+            ->select('actividad_plandetrabajo, estado_actividad, observaciones')
+            ->where('id_cliente', $idCliente)
+            ->where('fecha_propuesta >=', $desde)
+            ->where('fecha_propuesta <=', $hasta)
+            ->whereNotIn('estado_actividad', $estadosCerradas)
+            ->orderBy('fecha_propuesta', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        if (empty($rows)) {
+            return '';
+        }
+
+        $lines = [];
+        foreach ($rows as $r) {
+            $actividad = $r['actividad_plandetrabajo'] ?? 'Sin nombre';
+            $estado = $r['estado_actividad'] ?? 'Sin estado';
+            $obs = trim($r['observaciones'] ?? '');
+            $obs = $obs ?: 'Sin observación registrada';
+            $lines[] = "- {$actividad} (Estado: {$estado} | Obs: {$obs})";
+        }
+
+        return implode("\n", $lines);
     }
 }
