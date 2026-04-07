@@ -225,10 +225,7 @@
                             <i class="bi bi-folder2-open text-success me-2"></i>
                             Documentos Vinculados
                         </h5>
-                        <a href="<?= base_url('documentacion/nuevo/' . $cliente['id_cliente']) ?>?estandar=<?= $estandar['id_estandar'] ?>"
-                           class="btn btn-sm btn-success">
-                            <i class="bi bi-plus-lg me-1"></i>Vincular Documento
-                        </a>
+                        <!-- Botón "Vincular Documento" deshabilitado — módulo /documentacion/nuevo/ comentado 2026-04-07 -->
                     </div>
                     <div class="card-body">
                         <?php if (empty($documentos)): ?>

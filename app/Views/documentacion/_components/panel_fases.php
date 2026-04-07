@@ -132,8 +132,9 @@ if (!isset($fasesInfo) || !$fasesInfo || !$fasesInfo['tiene_fases']) {
                     } elseif (isset($tipoCarpetaFases) && isset($mapaCrearIA[$tipoCarpetaFases])) {
                         $urlCrearIA = base_url('documentos/generar/' . $mapaCrearIA[$tipoCarpetaFases] . '/' . $cliente['id_cliente']);
                     } else {
-                        // Fallback genérico — si caes aquí, falta registrar el programa en $mapaCrearIA
-                        $urlCrearIA = base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta'] . '&ia=1');
+                        // Fallback: si caes aquí, falta registrar el programa en $mapaCrearIA
+                        // Guia: docs/MODULO_NUMERALES_SGSST/03_MODULO_3_PARTES/ZZ_98_COMO_AGREGAR_PROGRAMA.md
+                        $urlCrearIA = '#'; // Ruta deshabilitada — agregar entrada en $mapaCrearIA
                     }
                     ?>
                     <?php if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsables_sst'): ?>

@@ -138,10 +138,7 @@
                         </a>
                     <?php endif; ?>
                 <?php elseif (!isset($tipoCarpetaFases)): ?>
-                    <a href="<?= base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta']) ?>"
-                       class="btn btn-primary">
-                        <i class="bi bi-plus-lg me-1"></i>Nuevo Documento
-                    </a>
+                    <!-- Botón "Nuevo Documento" deshabilitado — módulo /documentacion/nuevo/ comentado 2026-04-07 -->
                 <?php endif; ?>
             </div>
         </div>

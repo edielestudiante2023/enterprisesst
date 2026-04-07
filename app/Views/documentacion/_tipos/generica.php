@@ -6,12 +6,8 @@
  */
 ?>
 
-<!-- Botón específico para carpeta genérica -->
-<?php $slot_botones = '
-<a href="' . base_url('documentacion/nuevo/' . $cliente['id_cliente'] . '?carpeta=' . $carpeta['id_carpeta']) . '"
-   class="btn btn-primary">
-    <i class="bi bi-plus-lg me-1"></i>Nuevo Documento
-</a>'; ?>
+<!-- Botón "Nuevo Documento" deshabilitado — módulo /documentacion/nuevo/ comentado 2026-04-07 -->
+<?php $slot_botones = ''; ?>
 
 <!-- Card de Carpeta -->
 <?= view('documentacion/_components/card_carpeta_simple', [

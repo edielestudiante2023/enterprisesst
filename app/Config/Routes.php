@@ -737,18 +737,20 @@ $routes->get('/documentacion/proximos-revision/(:num)', 'DocumentacionController
 $routes->post('/documentacion/generar-estructura', 'DocumentacionController::generarEstructura');
 $routes->get('/documentacion/arbol-carpetas/(:num)', 'DocumentacionController::getArbolCarpetas/$1');
 
-// Generador de documentos
-$routes->get('/documentacion/nuevo/(:num)', 'GeneradorDocumentoController::nuevo/$1');
-$routes->post('/documentacion/configurar/(:num)', 'GeneradorDocumentoController::configurar/$1');
-$routes->get('/documentacion/configurar/(:num)', 'GeneradorDocumentoController::configurar/$1');
-$routes->post('/documentacion/crear/(:num)', 'GeneradorDocumentoController::crear/$1');
-$routes->get('/documentacion/editar/(:num)', 'GeneradorDocumentoController::editar/$1');
-$routes->get('/documentacion/editar-seccion/(:num)/(:num)', 'GeneradorDocumentoController::editarSeccion/$1/$2');
-$routes->post('/documentacion/guardar-seccion', 'GeneradorDocumentoController::guardarSeccion');
-$routes->post('/documentacion/aprobar-seccion', 'GeneradorDocumentoController::aprobarSeccion');
-$routes->post('/documentacion/generar-ia', 'GeneradorDocumentoController::generarConIA');
-$routes->get('/documentacion/vista-previa/(:num)', 'GeneradorDocumentoController::vistaPrevia/$1');
-$routes->post('/documentacion/finalizar/(:num)', 'GeneradorDocumentoController::finalizar/$1');
+// Generador de documentos — DESHABILITADO 2026-04-07
+// Módulo nunca usado en producción. Los documentos SST se generan via /documentos/generar/{tipo}/{id}
+// Si se necesita reactivar, descomentar estas rutas y verificar GeneradorDocumentoController.php
+// $routes->get('/documentacion/nuevo/(:num)', 'GeneradorDocumentoController::nuevo/$1');
+// $routes->post('/documentacion/configurar/(:num)', 'GeneradorDocumentoController::configurar/$1');
+// $routes->get('/documentacion/configurar/(:num)', 'GeneradorDocumentoController::configurar/$1');
+// $routes->post('/documentacion/crear/(:num)', 'GeneradorDocumentoController::crear/$1');
+// $routes->get('/documentacion/editar/(:num)', 'GeneradorDocumentoController::editar/$1');
+// $routes->get('/documentacion/editar-seccion/(:num)/(:num)', 'GeneradorDocumentoController::editarSeccion/$1/$2');
+// $routes->post('/documentacion/guardar-seccion', 'GeneradorDocumentoController::guardarSeccion');
+// $routes->post('/documentacion/aprobar-seccion', 'GeneradorDocumentoController::aprobarSeccion');
+// $routes->post('/documentacion/generar-ia', 'GeneradorDocumentoController::generarConIA');
+// $routes->get('/documentacion/vista-previa/(:num)', 'GeneradorDocumentoController::vistaPrevia/$1');
+// $routes->post('/documentacion/finalizar/(:num)', 'GeneradorDocumentoController::finalizar/$1');
 
 // Estándares del cliente
 $routes->get('/estandares', 'EstandaresClienteController::seleccionarCliente');
