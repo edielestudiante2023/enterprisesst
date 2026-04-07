@@ -807,11 +807,21 @@ columns: [{
           $('#btnCargarEstandares').hide();
           return;
         }
-        $.getJSON('<?= base_url('/api/checkEstandaresCliente') ?>', { id_cliente: clienteId }, function(resp) {
-          if (resp.success && !resp.tiene_estandares) {
-            $('#btnCargarEstandares').show();
-          } else {
+        $.ajax({
+          url: '<?= base_url('/api/checkEstandaresCliente') ?>',
+          method: 'GET',
+          data: { id_cliente: clienteId },
+          dataType: 'json',
+          success: function(resp) {
+            if (resp.success && !resp.tiene_estandares) {
+              $('#btnCargarEstandares').show();
+            } else {
+              $('#btnCargarEstandares').hide();
+            }
+          },
+          error: function() {
             $('#btnCargarEstandares').hide();
+            console.warn('No se pudo verificar estándares del cliente');
           }
         });
       }
