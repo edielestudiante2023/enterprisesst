@@ -6,6 +6,7 @@ use App\Models\EvaluationModel;
 use App\Models\SimpleEvaluationModel;
 use App\Models\ClientModel;
 use App\Libraries\StandardsLibrary;
+use App\Services\SyncEstandaresService;
 use CodeIgniter\Controller;
 
 class EvaluationController extends Controller
@@ -85,6 +86,17 @@ class EvaluationController extends Controller
         
         if ($model->update($id, $updateData)) {
             $updatedRecord = $model->find($id);
+
+            // Sincronizar con tbl_cliente_estandares si se cambió evaluacion_inicial
+            if ($field === 'evaluacion_inicial' && !empty($updatedRecord['id_cliente']) && !empty($updatedRecord['numeral'])) {
+                $sync = new SyncEstandaresService();
+                $sync->syncDesdeEvaluacion(
+                    (int) $updatedRecord['id_cliente'],
+                    $updatedRecord['numeral'],
+                    $value ?? ''
+                );
+            }
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Registro actualizado correctamente',

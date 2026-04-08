@@ -8,6 +8,7 @@ use App\Models\ClienteTransicionesModel;
 use App\Models\EstandarMinimoModel;
 use App\Models\ClientModel;
 use App\Services\EstandaresSetupService;
+use App\Services\SyncEstandaresService;
 use CodeIgniter\Controller;
 
 class EstandaresClienteController extends Controller
@@ -174,6 +175,10 @@ class EstandaresClienteController extends Controller
         );
 
         if ($resultado) {
+            // Sincronizar con evaluacion_inicial_sst
+            $sync = new SyncEstandaresService();
+            $sync->syncDesdeClienteEstandares($idCliente, $idEstandar, $estado);
+
             if ($this->request->isAJAX()) {
                 $resumen = $this->clienteEstandaresModel->getResumenCumplimiento($idCliente);
                 return $this->response->setJSON([
