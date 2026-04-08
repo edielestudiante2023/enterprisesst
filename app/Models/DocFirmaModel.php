@@ -425,31 +425,34 @@ class DocFirmaModel extends Model
             $tipo = $sol['firmante_tipo'];
             $cedulaFirma = trim($sol['firmante_documento'] ?? '');
 
-            // Determinar cédula actual según tipo de firmante
-            $cedulaActual = '';
-            switch ($tipo) {
-                case 'delegado_sst':
-                    $cedulaActual = trim($contexto['delegado_sst_cedula'] ?? '');
-                    break;
-                case 'representante_legal':
-                    $cedulaActual = trim($contexto['representante_legal_cedula'] ?? $cliente['cedula_rep_legal'] ?? '');
-                    break;
-                case 'vigia_sst':
-                    $cedulaActual = trim($contexto['vigia_sst_cedula'] ?? '');
-                    break;
-                default:
-                    // consultor_sst, jurados, miembros: no requieren validación de cambio
-                    $cedulaActual = $cedulaFirma; // siempre pasa
-                    break;
+            // Solo validar cédula para roles que pueden cambiar de persona
+            $requiereValidacion = in_array($tipo, ['delegado_sst', 'representante_legal', 'vigia_sst']);
+
+            if ($requiereValidacion) {
+                $cedulaActual = '';
+                switch ($tipo) {
+                    case 'delegado_sst':
+                        $cedulaActual = trim($contexto['delegado_sst_cedula'] ?? '');
+                        break;
+                    case 'representante_legal':
+                        $cedulaActual = trim($contexto['representante_legal_cedula'] ?? $cliente['cedula_rep_legal'] ?? '');
+                        break;
+                    case 'vigia_sst':
+                        $cedulaActual = trim($contexto['vigia_sst_cedula'] ?? '');
+                        break;
+                }
+
+                // Solo incluir si ambas cédulas existen y coinciden
+                if (empty($cedulaFirma) || empty($cedulaActual) || $cedulaFirma !== $cedulaActual) {
+                    continue; // Firma de persona anterior, no incluir
+                }
             }
 
-            // Solo incluir firma si ambas cédulas existen y coinciden
-            if (!empty($cedulaFirma) && !empty($cedulaActual) && $cedulaFirma === $cedulaActual) {
-                $firmasElectronicas[$tipo] = [
-                    'solicitud' => $sol,
-                    'evidencia' => $evidencia
-                ];
-            }
+            // Incluir firma (validada o sin requerir validación)
+            $firmasElectronicas[$tipo] = [
+                'solicitud' => $sol,
+                'evidencia' => $evidencia
+            ];
         }
 
         return $firmasElectronicas;
