@@ -181,21 +181,12 @@ class PzresponsabilidadesResponsableSstController extends Controller
         // Obtener firmas electrónicas del documento (sistema unificado)
         $firmasElectronicas = [];
         if (!empty($documento['id_documento'])) {
-            $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-                ->where('id_documento', $documento['id_documento'])
-                ->where('estado', 'firmado')
-                ->get()
-                ->getResultArray();
-            foreach ($solicitudesFirma as $sol) {
-                $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                    ->where('id_solicitud', $sol['id_solicitud'])
-                    ->get()
-                    ->getRowArray();
-                $firmasElectronicas[$sol['firmante_tipo']] = [
-                    'solicitud' => $sol,
-                    'evidencia' => $evidencia
-                ];
-            }
+            $firmaModelVal = new \App\Models\DocFirmaModel();
+            $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+                $documento['id_documento'],
+                $contexto ?? [],
+                $cliente ?? []
+            );
         }
 
         // Lista de consultores para el modal de actualizar datos

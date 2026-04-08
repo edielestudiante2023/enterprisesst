@@ -1780,24 +1780,13 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        // Obtener firmas electrónicas del documento
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Programa de Capacitacion - ' . $cliente['nombre_cliente'],
@@ -1873,24 +1862,13 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        // Obtener firmas electrónicas del documento
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Programa de Induccion y Reinduccion - ' . $cliente['nombre_cliente'],
@@ -1962,23 +1940,12 @@ Se debe generar acta que registre:
         }
 
         // Obtener firmas electronicas del documento
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Programa de Promocion y Prevencion en Salud - ' . $cliente['nombre_cliente'],
@@ -2049,23 +2016,12 @@ Se debe generar acta que registre:
         }
 
         // Obtener firmas electronicas del documento
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Programa de Mantenimiento Periodico - ' . $cliente['nombre_cliente'],
@@ -2166,24 +2122,13 @@ Se debe generar acta que registre:
             }
         }
 
-        // Obtener firmas electrónicas del documento para el PDF
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $idDocumento)
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $idDocumento,
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         // Datos dinámicos para secciones especiales (tipos_documentos, codificacion, listado_maestro)
         $listadoMaestro = [];
@@ -2332,24 +2277,13 @@ Se debe generar acta que registre:
             }
         }
 
-        // Firmas electrónicas
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $idDocumento)
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        // Firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+        $firmaModelVal2 = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal2->obtenerFirmasElectronicasValidadas(
+            $idDocumento,
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         // Datos dinámicos para secciones especiales (tipos_documentos, codificacion, listado_maestro)
         $listadoMaestro = [];
@@ -3979,24 +3913,13 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        // Obtener firmas electrónicas del documento
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         // Obtener listado maestro de documentos para la sección 13
         $listadoMaestro = $this->db->table('tbl_documentos_sst d')
@@ -4096,24 +4019,13 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        // Obtener firmas electrónicas del documento
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Procedimiento de Identificación de Requisitos Legales - ' . $cliente['nombre_cliente'],
@@ -4236,24 +4148,13 @@ Se debe generar acta que registre:
             ->get()
             ->getResultArray();
 
-        // Obtener firmas electrónicas del documento
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Plan de Objetivos y Metas del SG-SST - ' . $cliente['nombre_cliente'],
@@ -4411,24 +4312,13 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        // Obtener firmas electrónicas del documento
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Política de Seguridad y Salud en el Trabajo - ' . $cliente['nombre_cliente'],
@@ -4496,23 +4386,12 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Política de Prevención y Respuesta ante Emergencias - ' . $cliente['nombre_cliente'],
@@ -4582,23 +4461,12 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Política de Desconexión Laboral - ' . $cliente['nombre_cliente'],
@@ -4668,23 +4536,12 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo'            => 'Política de Gestión de Incapacidades y Licencias - ' . $cliente['nombre_cliente'],
@@ -4754,23 +4611,12 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Política de Prevención del Consumo de Alcohol, Tabaco y SPA - ' . $cliente['nombre_cliente'],
@@ -4840,23 +4686,12 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Política de Prevención del Acoso Laboral - ' . $cliente['nombre_cliente'],
@@ -4924,23 +4759,12 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Política de Prevención del Acoso Sexual - ' . $cliente['nombre_cliente'],
@@ -5010,23 +4834,12 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Política de Prevención del Acoso Sexual y Violencias de Género - ' . $cliente['nombre_cliente'],
@@ -5094,23 +4907,12 @@ Se debe generar acta que registre:
         $vigiaModel = new \App\Models\VigiaModel();
         $vigia = $vigiaModel->where('id_cliente', $idCliente)->first();
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Política de Prevención de la Discriminación, Maltrato y Violencia - ' . $cliente['nombre_cliente'],
@@ -5178,23 +4980,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Manual de Convivencia Laboral - ' . $cliente['nombre_cliente'],
@@ -5261,23 +5052,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Mecanismos de Comunicación, Auto Reporte en SG-SST - ' . $cliente['nombre_cliente'],
@@ -5343,23 +5123,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Procedimiento de Evaluaciones Médicas Ocupacionales - ' . $cliente['nombre_cliente'],
@@ -5425,23 +5194,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Procedimiento de Adquisiciones en SST - ' . $cliente['nombre_cliente'],
@@ -5507,23 +5265,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Procedimiento de Evaluacion y Seleccion de Proveedores - ' . $cliente['nombre_cliente'],
@@ -5589,23 +5336,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Procedimiento de Gestion del Cambio - ' . $cliente['nombre_cliente'],
@@ -5700,23 +5436,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Programa de Estilos de Vida Saludable - ' . $cliente['nombre_cliente'],
@@ -5782,23 +5507,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Programa de Evaluaciones Medicas Ocupacionales - ' . $cliente['nombre_cliente'],
@@ -5923,23 +5637,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Procedimiento de Investigacion de Accidentes - ' . $cliente['nombre_cliente'],
@@ -6019,23 +5722,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Investigacion de Incidentes, Accidentes y Enfermedades Laborales - ' . $cliente['nombre_cliente'],
@@ -6116,23 +5808,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Metodologia Identificacion de Peligros - ' . $cliente['nombre_cliente'],
@@ -6213,23 +5894,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Identificacion Sustancias Cancerigenas - ' . $cliente['nombre_cliente'],
@@ -6296,23 +5966,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Identificacion de Trabajadores de Alto Riesgo - ' . $cliente['nombre_cliente'],
@@ -6376,23 +6035,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Reglamento de Higiene y Seguridad Industrial - ' . $cliente['nombre_cliente'],
@@ -6459,23 +6107,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Procedimiento de Auditoria Anual del SG-SST - ' . $cliente['nombre_cliente'],
@@ -6539,23 +6176,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Plan de Prevención, Preparación y Respuesta ante Emergencias - ' . $cliente['nombre_cliente'],
@@ -6668,23 +6294,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'PVE de Riesgo Biomecánico - ' . $cliente['nombre_cliente'],
@@ -6764,23 +6379,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'Programa de Inspecciones - ' . $cliente['nombre_cliente'],
@@ -6860,23 +6464,12 @@ Se debe generar acta que registre:
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $documento['id_documento'])
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
 
         $data = [
             'titulo' => 'PVE de Riesgo Psicosocial - ' . $cliente['nombre_cliente'],

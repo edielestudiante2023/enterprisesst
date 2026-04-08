@@ -2871,8 +2871,13 @@ class ComitesEleccionesController extends BaseController
         $documento = $this->obtenerOCrearDocumentoActa($data['proceso'], $data['cliente'], $data);
         $data['documento'] = $documento;
 
-        // Obtener firmas electrónicas si existen
-        $data['firmasElectronicas'] = $this->obtenerFirmasElectronicas($documento['id_documento']);
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+        $firmaModel = new \App\Models\DocFirmaModel();
+        $data['firmasElectronicas'] = $firmaModel->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $data['contexto'] ?? [],
+            $data['cliente'] ?? []
+        );
 
         return view('comites_elecciones/acta_constitucion_preview', $data);
     }
@@ -2880,29 +2885,10 @@ class ComitesEleccionesController extends BaseController
     /**
      * Obtener firmas electrónicas de un documento
      */
-    private function obtenerFirmasElectronicas(int $idDocumento): array
+    private function obtenerFirmasElectronicas(int $idDocumento, array $contexto = [], array $cliente = []): array
     {
-        $firmasElectronicas = [];
-
-        $solicitudes = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $idDocumento)
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudes as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
-
-        return $firmasElectronicas;
+        $firmaModel = new \App\Models\DocFirmaModel();
+        return $firmaModel->obtenerFirmasElectronicasValidadas($idDocumento, $contexto, $cliente);
     }
 
     /**
@@ -3326,26 +3312,15 @@ class ComitesEleccionesController extends BaseController
             ->get()
             ->getRowArray();
 
-        // Obtener firmas electrónicas si existe el documento
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
         $firmasElectronicas = [];
         if ($documento) {
-            $solicitudes = $this->db->table('tbl_doc_firma_solicitudes')
-                ->where('id_documento', $documento['id_documento'])
-                ->where('estado', 'firmado')
-                ->get()
-                ->getResultArray();
-
-            foreach ($solicitudes as $sol) {
-                $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                    ->where('id_solicitud', $sol['id_solicitud'])
-                    ->get()
-                    ->getRowArray();
-
-                $firmasElectronicas[$sol['firmante_tipo']] = [
-                    'solicitud' => $sol,
-                    'evidencia' => $evidencia
-                ];
-            }
+            $firmaModel = new \App\Models\DocFirmaModel();
+            $firmasElectronicas = $firmaModel->obtenerFirmasElectronicasValidadas(
+                $documento['id_documento'],
+                $contexto ?? [],
+                $cliente ?? []
+            );
         }
 
         return [
@@ -4275,27 +4250,23 @@ class ComitesEleccionesController extends BaseController
             return redirect()->back()->with('error', 'Datos de recomposición no encontrados');
         }
 
-        // Obtener firmas electrónicas si el documento existe
+        // Obtener firmas electrónicas validadas (filtra firmas de firmantes anteriores)
         $firmasElectronicas = [];
         if (!empty($data['recomposicion']['id_documento'])) {
-            $solicitudes = $this->db->table('tbl_doc_firma_solicitudes')
-                ->where('id_documento', $data['recomposicion']['id_documento'])
-                ->where('estado', 'firmado')
-                ->get()
-                ->getResultArray();
-
-            foreach ($solicitudes as $sol) {
-                $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                    ->where('id_solicitud', $sol['id_solicitud'])
-                    ->get()
-                    ->getRowArray();
-
-                $firmasElectronicas[$sol['firmante_tipo']] = [
-                    'nombre' => $sol['firmante_nombre'],
-                    'cargo' => $sol['firmante_cargo'],
-                    'cedula' => $sol['firmante_documento'],
-                    'fecha_firma' => $sol['fecha_firma'],
-                    'firma_imagen' => $evidencia['firma_imagen'] ?? null
+            $firmaModel = new \App\Models\DocFirmaModel();
+            $firmasValidadas = $firmaModel->obtenerFirmasElectronicasValidadas(
+                $data['recomposicion']['id_documento'],
+                $data['contexto'] ?? [],
+                $data['cliente'] ?? []
+            );
+            // Mantener formato especial de recomposición
+            foreach ($firmasValidadas as $tipo => $firma) {
+                $firmasElectronicas[$tipo] = [
+                    'nombre' => $firma['solicitud']['firmante_nombre'],
+                    'cargo' => $firma['solicitud']['firmante_cargo'],
+                    'cedula' => $firma['solicitud']['firmante_documento'],
+                    'fecha_firma' => $firma['solicitud']['fecha_firma'],
+                    'firma_imagen' => $firma['evidencia']['firma_imagen'] ?? null
                 ];
             }
         }

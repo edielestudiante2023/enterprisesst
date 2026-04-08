@@ -562,24 +562,12 @@ class FirmaElectronicaController extends Controller
                 }
             }
 
-            // Firmas electrónicas
-            $firmasElectronicas = [];
-            $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-                ->where('id_documento', $idDocumento)
-                ->where('estado', 'firmado')
-                ->get()
-                ->getResultArray();
-
-            foreach ($solicitudesFirma as $sol) {
-                $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                    ->where('id_solicitud', $sol['id_solicitud'])
-                    ->get()
-                    ->getRowArray();
-                $firmasElectronicas[$sol['firmante_tipo']] = [
-                    'solicitud' => $sol,
-                    'evidencia' => $evidencia
-                ];
-            }
+            // Firmas electrónicas validadas (filtra firmas de firmantes anteriores)
+            $firmasElectronicas = $this->firmaModel->obtenerFirmasElectronicasValidadas(
+                $idDocumento,
+                $contexto ?? [],
+                $cliente ?? []
+            );
 
             $data = [
                 'titulo' => $doc['titulo'],

@@ -137,3 +137,4 @@ docs/SYNC_LOCAL_PRODUCCION.md
 
 # Claude Code
 .claude/
+app/SQL/completar_clasificacion_claude.php

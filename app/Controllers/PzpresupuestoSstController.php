@@ -230,7 +230,7 @@ class PzpresupuestoSstController extends BaseController
         $documento = $this->getOrCreateDocumentoSST($idCliente, $anio, $presupuesto, $totales);
 
         // Obtener firmas electrónicas del documento
-        $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento']);
+        $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento'], $contexto ?? [], $cliente ?? []);
 
         // Obtener historial de versiones para Control de Cambios
         $versiones = $this->obtenerVersiones($documento['id_documento']);
@@ -306,27 +306,10 @@ class PzpresupuestoSstController extends BaseController
     /**
      * Obtiene las firmas electronicas del documento desde el sistema unificado
      */
-    protected function obtenerFirmasElectronicas(int $idDocumento): array
+    protected function obtenerFirmasElectronicas(int $idDocumento, array $contexto = [], array $cliente = []): array
     {
-        $firmasElectronicas = [];
-        $solicitudesFirma = $this->db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $idDocumento)
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudesFirma as $sol) {
-            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
-
-        return $firmasElectronicas;
+        $firmaModel = new \App\Models\DocFirmaModel();
+        return $firmaModel->obtenerFirmasElectronicasValidadas($idDocumento, $contexto, $cliente);
     }
 
     /**
@@ -951,7 +934,7 @@ class PzpresupuestoSstController extends BaseController
         $firmasElectronicas = [];
         $versiones = [];
         if ($documento) {
-            $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento']);
+            $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento'], $contexto ?? [], $cliente ?? []);
             $versiones = $this->obtenerVersiones($documento['id_documento']);
         }
 
@@ -1078,7 +1061,7 @@ class PzpresupuestoSstController extends BaseController
         $firmasElectronicas = [];
         $versiones = [];
         if ($documento) {
-            $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento']);
+            $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento'], $contexto ?? [], $cliente ?? []);
             $versiones = $this->obtenerVersiones($documento['id_documento']);
         }
 

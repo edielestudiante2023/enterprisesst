@@ -1228,30 +1228,10 @@ class IndicadoresSSTController extends BaseController
      * Obtiene firmas electrónicas de un documento desde tbl_doc_firma_solicitudes/evidencias
      * (Instructivo 3_AA_PDF_FIRMAS sección 16-17)
      */
-    private function obtenerFirmasElectronicas(int $idDocumento): array
+    private function obtenerFirmasElectronicas(int $idDocumento, array $contexto = [], array $cliente = []): array
     {
-        $firmasElectronicas = [];
-        $db = \Config\Database::connect();
-
-        $solicitudes = $db->table('tbl_doc_firma_solicitudes')
-            ->where('id_documento', $idDocumento)
-            ->where('estado', 'firmado')
-            ->get()
-            ->getResultArray();
-
-        foreach ($solicitudes as $sol) {
-            $evidencia = $db->table('tbl_doc_firma_evidencias')
-                ->where('id_solicitud', $sol['id_solicitud'])
-                ->get()
-                ->getRowArray();
-
-            $firmasElectronicas[$sol['firmante_tipo']] = [
-                'solicitud' => $sol,
-                'evidencia' => $evidencia
-            ];
-        }
-
-        return $firmasElectronicas;
+        $firmaModel = new \App\Models\DocFirmaModel();
+        return $firmaModel->obtenerFirmasElectronicasValidadas($idDocumento, $contexto, $cliente);
     }
 
     /**

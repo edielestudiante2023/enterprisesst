@@ -400,4 +400,58 @@ class DocFirmaModel extends Model
 
         return strtoupper(substr($hash, 0, 12));
     }
+
+    /**
+     * Construye array firmasElectronicas para un documento, filtrando firmas
+     * que no corresponden al firmante actual (por cédula).
+     * Usar este método en lugar de construir el array manualmente en cada controller.
+     */
+    public function obtenerFirmasElectronicasValidadas(int $idDocumento, array $contexto, array $cliente = []): array
+    {
+        $solicitudes = $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $idDocumento)
+            ->where('estado', 'firmado')
+            ->get()
+            ->getResultArray();
+
+        $firmasElectronicas = [];
+
+        foreach ($solicitudes as $sol) {
+            $evidencia = $this->db->table('tbl_doc_firma_evidencias')
+                ->where('id_solicitud', $sol['id_solicitud'])
+                ->get()
+                ->getRowArray();
+
+            $tipo = $sol['firmante_tipo'];
+            $cedulaFirma = trim($sol['firmante_documento'] ?? '');
+
+            // Determinar cédula actual según tipo de firmante
+            $cedulaActual = '';
+            switch ($tipo) {
+                case 'delegado_sst':
+                    $cedulaActual = trim($contexto['delegado_sst_cedula'] ?? '');
+                    break;
+                case 'representante_legal':
+                    $cedulaActual = trim($contexto['representante_legal_cedula'] ?? $cliente['cedula_rep_legal'] ?? '');
+                    break;
+                case 'vigia_sst':
+                    $cedulaActual = trim($contexto['vigia_sst_cedula'] ?? '');
+                    break;
+                default:
+                    // consultor_sst, jurados, miembros: no requieren validación de cambio
+                    $cedulaActual = $cedulaFirma; // siempre pasa
+                    break;
+            }
+
+            // Solo incluir firma si ambas cédulas existen y coinciden
+            if (!empty($cedulaFirma) && !empty($cedulaActual) && $cedulaFirma === $cedulaActual) {
+                $firmasElectronicas[$tipo] = [
+                    'solicitud' => $sol,
+                    'evidencia' => $evidencia
+                ];
+            }
+        }
+
+        return $firmasElectronicas;
+    }
 }
