@@ -464,7 +464,7 @@
     <script>
     Chart.register(ChartDataLabels);
 
-    const BASE = '<?= base_url() ?>/';
+    const BASE = '<?= rtrim(base_url(), '/') ?>/';
     const EDIT_MODE = <?= json_encode($mode === 'edit') ?>;
     const PRESELECT_CLIENTE = <?= json_encode($id_cliente) ?>;
 
@@ -600,6 +600,8 @@
                 $('#selectCliente').val(PRESELECT_CLIENTE).trigger('change');
                 if (!EDIT_MODE) loadMetricas(PRESELECT_CLIENTE);
             }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error('Error cargando clientes:', textStatus, errorThrown, 'URL:', BASE + 'informe-avances/api/clientes');
         });
 
         $('#selectCliente').on('change', function() {
