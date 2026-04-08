@@ -320,6 +320,35 @@
                                                 </div>
                                             <?php endif; ?>
                                             <?php if ($sol['estado'] === 'firmado'): ?>
+                                                <?php
+                                                // Detectar si el firmante cambió (cédula no coincide con el actual)
+                                                $firmanteCambio = false;
+                                                $nombreActual = '';
+                                                if (in_array($sol['firmante_tipo'], ['delegado_sst', 'representante_legal']) && !empty($contexto)) {
+                                                    $cedulaSol = trim($sol['firmante_documento'] ?? '');
+                                                    if ($sol['firmante_tipo'] === 'delegado_sst') {
+                                                        $cedulaCtx = trim($contexto['delegado_sst_cedula'] ?? '');
+                                                        $nombreActual = $contexto['delegado_sst_nombre'] ?? '';
+                                                    } else {
+                                                        $cedulaCtx = trim($contexto['representante_legal_cedula'] ?? '');
+                                                        $nombreActual = $contexto['representante_legal_nombre'] ?? '';
+                                                    }
+                                                    $firmanteCambio = !empty($cedulaSol) && !empty($cedulaCtx) && $cedulaSol !== $cedulaCtx;
+                                                }
+                                                ?>
+                                                <?php if ($firmanteCambio): ?>
+                                                    <div class="alert alert-warning py-2 px-3 mt-2 mb-1" style="font-size: 0.85rem;">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                                        <strong>Firmante cambió:</strong> esta firma fue de <em><?= esc($sol['firmante_nombre']) ?></em>,
+                                                        pero el <?= $sol['firmante_tipo'] === 'delegado_sst' ? 'Delegado SST' : 'Representante Legal' ?> actual es <strong><?= esc($nombreActual) ?></strong>.
+                                                        <form action="<?= base_url('firma/reasignar/' . $sol['id_solicitud']) ?>" method="post" class="d-inline ms-2"
+                                                              onsubmit="return confirm('Esto invalidará la firma anterior y enviará una nueva solicitud a <?= esc($nombreActual) ?>. ¿Continuar?')">
+                                                            <button type="submit" class="btn btn-sm btn-warning">
+                                                                <i class="bi bi-arrow-repeat me-1"></i>Re-solicitar firma a <?= esc($nombreActual) ?>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                <?php endif; ?>
                                                 <div class="mt-1">
                                                     <a href="<?= base_url('firma/audit-log/' . $sol['id_solicitud']) ?>" class="btn btn-sm btn-outline-secondary">
                                                         <i class="bi bi-journal-text me-1"></i>Ver Audit Log

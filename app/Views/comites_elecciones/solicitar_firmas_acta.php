@@ -234,16 +234,26 @@ $tipoComiteNombre = [
             <div class="card-body p-0">
                 <?php foreach ($firmantes as $firmante): ?>
                 <?php
+                    $firmanteCambio = $firmante['firmante_cambio'] ?? false;
                     $yasolicitado = $firmante['ya_solicitado'];
                     $firmado = $firmante['estado_firma'] === 'firmado';
                     $sinEmail = empty($firmante['email']);
                     $idCandidato = $firmante['id_candidato'] ?? null;
-                    $claseItem = $firmado ? 'firmado' : ($yasolicitado ? 'ya-solicitado' : '');
+                    $claseItem = $firmanteCambio ? '' : ($firmado ? 'firmado' : ($yasolicitado ? 'ya-solicitado' : ''));
                 ?>
                 <div class="firmante-item <?= $claseItem ?>">
                     <div class="row align-items-center">
                         <div class="col-auto">
-                            <?php if ($firmado): ?>
+                            <?php if ($firmanteCambio): ?>
+                                <div class="form-check">
+                                    <input class="form-check-input checkbox-firmante"
+                                           type="checkbox"
+                                           name="firmantes[]"
+                                           value="<?= esc($firmante['tipo']) ?>"
+                                           id="firmante_<?= esc($firmante['tipo']) ?>"
+                                           onchange="actualizarContador()">
+                                </div>
+                            <?php elseif ($firmado): ?>
                                 <span class="text-success">
                                     <i class="fas fa-check-circle fa-lg"></i>
                                 </span>
@@ -276,7 +286,12 @@ $tipoComiteNombre = [
                             </small>
                         </div>
                         <div class="col-auto text-end">
-                            <?php if ($firmado): ?>
+                            <?php if ($firmanteCambio): ?>
+                                <span class="badge bg-warning text-dark badge-estado">
+                                    <i class="fas fa-exclamation-triangle me-1"></i> Requiere nueva firma
+                                </span>
+                                <br><small class="text-muted">Firma anterior: <?= esc($firmante['firmante_anterior'] ?? '') ?></small>
+                            <?php elseif ($firmado): ?>
                                 <span class="badge bg-success badge-estado">
                                     <i class="fas fa-check me-1"></i> Firmado
                                 </span>

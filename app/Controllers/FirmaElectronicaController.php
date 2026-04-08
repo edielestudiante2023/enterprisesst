@@ -1022,12 +1022,16 @@ class FirmaElectronicaController extends Controller
             }
         }
 
+        // Contexto SST para detectar cambio de firmante
+        $contexto = $documento ? $this->contextoModel->getByCliente($documento['id_cliente']) : [];
+
         return view('firma/estado', [
             'documento' => $documento,
             'cliente' => $cliente,
             'solicitudes' => $solicitudes,
             'estadoFirmas' => $estadoFirmas,
-            'evidencias' => $evidencias
+            'evidencias' => $evidencias,
+            'contexto' => $contexto ?? []
         ]);
     }
 

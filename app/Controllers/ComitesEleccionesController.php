@@ -3418,6 +3418,13 @@ class ComitesEleccionesController extends BaseController
 
         // 3. DELEGADO/VIGÍA SST
         if (!empty($data['contexto']['delegado_sst_nombre'])) {
+            // Detectar si la firma existente fue de otra persona
+            $firmanteCambioDelegado = false;
+            if (isset($firmasExistentes['delegado_sst']) && $firmasExistentes['delegado_sst']['estado'] === 'firmado') {
+                $cedulaSol = trim($firmasExistentes['delegado_sst']['firmante_documento'] ?? '');
+                $cedulaCtx = trim($data['contexto']['delegado_sst_cedula'] ?? '');
+                $firmanteCambioDelegado = !empty($cedulaSol) && !empty($cedulaCtx) && $cedulaSol !== $cedulaCtx;
+            }
             $firmantesDisponibles[] = [
                 'grupo' => 'Aprobación Empresarial',
                 'tipo' => 'delegado_sst',
@@ -3425,8 +3432,11 @@ class ComitesEleccionesController extends BaseController
                 'cargo' => $data['contexto']['delegado_sst_cargo'] ?? 'Delegado SST',
                 'cedula' => $data['contexto']['delegado_sst_cedula'] ?? '',
                 'email' => $data['contexto']['delegado_sst_email'] ?? '',
-                'ya_solicitado' => isset($firmasExistentes['delegado_sst']),
-                'estado_firma' => $firmasExistentes['delegado_sst']['estado'] ?? null
+                'ya_solicitado' => $firmanteCambioDelegado ? false : isset($firmasExistentes['delegado_sst']),
+                'estado_firma' => $firmanteCambioDelegado ? null : ($firmasExistentes['delegado_sst']['estado'] ?? null),
+                'firmante_cambio' => $firmanteCambioDelegado,
+                'firmante_anterior' => $firmanteCambioDelegado ? ($firmasExistentes['delegado_sst']['firmante_nombre'] ?? '') : null,
+                'id_solicitud_anterior' => $firmanteCambioDelegado ? ($firmasExistentes['delegado_sst']['id_solicitud'] ?? null) : null
             ];
         }
 
@@ -3562,13 +3572,30 @@ class ComitesEleccionesController extends BaseController
             $firmante = $mapaFirmantes[$tipoFirmante];
 
             // Verificar que no exista ya
-            $existe = $this->db->table('tbl_doc_firma_solicitudes')
+            // Verificar si ya existe solicitud para este firmante
+            $solExistente = $this->db->table('tbl_doc_firma_solicitudes')
                 ->where('id_documento', $idDocumento)
                 ->where('firmante_tipo', $tipoFirmante)
-                ->countAllResults();
+                ->get()
+                ->getRowArray();
 
-            if ($existe > 0) {
-                continue;
+            if ($solExistente) {
+                // Si es delegado/rep legal con cambio de persona, cancelar la anterior
+                if (in_array($tipoFirmante, ['delegado_sst', 'representante_legal'])) {
+                    $cedulaSolExistente = trim($solExistente['firmante_documento'] ?? '');
+                    $cedulaNueva = trim($firmante['cedula'] ?? '');
+                    if (!empty($cedulaSolExistente) && !empty($cedulaNueva) && $cedulaSolExistente !== $cedulaNueva) {
+                        // Cancelar solicitud anterior
+                        $this->db->table('tbl_doc_firma_solicitudes')
+                            ->where('id_solicitud', $solExistente['id_solicitud'])
+                            ->update(['estado' => 'cancelado', 'updated_at' => date('Y-m-d H:i:s')]);
+                        // Continuar para crear nueva solicitud
+                    } else {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
             }
 
             // Generar token único
