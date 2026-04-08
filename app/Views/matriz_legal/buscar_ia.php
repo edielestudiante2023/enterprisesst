@@ -289,17 +289,27 @@
 
                 <div class="preview-body">
                     <form id="formNormaIA">
-                        <!-- Sector -->
+                        <!-- Categoria -->
                         <div class="preview-field">
                             <div class="preview-label">
-                                <i class="fas fa-industry"></i>Sector
+                                <i class="fas fa-layer-group"></i>Categoria
                             </div>
                             <div class="preview-value">
-                                <select name="sector" id="ia_sector" class="form-select">
-                                    <?php foreach ($sectores as $key => $value): ?>
+                                <select name="categoria" id="ia_categoria" class="form-select">
+                                    <?php foreach ($categorias as $key => $value): ?>
                                         <option value="<?= $key ?>"><?= $value ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                            </div>
+                        </div>
+
+                        <!-- Clasificacion -->
+                        <div class="preview-field">
+                            <div class="preview-label">
+                                <i class="fas fa-tags"></i>Clasificacion
+                            </div>
+                            <div class="preview-value">
+                                <input type="text" name="clasificacion" id="ia_clasificacion" class="form-control" placeholder="Ej: COPASST, ACCIDENTES, RIESGO PSICOSOCIAL">
                             </div>
                         </div>
 
@@ -528,7 +538,8 @@
         // Función para extraer datos de la consulta del usuario
         function extraerDatosDeConsulta(consulta) {
             let datos = {
-                sector: 'General',
+                categoria: 'Seguridad e Higiene Industrial',
+                clasificacion: '',
                 tema: '',
                 subtema: '',
                 tipo_norma: '',
@@ -600,7 +611,8 @@
 
         function mostrarPreview(norma) {
             // Llenar formulario
-            $('#ia_sector').val(norma.sector || 'General');
+            $('#ia_categoria').val(norma.categoria || 'Seguridad e Higiene Industrial');
+            $('#ia_clasificacion').val(norma.clasificacion || '');
             $('#ia_tema').val(norma.tema || '');
             $('#ia_subtema').val(norma.subtema || '');
             $('#ia_tipo_norma').val(norma.tipo_norma || '');

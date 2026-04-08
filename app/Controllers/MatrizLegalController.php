@@ -18,16 +18,16 @@ class MatrizLegalController extends Controller
     }
 
     /**
-     * Vista principal - Lista de normas con DataTables
+     * Vista principal - Lista de normas con DataTables y cards
      */
     public function index()
     {
         $data = [
             'titulo' => 'Matriz Legal SST',
-            'sectores' => MatrizLegalModel::$sectores,
+            'categorias' => MatrizLegalModel::$categorias,
+            'categoriasConConteo' => $this->model->getCategoriasConConteo(),
             'tiposNorma' => MatrizLegalModel::$tiposNorma,
             'estados' => MatrizLegalModel::$estados,
-            'temas' => $this->model->getTemasUnicos(),
             'anios' => $this->model->getAniosUnicos(),
             'estadisticas' => $this->model->getEstadisticas()
         ];
@@ -46,7 +46,9 @@ class MatrizLegalController extends Controller
             'length' => $this->request->getGet('length') ?? 10,
             'search' => $this->request->getGet('search') ?? [],
             'order' => $this->request->getGet('order') ?? [],
-            'columns' => $this->request->getGet('columns') ?? []
+            'columns' => $this->request->getGet('columns') ?? [],
+            'categoria' => $this->request->getGet('categoria') ?? '',
+            'clasificacion_filtro' => $this->request->getGet('clasificacion_filtro') ?? '',
         ];
 
         $result = $this->model->getNormasDataTables($params);
@@ -56,6 +58,20 @@ class MatrizLegalController extends Controller
             'recordsTotal' => $result['recordsTotal'],
             'recordsFiltered' => $result['recordsFiltered'],
             'data' => $result['data']
+        ]);
+    }
+
+    /**
+     * API para obtener clasificaciones de una categoria
+     */
+    public function clasificaciones(string $categoria)
+    {
+        $categoria = urldecode($categoria);
+        $clasificaciones = $this->model->getClasificacionesPorCategoria($categoria);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'clasificaciones' => $clasificaciones
         ]);
     }
 
@@ -83,7 +99,7 @@ class MatrizLegalController extends Controller
     {
         $data = [
             'titulo' => 'Nueva Norma Legal',
-            'sectores' => MatrizLegalModel::$sectores,
+            'categorias' => MatrizLegalModel::$categorias,
             'tiposNorma' => MatrizLegalModel::$tiposNorma,
             'estados' => MatrizLegalModel::$estados,
             'norma' => null
@@ -112,12 +128,14 @@ class MatrizLegalController extends Controller
         }
 
         $data = [
-            'sector' => $this->request->getPost('sector') ?: 'General',
+            'categoria' => $this->request->getPost('categoria') ?: 'Seguridad e Higiene Industrial',
+            'clasificacion' => $this->request->getPost('clasificacion'),
             'tema' => $this->request->getPost('tema'),
             'subtema' => $this->request->getPost('subtema'),
             'tipo_norma' => $this->request->getPost('tipo_norma'),
             'id_norma_legal' => $this->request->getPost('id_norma_legal'),
             'anio' => $this->request->getPost('anio'),
+            'fecha_expedicion' => $this->request->getPost('fecha_expedicion') ?: null,
             'descripcion_norma' => $this->request->getPost('descripcion_norma'),
             'autoridad_emisora' => $this->request->getPost('autoridad_emisora'),
             'referente_nacional' => $this->request->getPost('referente_nacional') ? 'x' : '',
@@ -158,7 +176,7 @@ class MatrizLegalController extends Controller
 
         $data = [
             'titulo' => 'Editar Norma Legal',
-            'sectores' => MatrizLegalModel::$sectores,
+            'categorias' => MatrizLegalModel::$categorias,
             'tiposNorma' => MatrizLegalModel::$tiposNorma,
             'estados' => MatrizLegalModel::$estados,
             'norma' => $norma
@@ -196,7 +214,7 @@ class MatrizLegalController extends Controller
     {
         $data = [
             'titulo' => 'Importar Matriz Legal desde CSV',
-            'sectores' => MatrizLegalModel::$sectores
+            'categorias' => MatrizLegalModel::$categorias
         ];
 
         return view('matriz_legal/importar_csv', $data);
@@ -212,7 +230,7 @@ class MatrizLegalController extends Controller
         if (!$file || !$file->isValid()) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'No se recibió un archivo válido'
+                'message' => 'No se recibio un archivo valido'
             ]);
         }
 
@@ -224,31 +242,25 @@ class MatrizLegalController extends Controller
             ]);
         }
 
-        // Leer archivo
         $content = file_get_contents($file->getTempName());
-        // Detectar codificación y convertir a UTF-8
         $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252');
 
-        // Detectar delimitador
         $delimitador = $this->detectarDelimitador($content);
 
-        // Parsear CSV
         $lineas = explode("\n", $content);
         $headers = str_getcsv(array_shift($lineas), $delimitador);
 
-        // Limpiar headers
         $headers = array_map(function($h) {
             return trim(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $h));
         }, $headers);
 
-        // Mapeo de columnas esperadas
         $mapeo = $this->mapearColumnas($headers);
 
         $datos = [];
         $contador = 0;
         foreach ($lineas as $linea) {
             if (empty(trim($linea))) continue;
-            if ($contador >= 10) break; // Preview de 10 filas
+            if ($contador >= 10) break;
 
             $fila = str_getcsv($linea, $delimitador);
             $registro = [];
@@ -272,21 +284,20 @@ class MatrizLegalController extends Controller
     }
 
     /**
-     * Procesar importación CSV
+     * Procesar importacion CSV
      */
     public function procesarCSV()
     {
         $file = $this->request->getFile('archivo_csv');
-        $sectorDefecto = $this->request->getPost('sector_defecto') ?: 'General';
+        $categoriaDefecto = $this->request->getPost('categoria_defecto') ?: 'Seguridad e Higiene Industrial';
 
         if (!$file || !$file->isValid()) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'No se recibió un archivo válido'
+                'message' => 'No se recibio un archivo valido'
             ]);
         }
 
-        // Leer archivo
         $content = file_get_contents($file->getTempName());
         $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252');
 
@@ -311,13 +322,12 @@ class MatrizLegalController extends Controller
                 $registro[$campo] = isset($fila[$indice]) ? trim($fila[$indice]) : '';
             }
 
-            // Solo agregar si tiene datos mínimos
             if (!empty($registro['tema']) || !empty($registro['tipo_norma']) || !empty($registro['id_norma_legal'])) {
                 $datos[] = $registro;
             }
         }
 
-        $resultado = $this->model->importarCSV($datos, $sectorDefecto);
+        $resultado = $this->model->importarCSV($datos, $categoriaDefecto);
 
         return $this->response->setJSON([
             'success' => $resultado['exito'],
@@ -349,14 +359,16 @@ class MatrizLegalController extends Controller
     {
         $mapeo = [];
         $campos = [
-            'sector' => ['sector'],
+            'categoria' => ['categoria', 'categoría'],
+            'clasificacion' => ['clasificacion', 'clasificación'],
             'tema' => ['tema'],
             'subtema' => ['subtema'],
             'tipo_norma' => ['tipo de norma', 'tipo_norma', 'tipo norma'],
             'id_norma_legal' => ['id norma legal', 'id_norma_legal', 'numero', 'número', 'norma'],
             'anio' => ['año', 'anio', 'ano'],
-            'descripcion_norma' => ['descripción de la norma legal', 'descripcion_norma', 'descripción', 'descripcion'],
-            'autoridad_emisora' => ['autoridad que lo emite', 'autoridad_emisora', 'autoridad', 'entidad'],
+            'fecha_expedicion' => ['fecha', 'fecha_expedicion', 'fecha expedicion'],
+            'descripcion_norma' => ['descripción de la norma legal', 'descripcion_norma', 'descripción', 'descripcion', 'tematica', 'temática'],
+            'autoridad_emisora' => ['autoridad que lo emite', 'autoridad_emisora', 'autoridad', 'entidad', 'expedida por'],
             'referente_nacional' => ['referente nacional', 'referente_nacional', 'nacional'],
             'referente_internacional' => ['referente iternacional', 'referente internacional', 'referente_internacional', 'internacional'],
             'articulos_aplicables' => ['artículos aplicables', 'articulos_aplicables', 'artículos', 'articulos'],
@@ -379,16 +391,16 @@ class MatrizLegalController extends Controller
         return $mapeo;
     }
 
-    // ==================== MÓDULO IA ====================
+    // ==================== MODULO IA ====================
 
     /**
-     * Vista del módulo IA para buscar normas
+     * Vista del modulo IA para buscar normas
      */
     public function buscarIA()
     {
         $data = [
             'titulo' => 'Buscar Norma con IA',
-            'sectores' => MatrizLegalModel::$sectores,
+            'categorias' => MatrizLegalModel::$categorias,
             'tiposNorma' => MatrizLegalModel::$tiposNorma
         ];
 
@@ -396,7 +408,7 @@ class MatrizLegalController extends Controller
     }
 
     /**
-     * Procesar búsqueda con IA
+     * Procesar busqueda con IA
      */
     public function procesarBusquedaIA()
     {
@@ -433,41 +445,46 @@ class MatrizLegalController extends Controller
     }
 
     /**
-     * Buscar información de norma usando OpenAI
+     * Buscar informacion de norma usando OpenAI
      */
     protected function buscarNormaConIA(string $consulta): array
     {
-        $systemPrompt = "Eres un experto en legislación colombiana de Seguridad y Salud en el Trabajo (SST).
-Tu tarea es buscar y proporcionar información detallada sobre normas legales colombianas.
+        $categoriasLista = implode(', ', array_keys(MatrizLegalModel::$categorias));
 
-Cuando el usuario mencione una norma (ej: 'Resolución 0312 de 2019', 'Decreto 1072 de 2015', 'Ley 1562 de 2012'),
-debes responder ÚNICAMENTE con un JSON válido con la siguiente estructura:
+        $systemPrompt = "Eres un experto en legislacion colombiana de Seguridad y Salud en el Trabajo (SST).
+Tu tarea es buscar y proporcionar informacion detallada sobre normas legales colombianas.
+
+Cuando el usuario mencione una norma (ej: 'Resolucion 0312 de 2019', 'Decreto 1072 de 2015'),
+debes responder UNICAMENTE con un JSON valido con la siguiente estructura:
 
 {
-    \"sector\": \"General o el sector específico si aplica\",
+    \"categoria\": \"Una de estas categorias: {$categoriasLista}\",
+    \"clasificacion\": \"Sub-agrupacion tematica dentro de la categoria (ej: EVALUACIONES MEDICAS, ACCIDENTES, etc.)\",
     \"tema\": \"Tema principal de la norma (ej: Sistema General de Riesgos Laborales)\",
-    \"subtema\": \"Subtema específico si aplica\",
-    \"tipo_norma\": \"Tipo de norma (Ley, Decreto, Resolución, Circular, etc.)\",
-    \"id_norma_legal\": \"Número de la norma (ej: 0312, 1072, 1562)\",
-    \"anio\": Año como número (ej: 2019),
-    \"descripcion_norma\": \"Descripción completa de qué establece la norma (máximo 500 caracteres)\",
+    \"subtema\": \"Subtema especifico si aplica\",
+    \"tipo_norma\": \"Tipo de norma (Ley, Decreto, Resolucion, Circular, etc.)\",
+    \"id_norma_legal\": \"Numero de la norma (ej: 0312, 1072, 1562)\",
+    \"anio\": Anio como numero (ej: 2019),
+    \"fecha_expedicion\": \"Fecha en formato YYYY-MM-DD si se conoce\",
+    \"descripcion_norma\": \"Descripcion completa de que establece la norma (maximo 500 caracteres)\",
     \"autoridad_emisora\": \"Entidad que expide la norma (ej: Ministerio del Trabajo)\",
-    \"referente_nacional\": \"x si es referente nacional, vacío si no\",
-    \"referente_internacional\": \"x si tiene referente internacional, vacío si no\",
-    \"articulos_aplicables\": \"Artículos más relevantes para SST\",
-    \"parametros\": \"Parámetros o requisitos principales que establece la norma\",
+    \"referente_nacional\": \"x si es referente nacional, vacio si no\",
+    \"referente_internacional\": \"x si tiene referente internacional, vacio si no\",
+    \"articulos_aplicables\": \"Articulos mas relevantes para SST\",
+    \"parametros\": \"Parametros o requisitos principales que establece la norma\",
     \"notas_vigencia\": \"Estado de vigencia, modificaciones o derogatorias\"
 }
 
 IMPORTANTE:
 - Responde SOLO con el JSON, sin texto adicional
-- Si no encuentras información sobre la norma, responde con un JSON con campo 'error'
-- Asegúrate de que el año sea un número, no texto
-- La información debe ser precisa y basada en la legislación colombiana real";
+- La categoria debe ser una de las listadas arriba
+- La clasificacion es una sub-agrupacion en MAYUSCULAS (ej: COPASST, RIESGO PSICOSOCIAL, ACCIDENTES)
+- Si no encuentras informacion sobre la norma, responde con un JSON con campo 'error'
+- Asegurate de que el anio sea un numero, no texto
+- La informacion debe ser precisa y basada en la legislacion colombiana real";
 
-        $userPrompt = "Busca en internet información actualizada sobre la siguiente norma colombiana y devuelve los datos en formato JSON:\n\n{$consulta}";
+        $userPrompt = "Busca en internet informacion actualizada sobre la siguiente norma colombiana y devuelve los datos en formato JSON:\n\n{$consulta}";
 
-        // Usar el nuevo endpoint de OpenAI Responses con búsqueda web
         $apiUrlResponses = 'https://api.openai.com/v1/responses';
 
         $data = [
@@ -491,7 +508,7 @@ IMPORTANTE:
                 'Authorization: Bearer ' . $this->apiKey
             ],
             CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_TIMEOUT => 90, // Más tiempo porque incluye búsqueda web
+            CURLOPT_TIMEOUT => 90,
             CURLOPT_SSL_VERIFYPEER => false
         ]);
 
@@ -501,7 +518,7 @@ IMPORTANTE:
         curl_close($ch);
 
         if ($error) {
-            throw new \Exception("Error de conexión: {$error}");
+            throw new \Exception("Error de conexion: {$error}");
         }
 
         $result = json_decode($response, true);
@@ -512,7 +529,7 @@ IMPORTANTE:
             throw new \Exception($errorMsg);
         }
 
-        // Extraer contenido de la respuesta del nuevo endpoint
+        // Extraer contenido de la respuesta
         $contenido = '';
         if (isset($result['output'])) {
             foreach ($result['output'] as $item) {
@@ -527,16 +544,16 @@ IMPORTANTE:
             }
         }
 
-        // Fallback al formato antiguo si no encuentra en el nuevo
+        // Fallback al formato antiguo
         if (empty($contenido) && isset($result['choices'][0]['message']['content'])) {
             $contenido = trim($result['choices'][0]['message']['content']);
         }
 
         if (empty($contenido)) {
-            throw new \Exception('No se recibió respuesta de la IA');
+            throw new \Exception('No se recibio respuesta de la IA');
         }
 
-        // Limpiar posibles marcadores de código
+        // Limpiar marcadores de codigo
         $contenido = preg_replace('/^```json\s*/', '', $contenido);
         $contenido = preg_replace('/\s*```$/', '', $contenido);
 
@@ -544,7 +561,7 @@ IMPORTANTE:
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             log_message('error', 'JSON Parse Error. Contenido: ' . $contenido);
-            throw new \Exception('La IA no devolvió un JSON válido');
+            throw new \Exception('La IA no devolvio un JSON valido');
         }
 
         if (isset($norma['error'])) {
@@ -560,12 +577,14 @@ IMPORTANTE:
     public function guardarDesdeIA()
     {
         $data = [
-            'sector' => $this->request->getPost('sector') ?: 'General',
+            'categoria' => $this->request->getPost('categoria') ?: 'Seguridad e Higiene Industrial',
+            'clasificacion' => $this->request->getPost('clasificacion'),
             'tema' => $this->request->getPost('tema'),
             'subtema' => $this->request->getPost('subtema'),
             'tipo_norma' => $this->request->getPost('tipo_norma'),
             'id_norma_legal' => $this->request->getPost('id_norma_legal'),
             'anio' => (int)$this->request->getPost('anio'),
+            'fecha_expedicion' => $this->request->getPost('fecha_expedicion') ?: null,
             'descripcion_norma' => $this->request->getPost('descripcion_norma'),
             'autoridad_emisora' => $this->request->getPost('autoridad_emisora'),
             'referente_nacional' => $this->request->getPost('referente_nacional') ?: '',
@@ -594,11 +613,11 @@ IMPORTANTE:
     }
 
     /**
-     * Exportar a Excel/CSV
+     * Exportar a CSV
      */
     public function exportar()
     {
-        $normas = $this->model->orderBy('anio', 'DESC')->findAll();
+        $normas = $this->model->orderBy('categoria', 'ASC')->orderBy('anio', 'DESC')->findAll();
 
         $filename = 'matriz_legal_' . date('Y-m-d') . '.csv';
 
@@ -610,22 +629,23 @@ IMPORTANTE:
         // BOM para Excel
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
-        // Headers
         fputcsv($output, [
-            'ID', 'Sector', 'Tema', 'Subtema', 'Tipo de Norma', 'No. Norma', 'Año',
-            'Descripción', 'Autoridad', 'Ref. Nacional', 'Ref. Internacional',
-            'Artículos Aplicables', 'Parámetros', 'Notas Vigencia', 'Estado'
+            'ID', 'Categoria', 'Clasificacion', 'Tema', 'Subtema', 'Tipo de Norma', 'No. Norma', 'Ano',
+            'Fecha Expedicion', 'Descripcion', 'Autoridad', 'Ref. Nacional', 'Ref. Internacional',
+            'Articulos Aplicables', 'Parametros', 'Notas Vigencia', 'Estado'
         ], ';');
 
         foreach ($normas as $norma) {
             fputcsv($output, [
                 $norma['id'],
-                $norma['sector'],
+                $norma['categoria'],
+                $norma['clasificacion'],
                 $norma['tema'],
                 $norma['subtema'],
                 $norma['tipo_norma'],
                 $norma['id_norma_legal'],
                 $norma['anio'],
+                $norma['fecha_expedicion'],
                 $norma['descripcion_norma'],
                 $norma['autoridad_emisora'],
                 $norma['referente_nacional'],
@@ -652,71 +672,23 @@ IMPORTANTE:
         header('Content-Disposition: attachment; filename=' . $filename);
 
         $output = fopen('php://output', 'w');
-
-        // BOM para Excel
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
-        // Headers
         fputcsv($output, [
-            'TEMA',
-            'SUBTEMA',
-            'TIPO DE NORMA',
-            'ID NORMA LEGAL',
-            'AÑO',
-            'DESCRIPCIÓN DE LA NORMA LEGAL',
-            'AUTORIDAD QUE LO EMITE',
-            'REFERENTE NACIONAL',
-            'REFERENTE INTERNACIONAL',
-            'ARTÍCULOS APLICABLES',
-            'PARÁMETROS',
-            'NOTAS VIGENCIAS / OBSERVACIONES'
+            'CATEGORIA', 'CLASIFICACION', 'TEMA', 'SUBTEMA', 'TIPO DE NORMA',
+            'ID NORMA LEGAL', 'AÑO', 'FECHA EXPEDICION',
+            'DESCRIPCION DE LA NORMA LEGAL', 'AUTORIDAD QUE LO EMITE',
+            'REFERENTE NACIONAL', 'REFERENTE INTERNACIONAL',
+            'ARTICULOS APLICABLES', 'PARAMETROS', 'NOTAS VIGENCIAS / OBSERVACIONES'
         ], ';');
 
-        // Fila de ejemplo 1
         fputcsv($output, [
-            'SISTEMA GENERAL DE RIESGOS LABORALES',
-            'Accidente de Trabajo',
-            'Resolución',
-            '2851',
-            '2015',
-            'Por la cual se modifica el artículo 3 de la Resolución 156 de 2005',
-            'Ministerio de Trabajo',
-            'x',
-            '',
-            'Todos',
-            'El empleador deberá notificar a la EPS y ARL sobre la ocurrencia del accidente de trabajo dentro de los 2 días hábiles siguientes.',
-            'Vigente'
-        ], ';');
-
-        // Fila de ejemplo 2
-        fputcsv($output, [
-            'SISTEMA GENERAL DE RIESGOS LABORALES',
-            'Sistema de Gestión SST',
-            'Decreto',
-            '1072',
-            '2015',
-            'Decreto Único Reglamentario del Sector Trabajo',
-            'Ministerio de Trabajo',
-            'x',
-            '',
-            'Libro 2, Parte 2, Título 4, Capítulo 6',
-            'Establece las directrices para implementar el Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST)',
-            'Vigente - Norma principal del SG-SST'
-        ], ';');
-
-        // Fila de ejemplo 3
-        fputcsv($output, [
-            'SISTEMA GENERAL DE RIESGOS LABORALES',
-            'Estándares Mínimos',
-            'Resolución',
-            '0312',
-            '2019',
-            'Por la cual se definen los Estándares Mínimos del Sistema de Gestión de la Seguridad y Salud en el Trabajo SG-SST',
-            'Ministerio de Trabajo',
-            'x',
-            '',
-            'Todos',
-            'Define los estándares mínimos según el número de trabajadores y nivel de riesgo',
+            'Seguridad e Higiene Industrial', 'ACCIDENTES',
+            'SISTEMA GENERAL DE RIESGOS LABORALES', 'Accidente de Trabajo',
+            'Resolucion', '2851', '2015', '2015-07-28',
+            'Por la cual se modifica el articulo 3 de la Resolucion 156 de 2005',
+            'Ministerio de Trabajo', 'x', '', 'Todos',
+            'El empleador debera notificar a la EPS y ARL sobre la ocurrencia del accidente.',
             'Vigente'
         ], ';');
 

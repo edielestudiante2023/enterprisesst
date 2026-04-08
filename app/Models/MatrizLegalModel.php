@@ -11,12 +11,14 @@ class MatrizLegalModel extends Model
     protected $returnType = 'array';
 
     protected $allowedFields = [
-        'sector',
+        'categoria',
+        'clasificacion',
         'tema',
         'subtema',
         'tipo_norma',
         'id_norma_legal',
         'anio',
+        'fecha_expedicion',
         'descripcion_norma',
         'autoridad_emisora',
         'referente_nacional',
@@ -31,20 +33,15 @@ class MatrizLegalModel extends Model
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
 
-    // Sectores disponibles
-    public static array $sectores = [
-        'General' => 'General (aplica a todos)',
-        'Salud' => 'Salud',
-        'Construcción' => 'Construcción',
-        'Minería' => 'Minería',
-        'Hidrocarburos' => 'Hidrocarburos',
-        'Transporte' => 'Transporte',
-        'Educación' => 'Educación',
-        'Manufactura' => 'Manufactura',
-        'Agricultura' => 'Agricultura',
-        'Comercio' => 'Comercio',
-        'Servicios' => 'Servicios',
-        'Otro' => 'Otro'
+    // Categorias (hojas del compendio legal)
+    public static array $categorias = [
+        'Medicina Laboral' => 'Medicina Laboral',
+        'Sistema General de SSS' => 'Sistema General de SSS',
+        'Seguridad e Higiene Industrial' => 'Seguridad e Higiene Industrial',
+        'COVID 19' => 'COVID 19',
+        'Ambiente Nacional' => 'Ambiente Nacional',
+        'Ambiente Regional' => 'Ambiente Regional',
+        'Ambiente Bogotá' => 'Ambiente Bogotá'
     ];
 
     // Tipos de norma
@@ -54,10 +51,13 @@ class MatrizLegalModel extends Model
         'Decreto Ley' => 'Decreto Ley',
         'Resolución' => 'Resolución',
         'Circular' => 'Circular',
+        'Circular Externa' => 'Circular Externa',
         'Acuerdo' => 'Acuerdo',
         'Sentencia' => 'Sentencia',
         'Concepto' => 'Concepto',
         'Norma Técnica' => 'Norma Técnica',
+        'Código Sustantivo del Trabajo' => 'Código Sustantivo del Trabajo',
+        'Constitución' => 'Constitución',
         'Otro' => 'Otro'
     ];
 
@@ -75,8 +75,12 @@ class MatrizLegalModel extends Model
     {
         $builder = $this->builder();
 
-        if (!empty($filtros['sector'])) {
-            $builder->where('sector', $filtros['sector']);
+        if (!empty($filtros['categoria'])) {
+            $builder->where('categoria', $filtros['categoria']);
+        }
+
+        if (!empty($filtros['clasificacion'])) {
+            $builder->where('clasificacion', $filtros['clasificacion']);
         }
 
         if (!empty($filtros['tema'])) {
@@ -99,6 +103,7 @@ class MatrizLegalModel extends Model
             $builder->groupStart()
                     ->like('tema', $filtros['busqueda'])
                     ->orLike('subtema', $filtros['busqueda'])
+                    ->orLike('clasificacion', $filtros['busqueda'])
                     ->orLike('id_norma_legal', $filtros['busqueda'])
                     ->orLike('descripcion_norma', $filtros['busqueda'])
                     ->orLike('autoridad_emisora', $filtros['busqueda'])
@@ -121,22 +126,33 @@ class MatrizLegalModel extends Model
 
         // Mapeo de columnas DataTables a campos de la BD
         $columnMap = [
-            0 => null,           // Control expandir
-            1 => 'sector',
+            0 => null,               // Control expandir
+            1 => 'clasificacion',
             2 => 'tipo_norma',
-            3 => 'id_norma_legal', // Columna "Norma"
+            3 => 'id_norma_legal',   // Columna "Norma"
             4 => 'anio',
             5 => 'tema',
             6 => 'autoridad_emisora',
             7 => 'estado',
-            8 => null            // Acciones
+            8 => null                // Acciones
         ];
 
-        // Búsqueda global
+        // Filtro por categoria (enviado como parametro extra)
+        if (!empty($params['categoria'])) {
+            $builder->where('categoria', $params['categoria']);
+        }
+
+        // Filtro por clasificacion (enviado como parametro extra)
+        if (!empty($params['clasificacion_filtro'])) {
+            $builder->where('clasificacion', $params['clasificacion_filtro']);
+        }
+
+        // Busqueda global
         if (!empty($params['search']['value'])) {
             $search = $params['search']['value'];
             $builder->groupStart()
-                    ->like('sector', $search)
+                    ->like('categoria', $search)
+                    ->orLike('clasificacion', $search)
                     ->orLike('tema', $search)
                     ->orLike('subtema', $search)
                     ->orLike('tipo_norma', $search)
@@ -154,11 +170,9 @@ class MatrizLegalModel extends Model
                     $campo = $columnMap[$index];
                     $valor = $column['search']['value'];
 
-                    // Para campos exactos (selects)
-                    if (in_array($campo, ['sector', 'tipo_norma', 'anio', 'estado'])) {
+                    if (in_array($campo, ['tipo_norma', 'anio', 'estado', 'clasificacion'])) {
                         $builder->where($campo, $valor);
                     } else {
-                        // Para campos de texto (inputs)
                         $builder->like($campo, $valor);
                     }
                 }
@@ -169,7 +183,6 @@ class MatrizLegalModel extends Model
         $totalFiltered = $builder->countAllResults(false);
 
         // Ordenamiento
-        $columns = ['id', 'sector', 'tipo_norma', 'id_norma_legal', 'anio', 'tema', 'autoridad_emisora', 'estado'];
         if (!empty($params['order'])) {
             foreach ($params['order'] as $order) {
                 $colIdx = $order['column'];
@@ -182,22 +195,53 @@ class MatrizLegalModel extends Model
             $builder->orderBy('anio', 'DESC')->orderBy('id', 'DESC');
         }
 
-        // Paginación
+        // Paginacion
         if (isset($params['start']) && isset($params['length']) && $params['length'] != -1) {
             $builder->limit($params['length'], $params['start']);
         }
 
         $data = $builder->get()->getResultArray();
 
+        // Total general (respetando filtro de categoria si existe)
+        $totalBuilder = $this->builder();
+        if (!empty($params['categoria'])) {
+            $totalBuilder->where('categoria', $params['categoria']);
+        }
+        if (!empty($params['clasificacion_filtro'])) {
+            $totalBuilder->where('clasificacion', $params['clasificacion_filtro']);
+        }
+        $recordsTotal = $totalBuilder->countAllResults();
+
         return [
             'data' => $data,
-            'recordsTotal' => $this->countAll(),
+            'recordsTotal' => $recordsTotal,
             'recordsFiltered' => $totalFiltered
         ];
     }
 
     /**
-     * Obtener temas únicos para filtros
+     * Obtener categorias con conteo
+     */
+    public function getCategoriasConConteo(): array
+    {
+        return $this->db->query(
+            "SELECT categoria, COUNT(*) as total FROM matriz_legal GROUP BY categoria ORDER BY total DESC"
+        )->getResultArray();
+    }
+
+    /**
+     * Obtener clasificaciones unicas por categoria
+     */
+    public function getClasificacionesPorCategoria(string $categoria): array
+    {
+        return $this->db->query(
+            "SELECT clasificacion, COUNT(*) as total FROM matriz_legal WHERE categoria = ? AND clasificacion IS NOT NULL AND clasificacion != '' GROUP BY clasificacion ORDER BY clasificacion ASC",
+            [$categoria]
+        )->getResultArray();
+    }
+
+    /**
+     * Obtener temas unicos para filtros
      */
     public function getTemasUnicos(): array
     {
@@ -210,30 +254,14 @@ class MatrizLegalModel extends Model
     }
 
     /**
-     * Obtener subtemas únicos para filtros
-     */
-    public function getSubtemasUnicos(?string $tema = null): array
-    {
-        $builder = $this->distinct()
-                        ->select('subtema')
-                        ->where('subtema IS NOT NULL')
-                        ->where('subtema !=', '');
-
-        if ($tema) {
-            $builder->where('tema', $tema);
-        }
-
-        return $builder->orderBy('subtema', 'ASC')->findAll();
-    }
-
-    /**
-     * Obtener años únicos para filtros
+     * Obtener anios unicos para filtros
      */
     public function getAniosUnicos(): array
     {
         return $this->distinct()
                     ->select('anio')
                     ->where('anio IS NOT NULL')
+                    ->where('anio >', 0)
                     ->orderBy('anio', 'DESC')
                     ->findAll();
     }
@@ -241,7 +269,7 @@ class MatrizLegalModel extends Model
     /**
      * Importar desde CSV
      */
-    public function importarCSV(array $datos, string $sectorDefecto = 'General'): array
+    public function importarCSV(array $datos, string $categoriaDefecto = 'Seguridad e Higiene Industrial'): array
     {
         $insertados = 0;
         $errores = [];
@@ -251,12 +279,14 @@ class MatrizLegalModel extends Model
         foreach ($datos as $index => $fila) {
             try {
                 $registro = [
-                    'sector' => !empty($fila['sector']) ? $fila['sector'] : $sectorDefecto,
+                    'categoria' => !empty($fila['categoria']) ? $fila['categoria'] : $categoriaDefecto,
+                    'clasificacion' => $fila['clasificacion'] ?? '',
                     'tema' => $fila['tema'] ?? '',
                     'subtema' => $fila['subtema'] ?? '',
                     'tipo_norma' => $fila['tipo_norma'] ?? '',
                     'id_norma_legal' => $fila['id_norma_legal'] ?? '',
                     'anio' => (int)($fila['anio'] ?? 0),
+                    'fecha_expedicion' => !empty($fila['fecha_expedicion']) ? $fila['fecha_expedicion'] : null,
                     'descripcion_norma' => $fila['descripcion_norma'] ?? '',
                     'autoridad_emisora' => $fila['autoridad_emisora'] ?? '',
                     'referente_nacional' => $fila['referente_nacional'] ?? '',
@@ -267,9 +297,8 @@ class MatrizLegalModel extends Model
                     'estado' => 'activa'
                 ];
 
-                // Validar campos obligatorios
                 if (empty($registro['tema']) || empty($registro['tipo_norma']) || empty($registro['id_norma_legal'])) {
-                    $errores[] = "Fila " . ($index + 2) . ": Faltan campos obligatorios (tema, tipo_norma, id_norma_legal)";
+                    $errores[] = "Fila " . ($index + 2) . ": Faltan campos obligatorios";
                     continue;
                 }
 
@@ -291,7 +320,7 @@ class MatrizLegalModel extends Model
     }
 
     /**
-     * Buscar norma por número y tipo
+     * Buscar norma por numero y tipo
      */
     public function buscarPorNumero(string $tipoNorma, string $numero, ?int $anio = null): ?array
     {
@@ -317,7 +346,7 @@ class MatrizLegalModel extends Model
     }
 
     /**
-     * Obtener estadísticas generales
+     * Obtener estadisticas generales
      */
     public function getEstadisticas(): array
     {
@@ -325,16 +354,15 @@ class MatrizLegalModel extends Model
 
         $stats = [
             'total' => $this->countAll(),
-            'por_sector' => [],
+            'por_categoria' => [],
             'por_tipo' => [],
             'por_estado' => [],
-            'por_anio' => []
         ];
 
-        // Por sector
-        $result = $db->query("SELECT sector, COUNT(*) as total FROM matriz_legal GROUP BY sector ORDER BY total DESC")->getResultArray();
+        // Por categoria
+        $result = $db->query("SELECT categoria, COUNT(*) as total FROM matriz_legal GROUP BY categoria ORDER BY total DESC")->getResultArray();
         foreach ($result as $row) {
-            $stats['por_sector'][$row['sector']] = (int)$row['total'];
+            $stats['por_categoria'][$row['categoria']] = (int)$row['total'];
         }
 
         // Por tipo de norma
@@ -347,12 +375,6 @@ class MatrizLegalModel extends Model
         $result = $db->query("SELECT estado, COUNT(*) as total FROM matriz_legal GROUP BY estado ORDER BY total DESC")->getResultArray();
         foreach ($result as $row) {
             $stats['por_estado'][$row['estado']] = (int)$row['total'];
-        }
-
-        // Por año (últimos 10 años)
-        $result = $db->query("SELECT anio, COUNT(*) as total FROM matriz_legal WHERE anio >= YEAR(CURDATE()) - 10 GROUP BY anio ORDER BY anio DESC")->getResultArray();
-        foreach ($result as $row) {
-            $stats['por_anio'][$row['anio']] = (int)$row['total'];
         }
 
         return $stats;

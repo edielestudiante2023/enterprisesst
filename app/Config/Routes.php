@@ -1494,6 +1494,7 @@ $routes->post('/matriz-legal/procesar-busqueda-ia', 'MatrizLegalController::proc
 $routes->post('/matriz-legal/guardar-desde-ia', 'MatrizLegalController::guardarDesdeIA');
 $routes->get('/matriz-legal/exportar', 'MatrizLegalController::exportar');
 $routes->get('/matriz-legal/descargar-muestra', 'MatrizLegalController::descargarMuestra');
+$routes->get('/matriz-legal/clasificaciones/(:any)', 'MatrizLegalController::clasificaciones/$1');
 
 // ============================================
 // MATRIZ DE COMUNICACIÓN SST
