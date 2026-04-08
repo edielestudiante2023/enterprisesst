@@ -46,8 +46,14 @@ class SyncEstandaresService
             }
 
             $idEstandar = (int) $estandar['id_estandar'];
-            $estado = self::EVAL_TO_ESTADO[$evaluacionInicial] ?? 'pendiente';
+            $estado = self::EVAL_TO_ESTADO[$evaluacionInicial] ?? null;
             $pesoEstandar = (float) ($estandar['peso_porcentual'] ?? 0);
+
+            // Si evaluacion_inicial está vacía, no sobreescribir un posible "en_proceso"
+            if ($estado === null) {
+                return;
+            }
+
             $calificacion = ($estado === 'cumple' || $estado === 'no_aplica') ? $pesoEstandar : 0;
 
             $existe = $db->table('tbl_cliente_estandares')

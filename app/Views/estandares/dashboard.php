@@ -24,6 +24,9 @@
         .estado-en_proceso { background-color: #FEF3C7; color: #92400E; }
         .estado-no_aplica { background-color: #E5E7EB; color: #374151; }
         .estado-pendiente { background-color: #DBEAFE; color: #1E40AF; }
+        .card-filtro { cursor: pointer; transition: all 0.2s; }
+        .card-filtro:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; }
+        .card-filtro.filtro-activo { border: 2px solid #0d6efd; }
         .phva-card { border-left: 4px solid; }
         .phva-planear { border-color: #3B82F6; }
         .phva-hacer { border-color: #10B981; }
@@ -88,7 +91,7 @@
             <div class="col-md-8">
                 <div class="row h-100">
                     <div class="col">
-                        <div class="card border-0 shadow-sm h-100">
+                        <div class="card border-0 shadow-sm h-100 card-filtro" role="button" data-filtro="cumple" title="Filtrar: Cumple">
                             <div class="card-body text-center py-3">
                                 <i class="bi bi-check-circle text-success fs-2"></i>
                                 <h4 id="contadorCumple" class="mt-1 mb-0"><?= $resumen['cumple'] ?? 0 ?></h4>
@@ -97,7 +100,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card border-0 shadow-sm h-100">
+                        <div class="card border-0 shadow-sm h-100 card-filtro" role="button" data-filtro="en_proceso" title="Filtrar: En Proceso">
                             <div class="card-body text-center py-3">
                                 <i class="bi bi-hourglass-split text-warning fs-2"></i>
                                 <h4 id="contadorEnProceso" class="mt-1 mb-0"><?= $resumen['en_proceso'] ?? 0 ?></h4>
@@ -106,7 +109,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card border-0 shadow-sm h-100">
+                        <div class="card border-0 shadow-sm h-100 card-filtro" role="button" data-filtro="no_cumple" title="Filtrar: No Cumple">
                             <div class="card-body text-center py-3">
                                 <i class="bi bi-x-circle text-danger fs-2"></i>
                                 <h4 id="contadorNoCumple" class="mt-1 mb-0"><?= $resumen['no_cumple'] ?? 0 ?></h4>
@@ -115,7 +118,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card border-0 shadow-sm h-100">
+                        <div class="card border-0 shadow-sm h-100 card-filtro" role="button" data-filtro="pendiente" title="Filtrar: Pendiente">
                             <div class="card-body text-center py-3">
                                 <i class="bi bi-clock text-info fs-2"></i>
                                 <h4 id="contadorPendiente" class="mt-1 mb-0"><?= $resumen['pendiente'] ?? 0 ?></h4>
@@ -124,7 +127,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card border-0 shadow-sm h-100 bg-light">
+                        <div class="card border-0 shadow-sm h-100 bg-light card-filtro" role="button" data-filtro="no_aplica" title="Filtrar: No Aplica">
                             <div class="card-body text-center py-3">
                                 <i class="bi bi-dash-circle text-secondary fs-2"></i>
                                 <h4 id="contadorNoAplica" class="mt-1 mb-0 text-secondary"><?= $resumen['no_aplica'] ?? 0 ?></h4>
@@ -419,6 +422,8 @@
 
         function filtrarEstandares(tipo) {
             filtroActual = tipo;
+            filtroEstadoActivo = null;
+            document.querySelectorAll('.card-filtro').forEach(c => c.classList.remove('filtro-activo'));
             const filas = document.querySelectorAll('.estandar-row');
             const btnAplicables = document.getElementById('btnMostrarAplicables');
             const btnTodos = document.getElementById('btnMostrarTodos');
@@ -460,6 +465,45 @@
             // Actualizar contador
             contador.textContent = visibles;
         }
+
+        // Filtrar por estado al hacer click en tarjeta
+        let filtroEstadoActivo = null;
+
+        function filtrarPorEstado(estado) {
+            const filas = document.querySelectorAll('.estandar-row');
+            const cards = document.querySelectorAll('.card-filtro');
+            const contador = document.getElementById('contadorVisible');
+
+            // Si se clickea el mismo, quitar filtro
+            if (filtroEstadoActivo === estado) {
+                filtroEstadoActivo = null;
+                cards.forEach(c => c.classList.remove('filtro-activo'));
+                filtrarEstandares(filtroActual);
+                return;
+            }
+
+            filtroEstadoActivo = estado;
+            cards.forEach(c => {
+                c.classList.toggle('filtro-activo', c.dataset.filtro === estado);
+            });
+
+            let visibles = 0;
+            filas.forEach(fila => {
+                if (fila.dataset.estado === estado) {
+                    fila.style.display = '';
+                    visibles++;
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+            contador.textContent = visibles;
+        }
+
+        document.querySelectorAll('.card-filtro').forEach(card => {
+            card.addEventListener('click', function() {
+                filtrarPorEstado(this.dataset.filtro);
+            });
+        });
 
         // Aplicar filtro inicial (solo aplicables por defecto)
         document.addEventListener('DOMContentLoaded', function() {
