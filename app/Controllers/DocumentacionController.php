@@ -367,8 +367,9 @@ class DocumentacionController extends Controller
                 // 4.2.6: Entrega de EPP
                 $queryDocs->where('tipo_documento', 'soporte_entrega_epp');
             } elseif ($tipoCarpetaFases === 'plan_emergencias') {
-                // 5.1.1: Plan de emergencias (híbrida: documento IA + soportes)
-                $queryDocs->whereIn('tipo_documento', ['plan_emergencias', 'soporte_plan_emergencias']);
+                // 5.1.1: Plan de emergencias (solo documento IA)
+                // Los soportes adjuntos se cargan aparte en $soportesAdicionales
+                $queryDocs->where('tipo_documento', 'plan_emergencias');
             } elseif ($tipoCarpetaFases === 'brigada_emergencias') {
                 // 5.1.2: Brigada de emergencias
                 $queryDocs->where('tipo_documento', 'soporte_brigada_emergencias');
@@ -388,20 +389,16 @@ class DocumentacionController extends Controller
                 // 4.2.1: Medidas de prevención y control
                 $queryDocs->where('tipo_documento', 'soporte_medidas_prevencion_control');
             } elseif ($tipoCarpetaFases === 'diagnostico_condiciones_salud') {
-                // 3.1.1: Procedimiento de Evaluaciones Médicas + Soportes
-                $queryDocs->whereIn('tipo_documento', [
-                    'procedimiento_evaluaciones_medicas',
-                    'soporte_diagnostico_salud'
-                ]);
+                // 3.1.1: Procedimiento de Evaluaciones Médicas (solo documento IA)
+                // Los soportes adjuntos se cargan aparte en $soportesAdicionales
+                $queryDocs->where('tipo_documento', 'procedimiento_evaluaciones_medicas');
             } elseif ($tipoCarpetaFases === 'informacion_medico_perfiles') {
                 // 3.1.3: Información al médico perfiles de cargo
                 $queryDocs->where('tipo_documento', 'soporte_perfiles_medico');
             } elseif ($tipoCarpetaFases === 'evaluaciones_medicas') {
-                // 3.1.4: Evaluaciones médicas ocupacionales (Programa IA + Soportes)
-                $queryDocs->whereIn('tipo_documento', [
-                    'programa_evaluaciones_medicas_ocupacionales',
-                    'soporte_evaluaciones_medicas'
-                ]);
+                // 3.1.4: Evaluaciones médicas ocupacionales (solo Programa IA)
+                // Los soportes adjuntos se cargan aparte en $soportesAdicionales
+                $queryDocs->where('tipo_documento', 'programa_evaluaciones_medicas_ocupacionales');
             } elseif ($tipoCarpetaFases === 'custodia_historias_clinicas') {
                 // 3.1.5: Custodia historias clínicas
                 $queryDocs->where('tipo_documento', 'soporte_custodia_hc');
@@ -418,11 +415,9 @@ class DocumentacionController extends Controller
                     'soporte_plan_objetivos' // legacy
                 ]);
             } elseif ($tipoCarpetaFases === 'plan_objetivos_metas') {
-                // 2.2.1: Plan de Objetivos y Metas SG-SST
-                $queryDocs->whereIn('tipo_documento', [
-                    'plan_objetivos_metas',
-                    'soporte_plan_objetivos'
-                ]);
+                // 2.2.1: Plan de Objetivos y Metas SG-SST (solo documento IA)
+                // Los soportes adjuntos se cargan aparte en $soportesAdicionales
+                $queryDocs->where('tipo_documento', 'plan_objetivos_metas');
             } elseif ($tipoCarpetaFases === 'rendicion_desempeno') {
                 // 2.6.1: Rendición sobre el desempeño
                 $queryDocs->where('tipo_documento', 'soporte_rendicion_desempeno');
@@ -433,11 +428,9 @@ class DocumentacionController extends Controller
                 // 1.1.8: Conformación Comité de Convivencia (legacy)
                 $queryDocs->where('tipo_documento', 'soporte_comite_convivencia');
             } elseif ($tipoCarpetaFases === 'manual_convivencia_1_1_8') {
-                // 1.1.8: Manual de Convivencia + Soportes del Comité
-                $queryDocs->whereIn('tipo_documento', [
-                    'manual_convivencia_laboral',
-                    'soporte_comite_convivencia'
-                ]);
+                // 1.1.8: Manual de Convivencia (solo documento IA)
+                // Los soportes adjuntos se cargan aparte en $soportesAdicionales
+                $queryDocs->where('tipo_documento', 'manual_convivencia_laboral');
             } elseif ($tipoCarpetaFases === 'promocion_prevencion_salud') {
                 // 3.1.2: Programa de Promoción y Prevención en Salud
                 $queryDocs->where('tipo_documento', 'programa_promocion_prevencion_salud');
