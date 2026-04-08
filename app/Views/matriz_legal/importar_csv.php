@@ -210,10 +210,10 @@
                     </div>
 
                     <div class="mt-4">
-                        <label class="form-label fw-bold">Sector por defecto para registros sin sector:</label>
-                        <select id="sectorDefecto" class="form-select">
-                            <?php foreach ($sectores as $key => $value): ?>
-                                <option value="<?= $key ?>" <?= $key === 'General' ? 'selected' : '' ?>><?= $value ?></option>
+                        <label class="form-label fw-bold">Categoria por defecto para registros sin categoria:</label>
+                        <select id="categoriaDefecto" class="form-select">
+                            <?php foreach ($categorias as $key => $value): ?>
+                                <option value="<?= $key ?>"><?= $value ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -221,7 +221,7 @@
                     <div class="alert alert-info mt-4">
                         <h6><i class="fas fa-info-circle me-2"></i>Formato esperado del CSV:</h6>
                         <p class="mb-2">El archivo debe contener las siguientes columnas (orden flexible):</p>
-                        <code>TEMA; SUBTEMA; TIPO DE NORMA; ID NORMA LEGAL; AÑO; DESCRIPCIÓN; AUTORIDAD; REFERENTE NACIONAL; REFERENTE INTERNACIONAL; ARTÍCULOS APLICABLES; PARÁMETROS; NOTAS VIGENCIA</code>
+                        <code>CATEGORIA; CLASIFICACION; TEMA; SUBTEMA; TIPO DE NORMA; ID NORMA LEGAL; AÑO; FECHA EXPEDICION; DESCRIPCION; AUTORIDAD; REFERENTE NACIONAL; REFERENTE INTERNACIONAL; ARTICULOS APLICABLES; PARAMETROS; NOTAS VIGENCIA</code>
                         <p class="mt-2 mb-0"><small>Delimitadores soportados: punto y coma (;), coma (,), tabulador</small></p>
                         <hr>
                         <a href="<?= base_url('matriz-legal/descargar-muestra') ?>" class="btn btn-outline-primary btn-sm">
@@ -397,17 +397,20 @@
             // Mapeo de columnas
             let mapeoHtml = '';
             const campos = {
+                'categoria': 'Categoria',
+                'clasificacion': 'Clasificacion',
                 'tema': 'Tema',
                 'subtema': 'Subtema',
                 'tipo_norma': 'Tipo de Norma',
                 'id_norma_legal': 'No. Norma',
-                'anio': 'Año',
-                'descripcion_norma': 'Descripción',
+                'anio': 'Ano',
+                'fecha_expedicion': 'Fecha Expedicion',
+                'descripcion_norma': 'Descripcion',
                 'autoridad_emisora': 'Autoridad',
                 'referente_nacional': 'Ref. Nacional',
                 'referente_internacional': 'Ref. Internacional',
-                'articulos_aplicables': 'Artículos',
-                'parametros': 'Parámetros',
+                'articulos_aplicables': 'Articulos',
+                'parametros': 'Parametros',
                 'notas_vigencia': 'Notas Vigencia'
             };
 
@@ -455,7 +458,7 @@
         function importar() {
             let formData = new FormData();
             formData.append('archivo_csv', archivoSeleccionado);
-            formData.append('sector_defecto', $('#sectorDefecto').val());
+            formData.append('categoria_defecto', $('#categoriaDefecto').val());
 
             Swal.fire({
                 title: 'Importando datos...',
