@@ -524,17 +524,17 @@
                                         <i class="fas fa-undo me-1"></i>Reactivar
                                     </button>
                                 <?php elseif ($doc['existe']): ?>
-                                    <a href="<?= esc($doc['url_generar']) ?>"
+                                    <a href="<?= esc($doc['url_carpeta']) ?>"
                                        class="btn btn-ver btn-sm"
                                        target="_blank">
-                                        <i class="fas fa-external-link-alt me-1"></i>Ir al Módulo
+                                        <i class="fas fa-folder-open me-1"></i>Ir al Módulo
                                     </a>
                                 <?php else: ?>
                                     <div class="btn-group-vertical gap-1" role="group">
-                                        <a href="<?= esc($doc['url_generar']) ?>"
+                                        <a href="<?= esc($doc['url_carpeta']) ?>"
                                            class="btn btn-generar btn-sm"
                                            target="_blank">
-                                            <i class="fas fa-magic me-1"></i>Generar
+                                            <i class="fas fa-folder-open me-1"></i>Ir al Módulo
                                         </a>
                                         <button class="btn-toggle-exclusion"
                                                 data-tipo="<?= esc($doc['tipo']) ?>"
