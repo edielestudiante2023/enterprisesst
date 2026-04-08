@@ -170,16 +170,28 @@ $tipoComiteNombre = [
 
             <?php foreach ($firmantes as $f): ?>
             <?php
+                $firmanteCambio = $f['firmante_cambio'] ?? false;
                 $yaFirmado = $f['estado_firma'] === 'firmado';
                 $yaSolicitado = $f['ya_solicitado'];
                 $tieneEmail = !empty($f['email']);
-                $cardClass = $yaFirmado ? 'firmado' : ($yaSolicitado ? 'ya-solicitado' : '');
+                $cardClass = $firmanteCambio ? '' : ($yaFirmado ? 'firmado' : ($yaSolicitado ? 'ya-solicitado' : ''));
             ?>
             <div class="col-md-6 col-lg-4">
                 <div class="card card-firmante <?= $cardClass ?>" id="card-<?= $f['tipo'] ?>">
                     <div class="card-body">
                         <div class="d-flex align-items-start">
-                            <?php if (!$yaSolicitado): ?>
+                            <?php if ($firmanteCambio): ?>
+                            <div class="me-3">
+                                <input type="checkbox"
+                                       class="form-check-input firmante-check"
+                                       name="firmantes[<?= $f['tipo'] ?>][selected]"
+                                       value="1"
+                                       id="check-<?= $f['tipo'] ?>"
+                                       <?= !$tieneEmail ? 'disabled' : '' ?>
+                                       checked
+                                       onchange="toggleCard('<?= $f['tipo'] ?>')">
+                            </div>
+                            <?php elseif (!$yaSolicitado): ?>
                             <div class="me-3">
                                 <input type="checkbox"
                                        class="form-check-input firmante-check"
@@ -195,7 +207,11 @@ $tipoComiteNombre = [
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <h6 class="mb-0"><?= esc($f['nombre']) ?></h6>
-                                    <?php if ($yaFirmado): ?>
+                                    <?php if ($firmanteCambio): ?>
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Requiere nueva firma
+                                        </span>
+                                    <?php elseif ($yaFirmado): ?>
                                         <span class="badge bg-success"><i class="fas fa-check me-1"></i>Firmado</span>
                                     <?php elseif ($yaSolicitado): ?>
                                         <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pendiente</span>
@@ -223,7 +239,13 @@ $tipoComiteNombre = [
                                 </p>
                                 <?php endif; ?>
 
-                                <?php if (!$yaSolicitado && $tieneEmail): ?>
+                                <?php if ($firmanteCambio): ?>
+                                <p class="text-warning mb-0 small">
+                                    <i class="fas fa-exchange-alt me-1"></i>Firma anterior: <?= esc($f['firmante_anterior'] ?? '') ?>
+                                </p>
+                                <?php endif; ?>
+
+                                <?php if ((!$yaSolicitado || $firmanteCambio) && $tieneEmail): ?>
                                 <!-- Campos ocultos para enviar datos -->
                                 <input type="hidden" name="firmantes[<?= $f['tipo'] ?>][nombre]" value="<?= esc($f['nombre']) ?>">
                                 <input type="hidden" name="firmantes[<?= $f['tipo'] ?>][email]" value="<?= esc($f['email']) ?>">
@@ -250,7 +272,7 @@ $tipoComiteNombre = [
             $tienePendientes = false;
             foreach ($firmantesAgrupados as $grupo => $firmantes) {
                 foreach ($firmantes as $f) {
-                    if (!$f['ya_solicitado'] && !empty($f['email'])) {
+                    if ((!$f['ya_solicitado'] || ($f['firmante_cambio'] ?? false)) && !empty($f['email'])) {
                         $tienePendientes = true;
                         break 2;
                     }

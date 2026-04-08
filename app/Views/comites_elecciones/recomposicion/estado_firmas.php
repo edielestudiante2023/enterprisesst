@@ -292,6 +292,34 @@ $tipoComiteNombre = [
                                 <img src="<?= $evidencia['firma_imagen'] ?>"
                                      alt="Firma"
                                      class="firma-imagen">
+                                <?php
+                                $firmanteCambio = false;
+                                $nombreActual = '';
+                                if (in_array($sol['firmante_tipo'], ['delegado_sst', 'representante_legal']) && !empty($contexto ?? [])) {
+                                    $cedulaSol = trim($sol['firmante_documento'] ?? '');
+                                    if ($sol['firmante_tipo'] === 'delegado_sst') {
+                                        $cedulaCtx = trim(($contexto ?? [])['delegado_sst_cedula'] ?? '');
+                                        $nombreActual = ($contexto ?? [])['delegado_sst_nombre'] ?? '';
+                                    } else {
+                                        $cedulaCtx = trim(($contexto ?? [])['representante_legal_cedula'] ?? '');
+                                        $nombreActual = ($contexto ?? [])['representante_legal_nombre'] ?? '';
+                                    }
+                                    $firmanteCambio = !empty($cedulaSol) && !empty($cedulaCtx) && $cedulaSol !== $cedulaCtx;
+                                }
+                                ?>
+                                <?php if ($firmanteCambio): ?>
+                                    <div class="alert alert-warning py-2 px-3 mt-2 mb-1 text-start" style="font-size: 0.85rem;">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        <strong>Firmante cambió:</strong> esta firma fue de <em><?= esc($sol['firmante_nombre']) ?></em>,
+                                        pero el actual es <strong><?= esc($nombreActual) ?></strong>.
+                                        <form action="<?= base_url('firma/reasignar/' . $sol['id_solicitud']) ?>" method="post" class="d-inline ms-2"
+                                              onsubmit="return confirm('Esto invalidará la firma anterior y enviará nueva solicitud a ' + '<?= esc($nombreActual) ?>' + '. ¿Continuar?')">
+                                            <button type="submit" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-arrow-repeat me-1"></i>Re-solicitar firma a <?= esc($nombreActual) ?>
+                                            </button>
+                                        </form>
+                                    </div>
+                                <?php endif; ?>
                             <?php else: ?>
                                 <?php
                                     $badgeClass = match($sol['estado']) {

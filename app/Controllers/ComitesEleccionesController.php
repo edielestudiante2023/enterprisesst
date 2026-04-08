@@ -3882,6 +3882,9 @@ class ComitesEleccionesController extends BaseController
         $firmados = count(array_filter($solicitudes, fn($s) => $s['estado'] === 'firmado'));
         $pendientes = count(array_filter($solicitudes, fn($s) => in_array($s['estado'], ['pendiente', 'esperando'])));
 
+        // Contexto SST para detectar cambio de firmante
+        $contexto = $data['contexto'] ?? [];
+
         return view('comites_elecciones/estado_firmas_acta', [
             'proceso' => $data['proceso'],
             'cliente' => $data['cliente'],
@@ -3892,7 +3895,8 @@ class ComitesEleccionesController extends BaseController
             'totalSolicitudes' => $totalSolicitudes,
             'firmados' => $firmados,
             'pendientes' => $pendientes,
-            'porcentaje' => $totalSolicitudes > 0 ? round(($firmados / $totalSolicitudes) * 100) : 0
+            'porcentaje' => $totalSolicitudes > 0 ? round(($firmados / $totalSolicitudes) * 100) : 0,
+            'contexto' => $contexto
         ]);
     }
 
@@ -4481,6 +4485,18 @@ class ComitesEleccionesController extends BaseController
 
         // 2. DELEGADO SST (Si existe) - Firma segundo
         if (!empty($data['contexto']['delegado_sst_nombre'])) {
+            // Detectar si el firmante cambió desde que se solicitó la firma
+            $delegadoCambio = false;
+            $delegadoAnterior = '';
+            if (isset($firmasExistentes['delegado_sst'])) {
+                $cedulaSol = trim($firmasExistentes['delegado_sst']['firmante_documento'] ?? '');
+                $cedulaCtx = trim($data['contexto']['delegado_sst_cedula'] ?? '');
+                if (!empty($cedulaSol) && !empty($cedulaCtx) && $cedulaSol !== $cedulaCtx) {
+                    $delegadoCambio = true;
+                    $delegadoAnterior = $firmasExistentes['delegado_sst']['firmante_nombre'] ?? '';
+                }
+            }
+
             $firmantesDisponibles[] = [
                 'grupo' => 'Aprobación Empresarial',
                 'tipo' => 'delegado_sst',
@@ -4490,12 +4506,26 @@ class ComitesEleccionesController extends BaseController
                 'email' => $data['contexto']['delegado_sst_email'] ?? '',
                 'ya_solicitado' => isset($firmasExistentes['delegado_sst']),
                 'estado_firma' => $firmasExistentes['delegado_sst']['estado'] ?? null,
-                'obligatorio' => true
+                'obligatorio' => true,
+                'firmante_cambio' => $delegadoCambio,
+                'firmante_anterior' => $delegadoAnterior
             ];
         }
 
         // 3. REPRESENTANTE LEGAL (Obligatorio) - Firma último por jerarquía
         if (!empty($data['contexto']['representante_legal_nombre']) || !empty($data['cliente']['nombre_rep_legal'])) {
+            // Detectar si el firmante cambió desde que se solicitó la firma
+            $repLegalCambio = false;
+            $repLegalAnterior = '';
+            if (isset($firmasExistentes['representante_legal'])) {
+                $cedulaSol = trim($firmasExistentes['representante_legal']['firmante_documento'] ?? '');
+                $cedulaCtx = trim($data['contexto']['representante_legal_cedula'] ?? $data['cliente']['cedula_rep_legal'] ?? '');
+                if (!empty($cedulaSol) && !empty($cedulaCtx) && $cedulaSol !== $cedulaCtx) {
+                    $repLegalCambio = true;
+                    $repLegalAnterior = $firmasExistentes['representante_legal']['firmante_nombre'] ?? '';
+                }
+            }
+
             $firmantesDisponibles[] = [
                 'grupo' => 'Aprobación Empresarial',
                 'tipo' => 'representante_legal',
@@ -4505,7 +4535,9 @@ class ComitesEleccionesController extends BaseController
                 'email' => $data['contexto']['representante_legal_email'] ?? $data['cliente']['email_rep_legal'] ?? '',
                 'ya_solicitado' => isset($firmasExistentes['representante_legal']),
                 'estado_firma' => $firmasExistentes['representante_legal']['estado'] ?? null,
-                'obligatorio' => true
+                'obligatorio' => true,
+                'firmante_cambio' => $repLegalCambio,
+                'firmante_anterior' => $repLegalAnterior
             ];
         }
 
@@ -4522,6 +4554,7 @@ class ComitesEleccionesController extends BaseController
             'documento' => $documento,
             'firmantesAgrupados' => $firmantesAgrupados,
             'solicitudesExistentes' => $solicitudesExistentes,
+            'contexto' => $data['contexto'] ?? [],
             'totalFirmantes' => count($firmantesDisponibles),
             'firmadosCount' => count(array_filter($solicitudesExistentes, fn($s) => $s['estado'] === 'firmado')),
             'pendientesCount' => count(array_filter($solicitudesExistentes, fn($s) => in_array($s['estado'], ['pendiente', 'esperando'])))
@@ -4804,6 +4837,9 @@ class ComitesEleccionesController extends BaseController
         $pendientes = count(array_filter($solicitudes, fn($s) => in_array($s['estado'], ['pendiente', 'esperando'])));
         $porcentaje = $totalSolicitudes > 0 ? round(($firmados / $totalSolicitudes) * 100) : 0;
 
+        // Contexto SST para detectar cambio de firmante
+        $contexto = $data['contexto'] ?? [];
+
         return view('comites_elecciones/recomposicion/estado_firmas', [
             'proceso' => $data['proceso'],
             'cliente' => $data['cliente'],
@@ -4814,7 +4850,8 @@ class ComitesEleccionesController extends BaseController
             'totalSolicitudes' => $totalSolicitudes,
             'firmados' => $firmados,
             'pendientes' => $pendientes,
-            'porcentaje' => $porcentaje
+            'porcentaje' => $porcentaje,
+            'contexto' => $contexto
         ]);
     }
 
