@@ -156,6 +156,7 @@
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .badge-no-generado {
@@ -165,6 +166,7 @@
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .badge-no-aplica {
