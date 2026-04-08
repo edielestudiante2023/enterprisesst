@@ -6660,16 +6660,6 @@ Se debe generar acta que registre:
 
         $documentosMetadata = $this->getDocumentosMetadata();
 
-        // Cargar mapa de carpetas del cliente: codigo (numeral) → id_carpeta
-        $carpetasRaw = $this->db->table('tbl_doc_carpetas')
-            ->select('id_carpeta, codigo')
-            ->where('id_cliente', $idCliente)
-            ->where('tipo', 'estandar')
-            ->whereNotIn('codigo', [''])
-            ->get()
-            ->getResultArray();
-        $mapaCarpetas = array_column($carpetasRaw, 'id_carpeta', 'codigo');
-
         // Cargar exclusiones del cliente
         $exclusionesRaw = $this->db->table('tbl_doc_exclusiones_cliente')
             ->select('tipo_documento, motivo')
@@ -6685,13 +6675,6 @@ Se debe generar acta que registre:
 
         foreach ($documentosMetadata as $metadata) {
             $tipo = $metadata['tipo'];
-            $numeral = $metadata['numeral'] ?? '';
-
-            // Solo mostrar documentos que tienen carpeta asignada
-            $idCarpeta = $mapaCarpetas[$numeral] ?? null;
-            if (!$idCarpeta) {
-                continue;
-            }
 
             // Verificar si está excluido
             if (isset($exclusiones[$tipo])) {
@@ -6703,7 +6686,6 @@ Se debe generar acta que registre:
                 $doc['motivo_exclusion'] = $exclusiones[$tipo];
                 $doc['url_generar'] = null;
                 $doc['url_ver'] = null;
-                $doc['url_carpeta'] = base_url("documentacion/carpeta/{$idCarpeta}");
                 $documentos[] = $doc;
                 $noAplica++;
                 continue;
@@ -6736,7 +6718,6 @@ Se debe generar acta que registre:
                 $doc['url_generar'] = base_url("documentos/generar/{$tipo}/{$idCliente}");
                 $doc['url_ver'] = null;
             }
-            $doc['url_carpeta'] = base_url("documentacion/carpeta/{$idCarpeta}");
 
             $documentos[] = $doc;
 

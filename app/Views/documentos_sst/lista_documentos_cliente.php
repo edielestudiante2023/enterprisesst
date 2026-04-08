@@ -463,7 +463,6 @@
                             <th>Estado</th>
                             <th>Versión</th>
                             <th>Última Modificación</th>
-                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -513,36 +512,6 @@
                                     <?= date('d M Y', strtotime($doc['fecha_modificacion'])) ?>
                                 <?php else: ?>
                                     <span class="text-muted">N/A</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if ($doc['estado_doc'] === 'no_aplica'): ?>
-                                    <button class="btn-toggle-exclusion active"
-                                            data-tipo="<?= esc($doc['tipo']) ?>"
-                                            data-cliente="<?= esc($cliente['id_cliente']) ?>"
-                                            title="Reactivar documento">
-                                        <i class="fas fa-undo me-1"></i>Reactivar
-                                    </button>
-                                <?php elseif ($doc['existe']): ?>
-                                    <a href="<?= esc($doc['url_carpeta']) ?>"
-                                       class="btn btn-ver btn-sm"
-                                       target="_blank">
-                                        <i class="fas fa-folder-open me-1"></i>Ir al Módulo
-                                    </a>
-                                <?php else: ?>
-                                    <div class="btn-group-vertical gap-1" role="group">
-                                        <a href="<?= esc($doc['url_carpeta']) ?>"
-                                           class="btn btn-generar btn-sm"
-                                           target="_blank">
-                                            <i class="fas fa-folder-open me-1"></i>Ir al Módulo
-                                        </a>
-                                        <button class="btn-toggle-exclusion"
-                                                data-tipo="<?= esc($doc['tipo']) ?>"
-                                                data-cliente="<?= esc($cliente['id_cliente']) ?>"
-                                                title="Marcar como No Aplica">
-                                            <i class="fas fa-ban me-1"></i>No Aplica
-                                        </button>
-                                    </div>
                                 <?php endif; ?>
                             </td>
                         </tr>
