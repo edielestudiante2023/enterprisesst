@@ -466,6 +466,7 @@
                             <th>Estado</th>
                             <th>Versión</th>
                             <th>Última Modificación</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -517,6 +518,23 @@
                                     <span class="text-muted">N/A</span>
                                 <?php endif; ?>
                             </td>
+                            <td>
+                                <?php if ($doc['estado_doc'] === 'no_aplica'): ?>
+                                    <button class="btn-toggle-exclusion active"
+                                            data-tipo="<?= esc($doc['tipo']) ?>"
+                                            data-cliente="<?= esc($cliente['id_cliente']) ?>"
+                                            title="Reactivar documento">
+                                        <i class="fas fa-undo me-1"></i>Reactivar
+                                    </button>
+                                <?php else: ?>
+                                    <button class="btn-toggle-exclusion"
+                                            data-tipo="<?= esc($doc['tipo']) ?>"
+                                            data-cliente="<?= esc($cliente['id_cliente']) ?>"
+                                            title="Marcar como No Aplica">
+                                        <i class="fas fa-ban me-1"></i>No Aplica
+                                    </button>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -550,7 +568,9 @@
             },
             order: [[0, 'asc']], // Ordenar por numeral
             pageLength: 25,
-            columnDefs: [],
+            columnDefs: [
+                { orderable: false, targets: [7] }
+            ],
             initComplete: function() {
                 console.log('DataTable inicializado con ' + this.api().data().length + ' registros');
             }
