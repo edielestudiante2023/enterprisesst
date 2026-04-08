@@ -547,9 +547,7 @@
             },
             order: [[0, 'asc']], // Ordenar por numeral
             pageLength: 25,
-            columnDefs: [
-                { orderable: false, targets: [7] } // Deshabilitar orden en columna de acciones
-            ],
+            columnDefs: [],
             initComplete: function() {
                 console.log('DataTable inicializado con ' + this.api().data().length + ' registros');
             }
