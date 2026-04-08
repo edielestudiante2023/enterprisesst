@@ -232,6 +232,7 @@
             transition: var(--transition);
             border-left: 4px solid transparent;
             cursor: pointer;
+            position: relative;
         }
 
         .access-card:hover {
@@ -270,6 +271,27 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        .client-badge {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.55rem;
+            opacity: 0.85;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .access-card:hover .client-badge {
+            opacity: 1;
         }
 
         /* Banner móvil */
@@ -499,6 +521,11 @@
                                     <div class="card-title"><?= esc($item['detalle']) ?></div>
                                     <div class="card-desc"><?= esc($item['descripcion']) ?></div>
                                 </div>
+                                <?php if ($needsClient): ?>
+                                    <span class="client-badge" title="Requiere seleccionar cliente">
+                                        <i class="fas fa-user-check"></i>
+                                    </span>
+                                <?php endif; ?>
                             </a>
                         <?php endforeach; ?>
                     </div>

@@ -524,18 +524,11 @@
                                         <i class="fas fa-undo me-1"></i>Reactivar
                                     </button>
                                 <?php elseif ($doc['existe']): ?>
-                                    <div class="btn-group-vertical gap-1" role="group">
-                                        <a href="<?= esc($doc['url_ver']) ?>"
-                                           class="btn btn-ver btn-sm"
-                                           target="_blank">
-                                            <i class="fas fa-eye me-1"></i>Ver Documento
-                                        </a>
-                                        <a href="<?= esc($doc['url_generar']) ?>"
-                                           class="btn btn-nueva-version btn-sm"
-                                           target="_blank">
-                                            <i class="fas fa-plus me-1"></i>Nueva Versión
-                                        </a>
-                                    </div>
+                                    <a href="<?= esc($doc['url_generar']) ?>"
+                                       class="btn btn-ver btn-sm"
+                                       target="_blank">
+                                        <i class="fas fa-external-link-alt me-1"></i>Ir al Módulo
+                                    </a>
                                 <?php else: ?>
                                     <div class="btn-group-vertical gap-1" role="group">
                                         <a href="<?= esc($doc['url_generar']) ?>"
