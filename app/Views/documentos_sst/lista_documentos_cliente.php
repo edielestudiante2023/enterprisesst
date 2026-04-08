@@ -39,8 +39,9 @@
         }
 
         .main-container {
-            max-width: 1400px;
-            margin: 0 auto;
+            max-width: 100%;
+            margin: 0;
+            padding: 0 15px;
         }
 
         .header-card {
