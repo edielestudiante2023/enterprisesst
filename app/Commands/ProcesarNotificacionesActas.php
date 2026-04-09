@@ -310,13 +310,31 @@ class ProcesarNotificacionesActas extends BaseCommand
 
         CLI::write("  En cola: " . count($pendientes) . " notificación(es)", 'light_gray');
 
+        // Cache de consultores por cliente para no repetir queries
+        $cacheConsultores = [];
+
         foreach ($pendientes as $notif) {
+            // Obtener CC del consultor para notificaciones de compromisos
+            $ccEmail = null;
+            if (in_array($notif['tipo'], ['tarea_vencida', 'tarea_por_vencer']) && !empty($notif['id_cliente'])) {
+                if (!array_key_exists($notif['id_cliente'], $cacheConsultores)) {
+                    $cliente = $this->clienteModel->find($notif['id_cliente']);
+                    $cacheConsultores[$notif['id_cliente']] = null;
+                    if (!empty($cliente['id_consultor'])) {
+                        $consultor = (new \App\Models\ConsultantModel())->find($cliente['id_consultor']);
+                        $cacheConsultores[$notif['id_cliente']] = $consultor['correo_consultor'] ?? null;
+                    }
+                }
+                $ccEmail = $cacheConsultores[$notif['id_cliente']];
+            }
+
             $resultado = $this->enviarEmail(
                 $notif['destinatario_email'],
                 $notif['destinatario_nombre'],
                 $notif['asunto'],
                 $notif['cuerpo'],
-                $notif['tipo']
+                $notif['tipo'],
+                $ccEmail
             );
 
             if ($resultado) {
@@ -380,7 +398,7 @@ class ProcesarNotificacionesActas extends BaseCommand
     /**
      * Enviar email usando SendGrid API
      */
-    protected function enviarEmail(string $email, string $nombre, string $asunto, string $cuerpo, string $tipo): bool
+    protected function enviarEmail(string $email, string $nombre, string $asunto, string $cuerpo, string $tipo, ?string $ccEmail = null): bool
     {
         if ($this->modoTest) {
             CLI::write("    [TEST] -> {$email}: {$asunto}", 'light_gray');
@@ -393,11 +411,16 @@ class ProcesarNotificacionesActas extends BaseCommand
         }
 
         try {
+            $personalization = [
+                'to' => [['email' => $email, 'name' => $nombre]],
+                'subject' => $asunto
+            ];
+            if (!empty($ccEmail) && $ccEmail !== $email) {
+                $personalization['cc'] = [['email' => $ccEmail]];
+            }
+
             $emailData = [
-                'personalizations' => [[
-                    'to' => [['email' => $email, 'name' => $nombre]],
-                    'subject' => $asunto
-                ]],
+                'personalizations' => [$personalization],
                 'from' => [
                     'email' => $this->sendgridFromEmail,
                     'name' => $this->sendgridFromName
