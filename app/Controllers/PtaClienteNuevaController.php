@@ -499,6 +499,7 @@ class PtaClienteNuevaController extends Controller
         $description = $this->request->getPost('description');
         $context = $this->request->getPost('context') ?? '';
         $idCliente = $this->request->getPost('id_cliente');
+        $modo = $this->request->getPost('modo') ?? 'constructor';
 
         if (empty($description)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Descripción requerida']);
@@ -538,12 +539,19 @@ class PtaClienteNuevaController extends Controller
                 }
             }
 
-            $systemPrompt = "Eres un consultor experto en Seguridad y Salud en el Trabajo (SST) bajo la normativa colombiana (Decreto 1072 de 2015, Resolución 0312 de 2019). "
-                . "Tu tarea es proponer actividades REALISTAS y ESPECÍFICAS para el Plan de Trabajo Anual del SG-SST de una empresa. "
-                . "Las actividades deben ser pertinentes al sector económico, nivel de riesgo y peligros reales de la empresa. "
-                . "La complejidad de las opciones debe corresponder a la complejidad de la descripción del usuario. "
-                . "Responde SOLO con un JSON array de exactamente 3 opciones. Cada opción: phva (PLANEAR, HACER, VERIFICAR o ACTUAR), numeral (del estándar mínimo Resolución 0312), actividad (descripción profesional concisa). "
-                . "Ejemplo: [{\"phva\":\"HACER\",\"numeral\":\"3.1.3\",\"actividad\":\"Realizar exámenes médicos ocupacionales periódicos con énfasis en audiometría para operarios expuestos a ruido\"}]";
+            if ($modo === 'experto') {
+                $systemPrompt = "Eres un consultor experto en Seguridad y Salud en el Trabajo (SST) bajo la normativa colombiana (Decreto 1072 de 2015, Resolución 0312 de 2019). "
+                    . "Tu tarea es proponer actividades REALISTAS y ESPECÍFICAS para el Plan de Trabajo Anual del SG-SST de una empresa. "
+                    . "Las actividades deben ser pertinentes al sector económico, nivel de riesgo y peligros reales de la empresa. "
+                    . "Responde SOLO con un JSON array de exactamente 3 opciones. Cada opción: phva (PLANEAR, HACER, VERIFICAR o ACTUAR), numeral (del estándar mínimo Resolución 0312), actividad (descripción profesional concisa). "
+                    . "Ejemplo: [{\"phva\":\"HACER\",\"numeral\":\"3.1.3\",\"actividad\":\"Realizar exámenes médicos ocupacionales periódicos con énfasis en audiometría para operarios expuestos a ruido\"}]";
+            } else {
+                $systemPrompt = "Eres un redactor profesional. El usuario describe una actividad para un Plan de Trabajo Anual de SST. "
+                    . "Tu tarea es ofrecer 3 variantes de redacción de esa misma actividad: mejorar claridad, enriquecer vocabulario o ajustar el tono profesional. "
+                    . "No cambies el alcance ni la complejidad de lo que el usuario describe. "
+                    . "Responde SOLO con un JSON array de exactamente 3 opciones. Cada opción: phva (PLANEAR, HACER, VERIFICAR o ACTUAR), numeral (del estándar mínimo Resolución 0312 que mejor corresponda), actividad (la redacción mejorada). "
+                    . "Ejemplo: [{\"phva\":\"HACER\",\"numeral\":\"2.4.1\",\"actividad\":\"Visita de inspección y observación a las instalaciones del cliente\"}]";
+            }
 
             $userMessage = "";
             if (!empty($infoEmpresa)) {

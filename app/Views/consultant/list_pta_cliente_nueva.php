@@ -2394,6 +2394,23 @@
                     <div id="iaStep2B" style="display:none;">
                         <button class="btn btn-sm btn-outline-secondary mb-3" id="iaBackToStep1B"><i class="fas fa-arrow-left"></i> Volver</button>
                         <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">Modo de generaci&oacute;n:</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="iaModo" id="iaModoConstructor" value="constructor" checked>
+                                    <label class="form-check-label" for="iaModoConstructor">
+                                        <i class="fas fa-pen-fancy text-primary"></i> Constructor de redacci&oacute;n
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="iaModo" id="iaModoExperto" value="experto">
+                                    <label class="form-check-label" for="iaModoExperto">
+                                        <i class="fas fa-hard-hat" style="color:#7c3aed;"></i> Experto SST
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Describa la actividad que necesita:</label>
                             <textarea class="form-control" id="iaDescripcion" rows="3" placeholder="Ej: necesito una actividad sobre pausas activas para trabajadores administrativos..."></textarea>
                         </div>
@@ -2636,7 +2653,7 @@
             $.ajax({
                 url: '<?= site_url('/pta-cliente-nueva/generateAiActivity') ?>',
                 method: 'POST',
-                data: { description: description, context: context, id_cliente: clienteId, [csrfName]: csrfHash },
+                data: { description: description, context: context, id_cliente: clienteId, modo: $('input[name="iaModo"]:checked').val(), [csrfName]: csrfHash },
                 dataType: 'json',
                 success: function(resp) {
                     $('#iaGenerating').hide();
