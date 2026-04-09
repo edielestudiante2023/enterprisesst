@@ -616,6 +616,7 @@ class PtaClienteNuevaController extends Controller
         $numeral = $this->request->getPost('numeral');
         $actividad = $this->request->getPost('actividad');
         $months = $this->request->getPost('months'); // array opcional de meses [1..12]
+        $fechaDirecta = $this->request->getPost('fecha'); // fecha específica YYYY-MM-DD
 
         if (empty($idCliente) || empty($actividad)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Cliente y actividad son requeridos']);
@@ -630,8 +631,10 @@ class PtaClienteNuevaController extends Controller
             $year = (int) date('Y');
             $inserted = 0;
 
-            // Si no hay meses seleccionados, insertar una sola fila con fecha de hoy
-            if (empty($months) || !is_array($months)) {
+            // Si hay fecha directa, usarla; si hay meses, usarlos; si no, fecha de hoy
+            if (!empty($fechaDirecta)) {
+                $months = [null];
+            } elseif (empty($months) || !is_array($months)) {
                 $months = [null];
             }
 
@@ -641,6 +644,8 @@ class PtaClienteNuevaController extends Controller
                     $dt = new \DateTime("{$year}-{$m}-01");
                     $dt->modify('last day of this month');
                     $fechaPropuesta = $dt->format('Y-m-d');
+                } elseif (!empty($fechaDirecta)) {
+                    $fechaPropuesta = $fechaDirecta;
                 } else {
                     $fechaPropuesta = date('Y-m-d');
                 }

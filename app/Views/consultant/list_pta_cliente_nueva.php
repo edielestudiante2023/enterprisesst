@@ -1457,8 +1457,9 @@
                     ],
                     "dom": '<"row"<"col-sm-12"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
                     "columnDefs": [
-                        { "visible": false, "targets": [2, 4, 15, 16, 17, 18] },
-                        { "orderable": false, "searchable": false, "targets": [0] },
+                        { "visible": false, "targets": [1, 2, 4, 15, 16, 17, 18] },
+                        { "orderable": false, "searchable": false, "width": "30px", "targets": [0] },
+                        { "orderable": false, "searchable": false, "width": "70px", "targets": [1] },
                         { "orderable": false, "targets": [14] }
                     ],
                     "buttons": [
@@ -2596,12 +2597,22 @@
                 cancelButtonText: 'Cancelar',
                 confirmButtonColor: '#7c3aed',
                 preConfirm: () => {
-                    var months = getSelectedMonths();
-                    if ($('#swalMonthToggle').is(':checked') && months.length === 0) {
-                        Swal.showValidationMessage('Seleccione al menos un mes');
-                        return false;
+                    var mode = $('input[name="swalDateMode"]:checked').val();
+                    if (mode === 'multi') {
+                        var months = getSelectedMonths();
+                        if (months.length === 0) {
+                            Swal.showValidationMessage('Seleccione al menos un mes');
+                            return false;
+                        }
+                        return { months: months, fecha: null };
+                    } else {
+                        var fecha = $('#swalFechaPropuesta').val();
+                        if (!fecha) {
+                            Swal.showValidationMessage('Seleccione una fecha');
+                            return false;
+                        }
+                        return { months: [], fecha: fecha };
                     }
-                    return { months: months };
                 }
             }).then((result) => {
                 if (!result.isConfirmed) return;
@@ -2611,6 +2622,7 @@
                     items.push({ phva: $(this).data('phva'), numeral: $(this).data('numeral'), actividad: $(this).data('actividad') });
                 });
                 var months = result.value.months;
+                var fecha = result.value.fecha;
                 var totalInserted = 0;
 
                 var idx = 0;
@@ -2622,7 +2634,7 @@
                         return;
                     }
                     var item = items[idx++];
-                    doInsertActivity(item.phva, item.numeral, item.actividad, months, function(resp) {
+                    doInsertActivity(item.phva, item.numeral, item.actividad, months, fecha, function(resp) {
                         totalInserted += (resp.inserted || 1);
                         insertNext();
                     });
@@ -2667,13 +2679,24 @@
             });
         }
 
-        // HTML del panel de meses reutilizable
+        // HTML del panel de fecha reutilizable
         var monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
         function buildMonthPanel() {
+            var today = new Date().toISOString().split('T')[0];
             var html = '<div class="mt-3 text-start">' +
-                '<div class="form-check mb-2">' +
-                '<input type="checkbox" class="form-check-input" id="swalMonthToggle">' +
-                '<label class="form-check-label fw-bold" for="swalMonthToggle">Programar en meses específicos</label>' +
+                '<label class="fw-bold mb-2"><i class="fas fa-calendar-alt"></i> Fecha propuesta:</label>' +
+                '<div class="mb-2">' +
+                '<div class="form-check form-check-inline">' +
+                '<input class="form-check-input" type="radio" name="swalDateMode" id="swalDateSingle" value="single" checked>' +
+                '<label class="form-check-label" for="swalDateSingle">Fecha específica</label>' +
+                '</div>' +
+                '<div class="form-check form-check-inline">' +
+                '<input class="form-check-input" type="radio" name="swalDateMode" id="swalDateMulti" value="multi">' +
+                '<label class="form-check-label" for="swalDateMulti">Múltiples meses</label>' +
+                '</div>' +
+                '</div>' +
+                '<div id="swalSingleDate">' +
+                '<input type="date" class="form-control form-control-sm" id="swalFechaPropuesta" value="' + today + '" style="max-width:200px;">' +
                 '</div>' +
                 '<div id="swalMonthGrid" style="display:none;">' +
                 '<small class="text-muted d-block mb-2">Se creará una fila por cada mes seleccionado (último día del mes)</small>' +
@@ -2686,25 +2709,30 @@
         }
 
         function getSelectedMonths() {
-            if (!$('#swalMonthToggle').is(':checked')) return [];
+            if ($('input[name="swalDateMode"]:checked').val() !== 'multi') return [];
             var months = [];
             $('.swal-month-btn.btn-primary').each(function() { months.push($(this).data('month')); });
             return months;
         }
 
-        // Delegado para toggle y click de meses dentro de SweetAlert
-        $(document).on('change', '#swalMonthToggle', function() {
-            $('#swalMonthGrid').toggle($(this).is(':checked'));
+        // Delegado para toggle modo fecha dentro de SweetAlert
+        $(document).on('change', 'input[name="swalDateMode"]', function() {
+            var isMulti = $(this).val() === 'multi';
+            $('#swalSingleDate').toggle(!isMulti);
+            $('#swalMonthGrid').toggle(isMulti);
         });
         $(document).on('click', '.swal-month-btn', function() {
             $(this).toggleClass('btn-outline-secondary btn-primary text-white');
         });
 
-        // Función para insertar actividad(es) con meses opcionales
-        function doInsertActivity(phva, numeral, actividad, months, callback) {
+        // Función para insertar actividad(es) con fecha o meses
+        function doInsertActivity(phva, numeral, actividad, months, fecha, callback) {
+            if (typeof fecha === 'function') { callback = fecha; fecha = null; }
             var sendData = { id_cliente: clienteId, phva: phva, numeral: numeral, actividad: actividad, [csrfName]: csrfHash };
             if (months && months.length > 0) {
                 sendData.months = months;
+            } else if (fecha) {
+                sendData.fecha = fecha;
             }
             $.ajax({
                 url: '<?= site_url('/pta-cliente-nueva/insertAiActivity') ?>',
@@ -2743,16 +2771,26 @@
                 cancelButtonText: 'Cancelar',
                 confirmButtonColor: '#7c3aed',
                 preConfirm: () => {
-                    var months = getSelectedMonths();
-                    if ($('#swalMonthToggle').is(':checked') && months.length === 0) {
-                        Swal.showValidationMessage('Seleccione al menos un mes');
-                        return false;
+                    var mode = $('input[name="swalDateMode"]:checked').val();
+                    if (mode === 'multi') {
+                        var months = getSelectedMonths();
+                        if (months.length === 0) {
+                            Swal.showValidationMessage('Seleccione al menos un mes');
+                            return false;
+                        }
+                        return { months: months, fecha: null };
+                    } else {
+                        var fecha = $('#swalFechaPropuesta').val();
+                        if (!fecha) {
+                            Swal.showValidationMessage('Seleccione una fecha');
+                            return false;
+                        }
+                        return { months: [], fecha: fecha };
                     }
-                    return { months: months };
                 }
             }).then((result) => {
                 if (!result.isConfirmed) return;
-                doInsertActivity(phva, numeral, actividad, result.value.months);
+                doInsertActivity(phva, numeral, actividad, result.value.months, result.value.fecha);
             });
         });
 
