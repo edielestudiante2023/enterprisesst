@@ -577,29 +577,19 @@ class MetricasInformeService
      */
     public function getDocumentosSstPeriodo(int $idCliente, string $desde, string $hasta): array
     {
-        // Docs creados en el periodo
-        $porTipo = $this->db->table('tbl_documentos_sst')
-            ->select("tipo_documento, COUNT(*) as cantidad")
+        // Docs creados en el periodo con fecha
+        $documentos = $this->db->table('tbl_documentos_sst')
+            ->select("tipo_documento, created_at")
             ->where('id_cliente', $idCliente)
             ->where('created_at >=', $desde . ' 00:00:00')
             ->where('created_at <=', $hasta . ' 23:59:59')
-            ->groupBy('tipo_documento')
+            ->orderBy('created_at', 'ASC')
             ->get()
             ->getResultArray();
 
-        $totalCreados = array_sum(array_column($porTipo, 'cantidad'));
-
-        // Docs aprobados en el periodo
-        $aprobados = $this->db->table('tbl_documentos_sst')
-            ->where('id_cliente', $idCliente)
-            ->where('estado', 'aprobado')
-            ->where('updated_at >=', $desde . ' 00:00:00')
-            ->where('updated_at <=', $hasta . ' 23:59:59')
-            ->countAllResults();
-
         return [
-            'total_creados'     => $totalCreados,
-            'por_tipo'          => $porTipo,
+            'total_creados'     => count($documentos),
+            'documentos'        => $documentos,
             'aprobados_periodo' => $aprobados,
         ];
     }

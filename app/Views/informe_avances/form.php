@@ -331,10 +331,6 @@
             <div id="secDocsSst" class="card card-section d-none">
                 <div class="card-header py-3"><i class="fas fa-file-alt me-2"></i>Documentos SST Creados</div>
                 <div class="card-body">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4"><div class="metric-box"><div class="value" id="docsTotal">0</div><div class="label">Creados en periodo</div></div></div>
-                        <div class="col-md-4"><div class="metric-box"><div class="value text-success" id="docsAprobados">0</div><div class="label">Aprobados</div></div></div>
-                    </div>
                     <div id="docsTabla"></div>
                 </div>
             </div>
@@ -1005,12 +1001,10 @@
             var ds = d.documentos_sst || {};
             if ((ds.total_creados || 0) > 0) {
                 $('#secDocsSst').removeClass('d-none');
-                $('#docsTotal').text(ds.total_creados);
-                $('#docsAprobados').text(ds.aprobados_periodo || 0);
-                var pt = ds.por_tipo || [];
-                if (pt.length > 0) {
-                    var h = '<table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Tipo</th><th>Cantidad</th></tr></thead><tbody>';
-                    pt.forEach(function(t) { h += '<tr><td>' + esc((t.tipo_documento || '').replace(/_/g, ' ')) + '</td><td class="text-center">' + t.cantidad + '</td></tr>'; });
+                var docs = ds.documentos || [];
+                if (docs.length > 0) {
+                    var h = '<table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Tipo</th><th>Fecha</th></tr></thead><tbody>';
+                    docs.forEach(function(doc) { h += '<tr><td>' + esc((doc.tipo_documento || '').replace(/_/g, ' ')) + '</td><td class="text-center">' + (doc.created_at || '').substring(0, 10) + '</td></tr>'; });
                     h += '</tbody></table>';
                     $('#docsTabla').html(h);
                 }

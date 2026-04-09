@@ -463,17 +463,16 @@
 <?php if (!empty($dsData) && ($dsData['total_creados'] ?? 0) > 0): ?>
 <div class="section-title">DOCUMENTOS SST CREADOS</div>
 <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
-    <tr>
-        <td style="border:1px solid #ddd; padding:8px; width:50%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= $dsData['total_creados'] ?></div><div style="font-size:7px;color:#666;">Creados en periodo</div></td>
-        <td style="border:1px solid #ddd; padding:8px; width:50%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#198754;"><?= $dsData['aprobados_periodo'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Aprobados</div></td>
+    <tr style="background:#f8f9fa;">
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold;">Tipo</td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold; text-align:center;">Fecha</td>
     </tr>
-    <?php if (!empty($dsData['por_tipo'])): ?>
-    <tr><td colspan="2" style="border:1px solid #ddd; padding:6px;">
-        <?php foreach ($dsData['por_tipo'] as $t): ?>
-            <span style="font-size:7px;display:inline-block;margin-right:8px;"><strong><?= $t['cantidad'] ?></strong> <?= esc(str_replace('_',' ',$t['tipo_documento'] ?? '')) ?></span>
-        <?php endforeach; ?>
-    </td></tr>
-    <?php endif; ?>
+    <?php foreach (($dsData['documentos'] ?? []) as $doc): ?>
+    <tr>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px;"><?= esc(str_replace('_', ' ', $doc['tipo_documento'] ?? '')) ?></td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; text-align:center;"><?= substr($doc['created_at'] ?? '', 0, 10) ?></td>
+    </tr>
+    <?php endforeach; ?>
 </table>
 <?php endif; ?>
 

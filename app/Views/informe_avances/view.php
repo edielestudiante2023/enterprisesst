@@ -162,16 +162,12 @@
         <div class="card card-section">
             <div class="card-header py-3"><i class="fas fa-file-alt me-2"></i>Documentos SST Creados</div>
             <div class="card-body">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4"><div class="metric-box"><div class="value"><?= $dsData['total_creados'] ?></div><div class="label">Creados en periodo</div></div></div>
-                    <div class="col-md-4"><div class="metric-box"><div class="value text-success"><?= $dsData['aprobados_periodo'] ?? 0 ?></div><div class="label">Aprobados</div></div></div>
-                </div>
-                <?php if (!empty($dsData['por_tipo'])): ?>
+                <?php if (!empty($dsData['documentos'])): ?>
                 <table class="table table-sm table-bordered">
-                    <thead class="table-light"><tr><th>Tipo</th><th class="text-center">Cantidad</th></tr></thead>
+                    <thead class="table-light"><tr><th>Tipo</th><th class="text-center">Fecha</th></tr></thead>
                     <tbody>
-                    <?php foreach ($dsData['por_tipo'] as $t): ?>
-                        <tr><td><?= esc(str_replace('_', ' ', $t['tipo_documento'] ?? '')) ?></td><td class="text-center"><?= $t['cantidad'] ?></td></tr>
+                    <?php foreach ($dsData['documentos'] as $doc): ?>
+                        <tr><td><?= esc(str_replace('_', ' ', $doc['tipo_documento'] ?? '')) ?></td><td class="text-center"><?= substr($doc['created_at'] ?? '', 0, 10) ?></td></tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
