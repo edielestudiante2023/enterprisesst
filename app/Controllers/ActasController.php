@@ -882,23 +882,49 @@ class ActasController extends BaseController
 
         $this->actaModel->update($idActa, $data);
 
-        // Procesar compromisos nuevos
+        // Actualizar compromisos existentes
+        $compromisosIds = $this->request->getPost('compromiso_id') ?? [];
         $compromisosDesc = $this->request->getPost('compromiso_descripcion') ?? [];
         $compromisosResp = $this->request->getPost('compromiso_responsable') ?? [];
-        $compromisosEmail = $this->request->getPost('compromiso_email') ?? [];
-        $compromisosVence = $this->request->getPost('compromiso_vencimiento') ?? [];
+        $compromisosEstado = $this->request->getPost('compromiso_estado') ?? [];
+        $compromisosFecha = $this->request->getPost('compromiso_fecha') ?? [];
 
-        foreach ($compromisosDesc as $i => $desc) {
-            if (!empty($desc) && !empty($compromisosResp[$i])) {
+        foreach ($compromisosIds as $i => $idCompromiso) {
+            if (!empty($idCompromiso)) {
+                $updateData = [
+                    'descripcion' => $compromisosDesc[$i] ?? '',
+                    'estado' => $compromisosEstado[$i] ?? 'pendiente',
+                    'fecha_vencimiento' => $compromisosFecha[$i] ?? null,
+                ];
+                // Resolver responsable: la vista envía id_asistente
+                if (!empty($compromisosResp[$i])) {
+                    $asistente = $this->asistentesModel->find($compromisosResp[$i]);
+                    if ($asistente) {
+                        $updateData['responsable_nombre'] = $asistente['nombre_completo'];
+                        $updateData['responsable_email'] = $asistente['email'];
+                    }
+                }
+                $this->compromisosModel->update($idCompromiso, $updateData);
+            }
+        }
+
+        // Procesar compromisos nuevos
+        $nuevosDesc = $this->request->getPost('nuevo_compromiso_descripcion') ?? [];
+        $nuevosResp = $this->request->getPost('nuevo_compromiso_responsable') ?? [];
+        $nuevosFecha = $this->request->getPost('nuevo_compromiso_fecha') ?? [];
+
+        foreach ($nuevosDesc as $i => $desc) {
+            if (!empty($desc) && !empty($nuevosResp[$i])) {
+                $asistente = $this->asistentesModel->find($nuevosResp[$i]);
                 $this->compromisosModel->crearCompromiso([
                     'id_acta' => $idActa,
                     'id_comite' => $acta['id_comite'],
                     'id_cliente' => $acta['id_cliente'],
                     'descripcion' => $desc,
-                    'responsable_nombre' => $compromisosResp[$i],
-                    'responsable_email' => $compromisosEmail[$i] ?? null,
+                    'responsable_nombre' => $asistente['nombre_completo'] ?? '',
+                    'responsable_email' => $asistente['email'] ?? null,
                     'fecha_compromiso' => $acta['fecha_reunion'],
-                    'fecha_vencimiento' => $compromisosVence[$i] ?? date('Y-m-d', strtotime('+30 days'))
+                    'fecha_vencimiento' => $nuevosFecha[$i] ?? date('Y-m-d', strtotime('+30 days'))
                 ]);
             }
         }
