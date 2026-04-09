@@ -36,7 +36,7 @@ class MetricasInformeService
 
     /**
      * Obtiene puntaje del informe anterior del mismo cliente EN EL MISMO AÑO.
-     * Si es primer informe del ciclo, retorna 39.75 (línea base Res. 0312/2019).
+     * Si es primer informe del ciclo, retorna 0 (arranca desde cero).
      */
     public function getPuntajeAnterior(int $idCliente, int $anio): float
     {
@@ -47,7 +47,7 @@ class MetricasInformeService
             ->orderBy('fecha_hasta', 'DESC')
             ->first();
 
-        return $ultimo ? floatval($ultimo['puntaje_actual']) : 39.75;
+        return $ultimo ? floatval($ultimo['puntaje_actual']) : 0;
     }
 
     /**
