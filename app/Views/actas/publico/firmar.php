@@ -145,11 +145,15 @@
                     <?php endif; ?>
 
                     <!-- Desarrollo -->
-                    <?php if (!empty($acta['desarrollo'])): ?>
+                    <?php
+                        $desarrollo = $acta['desarrollo'] ?? '';
+                        if (is_string($desarrollo)) { $desarrollo = json_decode($desarrollo, true); }
+                    ?>
+                    <?php if (!empty($desarrollo)): ?>
                     <div class="seccion-acta">
                         <h6>Desarrollo de la Reunion</h6>
-                        <?php foreach ($acta['desarrollo'] as $punto): ?>
-                            <p class="mb-1"><strong>Punto <?= $punto['punto'] ?>:</strong> <?= esc(substr($punto['descripcion'], 0, 200)) ?>...</p>
+                        <?php foreach ($desarrollo as $numPunto => $descripcion): ?>
+                            <p class="mb-1"><strong>Punto <?= $numPunto ?>:</strong> <?= esc(substr($descripcion, 0, 200)) ?>...</p>
                         <?php endforeach; ?>
                     </div>
                     <?php endif; ?>
