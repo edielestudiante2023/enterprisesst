@@ -584,10 +584,14 @@ class ComitesEleccionesController extends BaseController
 
         $cliente = $this->clienteModel->find($proceso['id_cliente']);
 
-        // Validar que el proceso esté en estado de inscripción, votación (o designación para empleador)
+        // Validar que el proceso esté en estado que permita inscribir candidatos
         $estadosPermitidos = ['inscripcion', 'configuracion', 'votacion'];
         if ($representacion === 'empleador') {
             $estadosPermitidos[] = 'designacion_empleador';
+        }
+        // BRIGADA y VIGIA no tienen votación: permitir agregar en fase firmas
+        if (in_array($proceso['tipo_comite'], ['BRIGADA', 'VIGIA'])) {
+            $estadosPermitidos[] = 'firmas';
         }
 
         if (!in_array($proceso['estado'], $estadosPermitidos)) {
