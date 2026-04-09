@@ -85,6 +85,10 @@
                             <select id="selectMes" class="form-select">
                                 <option value="">Manual...</option>
                                 <option value="prev">Mes anterior</option>
+                                <option value="bimestre">Bimestre anterior</option>
+                                <option value="trimestre">Trimestre anterior</option>
+                                <option value="cuatrimestre">Cuatrimestre anterior</option>
+                                <option value="semestre">Semestre anterior</option>
                                 <option value="01">Enero</option>
                                 <option value="02">Febrero</option>
                                 <option value="03">Marzo</option>
@@ -670,20 +674,49 @@
             var val = $(this).val();
             if (!val) return;
             var anio = parseInt($('#selectAnio').val()) || new Date().getFullYear();
-            var mes, lastDay;
+            var today = new Date();
+            var desde, hasta;
+
+            function pad(n) { return n < 10 ? '0' + n : '' + n; }
+            function lastDayOf(y, m) { return new Date(y, m, 0).getDate(); }
+            function fmtDate(y, m, d) { return y + '-' + pad(m) + '-' + pad(d); }
+
             if (val === 'prev') {
-                var today = new Date();
-                var prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                mes = prevMonth.getMonth() + 1;
-                anio = prevMonth.getFullYear();
-                lastDay = new Date(anio, mes, 0).getDate();
+                var pm = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                var m = pm.getMonth() + 1, y = pm.getFullYear();
+                desde = fmtDate(y, m, 1);
+                hasta = fmtDate(y, m, lastDayOf(y, m));
+            } else if (val === 'bimestre') {
+                var end = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                var start = new Date(end.getFullYear(), end.getMonth() - 1, 1);
+                desde = fmtDate(start.getFullYear(), start.getMonth() + 1, 1);
+                var em = end.getMonth() + 1, ey = end.getFullYear();
+                hasta = fmtDate(ey, em, lastDayOf(ey, em));
+            } else if (val === 'trimestre') {
+                var end = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                var start = new Date(end.getFullYear(), end.getMonth() - 2, 1);
+                desde = fmtDate(start.getFullYear(), start.getMonth() + 1, 1);
+                var em = end.getMonth() + 1, ey = end.getFullYear();
+                hasta = fmtDate(ey, em, lastDayOf(ey, em));
+            } else if (val === 'cuatrimestre') {
+                var end = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                var start = new Date(end.getFullYear(), end.getMonth() - 3, 1);
+                desde = fmtDate(start.getFullYear(), start.getMonth() + 1, 1);
+                var em = end.getMonth() + 1, ey = end.getFullYear();
+                hasta = fmtDate(ey, em, lastDayOf(ey, em));
+            } else if (val === 'semestre') {
+                var end = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                var start = new Date(end.getFullYear(), end.getMonth() - 5, 1);
+                desde = fmtDate(start.getFullYear(), start.getMonth() + 1, 1);
+                var em = end.getMonth() + 1, ey = end.getFullYear();
+                hasta = fmtDate(ey, em, lastDayOf(ey, em));
             } else {
-                mes = parseInt(val);
-                lastDay = new Date(anio, mes, 0).getDate();
+                var mes = parseInt(val);
+                desde = fmtDate(anio, mes, 1);
+                hasta = fmtDate(anio, mes, lastDayOf(anio, mes));
             }
-            var mm = mes < 10 ? '0' + mes : '' + mes;
-            $('#fechaDesde').val(anio + '-' + mm + '-01');
-            $('#fechaHasta').val(anio + '-' + mm + '-' + (lastDay < 10 ? '0' + lastDay : lastDay));
+            $('#fechaDesde').val(desde);
+            $('#fechaHasta').val(hasta);
         });
 
         if (EDIT_MODE && PRESELECT_CLIENTE) {
