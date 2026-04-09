@@ -131,7 +131,7 @@
                                 $estadoComp = $comp['estado'] ?? 'pendiente';
                                 ?>
                                 <?= date('d/m/Y', $fechaVenc) ?>
-                                <?php if ($estadoComp !== 'cumplido' && $estadoComp !== 'completado'): ?>
+                                <?php if (!in_array($estadoComp, ['cumplido', 'cancelado'])): ?>
                                     <?php if ($diasRestantes < 0): ?>
                                         <br><small class="text-danger"><i class="bi bi-exclamation-circle"></i> Vencido hace <?= abs($diasRestantes) ?> dias</small>
                                     <?php elseif ($diasRestantes <= 7): ?>
@@ -144,10 +144,9 @@
                                 $estadoBadge = [
                                     'pendiente' => 'bg-secondary',
                                     'en_proceso' => 'bg-info',
-                                    'en_progreso' => 'bg-info',
-                                    'completado' => 'bg-success',
                                     'cumplido' => 'bg-success',
-                                    'vencido' => 'bg-danger'
+                                    'vencido' => 'bg-danger',
+                                    'cancelado' => 'bg-dark'
                                 ];
                                 ?>
                                 <span class="badge <?= $estadoBadge[$estadoComp] ?? 'bg-secondary' ?>">

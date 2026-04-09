@@ -74,9 +74,10 @@
                                 <?php
                                 $estadoBadges = [
                                     'pendiente' => '<span class="badge bg-secondary">Pendiente</span>',
-                                    'en_progreso' => '<span class="badge bg-info">En progreso</span>',
-                                    'completado' => '<span class="badge bg-success">Completado</span>',
-                                    'vencido' => '<span class="badge bg-danger">Vencido</span>'
+                                    'en_proceso' => '<span class="badge bg-info">En progreso</span>',
+                                    'cumplido' => '<span class="badge bg-success">Completado</span>',
+                                    'vencido' => '<span class="badge bg-danger">Vencido</span>',
+                                    'cancelado' => '<span class="badge bg-dark">Cancelado</span>'
                                 ];
                                 echo $estadoBadges[$compromiso['estado']] ?? '<span class="badge bg-secondary">-</span>';
                                 ?>
@@ -89,7 +90,7 @@
                     </div>
                 </div>
 
-                <?php if ($compromiso['estado'] === 'completado'): ?>
+                <?php if ($compromiso['estado'] === 'cumplido'): ?>
                 <div class="alert alert-success mt-4 mb-0">
                     <i class="bi bi-trophy me-2"></i>
                     <strong>Excelente trabajo!</strong><br>

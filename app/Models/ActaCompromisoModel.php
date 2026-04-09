@@ -30,6 +30,7 @@ class ActaCompromisoModel extends Model
         'evidencia_archivo',
         'cerrado_por',
         'cerrado_at',
+        'observaciones',
         'token_actualizacion',
         'ultima_notificacion_at',
         'total_notificaciones'

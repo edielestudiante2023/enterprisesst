@@ -200,9 +200,10 @@
                                         <?php
                                         $estadoBadges = [
                                             'pendiente' => 'bg-secondary',
-                                            'en_progreso' => 'bg-info',
-                                            'completado' => 'bg-success',
-                                            'vencido' => 'bg-danger'
+                                            'en_proceso' => 'bg-info',
+                                            'cumplido' => 'bg-success',
+                                            'vencido' => 'bg-danger',
+                                            'cancelado' => 'bg-dark'
                                         ];
                                         ?>
                                         <span class="badge <?= $estadoBadges[$comp['estado']] ?? 'bg-secondary' ?>">

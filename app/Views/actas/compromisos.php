@@ -31,9 +31,10 @@
                     <select class="form-select" name="estado">
                         <option value="">Todos</option>
                         <option value="pendiente" <?= ($filtros['estado'] ?? '') === 'pendiente' ? 'selected' : '' ?>>Pendiente</option>
-                        <option value="en_progreso" <?= ($filtros['estado'] ?? '') === 'en_progreso' ? 'selected' : '' ?>>En progreso</option>
-                        <option value="completado" <?= ($filtros['estado'] ?? '') === 'completado' ? 'selected' : '' ?>>Completado</option>
+                        <option value="en_proceso" <?= ($filtros['estado'] ?? '') === 'en_proceso' ? 'selected' : '' ?>>En progreso</option>
+                        <option value="cumplido" <?= ($filtros['estado'] ?? '') === 'cumplido' ? 'selected' : '' ?>>Completado</option>
                         <option value="vencido" <?= ($filtros['estado'] ?? '') === 'vencido' ? 'selected' : '' ?>>Vencido</option>
+                        <option value="cancelado" <?= ($filtros['estado'] ?? '') === 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -171,7 +172,7 @@
                                 $diasRestantes = floor(($fechaVenc - $hoy) / 86400);
                                 ?>
                                 <?= date('d/m/Y', $fechaVenc) ?>
-                                <?php if ($comp['estado'] !== 'cumplido' && $comp['estado'] !== 'completado'): ?>
+                                <?php if (!in_array($comp['estado'], ['cumplido', 'cancelado'])): ?>
                                     <?php if ($diasRestantes < 0): ?>
                                         <br><small class="text-danger"><i class="bi bi-exclamation-circle"></i> Vencido hace <?= abs($diasRestantes) ?> dias</small>
                                     <?php elseif ($diasRestantes <= 7): ?>
@@ -183,9 +184,10 @@
                                 <?php
                                 $estadoBadge = [
                                     'pendiente' => 'bg-secondary',
-                                    'en_progreso' => 'bg-info',
-                                    'completado' => 'bg-success',
-                                    'vencido' => 'bg-danger'
+                                    'en_proceso' => 'bg-info',
+                                    'cumplido' => 'bg-success',
+                                    'vencido' => 'bg-danger',
+                                    'cancelado' => 'bg-dark'
                                 ];
                                 ?>
                                 <span class="badge <?= $estadoBadge[$comp['estado']] ?? 'bg-secondary' ?>">
@@ -197,7 +199,7 @@
                                         onclick="editarCompromiso(<?= htmlspecialchars(json_encode($comp)) ?>)">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <?php if ($comp['estado'] !== 'completado'): ?>
+                                <?php if (!in_array($comp['estado'], ['cumplido', 'cancelado'])): ?>
                                 <form action="<?= base_url('actas/compromiso/' . $comp['id_compromiso'] . '/completar') ?>" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-outline-success btn-sm" title="Marcar como completado">
                                         <i class="bi bi-check-lg"></i>
@@ -247,9 +249,10 @@
                             <label class="form-label">Estado</label>
                             <select class="form-select" name="estado" id="comp_estado">
                                 <option value="pendiente">Pendiente</option>
-                                <option value="en_progreso">En progreso</option>
-                                <option value="completado">Completado</option>
+                                <option value="en_proceso">En progreso</option>
+                                <option value="cumplido">Completado</option>
                                 <option value="vencido">Vencido</option>
+                                <option value="cancelado">Cancelado</option>
                             </select>
                         </div>
                     </div>

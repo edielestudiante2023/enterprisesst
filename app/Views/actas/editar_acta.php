@@ -185,7 +185,7 @@
                                                 <select class="form-select" name="compromiso_responsable[]">
                                                     <option value="">Seleccione...</option>
                                                     <?php foreach ($asistentes as $asist): ?>
-                                                    <option value="<?= $asist['id_asistente'] ?>" <?= $comp['id_responsable'] == $asist['id_asistente'] ? 'selected' : '' ?>>
+                                                    <option value="<?= $asist['id_asistente'] ?>" <?= ($comp['responsable_nombre'] ?? '') == $asist['nombre_completo'] ? 'selected' : '' ?>>
                                                         <?= esc($asist['nombre_completo']) ?>
                                                     </option>
                                                     <?php endforeach; ?>
@@ -199,9 +199,10 @@
                                                 <label class="form-label">Estado</label>
                                                 <select class="form-select" name="compromiso_estado[]">
                                                     <option value="pendiente" <?= $comp['estado'] === 'pendiente' ? 'selected' : '' ?>>Pendiente</option>
-                                                    <option value="en_progreso" <?= $comp['estado'] === 'en_progreso' ? 'selected' : '' ?>>En progreso</option>
-                                                    <option value="completado" <?= $comp['estado'] === 'completado' ? 'selected' : '' ?>>Completado</option>
+                                                    <option value="en_proceso" <?= $comp['estado'] === 'en_proceso' ? 'selected' : '' ?>>En progreso</option>
+                                                    <option value="cumplido" <?= $comp['estado'] === 'cumplido' ? 'selected' : '' ?>>Completado</option>
                                                     <option value="vencido" <?= $comp['estado'] === 'vencido' ? 'selected' : '' ?>>Vencido</option>
+                                                    <option value="cancelado" <?= $comp['estado'] === 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
                                                 </select>
                                             </div>
                                             <div class="col-md-4 mb-2 d-flex align-items-end">

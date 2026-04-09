@@ -288,7 +288,7 @@ class MiembroAuthController extends BaseController
         $stats = [
             'pendientes' => count(array_filter($compromisos, fn($c) => $c['estado'] === 'pendiente')),
             'en_progreso' => count(array_filter($compromisos, fn($c) => $c['estado'] === 'en_proceso')),
-            'completados' => count(array_filter($compromisos, fn($c) => $c['estado'] === 'cumplido' || $c['estado'] === 'completado')),
+            'completados' => count(array_filter($compromisos, fn($c) => $c['estado'] === 'cumplido')),
             'vencidos' => count(array_filter($compromisos, fn($c) => $c['estado'] === 'vencido'))
         ];
 

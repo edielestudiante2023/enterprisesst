@@ -230,9 +230,10 @@
                                         <?php
                                         $estadoComp = [
                                             'pendiente' => '<span class="badge bg-secondary">Pendiente</span>',
-                                            'en_progreso' => '<span class="badge bg-info">En progreso</span>',
-                                            'completado' => '<span class="badge bg-success">Completado</span>',
-                                            'vencido' => '<span class="badge bg-danger">Vencido</span>'
+                                            'en_proceso' => '<span class="badge bg-info">En progreso</span>',
+                                            'cumplido' => '<span class="badge bg-success">Completado</span>',
+                                            'vencido' => '<span class="badge bg-danger">Vencido</span>',
+                                            'cancelado' => '<span class="badge bg-dark">Cancelado</span>'
                                         ];
                                         echo $estadoComp[$comp['estado']] ?? '<span class="badge bg-secondary">-</span>';
                                         ?>

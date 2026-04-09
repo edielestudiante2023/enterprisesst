@@ -83,9 +83,10 @@
                     <?php
                     $estadoBadges = [
                         'pendiente' => 'bg-secondary',
-                        'en_progreso' => 'bg-info',
-                        'completado' => 'bg-success',
-                        'vencido' => 'bg-danger'
+                        'en_proceso' => 'bg-info',
+                        'cumplido' => 'bg-success',
+                        'vencido' => 'bg-danger',
+                        'cancelado' => 'bg-dark'
                     ];
                     ?>
                     <span class="badge <?= $estadoBadges[$compromiso['estado']] ?? 'bg-secondary' ?> status-badge">
@@ -93,7 +94,7 @@
                     </span>
                 </div>
 
-                <?php if ($compromiso['estado'] !== 'completado'): ?>
+                <?php if (!in_array($compromiso['estado'], ['cumplido', 'cancelado'])): ?>
                 <!-- Formulario de actualización -->
                 <form action="<?= base_url('actas/publico/tarea/' . $token . '/guardar') ?>" method="post">
                     <div class="mb-4">

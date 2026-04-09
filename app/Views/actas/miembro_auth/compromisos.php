@@ -37,10 +37,10 @@
                 case 'pendiente':
                     $pendientes++;
                     break;
-                case 'en_progreso':
+                case 'en_proceso':
                     $enProgreso++;
                     break;
-                case 'completado':
+                case 'cumplido':
                     $completados++;
                     break;
                 case 'vencido':
@@ -126,20 +126,20 @@
                                     $diasRestantes = floor(($fechaLimite - $hoy) / (60 * 60 * 24));
                                     $claseTexto = '';
 
-                                    if ($diasRestantes < 0 && $comp['estado'] !== 'completado') {
+                                    if ($diasRestantes < 0 && !in_array($comp['estado'], ['cumplido', 'cancelado'])) {
                                         $claseTexto = 'text-danger fw-bold';
-                                    } elseif ($diasRestantes <= 3 && $comp['estado'] !== 'completado') {
+                                    } elseif ($diasRestantes <= 3 && !in_array($comp['estado'], ['cumplido', 'cancelado'])) {
                                         $claseTexto = 'text-warning';
                                     }
                                     ?>
                                     <span class="<?= $claseTexto ?>">
                                         <?= date('d/m/Y', $fechaLimite) ?>
                                     </span>
-                                    <?php if ($diasRestantes < 0 && $comp['estado'] !== 'completado'): ?>
+                                    <?php if ($diasRestantes < 0 && !in_array($comp['estado'], ['cumplido', 'cancelado'])): ?>
                                         <br><small class="text-danger">Vencido hace <?= abs($diasRestantes) ?> dias</small>
-                                    <?php elseif ($diasRestantes == 0 && $comp['estado'] !== 'completado'): ?>
+                                    <?php elseif ($diasRestantes == 0 && !in_array($comp['estado'], ['cumplido', 'cancelado'])): ?>
                                         <br><small class="text-warning">Vence hoy</small>
-                                    <?php elseif ($diasRestantes > 0 && $diasRestantes <= 3 && $comp['estado'] !== 'completado'): ?>
+                                    <?php elseif ($diasRestantes > 0 && $diasRestantes <= 3 && !in_array($comp['estado'], ['cumplido', 'cancelado'])): ?>
                                         <br><small class="text-warning">Faltan <?= $diasRestantes ?> dias</small>
                                     <?php endif; ?>
                                 <?php else: ?>
@@ -150,9 +150,10 @@
                                 <?php
                                 $estadoBadges = [
                                     'pendiente' => 'bg-secondary',
-                                    'en_progreso' => 'bg-info',
-                                    'completado' => 'bg-success',
-                                    'vencido' => 'bg-danger'
+                                    'en_proceso' => 'bg-info',
+                                    'cumplido' => 'bg-success',
+                                    'vencido' => 'bg-danger',
+                                    'cancelado' => 'bg-dark'
                                 ];
                                 ?>
                                 <span class="badge <?= $estadoBadges[$comp['estado']] ?? 'bg-secondary' ?>">
