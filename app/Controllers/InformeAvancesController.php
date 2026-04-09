@@ -847,11 +847,11 @@ class InformeAvancesController extends BaseController
         $docsSstTexto = '';
         if (!empty($docsSst) && ($docsSst['total_creados'] ?? 0) > 0) {
             $docsSstTexto = "DOCUMENTOS SST CREADOS EN EL PERIODO ({$docsSst['total_creados']} documentos):\n";
-            foreach (($docsSst['por_tipo'] ?? []) as $dt) {
-                $tipo = str_replace('_', ' ', $dt['tipo_documento'] ?? '');
-                $docsSstTexto .= "- {$dt['cantidad']} {$tipo}\n";
+            foreach (($docsSst['documentos'] ?? []) as $doc) {
+                $tipo = str_replace('_', ' ', $doc['tipo_documento'] ?? '');
+                $fecha = substr($doc['created_at'] ?? '', 0, 10);
+                $docsSstTexto .= "- [{$fecha}] {$tipo}\n";
             }
-            $docsSstTexto .= "- Aprobados en el periodo: {$docsSst['aprobados_periodo']}\n";
         } else {
             $docsSstTexto = "DOCUMENTOS SST CREADOS EN EL PERIODO: Ninguno.";
         }
