@@ -378,7 +378,7 @@
                     </button>
                     <?php endif; ?>
 
-                    <?php if ($acta['estado'] === 'firmada' && $puedesCerrar): ?>
+                    <?php if ($acta['estado'] === 'firmada'): ?>
                     <button type="button" class="btn btn-warning" onclick="cerrarActa()">
                         <i class="bi bi-lock me-2"></i>Cerrar Acta
                     </button>
