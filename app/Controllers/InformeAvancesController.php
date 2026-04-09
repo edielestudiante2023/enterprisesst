@@ -299,6 +299,7 @@ class InformeAvancesController extends BaseController
     // ─── AJAX: Snapshot (liquidar) un cliente individual ───
     public function liquidarSnapshot($idCliente)
     {
+        log_message('info', '[liquidarSnapshot] INICIO - idCliente: ' . $idCliente);
         $id = (int) $idCliente;
         $db = \Config\Database::connect();
         $now = date('Y-m-d H:i:s');

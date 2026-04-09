@@ -673,8 +673,12 @@
                         $('#liquidarStatus').html('<span class="text-danger"><i class="fas fa-times-circle me-1"></i>' + (resp.error || 'Error') + '</span>');
                     }
                 },
-                error: function() {
-                    $('#liquidarStatus').html('<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Error de conexión</span>');
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('[DEBUG LIQUIDAR] FALLO. Status:', jqXHR.status, 'StatusText:', jqXHR.statusText);
+                    console.error('[DEBUG LIQUIDAR] TextStatus:', textStatus, 'Error:', errorThrown);
+                    console.error('[DEBUG LIQUIDAR] Response body:', (jqXHR.responseText || '').substring(0, 1000));
+                    console.error('[DEBUG LIQUIDAR] URL:', BASE + 'informe-avances/api/liquidar/' + clienteId);
+                    $('#liquidarStatus').html('<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Error: ' + jqXHR.status + ' ' + (textStatus || '') + '</span>');
                 },
                 complete: function() {
                     btn.prop('disabled', false).html('<i class="fas fa-camera me-1"></i>Liquidar Informe');
