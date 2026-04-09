@@ -82,13 +82,13 @@ class InventarioActividadesController extends Controller
                              ->findAll();
 
         $results = array_map(function ($a) {
-            $label = '[' . $a['phva_plandetrabajo'] . ' - ' . $a['numeral_plandetrabajo'] . '] ' . $a['actividad_plandetrabajo'];
+            $label = '[' . $a->phva_plandetrabajo . ' - ' . $a->numeral_plandetrabajo . '] ' . $a->actividad_plandetrabajo;
             return [
-                'id'        => $a['id_inventario_actividades_plandetrabajo'],
+                'id'        => $a->id_inventario_actividades_plandetrabajo,
                 'text'      => $label,
-                'phva'      => $a['phva_plandetrabajo'],
-                'numeral'   => $a['numeral_plandetrabajo'],
-                'actividad' => $a['actividad_plandetrabajo'],
+                'phva'      => $a->phva_plandetrabajo,
+                'numeral'   => $a->numeral_plandetrabajo,
+                'actividad' => $a->actividad_plandetrabajo,
             ];
         }, $actividades);
 
