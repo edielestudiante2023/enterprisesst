@@ -389,12 +389,16 @@ class InformeAvancesController extends BaseController
     // ─── AJAX: API Clientes (para Select2) ───
     public function getClientes()
     {
+        log_message('info', '[InformeAvances::getClientes] Endpoint llamado. Session: ' . (session()->get('isLoggedIn') ? 'SI' : 'NO'));
+
         $clientModel = new ClientModel();
 
         $clientes = $clientModel->select('id_cliente, nombre_cliente, nit_cliente')
             ->where('estado', 'activo')
             ->orderBy('nombre_cliente', 'ASC')
             ->findAll();
+
+        log_message('info', '[InformeAvances::getClientes] Clientes encontrados: ' . count($clientes));
 
         return $this->response->setJSON($clientes);
     }

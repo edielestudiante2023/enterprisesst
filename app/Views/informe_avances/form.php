@@ -468,6 +468,14 @@
     const EDIT_MODE = <?= json_encode($mode === 'edit') ?>;
     const PRESELECT_CLIENTE = <?= json_encode($id_cliente) ?>;
 
+    // === DEBUG LOGS (remover después de diagnosticar) ===
+    console.log('[DEBUG] BASE URL:', BASE);
+    console.log('[DEBUG] EDIT_MODE:', EDIT_MODE);
+    console.log('[DEBUG] PRESELECT_CLIENTE:', PRESELECT_CLIENTE);
+    console.log('[DEBUG] Select2 element exists:', $('#selectCliente').length);
+    console.log('[DEBUG] jQuery version:', $.fn.jquery);
+    console.log('[DEBUG] Select2 loaded:', typeof $.fn.select2);
+
     // Chart instances
     var charts = { estandares: null, plan: null, cap: null, pend: null };
     // Desglose data for JSON
@@ -587,21 +595,51 @@
         }
 
         // Initialize Select2 immediately so it always renders
-        $('#selectCliente').select2({ theme: 'bootstrap-5', placeholder: 'Buscar cliente...', allowClear: true });
+        console.log('[DEBUG] Inicializando Select2...');
+        try {
+            $('#selectCliente').select2({ theme: 'bootstrap-5', placeholder: 'Buscar cliente...', allowClear: true });
+            console.log('[DEBUG] Select2 inicializado OK');
+        } catch(e) {
+            console.error('[DEBUG] Error inicializando Select2:', e);
+        }
 
         // Load clients
-        $.getJSON(BASE + 'informe-avances/api/clientes', function(data) {
-            data.forEach(function(c) {
-                var opt = new Option(c.nombre_cliente + ' (' + c.nit_cliente + ')', c.id_cliente, false, false);
-                $('#selectCliente').append(opt);
-            });
+        var clientesUrl = BASE + 'informe-avances/api/clientes';
+        console.log('[DEBUG] Llamando API clientes:', clientesUrl);
+        $.ajax({
+            url: clientesUrl,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data, textStatus, jqXHR) {
+                console.log('[DEBUG] API clientes respuesta OK. Status:', jqXHR.status);
+                console.log('[DEBUG] Tipo de data:', typeof data, 'Es array:', Array.isArray(data));
+                console.log('[DEBUG] Cantidad de clientes:', data ? data.length : 0);
+                console.log('[DEBUG] Primeros 2 clientes:', JSON.stringify((data || []).slice(0, 2)));
 
-            if (PRESELECT_CLIENTE) {
-                $('#selectCliente').val(PRESELECT_CLIENTE).trigger('change');
-                if (!EDIT_MODE) loadMetricas(PRESELECT_CLIENTE);
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    console.warn('[DEBUG] No se recibieron clientes. Response body:', jqXHR.responseText ? jqXHR.responseText.substring(0, 500) : '(vacio)');
+                    return;
+                }
+
+                data.forEach(function(c) {
+                    var opt = new Option(c.nombre_cliente + ' (' + c.nit_cliente + ')', c.id_cliente, false, false);
+                    $('#selectCliente').append(opt);
+                });
+                console.log('[DEBUG] Options agregadas al select. Total opciones:', $('#selectCliente option').length);
+
+                if (PRESELECT_CLIENTE) {
+                    $('#selectCliente').val(PRESELECT_CLIENTE).trigger('change');
+                    if (!EDIT_MODE) loadMetricas(PRESELECT_CLIENTE);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('[DEBUG] API clientes FALLO');
+                console.error('[DEBUG] Status:', jqXHR.status, 'StatusText:', jqXHR.statusText);
+                console.error('[DEBUG] TextStatus:', textStatus, 'Error:', errorThrown);
+                console.error('[DEBUG] Response headers:', jqXHR.getAllResponseHeaders());
+                console.error('[DEBUG] Response body (primeros 500 chars):', (jqXHR.responseText || '').substring(0, 500));
+                console.error('[DEBUG] URL intentada:', clientesUrl);
             }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.error('Error cargando clientes:', textStatus, errorThrown, 'URL:', BASE + 'informe-avances/api/clientes');
         });
 
         $('#selectCliente').on('change', function() {
