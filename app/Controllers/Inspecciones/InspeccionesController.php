@@ -68,15 +68,15 @@ class InspeccionesController extends BaseController
     }
 
     /**
-     * API: Clientes del consultor con contrato activo
+     * API: Clientes activos
      */
     public function getClientes()
     {
         $clientModel = new ClientModel();
 
-        $clientes = $clientModel->select('tbl_clientes.id_cliente, tbl_clientes.nombre_cliente, tbl_clientes.nit_cliente')
-            ->join('tbl_contratos', "tbl_contratos.id_cliente = tbl_clientes.id_cliente AND tbl_contratos.estado = 'activo'")
-            ->orderBy('tbl_clientes.nombre_cliente', 'ASC')
+        $clientes = $clientModel->select('id_cliente, nombre_cliente, nit_cliente')
+            ->where('estado', 'activo')
+            ->orderBy('nombre_cliente', 'ASC')
             ->findAll();
 
         return $this->response->setJSON($clientes);
