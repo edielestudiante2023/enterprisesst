@@ -600,30 +600,35 @@ class MetricasInformeService
      */
     public function getIndicadoresSstPeriodo(int $idCliente, int $anio): array
     {
-        $indicadorModel = new \App\Models\IndicadorSSTModel();
+        // Total indicadores activos
+        $totalActivos = $this->db->table('tbl_indicadores_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('activo', 1)
+            ->countAllResults();
 
-        $resumenCategoria = $indicadorModel->getResumenPorCategoria($idCliente);
-        $cumplimiento = $indicadorModel->verificarCumplimiento($idCliente);
-
-        // Mediciones registradas en el año
-        $mediciones = $this->db->table('tbl_indicadores_sst_mediciones m')
-            ->select("COUNT(m.id_medicion) as total_mediciones, SUM(CASE WHEN m.cumple_meta = 1 THEN 1 ELSE 0 END) as cumplen")
+        // Mediciones con detalle en el año
+        $medicionesDetalle = $this->db->table('tbl_indicadores_sst_mediciones m')
+            ->select('i.nombre_indicador, i.categoria, m.valor_resultado, i.meta, i.unidad_medida, m.cumple_meta, m.periodo')
             ->join('tbl_indicadores_sst i', 'i.id_indicador = m.id_indicador')
             ->where('i.id_cliente', $idCliente)
             ->where('i.activo', 1)
             ->like('m.periodo', (string) $anio, 'after')
+            ->orderBy('m.periodo', 'DESC')
             ->get()
-            ->getRowArray();
+            ->getResultArray();
 
-        $totalMediciones = intval($mediciones['total_mediciones'] ?? 0);
-        $cumplen = intval($mediciones['cumplen'] ?? 0);
+        $totalMediciones = count($medicionesDetalle);
+        $cumplen = 0;
+        foreach ($medicionesDetalle as $m) {
+            if (intval($m['cumple_meta'] ?? 0) === 1) $cumplen++;
+        }
 
         return [
-            'total_activos'     => $cumplimiento['total'] ?? 0,
+            'total_activos'     => $totalActivos,
             'medidos_periodo'   => $totalMediciones,
             'cumplen_meta'      => $cumplen,
             'pct_cumplimiento'  => $totalMediciones > 0 ? round(($cumplen / $totalMediciones) * 100, 1) : 0,
-            'por_categoria'     => $resumenCategoria,
+            'mediciones'        => $medicionesDetalle,
         ];
     }
 

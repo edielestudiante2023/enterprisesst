@@ -339,15 +339,8 @@
             <div id="secIndicadores" class="card card-section d-none">
                 <div class="card-header py-3"><i class="fas fa-chart-bar me-2"></i>Indicadores SST</div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3"><div class="metric-box"><div class="value" id="indActivos">0</div><div class="label">Activos</div></div></div>
-                        <div class="col-md-3"><div class="metric-box"><div class="value" id="indMedidos">0</div><div class="label">Medidos</div></div></div>
-                        <div class="col-md-3"><div class="metric-box"><div class="value text-success" id="indCumplen">0</div><div class="label">Cumplen meta</div></div></div>
-                        <div class="col-md-3"><div class="metric-box"><div class="value" id="indPct">0%</div><div class="label">Cumplimiento</div></div></div>
-                    </div>
-                    <div class="mt-3">
-                        <div class="progress progress-custom"><div class="progress-bar bg-info" id="indProgress" style="width:0%">0%</div></div>
-                    </div>
+                    <div id="indMensaje" class="alert alert-info mb-3" style="display:none;"></div>
+                    <div id="indTabla"></div>
                 </div>
             </div>
 
@@ -1014,12 +1007,26 @@
             var ind = d.indicadores_sst || {};
             if ((ind.total_activos || 0) > 0) {
                 $('#secIndicadores').removeClass('d-none');
-                $('#indActivos').text(ind.total_activos);
-                $('#indMedidos').text(ind.medidos_periodo || 0);
-                $('#indCumplen').text(ind.cumplen_meta || 0);
-                var pct = parseFloat(ind.pct_cumplimiento || 0);
-                $('#indPct').text(pct.toFixed(1) + '%');
-                $('#indProgress').css('width', pct + '%').text(pct.toFixed(1) + '%');
+                var medidos = ind.medidos_periodo || 0;
+                var total = ind.total_activos || 0;
+                var meds = ind.mediciones || [];
+                // Mensaje de contexto
+                if (medidos > 0) {
+                    $('#indMensaje').show().html('<i class="fas fa-info-circle me-2"></i>Se han medido <strong>' + medidos + '</strong> de <strong>' + total + '</strong> indicadores en el periodo.' + (medidos < total ? ' Los indicadores pendientes de medicion requieren seguimiento.' : ' Todos los indicadores fueron medidos.'));
+                } else {
+                    $('#indMensaje').show().html('<i class="fas fa-exclamation-circle me-2"></i>Ningun indicador ha sido medido en el periodo. Se requiere programar mediciones para los <strong>' + total + '</strong> indicadores activos.');
+                }
+                // Tabla de indicadores medidos
+                if (meds.length > 0) {
+                    var h = '<table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Indicador</th><th class="text-center">Resultado</th><th class="text-center">Meta</th><th class="text-center">Cumple</th></tr></thead><tbody>';
+                    meds.forEach(function(m) {
+                        var cumple = parseInt(m.cumple_meta) === 1;
+                        var icon = cumple ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>';
+                        h += '<tr><td>' + esc(m.nombre_indicador || '') + '</td><td class="text-center">' + (m.valor_resultado || '-') + ' ' + esc(m.unidad_medida || '') + '</td><td class="text-center">' + (m.meta || '-') + '</td><td class="text-center">' + icon + '</td></tr>';
+                    });
+                    h += '</tbody></table>';
+                    $('#indTabla').html(h);
+                }
             }
 
             // 4. Acciones Correctivas

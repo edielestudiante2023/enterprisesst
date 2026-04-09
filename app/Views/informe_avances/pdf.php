@@ -477,15 +477,33 @@
 <?php endif; ?>
 
 <?php if (!empty($indData) && ($indData['total_activos'] ?? 0) > 0): ?>
+<?php $medidos = $indData['medidos_periodo'] ?? 0; $totalInd = $indData['total_activos']; ?>
 <div class="section-title">INDICADORES SST</div>
+<div style="background:#e8f4fd;padding:6px 10px;border-radius:4px;font-size:8px;margin-bottom:6px;">
+    <?php if ($medidos > 0): ?>
+        Se midieron <strong><?= $medidos ?></strong> de <strong><?= $totalInd ?></strong> indicadores.<?= $medidos < $totalInd ? ' Los indicadores pendientes requieren seguimiento.' : ' Todos los indicadores fueron medidos.' ?>
+    <?php else: ?>
+        Ningun indicador fue medido en el periodo. Se requiere programar mediciones para los <strong><?= $totalInd ?></strong> indicadores activos.
+    <?php endif; ?>
+</div>
+<?php if (!empty($indData['mediciones'])): ?>
 <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
-    <tr>
-        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= $indData['total_activos'] ?></div><div style="font-size:7px;color:#666;">Activos</div></td>
-        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= $indData['medidos_periodo'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Medidos</div></td>
-        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#198754;"><?= $indData['cumplen_meta'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Cumplen meta</div></td>
-        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= number_format($indData['pct_cumplimiento'] ?? 0, 1) ?>%</div><div style="font-size:7px;color:#666;">Cumplimiento</div></td>
+    <tr style="background:#f8f9fa;">
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold;">Indicador</td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold; text-align:center;">Resultado</td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold; text-align:center;">Meta</td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; font-weight:bold; text-align:center;">Cumple</td>
     </tr>
+    <?php foreach ($indData['mediciones'] as $m): ?>
+    <tr>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px;"><?= esc($m['nombre_indicador'] ?? '') ?></td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; text-align:center;"><?= $m['valor_resultado'] ?? '-' ?> <?= esc($m['unidad_medida'] ?? '') ?></td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; text-align:center;"><?= $m['meta'] ?? '-' ?></td>
+        <td style="border:1px solid #ddd; padding:4px; font-size:7px; text-align:center;"><?= intval($m['cumple_meta'] ?? 0) === 1 ? '&#10004;' : '&#10008;' ?></td>
+    </tr>
+    <?php endforeach; ?>
 </table>
+<?php endif; ?>
 <?php endif; ?>
 
 <?php if (!empty($acData) && ($acData['acciones_total'] ?? 0) > 0): ?>

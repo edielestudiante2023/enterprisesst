@@ -180,12 +180,27 @@
         <div class="card card-section">
             <div class="card-header py-3"><i class="fas fa-chart-bar me-2"></i>Indicadores SST</div>
             <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $indData['total_activos'] ?></div><div class="label">Activos</div></div></div>
-                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $indData['medidos_periodo'] ?? 0 ?></div><div class="label">Medidos</div></div></div>
-                    <div class="col-md-3"><div class="metric-box"><div class="value text-success"><?= $indData['cumplen_meta'] ?? 0 ?></div><div class="label">Cumplen meta</div></div></div>
-                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= number_format($indData['pct_cumplimiento'] ?? 0, 1) ?>%</div><div class="label">Cumplimiento</div></div></div>
-                </div>
+                <?php $medidos = $indData['medidos_periodo'] ?? 0; $total = $indData['total_activos']; ?>
+                <?php if ($medidos > 0): ?>
+                <div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Se midieron <strong><?= $medidos ?></strong> de <strong><?= $total ?></strong> indicadores.<?= $medidos < $total ? ' Los indicadores pendientes requieren seguimiento.' : ' Todos los indicadores fueron medidos.' ?></div>
+                <?php else: ?>
+                <div class="alert alert-warning"><i class="fas fa-exclamation-circle me-2"></i>Ningun indicador fue medido en el periodo. Se requiere programar mediciones para los <strong><?= $total ?></strong> indicadores activos.</div>
+                <?php endif; ?>
+                <?php if (!empty($indData['mediciones'])): ?>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light"><tr><th>Indicador</th><th class="text-center">Resultado</th><th class="text-center">Meta</th><th class="text-center">Cumple</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($indData['mediciones'] as $m): ?>
+                        <tr>
+                            <td><?= esc($m['nombre_indicador'] ?? '') ?></td>
+                            <td class="text-center"><?= $m['valor_resultado'] ?? '-' ?> <?= esc($m['unidad_medida'] ?? '') ?></td>
+                            <td class="text-center"><?= $m['meta'] ?? '-' ?></td>
+                            <td class="text-center"><?= intval($m['cumple_meta'] ?? 0) === 1 ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php endif; ?>
             </div>
         </div>
         <?php endif; ?>
