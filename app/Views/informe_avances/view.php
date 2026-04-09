@@ -157,22 +157,6 @@
             $insData = $desglose['inspecciones'] ?? [];
         ?>
 
-        <?php if (!empty($feData) && ($feData['total_solicitudes'] ?? 0) > 0): ?>
-        <div class="card card-section">
-            <div class="card-header py-3"><i class="fas fa-signature me-2"></i>Firma Electronica</div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-3"><div class="metric-box"><div class="value"><?= $feData['total_solicitudes'] ?></div><div class="label">Solicitudes</div></div></div>
-                    <div class="col-md-3"><div class="metric-box"><div class="value text-success"><?= $feData['firmados'] ?? 0 ?></div><div class="label">Firmados</div></div></div>
-                    <div class="col-md-3"><div class="metric-box"><div class="value text-warning"><?= $feData['pendientes'] ?? 0 ?></div><div class="label">Pendientes</div></div></div>
-                    <div class="col-md-3"><div class="metric-box"><div class="value text-danger"><?= $feData['expirados'] ?? 0 ?></div><div class="label">Expirados</div></div></div>
-                </div>
-                <div class="mt-3">
-                    <div class="progress progress-custom"><div class="progress-bar bg-success" style="width:<?= $feData['tasa_firma'] ?? 0 ?>%"><?= number_format($feData['tasa_firma'] ?? 0, 1) ?>% firmados</div></div>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
 
         <?php if (!empty($dsData) && ($dsData['total_creados'] ?? 0) > 0): ?>
         <div class="card card-section">

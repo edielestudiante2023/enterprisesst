@@ -327,23 +327,6 @@
 
             <!-- 6 MODULOS ADICIONALES (se muestran al cargar metricas) -->
 
-            <!-- Firma Electronica -->
-            <div id="secFirma" class="card card-section d-none">
-                <div class="card-header py-3"><i class="fas fa-signature me-2"></i>Firma Electronica</div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3"><div class="metric-box"><div class="value" id="firmaTotal">0</div><div class="label">Solicitudes</div></div></div>
-                        <div class="col-md-3"><div class="metric-box"><div class="value text-success" id="firmaFirmados">0</div><div class="label">Firmados</div></div></div>
-                        <div class="col-md-3"><div class="metric-box"><div class="value text-warning" id="firmaPendientes">0</div><div class="label">Pendientes</div></div></div>
-                        <div class="col-md-3"><div class="metric-box"><div class="value text-danger" id="firmaExpirados">0</div><div class="label">Expirados</div></div></div>
-                    </div>
-                    <div class="mt-3">
-                        <label class="form-label small fw-bold">Tasa de firma</label>
-                        <div class="progress progress-custom"><div class="progress-bar bg-success" id="firmaProgress" style="width:0%">0%</div></div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Documentos SST -->
             <div id="secDocsSst" class="card card-section d-none">
                 <div class="card-header py-3"><i class="fas fa-file-alt me-2"></i>Documentos SST Creados</div>
@@ -1016,19 +999,7 @@
         // === RENDER 6 MODULOS ADICIONALES ===
         function renderModulosAdicionales(d) {
             // Ocultar todos primero
-            $('#secFirma,#secDocsSst,#secIndicadores,#secAcciones,#secActas,#secInspecciones').addClass('d-none');
-
-            // 1. Firma Electronica
-            var fe = d.firma_electronica || {};
-            if (fe.total_solicitudes > 0) {
-                $('#secFirma').removeClass('d-none');
-                $('#firmaTotal').text(fe.total_solicitudes);
-                $('#firmaFirmados').text(fe.firmados || 0);
-                $('#firmaPendientes').text(fe.pendientes || 0);
-                $('#firmaExpirados').text(fe.expirados || 0);
-                var tasa = parseFloat(fe.tasa_firma || 0);
-                $('#firmaProgress').css('width', tasa + '%').text(tasa.toFixed(1) + '%');
-            }
+            $('#secDocsSst,#secIndicadores,#secAcciones,#secActas,#secInspecciones').addClass('d-none');
 
             // 2. Documentos SST
             var ds = d.documentos_sst || {};

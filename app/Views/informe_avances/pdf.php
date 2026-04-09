@@ -460,18 +460,6 @@
     $insData = $desglose['inspecciones'] ?? [];
 ?>
 
-<?php if (!empty($feData) && ($feData['total_solicitudes'] ?? 0) > 0): ?>
-<div class="section-title">FIRMA ELECTRONICA</div>
-<table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
-    <tr>
-        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;"><?= $feData['total_solicitudes'] ?></div><div style="font-size:7px;color:#666;">Solicitudes</div></td>
-        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#198754;"><?= $feData['firmados'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Firmados</div></td>
-        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#ffc107;"><?= $feData['pendientes'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Pendientes</div></td>
-        <td style="border:1px solid #ddd; padding:8px; width:25%; text-align:center;"><div style="font-size:18px;font-weight:bold;color:#dc3545;"><?= $feData['expirados'] ?? 0 ?></div><div style="font-size:7px;color:#666;">Expirados</div></td>
-    </tr>
-</table>
-<?php endif; ?>
-
 <?php if (!empty($dsData) && ($dsData['total_creados'] ?? 0) > 0): ?>
 <div class="section-title">DOCUMENTOS SST CREADOS</div>
 <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
