@@ -2069,7 +2069,7 @@
                 updateSelectedCount();
             });
 
-            // Bulk delete
+            // Bulk delete con validación aritmética SweetAlert
             $('#btnDeleteSelected').on('click', function() {
                 var ids = [];
                 $('.row-select:checked').each(function() {
@@ -2077,45 +2077,83 @@
                 });
                 if (ids.length === 0) return;
 
-                if (!confirm('¿Seguro que deseas eliminar ' + ids.length + ' registro(s)? Esta acción no se puede deshacer.')) {
-                    return;
+                var ops = [];
+                for (var i = 0; i < 3; i++) {
+                    var a = Math.floor(Math.random() * 50) + 10;
+                    var b = Math.floor(Math.random() * 20) + 1;
+                    var tipo = Math.random() > 0.5 ? '+' : '-';
+                    var result = tipo === '+' ? a + b : a - b;
+                    ops.push({ expr: a + ' ' + tipo + ' ' + b, result: result });
                 }
 
-                var $btn = $(this);
-                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Eliminando...');
+                var htmlForm = '<div class="text-start">' +
+                    '<div class="alert alert-danger"><strong>ADVERTENCIA:</strong> Se eliminarán <strong>' + ids.length + '</strong> registro(s) seleccionados. Esta acción no se puede deshacer.</div>' +
+                    '<p class="fw-bold">Resuelva las 3 operaciones para confirmar:</p>';
+                for (var i = 0; i < 3; i++) {
+                    htmlForm += '<div class="mb-2"><label class="form-label">' + ops[i].expr + ' = </label>' +
+                        '<input type="number" class="form-control form-control-sm bulk-arith-input" data-idx="' + i + '" style="max-width:120px; display:inline-block; margin-left:10px;" /></div>';
+                }
+                htmlForm += '</div>';
 
-                $.ajax({
-                    url: '<?= site_url('/pta-cliente-nueva/deleteMultiple') ?>',
-                    method: 'POST',
-                    data: {
-                        ids: ids,
-                        '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            $('.row-select:checked').each(function() {
-                                var row = table.row($(this).closest('tr'));
-                                row.remove();
-                            });
-                            table.draw(false);
-                            $('#selectAll').prop('checked', false);
-                            updateSelectedCount();
-                            updateCardCounts();
-                            updateMonthlyCounts();
-                            generateYearCards();
-                            showAlert(response.message, 'success');
-                        } else {
-                            showAlert('Error: ' + response.message, 'error');
+                Swal.fire({
+                    title: 'Eliminar ' + ids.length + ' Registro(s)',
+                    html: htmlForm,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        var allCorrect = true;
+                        for (var i = 0; i < 3; i++) {
+                            var val = parseInt($('.bulk-arith-input[data-idx="' + i + '"]').val());
+                            if (val !== ops[i].result) { allCorrect = false; break; }
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        showAlert('Error en la comunicación: ' + error, 'error');
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false).html('<i class="fas fa-trash-alt"></i> Eliminar Seleccionados (<span id="selectedCount">0</span>)');
-                        updateSelectedCount();
+                        if (!allCorrect) {
+                            Swal.showValidationMessage('Una o más respuestas son incorrectas.');
+                            return false;
+                        }
+                        return true;
                     }
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+
+                    var $btn = $('#btnDeleteSelected');
+                    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Eliminando...');
+
+                    $.ajax({
+                        url: '<?= site_url('/pta-cliente-nueva/deleteMultiple') ?>',
+                        method: 'POST',
+                        data: {
+                            ids: ids,
+                            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                $('.row-select:checked').each(function() {
+                                    var row = table.row($(this).closest('tr'));
+                                    row.remove();
+                                });
+                                table.draw(false);
+                                $('#selectAll').prop('checked', false);
+                                updateSelectedCount();
+                                updateCardCounts();
+                                updateMonthlyCounts();
+                                generateYearCards();
+                                Swal.fire('Listo', response.message, 'success');
+                            } else {
+                                Swal.fire('Error', response.message, 'error');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            Swal.fire('Error', 'Error en la comunicación: ' + error, 'error');
+                        },
+                        complete: function() {
+                            $btn.prop('disabled', false).html('<i class="fas fa-trash-alt"></i> Eliminar Seleccionados (<span id="selectedCount">0</span>)');
+                            updateSelectedCount();
+                        }
+                    });
                 });
             });
 
