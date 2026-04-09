@@ -590,7 +590,6 @@ class MetricasInformeService
         return [
             'total_creados'     => count($documentos),
             'documentos'        => $documentos,
-            'aprobados_periodo' => $aprobados,
         ];
     }
 
