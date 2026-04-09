@@ -313,13 +313,14 @@ class MetricasInformeService
         }
 
         // Capacitaciones ejecutadas en el periodo
-        $caps = $this->db->table('tbl_cronog_capacitacion')
-            ->select('fecha_programada, nombre_capacitacion, estado')
-            ->where('id_cliente', $idCliente)
-            ->where('estado', 'EJECUTADA')
-            ->where('fecha_programada >=', $desde)
-            ->where('fecha_programada <=', $hasta)
-            ->orderBy('fecha_programada', 'ASC')
+        $caps = $this->db->table('tbl_cronog_capacitacion cc')
+            ->select('cc.fecha_programada, cs.capacitacion as nombre_capacitacion, cc.estado')
+            ->join('capacitaciones_sst cs', 'cs.id_capacitacion = cc.id_capacitacion', 'left')
+            ->where('cc.id_cliente', $idCliente)
+            ->where('cc.estado', 'EJECUTADA')
+            ->where('cc.fecha_programada >=', $desde)
+            ->where('cc.fecha_programada <=', $hasta)
+            ->orderBy('cc.fecha_programada', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -504,13 +505,14 @@ class MetricasInformeService
      */
     public function getCapacitacionesEjecutadas(int $idCliente, string $desde, string $hasta): array
     {
-        return $this->db->table('tbl_cronog_capacitacion')
-            ->select('fecha_programada, fecha_de_realizacion, nombre_capacitacion, objetivo_capacitacion, perfil_de_asistentes, nombre_del_capacitador, horas_de_duracion_de_la_capacitacion, numero_de_asistentes_a_capacitacion, numero_total_de_personas_programadas, porcentaje_cobertura, promedio_de_calificaciones, observaciones')
-            ->where('id_cliente', $idCliente)
-            ->where('estado', 'EJECUTADA')
-            ->where('fecha_programada >=', $desde)
-            ->where('fecha_programada <=', $hasta)
-            ->orderBy('fecha_programada', 'ASC')
+        return $this->db->table('tbl_cronog_capacitacion cc')
+            ->select('cc.fecha_programada, cc.fecha_de_realizacion, cs.capacitacion as nombre_capacitacion, cs.objetivo_capacitacion, cc.perfil_de_asistentes, cc.nombre_del_capacitador, cc.horas_de_duracion_de_la_capacitacion, cc.numero_de_asistentes_a_capacitacion, cc.numero_total_de_personas_programadas, cc.porcentaje_cobertura, cc.promedio_de_calificaciones, cc.observaciones')
+            ->join('capacitaciones_sst cs', 'cs.id_capacitacion = cc.id_capacitacion', 'left')
+            ->where('cc.id_cliente', $idCliente)
+            ->where('cc.estado', 'EJECUTADA')
+            ->where('cc.fecha_programada >=', $desde)
+            ->where('cc.fecha_programada <=', $hasta)
+            ->orderBy('cc.fecha_programada', 'ASC')
             ->get()
             ->getResultArray();
     }
