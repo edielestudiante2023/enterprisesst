@@ -73,6 +73,28 @@ class InventarioActividadesController extends Controller
         }
     }
 
+    // API JSON para Select2 en modal IA del PTA
+    public function jsonAll()
+    {
+        $model = new InventarioActividadesArrayModel();
+        $actividades = $model->orderBy('phva_plandetrabajo', 'ASC')
+                             ->orderBy('numeral_plandetrabajo', 'ASC')
+                             ->findAll();
+
+        $results = array_map(function ($a) {
+            $label = '[' . $a['phva_plandetrabajo'] . ' - ' . $a['numeral_plandetrabajo'] . '] ' . $a['actividad_plandetrabajo'];
+            return [
+                'id'        => $a['id_inventario_actividades_plandetrabajo'],
+                'text'      => $label,
+                'phva'      => $a['phva_plandetrabajo'],
+                'numeral'   => $a['numeral_plandetrabajo'],
+                'actividad' => $a['actividad_plandetrabajo'],
+            ];
+        }, $actividades);
+
+        return $this->response->setJSON(['results' => $results]);
+    }
+
     // Eliminar una actividad
     public function deleteinventarioactividades($id)
     {

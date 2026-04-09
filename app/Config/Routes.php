@@ -432,6 +432,7 @@ $routes->post('/addinventarioactividades', 'InventarioActividadesController::add
 $routes->get('/editinventarioactividades/(:num)', 'InventarioActividadesController::editinventarioactividades/$1');
 $routes->post('/editinventarioactividades/(:num)', 'InventarioActividadesController::editpostinventarioactividades/$1');
 $routes->get('/deleteinventarioactividades/(:num)', 'InventarioActividadesController::deleteinventarioactividades/$1');
+$routes->get('/inventarioactividades/json', 'InventarioActividadesController::jsonAll');
 
 $routes->get('consultant/plan', 'PlanController::index'); // Ruta para mostrar la vista
 $routes->post('consultant/plan/upload', 'PlanController::upload'); // Ruta para procesar la carga

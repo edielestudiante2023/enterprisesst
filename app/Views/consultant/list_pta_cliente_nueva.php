@@ -2364,28 +2364,7 @@
                         <button class="btn btn-sm btn-outline-secondary mb-3" id="iaBackToStep1A"><i class="fas fa-arrow-left"></i> Volver</button>
                         <div class="mb-3">
                             <label class="form-label">Seleccione una o varias actividades:</label>
-                            <select id="iaInventarioSelect" class="form-select" style="width:100%;" multiple>
-                                <?php
-                                $csvPath = FCPATH . '../PTA2026.csv';
-                                if (file_exists($csvPath)) {
-                                    $csvFile = fopen($csvPath, 'r');
-                                    $first = true;
-                                    while (($row = fgetcsv($csvFile, 0, ';')) !== false) {
-                                        if ($first) { $first = false; continue; }
-                                        $phva     = trim($row[0] ?? '');
-                                        $numeral  = trim($row[1] ?? '');
-                                        $actividad = trim($row[2] ?? '');
-                                        if (!$phva || !$actividad) continue;
-                                        $label = '[' . htmlspecialchars($phva) . ' - ' . htmlspecialchars($numeral) . '] ' . htmlspecialchars($actividad);
-                                        echo '<option value="' . htmlspecialchars($actividad) . '" '
-                                            . 'data-phva="' . htmlspecialchars($phva) . '" '
-                                            . 'data-numeral="' . htmlspecialchars($numeral) . '">'
-                                            . $label . '</option>' . "\n";
-                                    }
-                                    fclose($csvFile);
-                                }
-                                ?>
-                            </select>
+                            <select id="iaInventarioSelect" class="form-select" style="width:100%;" multiple></select>
                         </div>
                         <button class="btn btn-primary" id="iaInventarioAgregar" disabled><i class="fas fa-plus"></i> Agregar <span id="iaInventarioCount"></span></button>
                     </div>
@@ -2560,7 +2539,21 @@
             $('#iaRefineSection').hide();
         });
 
-        // Select2 inventario
+        // Select2 inventario - carga desde BD
+        var iaInventarioData = [];
+        $.getJSON('<?= site_url('/inventarioactividades/json') ?>', function(resp) {
+            iaInventarioData = resp.results || [];
+            var $sel = $('#iaInventarioSelect');
+            iaInventarioData.forEach(function(item) {
+                var opt = new Option(item.text, item.id, false, false);
+                $(opt).data('phva', item.phva);
+                $(opt).data('numeral', item.numeral);
+                $(opt).data('actividad', item.actividad);
+                $sel.append(opt);
+            });
+            $sel.trigger('change');
+        });
+
         $('#iaInventarioSelect').select2({
             theme: 'bootstrap-5',
             placeholder: 'Buscar y seleccionar actividades...',
@@ -2592,7 +2585,7 @@
             if (!$opts.length) return;
 
             var lista = '';
-            $opts.each(function() { lista += '<li>' + escHtml($(this).val()) + '</li>'; });
+            $opts.each(function() { lista += '<li>' + escHtml($(this).data('actividad')) + '</li>'; });
 
             Swal.fire({
                 title: 'Confirmar ' + $opts.length + ($opts.length === 1 ? ' actividad' : ' actividades'),
@@ -2615,7 +2608,7 @@
 
                 var items = [];
                 $opts.each(function() {
-                    items.push({ phva: $(this).data('phva'), numeral: $(this).data('numeral'), actividad: $(this).val() });
+                    items.push({ phva: $(this).data('phva'), numeral: $(this).data('numeral'), actividad: $(this).data('actividad') });
                 });
                 var months = result.value.months;
                 var totalInserted = 0;
