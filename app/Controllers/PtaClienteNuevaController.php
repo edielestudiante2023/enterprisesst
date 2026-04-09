@@ -498,6 +498,7 @@ class PtaClienteNuevaController extends Controller
     {
         $description = $this->request->getPost('description');
         $context = $this->request->getPost('context') ?? '';
+        $idCliente = $this->request->getPost('id_cliente');
 
         if (empty($description)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Descripción requerida']);
@@ -509,18 +510,47 @@ class PtaClienteNuevaController extends Controller
                 return $this->response->setJSON(['success' => false, 'message' => 'API key de OpenAI no configurada']);
             }
 
-            $systemPrompt = "Eres un consultor externo experto en Seguridad y Salud en el Trabajo (SST) bajo la normativa colombiana (Decreto 1072 de 2015, Resolución 0312 de 2019). "
-                . "Tu especialidad es asesorar PROPIEDADES HORIZONTALES (conjuntos residenciales y edificios) en Colombia. "
-                . "Contexto clave: las copropiedades NO tienen empleados directos — su objeto social es sin ánimo de lucro. "
-                . "Los trabajadores son de empresas contratistas: aseadoras, vigilantes y toderos. "
-                . "El SG-SST se orienta a VERIFICAR que estos proveedores cumplan con sus obligaciones. "
-                . "Tu tarea es proponer actividades REALISTAS para el Plan de Trabajo Anual del SG-SST. "
-                . "Responde SOLO con un JSON array de exactamente 3 opciones. Cada opción: phva (PLANEAR, HACER, VERIFICAR o ACTUAR), numeral (del estándar mínimo Resolución 0312), actividad (descripción profesional concisa). "
-                . "Ejemplo: [{\"phva\":\"VERIFICAR\",\"numeral\":\"4.1.1\",\"actividad\":\"Verificar afiliación a ARL y EPS del personal de aseo contratado\"}]";
+            // Obtener contexto real del cliente
+            $infoEmpresa = '';
+            if (!empty($idCliente)) {
+                $clienteModel = new ClientModel();
+                $contextoModel = new ClienteContextoSstModel();
+                $cliente = $clienteModel->find($idCliente);
+                $ctx = $contextoModel->getByCliente($idCliente);
 
-            $userMessage = "Necesito actividades de SST sobre: " . $description;
+                if ($cliente && $ctx) {
+                    $peligros = json_decode($ctx['peligros_identificados'] ?? '[]', true);
+                    $peligrosTexto = !empty($peligros) ? implode(', ', $peligros) : 'no especificados';
+
+                    $infoEmpresa = "DATOS DE LA EMPRESA:\n"
+                        . "- Razón social: " . ($cliente['nombre_cliente'] ?? '') . "\n"
+                        . "- Sector económico: " . ($ctx['sector_economico'] ?? 'no especificado') . "\n"
+                        . "- Actividad económica CIIU: " . ($cliente['codigo_actividad_economica'] ?? '') . "\n"
+                        . "- Nivel de riesgo ARL: " . ($ctx['nivel_riesgo_arl'] ?? 'I') . "\n"
+                        . "- ARL: " . ($ctx['arl_actual'] ?? '') . "\n"
+                        . "- Total trabajadores: " . ($ctx['total_trabajadores'] ?? 1)
+                        . " (directos: " . ($ctx['trabajadores_directos'] ?? 0)
+                        . ", temporales: " . ($ctx['trabajadores_temporales'] ?? 0)
+                        . ", contratistas: " . ($ctx['contratistas_permanentes'] ?? 0) . ")\n"
+                        . "- Estándares mínimos aplicables: " . ($ctx['estandares_aplicables'] ?? 60) . "\n"
+                        . "- Peligros identificados: " . $peligrosTexto . "\n"
+                        . "- Observaciones del contexto: " . ($ctx['observaciones_contexto'] ?? 'ninguna') . "\n";
+                }
+            }
+
+            $systemPrompt = "Eres un consultor experto en Seguridad y Salud en el Trabajo (SST) bajo la normativa colombiana (Decreto 1072 de 2015, Resolución 0312 de 2019). "
+                . "Tu tarea es proponer actividades REALISTAS y ESPECÍFICAS para el Plan de Trabajo Anual del SG-SST de una empresa. "
+                . "Las actividades deben ser pertinentes al sector económico, nivel de riesgo y peligros reales de la empresa. "
+                . "Responde SOLO con un JSON array de exactamente 3 opciones. Cada opción: phva (PLANEAR, HACER, VERIFICAR o ACTUAR), numeral (del estándar mínimo Resolución 0312), actividad (descripción profesional concisa). "
+                . "Ejemplo: [{\"phva\":\"HACER\",\"numeral\":\"3.1.3\",\"actividad\":\"Realizar exámenes médicos ocupacionales periódicos con énfasis en audiometría para operarios expuestos a ruido\"}]";
+
+            $userMessage = "";
+            if (!empty($infoEmpresa)) {
+                $userMessage .= $infoEmpresa . "\n";
+            }
+            $userMessage .= "Necesito actividades de SST sobre: " . $description;
             if (!empty($context)) {
-                $userMessage .= "\n\nContexto adicional: " . $context;
+                $userMessage .= "\n\nAjuste adicional del usuario: " . $context;
             }
 
             $ch = curl_init('https://api.openai.com/v1/chat/completions');

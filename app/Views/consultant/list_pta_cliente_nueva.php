@@ -2598,7 +2598,7 @@
             $.ajax({
                 url: '<?= site_url('/pta-cliente-nueva/generateAiActivity') ?>',
                 method: 'POST',
-                data: { description: description, context: context, [csrfName]: csrfHash },
+                data: { description: description, context: context, id_cliente: clienteId, [csrfName]: csrfHash },
                 dataType: 'json',
                 success: function(resp) {
                     $('#iaGenerating').hide();
