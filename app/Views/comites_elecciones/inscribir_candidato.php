@@ -64,7 +64,7 @@ $subtitulo = $esEmpleador
     <?php $esBrigada = ($proceso['tipo_comite'] === 'BRIGADA'); ?>
     <div class="row mb-4">
         <div class="col-md-6">
-            <div class="alert alert-<?= $colorTema ?> border-0">
+            <div class="alert alert-<?= $esBrigada ? 'warning' : $colorTema ?> border-0">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-info-circle fs-4 me-3"></i>
                     <div>
