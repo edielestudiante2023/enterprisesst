@@ -867,25 +867,17 @@ class ActasController extends BaseController
             return redirect()->back()->with('error', 'Acta no encontrada o no editable');
         }
 
-        // Preparar desarrollo
+        // Preparar desarrollo - la vista envía desarrollo[punto_number] = descripcion
+        $desarrolloPost = $this->request->getPost('desarrollo') ?? [];
         $desarrollo = [];
-        $puntosDesarrollo = $this->request->getPost('desarrollo_punto') ?? [];
-        $descripcionesDesarrollo = $this->request->getPost('desarrollo_descripcion') ?? [];
-        $decisionesDesarrollo = $this->request->getPost('desarrollo_decision') ?? [];
-
-        foreach ($puntosDesarrollo as $i => $punto) {
-            $desarrollo[] = [
-                'punto' => (int) $punto,
-                'descripcion' => $descripcionesDesarrollo[$i] ?? '',
-                'decision' => $decisionesDesarrollo[$i] ?? ''
-            ];
+        foreach ($desarrolloPost as $punto => $descripcion) {
+            $desarrollo[(int) $punto] = $descripcion;
         }
 
         $data = [
             'desarrollo' => json_encode($desarrollo),
             'conclusiones' => $this->request->getPost('conclusiones'),
             'observaciones' => $this->request->getPost('observaciones'),
-            'estado' => 'en_edicion'
         ];
 
         $this->actaModel->update($idActa, $data);

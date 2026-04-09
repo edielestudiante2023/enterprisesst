@@ -40,12 +40,6 @@
         </div>
     </div>
 
-    <?php if ($acta['estado'] !== 'borrador'): ?>
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle me-2"></i>
-        Esta acta ya no esta en borrador. Algunos campos no pueden ser modificados.
-    </div>
-    <?php endif; ?>
 
     <form action="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/actualizar') ?>" method="post" id="formActa">
         <div class="row">
@@ -59,31 +53,24 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Tipo de Acta</label>
-                                <select class="form-select" name="tipo_acta" <?= $acta['estado'] !== 'borrador' ? 'disabled' : '' ?>>
+                                <select class="form-select" name="tipo_acta">
                                     <option value="ordinaria" <?= $acta['tipo_acta'] === 'ordinaria' ? 'selected' : '' ?>>Ordinaria</option>
                                     <option value="extraordinaria" <?= $acta['tipo_acta'] === 'extraordinaria' ? 'selected' : '' ?>>Extraordinaria</option>
                                     <option value="conformacion" <?= $acta['tipo_acta'] === 'conformacion' ? 'selected' : '' ?>>Conformacion</option>
                                 </select>
-                                <?php if ($acta['estado'] !== 'borrador'): ?>
-                                <input type="hidden" name="tipo_acta" value="<?= $acta['tipo_acta'] ?>">
-                                <?php endif; ?>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Fecha de Reunion <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" name="fecha_reunion"
-                                       value="<?= $acta['fecha_reunion'] ?>" required
-                                       <?= $acta['estado'] !== 'borrador' ? 'readonly' : '' ?>>
+                                       value="<?= $acta['fecha_reunion'] ?>" required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Modalidad</label>
-                                <select class="form-select" name="modalidad" <?= $acta['estado'] !== 'borrador' ? 'disabled' : '' ?>>
+                                <select class="form-select" name="modalidad">
                                     <option value="presencial" <?= $acta['modalidad'] === 'presencial' ? 'selected' : '' ?>>Presencial</option>
                                     <option value="virtual" <?= $acta['modalidad'] === 'virtual' ? 'selected' : '' ?>>Virtual</option>
                                     <option value="mixta" <?= $acta['modalidad'] === 'mixta' ? 'selected' : '' ?>>Mixta</option>
                                 </select>
-                                <?php if ($acta['estado'] !== 'borrador'): ?>
-                                <input type="hidden" name="modalidad" value="<?= $acta['modalidad'] ?>">
-                                <?php endif; ?>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Hora Inicio</label>
@@ -115,7 +102,7 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><i class="bi bi-list-ol me-2"></i>Orden del Dia</h5>
-                        <?php if ($acta['estado'] === 'borrador'): ?>
+                        <?php if (in_array($acta['estado'], ['borrador', 'en_edicion'])): ?>
                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarPuntoOrden()">
                             <i class="bi bi-plus-lg"></i> Agregar Punto
                         </button>
@@ -133,8 +120,8 @@
                                 <input type="hidden" name="orden_punto[]" value="<?= $punto['punto'] ?? ($i + 1) ?>">
                                 <input type="text" class="form-control" name="orden_tema[]"
                                        value="<?= esc($punto['tema'] ?? '') ?>"
-                                       <?= $acta['estado'] !== 'borrador' ? 'readonly' : '' ?>>
-                                <?php if ($acta['estado'] === 'borrador'): ?>
+                                       <?= !in_array($acta['estado'], ['borrador', 'en_edicion']) ? 'readonly' : '' ?>>
+                                <?php if (in_array($acta['estado'], ['borrador', 'en_edicion'])): ?>
                                 <button type="button" class="btn btn-outline-danger" onclick="eliminarPuntoOrden(this)">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -267,7 +254,7 @@
                         <h5 class="mb-0"><i class="bi bi-people me-2"></i>Asistentes</h5>
                     </div>
                     <div class="card-body">
-                        <?php if ($acta['estado'] === 'borrador'): ?>
+                        <?php if (in_array($acta['estado'], ['borrador', 'en_edicion'])): ?>
                         <p class="text-muted small mb-3">Marque los miembros que asistieron:</p>
                         <?php else: ?>
                         <p class="text-muted small mb-3">Asistentes registrados:</p>
@@ -288,7 +275,7 @@
                                    name="asistio[]" value="<?= $miembro['id_miembro'] ?>"
                                    id="miembro_<?= $miembro['id_miembro'] ?>"
                                    <?= in_array($miembro['id_miembro'], $asistentesIds) ? 'checked' : '' ?>
-                                   <?= $acta['estado'] !== 'borrador' ? 'disabled' : '' ?>>
+                                   <?= !in_array($acta['estado'], ['borrador', 'en_edicion']) ? 'disabled' : '' ?>>
                             <label class="form-check-label" for="miembro_<?= $miembro['id_miembro'] ?>">
                                 <?= esc($miembro['nombre_completo']) ?>
                                 <?php if ($miembro['rol_comite'] !== 'miembro'): ?>
@@ -307,7 +294,7 @@
                                    name="asistio[]" value="<?= $miembro['id_miembro'] ?>"
                                    id="miembro_<?= $miembro['id_miembro'] ?>"
                                    <?= in_array($miembro['id_miembro'], $asistentesIds) ? 'checked' : '' ?>
-                                   <?= $acta['estado'] !== 'borrador' ? 'disabled' : '' ?>>
+                                   <?= !in_array($acta['estado'], ['borrador', 'en_edicion']) ? 'disabled' : '' ?>>
                             <label class="form-check-label" for="miembro_<?= $miembro['id_miembro'] ?>">
                                 <?= esc($miembro['nombre_completo']) ?>
                                 <br><small class="text-muted"><?= esc($miembro['cargo']) ?></small>
@@ -324,7 +311,7 @@
                                    name="asistio[]" value="<?= $miembro['id_miembro'] ?>"
                                    id="miembro_<?= $miembro['id_miembro'] ?>"
                                    <?= in_array($miembro['email'], $asistentesEmails) ? 'checked' : '' ?>
-                                   <?= $acta['estado'] !== 'borrador' ? 'disabled' : '' ?>>
+                                   <?= !in_array($acta['estado'], ['borrador', 'en_edicion']) ? 'disabled' : '' ?>>
                             <label class="form-check-label" for="miembro_<?= $miembro['id_miembro'] ?>">
                                 <?= esc($miembro['nombre_completo']) ?>
                                 <span class="badge bg-info">Asesor</span>
@@ -343,7 +330,7 @@
                 </div>
 
                 <!-- Estado de firmas -->
-                <?php if ($acta['estado'] !== 'borrador'): ?>
+                <?php if (!in_array($acta['estado'], ['borrador', 'en_edicion'])): ?>
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-transparent">
                         <h5 class="mb-0"><i class="bi bi-pen me-2"></i>Estado de Firmas</h5>
@@ -384,7 +371,7 @@
                         <i class="bi bi-save me-2"></i>Guardar Cambios
                     </button>
 
-                    <?php if ($acta['estado'] === 'borrador'): ?>
+                    <?php if (in_array($acta['estado'], ['borrador', 'en_edicion'])): ?>
                     <button type="button" class="btn btn-success" onclick="enviarAFirmas()">
                         <i class="bi bi-send me-2"></i>Enviar a Firmas
                     </button>
