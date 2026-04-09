@@ -61,6 +61,7 @@ $subtitulo = $esEmpleador
     <?php endif; ?>
 
     <!-- Info de plazas -->
+    <?php $esBrigada = ($proceso['tipo_comite'] === 'BRIGADA'); ?>
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="alert alert-<?= $colorTema ?> border-0">
@@ -68,16 +69,21 @@ $subtitulo = $esEmpleador
                     <i class="bi bi-info-circle fs-4 me-3"></i>
                     <div>
                         <strong><?= $subtitulo ?></strong>
+                        <?php if ($esBrigada): ?>
+                        <p class="mb-0 small">Brigadistas registrados: <strong><?= count($candidatosInscritos) ?></strong></p>
+                        <?php else: ?>
                         <p class="mb-0 small">
                             Plazas <?= $esEmpleador ? 'empleador' : 'trabajadores' ?>:
                             <strong><?= $proceso['plazas_principales'] ?></strong> principales +
                             <strong><?= $proceso['plazas_suplentes'] ?></strong> suplentes
                             = <strong><?= $plazasTotal ?></strong> total
                         </p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
+        <?php if (!$esBrigada): ?>
         <div class="col-md-6">
             <div class="card border-0 shadow-sm bg-light">
                 <div class="card-body py-2">
@@ -98,6 +104,7 @@ $subtitulo = $esEmpleador
                 </div>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 
     <div class="row">
@@ -188,7 +195,10 @@ $subtitulo = $esEmpleador
                             </div>
                         </div>
 
-                        <?php if ($esEmpleador): ?>
+                        <?php if ($esBrigada): ?>
+                        <!-- BRIGADA: todos son principales -->
+                        <input type="hidden" name="tipo_plaza" value="principal">
+                        <?php elseif ($esEmpleador): ?>
                         <!-- Tipo de plaza - SOLO para representantes del empleador (designados) -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -223,8 +233,8 @@ $subtitulo = $esEmpleador
                         </div>
                         <?php endif ?>
 
-                        <?php if ($esEmpleador): ?>
-                        <!-- Certificado 50 horas SST - Solo para representantes del empleador (designados directamente) -->
+                        <?php if ($esEmpleador && !$esBrigada): ?>
+                        <!-- Certificado 50 horas SST - Solo para representantes del empleador (no aplica BRIGADA) -->
                         <div class="card border-warning mb-3">
                             <div class="card-header bg-warning text-dark">
                                 <h6 class="mb-0">
@@ -279,7 +289,7 @@ $subtitulo = $esEmpleador
                                 <i class="bi bi-arrow-left me-1"></i>Cancelar
                             </a>
                             <button type="submit" class="btn btn-<?= $colorTema ?> <?= $colorTema === 'warning' ? 'text-dark' : '' ?>"
-                                    id="btnGuardar" <?= $plazasDisponibles <= 0 ? 'disabled' : '' ?>>
+                                    id="btnGuardar" <?= (!$esBrigada && $plazasDisponibles <= 0) ? 'disabled' : '' ?>>
                                 <i class="bi bi-check-lg me-1"></i>
                                 <?= $esEmpleador ? 'Designar Representante' : 'Inscribir Candidato' ?>
                             </button>
@@ -345,7 +355,7 @@ $subtitulo = $esEmpleador
                     <?php endif; ?>
                 </div>
 
-                <?php if ($plazasDisponibles <= 0): ?>
+                <?php if (!$esBrigada && $plazasDisponibles <= 0): ?>
                 <div class="card-footer bg-warning text-dark">
                     <i class="bi bi-exclamation-triangle me-1"></i>
                     Se han cubierto todas las plazas disponibles

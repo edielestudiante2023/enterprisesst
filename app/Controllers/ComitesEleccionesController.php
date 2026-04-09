@@ -611,10 +611,11 @@ class ComitesEleccionesController extends BaseController
             ->get()
             ->getResultArray();
 
-        // Calcular plazas disponibles
-        $plazasTotal = ($proceso['plazas_principales'] + $proceso['plazas_suplentes']);
+        // Calcular plazas disponibles (BRIGADA no tiene tope)
+        $sinTopePlazas = ($proceso['tipo_comite'] === 'BRIGADA');
+        $plazasTotal = $sinTopePlazas ? count($candidatosInscritos) : ($proceso['plazas_principales'] + $proceso['plazas_suplentes']);
         $plazasOcupadas = count($candidatosInscritos);
-        $plazasDisponibles = $plazasTotal - $plazasOcupadas;
+        $plazasDisponibles = $sinTopePlazas ? 999 : ($plazasTotal - $plazasOcupadas);
 
         // Determinar si requiere certificado 50h
         $requiereCertificado50h = in_array($proceso['tipo_comite'], ['COPASST', 'VIGIA']);
