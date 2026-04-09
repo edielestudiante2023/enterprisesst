@@ -1004,12 +1004,17 @@ class ActasController extends BaseController
 
         $cerradaPor = session()->get('user_id');
 
+        // Verificar que haya al menos un asistente marcado
+        $presentes = $this->asistentesModel->getPresentes($idActa);
+        if (empty($presentes)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Debe marcar al menos un asistente antes de cerrar el acta']);
+        }
+
         if ($this->actaModel->cerrarYEnviarAFirmas($idActa, $cerradaPor)) {
             // Programar notificaciones de firma
-            $asistentes = $this->asistentesModel->getPresentes($idActa);
             $actaActualizada = $this->actaModel->find($idActa);
 
-            foreach ($asistentes as $asistente) {
+            foreach ($presentes as $asistente) {
                 if (!empty($asistente['email'])) {
                     $this->notificacionModel->programarSolicitudFirma(
                         $idActa,
@@ -1053,6 +1058,11 @@ class ActasController extends BaseController
         }
 
         $cerradaPor = session()->get('user_id');
+
+        // Verificar que haya al menos un asistente marcado
+        if (empty($this->asistentesModel->getPresentes($idActa))) {
+            return redirect()->back()->with('error', 'Debe marcar al menos un asistente antes de cerrar el acta');
+        }
 
         if ($this->actaModel->cerrarYEnviarAFirmas($idActa, $cerradaPor)) {
             $asistentes = $this->asistentesModel->getPresentes($idActa);
