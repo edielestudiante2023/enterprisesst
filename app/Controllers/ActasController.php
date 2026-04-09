@@ -886,6 +886,31 @@ class ActasController extends BaseController
 
         $this->actaModel->update($idActa, $data);
 
+        // Actualizar asistencia desde checkboxes
+        $asistio = $this->request->getPost('asistio') ?? [];
+        $asistentesActa = $this->asistentesModel->getByActa($idActa);
+
+        foreach ($asistentesActa as $asistente) {
+            if ($asistente['tipo_asistente'] === 'asesor') {
+                // Asesores no se desmarcan desde edición
+                continue;
+            }
+            $marcado = in_array((string)$asistente['id_miembro'], $asistio, true);
+            if ($marcado && !$asistente['asistio']) {
+                $this->asistentesModel->marcarPresente($asistente['id_asistente']);
+            } elseif (!$marcado && $asistente['asistio']) {
+                $this->asistentesModel->marcarAusente($asistente['id_asistente']);
+            }
+        }
+
+        // Recalcular quórum
+        $quorumPresente = $this->asistentesModel->calcularQuorumPresente($idActa);
+        $hayQuorum = $this->asistentesModel->hayQuorum($idActa);
+        $this->actaModel->update($idActa, [
+            'quorum_presente' => $quorumPresente,
+            'hay_quorum' => $hayQuorum ? 1 : 0
+        ]);
+
         // Actualizar compromisos existentes
         $compromisosIds = $this->request->getPost('compromiso_id') ?? [];
         $compromisosDesc = $this->request->getPost('compromiso_descripcion') ?? [];
@@ -977,11 +1002,6 @@ class ActasController extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Esta acta ya fue cerrada']);
         }
 
-        // Verificar quórum
-        if (!$this->asistentesModel->hayQuorum($idActa)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'No hay quórum suficiente para cerrar el acta']);
-        }
-
         $cerradaPor = session()->get('user_id');
 
         if ($this->actaModel->cerrarYEnviarAFirmas($idActa, $cerradaPor)) {
@@ -1030,11 +1050,6 @@ class ActasController extends BaseController
 
         if (!in_array($acta['estado'], ['borrador', 'en_edicion'])) {
             return redirect()->back()->with('error', 'Esta acta ya fue cerrada');
-        }
-
-        // Verificar quórum
-        if (!$this->asistentesModel->hayQuorum($idActa)) {
-            return redirect()->back()->with('error', 'No hay quórum suficiente para cerrar el acta');
         }
 
         $cerradaPor = session()->get('user_id');
