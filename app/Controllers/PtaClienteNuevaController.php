@@ -541,6 +541,7 @@ class PtaClienteNuevaController extends Controller
             $systemPrompt = "Eres un consultor experto en Seguridad y Salud en el Trabajo (SST) bajo la normativa colombiana (Decreto 1072 de 2015, Resolución 0312 de 2019). "
                 . "Tu tarea es proponer actividades REALISTAS y ESPECÍFICAS para el Plan de Trabajo Anual del SG-SST de una empresa. "
                 . "Las actividades deben ser pertinentes al sector económico, nivel de riesgo y peligros reales de la empresa. "
+                . "La complejidad de las opciones debe corresponder a la complejidad de la descripción del usuario. "
                 . "Responde SOLO con un JSON array de exactamente 3 opciones. Cada opción: phva (PLANEAR, HACER, VERIFICAR o ACTUAR), numeral (del estándar mínimo Resolución 0312), actividad (descripción profesional concisa). "
                 . "Ejemplo: [{\"phva\":\"HACER\",\"numeral\":\"3.1.3\",\"actividad\":\"Realizar exámenes médicos ocupacionales periódicos con énfasis en audiometría para operarios expuestos a ruido\"}]";
 
