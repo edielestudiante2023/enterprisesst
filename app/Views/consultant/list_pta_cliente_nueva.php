@@ -1457,7 +1457,7 @@
                     ],
                     "dom": '<"row"<"col-sm-12"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
                     "columnDefs": [
-                        { "visible": false, "targets": [0, 1, 2, 4, 15, 16, 17, 18] },
+                        { "visible": false, "targets": [2, 4, 15, 16, 17, 18] },
                         { "orderable": false, "searchable": false, "targets": [0] },
                         { "orderable": false, "targets": [14] }
                     ],
