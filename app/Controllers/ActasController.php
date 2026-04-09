@@ -979,11 +979,15 @@ class ActasController extends BaseController
         $comite = $this->comiteModel->getConDetalles($acta['id_comite']);
         $asistentes = $this->asistentesModel->getByActa($idActa);
 
+        $reaperturaModel = new \App\Models\ActaSolicitudReaperturaModel();
+        $solicitudPendiente = $reaperturaModel->tieneSolicitudPendiente($idActa);
+
         return view('actas/ver_acta', [
             'cliente' => $cliente,
             'comite' => $comite,
             'acta' => $acta,
-            'asistentes' => $asistentes
+            'asistentes' => $asistentes,
+            'solicitudReaperturaPendiente' => $solicitudPendiente
         ]);
     }
 
@@ -1923,5 +1927,153 @@ class ActasController extends BaseController
             ->setHeader('Content-Type', 'image/png')
             ->setHeader('Cache-Control', 'max-age=3600')
             ->setBody($datos);
+    }
+
+    /**
+     * Solicitar reapertura de acta (POST, autenticado)
+     */
+    public function solicitarReapertura(int $idActa)
+    {
+        $acta = $this->actaModel->find($idActa);
+
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Acta no encontrada']);
+        }
+
+        if (!in_array($acta['estado'], ['pendiente_firma', 'firmada', 'cerrada'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Esta acta no requiere reapertura']);
+        }
+
+        $reaperturaModel = new \App\Models\ActaSolicitudReaperturaModel();
+
+        if ($reaperturaModel->tieneSolicitudPendiente($idActa)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Ya existe una solicitud de reapertura pendiente para esta acta']);
+        }
+
+        $nombre = $this->request->getPost('solicitante_nombre');
+        $email = $this->request->getPost('solicitante_email');
+        $cargo = $this->request->getPost('solicitante_cargo');
+        $justificacion = $this->request->getPost('justificacion');
+
+        if (empty($nombre) || empty($email) || empty($justificacion)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Nombre, email y justificación son obligatorios']);
+        }
+
+        // Obtener consultor asignado al cliente
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($acta['id_cliente']);
+        $consultorModel = new \App\Models\ConsultantModel();
+        $consultor = $consultorModel->find($cliente['id_consultor'] ?? 0);
+
+        if (!$consultor || empty($consultor['correo_consultor'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No hay consultor asignado a este cliente']);
+        }
+
+        // Crear solicitud
+        $id = $reaperturaModel->crearSolicitud([
+            'id_acta' => $idActa,
+            'id_cliente' => $acta['id_cliente'],
+            'solicitante_nombre' => $nombre,
+            'solicitante_email' => $email,
+            'solicitante_cargo' => $cargo
+            ,
+            'justificacion' => $justificacion
+        ]);
+
+        if (!$id) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al crear la solicitud']);
+        }
+
+        // Obtener token generado
+        $solicitud = $reaperturaModel->find($id);
+        $token = $solicitud['token'];
+
+        // Enviar email al consultor
+        $comite = $this->comiteModel->getConDetalles($acta['id_comite']);
+        $enviado = $this->enviarEmailReapertura($consultor, $token, $acta, $comite, $nombre, $cargo, $justificacion);
+
+        if (!$enviado) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Solicitud creada pero hubo un error al enviar el email. Contacte al administrador.']);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Solicitud de reapertura enviada al consultor ' . $consultor['nombre_consultor'] . '. Recibirá una notificación cuando sea procesada.'
+        ]);
+    }
+
+    /**
+     * Enviar email de solicitud de reapertura al consultor
+     */
+    private function enviarEmailReapertura(array $consultor, string $token, array $acta, array $comite, string $solicitante, string $cargo, string $justificacion): bool
+    {
+        $urlAprobar = base_url("acta/aprobar-reapertura/{$token}");
+        $tipoComite = $comite['tipo_nombre'] ?? 'Comité';
+        $fechaReunion = date('d/m/Y', strtotime($acta['fecha_reunion']));
+
+        $mensaje = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 20px; text-align: center;'>
+                <h2 style='color: white; margin: 0;'>Solicitud de Reapertura de Acta</h2>
+            </div>
+            <div style='padding: 30px; background: #f8f9fa;'>
+                <p>Estimado/a <strong>{$consultor['nombre_consultor']}</strong>,</p>
+                <p>Se ha recibido una solicitud de reapertura para la siguiente acta:</p>
+
+                <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;'>
+                    <p style='margin: 5px 0;'><strong>Acta N°:</strong> {$acta['numero_acta']}</p>
+                    <p style='margin: 5px 0;'><strong>Comité:</strong> {$tipoComite}</p>
+                    <p style='margin: 5px 0;'><strong>Fecha reunión:</strong> {$fechaReunion}</p>
+                    <p style='margin: 5px 0;'><strong>Estado actual:</strong> {$acta['estado']}</p>
+                </div>
+
+                <div style='background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;'>
+                    <p style='margin: 5px 0;'><strong>Solicitado por:</strong> {$solicitante}</p>
+                    <p style='margin: 5px 0;'><strong>Cargo:</strong> {$cargo}</p>
+                    <p style='margin: 5px 0;'><strong>Justificación:</strong></p>
+                    <p style='margin: 5px 0; font-style: italic;'>\"{$justificacion}\"</p>
+                </div>
+
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='{$urlAprobar}' style='background: #dc3545; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; display: inline-block;'>
+                        Revisar Solicitud
+                    </a>
+                </div>
+
+                <p style='color: #666; font-size: 12px;'>O copie este enlace en su navegador:</p>
+                <p style='word-break: break-all; background: #e9ecef; padding: 10px; border-radius: 4px; font-size: 12px;'>{$urlAprobar}</p>
+
+                <hr style='border: none; border-top: 1px solid #dee2e6; margin: 20px 0;'>
+                <p style='color: #666; font-size: 11px;'>
+                    <strong>Importante:</strong> Este enlace expirará en 48 horas.<br>
+                    Si aprueba la solicitud, el acta volverá al estado de edición y las firmas previas serán invalidadas.
+                </p>
+            </div>
+            <div style='background: #1e3a5f; padding: 15px; text-align: center;'>
+                <p style='color: #94a3b8; font-size: 11px; margin: 0;'>
+                    EnterpriseSST - Sistema de Gestión de Seguridad y Salud en el Trabajo
+                </p>
+            </div>
+        </div>
+        ";
+
+        try {
+            $email = new \SendGrid\Mail\Mail();
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setSubject("Solicitud de Reapertura: Acta {$acta['numero_acta']} - {$tipoComite}");
+            $email->addTo($consultor['correo_consultor'], $consultor['nombre_consultor']);
+            $email->addContent("text/html", $mensaje);
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($email);
+
+            $statusCode = $response->statusCode();
+            log_message('info', "SendGrid reapertura email enviado a {$consultor['correo_consultor']} - Status: {$statusCode}");
+
+            return $statusCode >= 200 && $statusCode < 300;
+        } catch (\Exception $e) {
+            log_message('error', 'Error enviando email de reapertura via SendGrid: ' . $e->getMessage());
+            return false;
+        }
     }
 }

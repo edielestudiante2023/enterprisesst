@@ -423,4 +423,99 @@ class ActaFirmaPublicaController extends BaseController
             'comite' => $comite
         ]);
     }
+
+    /**
+     * Página para aprobar/rechazar reapertura de acta (acceso por token)
+     */
+    public function aprobarReapertura(string $token)
+    {
+        $reaperturaModel = new \App\Models\ActaSolicitudReaperturaModel();
+        $solicitud = $reaperturaModel->getByToken($token);
+
+        if (!$solicitud) {
+            return view('actas/publico/reapertura_resultado', [
+                'resultado' => 'error',
+                'mensaje' => 'El enlace es inválido o ha expirado. La solicitud puede haber sido procesada anteriormente o el plazo de 48 horas venció.'
+            ]);
+        }
+
+        $acta = $this->actaModel->find($solicitud['id_acta']);
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($solicitud['id_cliente']);
+        $comiteModel = new ComiteModel();
+        $comite = $comiteModel->getConDetalles($acta['id_comite']);
+
+        return view('actas/publico/aprobar_reapertura', [
+            'solicitud' => $solicitud,
+            'acta' => $acta,
+            'cliente' => $cliente,
+            'comite' => $comite,
+            'token' => $token
+        ]);
+    }
+
+    /**
+     * Procesar aprobación/rechazo de reapertura (POST público)
+     */
+    public function procesarReapertura(string $token)
+    {
+        $reaperturaModel = new \App\Models\ActaSolicitudReaperturaModel();
+        $solicitud = $reaperturaModel->getByToken($token);
+
+        if (!$solicitud) {
+            return view('actas/publico/reapertura_resultado', [
+                'resultado' => 'error',
+                'mensaje' => 'El enlace es inválido o ha expirado.'
+            ]);
+        }
+
+        $accion = $this->request->getPost('accion');
+
+        if ($accion === 'aprobar') {
+            // Aprobar solicitud
+            $reaperturaModel->aprobar($solicitud['id'], 'Consultor (vía enlace)');
+
+            // Revertir acta a en_edicion
+            $this->actaModel->update($solicitud['id_acta'], [
+                'estado' => 'en_edicion',
+                'fecha_cierre' => null,
+                'cerrada_por' => null
+            ]);
+
+            // Resetear firmas de asistentes
+            $asistentes = $this->asistentesModel->getByActa($solicitud['id_acta']);
+            foreach ($asistentes as $asistente) {
+                if (!empty($asistente['firma_fecha'])) {
+                    $this->asistentesModel->update($asistente['id_asistente'], [
+                        'estado_firma' => 'pendiente',
+                        'firma_imagen' => null,
+                        'firma_fecha' => null,
+                        'firma_ip' => null,
+                        'token_firma' => null,
+                        'token_expira' => null
+                    ]);
+                }
+            }
+
+            return view('actas/publico/reapertura_resultado', [
+                'resultado' => 'aprobada',
+                'mensaje' => 'La solicitud de reapertura ha sido aprobada. El acta ahora puede ser editada nuevamente.',
+                'acta' => $this->actaModel->find($solicitud['id_acta'])
+            ]);
+
+        } elseif ($accion === 'rechazar') {
+            $motivo = $this->request->getPost('motivo_rechazo') ?: 'Sin motivo especificado';
+            $reaperturaModel->rechazar($solicitud['id'], $motivo);
+
+            return view('actas/publico/reapertura_resultado', [
+                'resultado' => 'rechazada',
+                'mensaje' => 'La solicitud de reapertura ha sido rechazada.'
+            ]);
+        }
+
+        return view('actas/publico/reapertura_resultado', [
+            'resultado' => 'error',
+            'mensaje' => 'Acción no válida.'
+        ]);
+    }
 }

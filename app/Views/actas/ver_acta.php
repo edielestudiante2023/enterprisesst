@@ -44,6 +44,18 @@
                     <a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/word') ?>" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-file-word me-1"></i> Word
                     </a>
+
+                    <?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada', 'cerrada'])): ?>
+                        <?php if (!empty($solicitudReaperturaPendiente)): ?>
+                        <button type="button" class="btn btn-warning btn-sm" disabled>
+                            <i class="bi bi-hourglass-split me-1"></i> Reapertura Pendiente
+                        </button>
+                        <?php else: ?>
+                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="solicitarReapertura()">
+                            <i class="bi bi-unlock me-1"></i> Solicitar Reabrir
+                        </button>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -387,5 +399,91 @@
         </div>
     </div>
 </div>
+
+<?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada', 'cerrada']) && empty($solicitudReaperturaPendiente)): ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function solicitarReapertura() {
+    Swal.fire({
+        title: 'Solicitar Reapertura de Acta',
+        html: `
+            <div class="text-start">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre completo <span class="text-danger">*</span></label>
+                    <input type="text" id="swal_nombre" class="form-control" placeholder="Su nombre completo">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                    <input type="email" id="swal_email" class="form-control" placeholder="su@email.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Cargo</label>
+                    <input type="text" id="swal_cargo" class="form-control" placeholder="Su cargo">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Justificacion <span class="text-danger">*</span></label>
+                    <textarea id="swal_justificacion" class="form-control" rows="4" placeholder="Explique por que debe reabrirse esta acta..."></textarea>
+                </div>
+                <div class="alert alert-warning small mb-0">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Al aprobar la reapertura, las firmas existentes seran invalidadas y el acta volvera a estado de edicion.
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-send me-1"></i> Enviar Solicitud',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545',
+        width: '550px',
+        preConfirm: () => {
+            const nombre = document.getElementById('swal_nombre').value.trim();
+            const email = document.getElementById('swal_email').value.trim();
+            const justificacion = document.getElementById('swal_justificacion').value.trim();
+
+            if (!nombre || !email || !justificacion) {
+                Swal.showValidationMessage('Nombre, email y justificacion son obligatorios');
+                return false;
+            }
+
+            return {
+                solicitante_nombre: nombre,
+                solicitante_email: email,
+                solicitante_cargo: document.getElementById('swal_cargo').value.trim(),
+                justificacion: justificacion
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('solicitante_nombre', result.value.solicitante_nombre);
+            formData.append('solicitante_email', result.value.solicitante_email);
+            formData.append('solicitante_cargo', result.value.solicitante_cargo);
+            formData.append('justificacion', result.value.justificacion);
+
+            fetch('<?= base_url("actas/solicitar-reapertura/" . $acta["id_acta"]) ?>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Solicitud Enviada',
+                        text: data.message,
+                        confirmButtonColor: '#28a745'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                }
+            })
+            .catch(() => {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexion. Intente nuevamente.' });
+            });
+        }
+    });
+}
+</script>
+<?php endif; ?>
 
 <?= $this->endSection() ?>

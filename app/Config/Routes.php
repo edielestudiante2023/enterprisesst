@@ -1422,6 +1422,13 @@ $routes->get('/acta/ver/(:segment)', 'ActaFirmaPublicaController::verActa/$1');
 $routes->get('/acta/tarea/(:segment)', 'ActaFirmaPublicaController::actualizarTarea/$1');
 $routes->post('/acta/tarea/(:segment)', 'ActaFirmaPublicaController::procesarActualizacionTarea/$1');
 
+// Solicitar reapertura de acta (autenticado)
+$routes->post('/actas/solicitar-reapertura/(:num)', 'ActasController::solicitarReapertura/$1');
+
+// Aprobar/rechazar reapertura por token (público)
+$routes->get('/acta/aprobar-reapertura/(:segment)', 'ActaFirmaPublicaController::aprobarReapertura/$1');
+$routes->post('/acta/aprobar-reapertura/(:segment)', 'ActaFirmaPublicaController::procesarReapertura/$1');
+
 // Verificar código de acta (público)
 $routes->get('/acta/verificar', 'ActaFirmaPublicaController::verificarActa');
 $routes->post('/acta/verificar', 'ActaFirmaPublicaController::verificarActa');
