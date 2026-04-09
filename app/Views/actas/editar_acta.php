@@ -262,8 +262,9 @@
                         <?php endif; ?>
 
                         <?php
-                        $asistentesIds = array_column($asistentes, 'id_miembro');
-                        $asistentesEmails = array_column($asistentes, 'email');
+                        $asistentesPresentes = array_filter($asistentes, fn($a) => !empty($a['asistio']));
+                        $asistentesIds = array_column($asistentesPresentes, 'id_miembro');
+                        $asistentesEmails = array_column($asistentesPresentes, 'email');
                         $principales = array_filter($miembros, fn($m) => $m['tipo_miembro'] === 'principal');
                         $suplentes = array_filter($miembros, fn($m) => $m['tipo_miembro'] === 'suplente');
                         $asesoresVirtuales = array_filter($miembros, fn($m) => ($m['tipo_miembro'] ?? '') === 'asesor');
