@@ -2664,14 +2664,20 @@
                     $('#iaGenerating').hide();
                     if (!resp.success) { Swal.fire('Error', resp.message, 'error'); return; }
 
-                    var html = '<div class="list-group">';
+                    var html = '<div class="d-flex align-items-center mb-2">' +
+                        '<div class="form-check"><input class="form-check-input" type="checkbox" id="iaSelectAll">' +
+                        '<label class="form-check-label fw-bold" for="iaSelectAll">Seleccionar todas</label></div></div>';
+                    html += '<div class="list-group">';
                     resp.options.forEach(function(opt, idx) {
-                        html += '<button type="button" class="list-group-item list-group-item-action ia-select-activity" ' +
+                        html += '<label class="list-group-item list-group-item-action d-flex align-items-start ia-option-item" style="cursor:pointer;">' +
+                            '<input type="checkbox" class="form-check-input me-2 mt-1 ia-option-check" ' +
                             'data-phva="' + escHtml(opt.phva) + '" data-numeral="' + escHtml(opt.numeral) + '" data-actividad="' + escHtml(opt.actividad) + '">' +
-                            '<span class="badge bg-primary me-2">Opción ' + (idx+1) + '</span>' +
-                            '<strong>[' + escHtml(opt.phva) + ' - ' + escHtml(opt.numeral) + ']</strong> ' + escHtml(opt.actividad) + '</button>';
+                            '<div><span class="badge bg-primary me-2">Opción ' + (idx+1) + '</span>' +
+                            '<strong>[' + escHtml(opt.phva) + ' - ' + escHtml(opt.numeral) + ']</strong> ' + escHtml(opt.actividad) + '</div></label>';
                     });
                     html += '</div>';
+                    html += '<button type="button" class="btn btn-success mt-3 w-100" id="iaInsertSelectedBtn" disabled>' +
+                        '<i class="fas fa-plus-circle me-1"></i> Insertar seleccionadas (<span id="iaSelectedCount">0</span>)</button>';
                     $('#iaOptions').html(html);
                     $('#iaRefineSection').show();
                 },
@@ -2754,22 +2760,54 @@
             });
         }
 
-        $(document).on('click', '.ia-select-activity', function() {
-            var phva = $(this).data('phva');
-            var numeral = $(this).data('numeral');
-            var actividad = $(this).data('actividad');
+        // Checkbox "Seleccionar todas"
+        $(document).on('change', '#iaSelectAll', function() {
+            var checked = $(this).is(':checked');
+            $('.ia-option-check').prop('checked', checked);
+            updateSelectedCount();
+        });
+
+        // Actualizar conteo al cambiar cualquier checkbox individual
+        $(document).on('change', '.ia-option-check', function() {
+            var total = $('.ia-option-check').length;
+            var checked = $('.ia-option-check:checked').length;
+            $('#iaSelectAll').prop('checked', checked === total);
+            updateSelectedCount();
+        });
+
+        function updateSelectedCount() {
+            var count = $('.ia-option-check:checked').length;
+            $('#iaSelectedCount').text(count);
+            $('#iaInsertSelectedBtn').prop('disabled', count === 0);
+        }
+
+        // Insertar todas las seleccionadas
+        $(document).on('click', '#iaInsertSelectedBtn', function() {
+            var selected = [];
+            $('.ia-option-check:checked').each(function() {
+                selected.push({
+                    phva: $(this).data('phva'),
+                    numeral: $(this).data('numeral'),
+                    actividad: $(this).data('actividad')
+                });
+            });
+            if (selected.length === 0) return;
+
+            var resumenHtml = '<ul class="text-start" style="font-size:0.9em;">';
+            selected.forEach(function(s, i) {
+                resumenHtml += '<li><strong>[' + escHtml(s.phva) + ' - ' + escHtml(s.numeral) + ']</strong> ' + escHtml(s.actividad) + '</li>';
+            });
+            resumenHtml += '</ul>';
 
             Swal.fire({
-                title: 'Confirmar actividad',
-                html: '<p><strong>PHVA:</strong> ' + escHtml(phva) + '</p>' +
-                      '<p><strong>Numeral:</strong> ' + escHtml(numeral) + '</p>' +
-                      '<p><strong>Actividad:</strong> ' + escHtml(actividad) + '</p>' +
-                      buildMonthPanel(),
+                title: 'Insertar ' + selected.length + ' actividad(es)',
+                html: resumenHtml + buildMonthPanel(),
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Insertar',
+                confirmButtonText: 'Insertar todas',
                 cancelButtonText: 'Cancelar',
                 confirmButtonColor: '#7c3aed',
+                width: '600px',
                 preConfirm: () => {
                     var mode = $('input[name="swalDateMode"]:checked').val();
                     if (mode === 'multi') {
@@ -2790,8 +2828,42 @@
                 }
             }).then((result) => {
                 if (!result.isConfirmed) return;
-                doInsertActivity(phva, numeral, actividad, result.value.months, result.value.fecha);
+                var months = result.value.months;
+                var fecha = result.value.fecha;
+                var totalInserted = 0;
+                var errors = [];
+                var idx = 0;
+
+                Swal.fire({ title: 'Insertando...', text: '0 de ' + selected.length, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                function insertNext() {
+                    if (idx >= selected.length) {
+                        Swal.close();
+                        if (errors.length > 0) {
+                            Swal.fire('Parcial', totalInserted + ' insertada(s), ' + errors.length + ' error(es)', 'warning').then(() => reloadWithFilters());
+                        } else {
+                            Swal.fire('Listo', totalInserted + ' actividad(es) insertada(s)', 'success').then(() => reloadWithFilters());
+                        }
+                        return;
+                    }
+                    var s = selected[idx];
+                    Swal.getHtmlContainer().querySelector('.swal2-content, p')?.remove();
+                    Swal.update({ text: (idx + 1) + ' de ' + selected.length });
+                    doInsertActivity(s.phva, s.numeral, s.actividad, months, fecha, function(resp) {
+                        totalInserted += (resp.inserted || 1);
+                        idx++;
+                        insertNext();
+                    });
+                }
+                insertNext();
             });
+        });
+
+        // Click individual en opción (mantener compatibilidad: click en la opción sin checkbox)
+        $(document).on('click', '.ia-option-item', function(e) {
+            if ($(e.target).is('input[type="checkbox"]')) return; // el checkbox se maneja solo
+            var cb = $(this).find('.ia-option-check');
+            cb.prop('checked', !cb.is(':checked')).trigger('change');
         });
 
         function escHtml(str) {

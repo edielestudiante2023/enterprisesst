@@ -850,6 +850,7 @@ class ActasController extends BaseController
             'cliente' => $cliente,
             'comite' => $comite,
             'acta' => $acta,
+            'compromisos' => $acta['compromisos'] ?? [],
             'compromisosPendientes' => $compromisosPendientes,
             'miembros' => $miembros,
             'asistentes' => $asistentes
@@ -878,6 +879,9 @@ class ActasController extends BaseController
             'desarrollo' => json_encode($desarrollo),
             'conclusiones' => $this->request->getPost('conclusiones'),
             'observaciones' => $this->request->getPost('observaciones'),
+            'proxima_reunion_fecha' => $this->request->getPost('proxima_reunion_fecha') ?: null,
+            'proxima_reunion_hora' => $this->request->getPost('proxima_reunion_hora') ?: null,
+            'proxima_reunion_lugar' => $this->request->getPost('proxima_reunion_lugar') ?: null,
         ];
 
         $this->actaModel->update($idActa, $data);
