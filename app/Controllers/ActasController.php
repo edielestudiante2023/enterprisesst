@@ -868,6 +868,17 @@ class ActasController extends BaseController
             return redirect()->back()->with('error', 'Acta no encontrada o no editable');
         }
 
+        // Preparar orden del día desde la vista
+        $ordenPuntos = $this->request->getPost('orden_punto') ?? [];
+        $ordenTemas = $this->request->getPost('orden_tema') ?? [];
+        $ordenDia = [];
+        foreach ($ordenPuntos as $i => $punto) {
+            $tema = $ordenTemas[$i] ?? '';
+            if (!empty(trim($tema))) {
+                $ordenDia[] = ['punto' => (int) $punto, 'tema' => trim($tema)];
+            }
+        }
+
         // Preparar desarrollo - la vista envía desarrollo[punto_number] = descripcion
         $desarrolloPost = $this->request->getPost('desarrollo') ?? [];
         $desarrollo = [];
@@ -876,6 +887,7 @@ class ActasController extends BaseController
         }
 
         $data = [
+            'orden_del_dia' => json_encode($ordenDia, JSON_UNESCAPED_UNICODE),
             'desarrollo' => json_encode($desarrollo),
             'conclusiones' => $this->request->getPost('conclusiones'),
             'observaciones' => $this->request->getPost('observaciones'),
