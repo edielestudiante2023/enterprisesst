@@ -1535,6 +1535,16 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->get('acta/(:num)/pdf', 'MiembroAuthController::descargarPDF/$1');
     $routes->post('acta/(:num)/cerrar', 'MiembroAuthController::cerrarActa/$1');
     $routes->get('compromisos', 'MiembroAuthController::misCompromisos');
+
+    // Inspecciones Locativas (miembro COPASST)
+    $routes->get('inspecciones/locativa', 'MiembroInspeccionController::list');
+    $routes->get('inspecciones/locativa/create', 'MiembroInspeccionController::create');
+    $routes->post('inspecciones/locativa/store', 'MiembroInspeccionController::store');
+    $routes->get('inspecciones/locativa/edit/(:num)', 'MiembroInspeccionController::edit/$1');
+    $routes->post('inspecciones/locativa/update/(:num)', 'MiembroInspeccionController::update/$1');
+    $routes->get('inspecciones/locativa/view/(:num)', 'MiembroInspeccionController::view/$1');
+    $routes->post('inspecciones/locativa/finalizar/(:num)', 'MiembroInspeccionController::finalizar/$1');
+    $routes->get('inspecciones/locativa/pdf/(:num)', 'MiembroInspeccionController::generatePdf/$1');
 });
 
 // Acceso de miembros del comité (por token - legacy/alternativo)

@@ -76,10 +76,20 @@ class MiembroAuthController extends BaseController
         // Obtener el primer miembro para mostrar info general
         $miembro = $this->miembroModel->getByEmailYCliente($email, $idCliente);
 
+        // Verificar si es miembro COPASST
+        $esCopasst = false;
+        foreach ($comites as $c) {
+            if (($c['codigo'] ?? '') === 'COPASST') {
+                $esCopasst = true;
+                break;
+            }
+        }
+
         return view('actas/miembro_auth/dashboard', [
             'miembro' => $miembro,
             'cliente' => $cliente,
-            'comites' => $comites
+            'comites' => $comites,
+            'esCopasst' => $esCopasst
         ]);
     }
 

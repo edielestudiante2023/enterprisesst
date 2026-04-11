@@ -21,7 +21,7 @@
 
     <!-- Acceso rápido -->
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3">
             <a href="<?= base_url('miembro/compromisos') ?>" class="card border-0 shadow-sm text-decoration-none h-100">
                 <div class="card-body d-flex align-items-center">
                     <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
@@ -34,6 +34,22 @@
                 </div>
             </a>
         </div>
+
+        <?php if (!empty($esCopasst)): ?>
+        <div class="col-md-6 mb-3">
+            <a href="<?= base_url('miembro/inspecciones/locativa') ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-building text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1 text-dark">Inspecciones Locativas</h5>
+                        <p class="text-muted mb-0 small">Crear y ver inspecciones COPASST</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Mis Comités -->

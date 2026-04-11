@@ -9,7 +9,7 @@ class InspeccionLocativaModel extends Model
     protected $table = 'tbl_inspeccion_locativa';
     protected $primaryKey = 'id';
     protected $allowedFields = [
-        'id_cliente', 'id_consultor',
+        'id_cliente', 'id_consultor', 'id_miembro', 'creado_por_tipo',
         'fecha_inspeccion', 'observaciones',
         'ruta_pdf', 'estado', 'id_documento_sst',
         'created_at', 'updated_at',

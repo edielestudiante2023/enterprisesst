@@ -80,8 +80,8 @@
             <td><?= date('d/m/Y', strtotime($inspeccion['fecha_inspeccion'])) ?></td>
         </tr>
         <tr>
-            <td class="datos-label">CONSULTOR:</td>
-            <td colspan="3"><?= esc($consultor['nombre_consultor'] ?? '') ?></td>
+            <td class="datos-label"><?= !empty($realizadoPor) ? 'REALIZADO POR:' : 'CONSULTOR:' ?></td>
+            <td colspan="3"><?= !empty($realizadoPor) ? esc($realizadoPor) . ' (COPASST)' : esc($consultor['nombre_consultor'] ?? '') ?></td>
         </tr>
     </table>
 
