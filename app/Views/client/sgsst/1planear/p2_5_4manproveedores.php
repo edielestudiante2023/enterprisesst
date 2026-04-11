@@ -212,24 +212,24 @@ Fecha: <?= strftime('%d de %B de %Y', strtotime($latestVersion['created_at'])); 
         <p class="gamma-subtitulo">A. DEFINICIONES</p>
         <ul>
             <li>Compra: Adquisición del derecho de uso o explotación de un bien o servicio, a cambio de la entrega de otro bien representado en dinero.</li>
-            <li>Insumos: Todo elemento de consumo interno necesario para el normal desarrollo de las actividades administrativas en la propiedad horizontal.</li>
+            <li>Insumos: Todo elemento de consumo interno necesario para el normal desarrollo de las actividades administrativas y operativas de la organizacion.</li>
             <li>No conformidad: No cumplimiento de un requisito, pudiendo ser una desviación de estándares, prácticas, procedimientos, requisitos normativos, entre otros.</li>
-            <li>Parte interesada: Persona o grupo involucrado o afectado por el desempeño en seguridad y salud en el trabajo en la propiedad horizontal.</li>
+            <li>Parte interesada: Persona o grupo involucrado o afectado por el desempeno en seguridad y salud en el trabajo de la organizacion.</li>
             <li>Producto: Resultado del desarrollo de actividades o procesos aplicados a materias primas e insumos para generar un elemento tangible.</li>
-            <li>Proveedor: Organización o persona que proporciona producto o servicio a la propiedad horizontal.</li>
+            <li>Proveedor: Organizacion o persona que proporciona producto o servicio a la organizacion.</li>
             <li>Proveedores críticos: Aquellos que pueden afectar de manera significativa la seguridad y salud en el trabajo de la Organización.</li>
             <li>Proveedor único o exclusivo: Organización que por las características especiales de su producto y/o servicio no tiene competencia alguna.</li>
             <li>Requisito Normativo: Requisito de seguridad y salud en el trabajo impuesto por una norma vigente y aplicable.</li>
-            <li>Servicio: Labor o trabajo realizado a favor de la propiedad horizontal por empresas o personas, sin implicar transformación de materia prima.</li>
+            <li>Servicio: Labor o trabajo realizado a favor de la organizacion por empresas o personas, sin implicar transformacion de materia prima.</li>
         </ul>
 
         <p class="gamma-subtitulo">B. CRITERIOS DE SELECCIÓN DE PROVEEDORES:</p>
-        <p>Detalla los criterios específicos de selección de proveedores adaptados a las necesidades particulares de la propiedad horizontal:</p>
+        <p>Detalla los criterios especificos de seleccion de proveedores adaptados a las necesidades particulares de la organizacion:</p>
         <ul>
             <li>Experiencia en servicios similares para finanzas.</li>
             <li>Cumplimiento de normativas de seguridad y salud.</li>
             <li>Referencias de trabajos anteriores relacionados con comunidades residenciales.</li>
-            <li>Capacidades técnicas y recursos disponibles adaptados a las instalaciones de la propiedad horizontal.</li>
+            <li>Capacidades tecnicas y recursos disponibles adaptados a las instalaciones de la organizacion.</li>
             <li>Cumplimiento de plazos y tiempos de entrega ajustados a las necesidades de la copropiedad.</li>
         </ul>
 

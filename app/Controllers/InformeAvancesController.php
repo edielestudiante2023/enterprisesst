@@ -955,7 +955,7 @@ ACTIVIDADES CERRADAS EN EL PERIODO:
 {$inspeccionesTexto}
 
 ESTILO Y TONO:
-1. Tono positivo, comercial y orientado a resultados. El informe lo lee el cliente (administrador de propiedad horizontal) y debe sentir que su inversión en consultoría SST genera valor.
+1. Tono positivo, comercial y orientado a resultados. El informe lo lee el cliente y debe sentir que su inversión en consultoría SST genera valor.
 2. IMPORTANTE: El resumen debe hablar EXCLUSIVAMENTE de lo que ocurrió en el periodo evaluado ({$desde} a {$hasta}). No menciones totales anuales ni actividades fuera de este periodo.
 3. Resalta PRIMERO los logros del periodo: actividades cerradas, documentos generados, capacitaciones ejecutadas, avance en calificación.
 4. Usa los "COMPROMISOS PTA PROGRAMADOS PARA ESTE PERIODO" para hablar de lo que se debía hacer vs lo que se hizo. No mezcles con el total anual.

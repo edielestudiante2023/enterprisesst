@@ -222,10 +222,10 @@ class PzasignacionresponsableSstController extends Controller
             . "nombro a la empresa <strong>{$empresaConsultora}</strong>, y esta a su vez asignando como responsable al profesional en Seguridad y Salud en el Trabajo, "
             . "<strong>{$nombreConsultor}</strong> con documento de identidad <strong>{$cedulaConsultor}</strong>, con numero de licencia <strong>{$licenciaConsultor}</strong>"
             . ", a quien se le confia la responsabilidad de asesorar en la administracion e implementacion del Sistema de Gestion "
-            . "de Seguridad y Salud en el Trabajo (SG-SST) en la propiedad horizontal.";
+            . "de Seguridad y Salud en el Trabajo (SG-SST) en la organizacion.";
 
         $textoAlcance = "Esto incluye la orientacion en la planificacion, organizacion y direccion de las evaluaciones del sistema, "
-            . "la presentacion de informes detallados sobre su desempeno y resultados al consejo de administracion, administrador y asamblea de propietarios, "
+            . "la presentacion de informes detallados sobre su desempeno y resultados a la alta direccion, "
             . "asi como la provision de lineamientos para su actualizacion continua conforme a la normatividad vigente.";
 
         return [

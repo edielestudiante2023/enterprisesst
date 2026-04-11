@@ -180,7 +180,7 @@ class AuthController extends Controller
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
             <div style='text-align: center; margin-bottom: 30px;'>
                 <h1 style='color: #1c2437;'>Enterprisesst</h1>
-                <p style='color: #bd9751; font-size: 14px;'>Propiedad Horizontal</p>
+                <p style='color: #bd9751; font-size: 14px;'>Sistema de Gestion SST</p>
             </div>
 
             <h2 style='color: #1c2437;'>Hola {$nombre},</h2>
