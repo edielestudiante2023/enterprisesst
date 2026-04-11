@@ -369,7 +369,7 @@
   <!-- Footer -->
   <footer style="background-color: white; padding: 20px 0; border-top: 1px solid #B0BEC5; margin-top: 40px; color: #3A3F51; font-size: 14px; text-align: center;">
       <div class="container d-flex flex-column align-items-center">
-          <p class="fw-bold mb-0">Cycloid Talent SAS</p>
+          <p class="fw-bold mb-0">EnterpriseSST</p>
           <p class="mb-2">Todos los derechos reservados © 2024</p>
           <p class="mb-2">NIT: 901.653.912</p>
           <p class="mb-2">

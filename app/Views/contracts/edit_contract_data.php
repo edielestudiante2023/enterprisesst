@@ -151,9 +151,9 @@
                 </div>
             </div>
 
-            <!-- Sección 3: Datos de Cycloid Talent (EL CONTRATISTA) -->
+            <!-- Sección 3: Datos de EnterpriseSST (EL CONTRATISTA) -->
             <div class="form-section">
-                <h4 class="section-title"><i class="fas fa-briefcase"></i> Datos de Cycloid Talent (EL CONTRATISTA)</h4>
+                <h4 class="section-title"><i class="fas fa-briefcase"></i> Datos de EnterpriseSST (EL CONTRATISTA)</h4>
 
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> Estos datos están prellenados y normalmente no necesitan cambios.

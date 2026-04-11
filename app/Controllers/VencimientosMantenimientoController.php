@@ -277,7 +277,7 @@ class VencimientosMantenimientoController extends BaseController
             log_message('debug', 'Destinatarios del correo: ' . implode(', ', $destinatarios));
 
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Recordatorio de Vencimiento");
 
             // Agregar destinatarios unicos
@@ -291,14 +291,14 @@ class VencimientosMantenimientoController extends BaseController
 
                  <p>Nos dirigimos a usted con el firme proposito de recordarle que el mantenimiento <strong>{$mantenimiento['detalle_mantenimiento']}</strong> tiene su fecha de vencimiento programada para el <strong>{$vencimiento['fecha_vencimiento']}</strong>.</p>
 
-                 <p>En <strong>Cycloid Talent</strong>, entendemos la importancia de un mantenimiento oportuno para garantizar la seguridad y el correcto funcionamiento de sus instalaciones. Como expertos en <strong>Seguridad y Salud en el Trabajo (SST)</strong>, estamos comprometidos en apoyarle en la planificacion y control de estas actividades, asegurando que cada proceso se ejecute de manera eficiente y conforme a la normativa.</p>
+                 <p>En <strong>EnterpriseSST</strong>, entendemos la importancia de un mantenimiento oportuno para garantizar la seguridad y el correcto funcionamiento de sus instalaciones. Como expertos en <strong>Seguridad y Salud en el Trabajo (SST)</strong>, estamos comprometidos en apoyarle en la planificacion y control de estas actividades, asegurando que cada proceso se ejecute de manera eficiente y conforme a la normativa.</p>
 
                  <p>Le recomendamos gestionar este mantenimiento con antelacion para evitar riesgos y garantizar la continuidad operativa. Si necesita orientacion o soporte, nuestro equipo esta disponible para asistirle en cada paso.</p>
 
                  <p><strong>Su seguridad y tranquilidad son nuestra prioridad!</strong> No dude en contactarnos para cualquier consulta adicional.</p>
 
                  <p>Saludos cordiales,</p>
-                 <p><strong>Cycloid Talent</strong></p>"
+                 <p><strong>EnterpriseSST</strong></p>"
             );
 
             // Intentar enviar el correo
@@ -319,7 +319,7 @@ class VencimientosMantenimientoController extends BaseController
     private function sendEmail($clientEmail, $consultantEmail, $subject, $content)
     {
         $email = new Mail();
-        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent");
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
         $email->setSubject($subject);
         $email->addTo($clientEmail);
         $email->addTo($consultantEmail);
@@ -380,7 +380,7 @@ class VencimientosMantenimientoController extends BaseController
             <p>El mantenimiento <strong>{$tituloMantenimiento}</strong> esta proximo a vencer el dia <strong>{$vencimiento['fecha_vencimiento']}</strong>.</p>
             <p>Por favor, tomen las acciones necesarias para su ejecucion antes de la fecha de vencimiento.</p>
             <p>Saludos,</p>
-            <p><strong>Cycloid Talent</strong></p>
+            <p><strong>EnterpriseSST</strong></p>
         ";
 
             // Enviar correos electronicos
@@ -412,7 +412,7 @@ class VencimientosMantenimientoController extends BaseController
         $mantenimiento = $mantenimientoModel->find($vencimiento['id_mantenimiento']);
 
         $email = new \SendGrid\Mail\Mail();
-        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent");
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
         $email->setSubject("Recordatorio de Vencimiento");
         $email->addTo($cliente['correo_cliente']);
         $email->addTo($consultor['correo_consultor']);

@@ -486,7 +486,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <h5 class="fw-bold mb-3"><i class="fas fa-building me-2"></i>Cycloid Talent SAS</h5>
+                    <h5 class="fw-bold mb-3"><i class="fas fa-building me-2"></i>EnterpriseSST</h5>
                     <p class="mb-2">Todos los derechos reservados &copy; <span id="currentYear"></span></p>
                     <p class="mb-2"><i class="fas fa-id-card me-2"></i>NIT: 901.653.912</p>
                     <p class="mb-3">

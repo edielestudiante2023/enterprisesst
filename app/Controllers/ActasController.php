@@ -435,7 +435,7 @@ class ActasController extends BaseController
 
         try {
             $emailObj = new \SendGrid\Mail\Mail();
-            $emailObj->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $emailObj->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $emailObj->setSubject("Credenciales de Acceso - {$tipoComite} - {$nombreEmpresa}");
             $emailObj->addTo($email, $nombre);
             $emailObj->addContent("text/html", $mensaje);
@@ -1190,7 +1190,7 @@ class ActasController extends BaseController
 
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Firma requerida: Acta {$acta['numero_acta']} - {$tipoComite}");
             $email->addTo($asistente['email'], $asistente['nombre_completo']);
             $email->addContent("text/html", $mensaje);
@@ -2071,7 +2071,7 @@ class ActasController extends BaseController
 
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Solicitud de Reapertura: Acta {$acta['numero_acta']} - {$tipoComite}");
             $email->addTo($consultor['correo_consultor'], $consultor['nombre_consultor']);
             $email->addContent("text/html", $mensaje);

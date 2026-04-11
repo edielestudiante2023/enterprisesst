@@ -762,7 +762,7 @@ class ConsultantController extends Controller
 
         // ── 4. Enviar con SendGrid ────────────────────────────────────────
         $mail = new \SendGrid\Mail\Mail();
-        $mail->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'EnterpriseSST - Cycloid Talent');
+        $mail->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'EnterpriseSST');
         $mail->setSubject('Paz y Salvo por Todo Concepto — ' . $client['nombre_cliente']);
         $mail->addContent('text/html', $htmlBody);
 
@@ -986,7 +986,7 @@ class ConsultantController extends Controller
                 <p style="color: #666; font-size: 14px;">Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar al administrador del sistema.</p>
             </div>
             <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef; border-top: none;">
-                <p style="margin: 0; color: #666; font-size: 12px;">© 2024 Cycloid Talent SAS - Todos los derechos reservados</p>
+                <p style="margin: 0; color: #666; font-size: 12px;">© 2024 EnterpriseSST - Todos los derechos reservados</p>
                 <p style="margin: 5px 0 0; color: #666; font-size: 12px;">NIT: 901.653.912</p>
             </div>
         </body>

@@ -554,7 +554,7 @@
 
     <!-- Footer -->
     <footer class="text-center">
-        <p>&copy; 2024 Cycloid Talent SAS. Todos los derechos reservados.</p>
+        <p>&copy; 2024 EnterpriseSST. Todos los derechos reservados.</p>
     </footer>
 
     <!-- Scripts -->

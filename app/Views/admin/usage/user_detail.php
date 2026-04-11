@@ -212,7 +212,7 @@
     <!-- Footer -->
     <footer style="background-color: white; padding: 20px 0; border-top: 1px solid #B0BEC5; margin-top: 40px; color: #3A3F51; font-size: 14px; text-align: center;">
         <div style="max-width: 1200px; margin: 0 auto;">
-            <p style="margin: 0; font-weight: bold;">Cycloid Talent SAS</p>
+            <p style="margin: 0; font-weight: bold;">EnterpriseSST</p>
             <p style="margin: 5px 0;">Todos los derechos reservados © 2024</p>
         </div>
     </footer>

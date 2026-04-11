@@ -2233,14 +2233,14 @@ class ComitesEleccionesController extends BaseController
                 <p>En los proximos dias recibira un correo con el Acta de Constitucion del {$tipoComite} para su firma electronica.</p>
 
                 <hr style='border: none; border-top: 1px solid #dee2e6; margin: 20px 0;'>
-                <p style='color: #666; font-size: 11px;'>Este mensaje fue generado automaticamente por EnterpriseSST - Cycloid Talent.</p>
+                <p style='color: #666; font-size: 11px;'>Este mensaje fue generado automaticamente por EnterpriseSST.</p>
             </div>
         </div>
         ";
 
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("¡Fue elegido/a! Resultado votacion {$tipoComite} {$anio} - {$nombreCliente}");
             $email->addTo($candidato['email'], $nombreCandidato);
             $email->addContent("text/html", $mensaje);
@@ -3791,7 +3791,7 @@ class ComitesEleccionesController extends BaseController
 
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Solicitud de Firma: Acta de Constitucion {$tipoComite} - {$nombreCliente}");
             $email->addTo($solicitud['firmante_email'], $solicitud['firmante_nombre']);
             $email->addContent("text/html", $mensaje);
@@ -4779,7 +4779,7 @@ class ComitesEleccionesController extends BaseController
 
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Solicitud de Firma: Acta de Recomposicion - {$nombreCliente}");
             $email->addTo($solicitud['firmante_email'], $solicitud['firmante_nombre']);
             $email->addContent("text/html", $mensaje);
@@ -5161,7 +5161,7 @@ class ComitesEleccionesController extends BaseController
                     </div>
 
                     <hr style='border:none; border-top:1px solid #dee2e6; margin:25px 0;'>
-                    <p style='color:#666; font-size:11px;'>Este informe fue generado automáticamente por EnterpriseSST - Cycloid Talent.<br>Fecha de envío: " . date('d/m/Y H:i') . "</p>
+                    <p style='color:#666; font-size:11px;'>Este informe fue generado automáticamente por EnterpriseSST.<br>Fecha de envío: " . date('d/m/Y H:i') . "</p>
                 </div>
             </div>
             ";
@@ -5230,7 +5230,7 @@ class ComitesEleccionesController extends BaseController
                     </div>
 
                     <hr style='border:none; border-top:1px solid #dee2e6; margin:25px 0;'>
-                    <p style='color:#666; font-size:11px;'>Este informe fue generado automáticamente por EnterpriseSST - Cycloid Talent.<br>Fecha de envio: " . date('d/m/Y H:i') . "</p>
+                    <p style='color:#666; font-size:11px;'>Este informe fue generado automáticamente por EnterpriseSST.<br>Fecha de envio: " . date('d/m/Y H:i') . "</p>
                 </div>
             </div>
             ";
@@ -5238,7 +5238,7 @@ class ComitesEleccionesController extends BaseController
 
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
 
             if ($tipoComite === 'BRIGADA') {
                 $email->setSubject("Informe de conformación Brigada de Emergencias {$anio} - {$nombreCliente}");
@@ -5415,14 +5415,14 @@ class ComitesEleccionesController extends BaseController
                 </div>
 
                 <hr style='border:none; border-top:1px solid #dee2e6; margin:25px 0;'>
-                <p style='color:#666; font-size:11px;'>Este correo fue generado automáticamente por EnterpriseSST - Cycloid Talent.</p>
+                <p style='color:#666; font-size:11px;'>Este correo fue generado automáticamente por EnterpriseSST.</p>
             </div>
         </div>
         ";
 
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Designación como integrante de la {$tipoComiteLabel} — {$nombreCliente} {$anio}");
             $email->addContent("text/html", $mensaje);
 

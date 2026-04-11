@@ -123,7 +123,7 @@
 
     <footer class="bg-white border-top mt-5 py-4 text-center" style="color: #3A3F51; font-size: 14px;">
         <div class="container d-flex flex-column align-items-center">
-            <p class="mb-1 fw-bold">Cycloid Talent SAS</p>
+            <p class="mb-1 fw-bold">EnterpriseSST</p>
             <p class="mb-1">Todos los derechos reservados © 2024</p>
             <p class="mb-1">NIT: 901.653.912</p>
             <p class="mb-1">

@@ -93,7 +93,7 @@ class InspeccionEmailNotifier
                     </tr>
                 </table>
                 <p>Para acceder al recurso, ingrese a su aplicativo en la sección de documentos.</p>
-                <p style='color: #999; font-size: 11px; margin-top: 30px;'>Generado por SG-SST Cycloid Talent.</p>
+                <p style='color: #999; font-size: 11px; margin-top: 30px;'>Generado por SG-SST EnterpriseSST.</p>
             </div>
         </div>";
 
@@ -107,7 +107,7 @@ class InspeccionEmailNotifier
         require_once ROOTPATH . 'vendor/autoload.php';
 
         $email = new \SendGrid\Mail\Mail();
-        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent - SG-SST");
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - SG-SST");
         $email->setSubject($subject);
 
         if ($correoCliente) {

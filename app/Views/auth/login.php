@@ -639,7 +639,7 @@
         </form>
 
         <div class="login-footer">
-            <p class="footer-text">Empowered By Cycloid Talent S.A.S.</p>
+            <p class="footer-text">Empowered By EnterpriseSST</p>
         </div>
     </div>
 </div>

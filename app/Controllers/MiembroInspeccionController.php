@@ -618,7 +618,7 @@ class MiembroInspeccionController extends BaseController
 
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Nueva Inspección Locativa COPASST - {$cliente['nombre_cliente']} - {$fecha}");
             $email->addTo($consultor['correo_consultor'], $consultor['nombre_consultor']);
             $email->addContent("text/html", $mensaje);

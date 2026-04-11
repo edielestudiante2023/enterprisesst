@@ -420,7 +420,7 @@
     <!-- Footer mejorado -->
     <footer class="footer-custom">
         <p style="margin:0; font-weight:bold; font-size: 16px;">
-            <i class="fas fa-building"></i> Cycloid Talent SAS - © 2024
+            <i class="fas fa-building"></i> EnterpriseSST - © 2024
         </p>
         <p style="margin:8px 0; color: #6c757d;">
             <i class="fas fa-id-card"></i> NIT: 901.653.912

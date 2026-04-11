@@ -254,7 +254,7 @@ class ResumenPendientes extends BaseCommand
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
             <p style="margin-bottom: 0; color: #6B7280; font-size: 13px;">
                 Saludos,<br>
-                <strong>Enterprise SST - Cycloid Talent</strong>
+                <strong>Enterprise SST - EnterpriseSST</strong>
             </p>
         </div>
         <div style="text-align: center; margin-top: 15px; color: #9CA3AF; font-size: 11px;">
@@ -426,7 +426,7 @@ HTML;
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
             <p style="margin-bottom: 0; color: #6B7280; font-size: 13px;">
                 Saludos,<br>
-                <strong>Enterprise SST - Cycloid Talent</strong>
+                <strong>Enterprise SST - EnterpriseSST</strong>
             </p>
         </div>
         <div style="text-align: center; margin-top: 15px; color: #9CA3AF; font-size: 11px;">

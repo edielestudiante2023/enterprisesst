@@ -661,7 +661,7 @@ class CronogcapacitacionController extends Controller
 
             // Preparar email con SendGrid
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject('Cronograma de Capacitación SST ' . $targetYear . ' - ' . $cliente['nombre_cliente']);
 
             // Agregar destinatarios
@@ -785,9 +785,9 @@ class CronogcapacitacionController extends Controller
                 <p><strong>Total de capacitaciones:</strong> ' . count($cronogramas) . '</p>
             </div>
             <div class="footer">
-                <p><strong>Cycloid Talent SAS</strong> - Sistema de Gestión SST</p>
+                <p><strong>EnterpriseSST</strong> - Sistema de Gestión SST</p>
                 <p>Este es un correo automático generado por el sistema. Por favor no responda a este mensaje.</p>
-                <p>© ' . date('Y') . ' Cycloid Talent SAS - NIT: 901.653.912</p>
+                <p>© ' . date('Y') . ' EnterpriseSST - NIT: 901.653.912</p>
             </div>
         </body>
         </html>';

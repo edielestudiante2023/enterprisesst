@@ -169,7 +169,7 @@ class ReportController extends Controller
 
         // Crear el objeto Mail para enviar el correo
         $email = new \SendGrid\Mail\Mail();
-        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent");
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
         $email->setSubject("Nuevo documento añadido en su aplicación Enterprisesst");
         $email->addTo($toEmail);
 
@@ -187,7 +187,7 @@ class ReportController extends Controller
         </p>
         
         <p style='text-align: justify;'>
-            En <strong>Cycloid Talent</strong>, nos distinguimos por ser aliados estratégicos en la administración del SG-SST. Nuestro compromiso es ofrecerle soluciones innovadoras y personalizadas que potencien la seguridad y el bienestar en su organización. Con Enterprisesst, no solo recibe herramientas de gestión, sino también el respaldo de un equipo de expertos enfocados en brindarle resultados sobresalientes.
+            En <strong>EnterpriseSST</strong>, nos distinguimos por ser aliados estratégicos en la administración del SG-SST. Nuestro compromiso es ofrecerle soluciones innovadoras y personalizadas que potencien la seguridad y el bienestar en su organización. Con Enterprisesst, no solo recibe herramientas de gestión, sino también el respaldo de un equipo de expertos enfocados en brindarle resultados sobresalientes.
             </p>
 
             <p style='text-align: justify;'>
@@ -195,7 +195,7 @@ class ReportController extends Controller
             </p>
 
             <p style='text-align: justify; font-size: 1.1em; font-weight: bold;'>
-            Gracias por confiar en Cycloid Talent, donde su tranquilidad y éxito son nuestra prioridad.
+            Gracias por confiar en EnterpriseSST, donde su tranquilidad y éxito son nuestra prioridad.
             </p>
 
             <p style='text-align: center; font-size: 0.9em; color: #6c757d;'>

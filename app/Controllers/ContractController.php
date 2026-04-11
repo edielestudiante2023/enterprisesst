@@ -520,7 +520,7 @@ class ContractController extends Controller
     {
         try {
             $email = new Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Nuevo Contrato Generado - " . $contract['numero_contrato']);
             $email->addTo("diana.cuestas@cycloidtalent.com", "Diana Cuestas");
 
@@ -565,7 +565,7 @@ class ContractController extends Controller
                     <p>El contrato PDF se encuentra adjunto a este correo.</p>
 
                     <p style='color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 15px;'>
-                        Este es un mensaje automático del sistema de gestión de contratos de Cycloid Talent.<br>
+                        Este es un mensaje automático del sistema de gestión de contratos de EnterpriseSST.<br>
                         Generado el " . date('d/m/Y H:i:s') . "
                     </p>
                 </div>

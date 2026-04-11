@@ -384,7 +384,7 @@ class UserController extends Controller
             </div>
 
             <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef; border-top: none;">
-                <p style="margin: 0; color: #666; font-size: 12px;">© 2024 Cycloid Talent SAS - Todos los derechos reservados</p>
+                <p style="margin: 0; color: #666; font-size: 12px;">© 2024 EnterpriseSST - Todos los derechos reservados</p>
                 <p style="margin: 5px 0 0; color: #666; font-size: 12px;">NIT: 901.653.912</p>
             </div>
         </body>
@@ -485,7 +485,7 @@ class UserController extends Controller
             </div>
 
             <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef; border-top: none;">
-                <p style="margin: 0; color: #666; font-size: 12px;">© 2024 Cycloid Talent SAS - Todos los derechos reservados</p>
+                <p style="margin: 0; color: #666; font-size: 12px;">© 2024 EnterpriseSST - Todos los derechos reservados</p>
                 <p style="margin: 5px 0 0; color: #666; font-size: 12px;">NIT: 901.653.912</p>
             </div>
         </body>

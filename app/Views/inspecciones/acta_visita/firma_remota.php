@@ -43,7 +43,7 @@
 
 <!-- Header sticky -->
 <div class="top-bar">
-    <div class="logo">Cycloid Talent · SST</div>
+    <div class="logo">EnterpriseSST</div>
     <h6><i class="fas fa-file-signature me-2"></i>Acta de Visita</h6>
     <p><?= esc($cliente['nombre_cliente'] ?? '') ?> &middot; <?= date('d M Y', strtotime($acta['fecha_visita'])) ?></p>
 </div>

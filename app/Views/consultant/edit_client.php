@@ -193,7 +193,7 @@
                                 <h6 class="mb-1 fw-bold" style="color:#065f46;">Emitir Paz y Salvo</h6>
                                 <p class="text-muted small mb-0">
                                     Verifica que no haya actividades abiertas en PTA, Cronograma ni Pendientes,
-                                    y envía el certificado por email al cliente con copia al consultor y a Cycloid Talent.
+                                    y envía el certificado por email al cliente con copia al consultor y a EnterpriseSST.
                                 </p>
                             </div>
                         </div>

@@ -272,7 +272,7 @@
                     </div>
                     <h4 class="text-success">Contrato Firmado Exitosamente</h4>
                     <p class="text-muted">El contrato ha sido firmado y aprobado correctamente.</p>
-                    <p class="text-muted small">Puede cerrar esta ventana. El equipo de Cycloid Talent sera notificado de su firma.</p>
+                    <p class="text-muted small">Puede cerrar esta ventana. El equipo de EnterpriseSST sera notificado de su firma.</p>
                 </div>
             </div>
         </div>

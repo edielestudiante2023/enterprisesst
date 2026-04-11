@@ -237,7 +237,7 @@
   </div>
 
   <footer class="mt-5 py-3 text-center" style="background: #fff; border-top:1px solid #B0BEC5; color:#3A3F51;">
-    <strong>Cycloid Talent SAS</strong> | Todos los derechos reservados © 2024 | NIT: 901.653.912
+    <strong>EnterpriseSST</strong> | Todos los derechos reservados © 2024 | NIT: 901.653.912
     <br>
     Sitio: <a href="https://cycloidtalent.com/" target="_blank" class="text-primary">cycloidtalent.com</a>
     <div class="mt-2">

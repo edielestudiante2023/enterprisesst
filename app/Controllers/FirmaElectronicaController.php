@@ -366,7 +366,7 @@ class FirmaElectronicaController extends Controller
 
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Solicitud de Firma: {$codigoDoc} - {$nombreDoc}");
             $email->addTo($solicitud['firmante_email'], $solicitud['firmante_nombre']);
             $email->addContent("text/html", $mensaje);
@@ -482,7 +482,7 @@ class FirmaElectronicaController extends Controller
             ";
 
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Firmas Completadas: {$codigoDoc} - {$nombreDoc} ({$nombreCliente})");
             $email->addTo($consultor['correo_consultor'], $consultor['nombre_consultor']);
             $email->addContent("text/html", $mensaje);

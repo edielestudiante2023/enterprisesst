@@ -137,7 +137,7 @@
 
     <footer>
         <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
-            <p style="margin: 0; font-weight: bold;">Cycloid Talent SAS</p>
+            <p style="margin: 0; font-weight: bold;">EnterpriseSST</p>
             <p style="margin: 5px 0;">Todos los derechos reservados © 2024</p>
             <p style="margin: 5px 0;">NIT: 901.653.912</p>
             <p style="margin: 5px 0;">

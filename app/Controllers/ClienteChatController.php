@@ -154,13 +154,13 @@ class ClienteChatController extends BaseController
             </table>
             <hr style='border:none;border-top:1px solid #e0e0e0;margin:24px 0;'>
             <p style='color:#999;font-size:12px;text-align:center;'>
-                Cycloid Talent SAS · <a href='https://cycloidtalent.com' style='color:#bd9751;'>www.cycloidtalent.com</a>
+                EnterpriseSST · <a href='https://cycloidtalent.com' style='color:#bd9751;'>www.cycloidtalent.com</a>
             </p>
         </div>";
 
         try {
             $mail = new \SendGrid\Mail\Mail();
-            $mail->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'Otto · Cycloid Talent');
+            $mail->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'Otto · EnterpriseSST');
             $mail->setSubject("Resumen sesión Otto · {$userName} · {$now}");
             if ($userEmail) {
                 $mail->addTo($userEmail, $userName);

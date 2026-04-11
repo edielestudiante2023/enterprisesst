@@ -206,7 +206,7 @@ class DashboardDocumentosSstController extends Controller
     {
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'Cycloid Talent');
+            $email->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'EnterpriseSST');
             $email->setSubject('⚠️ Solicitud de eliminación de documento SST — ' . $doc['codigo']);
             $email->addTo('edison.cuervo@cycloidtalent.com', 'Edison Cuervo');
             $email->addContent('text/html', '

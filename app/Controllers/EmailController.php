@@ -10,18 +10,18 @@ class EmailController
     {
         // Configurar los datos del correo
         $email = new Mail();
-        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent"); // Remitente actualizado
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST"); // Remitente actualizado
         $email->setSubject("Prueba de envío con SendGrid"); // Asunto del correo
         $email->addTo("edison.cuervo@cycloidtalent.com", "Edison Cuervo"); // Destinatario actualizado
         $email->addContent(
             "text/plain",
-            "Hola Edison, este es un mensaje de prueba enviado utilizando SendGrid desde el correo oficial de Cycloid Talent."
+            "Hola Edison, este es un mensaje de prueba enviado utilizando SendGrid desde el correo oficial de EnterpriseSST."
         );
         $email->addContent(
             "text/html",
             "<p><strong>Hola Edison,</strong></p>
-             <p>Este es un mensaje de prueba enviado utilizando SendGrid desde el correo oficial de Cycloid Talent.</p>
-             <p>Gracias por confiar en Cycloid Talent.</p>"
+             <p>Este es un mensaje de prueba enviado utilizando SendGrid desde el correo oficial de EnterpriseSST.</p>
+             <p>Gracias por confiar en EnterpriseSST.</p>"
         );
 
         // Crear instancia de SendGrid utilizando la clave API

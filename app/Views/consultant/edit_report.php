@@ -107,7 +107,7 @@
   </div>
 
   <footer class="text-center mt-5">
-    <p>© 2025 Cycloid Talent SAS - Todos los derechos reservados</p>
+    <p>© 2025 EnterpriseSST - Todos los derechos reservados</p>
   </footer>
 
   <!-- jQuery -->

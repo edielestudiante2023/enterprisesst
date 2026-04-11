@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cuenta Suspendida - Cycloid Talent</title>
+    <title>Cuenta Suspendida - EnterpriseSST</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
@@ -109,7 +109,7 @@
                         <p class="card-text">
                             Apreciado cliente,<br>
                             Hemos detectado que su cuenta está suspendida debido a que el contrato asociado se encuentra inactivo o vencido.
-                            En <strong>Cycloid Talent</strong>, nos enorgullece ofrecerle el mejor servicio.
+                            En <strong>EnterpriseSST</strong>, nos enorgullece ofrecerle el mejor servicio.
                         </p>
                         <p class="card-text">
                             Si desea solucionar este inconveniente o necesita más información, por favor contacte a nuestro equipo comercial. Estaremos encantados de ayudarle.
@@ -133,7 +133,7 @@
 
     <footer>
         <div class="container">
-            © <?= date('Y') ?> Cycloid Talent. Todos los derechos reservados.
+            © <?= date('Y') ?> EnterpriseSST. Todos los derechos reservados.
         </div>
     </footer>
 

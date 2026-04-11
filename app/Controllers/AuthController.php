@@ -172,7 +172,7 @@ class AuthController extends Controller
     private function sendPasswordResetEmail(string $toEmail, string $nombre, string $resetLink): bool
     {
         $email = new \SendGrid\Mail\Mail();
-        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Enterprisesst - Cycloid Talent");
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Enterprisesst - EnterpriseSST");
         $email->setSubject("Recuperación de Contraseña - Enterprisesst");
         $email->addTo($toEmail);
 
@@ -216,7 +216,7 @@ class AuthController extends Controller
             <hr style='border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;'>
 
             <p style='color: #999; font-size: 12px; text-align: center;'>
-                Este correo fue enviado por Cycloid Talent SAS<br>
+                Este correo fue enviado por EnterpriseSST<br>
                 <a href='https://cycloidtalent.com' style='color: #bd9751;'>www.cycloidtalent.com</a>
             </p>
         </div>

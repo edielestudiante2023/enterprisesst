@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Indicador no disponible | Cycloid Talent</title>
+    <title>Indicador no disponible | EnterpriseSST</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -128,7 +128,7 @@
 
     <!-- Contenido principal: Indicador no disponible -->
     <div class="card card-warning text-center">
-        <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Logo Cycloid Talent" class="logo">
+        <img src="<?= base_url('uploads/logocycloidsinfondo.png') ?>" alt="Logo EnterpriseSST" class="logo">
         <h3 class="text-warning mb-3">Indicador no disponible</h3>
         <p><?= esc($advertencia) ?></p>
         
@@ -141,7 +141,7 @@
     <!-- Footer -->
     <footer>
         <div>
-            <p style="margin: 0; font-weight: bold;">Cycloid Talent SAS</p>
+            <p style="margin: 0; font-weight: bold;">EnterpriseSST</p>
             <p style="margin: 5px 0;">Todos los derechos reservados © 2024</p>
             <p style="margin: 5px 0;">NIT: 901.653.912</p>
             <p style="margin: 5px 0;">

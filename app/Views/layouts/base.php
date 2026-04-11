@@ -244,7 +244,7 @@
 
     <!-- Footer -->
     <footer class="text-center">
-        <p class="mb-0">&copy; <?= date('Y') ?> Cycloid Talent SAS. Todos los derechos reservados.</p>
+        <p class="mb-0">&copy; <?= date('Y') ?> EnterpriseSST. Todos los derechos reservados.</p>
     </footer>
 
     <!-- Bootstrap JS -->

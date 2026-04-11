@@ -689,7 +689,7 @@ class InformeAvancesController extends BaseController
         }
 
         $email = new \SendGrid\Mail\Mail();
-        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent");
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
         $email->setSubject("Informe de Avances SG-SST - " . $nombreCliente);
 
         foreach ($destinatarios as $correo => $nombre) {
@@ -705,8 +705,8 @@ class InformeAvancesController extends BaseController
                 Ir a Enterprisesst
             </a>
         </p>
-        <p style='text-align: justify;'>En <strong>Cycloid Talent</strong>, nos distinguimos por ser aliados estratégicos en la administración del SG-SST. Nuestro compromiso es ofrecerle soluciones innovadoras y personalizadas que potencien la seguridad y el bienestar en su copropiedad.</p>
-        <p style='text-align: justify; font-size: 1.1em; font-weight: bold;'>Gracias por confiar en Cycloid Talent, donde su tranquilidad y éxito son nuestra prioridad.</p>
+        <p style='text-align: justify;'>En <strong>EnterpriseSST</strong>, nos distinguimos por ser aliados estratégicos en la administración del SG-SST. Nuestro compromiso es ofrecerle soluciones innovadoras y personalizadas que potencien la seguridad y el bienestar en su copropiedad.</p>
+        <p style='text-align: justify; font-size: 1.1em; font-weight: bold;'>Gracias por confiar en EnterpriseSST, donde su tranquilidad y éxito son nuestra prioridad.</p>
         ";
 
         $email->addContent("text/html", $emailContent);
@@ -1067,7 +1067,7 @@ PROMPT;
                     </tr>
                 </table>
                 <p>Por favor revise el documento adjunto para mayor detalle.</p>
-                <p style='color: #666; font-size: 12px; margin-top: 30px;'>Este correo fue generado automaticamente por el SG-SST de Cycloid Talent.</p>
+                <p style='color: #666; font-size: 12px; margin-top: 30px;'>Este correo fue generado automaticamente por el SG-SST de EnterpriseSST.</p>
             </div>
         </div>";
 
@@ -1075,7 +1075,7 @@ PROMPT;
         require_once ROOTPATH . 'vendor/autoload.php';
 
         $email = new \SendGrid\Mail\Mail();
-        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent - SG-SST");
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - SG-SST");
         $email->setSubject($subject);
         $email->addTo($cliente['correo_cliente'], $nombreCliente);
         $email->addContent("text/html", $htmlContent);
@@ -1255,14 +1255,14 @@ PROMPT;
                 <p>Estimado(a) equipo de <strong>{$nombreCliente}</strong>,</p>
                 <p>Adjunto el Informe de Avances del SG-SST periodo <strong>{$periodo}</strong>.</p>
                 <p><strong>Cumplimiento:</strong> {$puntaje}% | <strong>Estado:</strong> {$informe['estado_avance']}</p>
-                <p style='color: #666; font-size: 12px; margin-top: 20px;'>Generado automaticamente - Cycloid Talent SG-SST</p>
+                <p style='color: #666; font-size: 12px; margin-top: 20px;'>Generado automaticamente - EnterpriseSST SG-SST</p>
             </div>
         </div>";
 
         require_once ROOTPATH . 'vendor/autoload.php';
 
         $email = new \SendGrid\Mail\Mail();
-        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "Cycloid Talent - SG-SST");
+        $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - SG-SST");
         $email->setSubject("Informe de Avances SG-SST - {$nombreCliente} - {$periodo}");
         $email->addTo($cliente['correo_cliente'], $nombreCliente);
         $email->addContent("text/html", $htmlContent);

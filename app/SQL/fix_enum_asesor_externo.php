@@ -102,7 +102,7 @@ try {
                    WHEN 'brigada_lider_evacuacion' THEN 'Brigada - Líder Evacuación'
                    WHEN 'brigada_lider_primeros_auxilios' THEN 'Brigada - Líder Primeros Auxilios'
                    WHEN 'brigada_lider_control_incendios' THEN 'Brigada - Líder Control Incendios'
-                   WHEN 'asesor_sst_externo' THEN 'Consultor SST Cycloid Talent'
+                   WHEN 'asesor_sst_externo' THEN 'Consultor SST Externo'
                    ELSE 'Otro'
                END AS nombre_rol
         FROM tbl_cliente_responsables_sst r

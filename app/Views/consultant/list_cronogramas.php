@@ -918,7 +918,7 @@
   <!-- Footer -->
   <footer class="bg-white py-2 border-top mt-2">
     <div class="container-fluid text-center">
-      <p class="fw-bold mb-1">Cycloid Talent SAS</p>
+      <p class="fw-bold mb-1">EnterpriseSST</p>
       <p class="mb-1">Todos los derechos reservados © 2024</p>
       <p class="mb-1">NIT: 901.653.912</p>
       <p class="mb-1">

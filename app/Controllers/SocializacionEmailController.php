@@ -118,7 +118,7 @@ class SocializacionEmailController extends BaseController
 
             // Preparar email con SendGrid
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Plan de Trabajo Anual SG-SST {$targetYear} - {$cliente['nombre_cliente']}");
 
             // Agregar destinatarios
@@ -279,7 +279,7 @@ class SocializacionEmailController extends BaseController
                 <p style='margin-top: 20px;'><strong>Total de actividades:</strong> {$totalActividades}</p>
 
                 <div class='footer'>
-                    <p><strong>Cycloid Talent SAS</strong></p>
+                    <p><strong>EnterpriseSST</strong></p>
                     <p>Este documento hace parte de la socialización del Plan de Trabajo Anual del SG-SST.</p>
                     <p style='font-size: 11px; color: #666;'>Generado automáticamente por EnterpriseSST</p>
                 </div>
@@ -380,7 +380,7 @@ class SocializacionEmailController extends BaseController
 
             // Preparar email con SendGrid
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST - Cycloid Talent");
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Evaluación de Estándares Mínimos SG-SST {$anioActual} - {$cliente['nombre_cliente']}");
 
             foreach ($destinatarios as $destinatario) {
@@ -549,7 +549,7 @@ class SocializacionEmailController extends BaseController
 
         $html .= "</tbody></table>
             <div class='footer'>
-                <p><strong>Cycloid Talent SAS</strong></p>
+                <p><strong>EnterpriseSST</strong></p>
                 <p>NIT: 901.653.912</p>
                 <p style='font-size: 11px; color: #666;'>Generado automáticamente por EnterpriseSST</p>
             </div>

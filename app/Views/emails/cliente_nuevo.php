@@ -119,7 +119,7 @@
 
             <!-- Firma -->
             <p style="margin:0 0 4px;font-size:14px;color:#6b7280;font-style:italic;">Con orgullo,</p>
-            <p style="margin:0;font-size:15px;font-weight:700;color:#1c2437;">Equipo Cycloid Talent SAS</p>
+            <p style="margin:0;font-size:15px;font-weight:700;color:#1c2437;">Equipo EnterpriseSST</p>
 
           </td>
         </tr>
@@ -127,7 +127,7 @@
         <!-- ── Footer Azul Oscuro ── -->
         <tr>
           <td style="background:#1c2437;padding:24px 40px;text-align:center;">
-            <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#ffffff;">Cycloid Talent SAS</p>
+            <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#ffffff;">EnterpriseSST</p>
             <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;">NIT: 901.653.912</p>
             <p style="margin:0 0 10px;font-size:12px;color:#94a3b8;">Asesores especializados en SG-SST</p>
             <p style="margin:0;font-size:11px;color:#64748b;">&copy; 2026 Todos los derechos reservados</p>

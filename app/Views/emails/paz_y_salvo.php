@@ -25,7 +25,7 @@
                     Sistema de Gestión SST
                   </p>
                   <h1 style="margin:6px 0 0;font-size:22px;font-weight:700;color:#ffffff;line-height:1.3;">
-                    Cycloid Talent SAS
+                    EnterpriseSST
                   </h1>
                   <p style="margin:4px 0 0;font-size:13px;color:#bfdbfe;">
                     NIT: 901.653.912 &nbsp;·&nbsp; cycloidtalent.com
@@ -61,7 +61,7 @@
             </p>
 
             <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;">
-              Por medio de la presente, <strong>Cycloid Talent SAS</strong> certifica que
+              Por medio de la presente, <strong>EnterpriseSST</strong> certifica que
               <strong><?= esc($nombre_cliente) ?></strong>, identificado(a) con NIT <strong><?= esc($nit_cliente) ?></strong>,
               con sede en <strong><?= esc($ciudad_cliente) ?></strong>, se encuentra a
               <strong>paz y salvo por todo concepto</strong> en relación a los servicios de asesoría en
@@ -136,7 +136,7 @@
                     Cordialmente,
                   </p>
                   <p style="margin:6px 0 2px;font-size:16px;font-weight:700;color:#0f172a;">
-                    Cycloid Talent SAS
+                    EnterpriseSST
                   </p>
                   <p style="margin:0;font-size:13px;color:#6b7280;">
                     NIT: 901.653.912 &nbsp;·&nbsp; cycloidtalent.com
@@ -151,7 +151,7 @@
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:18px 40px;">
             <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.6;">
-              Mensaje generado automáticamente por el sistema de gestión SST de Cycloid Talent.<br>
+              Mensaje generado automáticamente por el sistema de gestión SST de EnterpriseSST.<br>
               Por favor no responder directamente a este correo.
             </p>
           </td>

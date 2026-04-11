@@ -233,7 +233,7 @@
 
     <footer class="bg-white py-3 border-top mt-4" style="color: #3A3F51; font-size: 14px; text-align: center;">
         <div class="container">
-            <p class="mb-0 font-weight-bold">Cycloid Talent SAS</p>
+            <p class="mb-0 font-weight-bold">EnterpriseSST</p>
             <p class="my-1">Todos los derechos reservados © 2024</p>
             <p class="my-1">NIT: 901.653.912</p>
             <p class="my-1">Sitio oficial: <a href="https://cycloidtalent.com/" target="_blank" style="color: #007BFF; text-decoration: none;">https://cycloidtalent.com/</a></p>
