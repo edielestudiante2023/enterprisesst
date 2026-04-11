@@ -44,21 +44,42 @@ $totalPasos = count($firmantes);
                                 style="width:100%; height:200px; touch-action:none; cursor:crosshair;"></canvas>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-2">
-                        <div class="d-flex gap-1">
+                    <div class="d-flex justify-content-between mt-2 flex-wrap gap-1">
+                        <div class="d-flex gap-1 flex-wrap">
                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="canvases['<?= $f['tipo'] ?>'].limpiar()">
                                 <i class="fas fa-eraser"></i> Limpiar
                             </button>
                             <button type="button" class="btn btn-sm btn-outline-success btn-whatsapp-firma"
                                 data-tipo="<?= esc($f['tipo']) ?>"
-                                title="Enviar enlace para firma remota">
-                                <i class="fab fa-whatsapp"></i> Enviar enlace
+                                title="Enviar enlace por WhatsApp">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-email-firma"
+                                data-tipo="<?= esc($f['tipo']) ?>"
+                                title="Enviar enlace por email">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary btn-copiar-firma"
+                                data-tipo="<?= esc($f['tipo']) ?>"
+                                title="Copiar enlace de firma">
+                                <i class="fas fa-copy"></i>
                             </button>
                         </div>
                         <button type="button" class="btn btn-sm btn-pwa-primary" onclick="guardarFirma('<?= $f['tipo'] ?>', <?= $i ?>)"
                                 style="background:#bd9751; color:#fff; border:none; border-radius:6px; padding:6px 16px;">
                             <i class="fas fa-save"></i> Guardar firma
                         </button>
+                    </div>
+
+                    <!-- Email inline (oculto hasta click) -->
+                    <div class="email-inline-section mt-2" id="emailInline-<?= $f['tipo'] ?>" style="display:none;">
+                        <div class="input-group input-group-sm">
+                            <input type="email" class="form-control input-email-firma" data-tipo="<?= $f['tipo'] ?>" placeholder="correo@ejemplo.com">
+                            <button type="button" class="btn btn-primary btn-enviar-email-inline" data-tipo="<?= $f['tipo'] ?>">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div class="email-status" id="emailStatus-<?= $f['tipo'] ?>" style="font-size:12px; margin-top:4px;"></div>
                     </div>
                 <?php endif; ?>
             </div>
@@ -381,164 +402,143 @@ document.addEventListener('DOMContentLoaded', function() {
     // Activar primer paso
     document.querySelector('.step-dot[data-step="0"]').classList.add('active');
 
-    // ============ WhatsApp Firma Remota ============
-    var pasoActual = 0;
-    var totalPasos = <?= $totalPasos ?>;
+    // ============ Firma Remota: WhatsApp, Email, Copiar ============
+    var tokenCache = {}; // cache de tokens generados por tipo
 
-    var _irPasoOriginal = window.irPaso;
-    window.irPaso = function(step) {
-        pasoActual = step;
-        _irPasoOriginal(step);
-    };
+    function generarToken(tipo, callback) {
+        if (tokenCache[tipo]) {
+            callback(tokenCache[tipo]);
+            return;
+        }
 
+        Swal.fire({ title: 'Generando enlace...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+        var formData = new FormData();
+        formData.append(csrfName, csrfHash);
+        formData.append('tipo', tipo);
+
+        fetch('/inspecciones/investigacion-accidente/generar-token-firma/' + invId, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            Swal.close();
+            if (!data.success) {
+                Swal.fire('Error', data.error, 'error');
+                return;
+            }
+            tokenCache[tipo] = data.url;
+            callback(data.url);
+        })
+        .catch(function() {
+            Swal.close();
+            Swal.fire('Error', 'Error de conexion', 'error');
+        });
+    }
+
+    // Boton WhatsApp
     document.querySelectorAll('.btn-whatsapp-firma').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var tipo = this.dataset.tipo;
-            var tipoLabel = {
-                jefe: 'Jefe Inmediato',
-                copasst: 'Representante COPASST',
-                sst: 'Responsable SST'
-            }[tipo] || tipo;
+            generarToken(tipo, function(url) {
+                var texto = encodeURIComponent(
+                    'Hola, por favor firma la investigacion de accidente/incidente de trabajo '
+                    + 'haciendo clic en este enlace (valido 7 dias):\n' + url
+                );
+                window.open('https://wa.me/?text=' + texto, '_blank');
+                Swal.fire({ icon: 'success', title: 'Enlace listo', text: 'WhatsApp abierto con el enlace.', timer: 2000, showConfirmButton: false });
+            });
+        });
+    });
 
-            Swal.fire({
-                title: 'Enviar enlace de firma',
-                html: '<p style="font-size:14px;">Se generara un enlace para que <strong>'
-                      + tipoLabel + '</strong> firme desde su celular.<br>'
-                      + '<small class="text-muted">El enlace expira en 7 dias.</small></p>',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: '<i class="fab fa-whatsapp"></i> Generar enlace',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#25D366',
-            }).then(function(result) {
-                if (!result.isConfirmed) return;
-
-                Swal.fire({
-                    title: 'Generando enlace...',
-                    allowOutsideClick: false,
-                    didOpen: function() { Swal.showLoading(); }
+    // Boton Copiar enlace
+    document.querySelectorAll('.btn-copiar-firma').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tipo = this.dataset.tipo;
+            var thisBtn = this;
+            generarToken(tipo, function(url) {
+                navigator.clipboard.writeText(url).then(function() {
+                    thisBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    thisBtn.classList.remove('btn-outline-secondary');
+                    thisBtn.classList.add('btn-success');
+                    setTimeout(function() {
+                        thisBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                        thisBtn.classList.remove('btn-success');
+                        thisBtn.classList.add('btn-outline-secondary');
+                    }, 2000);
+                    Swal.fire({ icon: 'success', title: 'Copiado', text: 'Enlace copiado al portapapeles.', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
                 });
+            });
+        });
+    });
 
-                var formData = new FormData();
-                formData.append(csrfName, csrfHash);
-                formData.append('tipo', tipo);
+    // Boton Email - mostrar/ocultar input inline
+    document.querySelectorAll('.btn-email-firma').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tipo = this.dataset.tipo;
+            var section = document.getElementById('emailInline-' + tipo);
+            section.style.display = section.style.display === 'none' ? 'block' : 'none';
+            if (section.style.display === 'block') {
+                section.querySelector('.input-email-firma').focus();
+            }
+        });
+    });
 
-                fetch('/inspecciones/investigacion-accidente/generar-token-firma/' + invId, {
+    // Enviar email inline
+    document.querySelectorAll('.btn-enviar-email-inline').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tipo = this.dataset.tipo;
+            var input = document.querySelector('.input-email-firma[data-tipo="' + tipo + '"]');
+            var statusEl = document.getElementById('emailStatus-' + tipo);
+            var email = input.value.trim();
+
+            if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                statusEl.innerHTML = '<span class="text-danger">Ingresa un correo valido</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            statusEl.innerHTML = '<span class="text-muted"><i class="fas fa-spinner fa-spin"></i> Enviando...</span>';
+
+            generarToken(tipo, function(url) {
+                var fd = new FormData();
+                fd.append(csrfName, csrfHash);
+                fd.append('email', email);
+                fd.append('url', url);
+                fd.append('tipo', tipo);
+
+                fetch('/inspecciones/investigacion-accidente/enviar-enlace-firma/' + invId, {
                     method: 'POST',
-                    body: formData,
+                    body: fd,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 })
                 .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (!data.success) {
-                        Swal.fire('Error', data.error, 'error');
-                        return;
+                .then(function(resp) {
+                    if (resp.success) {
+                        statusEl.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Enviado a ' + email + '</span>';
+                        input.value = '';
+                    } else {
+                        statusEl.innerHTML = '<span class="text-danger">' + (resp.error || 'Error al enviar') + '</span>';
+                        btn.disabled = false;
                     }
-
-                    var url   = data.url;
-                    var texto = encodeURIComponent(
-                        'Hola, por favor firma la investigacion de accidente/incidente de trabajo '
-                        + 'haciendo clic en este enlace (valido 7 dias):\n'
-                        + url
-                    );
-                    var waUrl = 'https://wa.me/?text=' + texto;
-
-                    Swal.fire({
-                        title: 'Enlace generado',
-                        html: '<p style="font-size:13px;">Comparte este enlace con el <strong>' + tipoLabel + '</strong>:</p>'
-                              + '<div id="swal-url-box" style="background:#f8f9fa;border-radius:8px;padding:10px;'
-                              + 'font-size:11px;word-break:break-all;margin-bottom:12px;cursor:pointer;border:1px solid #dee2e6;" title="Click para copiar">'
-                              + url + '</div>'
-                              + '<div class="d-flex gap-2 justify-content-center flex-wrap mb-2">'
-                              + '<button type="button" id="btnCopiarEnlace" class="btn btn-sm btn-outline-secondary">'
-                              + '<i class="fas fa-copy me-1"></i>Copiar enlace</button>'
-                              + '<button type="button" id="btnEnviarEmail" class="btn btn-sm btn-outline-primary">'
-                              + '<i class="fas fa-envelope me-1"></i>Enviar por email</button>'
-                              + '</div>'
-                              + '<div id="emailSection" style="display:none; margin-top:10px;">'
-                              + '<div class="input-group input-group-sm">'
-                              + '<input type="email" id="inputEmailFirma" class="form-control" placeholder="correo@ejemplo.com">'
-                              + '<button type="button" id="btnConfirmarEmail" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>'
-                              + '</div>'
-                              + '<div id="emailStatus" style="font-size:12px; margin-top:5px;"></div>'
-                              + '</div>',
-                        showCancelButton: true,
-                        confirmButtonText: '<i class="fab fa-whatsapp"></i> Abrir WhatsApp',
-                        cancelButtonText: 'Cerrar',
-                        confirmButtonColor: '#25D366',
-                        didOpen: function() {
-                            document.getElementById('btnCopiarEnlace').addEventListener('click', function() {
-                                navigator.clipboard.writeText(url).then(function() {
-                                    var btn = document.getElementById('btnCopiarEnlace');
-                                    btn.innerHTML = '<i class="fas fa-check me-1"></i>Copiado!';
-                                    btn.classList.remove('btn-outline-secondary');
-                                    btn.classList.add('btn-success');
-                                    setTimeout(function() {
-                                        btn.innerHTML = '<i class="fas fa-copy me-1"></i>Copiar enlace';
-                                        btn.classList.remove('btn-success');
-                                        btn.classList.add('btn-outline-secondary');
-                                    }, 2000);
-                                });
-                            });
-
-                            document.getElementById('btnEnviarEmail').addEventListener('click', function() {
-                                var section = document.getElementById('emailSection');
-                                section.style.display = section.style.display === 'none' ? 'block' : 'none';
-                                if (section.style.display === 'block') {
-                                    document.getElementById('inputEmailFirma').focus();
-                                }
-                            });
-
-                            document.getElementById('btnConfirmarEmail').addEventListener('click', function() {
-                                var email = document.getElementById('inputEmailFirma').value.trim();
-                                if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-                                    document.getElementById('emailStatus').innerHTML = '<span class="text-danger">Ingresa un correo valido</span>';
-                                    return;
-                                }
-                                document.getElementById('emailStatus').innerHTML = '<span class="text-muted"><i class="fas fa-spinner fa-spin"></i> Enviando...</span>';
-                                document.getElementById('btnConfirmarEmail').disabled = true;
-
-                                var fd = new FormData();
-                                fd.append(csrfName, csrfHash);
-                                fd.append('email', email);
-                                fd.append('url', url);
-                                fd.append('tipo', tipo);
-
-                                fetch('/inspecciones/investigacion-accidente/enviar-enlace-firma/' + invId, {
-                                    method: 'POST',
-                                    body: fd,
-                                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                                })
-                                .then(function(r) { return r.json(); })
-                                .then(function(resp) {
-                                    if (resp.success) {
-                                        document.getElementById('emailStatus').innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Enlace enviado a ' + email + '</span>';
-                                    } else {
-                                        document.getElementById('emailStatus').innerHTML = '<span class="text-danger">' + (resp.error || 'Error al enviar') + '</span>';
-                                        document.getElementById('btnConfirmarEmail').disabled = false;
-                                    }
-                                })
-                                .catch(function() {
-                                    document.getElementById('emailStatus').innerHTML = '<span class="text-danger">Error de conexion</span>';
-                                    document.getElementById('btnConfirmarEmail').disabled = false;
-                                });
-                            });
-
-                            document.getElementById('inputEmailFirma').addEventListener('keypress', function(e) {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    document.getElementById('btnConfirmarEmail').click();
-                                }
-                            });
-                        }
-                    }).then(function(r) {
-                        if (r.isConfirmed) window.open(waUrl, '_blank');
-                    });
                 })
                 .catch(function() {
-                    Swal.fire('Error', 'Error de conexion', 'error');
+                    statusEl.innerHTML = '<span class="text-danger">Error de conexion</span>';
+                    btn.disabled = false;
                 });
             });
+        });
+    });
+
+    // Enter en input email
+    document.querySelectorAll('.input-email-firma').forEach(function(input) {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.querySelector('.btn-enviar-email-inline[data-tipo="' + this.dataset.tipo + '"]').click();
+            }
         });
     });
 });
