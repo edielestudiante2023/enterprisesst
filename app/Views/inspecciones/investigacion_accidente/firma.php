@@ -310,7 +310,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             fetch('/inspecciones/investigacion-accidente/save-firma/' + invId, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'same-origin',
             })
             .then(r => r.json())
             .then(data => {
@@ -373,7 +374,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             fetch('/inspecciones/investigacion-accidente/finalizar/' + invId, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'same-origin',
             })
             .then(r => r.json())
             .then(data => {
@@ -428,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/inspecciones/investigacion-accidente/generar-token-firma/' + invId, {
             method: 'POST',
             body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -521,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch('/inspecciones/investigacion-accidente/enviar-enlace-firma/' + invId, {
                     method: 'POST',
                     body: fd,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(resp) {

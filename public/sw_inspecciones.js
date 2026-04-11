@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inspecciones-v2';
+const CACHE_NAME = 'inspecciones-v3';
 const STATIC_ASSETS = [
     '/inspecciones',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
