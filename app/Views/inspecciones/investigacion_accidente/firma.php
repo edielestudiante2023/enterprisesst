@@ -449,9 +449,18 @@ document.addEventListener('DOMContentLoaded', function() {
                               + '<div id="swal-url-box" style="background:#f8f9fa;border-radius:8px;padding:10px;'
                               + 'font-size:11px;word-break:break-all;margin-bottom:12px;cursor:pointer;border:1px solid #dee2e6;" title="Click para copiar">'
                               + url + '</div>'
-                              + '<div class="d-flex gap-2 justify-content-center">'
+                              + '<div class="d-flex gap-2 justify-content-center flex-wrap mb-2">'
                               + '<button type="button" id="btnCopiarEnlace" class="btn btn-sm btn-outline-secondary">'
                               + '<i class="fas fa-copy me-1"></i>Copiar enlace</button>'
+                              + '<button type="button" id="btnEnviarEmail" class="btn btn-sm btn-outline-primary">'
+                              + '<i class="fas fa-envelope me-1"></i>Enviar por email</button>'
+                              + '</div>'
+                              + '<div id="emailSection" style="display:none; margin-top:10px;">'
+                              + '<div class="input-group input-group-sm">'
+                              + '<input type="email" id="inputEmailFirma" class="form-control" placeholder="correo@ejemplo.com">'
+                              + '<button type="button" id="btnConfirmarEmail" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>'
+                              + '</div>'
+                              + '<div id="emailStatus" style="font-size:12px; margin-top:5px;"></div>'
                               + '</div>',
                         showCancelButton: true,
                         confirmButtonText: '<i class="fab fa-whatsapp"></i> Abrir WhatsApp',
@@ -470,6 +479,56 @@ document.addEventListener('DOMContentLoaded', function() {
                                         btn.classList.add('btn-outline-secondary');
                                     }, 2000);
                                 });
+                            });
+
+                            document.getElementById('btnEnviarEmail').addEventListener('click', function() {
+                                var section = document.getElementById('emailSection');
+                                section.style.display = section.style.display === 'none' ? 'block' : 'none';
+                                if (section.style.display === 'block') {
+                                    document.getElementById('inputEmailFirma').focus();
+                                }
+                            });
+
+                            document.getElementById('btnConfirmarEmail').addEventListener('click', function() {
+                                var email = document.getElementById('inputEmailFirma').value.trim();
+                                if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                                    document.getElementById('emailStatus').innerHTML = '<span class="text-danger">Ingresa un correo valido</span>';
+                                    return;
+                                }
+                                document.getElementById('emailStatus').innerHTML = '<span class="text-muted"><i class="fas fa-spinner fa-spin"></i> Enviando...</span>';
+                                document.getElementById('btnConfirmarEmail').disabled = true;
+
+                                var fd = new FormData();
+                                fd.append(csrfName, csrfHash);
+                                fd.append('email', email);
+                                fd.append('url', url);
+                                fd.append('tipo', tipo);
+
+                                fetch('/inspecciones/investigacion-accidente/enviar-enlace-firma/' + invId, {
+                                    method: 'POST',
+                                    body: fd,
+                                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(resp) {
+                                    if (resp.success) {
+                                        document.getElementById('emailStatus').innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Enlace enviado a ' + email + '</span>';
+                                    } else {
+                                        document.getElementById('emailStatus').innerHTML = '<span class="text-danger">' + (resp.error || 'Error al enviar') + '</span>';
+                                        document.getElementById('btnConfirmarEmail').disabled = false;
+                                    }
+                                })
+                                .catch(function() {
+                                    document.getElementById('emailStatus').innerHTML = '<span class="text-danger">Error de conexion</span>';
+                                    document.getElementById('btnConfirmarEmail').disabled = false;
+                                });
+                            });
+
+                            document.getElementById('inputEmailFirma').addEventListener('keypress', function(e) {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    document.getElementById('btnConfirmarEmail').click();
+                                }
                             });
                         }
                     }).then(function(r) {

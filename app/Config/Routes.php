@@ -1684,6 +1684,7 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('investigacion-accidente/enviar-email/(:num)', 'InvestigacionAccidenteController::enviarEmail/$1');
     $routes->get('investigacion-accidente/delete/(:num)', 'InvestigacionAccidenteController::delete/$1');
     $routes->post('investigacion-accidente/generar-token-firma/(:num)', 'InvestigacionAccidenteController::generarTokenFirma/$1');
+    $routes->post('investigacion-accidente/enviar-enlace-firma/(:num)', 'InvestigacionAccidenteController::enviarEnlaceFirma/$1');
 
     // Gestion de Mantenimientos (vencimientos PWA)
     $routes->get('mantenimientos', 'MantenimientosPwaController::list');

@@ -262,6 +262,83 @@ class InvestigacionAccidenteController extends BaseController
     }
 
     /**
+     * AJAX: enviar enlace de firma por email
+     */
+    public function enviarEnlaceFirma(int $id)
+    {
+        $email = $this->request->getPost('email');
+        $url = $this->request->getPost('url');
+        $tipo = $this->request->getPost('tipo');
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Correo inválido']);
+        }
+
+        $inv = $this->invModel->find($id);
+        if (!$inv) {
+            return $this->response->setJSON(['success' => false, 'error' => 'No encontrada']);
+        }
+
+        $clientModel = new ClientModel();
+        $cliente = $clientModel->find($inv['id_cliente']);
+
+        $tipoLabels = ['jefe' => 'Jefe Inmediato', 'copasst' => 'Representante COPASST', 'sst' => 'Responsable SST'];
+        $tipoLabel = $tipoLabels[$tipo] ?? 'Investigador';
+        $tipoEvento = $inv['tipo_evento'] === 'incidente' ? 'Incidente' : 'Accidente';
+
+        $mensaje = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 20px; text-align: center;'>
+                <h2 style='color: white; margin: 0; font-size: 18px;'>Firma de Investigacion de {$tipoEvento}</h2>
+            </div>
+            <div style='padding: 30px; background: #f8f9fa;'>
+                <p>Estimado/a <strong>{$tipoLabel}</strong>,</p>
+                <p>Se requiere su firma para la investigacion de {$tipoEvento} de trabajo de la empresa <strong>" . esc($cliente['nombre_cliente'] ?? '') . "</strong>.</p>
+
+                <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;'>
+                    <p style='margin: 5px 0;'><strong>Tipo:</strong> {$tipoEvento}</p>
+                    <p style='margin: 5px 0;'><strong>Fecha evento:</strong> " . date('d/m/Y', strtotime($inv['fecha_evento'])) . "</p>
+                    <p style='margin: 5px 0;'><strong>Firma como:</strong> {$tipoLabel}</p>
+                </div>
+
+                <div style='text-align: center; margin: 25px 0;'>
+                    <a href='{$url}' style='display: inline-block; background: #bd9751; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; font-size: 15px;'>
+                        Firmar ahora
+                    </a>
+                </div>
+
+                <p style='color: #666; font-size: 12px;'>Este enlace expira en 7 dias. Si no puede hacer clic en el boton, copie y pegue esta URL en su navegador:</p>
+                <p style='color: #888; font-size: 11px; word-break: break-all;'>{$url}</p>
+
+                <hr style='border: none; border-top: 1px solid #dee2e6; margin: 20px 0;'>
+                <p style='color: #666; font-size: 11px;'>Este es un mensaje automatico del sistema EnterpriseSST.</p>
+            </div>
+            <div style='background: #1e3a5f; padding: 15px; text-align: center;'>
+                <p style='color: #94a3b8; font-size: 11px; margin: 0;'>EnterpriseSST - Sistema de Gestion de Seguridad y Salud en el Trabajo</p>
+            </div>
+        </div>";
+
+        try {
+            $mail = new \SendGrid\Mail\Mail();
+            $mail->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
+            $mail->setSubject("Firma requerida - Investigacion {$tipoEvento} - " . ($cliente['nombre_cliente'] ?? ''));
+            $mail->addTo($email);
+            $mail->addContent("text/html", $mensaje);
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($mail);
+
+            if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
+                return $this->response->setJSON(['success' => true]);
+            }
+            return $this->response->setJSON(['success' => false, 'error' => 'Error al enviar (código ' . $response->statusCode() . ')']);
+        } catch (\Exception $e) {
+            log_message('error', 'Error enviando enlace firma por email: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'error' => 'Error al enviar el correo']);
+        }
+    }
+
+    /**
      * Página pública: canvas de firma para el firmante remoto (sin auth)
      */
     public function firmarRemoto(string $token)
