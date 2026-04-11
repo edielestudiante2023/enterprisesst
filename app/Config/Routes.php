@@ -1354,6 +1354,10 @@ $routes->get('/comites-elecciones/firma/reenviar/(:num)', 'ComitesEleccionesCont
 $routes->get('acta-visita/firmar-remoto/(:any)', 'Inspecciones\ActaVisitaController::firmarRemoto/$1');
 $routes->post('acta-visita/procesar-firma-remota', 'Inspecciones\ActaVisitaController::procesarFirmaRemota');
 
+// Rutas PUBLICAS de firma remota investigacion accidente (sin autenticacion)
+$routes->get('investigacion-accidente/firmar-remoto/(:any)', 'Inspecciones\InvestigacionAccidenteController::firmarRemoto/$1');
+$routes->post('investigacion-accidente/procesar-firma-remota', 'Inspecciones\InvestigacionAccidenteController::procesarFirmaRemota');
+
 // Rutas PUBLICAS de votacion (sin autenticacion)
 $routes->get('/votar/(:alphanum)', 'ComitesEleccionesController::votarAcceso/$1');
 $routes->post('/votar/validar', 'ComitesEleccionesController::validarVotante');
@@ -1555,6 +1559,16 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->get('inspecciones/pausas-activas/view/(:num)', 'MiembroPausasActivasController::view/$1');
     $routes->post('inspecciones/pausas-activas/finalizar/(:num)', 'MiembroPausasActivasController::finalizar/$1');
     $routes->get('inspecciones/pausas-activas/pdf/(:num)', 'MiembroPausasActivasController::generatePdf/$1');
+
+    // Investigacion Accidentes e Incidentes (miembro COPASST)
+    $routes->get('inspecciones/investigacion-accidente', 'MiembroInvestigacionAccidenteController::list');
+    $routes->get('inspecciones/investigacion-accidente/create', 'MiembroInvestigacionAccidenteController::create');
+    $routes->post('inspecciones/investigacion-accidente/store', 'MiembroInvestigacionAccidenteController::store');
+    $routes->get('inspecciones/investigacion-accidente/edit/(:num)', 'MiembroInvestigacionAccidenteController::edit/$1');
+    $routes->post('inspecciones/investigacion-accidente/update/(:num)', 'MiembroInvestigacionAccidenteController::update/$1');
+    $routes->get('inspecciones/investigacion-accidente/view/(:num)', 'MiembroInvestigacionAccidenteController::view/$1');
+    $routes->post('inspecciones/investigacion-accidente/finalizar/(:num)', 'MiembroInvestigacionAccidenteController::finalizar/$1');
+    $routes->get('inspecciones/investigacion-accidente/pdf/(:num)', 'MiembroInvestigacionAccidenteController::generatePdf/$1');
 });
 
 // Acceso de miembros del comité (por token - legacy/alternativo)
@@ -1653,6 +1667,23 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('pausas-activas/pdf/(:num)', 'InspeccionPausasActivasController::generatePdf/$1');
     $routes->post('pausas-activas/finalizar/(:num)', 'InspeccionPausasActivasController::finalizar/$1');
     $routes->get('pausas-activas/delete/(:num)', 'InspeccionPausasActivasController::delete/$1');
+
+    // Investigacion Accidentes e Incidentes
+    $routes->get('investigacion-accidente', 'InvestigacionAccidenteController::list');
+    $routes->get('investigacion-accidente/create', 'InvestigacionAccidenteController::create');
+    $routes->get('investigacion-accidente/create/(:num)', 'InvestigacionAccidenteController::create/$1');
+    $routes->post('investigacion-accidente/store', 'InvestigacionAccidenteController::store');
+    $routes->get('investigacion-accidente/edit/(:num)', 'InvestigacionAccidenteController::edit/$1');
+    $routes->post('investigacion-accidente/update/(:num)', 'InvestigacionAccidenteController::update/$1');
+    $routes->get('investigacion-accidente/view/(:num)', 'InvestigacionAccidenteController::view/$1');
+    $routes->get('investigacion-accidente/firma/(:num)', 'InvestigacionAccidenteController::firma/$1');
+    $routes->post('investigacion-accidente/save-firma/(:num)', 'InvestigacionAccidenteController::saveFirma/$1');
+    $routes->get('investigacion-accidente/pdf/(:num)', 'InvestigacionAccidenteController::generatePdf/$1');
+    $routes->post('investigacion-accidente/finalizar/(:num)', 'InvestigacionAccidenteController::finalizar/$1');
+    $routes->get('investigacion-accidente/regenerar/(:num)', 'InvestigacionAccidenteController::regenerarPdf/$1');
+    $routes->get('investigacion-accidente/enviar-email/(:num)', 'InvestigacionAccidenteController::enviarEmail/$1');
+    $routes->get('investigacion-accidente/delete/(:num)', 'InvestigacionAccidenteController::delete/$1');
+    $routes->post('investigacion-accidente/generar-token-firma/(:num)', 'InvestigacionAccidenteController::generarTokenFirma/$1');
 
     // Gestion de Mantenimientos (vencimientos PWA)
     $routes->get('mantenimientos', 'MantenimientosPwaController::list');

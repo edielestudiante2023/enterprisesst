@@ -1,0 +1,125 @@
+<div class="container-fluid px-3">
+    <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+        <h6 class="mb-0">Investigacion de Accidentes e Incidentes</h6>
+        <a href="/inspecciones/investigacion-accidente/create" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
+            <i class="fas fa-plus"></i> Nueva
+        </a>
+    </div>
+
+    <!-- Filtro por cliente -->
+    <div class="mb-3">
+        <select id="filterCliente" class="form-select" style="width:100%;">
+            <option value="">Todos los clientes</option>
+        </select>
+    </div>
+
+    <!-- Lista de investigaciones -->
+    <?php if (empty($investigaciones)): ?>
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-search fa-3x mb-3" style="opacity:0.3;"></i>
+            <p>No hay investigaciones registradas aun</p>
+            <a href="/inspecciones/investigacion-accidente/create" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
+                Crear primera investigacion
+            </a>
+        </div>
+    <?php else: ?>
+        <div id="investigacionesList">
+        <?php foreach ($investigaciones as $inv): ?>
+            <div class="card card-inspeccion <?= esc($inv['estado']) ?> inv-item" data-cliente="<?= strtolower(esc($inv['nombre_cliente'] ?? '')) ?>">
+                <div class="card-body py-3 px-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div style="flex:1;">
+                            <strong><?= esc($inv['nombre_cliente'] ?? 'Sin cliente') ?></strong>
+                            <div class="text-muted" style="font-size: 13px;">
+                                <?= date('d/m/Y', strtotime($inv['fecha_evento'])) ?>
+                            </div>
+                            <div style="font-size: 13px; margin-top: 2px;">
+                                <?php if (($inv['tipo_evento'] ?? '') === 'accidente'): ?>
+                                    <span class="badge bg-danger">Accidente</span>
+                                    <?php if (!empty($inv['gravedad'])): ?>
+                                        <span class="text-muted" style="font-size:12px;">(<?= ucfirst(esc($inv['gravedad'])) ?>)</span>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span class="badge bg-warning text-dark">Incidente</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge badge-<?= esc($inv['estado']) ?>">
+                                <?= $inv['estado'] === 'completo' ? 'Completo' : 'Borrador' ?>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-2 d-flex gap-2 flex-wrap">
+                        <a href="/inspecciones/investigacion-accidente/edit/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-dark">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="/inspecciones/investigacion-accidente/delete/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $inv['id'] ?>">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                        <?php if ($inv['estado'] === 'completo'): ?>
+                            <a href="/inspecciones/investigacion-accidente/view/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/inspecciones/investigacion-accidente/pdf/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-success" target="_blank">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Cargar clientes en Select2
+    $.ajax({
+        url: '/inspecciones/api/clientes',
+        dataType: 'json',
+        success: function(data) {
+            var select = $('#filterCliente');
+            data.forEach(function(c) {
+                select.append('<option value="' + c.nombre_cliente.toLowerCase() + '">' + c.nombre_cliente + '</option>');
+            });
+            select.select2({ placeholder: 'Todos los clientes', allowClear: true, width: '100%' });
+        },
+        error: function() {
+            $('#filterCliente').select2({ placeholder: 'Todos los clientes', allowClear: true, width: '100%' });
+        }
+    });
+
+    // Filtrar por cliente
+    $('#filterCliente').on('change', function() {
+        var selected = (this.value || '').toLowerCase();
+        $('.inv-item').each(function() {
+            if (!selected) {
+                $(this).show();
+            } else {
+                $(this).toggle($(this).data('cliente') === selected);
+            }
+        });
+    });
+});
+
+// Confirmar eliminacion
+document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const url = this.href;
+        Swal.fire({
+            title: 'Eliminar investigacion?',
+            text: 'Se eliminaran todos los datos, testigos, evidencias y medidas correctivas asociadas',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Si, eliminar',
+            cancelButtonText: 'Cancelar',
+        }).then(result => {
+            if (result.isConfirmed) window.location.href = url;
+        });
+    });
+});
+</script>
