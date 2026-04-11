@@ -409,7 +409,7 @@ $medidas = $medidas ?? [];
             <div class="accordion-item">
                 <h2 class="accordion-header">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#secMedidas">
-                        9. Medidas Correctivas (Art. 12 Res. 1401) (<span id="countMedidas"><?= count($medidas) ?></span>)
+                        9. Medidas Correctivas — <span id="countMedidas"><?= count($medidas) ?></span>
                     </button>
                 </h2>
                 <div id="secMedidas" class="accordion-collapse collapse" data-bs-parent="#accordionInvestigacion">
