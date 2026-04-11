@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inspecciones-v1';
+const CACHE_NAME = 'inspecciones-v2';
 const STATIC_ASSETS = [
     '/inspecciones',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
@@ -39,9 +39,8 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // POST requests: Network only
+    // POST requests: No interceptar, dejar que el browser lo maneje directo
     if (event.request.method !== 'GET') {
-        event.respondWith(fetch(event.request));
         return;
     }
 
