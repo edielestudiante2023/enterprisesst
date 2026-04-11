@@ -252,7 +252,7 @@
                 <?php
                 $firmaSlots = [
                     ['tipo' => 'administrador', 'label' => 'CLIENTE'],
-                    ['tipo' => 'consultor', 'label' => 'CONSULTOR CYCLOID TALENT'],
+                    ['tipo' => 'consultor', 'label' => 'CONSULTOR SST'],
                 ];
                 foreach ($firmaSlots as $slot):
                     $tipoKey = $slot['tipo'];

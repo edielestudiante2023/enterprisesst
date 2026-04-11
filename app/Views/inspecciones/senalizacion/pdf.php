@@ -93,16 +93,16 @@
         <div class="seccion-titulo">INTRODUCCION</div>
         <div class="seccion-contenido">
             <p>En cumplimiento de los lineamientos establecidos por el Sistema de Gestion de Seguridad y Salud en el Trabajo (SG-SST) y con base en la normativa vigente en Colombia, se realizo una inspeccion tecnica de senalizacion en las instalaciones de <?= esc($cliente['nombre_cliente'] ?? '') ?>. Esta actividad hace parte de las acciones planificadas para la identificacion de condiciones inseguras y la verificacion del cumplimiento de los requisitos minimos de seguridad en infraestructura, enmarcados en el Decreto 1072 de 2015 y la Resolucion 0312 de 2019.</p>
-            <p>El proposito de la inspeccion fue evaluar la adecuacion, visibilidad y estado de los elementos de senalizacion preventiva, informativa y de emergencia en las zonas comunes, considerando su impacto directo en la prevencion de accidentes, la orientacion de residentes y visitantes, y la adecuada respuesta ante situaciones de emergencia.</p>
-            <p>Esta labor fue liderada por Cycloid Talent SAS, siguiendo criterios tecnicos definidos en el Formato FT-SST-224 - Version 001, con el fin de garantizar la trazabilidad del proceso y la mejora continua del sistema de gestion.</p>
+            <p>El proposito de la inspeccion fue evaluar la adecuacion, visibilidad y estado de los elementos de senalizacion preventiva, informativa y de emergencia en las areas de trabajo y zonas comunes, considerando su impacto directo en la prevencion de accidentes, la orientacion de trabajadores y visitantes, y la adecuada respuesta ante situaciones de emergencia.</p>
+            <p>La inspeccion se realizo siguiendo criterios tecnicos definidos en el Formato FT-SST-224 - Version 001, con el fin de garantizar la trazabilidad del proceso y la mejora continua del sistema de gestion.</p>
         </div>
     </div>
 
     <div class="seccion">
         <div class="seccion-titulo">JUSTIFICACION</div>
         <div class="seccion-contenido">
-            <p>La senalizacion adecuada en espacios residenciales y empresariales no es unicamente un requerimiento normativo, sino una herramienta esencial en la prevencion de riesgos y en la proteccion de la vida e integridad de las personas. Segun el Decreto 1072 de 2015 y sus normas complementarias, las organizaciones deben implementar medidas que garanticen ambientes de trabajo y convivencia seguros, entre ellas, la correcta senalizacion de zonas de riesgo y equipos de emergencia.</p>
-            <p>Este informe tecnico permite establecer un diagnostico claro del estado actual de la senalizacion, identificando fortalezas y oportunidades de mejora, para que la administracion de <?= esc($cliente['nombre_cliente'] ?? '') ?> implemente planes de accion correctivos, preventivos o de mejora que aseguren el cumplimiento de los estandares minimos en SST.</p>
+            <p>La senalizacion adecuada en los lugares de trabajo no es unicamente un requerimiento normativo, sino una herramienta esencial en la prevencion de riesgos y en la proteccion de la vida e integridad de las personas. Segun el Decreto 1072 de 2015 y sus normas complementarias, las organizaciones deben implementar medidas que garanticen ambientes de trabajo seguros, entre ellas, la correcta senalizacion de zonas de riesgo y equipos de emergencia.</p>
+            <p>Este informe tecnico permite establecer un diagnostico claro del estado actual de la senalizacion, identificando fortalezas y oportunidades de mejora, para que <?= esc($cliente['nombre_cliente'] ?? '') ?> implemente planes de accion correctivos, preventivos o de mejora que aseguren el cumplimiento de los estandares minimos en SST.</p>
         </div>
     </div>
 

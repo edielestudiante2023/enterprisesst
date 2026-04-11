@@ -257,7 +257,7 @@
     </div>
 
     <footer class="text-center">
-        <p>&copy; <?= date('Y') ?> Cycloid Talent SAS. Todos los derechos reservados.</p>
+        <p>&copy; <?= date('Y') ?> EnterpriseSST. Todos los derechos reservados.</p>
     </footer>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
