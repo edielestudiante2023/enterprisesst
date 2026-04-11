@@ -358,13 +358,28 @@
     <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw_inspecciones.js', { scope: '/inspecciones/' })
-                .then(function(reg) {
-                    console.log('SW registrado:', reg.scope);
-                })
-                .catch(function(err) {
-                    console.log('SW error:', err);
+            // Forzar actualización: desregistrar SW viejo, registrar nuevo
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                var needsReregister = false;
+                registrations.forEach(function(reg) {
+                    if (reg.active && reg.active.scriptURL.indexOf('sw_inspecciones') !== -1) {
+                        reg.unregister().then(function() {
+                            console.log('SW viejo desregistrado');
+                        });
+                        needsReregister = true;
+                    }
                 });
+                // Re-registrar después de limpiar
+                setTimeout(function() {
+                    navigator.serviceWorker.register('/sw_inspecciones.js', { scope: '/inspecciones/', updateViaCache: 'none' })
+                        .then(function(reg) {
+                            console.log('SW registrado:', reg.scope);
+                        })
+                        .catch(function(err) {
+                            console.log('SW error:', err);
+                        });
+                }, needsReregister ? 500 : 0);
+            });
         });
     }
     </script>
