@@ -253,7 +253,6 @@ $action = $isEdit ? '/inspecciones/acta-visita/update/' . $acta['id'] : '/inspec
                         <div class="photo-input-group">
                             <input type="file" name="fotos[]" class="file-preview" accept="image/*" style="display:none;" multiple>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-secondary btn-photo-camera"><i class="fas fa-camera"></i> Camara</button>
                                 <button type="button" class="btn btn-sm btn-outline-primary btn-photo-gallery"><i class="fas fa-images"></i> Galeria</button>
                             </div>
                             <div class="preview-img mt-2 d-flex flex-wrap gap-2"></div>

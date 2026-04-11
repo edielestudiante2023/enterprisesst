@@ -88,9 +88,6 @@ $estados = ['NO APLICA', 'NO CUMPLE', 'CUMPLE PARCIALMENTE', 'CUMPLE TOTALMENTE'
                                 <div class="photo-input-group">
                                     <input type="file" name="item_foto[]" class="file-preview" accept="image/*" style="display:none;">
                                     <div class="d-flex gap-1">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-photo-camera" style="font-size:11px; padding:2px 6px;">
-                                            <i class="fas fa-camera"></i> Camara
-                                        </button>
                                         <button type="button" class="btn btn-sm btn-outline-primary btn-photo-gallery" style="font-size:11px; padding:2px 6px;">
                                             <i class="fas fa-images"></i> Galeria
                                         </button>

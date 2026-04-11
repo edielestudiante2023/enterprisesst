@@ -210,7 +210,6 @@ function buildExtintorRow(num, data) {
                     <div class="photo-input-group">
                         <input type="file" name="ext_foto[]" class="file-preview" accept="image/*" style="display:none;">
                         <div class="d-flex gap-1">
-                            <button type="button" class="btn btn-sm btn-outline-secondary btn-photo-camera" style="font-size:11px; padding:2px 6px;"><i class="fas fa-camera"></i></button>
                             <button type="button" class="btn btn-sm btn-outline-primary btn-photo-gallery" style="font-size:11px; padding:2px 6px;"><i class="fas fa-images"></i></button>
                         </div>
                         <div class="preview-img mt-1"></div>
