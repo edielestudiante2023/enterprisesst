@@ -1567,6 +1567,9 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->get('inspecciones/investigacion-accidente/edit/(:num)', 'MiembroInvestigacionAccidenteController::edit/$1');
     $routes->post('inspecciones/investigacion-accidente/update/(:num)', 'MiembroInvestigacionAccidenteController::update/$1');
     $routes->get('inspecciones/investigacion-accidente/view/(:num)', 'MiembroInvestigacionAccidenteController::view/$1');
+    $routes->get('inspecciones/investigacion-accidente/firma/(:num)', 'MiembroInvestigacionAccidenteController::firma/$1');
+    $routes->post('inspecciones/investigacion-accidente/save-firma/(:num)', 'MiembroInvestigacionAccidenteController::saveFirma/$1');
+    $routes->post('inspecciones/investigacion-accidente/enviar-enlace-firma/(:num)', 'MiembroInvestigacionAccidenteController::enviarEnlaceFirma/$1');
     $routes->post('inspecciones/investigacion-accidente/finalizar/(:num)', 'MiembroInvestigacionAccidenteController::finalizar/$1');
     $routes->get('inspecciones/investigacion-accidente/pdf/(:num)', 'MiembroInvestigacionAccidenteController::generatePdf/$1');
 });

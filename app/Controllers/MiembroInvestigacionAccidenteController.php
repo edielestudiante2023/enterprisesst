@@ -214,9 +214,6 @@ class MiembroInvestigacionAccidenteController extends BaseController
         $this->saveEvidencias($id);
         $this->saveMedidas($id);
 
-        if ($this->request->getPost('finalizar')) {
-            return $this->finalizar($id);
-        }
 
         if ($this->isAutosaveRequest()) {
             return $this->autosaveJsonSuccess((int)$id);
@@ -261,7 +258,10 @@ class MiembroInvestigacionAccidenteController extends BaseController
         ]);
     }
 
-    public function finalizar($id)
+    /**
+     * Página de firmas del equipo investigador
+     */
+    public function firma($id)
     {
         $miembro = $this->getMiembroCopasst();
         if (!$miembro) return redirect()->to('/miembro/dashboard');
@@ -271,8 +271,165 @@ class MiembroInvestigacionAccidenteController extends BaseController
             return redirect()->to('/miembro/inspecciones/investigacion-accidente')->with('error', 'No encontrada');
         }
 
+        $clientModel = new ClientModel();
+
+        // Pre-generar tokens de firma remota
+        $tokensRemoto = [];
+        foreach (['jefe', 'copasst', 'sst'] as $tipo) {
+            if (empty($inv["firma_{$tipo}"])) {
+                $token = bin2hex(random_bytes(32));
+                $expiracion = date('Y-m-d H:i:s', strtotime('+7 days'));
+                $this->invModel->update($id, [
+                    'token_firma_remota' => $token,
+                    'token_firma_tipo' => $tipo,
+                    'token_firma_expiracion' => $expiracion,
+                ]);
+                $tokensRemoto[$tipo] = base_url("investigacion-accidente/firmar-remoto/{$token}");
+            }
+        }
+        $inv = $this->invModel->find($id);
+
+        return view('inspecciones/miembro/layout_pwa_miembro', [
+            'content' => view('inspecciones/investigacion_accidente/firma', [
+                'title' => 'Firmas del Equipo Investigador',
+                'inv' => $inv,
+                'cliente' => $clientModel->find($inv['id_cliente']),
+                'tokensRemoto' => $tokensRemoto,
+                'baseUrl' => '/miembro/inspecciones/investigacion-accidente',
+            ]),
+            'title' => 'Firmas',
+            'miembro' => $miembro,
+        ]);
+    }
+
+    /**
+     * AJAX: guardar firma desde canvas
+     */
+    public function saveFirma($id)
+    {
+        $miembro = $this->getMiembroCopasst();
+        if (!$miembro) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Sin acceso']);
+        }
+
+        $tipo = $this->request->getPost('tipo');
+        $firmaBase64 = $this->request->getPost('firma_imagen');
+
+        if (!in_array($tipo, ['jefe', 'copasst', 'sst'])) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Tipo inválido']);
+        }
+
+        $inv = $this->invModel->find($id);
+        if (!$inv || (int)$inv['id_cliente'] !== (int)$miembro['id_cliente']) {
+            return $this->response->setJSON(['success' => false, 'error' => 'No encontrada']);
+        }
+
+        $firmaData = explode(',', $firmaBase64);
+        $firmaDecoded = base64_decode(end($firmaData));
+
+        $dir = FCPATH . 'uploads/inspecciones/investigacion_accidente/firmas/';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $nombreArchivo = "firma_{$tipo}_{$id}_" . time() . '.png';
+        file_put_contents($dir . $nombreArchivo, $firmaDecoded);
+
+        $campo = "firma_{$tipo}";
+        $this->invModel->update($id, [
+            $campo => "uploads/inspecciones/investigacion_accidente/firmas/{$nombreArchivo}",
+        ]);
+
+        return $this->response->setJSON(['success' => true, 'campo' => $campo]);
+    }
+
+    /**
+     * AJAX: enviar enlace de firma por email
+     */
+    public function enviarEnlaceFirma(int $id)
+    {
+        $miembro = $this->getMiembroCopasst();
+        if (!$miembro) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Sin acceso']);
+        }
+
+        $email = $this->request->getPost('email');
+        $url = $this->request->getPost('url');
+        $tipo = $this->request->getPost('tipo');
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Correo inválido']);
+        }
+
+        $inv = $this->invModel->find($id);
+        if (!$inv) {
+            return $this->response->setJSON(['success' => false, 'error' => 'No encontrada']);
+        }
+
+        $clientModel = new ClientModel();
+        $cliente = $clientModel->find($inv['id_cliente']);
+
+        $tipoLabels = ['jefe' => 'Jefe Inmediato', 'copasst' => 'Representante COPASST', 'sst' => 'Responsable SST'];
+        $tipoLabel = $tipoLabels[$tipo] ?? 'Investigador';
+        $tipoEvento = $inv['tipo_evento'] === 'incidente' ? 'Incidente' : 'Accidente';
+
+        $mensaje = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 20px; text-align: center;'>
+                <h2 style='color: white; margin: 0; font-size: 18px;'>Firma de Investigacion de {$tipoEvento}</h2>
+            </div>
+            <div style='padding: 30px; background: #f8f9fa;'>
+                <p>Estimado/a <strong>{$tipoLabel}</strong>,</p>
+                <p>Se requiere su firma para la investigacion de {$tipoEvento} de trabajo de la empresa <strong>" . esc($cliente['nombre_cliente'] ?? '') . "</strong>.</p>
+                <div style='text-align: center; margin: 25px 0;'>
+                    <a href='{$url}' style='display: inline-block; background: #bd9751; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold;'>Firmar ahora</a>
+                </div>
+                <p style='color: #666; font-size: 12px;'>Este enlace expira en 7 dias.</p>
+            </div>
+            <div style='background: #1e3a5f; padding: 15px; text-align: center;'>
+                <p style='color: #94a3b8; font-size: 11px; margin: 0;'>EnterpriseSST</p>
+            </div>
+        </div>";
+
+        try {
+            $mail = new \SendGrid\Mail\Mail();
+            $mail->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
+            $mail->setSubject("Firma requerida - Investigacion {$tipoEvento} - " . ($cliente['nombre_cliente'] ?? ''));
+            $mail->addTo($email);
+            $mail->addContent("text/html", $mensaje);
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($mail);
+
+            if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
+                return $this->response->setJSON(['success' => true]);
+            }
+            return $this->response->setJSON(['success' => false, 'error' => 'Error al enviar']);
+        } catch (\Exception $e) {
+            log_message('error', 'Error enviando enlace firma email (miembro): ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'error' => 'Error al enviar el correo']);
+        }
+    }
+
+    public function finalizar($id)
+    {
+        $miembro = $this->getMiembroCopasst();
+        $isAjax = $this->request->isAJAX() || $this->request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest';
+
+        if (!$miembro) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'error' => 'Sin acceso']);
+            return redirect()->to('/miembro/dashboard');
+        }
+
+        $inv = $this->invModel->find($id);
+        if (!$inv || (int)$inv['id_cliente'] !== (int)$miembro['id_cliente']) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'error' => 'No encontrada']);
+            return redirect()->to('/miembro/inspecciones/investigacion-accidente')->with('error', 'No encontrada');
+        }
+
         $pdfPath = $this->generarPdfInterno($id);
         if (!$pdfPath) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'error' => 'Error al generar PDF']);
             return redirect()->back()->with('error', 'Error al generar PDF');
         }
 
@@ -288,6 +445,13 @@ class MiembroInvestigacionAccidenteController extends BaseController
         $cliente = $clienteModel->find($miembro['id_cliente']);
         if (!empty($cliente['id_consultor'])) {
             $this->notificarConsultor($cliente, $miembro, $inv, $pdfPath);
+        }
+
+        if ($isAjax) {
+            return $this->response->setJSON([
+                'success' => true,
+                'pdf_url' => base_url($pdfPath),
+            ]);
         }
 
         return redirect()->to('/miembro/inspecciones/investigacion-accidente/view/' . $id)

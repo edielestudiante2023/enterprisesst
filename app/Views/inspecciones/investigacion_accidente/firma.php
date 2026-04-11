@@ -5,6 +5,7 @@ $firmantes = [
     ['tipo' => 'sst', 'nombre' => $inv['investigador_sst_nombre'] ?? 'Responsable SST', 'firmado' => !empty($inv['firma_sst'])],
 ];
 $totalPasos = count($firmantes);
+$baseUrl = $baseUrl ?? '/inspecciones/investigacion-accidente';
 ?>
 
 <div class="container-fluid px-3">
@@ -92,7 +93,7 @@ $totalPasos = count($firmantes);
                     <i class="fas fa-arrow-left"></i> Anterior
                 </button>
             <?php else: ?>
-                <a href="/inspecciones/investigacion-accidente/edit/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-dark">
+                <a href="<?= $baseUrl ?>/edit/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-dark">
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
             <?php endif; ?>
@@ -128,6 +129,7 @@ $totalPasos = count($firmantes);
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const invId = <?= $inv['id'] ?>;
+    const baseUrl = '<?= $baseUrl ?>';
     const csrfName = '<?= csrf_token() ?>';
     var csrfHash = '<?= csrf_hash() ?>';
 
@@ -309,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('firma_imagen', firmaBase64);
 
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/inspecciones/investigacion-accidente/save-firma/' + invId, true);
+            xhr.open('POST', baseUrl + '/save-firma/' + invId, true);
             xhr.withCredentials = true;
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.onload = function() {
@@ -373,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append(csrfName, csrfHash);
 
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/inspecciones/investigacion-accidente/finalizar/' + invId, true);
+            xhr.open('POST', baseUrl + '/finalizar/' + invId, true);
             xhr.withCredentials = true;
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.onload = function() {
@@ -394,10 +396,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         confirmButtonColor: '#bd9751',
                     }).then((r) => {
                         if (r.isConfirmed) {
-                            window.open('/inspecciones/investigacion-accidente/pdf/' + invId, '_blank');
-                            window.location.href = '/inspecciones/investigacion-accidente';
+                            window.open(baseUrl + '/pdf/' + invId, '_blank');
+                            window.location.href = baseUrl;
                         } else {
-                            window.location.href = '/inspecciones';
+                            window.location.href = baseUrl;
                         }
                     });
                 } else {
@@ -487,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Usar XMLHttpRequest en vez de fetch (el SW no lo intercepta)
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/inspecciones/investigacion-accidente/enviar-enlace-firma/' + invId, true);
+            xhr.open('POST', baseUrl + '/enviar-enlace-firma/' + invId, true);
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.withCredentials = true;
             xhr.onload = function() {

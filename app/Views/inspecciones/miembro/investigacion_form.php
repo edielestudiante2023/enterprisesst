@@ -476,9 +476,11 @@ $medidas = $medidas ?? [];
             <button type="submit" class="btn btn-pwa btn-pwa-outline py-3" style="font-size:17px;">
                 <i class="fas fa-save"></i> Guardar borrador
             </button>
-            <button type="submit" name="finalizar" value="1" class="btn btn-pwa btn-pwa-primary py-3" style="font-size:17px;" id="btnFinalizar">
-                <i class="fas fa-check-circle"></i> Finalizar investigacion
-            </button>
+            <?php if ($isEdit): ?>
+            <a href="/miembro/inspecciones/investigacion-accidente/firma/<?= $inv['id'] ?>" class="btn btn-pwa btn-pwa-primary py-3" style="font-size:17px;">
+                <i class="fas fa-signature"></i> Ir a Firmas
+            </a>
+            <?php endif; ?>
         </div>
     </form>
 </div>
@@ -677,43 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- Validacion al finalizar ---
-    document.getElementById('btnFinalizar').addEventListener('click', function(e) {
-        const tipoEvento = document.getElementById('tipo_evento').value;
-        const nombreTrabajador = document.querySelector('[name="nombre_trabajador"]').value.trim();
-        const descripcion = document.querySelector('[name="descripcion_detallada"]').value.trim();
-
-        const errores = [];
-        if (!tipoEvento) errores.push('Selecciona el tipo de evento');
-        if (!descripcion) errores.push('La descripcion detallada es obligatoria');
-        if (!nombreTrabajador) errores.push('El nombre del trabajador es obligatorio');
-
-        if (errores.length > 0) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'warning', title: 'Datos incompletos',
-                html: '<ul style="text-align:left;">' + errores.map(er => '<li>' + er + '</li>').join('') + '</ul>',
-                confirmButtonColor: '#bd9751',
-            });
-            return;
-        }
-
-        e.preventDefault();
-        Swal.fire({
-            title: 'Finalizar investigacion?',
-            html: 'Se generara el PDF y se notificara al consultor.',
-            icon: 'question', showCancelButton: true,
-            confirmButtonText: 'Si, finalizar', cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#bd9751',
-        }).then(result => {
-            if (result.isConfirmed) {
-                const input = document.createElement('input');
-                input.type = 'hidden'; input.name = 'finalizar'; input.value = '1';
-                document.getElementById('investigacionForm').appendChild(input);
-                document.getElementById('investigacionForm').submit();
-            }
-        });
-    });
+    // (Finalizar se hace desde la pagina de firmas)
 
     // --- Autoguardado localStorage ---
     const STORAGE_KEY = 'miembro_investigacion_draft_<?= $inv['id'] ?? 'new' ?>';
