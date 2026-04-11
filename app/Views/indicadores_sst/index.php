@@ -526,6 +526,8 @@
                                                     <button type="button" class="btn btn-outline-success btn-sm btn-medir"
                                                             data-id="<?= $ind['id_indicador'] ?>"
                                                             data-nombre="<?= esc($ind['nombre_indicador']) ?>"
+                                                            data-formula="<?= esc($ind['formula'] ?? '') ?>"
+                                                            data-definicion="<?= esc($ind['definicion'] ?? '') ?>"
                                                             title="Medir">
                                                         <i class="bi bi-speedometer2"></i>
                                                     </button>
@@ -708,6 +710,8 @@
                                                 <button type="button" class="btn btn-outline-success btn-medir"
                                                         data-id="<?= $ind['id_indicador'] ?>"
                                                         data-nombre="<?= esc($ind['nombre_indicador']) ?>"
+                                                        data-formula="<?= esc($ind['formula'] ?? '') ?>"
+                                                        data-definicion="<?= esc($ind['definicion'] ?? '') ?>"
                                                         title="Medir">
                                                     <i class="bi bi-speedometer2"></i>
                                                 </button>
@@ -749,6 +753,17 @@
                 <form id="formMedicion">
                     <div class="modal-body">
                         <p class="text-muted mb-3">Indicador: <strong id="nombreIndicadorMedicion"></strong></p>
+
+                        <div id="bloqueOperacionalizacion" class="alert alert-info py-2 px-3 mb-3" style="display:none;">
+                            <div id="bloqueFormula" style="display:none;">
+                                <small class="fw-bold"><i class="bi bi-calculator me-1"></i>Fórmula:</small>
+                                <div class="small" id="textoFormula"></div>
+                            </div>
+                            <div id="bloqueDefinicion" style="display:none;" class="mt-1">
+                                <small class="fw-bold"><i class="bi bi-info-circle me-1"></i>Definición:</small>
+                                <div class="small text-muted" id="textoDefinicion"></div>
+                            </div>
+                        </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -990,6 +1005,23 @@
             btn.addEventListener('click', function() {
                 indicadorActual = this.dataset.id;
                 document.getElementById('nombreIndicadorMedicion').textContent = this.dataset.nombre;
+
+                const formula = this.dataset.formula || '';
+                const definicion = this.dataset.definicion || '';
+                const bloqueOp = document.getElementById('bloqueOperacionalizacion');
+                const bloqueF = document.getElementById('bloqueFormula');
+                const bloqueD = document.getElementById('bloqueDefinicion');
+
+                if (formula || definicion) {
+                    bloqueOp.style.display = '';
+                    bloqueF.style.display = formula ? '' : 'none';
+                    document.getElementById('textoFormula').textContent = formula;
+                    bloqueD.style.display = definicion ? '' : 'none';
+                    document.getElementById('textoDefinicion').textContent = definicion;
+                } else {
+                    bloqueOp.style.display = 'none';
+                }
+
                 new bootstrap.Modal(document.getElementById('modalMedicion')).show();
             });
         });
