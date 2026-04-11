@@ -1545,6 +1545,16 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->get('inspecciones/locativa/view/(:num)', 'MiembroInspeccionController::view/$1');
     $routes->post('inspecciones/locativa/finalizar/(:num)', 'MiembroInspeccionController::finalizar/$1');
     $routes->get('inspecciones/locativa/pdf/(:num)', 'MiembroInspeccionController::generatePdf/$1');
+
+    // Pausas Activas (miembro COPASST)
+    $routes->get('inspecciones/pausas-activas', 'MiembroPausasActivasController::list');
+    $routes->get('inspecciones/pausas-activas/create', 'MiembroPausasActivasController::create');
+    $routes->post('inspecciones/pausas-activas/store', 'MiembroPausasActivasController::store');
+    $routes->get('inspecciones/pausas-activas/edit/(:num)', 'MiembroPausasActivasController::edit/$1');
+    $routes->post('inspecciones/pausas-activas/update/(:num)', 'MiembroPausasActivasController::update/$1');
+    $routes->get('inspecciones/pausas-activas/view/(:num)', 'MiembroPausasActivasController::view/$1');
+    $routes->post('inspecciones/pausas-activas/finalizar/(:num)', 'MiembroPausasActivasController::finalizar/$1');
+    $routes->get('inspecciones/pausas-activas/pdf/(:num)', 'MiembroPausasActivasController::generatePdf/$1');
 });
 
 // Acceso de miembros del comité (por token - legacy/alternativo)
@@ -1631,6 +1641,18 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('inspeccion-locativa/enviar-email/(:num)', 'InspeccionLocativaController::enviarEmail/$1');
     $routes->post('inspeccion-locativa/finalizar/(:num)', 'InspeccionLocativaController::finalizar/$1');
     $routes->get('inspeccion-locativa/delete/(:num)', 'InspeccionLocativaController::delete/$1');
+
+    // Pausas Activas
+    $routes->get('pausas-activas', 'InspeccionPausasActivasController::list');
+    $routes->get('pausas-activas/create', 'InspeccionPausasActivasController::create');
+    $routes->get('pausas-activas/create/(:num)', 'InspeccionPausasActivasController::create/$1');
+    $routes->post('pausas-activas/store', 'InspeccionPausasActivasController::store');
+    $routes->get('pausas-activas/edit/(:num)', 'InspeccionPausasActivasController::edit/$1');
+    $routes->post('pausas-activas/update/(:num)', 'InspeccionPausasActivasController::update/$1');
+    $routes->get('pausas-activas/view/(:num)', 'InspeccionPausasActivasController::view/$1');
+    $routes->get('pausas-activas/pdf/(:num)', 'InspeccionPausasActivasController::generatePdf/$1');
+    $routes->post('pausas-activas/finalizar/(:num)', 'InspeccionPausasActivasController::finalizar/$1');
+    $routes->get('pausas-activas/delete/(:num)', 'InspeccionPausasActivasController::delete/$1');
 
     // Gestion de Mantenimientos (vencimientos PWA)
     $routes->get('mantenimientos', 'MantenimientosPwaController::list');

@@ -49,6 +49,19 @@
                 </div>
             </a>
         </div>
+        <div class="col-md-6 mb-3">
+            <a href="<?= base_url('miembro/inspecciones/pausas-activas') ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-heart-pulse text-info fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1 text-dark">Pausas Activas</h5>
+                        <p class="text-muted mb-0 small">Registrar pausas activas con evidencia</p>
+                    </div>
+                </div>
+            </a>
+        </div>
         <?php endif; ?>
     </div>
 
