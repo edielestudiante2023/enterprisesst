@@ -308,14 +308,13 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('tipo', tipo);
             formData.append('firma_imagen', firmaBase64);
 
-            fetch('/inspecciones/investigacion-accidente/save-firma/' + invId, {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin',
-            })
-            .then(r => r.json())
-            .then(data => {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/inspecciones/investigacion-accidente/save-firma/' + invId, true);
+            xhr.withCredentials = true;
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = function() {
                 getCSRFFromCookie();
+                try { var data = JSON.parse(xhr.responseText); } catch(e) { Swal.fire({icon:'error',title:'Error',text:'Respuesta invalida'}); return; }
                 if (data.success) {
                     const dot = document.querySelector('.step-dot[data-step="' + pasoActual + '"]');
                     dot.style.background = '#28a745';
@@ -347,10 +346,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'No se pudo guardar la firma.' });
                 }
-            })
-            .catch(() => {
+            };
+            xhr.onerror = function() {
                 Swal.fire({ icon: 'error', title: 'Error de conexion', text: 'Verifica tu conexion a internet.' });
-            });
+            };
+            xhr.send(formData);
         });
     };
 
@@ -372,15 +372,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData();
             formData.append(csrfName, csrfHash);
 
-            fetch('/inspecciones/investigacion-accidente/finalizar/' + invId, {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin',
-            })
-            .then(r => r.json())
-            .then(data => {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/inspecciones/investigacion-accidente/finalizar/' + invId, true);
+            xhr.withCredentials = true;
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = function() {
                 Swal.close();
                 getCSRFFromCookie();
+                try { var data = JSON.parse(xhr.responseText); } catch(e) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Respuesta invalida del servidor.' });
+                    return;
+                }
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
@@ -401,66 +403,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'No se pudo finalizar la investigacion.' });
                 }
-            })
-            .catch(() => {
+            };
+            xhr.onerror = function() {
                 Swal.close();
                 Swal.fire({ icon: 'error', title: 'Error de conexion', text: 'Verifica tu conexion a internet.' });
-            });
+            };
+            xhr.send(formData);
         });
     };
 
     // Activar primer paso
     document.querySelector('.step-dot[data-step="0"]').classList.add('active');
 
-    // ============ Firma Remota: WhatsApp, Email, Copiar ============
-    var tokenCache = {}; // cache de tokens generados por tipo
-
-    function generarToken(tipo, callback) {
-        if (tokenCache[tipo]) {
-            callback(tokenCache[tipo]);
-            return;
-        }
-
-        Swal.fire({ title: 'Generando enlace...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
-
-        var formData = new FormData();
-        formData.append(csrfName, csrfHash);
-        formData.append('tipo', tipo);
-
-        fetch('/inspecciones/investigacion-accidente/generar-token-firma/' + invId, {
-            method: 'POST',
-            body: formData,
-            credentials: 'same-origin',
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            Swal.close();
-            getCSRFFromCookie();
-            if (!data.success) {
-                Swal.fire('Error', data.error, 'error');
-                return;
-            }
-            tokenCache[tipo] = data.url;
-            callback(data.url);
-        })
-        .catch(function() {
-            Swal.close();
-            Swal.fire('Error', 'Error de conexion', 'error');
-        });
-    }
+    // ============ Firma Remota: WhatsApp, Email, Copiar (URLs pre-generadas, sin fetch) ============
+    var tokenUrls = <?= json_encode($tokensRemoto ?? []) ?>;
 
     // Boton WhatsApp
     document.querySelectorAll('.btn-whatsapp-firma').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var tipo = this.dataset.tipo;
-            generarToken(tipo, function(url) {
-                var texto = encodeURIComponent(
-                    'Hola, por favor firma la investigacion de accidente/incidente de trabajo '
-                    + 'haciendo clic en este enlace (valido 7 dias):\n' + url
-                );
-                window.open('https://wa.me/?text=' + texto, '_blank');
-                Swal.fire({ icon: 'success', title: 'Enlace listo', text: 'WhatsApp abierto con el enlace.', timer: 2000, showConfirmButton: false });
-            });
+            var url = tokenUrls[tipo];
+            if (!url) { Swal.fire('Info', 'Esta firma ya fue registrada.', 'info'); return; }
+            var texto = encodeURIComponent(
+                'Hola, por favor firma la investigacion de accidente/incidente de trabajo '
+                + 'haciendo clic en este enlace (valido 7 dias):\n' + url
+            );
+            window.open('https://wa.me/?text=' + texto, '_blank');
         });
     });
 
@@ -468,19 +436,19 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-copiar-firma').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var tipo = this.dataset.tipo;
+            var url = tokenUrls[tipo];
+            if (!url) { Swal.fire('Info', 'Esta firma ya fue registrada.', 'info'); return; }
             var thisBtn = this;
-            generarToken(tipo, function(url) {
-                navigator.clipboard.writeText(url).then(function() {
-                    thisBtn.innerHTML = '<i class="fas fa-check"></i>';
-                    thisBtn.classList.remove('btn-outline-secondary');
-                    thisBtn.classList.add('btn-success');
-                    setTimeout(function() {
-                        thisBtn.innerHTML = '<i class="fas fa-copy"></i>';
-                        thisBtn.classList.remove('btn-success');
-                        thisBtn.classList.add('btn-outline-secondary');
-                    }, 2000);
-                    Swal.fire({ icon: 'success', title: 'Copiado', text: 'Enlace copiado al portapapeles.', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
-                });
+            navigator.clipboard.writeText(url).then(function() {
+                thisBtn.innerHTML = '<i class="fas fa-check"></i>';
+                thisBtn.classList.remove('btn-outline-secondary');
+                thisBtn.classList.add('btn-success');
+                setTimeout(function() {
+                    thisBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                    thisBtn.classList.remove('btn-success');
+                    thisBtn.classList.add('btn-outline-secondary');
+                }, 2000);
+                Swal.fire({ icon: 'success', title: 'Copiado', text: 'Enlace copiado al portapapeles.', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
             });
         });
     });
@@ -489,6 +457,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-email-firma').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var tipo = this.dataset.tipo;
+            var url = tokenUrls[tipo];
+            if (!url) { Swal.fire('Info', 'Esta firma ya fue registrada.', 'info'); return; }
             var section = document.getElementById('emailInline-' + tipo);
             section.style.display = section.style.display === 'none' ? 'block' : 'none';
             if (section.style.display === 'block') {
@@ -497,37 +467,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Enviar email inline
+    // Enviar email inline - usa form submit normal (no fetch)
     document.querySelectorAll('.btn-enviar-email-inline').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var tipo = this.dataset.tipo;
             var input = document.querySelector('.input-email-firma[data-tipo="' + tipo + '"]');
             var statusEl = document.getElementById('emailStatus-' + tipo);
             var email = input.value.trim();
+            var url = tokenUrls[tipo];
 
             if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
                 statusEl.innerHTML = '<span class="text-danger">Ingresa un correo valido</span>';
                 return;
             }
+            if (!url) { statusEl.innerHTML = '<span class="text-danger">No hay enlace disponible</span>'; return; }
 
             btn.disabled = true;
             statusEl.innerHTML = '<span class="text-muted"><i class="fas fa-spinner fa-spin"></i> Enviando...</span>';
 
-            generarToken(tipo, function(url) {
-                var fd = new FormData();
-                fd.append(csrfName, csrfHash);
-                fd.append('email', email);
-                fd.append('url', url);
-                fd.append('tipo', tipo);
-
-                fetch('/inspecciones/investigacion-accidente/enviar-enlace-firma/' + invId, {
-                    method: 'POST',
-                    body: fd,
-                    credentials: 'same-origin',
-                })
-                .then(function(r) { return r.json(); })
-                .then(function(resp) {
-                    getCSRFFromCookie();
+            // Usar XMLHttpRequest en vez de fetch (el SW no lo intercepta)
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/inspecciones/investigacion-accidente/enviar-enlace-firma/' + invId, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.withCredentials = true;
+            xhr.onload = function() {
+                getCSRFFromCookie();
+                try {
+                    var resp = JSON.parse(xhr.responseText);
                     if (resp.success) {
                         statusEl.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Enviado a ' + email + '</span>';
                         input.value = '';
@@ -535,12 +501,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         statusEl.innerHTML = '<span class="text-danger">' + (resp.error || 'Error al enviar') + '</span>';
                         btn.disabled = false;
                     }
-                })
-                .catch(function() {
-                    statusEl.innerHTML = '<span class="text-danger">Error de conexion</span>';
+                } catch(e) {
+                    statusEl.innerHTML = '<span class="text-danger">Error en respuesta del servidor</span>';
                     btn.disabled = false;
-                });
-            });
+                }
+            };
+            xhr.onerror = function() {
+                statusEl.innerHTML = '<span class="text-danger">Error de conexion</span>';
+                btn.disabled = false;
+            };
+            var fd = new FormData();
+            fd.append(csrfName, csrfHash);
+            fd.append('email', email);
+            fd.append('url', url);
+            fd.append('tipo', tipo);
+            xhr.send(fd);
         });
     });
 

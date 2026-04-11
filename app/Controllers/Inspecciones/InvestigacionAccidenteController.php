@@ -187,11 +187,29 @@ class InvestigacionAccidenteController extends BaseController
 
         $clientModel = new ClientModel();
 
+        // Pre-generar tokens de firma remota para cada firmante sin firma
+        $tokensRemoto = [];
+        foreach (['jefe', 'copasst', 'sst'] as $tipo) {
+            if (empty($inv["firma_{$tipo}"])) {
+                $token = bin2hex(random_bytes(32));
+                $expiracion = date('Y-m-d H:i:s', strtotime('+7 days'));
+                $this->invModel->update($id, [
+                    'token_firma_remota' => $token,
+                    'token_firma_tipo' => $tipo,
+                    'token_firma_expiracion' => $expiracion,
+                ]);
+                $tokensRemoto[$tipo] = base_url("investigacion-accidente/firmar-remoto/{$token}");
+            }
+        }
+        // Re-leer con último token guardado
+        $inv = $this->invModel->find($id);
+
         return view('inspecciones/layout_pwa', [
             'content' => view('inspecciones/investigacion_accidente/firma', [
                 'title' => 'Firmas del Equipo Investigador',
                 'inv' => $inv,
                 'cliente' => $clientModel->find($inv['id_cliente']),
+                'tokensRemoto' => $tokensRemoto,
             ]),
             'title' => 'Firmas',
         ]);
