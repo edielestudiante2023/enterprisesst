@@ -129,7 +129,13 @@ $totalPasos = count($firmantes);
 document.addEventListener('DOMContentLoaded', function() {
     const invId = <?= $inv['id'] ?>;
     const csrfName = '<?= csrf_token() ?>';
-    const csrfHash = '<?= csrf_hash() ?>';
+    var csrfHash = '<?= csrf_hash() ?>';
+
+    // Actualizar CSRF hash desde cookie después de cada POST
+    function getCSRFFromCookie() {
+        var match = document.cookie.match(/csrf_cookie_name=([^;]+)/);
+        if (match) csrfHash = match[1];
+    }
 
     // ============ Clase SignatureCanvas ============
     class SignatureCanvas {
@@ -308,6 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(r => r.json())
             .then(data => {
+                getCSRFFromCookie();
                 if (data.success) {
                     const dot = document.querySelector('.step-dot[data-step="' + pasoActual + '"]');
                     dot.style.background = '#28a745';
@@ -371,6 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(r => r.json())
             .then(data => {
                 Swal.close();
+                getCSRFFromCookie();
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
@@ -425,6 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             Swal.close();
+            getCSRFFromCookie();
             if (!data.success) {
                 Swal.fire('Error', data.error, 'error');
                 return;
@@ -516,6 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(resp) {
+                    getCSRFFromCookie();
                     if (resp.success) {
                         statusEl.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Enviado a ' + email + '</span>';
                         input.value = '';

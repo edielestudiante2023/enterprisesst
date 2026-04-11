@@ -63,7 +63,7 @@ $medidas = $medidas ?? [];
             <td rowspan="2" style="width:130px; border:1px solid #333; padding:0; vertical-align:middle;">
                 <table style="width:100%; border-collapse:collapse;" cellpadding="0" cellspacing="0">
                     <tr>
-                        <td style="border-bottom:1px solid #333; padding:3px 6px; font-size:8pt;"><span style="font-weight:bold;">Codigo:</span> FT-SST-INV</td>
+                        <td style="border-bottom:1px solid #333; padding:3px 6px; font-size:8pt;"><span style="font-weight:bold;">Codigo:</span> FT-SST-231</td>
                     </tr>
                     <tr>
                         <td style="border-bottom:1px solid #333; padding:3px 6px; font-size:8pt;"><span style="font-weight:bold;">Version:</span> 001</td>
