@@ -9,6 +9,8 @@ use App\Models\InspeccionExtintoresModel;
 use App\Models\InspeccionBotiquinModel;
 use App\Models\InspeccionSenalizacionModel;
 use App\Models\RegistroAsistenciaModel;
+use App\Models\PausaActivaModel;
+use App\Models\InvestigacionAccidenteModel;
 use App\Models\ClientModel;
 use App\Models\PendientesModel;
 use App\Models\VencimientosMantenimientoModel;
@@ -44,6 +46,12 @@ class InspeccionesController extends BaseController
         $pendientesAsistencia = $registroAsistModel->getAllPendientes();
         $totalAsistencia = $registroAsistModel->where('estado', 'completo')->countAllResults();
 
+        $pausasModel = new PausaActivaModel();
+        $totalPausas = $pausasModel->where('estado', 'completo')->countAllResults();
+
+        $invAccidenteModel = new InvestigacionAccidenteModel();
+        $totalInvestigaciones = $invAccidenteModel->where('estado', 'completo')->countAllResults();
+
         $data = [
             'title'                    => 'Inspecciones SST',
             'pendientes'               => $pendientes,
@@ -58,6 +66,8 @@ class InspeccionesController extends BaseController
             'totalBotiquin'            => $totalBotiquin,
             'totalSenalizacion'        => $totalSenalizacion,
             'totalAsistencia'          => $totalAsistencia,
+            'totalPausas'              => $totalPausas,
+            'totalInvestigaciones'     => $totalInvestigaciones,
             'nombre'                 => session()->get('nombre_usuario'),
         ];
 

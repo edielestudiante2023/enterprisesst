@@ -224,5 +224,15 @@
             <div><strong>Asistencia</strong></div>
             <div class="count">(<?= $totalAsistencia ?>)</div>
         </a>
+        <a href="/inspecciones/pausas-activas" class="card-tipo">
+            <i class="fas fa-heartbeat"></i>
+            <div><strong>Pausas Activas</strong></div>
+            <div class="count">(<?= $totalPausas ?>)</div>
+        </a>
+        <a href="/inspecciones/investigacion-accidente" class="card-tipo">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div><strong>Investigacion AT/IT</strong></div>
+            <div class="count">(<?= $totalInvestigaciones ?>)</div>
+        </a>
     </div>
 </div>
