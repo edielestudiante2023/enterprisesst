@@ -345,12 +345,20 @@ class InvestigacionAccidenteController extends BaseController
     public function finalizar($id)
     {
         $inv = $this->invModel->find($id);
+        $isAjax = $this->request->isAJAX();
+
         if (!$inv) {
+            if ($isAjax) {
+                return $this->response->setJSON(['success' => false, 'error' => 'No encontrada']);
+            }
             return redirect()->to('/inspecciones/investigacion-accidente')->with('error', 'No encontrada');
         }
 
         $pdfPath = $this->generarPdfInterno($id);
         if (!$pdfPath) {
+            if ($isAjax) {
+                return $this->response->setJSON(['success' => false, 'error' => 'Error al generar PDF']);
+            }
             return redirect()->back()->with('error', 'Error al generar PDF');
         }
 
@@ -372,13 +380,22 @@ class InvestigacionAccidenteController extends BaseController
             'InvestigacionAccidente'
         );
 
-        $msg = 'Investigación finalizada y PDF generado.';
+        $emailMsg = '';
         if ($emailResult['success']) {
-            $msg .= ' ' . $emailResult['message'];
+            $emailMsg = $emailResult['message'];
         } else {
-            $msg .= ' (Email no enviado: ' . $emailResult['error'] . ')';
+            $emailMsg = '(Email no enviado: ' . $emailResult['error'] . ')';
         }
 
+        if ($isAjax) {
+            return $this->response->setJSON([
+                'success' => true,
+                'pdf_url' => base_url($pdfPath),
+                'email_msg' => $emailMsg,
+            ]);
+        }
+
+        $msg = 'Investigación finalizada y PDF generado. ' . $emailMsg;
         return redirect()->to('/inspecciones/investigacion-accidente/view/' . $id)->with('msg', $msg);
     }
 
