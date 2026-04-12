@@ -56,6 +56,10 @@ class IndicadoresSSTController extends BaseController
         // Obtener sugerencias
         $sugerencias = $this->indicadorModel->generarIndicadoresSugeridos($idCliente, $estandares);
 
+        // BI: Vencimientos y tendencias
+        $vencimientos = $this->indicadorModel->getIndicadoresVencidos($idCliente);
+        $tendencias = $this->indicadorModel->getTendencias($idCliente);
+
         $data = [
             'titulo' => 'Indicadores del SG-SST',
             'cliente' => $cliente,
@@ -66,6 +70,8 @@ class IndicadoresSSTController extends BaseController
             'categoriaFiltro' => $categoriaFiltro,
             'verificacion' => $verificacion,
             'sugerencias' => $sugerencias,
+            'vencimientos' => $vencimientos,
+            'tendencias' => $tendencias,
             'tiposIndicador' => IndicadorSSTModel::TIPOS_INDICADOR,
             'periodicidades' => IndicadorSSTModel::PERIODICIDADES,
             'fasesPhva' => IndicadorSSTModel::FASES_PHVA
@@ -335,6 +341,100 @@ class IndicadoresSSTController extends BaseController
         return $this->response->setJSON([
             'success' => true,
             'data' => $historico
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // BI: SPARKLINE + MEDICIÓN MASIVA
+    // ─────────────────────────────────────────────────────────
+
+    /**
+     * GET AJAX: Últimas 6 mediciones + meta para sparkline en modal
+     */
+    public function apiHistoricoRapido(int $idCliente, int $idIndicador)
+    {
+        $indicador = $this->indicadorModel->find($idIndicador);
+        if (!$indicador || (int)$indicador['id_cliente'] !== $idCliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Indicador no encontrado']);
+        }
+
+        $historico = $this->indicadorModel->getHistoricoMediciones($idIndicador, 6);
+        // Ordenar cronológicamente (viene DESC)
+        $historico = array_reverse($historico);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'meta'    => (float)($indicador['meta'] ?? 0),
+            'unidad'  => $indicador['unidad_medida'] ?? '%',
+            'data'    => array_map(function($m) {
+                return [
+                    'periodo'   => $m['periodo'],
+                    'resultado' => $m['valor_resultado'] !== null ? (float)$m['valor_resultado'] : null,
+                ];
+            }, $historico)
+        ]);
+    }
+
+    /**
+     * GET: Vista de medición masiva
+     */
+    public function medicionMasiva(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $indicadores = $this->indicadorModel->where('id_cliente', $idCliente)
+                                             ->where('activo', 1)
+                                             ->orderBy('categoria', 'ASC')
+                                             ->orderBy('nombre_indicador', 'ASC')
+                                             ->findAll();
+
+        $periodoActual = $this->request->getGet('periodo') ?: date('Y-m');
+        $medicionesExistentes = $this->indicadorModel->getMedicionesPorPeriodo($idCliente, $periodoActual);
+
+        return view('indicadores_sst/medicion_masiva', [
+            'cliente'     => $cliente,
+            'indicadores' => $indicadores,
+            'mediciones'  => $medicionesExistentes,
+            'periodo'     => $periodoActual,
+            'categorias'  => IndicadorSSTModel::CATEGORIAS,
+        ]);
+    }
+
+    /**
+     * POST AJAX: Guardar mediciones en lote
+     */
+    public function guardarMedicionMasiva(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $input = $this->request->getJSON(true);
+        $mediciones = $input['mediciones'] ?? [];
+        $periodo = $input['periodo'] ?? date('Y-m');
+        $fechaMedicion = $input['fecha_medicion'] ?? date('Y-m-d');
+
+        if (empty($mediciones)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No hay mediciones para guardar']);
+        }
+
+        $resultado = $this->indicadorModel->registrarMedicionesLote(
+            $idCliente,
+            $mediciones,
+            $periodo,
+            $fechaMedicion,
+            session()->get('id_usuario')
+        );
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => "Se registraron {$resultado['registrados']} mediciones" .
+                         ($resultado['errores'] > 0 ? " ({$resultado['errores']} errores)" : ''),
+            'data'    => $resultado
         ]);
     }
 

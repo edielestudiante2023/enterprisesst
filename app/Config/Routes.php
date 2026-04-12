@@ -833,6 +833,11 @@ $routes->get('/indicadores-sst/(:num)/api', 'IndicadoresSSTController::apiObtene
 $routes->get('/indicadores-sst/(:num)/verificar', 'IndicadoresSSTController::apiVerificar/$1');
 $routes->get('/indicadores-sst/historico/(:num)', 'IndicadoresSSTController::apiHistorico/$1');
 
+// BI: Historial rápido para sparkline + Medición masiva
+$routes->get('/indicadores-sst/(:num)/historico-rapido/(:num)', 'IndicadoresSSTController::apiHistoricoRapido/$1/$2');
+$routes->get('/indicadores-sst/(:num)/medicion-masiva', 'IndicadoresSSTController::medicionMasiva/$1');
+$routes->post('/indicadores-sst/(:num)/medicion-masiva/guardar', 'IndicadoresSSTController::guardarMedicionMasiva/$1');
+
 // Dashboard jerárquico de indicadores (ZZ_94)
 $routes->get('/indicadores-sst/(:num)/dashboard', 'IndicadoresSSTController::dashboard/$1');
 $routes->get('/indicadores-sst/(:num)/api/dashboard', 'IndicadoresSSTController::apiDashboard/$1');

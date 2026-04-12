@@ -1521,4 +1521,182 @@ class IndicadorSSTModel extends Model
             'anio'       => $anio,
         ];
     }
+
+    // =========================================================================
+    // MÉTODOS BI: Vencimientos, Tendencia, Medición Masiva
+    // =========================================================================
+
+    /**
+     * Días máximos por periodicidad antes de considerar vencido
+     */
+    private const DIAS_VENCIMIENTO = [
+        'mensual'    => 35,
+        'trimestral' => 100,
+        'semestral'  => 190,
+        'anual'      => 380,
+    ];
+
+    /**
+     * Umbral (%) del periodo para considerar "próximo a vencer"
+     */
+    private const UMBRAL_PROXIMO = 0.80;
+
+    /**
+     * Calcula estado de vencimiento de cada indicador activo de un cliente
+     * @return array [id_indicador => ['estado' => 'vencido'|'proximo'|'al_dia', 'dias' => int]]
+     */
+    public function getIndicadoresVencidos(int $idCliente): array
+    {
+        $indicadores = $this->where('id_cliente', $idCliente)
+                            ->where('activo', 1)
+                            ->findAll();
+
+        $hoy = new \DateTime();
+        $resultado = [];
+
+        foreach ($indicadores as $ind) {
+            $id = $ind['id_indicador'];
+            $periodicidad = $ind['periodicidad'] ?? 'trimestral';
+            $diasMax = self::DIAS_VENCIMIENTO[$periodicidad] ?? 100;
+            $umbralDias = (int)($diasMax * self::UMBRAL_PROXIMO);
+
+            if (empty($ind['fecha_medicion'])) {
+                // Nunca medido = vencido
+                $resultado[$id] = ['estado' => 'vencido', 'dias' => null, 'nombre' => $ind['nombre_indicador'], 'categoria' => $ind['categoria']];
+                continue;
+            }
+
+            $fechaMedicion = new \DateTime($ind['fecha_medicion']);
+            $diasTranscurridos = (int)$hoy->diff($fechaMedicion)->days;
+
+            if ($diasTranscurridos > $diasMax) {
+                $resultado[$id] = ['estado' => 'vencido', 'dias' => $diasTranscurridos, 'nombre' => $ind['nombre_indicador'], 'categoria' => $ind['categoria']];
+            } elseif ($diasTranscurridos >= $umbralDias) {
+                $resultado[$id] = ['estado' => 'proximo', 'dias' => $diasTranscurridos, 'nombre' => $ind['nombre_indicador'], 'categoria' => $ind['categoria']];
+            } else {
+                $resultado[$id] = ['estado' => 'al_dia', 'dias' => $diasTranscurridos, 'nombre' => $ind['nombre_indicador'], 'categoria' => $ind['categoria']];
+            }
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Calcula tendencia por indicador: compara última vs penúltima medición
+     * @return array [id_indicador => 'mejora'|'empeora'|'estable'|'sin_datos']
+     */
+    public function getTendencias(int $idCliente): array
+    {
+        $indicadores = $this->where('id_cliente', $idCliente)
+                            ->where('activo', 1)
+                            ->findAll();
+
+        $db = \Config\Database::connect();
+        $resultado = [];
+
+        foreach ($indicadores as $ind) {
+            $id = $ind['id_indicador'];
+            $mediciones = $db->table('tbl_indicadores_sst_mediciones')
+                             ->where('id_indicador', $id)
+                             ->orderBy('fecha_registro', 'DESC')
+                             ->limit(2)
+                             ->get()
+                             ->getResultArray();
+
+            if (count($mediciones) < 2) {
+                $resultado[$id] = 'sin_datos';
+                continue;
+            }
+
+            $actual = (float)($mediciones[0]['valor_resultado'] ?? 0);
+            $anterior = (float)($mediciones[1]['valor_resultado'] ?? 0);
+
+            // Para accidentalidad, menor es mejor (invertir)
+            $menorEsMejor = strpos(strtolower($ind['nombre_indicador']), 'accidentalidad') !== false
+                         || strpos(strtolower($ind['nombre_indicador']), 'frecuencia') !== false
+                         || strpos(strtolower($ind['nombre_indicador']), 'severidad') !== false
+                         || strpos(strtolower($ind['nombre_indicador']), 'mortal') !== false
+                         || strpos(strtolower($ind['nombre_indicador']), 'ausentismo') !== false;
+
+            if (abs($actual - $anterior) < 0.01) {
+                $resultado[$id] = 'estable';
+            } elseif ($menorEsMejor) {
+                $resultado[$id] = $actual < $anterior ? 'mejora' : 'empeora';
+            } else {
+                $resultado[$id] = $actual > $anterior ? 'mejora' : 'empeora';
+            }
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Obtiene mediciones existentes de un cliente para un periodo dado
+     * @return array indexado por id_indicador
+     */
+    public function getMedicionesPorPeriodo(int $idCliente, string $periodo): array
+    {
+        $db = \Config\Database::connect();
+
+        $indicadores = $this->where('id_cliente', $idCliente)
+                            ->where('activo', 1)
+                            ->findAll();
+        $ids = array_column($indicadores, 'id_indicador');
+
+        if (empty($ids)) {
+            return [];
+        }
+
+        $mediciones = $db->table('tbl_indicadores_sst_mediciones')
+                         ->whereIn('id_indicador', $ids)
+                         ->where('periodo', $periodo)
+                         ->get()
+                         ->getResultArray();
+
+        $resultado = [];
+        foreach ($mediciones as $m) {
+            $resultado[$m['id_indicador']] = $m;
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Registra múltiples mediciones en lote
+     * @param array $mediciones [[id_indicador, valor_numerador, valor_denominador, observaciones], ...]
+     * @return array ['registrados' => int, 'errores' => int]
+     */
+    public function registrarMedicionesLote(int $idCliente, array $mediciones, string $periodo, string $fechaMedicion, ?int $registradoPor = null): array
+    {
+        $registrados = 0;
+        $errores = 0;
+
+        foreach ($mediciones as $med) {
+            $idIndicador = (int)($med['id_indicador'] ?? 0);
+
+            // Verificar que el indicador pertenece al cliente
+            $indicador = $this->where('id_indicador', $idIndicador)
+                              ->where('id_cliente', $idCliente)
+                              ->where('activo', 1)
+                              ->first();
+
+            if (!$indicador) {
+                $errores++;
+                continue;
+            }
+
+            $ok = $this->registrarMedicion($idIndicador, [
+                'valor_numerador'   => $med['valor_numerador'] ?? null,
+                'valor_denominador' => $med['valor_denominador'] ?? null,
+                'fecha_medicion'    => $fechaMedicion,
+                'periodo'           => $periodo,
+                'observaciones'     => $med['observaciones'] ?? null,
+                'registrado_por'    => $registradoPor,
+            ]);
+
+            $ok ? $registrados++ : $errores++;
+        }
+
+        return ['registrados' => $registrados, 'errores' => $errores];
+    }
 }

@@ -226,6 +226,9 @@
                 <button type="button" class="btn btn-outline-success btn-sm" onclick="verificarYGenerarActividades()">
                     <i class="bi bi-list-task me-1"></i>Generar Actividades con IA
                 </button>
+                <a href="<?= base_url('indicadores-sst/' . $cliente['id_cliente'] . '/medicion-masiva') ?>" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-grid-3x3 me-1"></i>Medicion Masiva
+                </a>
                 <a href="<?= base_url('indicadores-sst/' . $cliente['id_cliente'] . '/crear') ?><?= $categoriaFiltro ? '?categoria=' . $categoriaFiltro : '' ?>" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg me-1"></i>Nuevo Indicador
                 </a>
@@ -244,6 +247,98 @@
             <div class="alert alert-danger alert-dismissible fade show">
                 <i class="bi bi-exclamation-circle me-2"></i><?= session()->getFlashdata('error') ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <!-- KPI Cards Resumen -->
+        <?php
+            $totalVencidos = 0;
+            $totalProximos = 0;
+            foreach ($vencimientos as $v) {
+                if ($v['estado'] === 'vencido') $totalVencidos++;
+                elseif ($v['estado'] === 'proximo') $totalProximos++;
+            }
+        ?>
+        <div class="row g-2 mb-3">
+            <div class="col">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center py-2">
+                        <?php
+                            $pct = $verificacion['porcentaje_cumplimiento'];
+                            $colorCumpl = $pct >= 85 ? 'success' : ($pct >= 60 ? 'warning' : 'danger');
+                        ?>
+                        <div class="h4 mb-0 text-<?= $colorCumpl ?>"><?= $pct ?>%</div>
+                        <small class="text-muted">Cumplimiento</small>
+                        <div class="progress mt-1" style="height: 4px;">
+                            <div class="progress-bar bg-<?= $colorCumpl ?>" style="width: <?= $pct ?>%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center py-2">
+                        <div class="h4 mb-0 text-info"><?= $verificacion['medidos'] ?><small class="text-muted fs-6">/<?= $verificacion['total'] ?></small></div>
+                        <small class="text-muted">Medidos</small>
+                        <div class="progress mt-1" style="height: 4px;">
+                            <div class="progress-bar bg-info" style="width: <?= $verificacion['porcentaje_medicion'] ?>%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center py-2">
+                        <div class="h4 mb-0 text-<?= $verificacion['sin_medir'] > 0 ? 'warning' : 'secondary' ?>"><?= $verificacion['sin_medir'] ?></div>
+                        <small class="text-muted">Sin Medir</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center py-2">
+                        <div class="h4 mb-0 text-<?= $verificacion['no_cumplen'] > 0 ? 'danger' : 'secondary' ?>"><?= $verificacion['no_cumplen'] ?></div>
+                        <small class="text-muted">En Riesgo</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center py-2">
+                        <div class="h4 mb-0 text-<?= $totalVencidos > 0 ? 'danger' : ($totalProximos > 0 ? 'warning' : 'success') ?>">
+                            <?= $totalVencidos ?>
+                            <?php if ($totalProximos > 0): ?>
+                                <small class="text-warning fs-6">(+<?= $totalProximos ?>)</small>
+                            <?php endif; ?>
+                        </div>
+                        <small class="text-muted">Vencidos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta indicadores vencidos -->
+        <?php if ($totalVencidos > 0): ?>
+            <div class="alert alert-danger py-2 mb-3">
+                <a class="d-flex justify-content-between align-items-center text-danger text-decoration-none" data-bs-toggle="collapse" href="#collapseVencidos">
+                    <span><i class="bi bi-exclamation-triangle-fill me-2"></i><strong><?= $totalVencidos ?> indicador<?= $totalVencidos > 1 ? 'es' : '' ?> vencido<?= $totalVencidos > 1 ? 's' : '' ?></strong> — requieren medicion</span>
+                    <i class="bi bi-chevron-down"></i>
+                </a>
+                <div class="collapse mt-2" id="collapseVencidos">
+                    <div class="row g-1">
+                        <?php foreach ($vencimientos as $idInd => $v): ?>
+                            <?php if ($v['estado'] === 'vencido'): ?>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center small py-1">
+                                        <i class="bi bi-circle-fill text-danger me-2" style="font-size:0.5rem"></i>
+                                        <span class="flex-grow-1"><?= esc($v['nombre']) ?></span>
+                                        <span class="text-muted ms-2"><?= $v['dias'] !== null ? $v['dias'] . 'd' : 'Nunca' ?></span>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
         <?php endif; ?>
 
@@ -520,6 +615,22 @@
                                                                 <?= number_format($ind['valor_resultado'], 1) ?><?= esc($ind['unidad_medida']) ?>
                                                             </span>
                                                         <?php endif; ?>
+                                                        <?php
+                                                            $venc = $vencimientos[$ind['id_indicador']] ?? null;
+                                                            $tend = $tendencias[$ind['id_indicador']] ?? 'sin_datos';
+                                                        ?>
+                                                        <?php if ($venc && $venc['estado'] === 'vencido'): ?>
+                                                            <span class="badge bg-danger small"><i class="bi bi-clock-fill me-1"></i>Vencido</span>
+                                                        <?php elseif ($venc && $venc['estado'] === 'proximo'): ?>
+                                                            <span class="badge bg-warning text-dark small"><i class="bi bi-clock me-1"></i>Pronto</span>
+                                                        <?php endif; ?>
+                                                        <?php if ($tend === 'mejora'): ?>
+                                                            <span class="badge bg-success small"><i class="bi bi-arrow-up-short"></i></span>
+                                                        <?php elseif ($tend === 'empeora'): ?>
+                                                            <span class="badge bg-danger small"><i class="bi bi-arrow-down-short"></i></span>
+                                                        <?php elseif ($tend === 'estable'): ?>
+                                                            <span class="badge bg-secondary small"><i class="bi bi-dash"></i></span>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                                 <div class="btn-group btn-group-sm ms-2" onclick="event.stopPropagation()">
@@ -677,8 +788,26 @@
                                     $tipoNombre = $tiposIndicador[$ind['tipo_indicador']] ?? ucfirst($ind['tipo_indicador'] ?? '-');
                                     $phvaNombre = $fasesPhva[$ind['phva']] ?? strtoupper($ind['phva'] ?? '-');
                                     ?>
+                                    <?php
+                                        $vencT = $vencimientos[$ind['id_indicador']] ?? null;
+                                        $tendT = $tendencias[$ind['id_indicador']] ?? 'sin_datos';
+                                    ?>
                                     <tr class="fila-indicador" data-estado="<?= $estadoFiltro ?>">
-                                        <td><?= esc($ind['nombre_indicador']) ?></td>
+                                        <td>
+                                            <?= esc($ind['nombre_indicador']) ?>
+                                            <?php if ($vencT && $vencT['estado'] === 'vencido'): ?>
+                                                <span class="badge bg-danger ms-1" style="font-size:0.65rem"><i class="bi bi-clock-fill"></i> Vencido</span>
+                                            <?php elseif ($vencT && $vencT['estado'] === 'proximo'): ?>
+                                                <span class="badge bg-warning text-dark ms-1" style="font-size:0.65rem"><i class="bi bi-clock"></i> Pronto</span>
+                                            <?php endif; ?>
+                                            <?php if ($tendT === 'mejora'): ?>
+                                                <i class="bi bi-arrow-up-short text-success"></i>
+                                            <?php elseif ($tendT === 'empeora'): ?>
+                                                <i class="bi bi-arrow-down-short text-danger"></i>
+                                            <?php elseif ($tendT === 'estable'): ?>
+                                                <i class="bi bi-dash text-secondary"></i>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?= esc($tipoNombre) ?></td>
                                         <td>
                                             <span class="badge bg-<?= $ind['categoria_color'] ?>">
@@ -763,6 +892,14 @@
                                 <small class="fw-bold"><i class="bi bi-info-circle me-1"></i>Definición:</small>
                                 <div class="small text-muted" id="textoDefinicion"></div>
                             </div>
+                        </div>
+
+                        <div id="bloqueSparkline" class="mb-3" style="display:none;">
+                            <small class="fw-bold text-muted"><i class="bi bi-graph-up me-1"></i>Historial (ultimas 6 mediciones)</small>
+                            <div style="height:100px;" class="mt-1">
+                                <canvas id="chartSparkline"></canvas>
+                            </div>
+                            <div class="text-center small text-muted mt-1" id="sparklineInfo"></div>
                         </div>
 
                         <div class="row">
@@ -906,6 +1043,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/rowgroup/1.4.0/js/dataTables.rowGroup.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         let indicadorActual = null;
@@ -1001,6 +1139,8 @@
         }
 
         // Registrar medición
+        let sparklineChart = null;
+
         document.querySelectorAll('.btn-medir').forEach(btn => {
             btn.addEventListener('click', function() {
                 indicadorActual = this.dataset.id;
@@ -1022,9 +1162,77 @@
                     bloqueOp.style.display = 'none';
                 }
 
+                // Cargar sparkline
+                cargarSparkline(indicadorActual);
+
                 new bootstrap.Modal(document.getElementById('modalMedicion')).show();
             });
         });
+
+        function cargarSparkline(idIndicador) {
+            const bloque = document.getElementById('bloqueSparkline');
+            const info = document.getElementById('sparklineInfo');
+            bloque.style.display = 'none';
+
+            fetch('<?= base_url('indicadores-sst/' . $cliente['id_cliente'] . '/historico-rapido') ?>/' + idIndicador, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(resp => {
+                if (!resp.success || !resp.data || resp.data.length === 0) return;
+
+                bloque.style.display = '';
+                const labels = resp.data.map(d => d.periodo);
+                const valores = resp.data.map(d => d.resultado);
+                const meta = resp.meta;
+
+                if (sparklineChart) sparklineChart.destroy();
+
+                const ctx = document.getElementById('chartSparkline').getContext('2d');
+                sparklineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Resultado',
+                                data: valores,
+                                borderColor: '#0d6efd',
+                                backgroundColor: 'rgba(13,110,253,0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 3,
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Meta',
+                                data: Array(labels.length).fill(meta),
+                                borderColor: '#dc3545',
+                                borderDash: [5, 5],
+                                borderWidth: 1.5,
+                                pointRadius: 0,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { display: true, ticks: { font: { size: 9 } } },
+                            y: { display: true, ticks: { font: { size: 9 } } }
+                        }
+                    }
+                });
+
+                const ultimo = valores[valores.length - 1];
+                info.textContent = ultimo !== null
+                    ? 'Ultimo: ' + ultimo.toFixed(1) + resp.unidad + ' | Meta: ' + meta + resp.unidad
+                    : '';
+            })
+            .catch(() => { bloque.style.display = 'none'; });
+        }
 
         document.getElementById('formMedicion').addEventListener('submit', function(e) {
             e.preventDefault();
