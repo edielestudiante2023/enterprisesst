@@ -55,16 +55,18 @@ class ResponsableSSTModel extends Model
     /**
      * Roles obligatorios según estándares aplicables
      *
-     * Según Resolución 0312/2019:
+     * Resolución 0312/2019 (COPASST/Vigía):
      * - 7 estándares: Vigía SST (< 10 trabajadores, Riesgo I-III)
      * - 21 estándares: COPASST obligatorio (10-50 trabajadores, Riesgo I-III)
-     * - 60 estándares: COPASST + Comité Convivencia (> 50 trabajadores o Riesgo IV-V)
+     * - 60 estándares: COPASST (> 50 trabajadores o Riesgo IV-V)
      *
-     * Nota: Comité de Convivencia es obligatorio para TODAS las empresas según Ley 1010/2006
-     * y Resolución 652/2012, pero para simplificar solo se valida como obligatorio en 21 y 60.
+     * Transversal a todos los tamaños:
+     * - Comité de Convivencia Laboral: obligatorio por Resolución 3461/2025
+     *   (deroga la 652/2012), incluso en empresas con menos de 5 trabajadores.
+     * - Brigada de Emergencias: obligatoria por Decreto 1072/2015, Art. 2.2.4.6.25.
      */
     public const ROLES_OBLIGATORIOS = [
-        7 => ['representante_legal', 'vigia_sst'],
+        7 => ['representante_legal', 'vigia_sst', 'comite_convivencia_presidente', 'comite_convivencia_secretario', 'brigada_coordinador'],
         21 => ['representante_legal', 'responsable_sgsst', 'copasst_presidente', 'copasst_secretario', 'comite_convivencia_presidente', 'comite_convivencia_secretario', 'brigada_coordinador'],
         60 => ['representante_legal', 'responsable_sgsst', 'copasst_presidente', 'copasst_secretario', 'comite_convivencia_presidente', 'comite_convivencia_secretario', 'brigada_coordinador']
     ];

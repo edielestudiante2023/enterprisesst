@@ -370,18 +370,22 @@ class ResponsablesSSTController extends BaseController
     /**
      * Obtiene roles disponibles según estándares
      *
-     * Según Resolución 0312/2019:
-     * - 7 estándares (< 10 trabajadores): Solo Vigía SST, NO COPASST
-     * - 21 estándares (10-50 trabajadores): COPASST obligatorio, NO Vigía
-     * - 60 estándares (> 50 trabajadores o Riesgo IV-V): COPASST + Comité Convivencia
+     * Según Resolución 0312/2019 (COPASST/Vigía) y normas transversales:
+     * - 7 estándares (< 10 trabajadores): Vigía SST (no COPASST) + Comité Convivencia + Brigada
+     * - 21 estándares (10-50 trabajadores): COPASST + Comité Convivencia + Brigada (no Vigía)
+     * - 60 estándares (> 50 trabajadores o Riesgo IV-V): COPASST + Comité Convivencia + Brigada
+     *
+     * Nota: Comité de Convivencia es obligatorio para TODAS las empresas
+     * (Resolución 3461/2025, que derogó la 652/2012) y Brigada de Emergencias
+     * también (Decreto 1072/2015, Art. 2.2.4.6.25), sin importar número de trabajadores.
      */
     private function getRolesDisponibles(int $estandares): array
     {
         $todos = ResponsableSSTModel::TIPOS_ROL;
 
         if ($estandares <= 7) {
-            // 7 estándares: Solo Vigía SST, NO COPASST ni Comité Convivencia
-            // Tampoco requiere Responsable interno del SG-SST (lo gestiona consultor externo)
+            // 7 estándares: Vigía SST en lugar de COPASST.
+            // Comité Convivencia y Brigada aplican por normas transversales.
             unset(
                 $todos['responsable_sgsst'],
                 $todos['copasst_presidente'],
@@ -389,13 +393,7 @@ class ResponsablesSSTController extends BaseController
                 $todos['copasst_representante_empleador'],
                 $todos['copasst_representante_trabajadores'],
                 $todos['copasst_suplente_empleador'],
-                $todos['copasst_suplente_trabajadores'],
-                $todos['comite_convivencia_presidente'],
-                $todos['comite_convivencia_secretario'],
-                $todos['comite_convivencia_representante_empleador'],
-                $todos['comite_convivencia_representante_trabajadores'],
-                $todos['comite_convivencia_suplente_empleador'],
-                $todos['comite_convivencia_suplente_trabajadores']
+                $todos['copasst_suplente_trabajadores']
             );
         } elseif ($estandares <= 21) {
             // 21 estándares: COPASST obligatorio, NO Vigía

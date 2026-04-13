@@ -147,16 +147,12 @@
                         // Vigía NO aplica para 21 y 60 estándares
                         $mostrarSeccion = false;
                     } elseif ($grupo === 'copasst' && $estandares <= 7) {
-                        // COPASST NO aplica para 7 estándares
-                        $mostrarSeccion = false;
-                    } elseif ($grupo === 'convivencia' && $estandares <= 7) {
-                        // Comité de Convivencia: aunque es obligatorio por Ley 1010/2006,
-                        // para 7 estándares se simplifica y no se exige en el formulario
-                        $mostrarSeccion = false;
-                    } elseif ($grupo === 'brigada' && $estandares <= 7) {
-                        // Brigada de Emergencias: para 7 estándares no se exige formalmente
+                        // COPASST NO aplica para 7 estándares (usa Vigía)
                         $mostrarSeccion = false;
                     }
+                    // Comité de Convivencia (Res. 3461/2025) y Brigada de Emergencias
+                    // (Decreto 1072/2015, Art. 2.2.4.6.25) aplican a todas las empresas
+                    // sin importar el número de trabajadores.
 
                     // Mostrar solo secciones que aplican o que tienen items
                     if ($mostrarSeccion && (!empty($data['items']) || in_array($grupo, ['direccion', 'vigia', 'copasst', 'convivencia', 'brigada']))):
