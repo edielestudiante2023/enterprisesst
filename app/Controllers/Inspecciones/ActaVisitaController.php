@@ -350,20 +350,27 @@ class ActaVisitaController extends BaseController
 
         $integrantes = $this->integranteModel->getByActa($id);
 
-        // Determinar qué firmas se necesitan
+        // Determinar qué firmas se necesitan a partir de los integrantes del acta
         $firmantes = [];
+        $consultorIntegrante = null;
         foreach ($integrantes as $integrante) {
-            if (strtoupper($integrante['rol']) === 'CLIENTE') {
+            $rol = strtoupper($integrante['rol']);
+            if ($rol === 'CLIENTE') {
                 $firmantes[] = ['tipo' => 'administrador', 'nombre' => $integrante['nombre'], 'firmado' => !empty($acta['firma_administrador'])];
+            } elseif (stripos($rol, 'CONSULTOR') !== false && $consultorIntegrante === null) {
+                $consultorIntegrante = $integrante['nombre'];
             }
         }
 
-        // Consultor siempre firma
-        $consultantModel = new ConsultantModel();
-        $consultor = $consultantModel->find(session()->get('user_id'));
+        // Consultor siempre firma: preferir integrante del acta; fallback a consultor de sesión
+        if ($consultorIntegrante === null) {
+            $consultantModel = new ConsultantModel();
+            $consultor = $consultantModel->find(session()->get('user_id'));
+            $consultorIntegrante = $consultor['nombre_consultor'] ?? session()->get('nombre_usuario');
+        }
         $firmantes[] = [
             'tipo'    => 'consultor',
-            'nombre'  => $consultor['nombre_consultor'] ?? session()->get('nombre_usuario'),
+            'nombre'  => $consultorIntegrante,
             'firmado' => !empty($acta['firma_consultor']),
         ];
 
