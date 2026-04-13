@@ -53,7 +53,7 @@
     <!-- Aviso -->
     <div class="aviso-firma mb-3">
         <i class="fas fa-pen-nib me-1"></i>
-        <?php $tipoLabel = ['administrador' => 'Administrador', 'vigia' => 'Vigia SST', 'consultor' => 'Consultor'];
+        <?php $tipoLabel = ['administrador' => 'Cliente', 'vigia' => 'Vigia SST', 'consultor' => 'Consultor'];
               $label = $tipoLabel[$tipo] ?? ucfirst($tipo); ?>
         Revise el contenido del acta y firme al final como <strong><?= $label ?></strong>.
         <?php if ($nombreFirmante): ?> (<?= esc($nombreFirmante) ?>)<?php endif; ?>

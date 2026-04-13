@@ -24,7 +24,8 @@ $totalPasos = count($firmantes);
         <div class="card">
             <div class="card-body text-center">
                 <p class="text-muted mb-1" style="font-size:13px;">PASO <?= $i + 1 ?> de <?= $totalPasos ?></p>
-                <h6 class="mb-1">Firma del <?= ucfirst($f['tipo']) ?></h6>
+                <?php $labelTipo = ['administrador' => 'Cliente', 'vigia' => 'Vigia SST', 'consultor' => 'Consultor'][$f['tipo']] ?? ucfirst($f['tipo']); ?>
+                <h6 class="mb-1">Firma del <?= $labelTipo ?></h6>
                 <p class="mb-3" style="font-size:14px; font-weight:600;"><?= esc($f['nombre']) ?></p>
 
                 <?php if ($f['firmado']): ?>
@@ -401,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             var tipo = this.dataset.tipo;
             var tipoLabel = {
-                administrador: 'Administrador',
+                administrador: 'Cliente',
                 vigia: 'Vigia SST',
                 consultor: 'Consultor'
             }[tipo] || tipo;
