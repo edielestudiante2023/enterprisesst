@@ -1830,6 +1830,8 @@ class ActasController extends BaseController
                 'rol_comite'       => 'miembro',
                 'estado'           => 'activo',
                 'fecha_ingreso'    => date('Y-m-d'),
+                'puede_crear_actas'  => 1,
+                'puede_cerrar_actas' => 1,
             ];
 
             $idMiembro = $this->miembroModel->insert($dataMiembro, true);
