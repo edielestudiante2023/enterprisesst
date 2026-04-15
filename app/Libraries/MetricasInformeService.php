@@ -14,15 +14,14 @@ class MetricasInformeService
     }
 
     /**
-     * Calcula cumplimiento de estándares desde evaluacion_inicial_sst
-     * Filtrado por año PHVA usando YEAR(updated_at) — la última evaluación del ciclo
+     * Calcula cumplimiento de estándares desde evaluacion_inicial_sst.
+     * Suma todas las evaluaciones vigentes del cliente (misma fuente que /listEvaluaciones).
      */
     public function calcularCumplimientoEstandares(int $idCliente, int $anio): float
     {
         $result = $this->db->table('evaluacion_inicial_sst')
             ->select('SUM(valor) as total_maximo, SUM(puntaje_cuantitativo) as total_logrado')
             ->where('id_cliente', $idCliente)
-            ->where('YEAR(updated_at)', $anio)
             ->get()
             ->getRowArray();
 
