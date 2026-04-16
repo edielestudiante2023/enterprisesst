@@ -97,6 +97,14 @@ class EmpresaConsultoraController extends Controller
             $resultado = $this->crearPrimerAdmin((int)$idEmpresa, $emailAdmin, $nombreAdmin);
             if ($resultado['ok']) {
                 $mensajeExtra = " | Admin creado: {$emailAdmin} — Contraseña temporal: {$resultado['password']}";
+
+                // Enviar email de bienvenida
+                $emailEnviado = $this->enviarEmailBienvenida(
+                    $emailAdmin, $nombreAdmin, $resultado['password'], $data['razon_social']
+                );
+                $mensajeExtra .= $emailEnviado
+                    ? ' | Email de bienvenida enviado.'
+                    : ' | (Email no pudo enviarse, entrega la contraseña manualmente)';
             } else {
                 $mensajeExtra = " | Error creando admin: {$resultado['error']}";
             }
@@ -252,5 +260,99 @@ class EmpresaConsultoraController extends Controller
         }
 
         return ['ok' => true, 'password' => $password, 'id_usuario' => $idUsuario, 'id_consultor' => $idConsultor];
+    }
+
+    /**
+     * Envia email de bienvenida al nuevo admin de empresa consultora
+     */
+    private function enviarEmailBienvenida(string $email, string $nombre, string $password, string $razonSocial): bool
+    {
+        $loginUrl = base_url('/login');
+
+        $html = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0;'>
+            <!-- Header -->
+            <div style='background: linear-gradient(135deg, #1c2437, #2c3e50); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;'>
+                <h1 style='color: #ffffff; margin: 0; font-size: 28px;'>EnterpriseSST</h1>
+                <p style='color: #bd9751; margin: 5px 0 0; font-size: 14px;'>Sistemas que Evolucionan</p>
+            </div>
+
+            <!-- Body -->
+            <div style='background: #ffffff; padding: 30px; border: 1px solid #e0e0e0;'>
+                <h2 style='color: #1c2437; margin-top: 0;'>Bienvenido, {$nombre}</h2>
+
+                <p style='color: #333; line-height: 1.6;'>
+                    Tu empresa <strong>{$razonSocial}</strong> ha sido registrada exitosamente en el ecosistema
+                    <strong>EnterpriseSST</strong>, la plataforma integral para la gestion del Sistema de Gestion
+                    de Seguridad y Salud en el Trabajo (SG-SST).
+                </p>
+
+                <div style='background: #f8f9fa; border-left: 4px solid #bd9751; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0;'>
+                    <h3 style='color: #1c2437; margin-top: 0; font-size: 16px;'>Tus credenciales de acceso</h3>
+                    <table style='width: 100%;'>
+                        <tr>
+                            <td style='padding: 5px 0; color: #666; width: 120px;'>Email:</td>
+                            <td style='padding: 5px 0; color: #333; font-weight: bold;'>{$email}</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 5px 0; color: #666;'>Contrasena:</td>
+                            <td style='padding: 5px 0; color: #333; font-weight: bold; font-family: monospace; font-size: 16px;'>{$password}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='{$loginUrl}'
+                       style='display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #1c2437, #2c3e50);
+                              color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;'>
+                        Ingresar a EnterpriseSST
+                    </a>
+                </div>
+
+                <h3 style='color: #1c2437; font-size: 16px;'>Primeros pasos</h3>
+                <ol style='color: #333; line-height: 1.8;'>
+                    <li>Ingresa con las credenciales de arriba</li>
+                    <li>Ve a <strong>Mi Empresa</strong> para completar los datos de tu empresa (NIT, logo, etc.)</li>
+                    <li>Crea tus consultores desde el menu <strong>Consultores</strong></li>
+                    <li>Crea tus clientes y comienza a gestionar su SG-SST</li>
+                </ol>
+
+                <p style='color: #666; font-size: 13px; margin-top: 25px; padding-top: 15px; border-top: 1px solid #e0e0e0;'>
+                    <strong>Importante:</strong> Te recomendamos cambiar tu contrasena temporal desde
+                    la opcion de recuperacion de contrasena en el login.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div style='background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 12px 12px; border: 1px solid #e0e0e0; border-top: none;'>
+                <p style='color: #999; font-size: 12px; margin: 0;'>
+                    Este correo fue enviado por EnterpriseSST — Plataforma de Gestion SG-SST
+                </p>
+            </div>
+        </div>
+        ";
+
+        try {
+            $sendgridEmail = new \SendGrid\Mail\Mail();
+            $sendgridEmail->setFrom(
+                getenv('SENDGRID_FROM_EMAIL') ?: 'notificacion.cycloidtalent@cycloidtalent.com',
+                getenv('SENDGRID_FROM_NAME') ?: 'EnterpriseSST'
+            );
+            $sendgridEmail->setSubject("Bienvenido a EnterpriseSST — {$razonSocial}");
+            $sendgridEmail->addTo($email, $nombre);
+            $sendgridEmail->addContent('text/html', $html);
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($sendgridEmail);
+
+            $ok = $response->statusCode() >= 200 && $response->statusCode() < 300;
+            if (!$ok) {
+                log_message('error', 'Email bienvenida falló: status=' . $response->statusCode() . ' body=' . $response->body());
+            }
+            return $ok;
+        } catch (\Exception $e) {
+            log_message('error', 'Email bienvenida excepción: ' . $e->getMessage());
+            return false;
+        }
     }
 }
