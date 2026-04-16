@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ClienteReportModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_reporte';
     protected $primaryKey = 'id_reporte';
     protected $allowedFields = [

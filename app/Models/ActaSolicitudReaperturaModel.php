@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ActaSolicitudReaperturaModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_acta_solicitudes_reapertura';
     protected $primaryKey = 'id';
     protected $returnType = 'array';

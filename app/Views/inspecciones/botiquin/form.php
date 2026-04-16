@@ -1,6 +1,6 @@
 <?php
 $isEdit = !empty($inspeccion);
-$action = $isEdit ? '/inspecciones/botiquin/update/' . $inspeccion['id'] : '/inspecciones/botiquin/store';
+$action = $isEdit ? site_url('inspecciones/botiquin/update/' . $inspeccion['id']) : site_url('inspecciones/botiquin/store');
 
 // Agrupar elementos por grupo
 $grupos = [];
@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Select2 clientes ---
     $.ajax({
-        url: '/inspecciones/api/clientes',
+        url: '<?= site_url('inspecciones/api/clientes') ?>',
         dataType: 'json',
         success: function(data) {
             const select = document.getElementById('selectCliente');

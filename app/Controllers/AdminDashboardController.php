@@ -4,20 +4,74 @@ namespace App\Controllers;
 
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
+use App\Models\DashboardItemModel;
 use App\Models\ReporteModel;
+use App\Models\UserModel;
+use App\Libraries\TenantFilter;
 use CodeIgniter\Controller;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        return view('consultant/admindashboard');
+        $session = session();
+
+        $model = new DashboardItemModel();
+        $items = $model->where('activo', 1)
+                       ->orderBy('categoria ASC, orden ASC')
+                       ->findAll();
+
+        $grouped = [];
+        foreach ($items as $item) {
+            $cat = $item['categoria'] ?? 'Sin categoría';
+            $grouped[$cat][] = $item;
+        }
+
+        $ordenCategorias = [
+            'Operación por Cliente',
+            'Dashboards y Reportes',
+            'Herramientas IA',
+            'Cumplimiento SST - Res. 0312',
+            'Capacitación y Planificación',
+            'Gestión Documental',
+            'Carga Masiva CSV',
+            'Plataformas Colaborativas',
+            'Administración del Sistema',
+        ];
+
+        $sortedGrouped = [];
+        foreach ($ordenCategorias as $cat) {
+            if (isset($grouped[$cat])) {
+                $sortedGrouped[$cat] = $grouped[$cat];
+            }
+        }
+        foreach ($grouped as $cat => $listaItems) {
+            if (!isset($sortedGrouped[$cat])) {
+                $sortedGrouped[$cat] = $listaItems;
+            }
+        }
+
+        $userModel = new UserModel();
+        $clientModel = new ClientModel();
+        $clientesBuilder = $clientModel->builder();
+        $clientesBuilder->where('estado', 'activo');
+        TenantFilter::applyToClientQuery($clientesBuilder);
+        $data = [
+            'usuario'  => $session->get('id_usuario') ? $userModel->find($session->get('id_usuario')) : null,
+            'clientes' => $clientesBuilder->get()->getResultArray(),
+            'grouped'  => $sortedGrouped,
+        ];
+
+        return view('consultant/admindashboard', $data);
     }
 
     public function addClient()
     {
         $consultantModel = new ConsultantModel();
-        $consultants = $consultantModel->findAll(); // Recupera todos los consultores
+        // Filtrar consultores por empresa (superadmin ve todos)
+        $builder = $consultantModel->builder();
+        TenantFilter::applyToConsultorQuery($builder);
+        $consultants = $builder->get()->getResultArray();
 
         // Verifica que los consultores se están cargando
         if (empty($consultants)) {
@@ -124,6 +178,9 @@ class AdminDashboardController extends Controller
     {
         $consultantModel = new ConsultantModel();
 
+        // Forzar empresa consultora del usuario en sesion (multi-tenant)
+        $empresaId = TenantFilter::getEmpresaId();
+
         $data = [
             'nombre_consultor' => $this->request->getVar('nombre_consultor'),
             'cedula_consultor' => $this->request->getVar('cedula_consultor'),
@@ -132,6 +189,7 @@ class AdminDashboardController extends Controller
             'correo_consultor' => $this->request->getVar('correo_consultor'),
             'telefono_consultor' => $this->request->getVar('telefono_consultor'),
             'numero_licencia' => $this->request->getVar('numero_licencia'),
+            'id_empresa_consultora' => $empresaId,
             'id_cliente' => $this->request->getVar('id_cliente'),
         ];
 
@@ -161,7 +219,9 @@ class AdminDashboardController extends Controller
     public function listConsultants()
     {
         $consultantModel = new ConsultantModel();
-        $consultants = $consultantModel->findAll();
+        $builder = $consultantModel->builder();
+        TenantFilter::applyToConsultorQuery($builder);
+        $consultants = $builder->get()->getResultArray();
 
         $data = [
             'consultants' => $consultants

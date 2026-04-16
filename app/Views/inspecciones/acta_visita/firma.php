@@ -67,7 +67,7 @@ $totalPasos = count($firmantes);
                     <i class="fas fa-arrow-left"></i> Anterior
                 </button>
             <?php else: ?>
-                <a href="/inspecciones/acta-visita/edit/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-dark">
+                <a href="<?= site_url('inspecciones/acta-visita/edit/' . $acta['id']) ?>" class="btn btn-sm btn-outline-dark">
                     <i class="fas fa-arrow-left"></i> Volver al acta
                 </a>
             <?php endif; ?>
@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('tipo', tipo);
             formData.append('firma_imagen', firmaBase64);
 
-            fetch('/inspecciones/acta-visita/save-firma/' + actaId, {
+            fetch('<?= site_url('inspecciones/acta-visita/save-firma/') ?>' + actaId, {
                 method: 'POST',
                 body: formData
             })
@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData();
             formData.append(csrfName, csrfHash);
 
-            fetch('/inspecciones/acta-visita/finalizar/' + actaId, {
+            fetch('<?= site_url('inspecciones/acta-visita/finalizar/') ?>' + actaId, {
                 method: 'POST',
                 body: formData
             })
@@ -367,10 +367,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         confirmButtonColor: '#bd9751',
                     }).then((r) => {
                         if (r.isConfirmed) {
-                            window.open('/inspecciones/acta-visita/pdf/' + actaId, '_blank');
-                            window.location.href = '/inspecciones/acta-visita';
+                            window.open('<?= site_url('inspecciones/acta-visita/pdf/') ?>' + actaId, '_blank');
+                            window.location.href = '<?= site_url('inspecciones/acta-visita') ?>';
                         } else {
-                            window.location.href = '/inspecciones';
+                            window.location.href = '<?= site_url('inspecciones') ?>';
                         }
                     });
                 } else {
@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append(csrfName, csrfHash);
                 formData.append('tipo', tipo);
 
-                fetch('/inspecciones/acta-visita/generar-token-firma/' + actaId, {
+                fetch('<?= site_url('inspecciones/acta-visita/generar-token-firma/') ?>' + actaId, {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },

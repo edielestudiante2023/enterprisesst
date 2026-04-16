@@ -15,7 +15,7 @@
     </div>
 
     <!-- Boton nueva -->
-    <a href="/inspecciones/extintores/create" class="btn btn-pwa btn-pwa-primary mb-3">
+    <a href="<?= site_url('inspecciones/extintores/create') ?>" class="btn btn-pwa btn-pwa-primary mb-3">
         <i class="fas fa-plus"></i> Nueva inspeccion
     </a>
 
@@ -47,17 +47,17 @@
                 </div>
                 <div class="mt-2 d-flex gap-1 flex-wrap">
                     <!-- Doc 25: edit/delete buttons always visible regardless of estado -->
-                    <a href="/inspecciones/extintores/edit/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-dark">
+                    <a href="<?= site_url('inspecciones/extintores/edit/' . $insp['id']) ?>" class="btn btn-sm btn-outline-dark">
                         <i class="fas fa-edit"></i> Editar
                     </a>
                     <button type="button" class="btn btn-sm btn-outline-danger btn-delete-insp" data-id="<?= $insp['id'] ?>" data-nombre="<?= esc($insp['nombre_cliente'] ?? '') ?>">
                         <i class="fas fa-trash"></i>
                     </button>
                     <?php if ($insp['estado'] === 'completo'): ?>
-                        <a href="/inspecciones/extintores/view/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-dark">
+                        <a href="<?= site_url('inspecciones/extintores/view/' . $insp['id']) ?>" class="btn btn-sm btn-outline-dark">
                             <i class="fas fa-eye"></i> Ver
                         </a>
-                        <a href="/inspecciones/extintores/pdf/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <a href="<?= site_url('inspecciones/extintores/pdf/' . $insp['id']) ?>" class="btn btn-sm btn-outline-primary" target="_blank">
                             <i class="fas fa-file-pdf"></i> PDF
                         </a>
                     <?php endif; ?>
@@ -73,7 +73,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Select2 filtro
     $.ajax({
-        url: '/inspecciones/api/clientes',
+        url: '<?= site_url('inspecciones/api/clientes') ?>',
         dataType: 'json',
         success: function(data) {
             const select = document.getElementById('filtroCliente');
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmButtonColor: '#dc3545',
         }).then(result => {
             if (result.isConfirmed) {
-                window.location.href = '/inspecciones/extintores/delete/' + btn.dataset.id;
+                window.location.href = '<?= site_url('inspecciones/extintores/delete/') ?>' + btn.dataset.id;
             }
         });
     });

@@ -1,6 +1,6 @@
 <?php
 $isEdit = !empty($inspeccion);
-$action = $isEdit ? '/miembro/inspecciones/pausas-activas/update/' . $inspeccion['id'] : '/miembro/inspecciones/pausas-activas/store';
+$action = $isEdit ? site_url('miembro/inspecciones/pausas-activas/update/' . $inspeccion['id']) : site_url('miembro/inspecciones/pausas-activas/store');
 ?>
 
 <div class="container-fluid px-3">

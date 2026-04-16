@@ -79,11 +79,11 @@
 
     <div class="mb-4">
         <?php if ($inspeccion['estado'] === 'completo' && !empty($inspeccion['ruta_pdf'])): ?>
-        <a href="/miembro/inspecciones/pausas-activas/pdf/<?= $inspeccion['id'] ?>" class="btn btn-pwa btn-pwa-primary" target="_blank">
+        <a href="<?= site_url('miembro/inspecciones/pausas-activas/pdf/' . $inspeccion['id']) ?>" class="btn btn-pwa btn-pwa-primary" target="_blank">
             <i class="fas fa-file-pdf"></i> Ver PDF
         </a>
         <?php endif; ?>
-        <a href="/miembro/inspecciones/pausas-activas" class="btn btn-pwa btn-pwa-outline">
+        <a href="<?= site_url('miembro/inspecciones/pausas-activas') ?>" class="btn btn-pwa btn-pwa-outline">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>

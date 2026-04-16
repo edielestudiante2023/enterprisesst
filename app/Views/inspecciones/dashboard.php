@@ -32,11 +32,11 @@
             </div>
             <div class="mt-2">
                 <?php if ($doc['estado'] === 'borrador'): ?>
-                    <a href="/inspecciones/acta-visita/edit/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-dark">
+                    <a href="<?= site_url('inspecciones/acta-visita/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                         Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 <?php else: ?>
-                    <a href="/inspecciones/acta-visita/firma/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-warning">
+                    <a href="<?= site_url('inspecciones/acta-visita/firma/' . $doc['id']) ?>" class="btn btn-sm btn-outline-warning">
                         Ir a firmas <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 <?php endif; ?>
@@ -66,7 +66,7 @@
                 </div>
             </div>
             <div class="mt-2">
-                <a href="/inspecciones/inspeccion-locativa/edit/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-dark">
+                <a href="<?= site_url('inspecciones/inspeccion-locativa/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -95,7 +95,7 @@
                 </div>
             </div>
             <div class="mt-2">
-                <a href="/inspecciones/extintores/edit/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-dark">
+                <a href="<?= site_url('inspecciones/extintores/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -124,7 +124,7 @@
                 </div>
             </div>
             <div class="mt-2">
-                <a href="/inspecciones/botiquin/edit/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-dark">
+                <a href="<?= site_url('inspecciones/botiquin/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -153,7 +153,7 @@
                 </div>
             </div>
             <div class="mt-2">
-                <a href="/inspecciones/senalizacion/edit/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-dark">
+                <a href="<?= site_url('inspecciones/senalizacion/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -182,7 +182,7 @@
                 </div>
             </div>
             <div class="mt-2">
-                <a href="/inspecciones/registro-asistencia/edit/<?= $doc['id'] ?>" class="btn btn-sm btn-outline-dark">
+                <a href="<?= site_url('inspecciones/registro-asistencia/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -194,42 +194,42 @@
     <!-- Grid de inspecciones -->
     <div class="section-title">Inspecciones</div>
     <div class="grid-inspecciones mb-4">
-        <a href="/inspecciones/acta-visita" class="card-tipo">
+        <a href="<?= site_url('inspecciones/acta-visita') ?>" class="card-tipo">
             <i class="fas fa-clipboard-list"></i>
             <div><strong>Actas de Visita</strong></div>
             <div class="count">(<?= $totalActas ?>)</div>
         </a>
-        <a href="/inspecciones/inspeccion-locativa" class="card-tipo">
+        <a href="<?= site_url('inspecciones/inspeccion-locativa') ?>" class="card-tipo">
             <i class="fas fa-hard-hat"></i>
             <div><strong>Locativas</strong></div>
             <div class="count">(<?= $totalLocativas ?>)</div>
         </a>
-        <a href="/inspecciones/extintores" class="card-tipo">
+        <a href="<?= site_url('inspecciones/extintores') ?>" class="card-tipo">
             <i class="fas fa-fire-extinguisher"></i>
             <div><strong>Extintores</strong></div>
             <div class="count">(<?= $totalExtintores ?>)</div>
         </a>
-        <a href="/inspecciones/botiquin" class="card-tipo">
+        <a href="<?= site_url('inspecciones/botiquin') ?>" class="card-tipo">
             <i class="fas fa-first-aid"></i>
             <div><strong>Botiquin</strong></div>
             <div class="count">(<?= $totalBotiquin ?>)</div>
         </a>
-        <a href="/inspecciones/senalizacion" class="card-tipo">
+        <a href="<?= site_url('inspecciones/senalizacion') ?>" class="card-tipo">
             <i class="fas fa-sign"></i>
             <div><strong>Senalizacion</strong></div>
             <div class="count">(<?= $totalSenalizacion ?>)</div>
         </a>
-        <a href="/inspecciones/registro-asistencia" class="card-tipo">
+        <a href="<?= site_url('inspecciones/registro-asistencia') ?>" class="card-tipo">
             <i class="fas fa-clipboard-list"></i>
             <div><strong>Asistencia</strong></div>
             <div class="count">(<?= $totalAsistencia ?>)</div>
         </a>
-        <a href="/inspecciones/pausas-activas" class="card-tipo">
+        <a href="<?= site_url('inspecciones/pausas-activas') ?>" class="card-tipo">
             <i class="fas fa-heartbeat"></i>
             <div><strong>Pausas Activas</strong></div>
             <div class="count">(<?= $totalPausas ?>)</div>
         </a>
-        <a href="/inspecciones/investigacion-accidente" class="card-tipo">
+        <a href="<?= site_url('inspecciones/investigacion-accidente') ?>" class="card-tipo">
             <i class="fas fa-exclamation-triangle"></i>
             <div><strong>Investigacion AT/IT</strong></div>
             <div class="count">(<?= $totalInvestigaciones ?>)</div>

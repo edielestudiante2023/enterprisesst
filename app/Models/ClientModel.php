@@ -20,6 +20,81 @@ class ClientModel extends Model
     ];
 
     /**
+     * Determina si se debe aplicar el filtro de tenant automaticamente.
+     * No aplica en CLI, cuando no hay sesion, o cuando el usuario es superadmin.
+     */
+    private function shouldApplyTenantFilter(): bool
+    {
+        if (is_cli()) return false;
+        $session = session();
+        if (!$session->get('isLoggedIn')) return false;
+        if ($session->get('is_superadmin')) return false;
+        if (!$session->get('id_empresa_consultora')) return false;
+        return true;
+    }
+
+    /**
+     * Aplica el filtro de tenant al builder interno del modelo.
+     */
+    private function applyTenantScope(): void
+    {
+        if ($this->shouldApplyTenantFilter()) {
+            $empresaId = (int) session()->get('id_empresa_consultora');
+            $this->whereIn('tbl_clientes.id_consultor', function ($sub) use ($empresaId) {
+                return $sub->select('id_consultor')
+                    ->from('tbl_consultor')
+                    ->where('id_empresa_consultora', $empresaId);
+            });
+        }
+    }
+
+    /**
+     * Override findAll: filtra por empresa automaticamente.
+     */
+    public function findAll(?int $limit = null, int $offset = 0)
+    {
+        $this->applyTenantScope();
+        return parent::findAll($limit, $offset);
+    }
+
+    /**
+     * Override find: si se busca por ID, verifica que pertenezca a la empresa.
+     * Si se busca sin ID (null), aplica scope como findAll.
+     */
+    public function find($id = null)
+    {
+        $result = parent::find($id);
+
+        // Si se busco por ID especifico, validar pertenencia a la empresa
+        if ($id !== null && $result !== null && $this->shouldApplyTenantFilter()) {
+            $row = is_array($result) && isset($result['id_consultor']) ? $result : null;
+            if ($row) {
+                $empresaId = (int) session()->get('id_empresa_consultora');
+                $db = \Config\Database::connect();
+                $consultor = $db->table('tbl_consultor')
+                    ->where('id_consultor', $row['id_consultor'])
+                    ->where('id_empresa_consultora', $empresaId)
+                    ->get()->getRowArray();
+                if (!$consultor) {
+                    return null; // No pertenece a la empresa: como si no existiera
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Override where()->findAll() pattern: el scope se aplica en findAll.
+     * Override first(): aplica scope tambien.
+     */
+    public function first()
+    {
+        $this->applyTenantScope();
+        return parent::first();
+    }
+
+    /**
      * Obtiene un cliente con su contrato activo
      */
     public function getClientWithActiveContract($idCliente)

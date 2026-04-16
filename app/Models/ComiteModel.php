@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ComiteModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_comites';
     protected $primaryKey = 'id_comite';
     protected $returnType = 'array';

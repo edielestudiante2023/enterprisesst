@@ -1,6 +1,6 @@
 <?php
 $isEdit = !empty($acta);
-$action = $isEdit ? '/inspecciones/acta-visita/update/' . $acta['id'] : '/inspecciones/acta-visita/store';
+$action = $isEdit ? site_url('inspecciones/acta-visita/update/' . $acta['id']) : site_url('inspecciones/acta-visita/store');
 ?>
 
 <div class="container-fluid px-3">
@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Select2 para clientes ---
     $.ajax({
-        url: '/inspecciones/api/clientes',
+        url: '<?= site_url('inspecciones/api/clientes') ?>',
         dataType: 'json',
         success: function(data) {
             const select = document.getElementById('selectCliente');
@@ -329,8 +329,8 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</p>';
 
         Promise.all([
-            fetch('/inspecciones/api/pendientes/' + idCliente).then(r => r.json()),
-            fetch('/inspecciones/api/mantenimientos/' + idCliente).then(r => r.json()),
+            fetch('<?= site_url('inspecciones/api/pendientes/') ?>' + idCliente).then(r => r.json()),
+            fetch('<?= site_url('inspecciones/api/mantenimientos/') ?>' + idCliente).then(r => r.json()),
         ]).then(([pendientes, mantenimientos]) => {
             let html = '';
 
@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         container.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando actividades PTA...</p>';
 
-        let url = '/inspecciones/acta-visita/api/pta-actividades?id_cliente=' + idCliente + '&fecha_visita=' + fechaVisita;
+        let url = '<?= site_url('inspecciones/acta-visita/api/pta-actividades') ?>?id_cliente=' + idCliente + '&fecha_visita=' + fechaVisita;
         if (actaId) url += '&id_acta=' + actaId;
 
         fetch(url).then(r => r.json()).then(data => {

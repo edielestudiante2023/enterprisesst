@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ActaTokenModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_actas_tokens';
     protected $primaryKey = 'id_token';
     protected $returnType = 'array';

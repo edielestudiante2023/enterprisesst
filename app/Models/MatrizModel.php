@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class MatrizModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_matrices'; // Nombre de la tabla
     protected $primaryKey = 'id_matriz'; // Clave primaria
     protected $allowedFields = [

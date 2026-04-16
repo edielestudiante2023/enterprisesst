@@ -1,0 +1,986 @@
+{
+    "escala": [
+        {
+            "nivel": 1,
+            "nombre": "Inicial",
+            "etiqueta": "No evidenciado",
+            "descripcion": "El individuo no demuestra la competencia en ninguna circunstancia. No se observan comportamientos asociados, ni siquiera cuando se le solicita, y no reconoce la importancia de la competencia en el desempeño de su rol. Requiere capacitación inicial y un plan de desarrollo estructurado para adquirir la competencia."
+        },
+        {
+            "nivel": 2,
+            "nombre": "Básico",
+            "etiqueta": "Intermitente",
+            "descripcion": "La competencia se evidencia de manera ocasional, pero con dificultad para mantenerse de forma constante. El colaborador necesita supervisión y apoyo para ejecutar los comportamientos asociados y no logra desempeñarse eficazmente en situaciones complejas o bajo presión. Característico de personas en proceso de aprendizaje que requieren orientación y retroalimentación continua."
+        },
+        {
+            "nivel": 3,
+            "nombre": "Intermedio",
+            "etiqueta": "Funcional en condiciones normales",
+            "descripcion": "Los individuos demuestran la competencia de manera consistente en situaciones favorables. Pueden presentar dificultades cuando enfrentan retos o situaciones de presión, pero logran responder adecuadamente en la mayoría de las circunstancias esperadas para su rol. Punto de transición entre la dependencia de supervisión y la autonomía."
+        },
+        {
+            "nivel": 4,
+            "nombre": "Avanzado",
+            "etiqueta": "Consistente y adaptable",
+            "descripcion": "Manifiestan la competencia de manera sólida y estable en su desempeño. Son capaces de mantenerla incluso en circunstancias adversas o de alta exigencia, demostrando adaptabilidad y capacidad de resolver problemas en escenarios complejos. Pueden guiar a otros en el desarrollo de la competencia, convirtiéndose en referentes dentro de sus equipos."
+        },
+        {
+            "nivel": 5,
+            "nombre": "Experto",
+            "etiqueta": "Dominante y natural",
+            "descripcion": "Nivel más alto de dominio. Aplican la competencia con alto nivel de impacto y eficacia, siendo modelos a seguir dentro de la organización. Demuestran un dominio innato y tienen la capacidad de enseñar e influenciar a otros en su aplicación, promoviendo el desarrollo de la competencia en el entorno laboral."
+        }
+    ],
+    "competencias": [
+        {
+            "numero": 1,
+            "codigo": null,
+            "nombre": "FLEXIBILIDAD",
+            "familia": "eficacia_personal",
+            "definicion": "Es la habilidad de adaptarse y trabajar eficazmente en distintas y variadas situaciones y con personas o grupos diversos. Supone entender y valorar posturas distintas o puntos de vista diferentes, o bien adaptar el propio enfoque a medida que la situación lo requiera, o bien cambiar o aceptar sin problemas los cambios en la propia Organización o en las responsabilidades del puesto.",
+            "pregunta_clave": "¿Puede la persona cambiar su enfoque o dejar una tarea cuando las circunstancias así lo requieran?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Acepta la necesidad de ser flexible",
+                    "descripcion_conducta": "Está dispuesto a cambiar las propias ideas ante una nueva información o evidencia contraria. Comprende los puntos de vista de los demás."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Aplica las normas con flexibilidad",
+                    "descripcion_conducta": "Es flexible al aplicar los procedimientos, adaptándolos para alcanzar los objetivos nacionales de su área dependiendo de cada situación."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Adapta su comportamiento a la situación",
+                    "descripcion_conducta": "Realiza cambios significativos en su comportamiento basándose en la situación."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Adapta su estrategia a la situación",
+                    "descripcion_conducta": "Adecua su plan, objetivo o proyecto a la situación. Realiza cambios pequeños o temporales en su área, para adaptarse a las necesidades de una situación específica."
+                }
+            ]
+        },
+        {
+            "numero": 2,
+            "codigo": null,
+            "nombre": "AUTOCONFIANZA",
+            "familia": "eficacia_personal",
+            "definicion": "Es el convencimiento de que es capaz de realizar con éxito una tarea o elegir el enfoque adecuado para realizar un trabajo y resolver un problema. Incluye el mostrar confianza en las propias capacidades, decisiones y opiniones.",
+            "pregunta_clave": "¿Aborda la persona situaciones arriesgadas o retadoras y se encuentra segura de sí misma?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Se muestra segura de sí misma",
+                    "descripcion_conducta": "Una vez que ha recibido los lineamientos de trabajo, lo hace sin requerir supervisión. Muestra confianza en sí misma, muestra seguridad ante los demás."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Actúa con independencia",
+                    "descripcion_conducta": "Toma decisiones o actúa dentro de su ámbito de responsabilidad sin necesidad de consultar a sus superiores."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Expresa confianza en sus capacidades",
+                    "descripcion_conducta": "Por su experiencia y conocimientos sabe que es un experto y lo expresa, alguien que saca las cosas adelante. Valora favorablemente sus capacidades en comparación con otros basado en hechos. Explícitamente manifiesta confianza en su propio juicio."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Busca retos o desafíos",
+                    "descripcion_conducta": "Busca y disfruta con responsabilidades nuevas o desafiantes. Expresa su desacuerdo de forma adecuada ante personas en una posición superior o Clientes, presentando su postura de forma clara y con seguridad en situaciones importantes."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Escoge retos con un alto riesgo",
+                    "descripcion_conducta": "Se ofrece para situaciones o proyectos extremadamente desafiantes, que le suponen un riesgo laboral importante (perder credibilidad e imagen profesional si no se consigue llegar a la meta). Confronta a sus superiores o clientes de forma firme y contundente presentando su posición de forma sólida y válida."
+                }
+            ]
+        },
+        {
+            "numero": 3,
+            "codigo": null,
+            "nombre": "INTEGRIDAD",
+            "familia": "eficacia_personal",
+            "definicion": "Es ser honesto y ético en todo el ámbito profesional. Incluye el comunicar las intenciones, ideas y sentimientos abierta y directamente y el estar dispuesto a actuar rectamente incluso bajo presiones internas y externas.",
+            "pregunta_clave": "¿Actúa la persona rectamente aun en situaciones adversas?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Es abierta y honesta en situaciones de trabajo",
+                    "descripcion_conducta": "Reconoce y expresa sus equivocaciones o sentimientos propios (temor, duda, etc.). Si la situación lo amerita expresa lo que piensa, aunque no sea necesario o sea más sencillo callarse."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Actúa rectamente",
+                    "descripcion_conducta": "Es franca y transparente en las relaciones profesionales. Trata confidencialmente la información relacionada con el cliente. Da a todos un trato equitativo."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Actúa rectamente, aunque no sea fácil",
+                    "descripcion_conducta": "Actúa \"como debe hacerlo\" aunque eso le suponga complicaciones profesionales o personales dentro del ámbito laboral. Dice la verdad aunque eso pueda molestar o afectar a otras personas."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Actúa íntegramente",
+                    "descripcion_conducta": "Menciona haber rechazado ofertas poco éticas. Se asegura de señalar tanto las ventajas como los inconvenientes de un trato. Influencia a otros en posiciones superiores a que actúen en forma íntegra."
+                }
+            ]
+        },
+        {
+            "numero": 4,
+            "codigo": null,
+            "nombre": "IDENTIFICACIÓN - LEALTAD",
+            "familia": "eficacia_personal",
+            "definicion": "Es la capacidad y voluntad de orientar los propios intereses y comportamientos hacia las necesidades, prioridades y objetivos de la organización. Supone actuar en forma que se consigan los objetivos o se satisfagan las necesidades de esta. Puede manifestarse al poner la misión de la compañía por delante de las preferencias individuales.",
+            "pregunta_clave": "¿Actúa la persona de acuerdo con la autoridad, las políticas, procedimientos, las necesidades y los objetivos de la Organización?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Trabaja por adaptarse en la organización",
+                    "descripcion_conducta": "Respeta las normas, políticas, los procedimientos, cumple con los compromisos y obligaciones."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Es leal",
+                    "descripcion_conducta": "Se preocupa acerca de la imagen corporativa y afectivamente está ligado a ella. Respeta y acepta lo que es importante para la compañía. Realiza esfuerzos adicionales voluntariamente para cumplir con lo que se espera de él."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Apoya",
+                    "descripcion_conducta": "Se siente comprometido y actúa públicamente a favor de la misión y los objetivos de la organización, por ello toma decisiones y ajusta sus prioridades a las necesidades de la organización. Coopera con los demás en el logro de los objetivos y amplía su marco de responsabilidad habitual pensando en beneficio de la misma."
+                }
+            ]
+        },
+        {
+            "numero": 5,
+            "codigo": null,
+            "nombre": "PENSAMIENTO ANALÍTICO",
+            "familia": "cognitivas",
+            "definicion": "Es la capacidad de entender una situación, desagregándola en pequeñas partes o identificando sus implicaciones paso a paso. Incluye el organizar las partes de un problema o situación de forma sistemática, el realizar comparaciones entre diferentes elementos o aspectos y el establecer prioridades de una forma racional. También incluye el entender las secuencias temporales y las relaciones causa-efecto de los hechos.",
+            "pregunta_clave": "¿Entiende la persona las relaciones causa-efecto? ¿Desglosa los problemas en partes?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Separa en partes los problemas",
+                    "descripcion_conducta": "Separa los problemas o situaciones en partes. Realiza una lista de asuntos a tratar."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Identifica relaciones básicas",
+                    "descripcion_conducta": "Establece relaciones causales sencillas (A causa B), o identifica los pros y los contras de las decisiones. Marca prioridades en las tareas según su orden de importancia."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Identifica relaciones múltiples",
+                    "descripcion_conducta": "Es capaz de establecer vínculos causales múltiples y complicados, es decir reconoce varias posibles causas de un hecho, o varias consecuencias de una acción o una cadena de acontecimientos (A causa B causa C causa D). Analiza las relaciones complejas entre las distintas partes de un problema o situación y puede anticipar los obstáculos y planificar los siguientes pasos."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Identifica varias soluciones a problemas complejos y realiza planes",
+                    "descripcion_conducta": "Utiliza diversas técnicas para identificar varias relaciones causales múltiples de un problema complejo y utiliza diversas técnicas de análisis para identificar varias soluciones, además sopesa el valor de cada una de ellas."
+                }
+            ]
+        },
+        {
+            "numero": 6,
+            "codigo": null,
+            "nombre": "PENSAMIENTO CONCEPTUAL",
+            "familia": "cognitivas",
+            "definicion": "Es la habilidad para identificar en las situaciones pautas o relaciones que no son obvias o identificar puntos clave en situaciones complejas. Incluye la utilización de un razonamiento creativo, inductivo o conceptual.",
+            "pregunta_clave": "¿Encuentra la persona pautas, relaciones o modelos? ¿Consigue hacer un todo de las distintas partes? ¿Encuentra nuevas formas de ver las cosas?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Utiliza reglas básicas",
+                    "descripcion_conducta": "Utiliza criterios básicos, el sentido común y las experiencias vividas para identificar problemas. Reconoce cuando una situación presente es idéntica a una situación pasada."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Reconoce modelos o pautas",
+                    "descripcion_conducta": "Identifica pautas, tendencias o lagunas en la información que maneja. Reconoce e identifica las similitudes entre una nueva situación y algo que ocurrió en el pasado."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Utiliza conceptos complejos",
+                    "descripcion_conducta": "Evidencia un patrón de reconocimiento más profundo, generando análisis e interpretación de datos, estadísticas, hechos, resultados por medio del uso de métodos técnicos y principios complejos."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Clarifica datos o situaciones complejos",
+                    "descripcion_conducta": "Hace que las situaciones o ideas complejas estén claras, sean simples y comprensibles. Integra ideas, datos y observaciones, presentándolos en forma clara y útil. Redefine en una forma más sencilla los conocimientos o los datos existentes."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Descubre nuevos conceptos",
+                    "descripcion_conducta": "Para explicar situaciones o resolver problemas, descubre y desarrolla conceptos nuevos (no aprendidos en la formación o experiencia previa, nunca antes desarrollados) que no resultan obvios para los demás."
+                }
+            ]
+        },
+        {
+            "numero": 7,
+            "codigo": null,
+            "nombre": "BÚSQUEDA DE INFORMACIÓN",
+            "familia": "cognitivas",
+            "definicion": "Es la inquietud y la curiosidad constantes por saber más sobre temas, hechos o personas. Implica buscar información más allá de las preguntas rutinarias o de las que se requiere en el puesto. Puede implicar el \"escarbar\" o pedir una información concreta, el clarificar discrepancias formando una serie de preguntas, o el buscar información variada sin un objetivo concreto que pueda ser útil en el futuro.",
+            "pregunta_clave": "¿Va la persona más allá de lo evidente y busca información activamente?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Pregunta",
+                    "descripcion_conducta": "Personalmente hace preguntas directas a las personas que están presentes o que conocen la situación. Utiliza la información que está disponible o consulta las fuentes de información disponibles."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Indaga personalmente",
+                    "descripcion_conducta": "Aborda personalmente el esclarecimiento de una situación o problema. Encuentra a las personas relacionadas con el problema o situación aunque no estén presentes y les hace preguntas."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Profundiza en el tema",
+                    "descripcion_conducta": "Hace preguntas para ahondar en la raíz de una situación, problema u oportunidad, para ir más allá de lo evidente. Recurre a personas que no están involucradas en la situación o problema para conocer sus perspectivas, información básica, experiencias, etc. No se queda satisfecho con la primera respuesta, averigua por qué las cosas ocurrieron."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Investiga",
+                    "descripcion_conducta": "Realiza un trabajo sistemático en un determinado periodo para obtener la máxima y mejor información posible de todas las fuentes disponibles. Obtiene información mediante periódicos, revistas, bases de datos, estudios de mercado, financieros o de la competencia."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Ha desarrollado sistemas propios de información",
+                    "descripcion_conducta": "La persona ha puesto en marcha por sí misma, sistemas o prácticas personalizadas que permiten recoger información de forma habitual yendo personalmente a los sitios donde está la información, etc."
+                }
+            ]
+        },
+        {
+            "numero": 8,
+            "codigo": null,
+            "nombre": "HABILIDADES DE COMUNICACIÓN (HC)",
+            "familia": "gerenciales",
+            "definicion": "Habilidad para expresar ideas y opiniones claramente, definir mensajes y alcanzar un entendimiento común de situaciones, dirigiendo efectivamente la audiencia. Incluye comunicación oral y escrita, clara, fluida y concisa, clarificando los puntos de vista de otros. Manteniendo la atención de la audiencia en un grupo y en situaciones uno a uno. Escuchando cuidadosa y pacientemente para dar feedback.",
+            "pregunta_clave": "¿Se comunica generando entendimiento en la audiencia?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Se comunica de forma básica",
+                    "descripcion_conducta": "Escucha y transmite los mensajes de forma simple y detallada, comunicándolos independientemente de la audiencia."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Se comunica según la audiencia",
+                    "descripcion_conducta": "Adapta los mensajes y el nivel de detalle a la situación y a la audiencia. Revisa y edita el trabajo escrito de otros constructivamente. Escucha y se asegura de tener un entendimiento claro sobre cuestiones básicas."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Se comunica eficientemente",
+                    "descripcion_conducta": "Se expresa de manera clara, consistente y eficaz. Mantiene la atención sobre problemas clave a través de instrumentos de comunicación, técnicas y comportamientos eficaces. Escucha con mucha atención y cuidado considerando cuidadosamente las opiniones de las otras partes."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Motiva con su comunicación",
+                    "descripcion_conducta": "Desarrolla y transmite mensajes críticos y complejos de manera persuasiva y motivante. Prepara y entrega presentaciones claras y bien organizadas, dirigiendo las situaciones críticas a influenciar a diferentes audiencias. Controla sus emociones y sabe manejar las barreras que se presentan en la comunicación."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Incentiva un ambiente con comunicación abierta",
+                    "descripcion_conducta": "Crea una atmósfera en la que la información oportuna y de alta calidad fluye suavemente en toda la organización, escuchando y hablando para crear una opinión común. Anima a expresar abiertamente las ideas y opiniones, dirigiendo audiencias variadas, revirtiendo sus percepciones y conduciéndolos al cambio y a objetivos retadores."
+                }
+            ]
+        },
+        {
+            "numero": 9,
+            "codigo": null,
+            "nombre": "ORIENTACIÓN AL LOGRO",
+            "familia": "logro",
+            "definicion": "Es la preocupación por realizar bien el trabajo o sobrepasar un estándar. Los estándares pueden ser el propio rendimiento en el pasado (esforzarse por superarlo), una medida objetiva (orientación a resultados), cuota de ventas, superar a otros (competitividad), metas personales que uno mismo se ha marcado o actividades que nadie ha realizado antes (innovación). El realizar algo único y excepcional también indica Orientación al Logro.",
+            "pregunta_clave": "¿Se esfuerza la persona por alcanzar o sobrepasar unos objetivos? ¿Se fija objetivos para obtener un beneficio concreto?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Realiza bien su trabajo",
+                    "descripcion_conducta": "Realiza su trabajo bien o correctamente y expresa frustración ante la ineficacia o la pérdida de tiempo."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Fija sus propios estándares en el trabajo",
+                    "descripcion_conducta": "Se fija sus propios estándares y comprueba frente a ellos el logro de sus resultados. Emplea nuevos métodos o formas de conseguir los objetivos impuestos por la compañía."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Mejora el rendimiento, es proactivo",
+                    "descripcion_conducta": "Hace o propone cambios específicos en los métodos de trabajo para conseguir mejoras notables y medibles en el rendimiento (por ejemplo: encuentra formas mejores, más rápidas, menos caras o más eficientes de hacer las cosas). Persevera, intenta una y otra vez algo que se propuso conseguirlo de manera exitosa."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Se fija objetivos o metas retadoras y los alcanza",
+                    "descripcion_conducta": "Implica fijarse metas u objetivos ambiciosos que demandan alto esfuerzo personal pues son muy difíciles de lograr y los alcanza. Demuestra la consecución exitosa de resultados en términos numéricos comparando su gestión actual con otras pasadas, propias o de otras personas."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Realiza análisis costo-beneficio",
+                    "descripcion_conducta": "Toma decisiones y establece prioridades y objetivos sopesando \"recursos utilizados y resultados obtenidos\". Hace continuas referencias al beneficio potencial, a la rentabilidad o al análisis costo-beneficio al revisar los resultados de su Unidad, proyectos, situaciones complejas, etc."
+                }
+            ]
+        },
+        {
+            "numero": 10,
+            "codigo": null,
+            "nombre": "RESPONSABILIDAD POR RESULTADOS (RR)",
+            "familia": "logro",
+            "definicion": "Consigue los resultados que tienen un claro impacto positivo en el funcionamiento del negocio y la rentabilidad, persistiendo con las tareas planificadas ante los obstáculos. Se hace responsable por los resultados positivos y negativos. Se compromete; toma la delantera para resolver los problemas y se apropia de los proyectos desafiantes.",
+            "pregunta_clave": "¿Se responsabiliza por los resultados y actúa para mejorarlos?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Le interesa hacer el trabajo bien",
+                    "descripcion_conducta": "Trabaja dirigido por las normas implícitas de excelencia. Intenta hacer el trabajo bien. Puede sentirse frustrado o ineficiente, pero no provoca mejoras específicas."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Trabaja por mejorar los resultados",
+                    "descripcion_conducta": "Hace cambios específicos en el sistema o en sus propios métodos de trabajo para mejorar el desempeño."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Trabaja enfocado en alcanzar resultados positivos",
+                    "descripcion_conducta": "Es firme y actúa para alcanzar objetivos retadores para él mismo o para los demás que tienen una conexión clara con los objetivos totales de la región o de todo el país."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Se arriesga para optimizar los resultados",
+                    "descripcion_conducta": "Hace análisis de costo\/beneficio, toma decisiones, establece prioridades, o escoge objetivos sobre la base de gastos y rendimientos. Toma riesgos emprendedores calculados, comprometiendo recursos significativos y\/o tiempo para mejorar el funcionamiento y alcanzar un objetivo retador. Toma medidas para reducir al mínimo los riesgos involucrados."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Mantiene y logra los resultados esperados",
+                    "descripcion_conducta": "Persiste en esfuerzos emprendedores. Toma numerosas acciones, las mantiene en el tiempo ante los obstáculos para alcanzar el objetivo emprendedor, y\/o completa esfuerzos satisfactoriamente, llevando las situaciones a una conclusión."
+                }
+            ]
+        },
+        {
+            "numero": 11,
+            "codigo": null,
+            "nombre": "INICIATIVA",
+            "familia": "logro",
+            "definicion": "Se refiere a: 1) Identificar un problema, obstáculo u oportunidad y 2) llevar a cabo acciones para dar respuesta a ellos. Por tanto, puede verse la Iniciativa como la predisposición a actuar de forma proactiva y no solo limitarse a pensar en lo que hay que hacer en el futuro.",
+            "pregunta_clave": "¿Se anticipa la persona a las necesidades y oportunidades futuras y actúa en consecuencia?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Aborda oportunidades o problemas presentes",
+                    "descripcion_conducta": "Reconoce las oportunidades y actúa en consecuencia o supera obstáculos para resolver problemas presentes, actuando en el plazo de 1 ó 2 días."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Es decisivo a corto plazo",
+                    "descripcion_conducta": "Actúa rápida y decisivamente en una crisis, problema, situación imprevista u oportunidad en el momento en que se presenta."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Se anticipa a corto plazo",
+                    "descripcion_conducta": "Se adelanta determinando oportunidades y\/o problemas inminentes y actúa en consecuencia en un plazo menor a 1 mes."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Se anticipa a medio plazo",
+                    "descripcion_conducta": "Actúa proactivamente creando oportunidades y\/o minimizando problemas potenciales que no son evidentes para otros, en un plazo entre 1 mes y 1 año."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Se anticipa a largo plazo",
+                    "descripcion_conducta": "Se anticipa a las situaciones con más de un año de antelación, actuando para crear oportunidades o evitar problemas que no son evidentes para los demás."
+                }
+            ]
+        },
+        {
+            "numero": 12,
+            "codigo": null,
+            "nombre": "ORIENTACIÓN AL CLIENTE",
+            "familia": "ayuda_servicio",
+            "definicion": "Implica un deseo de ayudar o servir a los clientes, de satisfacer sus necesidades. Significa centrarse en descubrir o satisfacer los requerimientos o necesidades reales de los clientes internos o externos.",
+            "pregunta_clave": "¿Actúa la persona en beneficio del cliente interno o externo?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Lleva un seguimiento",
+                    "descripcion_conducta": "Responde a las preguntas, quejas o problemas que el cliente le plantea en ese momento. Mantiene una actitud de servicio frente al cliente."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Mantiene una comunicación fluida",
+                    "descripcion_conducta": "Mantiene una comunicación permanente con el cliente para conocer sus necesidades y su nivel de satisfacción. Ofrece al cliente información adicional que le pueda ser de utilidad o beneficio."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Se compromete personalmente",
+                    "descripcion_conducta": "Mantiene una actitud de total disponibilidad con el cliente. Cuando el cliente plantea un problema, se responsabiliza personalmente para resolverlo con rapidez, sin presentar pretextos o excusas frente a él."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Se preocupa por el cliente y aborda las necesidades de fondo",
+                    "descripcion_conducta": "Conoce las actividades del cliente y sus necesidades reales lo que le permite enfocar sus acciones para satisfacerlas de manera que va más allá de las inicialmente expresadas. Trata de adaptar el servicio, proyecto o producto a las necesidades del cliente para que finalmente sean más ventajosas o le reporten mayor beneficio pues se interesa en visualizar al cliente de manera completa y profunda."
+                }
+            ]
+        },
+        {
+            "numero": 13,
+            "codigo": null,
+            "nombre": "COMPRENSIÓN INTERPERSONAL",
+            "familia": "ayuda_servicio",
+            "definicion": "Implica querer entender a los demás. Es la habilidad para escuchar, entender correctamente los pensamientos, sentimientos o preocupaciones de los demás aunque no se expresen verbalmente o se expresen parcialmente. Esta competencia mide la creciente complejidad y profundidad que supone entender a los demás; puede también incluir sensibilidad intercultural.",
+            "pregunta_clave": "¿Es consciente esta persona de lo que los demás sienten y piensan aunque no lo digan?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Entiende los sentimientos o su razón",
+                    "descripcion_conducta": "Capta los sentimientos de una persona en un momento dado o su razón explícita, pero no ambas cosas."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Entiende los sentimientos y a la vez su razón",
+                    "descripcion_conducta": "Entiende a la vez los sentimientos de los demás y su razón."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Entiende los por qué",
+                    "descripcion_conducta": "Entiende el por qué los demás actúan en ese momento de una determinada manera, aunque estos no lo expliquen o lo hagan de una forma incompleta o imprecisa."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Comprende las razones de fondo",
+                    "descripcion_conducta": "Entiende los problemas de fondo de los demás. Comprende las razones principales de los sentimientos, preocupaciones y comportamientos más arraigados de otras personas. Por su conocimiento profundo de la persona comprende en el plano personal además del profesional sus puntos fuertes y débiles."
+                }
+            ]
+        },
+        {
+            "numero": 14,
+            "codigo": null,
+            "nombre": "COMPRENSIÓN DE LA ORGANIZACIÓN",
+            "familia": "influencia",
+            "definicion": "Es la capacidad para comprender e interpretar las relaciones de poder en la propia empresa o en otras Organizaciones (cliente, proveedores, etc.). Ello implica una capacidad de identificar tanto a aquellas personas que toman las decisiones como a aquellas otras que pueden influir sobre las anteriores; asimismo significa ser capaz de prever cómo los nuevos acontecimientos o situaciones afectarán a las personas y grupos dentro de la Organización.",
+            "pregunta_clave": "¿Es la persona sensible a la realidad de las tramas informales y la estructura formal de la Organización?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Comprende la estructura",
+                    "descripcion_conducta": "Identifica o utiliza la estructura organizacional definida, las normas, los procedimientos establecidos, etc."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Reconoce a las personas clave",
+                    "descripcion_conducta": "Identifica a las personas claves o a las que influyen en las decisiones y que le pueden apoyar en las ocasiones cuando no puede conseguir sus objetivos laborales por la vía habitual o cuando la situación así lo amerita."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Comprende el clima y la cultura",
+                    "descripcion_conducta": "Reconoce las limitaciones que en la Organización se presentan, es decir lo que se puede o no hacer según la posición de cada uno y el momento, sin que estén escritas o se hayan manifestado de manera abierta. Identifica y utiliza los comportamientos, el lenguaje, el estilo más adecuado, etc., para obtener una mejor respuesta."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Entiende las relaciones de influencia dentro de la organización",
+                    "descripcion_conducta": "Comprende o utiliza las relaciones de poder e influencia existentes dentro de la Organización Ej. alianzas, discrepancias, etc. Con un sentido claro de lo que es influir en la Organización."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Comprende asuntos de fondo de la compañía",
+                    "descripcion_conducta": "Comprende y aborda las razones que motivan determinados comportamientos organizativos o los problemas de fondo, oportunidades o fuerzas de poder no obvias que afectan a la Organización. Ejemplo: tendencias económicas, políticas gubernamentales, acontecimientos políticos, etc."
+                }
+            ]
+        },
+        {
+            "numero": 15,
+            "codigo": null,
+            "nombre": "IMPACTO E INFLUENCIA",
+            "familia": "influencia",
+            "definicion": "Implica la intención de persuadir, convencer, influir o impresionar a los demás para que contribuyan a alcanzar sus objetivos. Está basado en el deseo de causar un efecto específico en los demás, una impresión determinada o una actuación concreta cuando se persigue un objetivo.",
+            "pregunta_clave": "¿Utiliza la persona estrategias o tácticas de influencia para convencer a otros?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Quiere influir",
+                    "descripcion_conducta": "Muestra preocupación por la apariencia, la reputación, el estatus, etc., para causar una impresión positiva en los demás."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Utiliza la persuasión para influir",
+                    "descripcion_conducta": "Utiliza directamente la persuasión en una discusión o presentación."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Utiliza acciones múltiples para persuadir",
+                    "descripcion_conducta": "Elabora varios argumentos o puntos de vista para una presentación o discusión, prepara cuidadosamente los datos para una presentación, etc., los cuales no están personalizados para quienes la escuchan, pueden ser utilizados de forma estandarizada."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Calcula el impacto de las palabras o acciones",
+                    "descripcion_conducta": "Se anticipa y se prepara para las acciones de los demás, piensa de antemano en el efecto de una acción, palabras, términos o de cualquier otro detalle ya sea en los demás o en la imagen que los demás tienen de él o ella, para lo cual adapta la presentación o discusión. Lleva a cabo acciones inusuales o singulares especialmente pensadas para producir un impacto determinado."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Utiliza influencias indirectas",
+                    "descripcion_conducta": "Convence mediante cadenas de influencia indirectas: Con A se obtiene B, B nos llevará a C, etc. Utiliza una estrategia formada por diferentes y sucesivas acciones para influir en los demás, adaptando cada acción a cada persona implicada. Utiliza expertos con el objetivo de influir."
+                }
+            ]
+        },
+        {
+            "numero": 16,
+            "codigo": null,
+            "nombre": "DESARROLLO DE INTERRELACIONES",
+            "familia": "influencia",
+            "definicion": "Consiste en actuar para establecer y mantener relaciones cordiales, recíprocas y cálidas o redes de contacto con distintas personas.",
+            "pregunta_clave": "¿Se esfuerza la persona por entablar y mantener relaciones personales?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Mantiene contactos informales",
+                    "descripcion_conducta": "Mantiene contactos informales con los demás, así como con los contactos requeridos por razones de trabajo. Incluye charlas amistosas sobre el trabajo, los hijos, deportes, noticias, etc."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Entabla frecuentemente relaciones informales",
+                    "descripcion_conducta": "Entabla relaciones con un amplio círculo de amigos y conocidos. Puede establecer relaciones amistosas con asociados, clientes u otras personas en clubes, restaurantes, espectáculos, deportes, etc."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Fomenta contactos sociales útiles",
+                    "descripcion_conducta": "Toma la iniciativa para mejorar y fortalecer sus relaciones personales con colegas o clientes fuera del ámbito de la Organización, con una finalidad profesional."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Establece sólidas relaciones",
+                    "descripcion_conducta": "Establece sólidas relaciones con personas que le apoyan o le ayudan a alcanzar un objetivo de negocio determinado."
+                }
+            ]
+        },
+        {
+            "numero": 17,
+            "codigo": null,
+            "nombre": "DESARROLLO DE PERSONAS",
+            "familia": "gerenciales",
+            "definicion": "Implica un esfuerzo constante por mejorar el desarrollo o el aprendizaje de los demás a partir de un apropiado análisis de sus necesidades y de la Organización. Se centra en el interés por desarrollar a las personas, no en el de proporcionar educación formal.",
+            "pregunta_clave": "¿Trabaja la persona para desarrollar las capacidades, destrezas y habilidades de los demás a largo plazo?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Confía en el potencial de los demás",
+                    "descripcion_conducta": "Actúa bajo el concepto de que las personas quieren y pueden aprender para mejorar su rendimiento, por ello, se refiere positivamente acerca del desarrollo de las habilidades actuales y futuras o al potencial para aprender."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Provee de aprendizaje dando instrucciones detalladas",
+                    "descripcion_conducta": "Con el propósito de enseñar, dedica tiempo a los demás para aclarar cómo realizar los trabajos de manera detallada, efectúa demostraciones prácticas, ofrece sugerencias útiles, etc."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Da explicaciones \/ ofrece ayuda para el aprendizaje",
+                    "descripcion_conducta": "Da instrucciones o demostraciones, junto con las razones de fondo para proveer de aprendizaje sólido y se asegura por varios medios de que los demás han comprendido e interiorizado sus explicaciones. Recurre a varios mecanismos para ofrecer ayuda práctica o instrumentos que faciliten la comprensión de los alcances y del impacto del trabajo de cada uno (por ejemplo: recursos adicionales, herramientas, información, consejo de expertos)."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Da \"feed-back\" para desarrollo integral",
+                    "descripcion_conducta": "Da \"feedback\" positivo o mixto como estrategia de desarrollo global de la persona. El feedback negativo lo da basándose en comportamientos concretos y sin desacatar personalmente, expresa su confianza en que se mejorará en el futuro. Ofrece sugerencias específicas para mejorar y anima a los demás después de un contratiempo o revés."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Fomenta el desarrollo a largo plazo",
+                    "descripcion_conducta": "Para personas con potencial desarrolla planes de formación guiada a largo plazo (mentoring) junto con experiencias en el trabajo que sirvan para adquirir nuevas capacidades o habilidades que serán requeridas para responsabilidades futuras."
+                }
+            ]
+        },
+        {
+            "numero": 18,
+            "codigo": null,
+            "nombre": "DIRECCIÓN DE PERSONAS",
+            "familia": "gerenciales",
+            "definicion": "Implica utilizar apropiada y adecuadamente la autoridad personal o la que el puesto nos confiere, para decir a los demás lo que tienen que hacer y demandar su cumplimiento. El estilo varía según lo requieran las circunstancias o las personas.",
+            "pregunta_clave": "¿Establece la persona estándares de comportamiento y demanda a los demás que los cumplan?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Da instrucciones",
+                    "descripcion_conducta": "Da a las personas las instrucciones adecuadas, dejando razonablemente claras las necesidades y exigencias de la tarea asignada."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Establece límites",
+                    "descripcion_conducta": "Maneja situaciones en las cuales fija límites y deja claro con sus colaboradores el cumplimiento y entrega del trabajo."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Exige alto rendimiento",
+                    "descripcion_conducta": "Establece estándares derivados de los objetivos organizacionales y demanda insistentemente un elevado nivel de rendimiento, calidad o resultados."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Lleva un seguimiento del rendimiento exigido",
+                    "descripcion_conducta": "Establece estándares y realiza un seguimiento de los mismos, revisa además con cada persona la consecución individual de dichos estándares."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Presenta abiertamente los niveles alcanzados de rendimiento",
+                    "descripcion_conducta": "Comparte con los demás en forma abierta los resultados que cada persona ha alcanzado frente a los objetivos que fueron establecidos."
+                }
+            ]
+        },
+        {
+            "numero": 19,
+            "codigo": null,
+            "nombre": "LIDERAZGO",
+            "familia": "gerenciales",
+            "definicion": "Supone la intención de asumir el papel de líder de un grupo o equipo de trabajo. Implica el deseo de guiar a los demás. El liderazgo suele estar, pero no lo está siempre, asociado a posiciones que tienen una autoridad formal. El \"equipo\" debe considerarse en sentido amplio como cualquier grupo en el que la persona asume el papel de líder.",
+            "pregunta_clave": "¿Dirige la persona a un grupo de gente de forma que trabajen juntos eficientemente?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Lidera bien las reuniones",
+                    "descripcion_conducta": "Conduce reuniones eficientes, inicia a tiempo las reuniones, establece el orden del día y los objetivos de las reuniones, controla el tiempo, mantiene al grupo enfocado, etc."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Mantiene a las personas informadas",
+                    "descripcion_conducta": "En un papel de líder, mantiene informadas a las personas que pueden verse afectadas por una decisión, explicando las razones que han llevado a tomarla, aunque no sea necesario dar la información. Se asegura que el grupo dispone de toda la información necesaria."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Cuida el grupo",
+                    "descripcion_conducta": "Se asegura que las necesidades del grupo están cubiertas (obtiene los recursos, el personal o la información, que el grupo necesite) para que el equipo trabaje con las herramientas suficientes y fundamentales para generar resultados. Protege al grupo y defiende su reputación con argumentos sólidos cuando lo amerita."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Promueve la eficacia del equipo",
+                    "descripcion_conducta": "Como líder del equipo emplea estrategias complejas y variadas para que el equipo trabaje eficientemente, para mantener alta motivación del grupo y para incrementar los niveles de productividad."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Comunica una visión de futuro convincente",
+                    "descripcion_conducta": "Se asegura que los demás participan de sus objetivos, misión, clima, políticas, etc., y transmite ilusión y compromiso con el proyecto o la misión del grupo. Actúa como modelo a seguir por los demás con credibilidad y un carisma genuino."
+                }
+            ]
+        },
+        {
+            "numero": 20,
+            "codigo": null,
+            "nombre": "CONSTRUCCIÓN DE EQUIPOS (CE)",
+            "familia": "gerenciales",
+            "definicion": "Construye equipos efectivos comprometidos con las metas organizacionales, fomenta la colaboración entre los miembros de los equipos y entre los equipos. Actúa como miembro del equipo, colocando el éxito del equipo por encima del beneficio individual.",
+            "pregunta_clave": "¿Actúa la persona para facilitar el funcionamiento del grupo del cual es parte?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Trabaja de forma individual",
+                    "descripcion_conducta": "Tiende a trabajar individualmente, aun cuando tenga las capacidades básicas para relacionarse con colegas en un proyecto común."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Coopera",
+                    "descripcion_conducta": "Actúa de manera cooperativa y entusiasta demostrando su disponibilidad. Apoya y respeta las normas y decisiones de otros, compartiendo toda la información relevante y útil."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Activamente se compromete con el equipo",
+                    "descripcion_conducta": "Comparte objetivos y se integra fácilmente en un grupo, proporcionando ideas y métodos de trabajo. Propone soluciones para superar las barreras y demuestra expectativas positivas en los miembros del equipo."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Motiva al equipo",
+                    "descripcion_conducta": "Busca y desarrolla sinergias con la mayoría de los miembros del equipo colocando el éxito del equipo por encima del beneficio individual. Solicita, valora y enriquece su trabajo a través de las ideas y experiencias (independientemente del nivel jerárquico) de los miembros del equipo. Es un integrador e impulsador del equipo, motivándolo con sus propias acciones e ideas."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Desarrolla el espíritu de equipo",
+                    "descripcion_conducta": "Actúa para desarrollar un ambiente de trabajo cooperativo, confiable y amistoso. Toma lo mejor de cada persona para lograr metas comunes. Promueve la identidad y el profesionalismo del equipo ante terceras partes. Es un catalizador excelente para el desarrollo del equipo."
+                }
+            ]
+        },
+        {
+            "numero": 21,
+            "codigo": null,
+            "nombre": "TRABAJA EN EQUIPO Y COOPERACIÓN",
+            "familia": "ayuda_servicio",
+            "definicion": "Implica la intención genuina de colaboración y cooperación para el logro de los objetivos del grupo del cual se forma parte, el trabajar juntos, como opuesto a hacerlo individual o competitivamente. Se considera siempre que el ocupante del puesto sea miembro de un equipo. Debe valorarse el trabajo como miembro de un grupo y no como supervisor o líder del mismo pues la naturaleza de esta competencia es para personas miembros de un equipo que comparten tareas, actividades, procesos, proyectos u objetivos comunes en su misma región o a nivel nacional.",
+            "pregunta_clave": "¿Actúa la persona para facilitar el funcionamiento del grupo del cual es parte?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Coopera",
+                    "descripcion_conducta": "Participa de buen grado en el grupo, apoya las decisiones del mismo, es un \"buen jugador del equipo\", realiza la parte del trabajo que le corresponde, mantiene a los demás miembros informados de lo que es importante o útil y al corriente de temas que les afectan (procesos, acciones individuales o acontecimientos)."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Expresa expectativas positivas del equipo",
+                    "descripcion_conducta": "Demuestra respeto por el trabajo y las cualidades de los demás miembros del grupo, por lo cual habla positivamente de los demás miembros del equipo y mantiene una actitud abierta al aprendizaje pues valora sinceramente sus ideas, habilidades, aportaciones, etc."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Fomenta la cooperación entre distintas áreas, personas o regiones",
+                    "descripcion_conducta": "Promueve y coopera habitualmente y de buen grado la interacción profesional, el compartir ideas y opiniones con personas de otros departamentos o áreas de la organización o de su Unidad para lograr mejores decisiones o planes."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Desarrolla el espíritu de equipo",
+                    "descripcion_conducta": "Es un impulsor del desarrollo de un ambiente de cooperación interdepartamental para lo cual actúa públicamente reconociendo el mérito de los miembros del equipo que están trabajando por un objetivo. Resuelve los conflictos o desavenencias que se puedan producir dentro del mismo, defiende la efectividad del grupo frente a terceros, etc."
+                }
+            ]
+        },
+        {
+            "numero": 22,
+            "codigo": null,
+            "nombre": "PREOCUPACIÓN POR EL ORDEN Y LA CALIDAD",
+            "familia": "eficacia_personal",
+            "definicion": "Se expresa en formas como el seguimiento, la revisión del trabajo y la información, y la insistencia en la claridad de los roles y funciones asignadas, el asegurarse de que no existen errores en el trabajo o en la información.",
+            "pregunta_clave": "¿Presta la persona atención a los pequeños detalles y la organiza? ¿Es cuidadoso en su trabajo?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Demanda claridad y se preocupa por el orden",
+                    "descripcion_conducta": "Insiste en que sus funciones, metas, expectativas, datos e información, etc., estén claros y correctos. Mantiene el orden en su sitio de trabajo."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Comprueba su propio trabajo",
+                    "descripcion_conducta": "Repasa y comprueba la exactitud de la información o el trabajo, para asegurarse de que no existen errores."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Realiza un seguimiento del trabajo de los demás",
+                    "descripcion_conducta": "Vigila la calidad del trabajo de los demás para asegurarse de que se siguen los procedimientos establecidos. Da seguimiento a las actividades propias y a las de los demás."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Realiza un seguimiento de datos o proyectos",
+                    "descripcion_conducta": "Vigila el progreso de un proyecto respecto a sus fases y plazos. Realiza un seguimiento de la información, detecta y suple lagunas o errores y busca información para mantener el orden y la calidad."
+                }
+            ]
+        },
+        {
+            "numero": 23,
+            "codigo": null,
+            "nombre": "AUTOCONTROL",
+            "familia": "eficacia_personal",
+            "definicion": "Es la capacidad de mantener las propias emociones bajo control y evitar reacciones negativas ante provocaciones, oposición u hostilidad por parte de otros o cuando se trabaja en condiciones constantes de estrés.",
+            "pregunta_clave": "¿Controla la persona sus impulsos?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "No se deja llevar por impulsos emocionales",
+                    "descripcion_conducta": "Piensa antes de actuar, controla impulsos y emociones fuertes tales como enfado, frustración, estrés, etc."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Mantiene la calma",
+                    "descripcion_conducta": "Aunque sienta emociones fuertes tales como enfado, frustración extrema o estrés elevado, las controla y continúa hablando, actuando o trabajando con calma. Ignora las acciones que pretenden provocar su enfado y continúa su actividad o conversación."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Controla el estrés sostenido con efectividad",
+                    "descripcion_conducta": "Evita las manifestaciones de las emociones fuertes o el estrés sostenido; sigue funcionando bien o responde constructivamente a pesar del estrés."
+                }
+            ]
+        },
+        {
+            "numero": 24,
+            "codigo": null,
+            "nombre": "CONCIENCIA FINANCIERA",
+            "familia": "gerenciales",
+            "definicion": "Desarrolla y establece presupuestos realistas, pues identifica y evalúa todos los gastos necesarios para alcanzar los resultados planeados. Asigna de manera efectiva el recurso humano, material y financiero para realizar las tareas; busca continuamente modos para reducir los gastos sin comprometer la calidad. Usando efectiva y eficientemente los recursos de la compañía.",
+            "pregunta_clave": "¿Esta persona hace un buen uso de los recursos?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Da buen uso de los recursos",
+                    "descripcion_conducta": "Usa recursos predefinidos basados en las necesidades actuales."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Usa y asigna (futuro) el uso de los recursos",
+                    "descripcion_conducta": "Basado en los recursos predefinidos maneja las necesidades actuales y futuras."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Prioriza el uso de los recursos",
+                    "descripcion_conducta": "Define los recursos solicitados y los asigna correctamente según las prioridades."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Justifica los recursos que va a solicitar",
+                    "descripcion_conducta": "Escoge y justifica los recursos solicitados antes de la optimización de ellos."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Optimiza los recursos",
+                    "descripcion_conducta": "Arbitra la asignación de recursos dentro de objetivos opuestos, alcanzando los resultados planeados con menos recursos que los asignados, manteniendo los altos niveles de calidad."
+                }
+            ]
+        },
+        {
+            "numero": 25,
+            "codigo": null,
+            "nombre": "HABILIDADES DE PLANEACIÓN",
+            "familia": "gerenciales",
+            "definicion": "Desarrolla metas y objetivos de manera proactiva para dar soporte a la visión estratégica de la organización. Incluye la identificación de acciones específicas (pasos), responsabilidades, y límites de tiempo para las entregas; teniendo en cuenta los estimativos reales de los requerimientos de recursos. Balancea la planeación con las demandas cotidianas, asignando los tiempos de manera eficiente. Coordina la planeación y la estrategia a través de funciones y de las unidades de negocio, inclusive estandariza procesos de trabajo para facilitar los esfuerzos de planificación y estrategia.",
+            "pregunta_clave": "¿Actúa eficientemente según lo planeado?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Actúa según se presentan las tareas",
+                    "descripcion_conducta": "Planea sin priorizar. Hace una lista de tareas por hacer sin asignarles un orden o prioridad (por ejemplo visitas a clientes). Con el trabajo diario tiende a perder el tiempo con cuestiones inesperadas, que no son de mucha importancia."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Prioriza las tareas",
+                    "descripcion_conducta": "Planea prioridades, integra toda la información disponible estableciendo relaciones evidentes causales. Establece prioridades sobre los trabajos a ser realizados, asignándoles un orden de importancia basado en criterios eficientes."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Prioriza según criterios",
+                    "descripcion_conducta": "Analiza la información (proyectos en curso, mercado, capacidades, cambios tecnológicos) y organiza sus propias actividades o las de otros teniendo en cuenta los plazos de tiempo disponibles y correspondientes. Establece un calendario de tareas con criterios eficientes y productivos (por ejemplo hacer seguimiento a los archivos de clientes, ejecución de tareas, control de gastos)."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Planea con escenarios (alternativas)",
+                    "descripcion_conducta": "Analiza un problema complejo y establece las posibles causas de varias consecuencias de una serie de acontecimientos. Define proyectos de acción detallados (directrices, recursos humanos y materiales, actividades, el tiempo, objetivos, etc.). Muestra un comportamiento sensible cuando esto corresponde a la identificación y puesta en práctica de actividades basándolas en su prioridad (urgencia + importancia)."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Planea de forma compleja, y previene posibles problemas",
+                    "descripcion_conducta": "Supervisa el desarrollo del plan. Cuando elabora planes, introduce los elementos necesarios para evitar las contingencias que puedan obstruir el alcance de los objetivos. Asume la solución del problema construyendo planes complejos, que integran muchos elementos diferentes. Ayuda a los colegas a priorizar las tareas, inculcando el sentido de la responsabilidad."
+                }
+            ]
+        },
+        {
+            "numero": 26,
+            "codigo": null,
+            "nombre": "ENTRENAMIENTO Y DESARROLLO (ED)",
+            "familia": "gerenciales",
+            "definicion": "Continuamente se esfuerza para mejorar el aprendizaje y desarrollo de otros, comienza con un análisis apropiado de sus necesidades y las de la organización.",
+            "pregunta_clave": "¿Facilita el aprendizaje de los demás?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Reconoce el desarrollo de otros",
+                    "descripcion_conducta": "Expresa comentarios y expectativas positivas sobre el desarrollo de otros. Se refiere a habilidades actuales y futuras y\/o el potencial para aprender, aún en casos difíciles. Cree que la gente quiere y es capaz de mejorar su desempeño."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Apoya el aprendizaje",
+                    "descripcion_conducta": "Da instrucciones detalladas, dedicando el tiempo para explicar a otros cómo hacer las tareas y\/o hace demostraciones para ayudarlos."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Proporciona ayudas adicionales de aprendizaje",
+                    "descripcion_conducta": "Da instrucciones o demostraciones, junto a las razones implícitas, como una estrategia de aprendizaje. Ofrece a sus colaboradores ayuda o instrumentos prácticos para facilitar el trabajo. Hace preguntas, pruebas o usa medios para asegurarse que los otros han entendido claramente sus explicaciones o instrucciones."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Motiva y guía el desarrollo de otros (retroalimenta)",
+                    "descripcion_conducta": "Da retroalimentación específica y constructiva como una estrategia de desarrollo. Motiva a otros para enfrentar los obstáculos. Da retroalimentación negativa en términos de comportamientos concretos, sin estar emocionalmente relacionado. Hace sugerencias específicas sobre qué mejorar y cómo mejorarlo."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Mejora los mecanismos de desarrollo y empodera en la búsqueda de soluciones",
+                    "descripcion_conducta": "Busca activamente entrenamiento, o las experiencias que ayudarán a otros a adquirir nuevas habilidades y capacidades. Permite que la gente encuentre la solución por ellos mismos. Desarrolla sucesores dándoles tareas retadoras y ocasiones para el desarrollo, identificando el grupo talentoso para ocupar posiciones claves."
+                }
+            ]
+        },
+        {
+            "numero": 27,
+            "codigo": null,
+            "nombre": "EXPERIENCIA FUNCIONAL \/ TÉCNICA (ET)",
+            "familia": "cognitivas",
+            "definicion": "Posee conocimiento actualizado de la profesión y de la tecnología en la cual está involucrado. Es considerado como un experto en el área de trabajo (punto de venta, producto, y región). Incluye tener acceso y uso de otros recursos expertos cuando es apropiado.",
+            "pregunta_clave": "¿Es un experto en su función o producto?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Comunica su conocimiento",
+                    "descripcion_conducta": "Distribuye la información actual en el rol como un experto."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Pone su conocimiento en práctica",
+                    "descripcion_conducta": "Aplica el conocimiento técnico para alcanzar un impacto adicional. Va más allá de simplemente contestar una pregunta, o ayuda a resolver problemas técnicos de otros."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Soluciona consultas internas",
+                    "descripcion_conducta": "Da ayuda técnica, actúa como consultor interno. Ofrece la experiencia personal para mejorar el funcionamiento. Se da autoconocimiento con la información más reciente, y mantiene de manera activa actualizadas sus habilidades."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Lidera el desarrollo técnico",
+                    "descripcion_conducta": "Sale activamente en misiones técnicas o como agente de cambio para la nueva tecnología dentro de la fuerza de ventas."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Desarrolla su conocimiento (vanguardia tecnológica)",
+                    "descripcion_conducta": "Hace su mayor esfuerzo para adquirir conocimiento y habilidades nuevas, o mantiene una extensa red de contactos técnicos \/ profesionales para estar al tanto de las últimas ideas."
+                }
+            ]
+        },
+        {
+            "numero": 30,
+            "codigo": null,
+            "nombre": "NEGOCIACIÓN",
+            "familia": "influencia",
+            "definicion": "Busca un intercambio conforme o un resultado ganar\/ganar entendiendo la posición del otro y usando un acercamiento creativo. Asegura que su posición esté dirigida a las necesidades y prioridades de las otras personas. Desarrolla estrategias orientadas a construir acuerdos entre dos o más partes enfrentadas.",
+            "pregunta_clave": "¿Genera acuerdos de mutuo beneficio en sus negociaciones?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Comprende a la contraparte",
+                    "descripcion_conducta": "Descubre las principales cuestiones de un argumento tomando en cuenta la posición e intereses de la contraparte y escucha atentamente."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Negocia basado en los intereses",
+                    "descripcion_conducta": "Centra la negociación en acuerdos de mutuo beneficio, al centrarse en los intereses de las partes."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Logra acuerdos en varias negociaciones",
+                    "descripcion_conducta": "Logra maximizar los resultados de las negociaciones (ampliando las ganancias de las partes). Alcanza acuerdos sobre amplias situaciones de negocio. Estructura acuerdos satisfactorios."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Negocia con varias partes",
+                    "descripcion_conducta": "Concluye acuerdos complejos involucrando diferentes partes en varios campos de negocio y experiencia."
+                },
+                {
+                    "nivel_numero": 5,
+                    "titulo_corto": "Desarrolla su propio método de negociación",
+                    "descripcion_conducta": "Desarrolla métodos de negociación. Decide opciones de negociación, evaluando parámetros de rentabilidad y el riesgo."
+                }
+            ]
+        },
+        {
+            "numero": 31,
+            "codigo": null,
+            "nombre": "CONOCIMIENTO DEL NEGOCIO",
+            "familia": "cognitivas",
+            "definicion": "Tiene un entendimiento claro de la situación de la fuerza de ventas (organización) y la posición de la empresa en el mercado.",
+            "pregunta_clave": "¿Entiende el negocio, las causas y los resultados?",
+            "niveles": [
+                {
+                    "nivel_numero": 1,
+                    "titulo_corto": "Entiende el negocio",
+                    "descripcion_conducta": "Tiene un conocimiento básico de la industria, sus mercados, clientes y el ambiente competitivo."
+                },
+                {
+                    "nivel_numero": 2,
+                    "titulo_corto": "Muestra experiencia del negocio",
+                    "descripcion_conducta": "Muestra experiencia en su área de negocio y usa un profundo conocimiento funcional."
+                },
+                {
+                    "nivel_numero": 3,
+                    "titulo_corto": "Anticipa las situaciones del negocio",
+                    "descripcion_conducta": "Es capaz de prever oportunidades de negocio y obstáculos, evaluando las acciones de los diferentes actores del mercado (competidores, clientes, etc.) y su impacto en los negocios de la empresa."
+                },
+                {
+                    "nivel_numero": 4,
+                    "titulo_corto": "Lidera la implementación de las estrategias",
+                    "descripcion_conducta": "Es capaz de diseñar, dirigir y hacer seguimiento a corto, mediano y largo plazo de la estrategia del negocio."
+                }
+            ]
+        }
+    ]
+}

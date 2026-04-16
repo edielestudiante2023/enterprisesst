@@ -347,12 +347,12 @@ $medidas = $medidas ?? [];
     <!-- Acciones -->
     <div class="mb-4">
         <?php if ($inv['estado'] === 'completo' && !empty($inv['ruta_pdf'])): ?>
-        <a href="/miembro/inspecciones/investigacion-accidente/pdf/<?= $inv['id'] ?>" class="btn btn-pwa btn-pwa-primary" target="_blank">
+        <a href="<?= site_url('miembro/inspecciones/investigacion-accidente/pdf/' . $inv['id']) ?>" class="btn btn-pwa btn-pwa-primary" target="_blank">
             <i class="fas fa-file-pdf"></i> Ver PDF
         </a>
         <?php endif; ?>
 
-        <a href="/miembro/inspecciones/investigacion-accidente" class="btn btn-pwa btn-pwa-outline">
+        <a href="<?= site_url('miembro/inspecciones/investigacion-accidente') ?>" class="btn btn-pwa btn-pwa-outline">
             <i class="fas fa-arrow-left"></i> Volver a lista
         </a>
     </div>

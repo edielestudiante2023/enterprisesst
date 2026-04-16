@@ -1,6 +1,6 @@
 <?php
 $isEdit = !empty($inv);
-$action = $isEdit ? '/miembro/inspecciones/investigacion-accidente/update/' . $inv['id'] : '/miembro/inspecciones/investigacion-accidente/store';
+$action = $isEdit ? site_url('miembro/inspecciones/investigacion-accidente/update/' . $inv['id']) : site_url('miembro/inspecciones/investigacion-accidente/store');
 $testigos = $testigos ?? [];
 $evidencias = $evidencias ?? [];
 $medidas = $medidas ?? [];
@@ -477,7 +477,7 @@ $medidas = $medidas ?? [];
                 <i class="fas fa-save"></i> Guardar borrador
             </button>
             <?php if ($isEdit): ?>
-            <a href="/miembro/inspecciones/investigacion-accidente/firma/<?= $inv['id'] ?>" class="btn btn-pwa btn-pwa-primary py-3" style="font-size:17px;">
+            <a href="<?= site_url('miembro/inspecciones/investigacion-accidente/firma/' . $inv['id']) ?>" class="btn btn-pwa btn-pwa-primary py-3" style="font-size:17px;">
                 <i class="fas fa-signature"></i> Ir a Firmas
             </a>
             <?php endif; ?>

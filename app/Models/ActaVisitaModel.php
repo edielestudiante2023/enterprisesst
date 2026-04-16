@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ActaVisitaModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_acta_visita';
     protected $primaryKey = 'id';
     protected $allowedFields = [

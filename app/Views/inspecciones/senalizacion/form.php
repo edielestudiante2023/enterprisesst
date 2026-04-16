@@ -1,6 +1,6 @@
 <?php
 $isEdit = !empty($inspeccion);
-$action = $isEdit ? '/inspecciones/senalizacion/update/' . $inspeccion['id'] : '/inspecciones/senalizacion/store';
+$action = $isEdit ? site_url('inspecciones/senalizacion/update/' . $inspeccion['id']) : site_url('inspecciones/senalizacion/store');
 $estados = ['NO APLICA', 'NO CUMPLE', 'CUMPLE PARCIALMENTE', 'CUMPLE TOTALMENTE'];
 ?>
 
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const clienteId = '<?= $idCliente ?? '' ?>';
 
     $.ajax({
-        url: '/inspecciones/api/clientes',
+        url: '<?= site_url('inspecciones/api/clientes') ?>',
         dataType: 'json',
         success: function(data) {
             const select = document.getElementById('selectCliente');

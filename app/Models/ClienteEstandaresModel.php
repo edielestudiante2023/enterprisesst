@@ -2,9 +2,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ClienteEstandaresModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_cliente_estandares';
     protected $primaryKey = 'id_cliente_estandar';
     protected $allowedFields = [

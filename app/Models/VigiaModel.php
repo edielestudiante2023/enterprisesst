@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class VigiaModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table      = 'tbl_vigias';  // Nombre de la tabla
     protected $primaryKey = 'id_vigia';    // Clave primaria
 

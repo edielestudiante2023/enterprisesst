@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class LookerStudioModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_lookerstudio';
     protected $primaryKey = 'id_looker';
     protected $allowedFields = ['tipodedashboard', 'enlace', 'id_cliente', 'created_at', 'updated_at'];

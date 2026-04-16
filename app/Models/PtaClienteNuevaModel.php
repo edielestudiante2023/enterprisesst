@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class PtaClienteNuevaModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_pta_cliente'; // Nombre de la tabla
     protected $primaryKey = 'id_ptacliente'; // Clave primaria
 

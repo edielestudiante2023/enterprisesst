@@ -477,6 +477,15 @@ $routes->get('consultant/deleteitemdashboard/(:num)', 'AdminlistdashboardControl
 
 $routes->get('admin/dashboard', 'CustomDashboardController::index');
 
+// Empresas Consultoras (multi-tenant)
+$routes->get('admin/empresas-consultoras', 'EmpresaConsultoraController::index');
+$routes->get('admin/empresas-consultoras/crear', 'EmpresaConsultoraController::create');
+$routes->post('admin/empresas-consultoras/guardar', 'EmpresaConsultoraController::store');
+$routes->get('admin/empresas-consultoras/editar/(:num)', 'EmpresaConsultoraController::edit/$1');
+$routes->post('admin/empresas-consultoras/actualizar/(:num)', 'EmpresaConsultoraController::update/$1');
+$routes->get('admin/empresas-consultoras/toggle/(:num)', 'EmpresaConsultoraController::toggleEstado/$1');
+$routes->get('admin/mi-empresa', 'EmpresaConsultoraController::miEmpresa');
+
 $routes->get('/accesosseguncliente/list', 'AccesossegunclienteController::listaccesosseguncliente');
 $routes->get('/accesosseguncliente/add', 'AccesossegunclienteController::addaccesosseguncliente');
 $routes->post('/accesosseguncliente/add', 'AccesossegunclienteController::addpostaccesosseguncliente');
@@ -1823,4 +1832,125 @@ $routes->get('agente-chat/api/tabla/(:segment)', 'AgenteChatController::infoTabl
 // ─── Agente Virtual de Chat - Cliente (solo lectura) ──────────
 $routes->get('cliente/chat', 'ClienteChatController::index');
 $routes->post('cliente/chat/api/mensaje', 'ClienteChatController::enviarMensaje');
+
+// ─── Matriz de EPP y Dotacion (SST-MT-G-003) ───────────────
+// Hito A: Catalogo maestro (CRUD + IA autocompletar + foto normalizada)
+$routes->get ('matrizEpp/maestro',                       'MatrizEppController::maestroIndex');
+$routes->get ('matrizEpp/maestro/nuevo',                 'MatrizEppController::maestroNuevo');
+$routes->get ('matrizEpp/maestro/(:num)/editar',         'MatrizEppController::maestroEditar/$1');
+$routes->post('matrizEpp/maestro/guardar',               'MatrizEppController::maestroGuardar');
+$routes->post('matrizEpp/maestro/autocompletar',         'MatrizEppController::maestroAutocompletar');
+$routes->post('matrizEpp/maestro/(:num)/desactivar',     'MatrizEppController::maestroDesactivar/$1');
+$routes->post('matrizEpp/categorias/guardar',            'MatrizEppController::categoriaGuardar');
+$routes->post('matrizEpp/categorias/(:num)/desactivar',  'MatrizEppController::categoriaDesactivar/$1');
+// Hito B: asignacion masiva + matriz cliente + editing inline
+$routes->get ('matrizEpp/clientesJson',                  'MatrizEppController::clientesJson');
+$routes->post('matrizEpp/asignarACliente',               'MatrizEppController::asignarACliente');
+$routes->get ('matrizEpp/cliente/(:num)',                'MatrizEppController::clienteMatriz/$1');
+$routes->post('matrizEpp/cliente/(:num)/item/(:num)/editarInline', 'MatrizEppController::clienteEditarInline/$1/$2');
+$routes->post('matrizEpp/cliente/(:num)/item/(:num)/quitar',       'MatrizEppController::clienteQuitarItem/$1/$2');
+// Hito C: resincronización desde maestro
+$routes->get ('matrizEpp/cliente/(:num)/item/(:num)/diffMaestro',    'MatrizEppController::clienteDiffMaestro/$1/$2');
+$routes->post('matrizEpp/cliente/(:num)/item/(:num)/resincronizar',  'MatrizEppController::clienteResincronizarItem/$1/$2');
+$routes->get ('matrizEpp/cliente/(:num)/diffMasivoJson',             'MatrizEppController::clienteDiffMasivo/$1');
+$routes->post('matrizEpp/cliente/(:num)/resincronizarTodos',         'MatrizEppController::clienteResincronizarTodos/$1');
+
+// ─── IPEVR GTC 45 (Matriz de peligros y riesgos) ──────────────
+// Catalogos GTC 45 (seed estatico, solo lectura) — util desde Fase 1
+$routes->get('ipevr/catalogo', 'IpevrController::catalogoJson');
+$routes->get('ipevr/matriz/(:num)/acelerador', 'IpevrController::acelerador/$1');
+$routes->post('ipevr/acelerador/generar', 'IpevrController::aceleradorGenerar');
+$routes->post('ipevr/acelerador/guardar', 'IpevrController::aceleradorGuardar');
+$routes->get('ipevr/tablas-gtc45', 'IpevrController::tablasGtc45');
+$routes->get('ipevr/tablas-gtc45/xlsx', 'IpevrController::tablasGtc45Xlsx');
+$routes->get('ipevr/tablas-gtc45/pdf', 'IpevrController::tablasGtc45Pdf');
+
+// Listado y editor PC
+$routes->get('ipevr/cliente/(:num)', 'IpevrController::listarPorCliente/$1');
+$routes->get('ipevr/matriz/(:num)/editar', 'IpevrController::editorPc/$1');
+$routes->post('ipevr/matriz/crear', 'IpevrController::crear');
+$routes->post('ipevr/fila/upsert', 'IpevrController::filaUpsert');
+$routes->post('ipevr/fila/(:num)/eliminar', 'IpevrController::filaEliminar/$1');
+
+// IA semilla
+$routes->post('ipevr/matriz/(:num)/sugerir-ia', 'IpevrController::sugerirIa/$1');
+
+// Exportacion
+$routes->get('ipevr/matriz/(:num)/exportar/xlsx', 'IpevrController::exportarXlsx/$1');
+$routes->get('ipevr/matriz/(:num)/exportar/pdf',  'IpevrController::exportarPdf/$1');
+
+// Versionamiento
+$routes->post('ipevr/matriz/(:num)/version', 'IpevrController::nuevaVersion/$1');
+
+// PWA
+$routes->get('ipevr/matriz/(:num)/pwa',     'IpevrPwaController::editor/$1');
+$routes->post('ipevr/pwa/fila/autosave',    'IpevrPwaController::autosave');
+$routes->get('ipevr/pwa/sync',              'IpevrPwaController::sync');
+
+// Maestros por cliente (procesos/cargos/tareas/zonas)
+$routes->get('maestros-cliente/(:num)', 'MaestrosClienteController::index/$1');
+$routes->post('maestros-cliente/proceso/upsert',    'MaestrosClienteController::procesoUpsert');
+$routes->post('maestros-cliente/proceso/eliminar/(:num)', 'MaestrosClienteController::procesoEliminar/$1');
+$routes->post('maestros-cliente/cargo/upsert',      'MaestrosClienteController::cargoUpsert');
+$routes->post('maestros-cliente/cargo/eliminar/(:num)',   'MaestrosClienteController::cargoEliminar/$1');
+$routes->post('maestros-cliente/tarea/upsert',      'MaestrosClienteController::tareaUpsert');
+$routes->post('maestros-cliente/tarea/eliminar/(:num)',   'MaestrosClienteController::tareaEliminar/$1');
+$routes->post('maestros-cliente/zona/upsert',       'MaestrosClienteController::zonaUpsert');
+$routes->post('maestros-cliente/zona/eliminar/(:num)',    'MaestrosClienteController::zonaEliminar/$1');
+$routes->get('maestros-cliente/plantilla/(:segment)',     'MaestrosClienteController::plantillaCsv/$1');
+$routes->post('maestros-cliente/cargar-csv',              'MaestrosClienteController::cargarCsv');
 $routes->post('cliente/chat/end-session', 'ClienteChatController::endSession');
+
+// ======================= PROFESIOGRAMA =======================
+$routes->get('profesiograma/cliente/(:num)',                'ProfesiogramaController::index/$1');
+$routes->get('profesiograma/cliente/(:num)/cargo/(:num)',   'ProfesiogramaController::editorCargo/$1/$2');
+$routes->post('profesiograma/asignar',                      'ProfesiogramaController::asignarExamen');
+$routes->post('profesiograma/quitar/(:num)',                'ProfesiogramaController::quitarExamen/$1');
+$routes->post('profesiograma/generar-ipevr/(:num)',         'ProfesiogramaController::generarDesdeIpevr/$1');
+$routes->post('profesiograma/sugerir-ia/(:num)/(:num)',     'ProfesiogramaController::sugerirIa/$1/$2');
+$routes->post('profesiograma/aplicar-ia',                   'ProfesiogramaController::aplicarSugerenciasIa');
+$routes->get('profesiograma/exportar/xlsx/(:num)',          'ProfesiogramaController::exportarXlsx/$1');
+$routes->get('profesiograma/catalogo-json',                 'ProfesiogramaController::catalogoJson');
+
+// ======================= DICCIONARIO DE COMPETENCIAS POR CLIENTE =======================
+// Ver: docs/MODULO_DICCIONARIO_COMPETENCIAS/ARQUITECTURA.md
+$routes->get('diccionario-competencias/(:num)',                 'DiccionarioCompetenciasController::index/$1');
+$routes->get('diccionario-competencias/(:num)/escala',          'DiccionarioCompetenciasController::escala/$1');
+$routes->post('diccionario-competencias/(:num)/escala/guardar', 'DiccionarioCompetenciasController::escalaGuardar/$1');
+$routes->get('diccionario-competencias/(:num)/matriz',          'DiccionarioCompetenciasController::matriz/$1');
+$routes->post('diccionario-competencias/(:num)/matriz/guardar', 'DiccionarioCompetenciasController::matrizGuardar/$1');
+$routes->post('diccionario-competencias/(:num)/matriz/eliminar','DiccionarioCompetenciasController::matrizEliminar/$1');
+$routes->get('diccionario-competencias/(:num)/clientes-origen',  'DiccionarioCompetenciasController::clientesOrigen/$1');
+$routes->post('diccionario-competencias/(:num)/clonar-desde/(:num)','DiccionarioCompetenciasController::clonarDesde/$1/$2');
+
+// ======================= PERFILES DE CARGO =======================
+// Ver: docs/MODULO_PERFILES_CARGO/ARQUITECTURA.md
+$routes->post('perfiles-cargo/ia/objetivo',               'PerfilCargoController::iaObjetivo');
+$routes->post('perfiles-cargo/ia/indicadores',            'PerfilCargoController::iaIndicadores');
+$routes->post('perfiles-cargo/ia/funciones',              'PerfilCargoController::iaFunciones');
+$routes->get ('perfiles-cargo/(:num)',                    'PerfilCargoController::index/$1');
+$routes->post('perfiles-cargo/(:num)/crear',              'PerfilCargoController::crear/$1');
+$routes->get ('perfiles-cargo/(:num)/editor/(:num)',      'PerfilCargoController::editor/$1/$2');
+$routes->post('perfiles-cargo/(:num)/guardar',            'PerfilCargoController::guardar/$1');
+$routes->get ('perfiles-cargo/(:num)/competencias/buscar','PerfilCargoController::competenciasBuscar/$1');
+$routes->get ('perfiles-cargo/(:num)/competencias',       'PerfilCargoController::competenciasListar/$1');
+$routes->post('perfiles-cargo/(:num)/competencias/guardar','PerfilCargoController::competenciasGuardar/$1');
+// Funciones transversales SST/TH
+$routes->get ('perfiles-cargo/(:num)/funciones-transversales',       'PerfilCargoController::funcionesTransversalesIndex/$1');
+$routes->post('perfiles-cargo/(:num)/funciones-transversales/sst',   'PerfilCargoController::funcionesTransversalesGuardarSST/$1');
+$routes->post('perfiles-cargo/(:num)/funciones-transversales/th',    'PerfilCargoController::funcionesTransversalesGuardarTH/$1');
+// Trabajadores
+$routes->get ('perfiles-cargo/(:num)/trabajadores',             'PerfilCargoController::trabajadoresIndex/$1');
+$routes->post('perfiles-cargo/(:num)/trabajadores/guardar',     'PerfilCargoController::trabajadorGuardar/$1');
+$routes->post('perfiles-cargo/(:num)/trabajadores/eliminar',    'PerfilCargoController::trabajadorEliminar/$1');
+$routes->get ('perfiles-cargo/(:num)/trabajadores/plantilla-csv','PerfilCargoController::trabajadoresPlantillaCsv/$1');
+$routes->post('perfiles-cargo/(:num)/trabajadores/importar',    'PerfilCargoController::trabajadoresImportar/$1');
+// Firmas
+$routes->post('perfiles-cargo/(:num)/aprobador/firmar',         'PerfilCargoController::aprobadorFirmar/$1');
+$routes->get ('perfiles-cargo/(:num)/acuses',                   'PerfilCargoController::acusesIndex/$1');
+$routes->post('perfiles-cargo/(:num)/acuses/generar',           'PerfilCargoController::acusesGenerar/$1');
+$routes->get ('perfiles-cargo/(:num)/pdf',                      'PerfilCargoController::pdfPerfil/$1');
+// Publico (sin sesion)
+$routes->get ('perfil-acuse/(:segment)',                        'PerfilCargoController::acusePublico/$1');
+$routes->post('perfil-acuse/(:segment)/firmar',                 'PerfilCargoController::acuseFirmar/$1');
+$routes->get ('perfil-acuse/(:segment)/pdf',                    'PerfilCargoController::pdfAcuse/$1');

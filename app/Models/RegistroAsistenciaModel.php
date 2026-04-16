@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class RegistroAsistenciaModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_registro_asistencia';
     protected $primaryKey = 'id';
     protected $allowedFields = [

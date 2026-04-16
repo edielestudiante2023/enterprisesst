@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ActaNotificacionModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_actas_notificaciones';
     protected $primaryKey = 'id_notificacion';
     protected $returnType = 'array';

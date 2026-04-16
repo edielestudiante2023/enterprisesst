@@ -13,7 +13,7 @@
 
     <div class="d-grid gap-2 mt-4" style="max-width:300px; margin:0 auto;">
         <?php if (!empty($acta['ruta_pdf'])): ?>
-        <a href="/inspecciones/acta-visita/pdf/<?= $acta['id'] ?>" target="_blank" class="btn btn-pwa btn-pwa-primary" style="background:#bd9751; color:#fff; border:none;">
+        <a href="<?= site_url('inspecciones/acta-visita/pdf/' . $acta['id']) ?>" target="_blank" class="btn btn-pwa btn-pwa-primary" style="background:#bd9751; color:#fff; border:none;">
             <i class="fas fa-file-pdf"></i> Ver PDF
         </a>
         <?php endif; ?>
@@ -22,11 +22,11 @@
             <i class="fas fa-share-alt"></i> Compartir
         </button>
 
-        <a href="/inspecciones/acta-visita/create" class="btn btn-pwa btn-pwa-outline" style="border:2px solid #1c2437;">
+        <a href="<?= site_url('inspecciones/acta-visita/create') ?>" class="btn btn-pwa btn-pwa-outline" style="border:2px solid #1c2437;">
             <i class="fas fa-plus"></i> Nueva acta
         </a>
 
-        <a href="/inspecciones" class="btn btn-pwa btn-pwa-outline" style="border:2px solid #1c2437;">
+        <a href="<?= site_url('inspecciones') ?>" class="btn btn-pwa btn-pwa-outline" style="border:2px solid #1c2437;">
             <i class="fas fa-home"></i> Volver al inicio
         </a>
     </div>

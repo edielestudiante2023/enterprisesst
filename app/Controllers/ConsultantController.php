@@ -15,6 +15,7 @@ use App\Libraries\StandardsLibrary;
 use App\Models\IndicadorSSTModel;
 use App\Models\UserModel;
 use App\Models\RoleModel;
+use App\Libraries\TenantFilter;
 use CodeIgniter\Controller;
 
 class ConsultantController extends Controller
@@ -24,7 +25,10 @@ class ConsultantController extends Controller
         $clientModel = new ClientModel();
         $dashboardItemModel = new DashboardItemModel();
 
-        $clientes = $clientModel->where('estado', 'activo')->findAll();
+        $builder = $clientModel->builder();
+        $builder->where('estado', 'activo');
+        TenantFilter::applyToClientQuery($builder);
+        $clientes = $builder->get()->getResultArray();
 
         $items = $dashboardItemModel->where('activo', 1)
                     ->orderBy('categoria ASC, orden ASC')
@@ -68,7 +72,10 @@ class ConsultantController extends Controller
     public function addClient()
     {
         $consultantModel = new ConsultantModel();
-        $consultants = $consultantModel->findAll(); // Recupera todos los consultores
+        // Filtrar consultores por empresa consultora (superadmin ve todos)
+        $builder = $consultantModel->builder();
+        TenantFilter::applyToConsultorQuery($builder);
+        $consultants = $builder->get()->getResultArray();
 
         // Verifica que los consultores se están cargando
         if (empty($consultants)) {
@@ -377,6 +384,9 @@ class ConsultantController extends Controller
     {
         $consultantModel = new ConsultantModel();
 
+        // Forzar empresa consultora del usuario en sesion (multi-tenant)
+        $empresaId = TenantFilter::getEmpresaId();
+
         $data = [
             'nombre_consultor' => $this->request->getVar('nombre_consultor'),
             'cedula_consultor' => $this->request->getVar('cedula_consultor'),
@@ -385,7 +395,7 @@ class ConsultantController extends Controller
             'correo_consultor' => $this->request->getVar('correo_consultor'),
             'telefono_consultor' => $this->request->getVar('telefono_consultor'),
             'numero_licencia' => $this->request->getVar('numero_licencia'),
-
+            'id_empresa_consultora' => $empresaId,
             'id_cliente' => $this->request->getVar('id_cliente'),
         ];
 
@@ -415,7 +425,9 @@ class ConsultantController extends Controller
     public function listConsultants()
     {
         $consultantModel = new ConsultantModel();
-        $consultants = $consultantModel->findAll();
+        $builder = $consultantModel->builder();
+        TenantFilter::applyToConsultorQuery($builder);
+        $consultants = $builder->get()->getResultArray();
 
         $data = [
             'consultants' => $consultants
@@ -557,8 +569,10 @@ class ConsultantController extends Controller
         $clientModel = new ClientModel();
         $consultantModel = new ConsultantModel();
 
-        // Obtener todos los clientes
-        $clients = $clientModel->findAll();
+        // Obtener clientes filtrados por empresa consultora (superadmin ve todos)
+        $builder = $clientModel->builder();
+        TenantFilter::applyToClientQuery($builder);
+        $clients = $builder->get()->getResultArray();
 
         // Recorrer los clientes y agregar el nombre del consultor correspondiente
         foreach ($clients as &$client) {
@@ -578,11 +592,20 @@ class ConsultantController extends Controller
         $consultantModel = new ConsultantModel();
 
         $client = $clientModel->find($id);
-        $consultants = $consultantModel->findAll();
 
         if (!$client) {
             return redirect()->to('/listClients')->with('error', 'Cliente no encontrado.');
         }
+
+        // Guard: cliente debe pertenecer a la empresa del usuario (superadmin pasa)
+        if (!TenantFilter::clienteEnMiEmpresa((int)$id)) {
+            return redirect()->to('/listClients')->with('error', 'Cliente no encontrado.');
+        }
+
+        // Dropdown de consultores: solo los de mi empresa (superadmin ve todos)
+        $builder = $consultantModel->builder();
+        TenantFilter::applyToConsultorQuery($builder);
+        $consultants = $builder->get()->getResultArray();
 
         $data = [
             'client' => $client,

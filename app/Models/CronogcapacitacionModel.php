@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class CronogcapacitacionModel extends Model
 {
+    use TenantScopedModel;
+
     // Definimos la tabla asociada al modelo
     protected $table = 'tbl_cronog_capacitacion';
 
