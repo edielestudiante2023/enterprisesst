@@ -4,7 +4,7 @@
             <h6 class="mb-0">Inspecciones Locativas</h6>
             <small class="text-muted"><?= esc($cliente['nombre_cliente'] ?? '') ?></small>
         </div>
-        <a href="/miembro/inspecciones/locativa/create" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
+        <a href="<?= site_url('miembro/inspecciones/locativa/create') ?>" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
             <i class="fas fa-plus"></i> Nueva
         </a>
     </div>
@@ -13,7 +13,7 @@
         <div class="text-center text-muted py-5">
             <i class="fas fa-building fa-3x mb-3" style="opacity:0.3;"></i>
             <p>No hay inspecciones locativas aun</p>
-            <a href="/miembro/inspecciones/locativa/create" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
+            <a href="<?= site_url('miembro/inspecciones/locativa/create') ?>" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
                 Crear primera inspeccion
             </a>
         </div>
@@ -41,15 +41,15 @@
                     </div>
                     <div class="mt-2 d-flex gap-2 flex-wrap">
                         <?php if ($insp['estado'] === 'borrador' && $insp['creado_por_tipo'] === 'miembro' && (int)$insp['id_miembro'] === (int)$miembro['id_miembro']): ?>
-                        <a href="/miembro/inspecciones/locativa/edit/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-dark">
+                        <a href="<?= site_url('miembro/inspecciones/locativa/edit/' . $insp['id']) ?>" class="btn btn-sm btn-outline-dark">
                             <i class="fas fa-edit"></i> Editar
                         </a>
                         <?php endif; ?>
                         <?php if ($insp['estado'] === 'completo'): ?>
-                            <a href="/miembro/inspecciones/locativa/view/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-dark">
+                            <a href="<?= site_url('miembro/inspecciones/locativa/view/' . $insp['id']) ?>" class="btn btn-sm btn-outline-dark">
                                 <i class="fas fa-eye"></i> Ver
                             </a>
-                            <a href="/miembro/inspecciones/locativa/pdf/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-success" target="_blank">
+                            <a href="<?= site_url('miembro/inspecciones/locativa/pdf/' . $insp['id']) ?>" class="btn btn-sm btn-outline-success" target="_blank">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </a>
                         <?php endif; ?>

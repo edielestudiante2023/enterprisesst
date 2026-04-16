@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 /**
  * Modelo para gestionar indicadores del SG-SST
@@ -10,6 +11,8 @@ use CodeIgniter\Model;
  */
 class IndicadorSSTModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_indicadores_sst';
     protected $primaryKey = 'id_indicador';
     protected $allowedFields = [

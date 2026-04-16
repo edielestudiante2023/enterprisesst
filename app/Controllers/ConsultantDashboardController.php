@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
+use App\Libraries\TenantFilter;
 use App\Models\DashboardItemModel;
 use CodeIgniter\Controller;
 
@@ -56,9 +57,12 @@ class ConsultantDashboardController extends Controller
             }
         }
 
-        // Obtener clientes activos para el modal selector
+        // Obtener clientes activos para el modal selector (filtrado por empresa)
         $clientModel = new ClientModel();
-        $data['clientes'] = $clientModel->where('estado', 'activo')->findAll();
+        $builder = $clientModel->builder();
+        $builder->where('estado', 'activo');
+        TenantFilter::applyToClientQuery($builder);
+        $data['clientes'] = $builder->get()->getResultArray();
         $data['grouped'] = $sortedGrouped;
         $data['usuario'] = $userData;
 
@@ -68,7 +72,9 @@ class ConsultantDashboardController extends Controller
     public function addClient()
     {
         $consultantModel = new ConsultantModel();
-        $consultants = $consultantModel->findAll(); // Recupera todos los consultores
+        $builder = $consultantModel->builder();
+        TenantFilter::applyToConsultorQuery($builder);
+        $consultants = $builder->get()->getResultArray();
 
         // Verifica que los consultores se están cargando
         if (empty($consultants)) {
@@ -175,6 +181,9 @@ class ConsultantDashboardController extends Controller
     {
         $consultantModel = new ConsultantModel();
 
+        // Forzar empresa consultora del usuario en sesion (multi-tenant)
+        $empresaId = TenantFilter::getEmpresaId();
+
         $data = [
             'nombre_consultor' => $this->request->getVar('nombre_consultor'),
             'cedula_consultor' => $this->request->getVar('cedula_consultor'),
@@ -183,6 +192,7 @@ class ConsultantDashboardController extends Controller
             'correo_consultor' => $this->request->getVar('correo_consultor'),
             'telefono_consultor' => $this->request->getVar('telefono_consultor'),
             'numero_licencia' => $this->request->getVar('numero_licencia'),
+            'id_empresa_consultora' => $empresaId,
             'id_cliente' => $this->request->getVar('id_cliente'),
         ];
 
@@ -212,7 +222,9 @@ class ConsultantDashboardController extends Controller
     public function listConsultants()
     {
         $consultantModel = new ConsultantModel();
-        $consultants = $consultantModel->findAll();
+        $builder = $consultantModel->builder();
+        TenantFilter::applyToConsultorQuery($builder);
+        $consultants = $builder->get()->getResultArray();
 
         $data = [
             'consultants' => $consultants
@@ -352,7 +364,9 @@ class ConsultantDashboardController extends Controller
     public function listClients()
     {
         $clientModel = new ClientModel();
-        $clients = $clientModel->findAll();
+        $builder = $clientModel->builder();
+        TenantFilter::applyToClientQuery($builder);
+        $clients = $builder->get()->getResultArray();
 
         return view('consultant/list_clients', ['clients' => $clients]);
     }
@@ -365,11 +379,18 @@ class ConsultantDashboardController extends Controller
         $consultantModel = new ConsultantModel();
 
         $client = $clientModel->find($id);
-        $consultants = $consultantModel->findAll();
 
         if (!$client) {
             return redirect()->to('/listClients')->with('error', 'Cliente no encontrado.');
         }
+
+        if (!TenantFilter::clienteEnMiEmpresa((int)$id)) {
+            return redirect()->to('/listClients')->with('error', 'Cliente no encontrado.');
+        }
+
+        $builder = $consultantModel->builder();
+        TenantFilter::applyToConsultorQuery($builder);
+        $consultants = $builder->get()->getResultArray();
 
         $data = [
             'client' => $client,

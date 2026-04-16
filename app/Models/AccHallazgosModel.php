@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 /**
  * Modelo para gestionar Hallazgos/Orígenes de Acciones Correctivas
@@ -10,6 +11,8 @@ use CodeIgniter\Model;
  */
 class AccHallazgosModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_acc_hallazgos';
     protected $primaryKey = 'id_hallazgo';
     protected $returnType = 'array';

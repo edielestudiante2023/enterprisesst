@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 /**
  * Modelo para gestionar responsables del SG-SST
  */
 class ResponsableSSTModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_cliente_responsables_sst';
     protected $primaryKey = 'id_responsable';
     protected $allowedFields = [

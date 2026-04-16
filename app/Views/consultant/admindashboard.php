@@ -419,6 +419,82 @@
                 'Administración del Sistema'     => 'fas fa-cogs',
             ];
             ?>
+            <!-- Accesos fijos - Módulo Matriz EPP (Hito D) -->
+            <div class="category-section" data-category="Talento Humano - EPP">
+                <div class="category-header">
+                    <i class="fas fa-shield-halved" style="color: var(--gold-primary); font-size: 1.2rem;"></i>
+                    <h5>Matriz de EPP y Dotación</h5>
+                    <span class="category-badge">2</span>
+                </div>
+                <div class="cards-grid">
+                    <a href="<?= base_url('matrizEpp/maestro') ?>" target="_blank"
+                       class="access-card"
+                       style="border-left-color: #bd9751;"
+                       data-search="matriz epp dotacion catalogo maestro proteccion personal sst-mt-g-003">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #bd9751, #d4af37);">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <div class="card-text">
+                            <div class="card-title">Catálogo Maestro EPP</div>
+                            <div class="card-desc">Universo global de EPP y dotación con IA</div>
+                        </div>
+                    </a>
+                    <a href="javascript:void(0)"
+                       data-client-url="matrizEpp/cliente/{id_cliente}" data-card-title="Matriz de EPP del cliente"
+                       onclick="openClientSelector(this)"
+                       class="access-card"
+                       style="border-left-color: #1c2437;"
+                       data-search="matriz epp cliente dotacion snapshot editing inline">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #1c2437, #2c3e50);">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="card-text">
+                            <div class="card-title">Matriz EPP del Cliente</div>
+                            <div class="card-desc">Ver/editar matriz asignada a un cliente</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Accesos fijos - Modulo Perfiles de Cargo -->
+            <div class="category-section" data-category="Talento Humano - Perfiles">
+                <div class="category-header">
+                    <i class="fas fa-user-tie" style="color: var(--gold-primary); font-size: 1.2rem;"></i>
+                    <h5>Perfiles de Cargo</h5>
+                    <span class="category-badge">2</span>
+                </div>
+                <div class="cards-grid">
+                    <a href="javascript:void(0)"
+                       data-client-url="perfiles-cargo/{id_cliente}" data-card-title="Perfiles de Cargo del cliente"
+                       onclick="openClientSelector(this)"
+                       class="access-card"
+                       style="border-left-color: #1e4c9a;"
+                       data-search="perfil cargo trabajador firmas competencias objetivo indicadores ia talento humano">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #1e4c9a, #2d6cdf);">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="card-text">
+                            <div class="card-title">Perfiles de Cargo</div>
+                            <div class="card-desc">Crear perfiles con objetivo IA, funciones, indicadores IA, competencias y acuses firmados</div>
+                        </div>
+                    </a>
+                    <a href="javascript:void(0)"
+                       data-client-url="perfiles-cargo/{id_cliente}/trabajadores" data-card-title="Trabajadores del cliente"
+                       onclick="openClientSelector(this)"
+                       class="access-card"
+                       style="border-left-color: #2d8f5a;"
+                       data-search="trabajadores censo empleados importar csv cedula">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #2d8f5a, #4ec07d);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="card-text">
+                            <div class="card-title">Trabajadores del Cliente</div>
+                            <div class="card-desc">Censo del cliente con importacion masiva CSV</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
             <?php foreach ($grouped as $categoria => $items): ?>
                 <div class="category-section" data-category="<?= esc($categoria) ?>">
                     <div class="category-header">
@@ -462,6 +538,52 @@
                     </div>
                 </div>
             <?php endforeach; ?>
+
+            <?php if (session()->get('is_superadmin')): ?>
+            <div class="category-section" data-category="superadmin">
+                <div class="category-header">
+                    <i class="fas fa-shield-alt" style="color: var(--gold-primary); font-size: 1.2rem;"></i>
+                    <h5>Superadmin</h5>
+                    <span class="category-badge">1</span>
+                </div>
+                <div class="cards-grid">
+                    <a href="<?= base_url('/admin/empresas-consultoras') ?>"
+                       class="access-card"
+                       style="border-left-color: #6f42c1;"
+                       data-search="empresas consultoras tenant multi superadmin">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #6f42c1, #9b59b6);">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="card-text">
+                            <div class="card-title">Empresas Consultoras</div>
+                            <div class="card-desc">Crear, editar y gestionar empresas consultoras del sistema</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <?php elseif (session()->get('id_empresa_consultora')): ?>
+            <div class="category-section" data-category="mi-empresa">
+                <div class="category-header">
+                    <i class="fas fa-building" style="color: var(--gold-primary); font-size: 1.2rem;"></i>
+                    <h5>Mi Empresa</h5>
+                    <span class="category-badge">1</span>
+                </div>
+                <div class="cards-grid">
+                    <a href="<?= base_url('/admin/mi-empresa') ?>"
+                       class="access-card"
+                       style="border-left-color: #17a2b8;"
+                       data-search="mi empresa consultora datos">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #17a2b8, #20c997);">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="card-text">
+                            <div class="card-title">Mi Empresa</div>
+                            <div class="card-desc">Editar datos de <?= esc(session()->get('razon_social_empresa') ?? 'mi empresa') ?></div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Sin resultados -->

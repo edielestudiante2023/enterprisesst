@@ -1,147 +1,152 @@
-# Continuacion Chat - Modulo Investigacion Accidentes + Fix ReportList
+# Continuacion Chat — Multi-tenant por Empresa Consultora
 
-> Fecha: 2026-04-11 | Estado: EN PROGRESO
+**Fecha:** 2026-04-16
+**Branch:** cycloid
+**Estado:** Implementacion completa. Pendiente deploy a PROD y smoke test final.
 
-## PRIORIDAD 1: Fix uploadToReportes en investigacion de accidentes
+---
 
-Al finalizar una investigacion de accidente/incidente, el PDF NO se esta subiendo a reportlist (`tbl_reporte`). Esto afecta tanto al controller del consultor como al del miembro COPASST.
+## QUE SE HIZO
 
-### Como funciona uploadToReportes (patron correcto - locativas del consultor)
+### Fase 1 — BD (LOCAL + PROD completados)
+- Creada `tbl_empresa_consultora` (razon_social, nit, logo, estado, plan, etc.)
+- Agregado `id_empresa_consultora` a `tbl_consultor` + backfill (todos → empresa 1 = Cycloid)
+- ENUM `tbl_usuarios.tipo_usuario` ampliado con `superadmin`
+- Script: `scripts/multitenant_01_schema.php` (idempotente, LOCAL + PROD)
 
-Archivo de referencia: `app/Controllers/Inspecciones/InspeccionLocativaController.php` lineas 527-574
+### Fase 2 — Sesion + Guard (LOCAL + PROD)
+- `AuthController::loginPost` inyecta `id_empresa_consultora`, `razon_social_empresa`, `is_superadmin` en sesion
+- Rama `superadmin` en login: role='admin' + tipo_real='superadmin' + is_superadmin=true
+- Bloqueo de login si empresa esta suspendida/inactiva (salvo superadmin)
+- `app/Libraries/TenantFilter.php` — helper central (getEmpresaId, isSuperAdmin, resolverEmpresa, applyToClientQuery, applyToConsultorQuery, applyToUserQuery, assertClientBelongsToTenant, clienteEnMiEmpresa, getMyClientIds)
+- `app/Filters/TenantGuardFilter.php` — verifica id_cliente en POST/GET
+- `app/Filters/SuperAdminOnlyFilter.php` — bloquea rutas solo-superadmin
+- Registrados en `app/Config/Filters.php`
+- head.consultant.cycloidtalent@gmail.com marcado como superadmin (LOCAL + PROD)
+- Script: `scripts/multitenant_02_marcar_superadmin.php`
 
-```php
-private function uploadToReportes(array $inspeccion, string $pdfPath): bool
-{
-    $reporteModel = new ReporteModel();  // tabla: tbl_reporte
-    $clientModel = new ClientModel();
-    $cliente = $clientModel->find($inspeccion['id_cliente']);
-    $nitCliente = $cliente['nit_cliente'];
+### Fase 3 — Blindar listados
+- ConsultantController: index, listClients, addClient, editClient, listConsultants
+- ConsultantDashboardController: index, listClients, listConsultants, addClient, editClient
+- AdminDashboardController: index, addClient, listConsultants, addConsultantPost
+- UserController: listUsers, addUser
+- Todos usan `TenantFilter::applyToClientQuery/applyToConsultorQuery/applyToUserQuery`
 
-    // Buscar si ya existe (para update en vez de duplicar)
-    $existente = $reporteModel
-        ->where('id_cliente', $inspeccion['id_cliente'])
-        ->where('id_report_type', 6)        // Tipo: Inspecciones
-        ->where('id_detailreport', 10)       // Detalle: Inspeccion Locativa
-        ->like('observaciones', 'insp_locativa_id:' . $inspeccion['id'])
-        ->first();
+### Fase 4 — Branding + restricciones
+- `CYCLOID TALENT` → `ASESOR SST` en CronogcapacitacionController (lineas 540, 871)
+- Modulo contratos bloqueado para no-superadmin (SuperAdminOnlyFilter en routes `contracts/*`)
+- NO se toco: URLs cycloidtalent.com en footers, email sender SendGrid, emails personales Cycloid
 
-    // Copiar PDF a uploads/{nit_cliente}/
-    $destDir = ROOTPATH . 'public/uploads/' . $nitCliente;
-    mkdir($destDir, 0755, true);  // si no existe
-    $fileName = 'inspeccion_locativa_' . $inspeccion['id'] . '_' . date('Ymd_His') . '.pdf';
-    copy(FCPATH . $pdfPath, $destDir . '/' . $fileName);
+### Fase 5 — CRUD empresas + proteccion global
+- `app/Controllers/EmpresaConsultoraController.php` — CRUD completo
+  - Superadmin: listado todas las empresas, crear con primer admin, editar, toggle estado
+  - Admin: "Mi Empresa" (solo edita la suya)
+  - crearPrimerAdmin(): crea consultor + usuario con password temporal
+- `app/Views/admin/empresas_consultoras/index.php` — listado con DataTable
+- `app/Views/admin/empresas_consultoras/form.php` — crear/editar con logo upload
+- Rutas en Routes.php: admin/empresas-consultoras/*, admin/mi-empresa
+- Card "Superadmin > Empresas Consultoras" en admindashboard.php (solo superadmin)
+- Card "Mi Empresa" en admindashboard.php (admin no-superadmin)
+- `id_empresa_consultora` se fuerza al crear consultor (3 controllers)
 
-    $data = [
-        'titulo_reporte'  => 'INSPECCION LOCATIVA - ' . $cliente['nombre_cliente'] . ' - ' . $inspeccion['fecha_inspeccion'],
-        'id_detailreport' => 10,
-        'id_report_type'  => 6,
-        'id_cliente'      => $inspeccion['id_cliente'],
-        'estado'          => 'CERRADO',
-        'observaciones'   => 'Generado automaticamente. insp_locativa_id:' . $inspeccion['id'],
-        'enlace'          => base_url('uploads/' . $nitCliente . '/' . $fileName),
-        'updated_at'      => date('Y-m-d H:i:s'),
-    ];
+### Proteccion global a nivel de modelo
+- `app/Models/Traits/TenantScopedModel.php` — trait con override de findAll, first, update, delete
+- Aplicado a **65 modelos** con id_cliente via script `scripts/multitenant_04_aplicar_trait.php`
+- `ClientModel.php` — override propio de findAll, find, first con filtro tenant
+- **Lecturas**: findAll/first filtran por empresa automaticamente
+- **Escrituras**: update/delete verifican pertenencia del registro antes de ejecutar; lanzan RuntimeException si no pertenece
+- Superadmin y CLI: bypass total en las 4 operaciones
 
-    if ($existente) {
-        return $reporteModel->update($existente['id_reporte'], $data);
-    }
-    $data['created_at'] = date('Y-m-d H:i:s');
-    return $reporteModel->save($data);
-}
+### Empresa de prueba (SOLO LOCAL)
+- "TEST Colega SAS" (id=2) con consultor, cliente y usuario admin
+- Login: colega.test@example.com / colega123
+- Rollback: `php scripts/multitenant_03_empresa_prueba.php --rollback`
+- Usuario pidio NO borrarla (la usa para demo a junta directiva)
+
+---
+
+## QUE FALTA
+
+### Pendiente inmediato
+- [ ] **Deploy a PROD**: git add/commit/push de todo el codigo de Fases 2-5 (la BD ya esta en PROD desde Fase 1+2)
+- [ ] **Smoke test PROD**: login superadmin en produccion, verificar que todo funciona
+- [ ] **Smoke test escrituras**: usuario confirmo que lecturas estan OK, falta confirmar que update/delete bloquean correctamente
+
+### Mejoras futuras (NO urgentes)
+- [ ] Envio de email con credenciales al crear empresa (hoy muestra password en flash message)
+- [ ] CRUD usuarios por empresa (hoy se usa el CRUD general de UserController)
+- [ ] Dashboard del colega: ocultar tiles de modulos que no aplican (ej: contratos)
+- [ ] Branding avanzado: color_primario de empresa en UI
+- [ ] Facturacion / plan por empresa (campos existen pero no hay logica)
+
+---
+
+## ARCHIVOS CREADOS
+
+```
+app/Libraries/TenantFilter.php
+app/Models/Traits/TenantScopedModel.php
+app/Models/EmpresaConsultoraModel.php
+app/Filters/TenantGuardFilter.php
+app/Filters/SuperAdminOnlyFilter.php
+app/Controllers/EmpresaConsultoraController.php
+app/Views/admin/empresas_consultoras/index.php
+app/Views/admin/empresas_consultoras/form.php
+docs/MULTI_TENANT_EMPRESA_CONSULTORA/01_ARQUITECTURA.md
+docs/MULTI_TENANT_EMPRESA_CONSULTORA/02_FASE2_PLAN_EJECUCION.md
+scripts/multitenant_01_schema.php
+scripts/multitenant_02_marcar_superadmin.php
+scripts/multitenant_03_empresa_prueba.php
+scripts/multitenant_04_aplicar_trait.php
+public/uploads/empresas/ (directorio para logos)
 ```
 
-### Campos clave de tbl_reporte (ReporteModel)
+## ARCHIVOS MODIFICADOS
 
-```php
-protected $allowedFields = [
-    'titulo_reporte', 'id_detailreport', 'enlace', 'estado',
-    'observaciones', 'id_cliente', 'created_at', 'updated_at', 'id_report_type'
-];
+```
+app/Config/Routes.php — rutas empresas consultoras
+app/Config/Filters.php — tenantguard, superadminonly
+app/Controllers/AuthController.php — sesion multi-tenant + rama superadmin
+app/Controllers/ConsultantController.php — filtros tenant + forzar empresa en consultor
+app/Controllers/ConsultantDashboardController.php — filtros tenant + forzar empresa
+app/Controllers/AdminDashboardController.php — filtros tenant + forzar empresa
+app/Controllers/UserController.php — filtros tenant
+app/Controllers/CronogcapacitacionController.php — CYCLOID TALENT → ASESOR SST
+app/Models/ClientModel.php — override findAll/find/first con filtro tenant
+app/Models/ConsultantModel.php — id_empresa_consultora en allowedFields
+app/Models/UserModel.php — superadmin en validacion tipo_usuario (ya en PROD via Fase 1)
+app/Views/consultant/admindashboard.php — cards Superadmin / Mi Empresa
+65 modelos en app/Models/ — trait TenantScopedModel agregado (via script automatico)
 ```
 
-### IDs de referencia para cada modulo
+## DECISIONES TOMADAS
 
-| Modulo | id_report_type | id_detailreport | tag en observaciones |
-|--------|---------------|-----------------|----------------------|
-| Inspeccion Locativa | 6 | 10 | insp_locativa_id:{id} |
-| Pausas Activas | 6 | 10 | pausas_activas_id:{id} |
-| Investigacion AT/IT | 7 | 38 | investigacion_accidente_id:{id} |
+1. **No denormalizar id_empresa_consultora en tbl_clientes** — se hereda via id_consultor
+2. **Superadmin reutiliza rutas admin/** — role='admin' en sesion, tipo_real='superadmin'
+3. **Guard por POST/GET id_cliente** en TenantGuardFilter (no parsea URI segments)
+4. **Proteccion principal a nivel de MODELO** (trait), no de controller ni middleware
+5. **No tocar URLs de Cycloid en footers** — riesgo alto, impacto bajo
+6. **No tocar email sender** — infraestructura compartida
+7. **Modulo contratos exclusivo superadmin** — el colega no lo necesita
+8. **Lecturas Y escrituras protegidas** — findAll/first filtran; update/delete validan pertenencia
 
-El `id_report_type=7` y `id_detailreport=38` ya fueron creados en BD por el script `app/SQL/crear_modulo_investigacion_accidente.php`.
+## FLUJO GIT PARA DEPLOY
 
-### Archivos que tienen uploadToReportes y hay que verificar
+```bash
+git add .
+git commit -m "feat: multi-tenant por empresa consultora — aislamiento completo"
+git checkout main
+git merge cycloid
+git push origin main
+git checkout cycloid
+```
 
-1. `app/Controllers/Inspecciones/InvestigacionAccidenteController.php` - consultor
-2. `app/Controllers/MiembroInvestigacionAccidenteController.php` - miembro COPASST
-3. `app/Controllers/Inspecciones/InspeccionPausasActivasController.php` - consultor pausas
-4. `app/Controllers/MiembroPausasActivasController.php` - miembro pausas
+## PROMPT PARA CONTINUAR EN NUEVO CHAT
 
-Verificar que:
-- El metodo `uploadToReportes` existe y se llama en `finalizar()`
-- Los `id_report_type` y `id_detailreport` son correctos
-- El `copy()` del PDF usa la ruta correcta: `FCPATH . $pdfPath` → `ROOTPATH . 'public/uploads/' . $nitCliente`
-- El `enlace` usa `base_url('uploads/' . $nitCliente . '/' . $fileName)`
+```
+Estoy retomando el trabajo de multi-tenant por empresa consultora.
+Lee docs/CONTINUACION_CHAT.md y docs/MULTI_TENANT_EMPRESA_CONSULTORA/01_ARQUITECTURA.md
+para contexto completo.
 
-## PRIORIDAD 2: Lo que ya se hizo (modulo investigacion accidentes)
-
-### Base de datos (LOCAL + PROD OK)
-
-- Script: `app/SQL/crear_modulo_investigacion_accidente.php`
-- `tbl_investigacion_accidente` (tabla principal)
-- `tbl_investigacion_testigos`
-- `tbl_investigacion_evidencia`
-- `tbl_investigacion_medidas` (plan accion)
-- detail_report id=38, report_type id=7
-
-### Modelos creados
-
-- `app/Models/InvestigacionAccidenteModel.php`
-- `app/Models/InvestigacionTestigoModel.php`
-- `app/Models/InvestigacionEvidenciaModel.php`
-- `app/Models/InvestigacionMedidaModel.php`
-
-### Controllers creados
-
-- `app/Controllers/Inspecciones/InvestigacionAccidenteController.php` (consultor) - CRUD + firmas canvas + WhatsApp token + PDF + reportlist + email
-- `app/Controllers/MiembroInvestigacionAccidenteController.php` (miembro COPASST) - CRUD + PDF + reportlist + notificarConsultor
-
-### Vistas creadas
-
-Consultor:
-- `app/Views/inspecciones/investigacion_accidente/list.php`
-- `app/Views/inspecciones/investigacion_accidente/form.php` (9 secciones accordion)
-- `app/Views/inspecciones/investigacion_accidente/view.php`
-- `app/Views/inspecciones/investigacion_accidente/firma.php` (canvas + WhatsApp)
-- `app/Views/inspecciones/investigacion_accidente/firma_remota.php` (publica)
-- `app/Views/inspecciones/investigacion_accidente/pdf.php` (DOMPDF condicional)
-
-Miembro:
-- `app/Views/inspecciones/miembro/investigacion_list.php`
-- `app/Views/inspecciones/miembro/investigacion_form.php`
-- `app/Views/inspecciones/miembro/investigacion_view.php`
-
-### Rutas agregadas en Routes.php
-
-- Publicas: firma remota investigacion (sin auth)
-- Grupo miembro: CRUD + finalizar + PDF
-- Grupo inspecciones (consultor): CRUD + firmas + token + PDF + email + regenerar
-
-### Dashboard miembro actualizado
-
-Card "Investigacion AT/IT" ya agregada en `app/Views/actas/miembro_auth/dashboard.php`
-
-## PRIORIDAD 3: Que falta
-
-1. **Fix uploadToReportes** en los 4 controllers listados arriba
-2. **Testing funcional**: probar flujos completos
-3. **Deploy**: git add . → commit → checkout main → merge cycloid → push → checkout cycloid
-
-## Reglas del proyecto
-
-- NO hardcodear textos autopromocionales en PDFs
-- Solo boton galeria, NO boton camara en formularios
-- Textos genericos (organizacion, instalaciones), no propiedad horizontal
-- EnterpriseSST en vez de Cycloid Talent en todo
-- BD: scripts PHP CLI, primero LOCAL, luego --prod
-- Deploy: git add . → commit → checkout main → merge cycloid → push → checkout cycloid
+Estado: implementacion completa en LOCAL, pendiente [lo que necesites].
+```

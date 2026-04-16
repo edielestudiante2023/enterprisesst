@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class EvaluationModel extends Model
 {
+    use TenantScopedModel;
+
     // Definimos la tabla
     protected $table = 'evaluacion_inicial_sst'; 
 

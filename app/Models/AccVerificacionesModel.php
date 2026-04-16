@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 /**
  * Modelo para gestionar Verificaciones de Efectividad
@@ -10,6 +11,8 @@ use CodeIgniter\Model;
  */
 class AccVerificacionesModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_acc_verificaciones';
     protected $primaryKey = 'id_verificacion';
     protected $returnType = 'array';

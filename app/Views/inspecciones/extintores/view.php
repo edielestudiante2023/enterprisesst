@@ -121,21 +121,21 @@
     <!-- Acciones -->
     <div class="mb-4">
         <?php if ($inspeccion['estado'] === 'completo' && !empty($inspeccion['ruta_pdf'])): ?>
-        <a href="/inspecciones/extintores/pdf/<?= $inspeccion['id'] ?>" class="btn btn-pwa btn-pwa-primary" target="_blank">
+        <a href="<?= site_url('inspecciones/extintores/pdf/' . $inspeccion['id']) ?>" class="btn btn-pwa btn-pwa-primary" target="_blank">
             <i class="fas fa-file-pdf"></i> Ver PDF
         </a>
         <?php endif; ?>
     <?php if ($inspeccion['estado'] === 'completo'): ?>
-    <a href="/inspecciones/extintores/regenerar/<?= $inspeccion['id'] ?>" class="btn btn-pwa btn-pwa-outline" onclick="return confirm('Regenerar el PDF con la plantilla actual?')">
+    <a href="<?= site_url('inspecciones/extintores/regenerar/' . $inspeccion['id']) ?>" class="btn btn-pwa btn-pwa-outline" onclick="return confirm('Regenerar el PDF con la plantilla actual?')">
         <i class="fas fa-sync-alt me-2"></i>Regenerar PDF
     </a>
-    <a href="/inspecciones/extintores/enviar-email/<?= $inspeccion['id'] ?>" class="btn btn-pwa btn-pwa-outline" onclick="return confirm('Enviar el PDF por email al cliente, consultor y consultor externo?')">
+    <a href="<?= site_url('inspecciones/extintores/enviar-email/' . $inspeccion['id']) ?>" class="btn btn-pwa btn-pwa-outline" onclick="return confirm('Enviar el PDF por email al cliente, consultor y consultor externo?')">
         <i class="fas fa-envelope me-2"></i>Enviar por Email
     </a>
     <?php endif; ?>
 
         <!-- Doc 25: edit button always visible -->
-        <a href="/inspecciones/extintores/edit/<?= $inspeccion['id'] ?>" class="btn btn-pwa btn-pwa-outline">
+        <a href="<?= site_url('inspecciones/extintores/edit/' . $inspeccion['id']) ?>" class="btn btn-pwa btn-pwa-outline">
             <i class="fas fa-edit"></i> Editar
         </a>
     </div>

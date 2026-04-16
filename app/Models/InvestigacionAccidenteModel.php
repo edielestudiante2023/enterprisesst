@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class InvestigacionAccidenteModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_investigacion_accidente';
     protected $primaryKey = 'id';
     protected $allowedFields = [

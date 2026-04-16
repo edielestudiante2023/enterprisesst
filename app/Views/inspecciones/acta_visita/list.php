@@ -1,7 +1,7 @@
 <div class="container-fluid px-3">
     <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
         <h6 class="mb-0">Actas de Visita</h6>
-        <a href="/inspecciones/acta-visita/create" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
+        <a href="<?= site_url('inspecciones/acta-visita/create') ?>" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
             <i class="fas fa-plus"></i> Nueva
         </a>
     </div>
@@ -18,7 +18,7 @@
         <div class="text-center text-muted py-5">
             <i class="fas fa-clipboard fa-3x mb-3" style="opacity:0.3;"></i>
             <p>No hay actas de visita aun</p>
-            <a href="/inspecciones/acta-visita/create" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
+            <a href="<?= site_url('inspecciones/acta-visita/create') ?>" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
                 Crear primera acta
             </a>
         </div>
@@ -51,22 +51,22 @@
                         </div>
                     </div>
                     <div class="mt-2 d-flex gap-2 flex-wrap">
-                        <a href="/inspecciones/acta-visita/edit/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-dark">
+                        <a href="<?= site_url('inspecciones/acta-visita/edit/' . $acta['id']) ?>" class="btn btn-sm btn-outline-dark">
                             <i class="fas fa-edit"></i> Editar
                         </a>
-                        <a href="/inspecciones/acta-visita/delete/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $acta['id'] ?>">
+                        <a href="<?= site_url('inspecciones/acta-visita/delete/' . $acta['id']) ?>" class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $acta['id'] ?>">
                             <i class="fas fa-trash"></i>
                         </a>
                         <?php if ($acta['estado'] === 'pendiente_firma'): ?>
-                            <a href="/inspecciones/acta-visita/firma/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-warning">
+                            <a href="<?= site_url('inspecciones/acta-visita/firma/' . $acta['id']) ?>" class="btn btn-sm btn-outline-warning">
                                 <i class="fas fa-signature"></i> Firmar
                             </a>
                         <?php endif; ?>
                         <?php if ($acta['estado'] === 'completo'): ?>
-                            <a href="/inspecciones/acta-visita/view/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-dark">
+                            <a href="<?= site_url('inspecciones/acta-visita/view/' . $acta['id']) ?>" class="btn btn-sm btn-outline-dark">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="/inspecciones/acta-visita/pdf/<?= $acta['id'] ?>" class="btn btn-sm btn-outline-success" target="_blank">
+                            <a href="<?= site_url('inspecciones/acta-visita/pdf/' . $acta['id']) ?>" class="btn btn-sm btn-outline-success" target="_blank">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </a>
                         <?php endif; ?>
@@ -82,7 +82,7 @@
 $(document).ready(function() {
     // Cargar clientes en Select2
     $.ajax({
-        url: '/inspecciones/api/clientes',
+        url: '<?= site_url('inspecciones/api/clientes') ?>',
         dataType: 'json',
         success: function(data) {
             var select = $('#filterCliente');

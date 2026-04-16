@@ -1,6 +1,6 @@
 <?php
 $isEdit = !empty($inv);
-$action = $isEdit ? '/inspecciones/investigacion-accidente/update/' . $inv['id'] : '/inspecciones/investigacion-accidente/store';
+$action = $isEdit ? site_url('inspecciones/investigacion-accidente/update/' . $inv['id']) : site_url('inspecciones/investigacion-accidente/store');
 $testigos = $testigos ?? [];
 $evidencias = $evidencias ?? [];
 $medidas = $medidas ?? [];
@@ -472,7 +472,7 @@ $medidas = $medidas ?? [];
                 <i class="fas fa-save"></i> Guardar borrador
             </button>
             <?php if ($isEdit): ?>
-            <a href="/inspecciones/investigacion-accidente/firma/<?= $inv['id'] ?>" class="btn btn-pwa btn-pwa-primary py-3" style="font-size:17px;">
+            <a href="<?= site_url('inspecciones/investigacion-accidente/firma/' . $inv['id']) ?>" class="btn btn-pwa btn-pwa-primary py-3" style="font-size:17px;">
                 <i class="fas fa-signature"></i> Ir a Firmas
             </a>
             <?php endif; ?>
@@ -503,7 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Select2 para clientes (solo en creacion) ---
     <?php if (!$isEdit): ?>
     $.ajax({
-        url: '/inspecciones/api/clientes',
+        url: '<?= site_url('inspecciones/api/clientes') ?>',
         dataType: 'json',
         success: function(data) {
             const select = document.getElementById('selectCliente');

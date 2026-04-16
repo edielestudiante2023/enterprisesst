@@ -19,24 +19,24 @@ $medidas = $medidas ?? [];
     <!-- Toolbar -->
     <div class="d-flex gap-2 mb-3 flex-wrap">
         <?php if (!empty($inv['ruta_pdf'])): ?>
-        <a href="/inspecciones/investigacion-accidente/pdf/<?= $inv['id'] ?>" target="_blank" class="btn btn-sm btn-pwa-primary" style="background:#bd9751; color:#fff; border:none; border-radius:6px;">
+        <a href="<?= site_url('inspecciones/investigacion-accidente/pdf/' . $inv['id']) ?>" target="_blank" class="btn btn-sm btn-pwa-primary" style="background:#bd9751; color:#fff; border:none; border-radius:6px;">
             <i class="fas fa-file-pdf"></i> Ver PDF
         </a>
         <?php endif; ?>
         <?php if (($inv['estado'] ?? '') === 'completo'): ?>
-        <a href="/inspecciones/investigacion-accidente/regenerar/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-secondary"
+        <a href="<?= site_url('inspecciones/investigacion-accidente/regenerar/' . $inv['id']) ?>" class="btn btn-sm btn-outline-secondary"
            onclick="return confirm('Regenerar el PDF con la plantilla actual?')">
             <i class="fas fa-sync-alt"></i> Regenerar PDF
         </a>
-        <a href="/inspecciones/investigacion-accidente/enviar-email/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-secondary"
+        <a href="<?= site_url('inspecciones/investigacion-accidente/enviar-email/' . $inv['id']) ?>" class="btn btn-sm btn-outline-secondary"
            onclick="return confirm('Enviar el PDF por email?')">
             <i class="fas fa-envelope"></i> Enviar Email
         </a>
         <?php endif; ?>
-        <a href="/inspecciones/investigacion-accidente/firma/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-dark">
+        <a href="<?= site_url('inspecciones/investigacion-accidente/firma/' . $inv['id']) ?>" class="btn btn-sm btn-outline-dark">
             <i class="fas fa-signature"></i> Firmas
         </a>
-        <a href="/inspecciones/investigacion-accidente" class="btn btn-sm btn-outline-dark">
+        <a href="<?= site_url('inspecciones/investigacion-accidente') ?>" class="btn btn-sm btn-outline-dark">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>

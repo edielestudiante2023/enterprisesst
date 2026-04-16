@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class CicloVisitaModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table         = 'tbl_ciclos_visita';
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;

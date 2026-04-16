@@ -17,6 +17,8 @@ use App\Filters\AuthFilter;
 use App\Filters\MiembroFilter;
 use App\Filters\ClientFilter;
 use App\Filters\AuthOrApiKeyFilter;
+use App\Filters\TenantGuardFilter;
+use App\Filters\SuperAdminOnlyFilter;
 
 class Filters extends BaseFilters
 {
@@ -44,6 +46,8 @@ class Filters extends BaseFilters
         'miembro'        => MiembroFilter::class,
         'clientfilter'   => ClientFilter::class,
         'authOrApiKey'   => AuthOrApiKeyFilter::class,
+        'tenantguard'    => TenantGuardFilter::class,
+        'superadminonly'  => SuperAdminOnlyFilter::class,
     ];
 
     /**
@@ -138,6 +142,37 @@ class Filters extends BaseFilters
                 'indicadores-sst/*',
                 'pdfUnificado*',
                 'generarPdfUnificado*',
+            ],
+        ],
+        'tenantguard' => [
+            'before' => [
+                'dashboard',
+                'dashboard/*',
+                'admin/*',
+                'consultor/*',
+                'client/*',
+                'cronograma/*',
+                'pendientes/*',
+                'plan-trabajo/*',
+                'evaluacion/*',
+                'matriz/*',
+                'inventario/*',
+                'generatePdf*',
+                'pausasActivas/*',
+                'actas/*',
+                'comites-elecciones/*',
+                'acciones-correctivas/*',
+                'indicadores-sst/*',
+                'pdfUnificado*',
+                'generarPdfUnificado*',
+            ],
+        ],
+        'superadminonly' => [
+            'before' => [
+                'contracts',
+                'contracts/*',
+                'admin/empresas-consultoras',
+                'admin/empresas-consultoras/*',
             ],
         ],
     ];

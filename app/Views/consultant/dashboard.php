@@ -483,6 +483,43 @@
                 'Administración del Sistema'     => 'fas fa-cogs',
             ];
             ?>
+            <!-- Accesos fijos - Módulo Matriz EPP -->
+            <div class="category-section" data-category="Talento Humano - EPP">
+                <div class="category-header">
+                    <i class="fas fa-shield-halved" style="color: var(--gold-primary); font-size: 1.2rem;"></i>
+                    <h5>Matriz de EPP y Dotación</h5>
+                    <span class="category-badge">2</span>
+                </div>
+                <div class="cards-grid">
+                    <a href="<?= base_url('matrizEpp/maestro') ?>" target="_blank"
+                       class="access-card"
+                       style="border-left-color: #bd9751;"
+                       data-search="matriz epp dotacion catalogo maestro proteccion personal sst-mt-g-003">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #bd9751, #d4af37);">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <div class="card-text">
+                            <div class="card-title">Catálogo Maestro EPP</div>
+                            <div class="card-desc">Universo global de EPP y dotación con IA</div>
+                        </div>
+                    </a>
+                    <a href="javascript:void(0)"
+                       data-client-url="matrizEpp/cliente/{id_cliente}" data-card-title="Matriz de EPP del cliente"
+                       onclick="openClientSelector(this)"
+                       class="access-card"
+                       style="border-left-color: #1c2437;"
+                       data-search="matriz epp cliente dotacion snapshot editing inline">
+                        <div class="card-icon" style="background: linear-gradient(135deg, #1c2437, #2c3e50);">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="card-text">
+                            <div class="card-title">Matriz EPP del Cliente</div>
+                            <div class="card-desc">Ver/editar matriz asignada a un cliente</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
             <?php foreach ($grouped as $categoria => $items): ?>
                 <div class="category-section" data-category="<?= esc($categoria) ?>">
                     <div class="category-header">

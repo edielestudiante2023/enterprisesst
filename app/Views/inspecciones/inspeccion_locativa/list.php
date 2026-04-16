@@ -1,7 +1,7 @@
 <div class="container-fluid px-3">
     <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
         <h6 class="mb-0">Inspecciones Locativas</h6>
-        <a href="/inspecciones/inspeccion-locativa/create" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
+        <a href="<?= site_url('inspecciones/inspeccion-locativa/create') ?>" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
             <i class="fas fa-plus"></i> Nueva
         </a>
     </div>
@@ -18,7 +18,7 @@
         <div class="text-center text-muted py-5">
             <i class="fas fa-building fa-3x mb-3" style="opacity:0.3;"></i>
             <p>No hay inspecciones locativas aun</p>
-            <a href="/inspecciones/inspeccion-locativa/create" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
+            <a href="<?= site_url('inspecciones/inspeccion-locativa/create') ?>" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
                 Crear primera inspeccion
             </a>
         </div>
@@ -45,17 +45,17 @@
                         </div>
                     </div>
                     <div class="mt-2 d-flex gap-2 flex-wrap">
-                        <a href="/inspecciones/inspeccion-locativa/edit/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-dark">
+                        <a href="<?= site_url('inspecciones/inspeccion-locativa/edit/' . $insp['id']) ?>" class="btn btn-sm btn-outline-dark">
                             <i class="fas fa-edit"></i> Editar
                         </a>
-                        <a href="/inspecciones/inspeccion-locativa/delete/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $insp['id'] ?>">
+                        <a href="<?= site_url('inspecciones/inspeccion-locativa/delete/' . $insp['id']) ?>" class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $insp['id'] ?>">
                             <i class="fas fa-trash"></i>
                         </a>
                         <?php if ($insp['estado'] === 'completo'): ?>
-                            <a href="/inspecciones/inspeccion-locativa/view/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-dark">
+                            <a href="<?= site_url('inspecciones/inspeccion-locativa/view/' . $insp['id']) ?>" class="btn btn-sm btn-outline-dark">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="/inspecciones/inspeccion-locativa/pdf/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-success" target="_blank">
+                            <a href="<?= site_url('inspecciones/inspeccion-locativa/pdf/' . $insp['id']) ?>" class="btn btn-sm btn-outline-success" target="_blank">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </a>
                         <?php endif; ?>
@@ -71,7 +71,7 @@
 $(document).ready(function() {
     // Cargar clientes en Select2
     $.ajax({
-        url: '/inspecciones/api/clientes',
+        url: '<?= site_url('inspecciones/api/clientes') ?>',
         dataType: 'json',
         success: function(data) {
             var select = $('#filterCliente');

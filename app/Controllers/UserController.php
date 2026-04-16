@@ -6,6 +6,7 @@ use App\Models\UserModel;
 use App\Models\RoleModel;
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
+use App\Libraries\TenantFilter;
 use CodeIgniter\Controller;
 
 class UserController extends Controller
@@ -29,7 +30,10 @@ class UserController extends Controller
             return redirect()->to('/login');
         }
 
-        $users = $this->userModel->findAll();
+        // Filtrar usuarios por empresa (superadmin ve todos)
+        $userBuilder = $this->userModel->builder();
+        TenantFilter::applyToUserQuery($userBuilder);
+        $users = $userBuilder->get()->getResultArray();
         $roles = $this->roleModel->findAll();
 
         $data = [
@@ -53,10 +57,16 @@ class UserController extends Controller
         $clientModel = new ClientModel();
         $consultantModel = new ConsultantModel();
 
+        // Dropdowns filtrados por empresa (superadmin ve todo)
+        $clientBuilder = $clientModel->builder();
+        TenantFilter::applyToClientQuery($clientBuilder);
+        $consultantBuilder = $consultantModel->builder();
+        TenantFilter::applyToConsultorQuery($consultantBuilder);
+
         $data = [
             'roles'       => $this->roleModel->findAll(),
-            'clients'     => $clientModel->findAll(),
-            'consultants' => $consultantModel->findAll(),
+            'clients'     => $clientBuilder->get()->getResultArray(),
+            'consultants' => $consultantBuilder->get()->getResultArray(),
         ];
 
         return view('admin/users/add_user', $data);

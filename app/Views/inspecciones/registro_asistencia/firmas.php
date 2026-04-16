@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
             btnThis.disabled = true;
             btnThis.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
-            fetch('/inspecciones/registro-asistencia/guardar-firma/' + idAsistente, {
+            fetch('<?= site_url('inspecciones/registro-asistencia/guardar-firma/') ?>' + idAsistente, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
                 body: 'firma=' + encodeURIComponent(firmaData) + '&<?= csrf_token() ?>=<?= csrf_hash() ?>'
@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 try {
                     await OfflineQueue.add({
                         type: 'firma',
-                        url: '/inspecciones/registro-asistencia/guardar-firma/' + idAsistente,
+                        url: '<?= site_url('inspecciones/registro-asistencia/guardar-firma/') ?>' + idAsistente,
                         id_asistencia: <?= $inspeccion['id'] ?>,
                         payload: { firma: firmaData, '<?= csrf_token() ?>': '<?= csrf_hash() ?>' },
                         meta: { idAsistente, idx }

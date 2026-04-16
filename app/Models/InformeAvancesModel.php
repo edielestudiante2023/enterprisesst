@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class InformeAvancesModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_informe_avances';
     protected $primaryKey = 'id';
     protected $allowedFields = [

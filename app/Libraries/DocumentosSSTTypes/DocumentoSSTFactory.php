@@ -93,6 +93,10 @@ class DocumentoSSTFactory
         'acta_recomposicion_vigia' => ActaRecomposicionVigia::class,
         // 6.1.2 Procedimiento de Auditoria Anual del SG-SST
         'procedimiento_auditoria_anual' => ProcedimientoAuditoriaAnual::class,
+        // Talento Humano - Diccionario de Competencias por cliente (acceso via dashboard consultor)
+        'diccionario_competencias_cliente' => DiccionarioCompetenciasCliente::class,
+        // Talento Humano - Matriz de EPP y Dotacion (SST-MT-G-003)
+        'matriz_epp' => MatrizEpp::class,
     ];
 
     /**

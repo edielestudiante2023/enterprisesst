@@ -2,9 +2,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class DocCarpetaModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_doc_carpetas';
     protected $primaryKey = 'id_carpeta';
     protected $allowedFields = [

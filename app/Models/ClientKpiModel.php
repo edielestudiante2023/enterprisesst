@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ClientKpiModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_client_kpi';
     protected $primaryKey = 'id_client_kpi';
 

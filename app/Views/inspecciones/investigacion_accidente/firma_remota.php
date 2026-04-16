@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('token',        '<?= esc($token) ?>');
             formData.append('firma_imagen', firmaImagen);
 
-            fetch('/investigacion-accidente/procesar-firma-remota', { method: 'POST', body: formData })
+            fetch('<?= site_url('investigacion-accidente/procesar-firma-remota') ?>', { method: 'POST', body: formData })
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.success) {

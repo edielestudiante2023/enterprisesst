@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#1c2437">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/manifest_miembro.json">
-    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="manifest" href="<?= base_url('manifest_miembro.json') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('assets/icons/icon-192.png') ?>">
     <title><?= $title ?? 'Inspecciones COPASST' ?></title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -111,22 +111,22 @@
     </div>
 
     <div class="pwa-bottomnav">
-        <a href="/miembro/dashboard">
+        <a href="<?= site_url('miembro/dashboard') ?>">
             <i class="fas fa-home"></i>
             <span>Inicio</span>
         </a>
-        <a href="/miembro/inspecciones/locativa" class="<?= strpos(current_url(), 'inspecciones/locativa') !== false ? 'active' : '' ?>">
+        <a href="<?= site_url('miembro/inspecciones/locativa') ?>" class="<?= strpos(current_url(), 'inspecciones/locativa') !== false ? 'active' : '' ?>">
             <i class="fas fa-building"></i>
             <span>Inspecciones</span>
         </a>
-        <a href="/miembro/inspecciones/locativa/create" class="btn-create">
+        <a href="<?= site_url('miembro/inspecciones/locativa/create') ?>" class="btn-create">
             <i class="fas fa-plus-circle"></i>
         </a>
-        <a href="/miembro/compromisos">
+        <a href="<?= site_url('miembro/compromisos') ?>">
             <i class="fas fa-tasks"></i>
             <span>Tareas</span>
         </a>
-        <a href="/logout">
+        <a href="<?= site_url('logout') ?>">
             <i class="fas fa-sign-out-alt"></i>
             <span>Salir</span>
         </a>
@@ -139,7 +139,7 @@
     <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw_miembro.js', { scope: '/miembro/' })
+            navigator.serviceWorker.register('<?= base_url('sw_miembro.js') ?>', { scope: '<?= site_url('miembro/') ?>' })
                 .then(reg => console.log('SW miembro registrado:', reg.scope))
                 .catch(err => console.log('SW error:', err));
         });

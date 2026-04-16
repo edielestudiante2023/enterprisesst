@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class InspeccionExtintoresModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_inspeccion_extintores';
     protected $primaryKey = 'id';
     protected $allowedFields = [

@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ContractModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_contratos';
     protected $primaryKey = 'id_contrato';
     protected $allowedFields = [

@@ -167,7 +167,7 @@
 
                 <?php if ($esSinEjecutar): ?>
                 <div class="d-flex gap-1 mt-2">
-                    <a href="/inspecciones/mantenimientos/edit/<?= $v['id_vencimientos_mmttos'] ?>" class="btn btn-sm btn-outline-dark btn-action">
+                    <a href="<?= site_url('inspecciones/mantenimientos/edit/' . $v['id_vencimientos_mmttos']) ?>" class="btn btn-sm btn-outline-dark btn-action">
                         <i class="fas fa-edit"></i> Editar
                     </a>
                     <button type="button" class="btn btn-sm btn-success btn-action btn-ejecutar" data-id="<?= $v['id_vencimientos_mmttos'] ?>">
@@ -185,7 +185,7 @@
 
         <!-- Boton nuevo -->
         <div class="mt-3 mb-4">
-            <a href="/inspecciones/mantenimientos/create/<?= $idCliente ?>" class="btn btn-pwa btn-pwa-primary">
+            <a href="<?= site_url('inspecciones/mantenimientos/create/' . $idCliente) ?>" class="btn btn-pwa btn-pwa-primary">
                 <i class="fas fa-plus"></i> Nuevo Vencimiento
             </a>
         </div>
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
         placeholder: 'Buscar cliente...',
         allowClear: true,
         ajax: {
-            url: '/inspecciones/api/clientes',
+            url: '<?= site_url('inspecciones/api/clientes') ?>',
             dataType: 'json',
             delay: 250,
             processResults: function(data) {
@@ -254,9 +254,9 @@ document.addEventListener('DOMContentLoaded', function() {
     $('#selectCliente').on('change', function() {
         var id = $(this).val();
         if (id) {
-            window.location.href = '/inspecciones/mantenimientos/cliente/' + id;
+            window.location.href = '<?= site_url('inspecciones/mantenimientos/cliente/') ?>' + id;
         } else {
-            window.location.href = '/inspecciones/mantenimientos';
+            window.location.href = '<?= site_url('inspecciones/mantenimientos') ?>';
         }
     });
 
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonColor: '#28a745',
             }).then(function(result) {
                 if (result.isConfirmed) {
-                    fetch('/inspecciones/mantenimientos/ejecutado/' + id, {
+                    fetch('<?= site_url('inspecciones/mantenimientos/ejecutado/') ?>' + id, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonColor: '#dc3545',
             }).then(function(result) {
                 if (result.isConfirmed) {
-                    window.location.href = '/inspecciones/mantenimientos/delete/' + id;
+                    window.location.href = '<?= site_url('inspecciones/mantenimientos/delete/') ?>' + id;
                 }
             });
         });

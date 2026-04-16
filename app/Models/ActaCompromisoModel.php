@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class ActaCompromisoModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_acta_compromisos';
     protected $primaryKey = 'id_compromiso';
     protected $returnType = 'array';

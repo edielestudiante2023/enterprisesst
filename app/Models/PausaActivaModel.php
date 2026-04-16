@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class PausaActivaModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_pausas_activas';
     protected $primaryKey = 'id';
     protected $allowedFields = [

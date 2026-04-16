@@ -1,7 +1,7 @@
 <div class="container-fluid px-3">
     <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
         <h5 class="mb-0" style="font-size:18px; font-weight:700;">Señalización</h5>
-        <a href="/inspecciones/senalizacion/create" class="btn btn-sm btn-pwa btn-pwa-primary" style="width:auto; padding:8px 16px;">
+        <a href="<?= site_url('inspecciones/senalizacion/create') ?>" class="btn btn-sm btn-pwa btn-pwa-primary" style="width:auto; padding:8px 16px;">
             <i class="fas fa-plus"></i> Nueva
         </a>
     </div>
@@ -17,7 +17,7 @@
     <div class="text-center py-5" style="color:#999;">
         <i class="fas fa-clipboard-check fa-3x mb-3" style="color:#ddd;"></i>
         <p>No hay inspecciones de señalización aún</p>
-        <a href="/inspecciones/senalizacion/create" class="btn btn-pwa btn-pwa-outline" style="width:auto;">
+        <a href="<?= site_url('inspecciones/senalizacion/create') ?>" class="btn btn-pwa btn-pwa-outline" style="width:auto;">
             <i class="fas fa-plus"></i> Crear primera inspección
         </a>
     </div>
@@ -49,17 +49,17 @@
                 </div>
 
                 <div class="mt-2 d-flex gap-2 flex-wrap">
-                    <a href="/inspecciones/senalizacion/edit/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-dark">
+                    <a href="<?= site_url('inspecciones/senalizacion/edit/' . $insp['id']) ?>" class="btn btn-sm btn-outline-dark">
                         <i class="fas fa-edit"></i> Editar
                     </a>
                     <button class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $insp['id'] ?>" data-cliente="<?= esc($insp['nombre_cliente'] ?? '') ?>">
                         <i class="fas fa-trash"></i>
                     </button>
                     <?php if ($insp['estado'] === 'completo'): ?>
-                        <a href="/inspecciones/senalizacion/view/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-dark">
+                        <a href="<?= site_url('inspecciones/senalizacion/view/' . $insp['id']) ?>" class="btn btn-sm btn-outline-dark">
                             <i class="fas fa-eye"></i> Ver
                         </a>
-                        <a href="/inspecciones/senalizacion/pdf/<?= $insp['id'] ?>" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <a href="<?= site_url('inspecciones/senalizacion/pdf/' . $insp['id']) ?>" class="btn btn-sm btn-outline-primary" target="_blank">
                             <i class="fas fa-file-pdf"></i> PDF
                         </a>
                     <?php endif; ?>
@@ -73,7 +73,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     $.ajax({
-        url: '/inspecciones/api/clientes',
+        url: '<?= site_url('inspecciones/api/clientes') ?>',
         dataType: 'json',
         success: function(data) {
             const select = document.getElementById('filtroCliente');
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonColor: '#dc3545',
             }).then(result => {
                 if (result.isConfirmed) {
-                    window.location.href = '/inspecciones/senalizacion/delete/' + id;
+                    window.location.href = '<?= site_url('inspecciones/senalizacion/delete/') ?>' + id;
                 }
             });
         });

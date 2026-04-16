@@ -1,6 +1,6 @@
 <?php
 $isEdit = !empty($inspeccion);
-$action = $isEdit ? '/inspecciones/extintores/update/' . $inspeccion['id'] : '/inspecciones/extintores/store';
+$action = $isEdit ? site_url('inspecciones/extintores/update/' . $inspeccion['id']) : site_url('inspecciones/extintores/store');
 ?>
 
 <div class="container-fluid px-3">
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Select2 clientes ---
     $.ajax({
-        url: '/inspecciones/api/clientes',
+        url: '<?= site_url('inspecciones/api/clientes') ?>',
         dataType: 'json',
         success: function(data) {
             const select = document.getElementById('selectCliente');

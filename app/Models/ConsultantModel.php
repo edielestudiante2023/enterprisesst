@@ -19,7 +19,8 @@ class ConsultantModel extends Model
         'correo_consultor',
         'telefono_consultor',
         'id_cliente',
-        'rol' // Nueva columna
+        'rol',
+        'id_empresa_consultora',
     ];
 
    

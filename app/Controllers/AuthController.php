@@ -6,6 +6,7 @@ use App\Models\ClientModel;
 use App\Models\ConsultantModel;
 use App\Models\UserModel;
 use App\Models\SessionModel;
+use App\Libraries\TenantFilter;
 use CodeIgniter\Controller;
 
 class AuthController extends Controller
@@ -41,6 +42,27 @@ class AuthController extends Controller
                 return view('client/suspended');
             }
 
+            // Resolver empresa consultora del usuario (multi-tenant)
+            $empresaInfo = TenantFilter::resolverEmpresaDesdeUsuario($user);
+            $isSuperAdmin = $empresaInfo['is_superadmin'] ?? false;
+
+            // Bloquear login si la empresa esta suspendida/inactiva (salvo superadmin)
+            if (!$isSuperAdmin && $empresaInfo !== null) {
+                $estadoEmpresa = $empresaInfo['estado_empresa'] ?? null;
+                if (in_array($estadoEmpresa, ['suspendido', 'inactivo'], true)) {
+                    $session->setFlashdata('msg', 'El acceso de tu empresa esta suspendido. Contacta al administrador.');
+                    return redirect()->to('/login');
+                }
+            }
+
+            // Campos de tenant a inyectar en todas las sesiones
+            $tenantSession = [
+                'id_empresa_consultora' => $empresaInfo['id_empresa_consultora'] ?? null,
+                'razon_social_empresa'  => $empresaInfo['razon_social'] ?? null,
+                'estado_empresa'        => $empresaInfo['estado_empresa'] ?? null,
+                'is_superadmin'         => $isSuperAdmin,
+            ];
+
             // Resetear intentos fallidos y actualizar último login
             $userModel->resetFailedAttempts($user['id_usuario']);
 
@@ -54,41 +76,55 @@ class AuthController extends Controller
 
             // Configurar sesión según tipo de usuario (detección automática)
             if ($tipoUsuario === 'client') {
-                $session->set([
+                $session->set(array_merge([
                     'user_id'       => $user['id_entidad'], // id_cliente para compatibilidad
                     'id_usuario'    => $user['id_usuario'],
                     'id_sesion'     => $idSesion, // ID de la sesión para tracking
                     'role'          => 'client',
                     'isLoggedIn'    => true,
                     'last_activity' => time() // Para control de inactividad
-                ]);
+                ], $tenantSession));
                 return redirect()->to('/dashboard');
 
             } elseif ($tipoUsuario === 'admin') {
-                $session->set([
+                $session->set(array_merge([
                     'user_id'       => $user['id_entidad'], // id_consultor para compatibilidad
                     'id_usuario'    => $user['id_usuario'],
                     'id_sesion'     => $idSesion, // ID de la sesión para tracking
                     'role'          => 'admin',
                     'isLoggedIn'    => true,
                     'last_activity' => time() // Para control de inactividad
-                ]);
+                ], $tenantSession));
                 return redirect()->to('/admin/dashboard');
 
             } elseif ($tipoUsuario === 'consultant') {
-                $session->set([
+                $session->set(array_merge([
                     'user_id'       => $user['id_entidad'], // id_consultor para compatibilidad
                     'id_usuario'    => $user['id_usuario'],
                     'id_sesion'     => $idSesion, // ID de la sesión para tracking
                     'role'          => 'consultant',
                     'isLoggedIn'    => true,
                     'last_activity' => time() // Para control de inactividad
-                ]);
+                ], $tenantSession));
                 return redirect()->to('/consultor/dashboard');
+
+            } elseif ($tipoUsuario === 'superadmin') {
+                // Superadmin: mismo tratamiento que admin a nivel de rutas,
+                // pero con bypass total del filtro multi-tenant.
+                $session->set(array_merge([
+                    'user_id'       => $user['id_entidad'], // id_consultor (owner Cycloid)
+                    'id_usuario'    => $user['id_usuario'],
+                    'id_sesion'     => $idSesion,
+                    'role'          => 'admin', // reutiliza rutas admin/*
+                    'tipo_real'     => 'superadmin',
+                    'isLoggedIn'    => true,
+                    'last_activity' => time()
+                ], $tenantSession));
+                return redirect()->to('/admin/dashboard');
 
             } elseif ($tipoUsuario === 'miembro') {
                 // Usuario miembro de comité - acceso restringido a actas
-                $session->set([
+                $session->set(array_merge([
                     'user_id'       => $user['id_entidad'], // id_cliente para obtener datos
                     'id_usuario'    => $user['id_usuario'],
                     'id_sesion'     => $idSesion,
@@ -96,7 +132,7 @@ class AuthController extends Controller
                     'email_miembro' => $user['email'], // Para identificar al miembro
                     'isLoggedIn'    => true,
                     'last_activity' => time()
-                ]);
+                ], $tenantSession));
                 return redirect()->to('/miembro/dashboard');
             }
         }

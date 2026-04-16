@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 class InspeccionLocativaModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_inspeccion_locativa';
     protected $primaryKey = 'id';
     protected $allowedFields = [

@@ -4,7 +4,7 @@
             <h6 class="mb-0">Investigacion de Accidentes e Incidentes</h6>
             <small class="text-muted"><?= esc($cliente['nombre_cliente'] ?? '') ?></small>
         </div>
-        <a href="/miembro/inspecciones/investigacion-accidente/create" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
+        <a href="<?= site_url('miembro/inspecciones/investigacion-accidente/create') ?>" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
             <i class="fas fa-plus"></i> Nueva
         </a>
     </div>
@@ -13,7 +13,7 @@
         <div class="text-center text-muted py-5">
             <i class="fas fa-search fa-3x mb-3" style="opacity:0.3;"></i>
             <p>No hay investigaciones registradas aun</p>
-            <a href="/miembro/inspecciones/investigacion-accidente/create" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
+            <a href="<?= site_url('miembro/inspecciones/investigacion-accidente/create') ?>" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
                 Crear primera investigacion
             </a>
         </div>
@@ -47,15 +47,15 @@
                     </div>
                     <div class="mt-2 d-flex gap-2 flex-wrap">
                         <?php if ($inv['estado'] === 'borrador' && ($inv['creado_por_tipo'] ?? '') === 'miembro' && (int)($inv['id_miembro'] ?? 0) === (int)$miembro['id_miembro']): ?>
-                        <a href="/miembro/inspecciones/investigacion-accidente/edit/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-dark">
+                        <a href="<?= site_url('miembro/inspecciones/investigacion-accidente/edit/' . $inv['id']) ?>" class="btn btn-sm btn-outline-dark">
                             <i class="fas fa-edit"></i> Editar
                         </a>
                         <?php endif; ?>
                         <?php if ($inv['estado'] === 'completo'): ?>
-                            <a href="/miembro/inspecciones/investigacion-accidente/view/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-dark">
+                            <a href="<?= site_url('miembro/inspecciones/investigacion-accidente/view/' . $inv['id']) ?>" class="btn btn-sm btn-outline-dark">
                                 <i class="fas fa-eye"></i> Ver
                             </a>
-                            <a href="/miembro/inspecciones/investigacion-accidente/pdf/<?= $inv['id'] ?>" class="btn btn-sm btn-outline-success" target="_blank">
+                            <a href="<?= site_url('miembro/inspecciones/investigacion-accidente/pdf/' . $inv['id']) ?>" class="btn btn-sm btn-outline-success" target="_blank">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </a>
                         <?php endif; ?>

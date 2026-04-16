@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\Traits\TenantScopedModel;
 
 /**
  * Modelo para las etapas del proceso de inducción y reinducción
@@ -12,6 +13,8 @@ use CodeIgniter\Model;
  */
 class InduccionEtapasModel extends Model
 {
+    use TenantScopedModel;
+
     protected $table = 'tbl_induccion_etapas';
     protected $primaryKey = 'id_etapa';
     protected $useAutoIncrement = true;

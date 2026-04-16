@@ -5,7 +5,7 @@ $firmantes = [
     ['tipo' => 'sst', 'nombre' => $inv['investigador_sst_nombre'] ?? 'Responsable SST', 'firmado' => !empty($inv['firma_sst'])],
 ];
 $totalPasos = count($firmantes);
-$baseUrl = $baseUrl ?? '/inspecciones/investigacion-accidente';
+$baseUrl = $baseUrl ?? site_url('inspecciones/investigacion-accidente');
 ?>
 
 <div class="container-fluid px-3">

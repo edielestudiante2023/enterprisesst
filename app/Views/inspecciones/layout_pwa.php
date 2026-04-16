@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#1c2437">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/manifest_inspecciones.json">
-    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="manifest" href="<?= base_url('manifest_inspecciones.json') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('assets/icons/icon-192.png') ?>">
     <title><?= $title ?? 'Inspecciones SST' ?></title>
 
     <!-- Bootstrap 5.3 -->
@@ -327,22 +327,22 @@
 
     <!-- Bottom Navigation -->
     <div class="pwa-bottomnav">
-        <a href="/inspecciones" class="<?= current_url() === base_url('inspecciones') ? 'active' : '' ?>">
+        <a href="<?= site_url('inspecciones') ?>" class="<?= current_url() === base_url('inspecciones') ? 'active' : '' ?>">
             <i class="fas fa-home"></i>
             <span>Inicio</span>
         </a>
-        <a href="/inspecciones/acta-visita" class="<?= strpos(current_url(), 'acta-visita') !== false ? 'active' : '' ?>">
+        <a href="<?= site_url('inspecciones/acta-visita') ?>" class="<?= strpos(current_url(), 'acta-visita') !== false ? 'active' : '' ?>">
             <i class="fas fa-file-alt"></i>
             <span>Actas</span>
         </a>
-        <a href="/inspecciones/acta-visita/create" class="btn-create">
+        <a href="<?= site_url('inspecciones/acta-visita/create') ?>" class="btn-create">
             <i class="fas fa-plus-circle"></i>
         </a>
         <a href="#" class="disabled">
             <i class="fas fa-list"></i>
             <span>Otras</span>
         </a>
-        <a href="/logout">
+        <a href="<?= site_url('logout') ?>">
             <i class="fas fa-sign-out-alt"></i>
             <span>Salir</span>
         </a>
@@ -371,7 +371,7 @@
                 });
                 // Re-registrar después de limpiar
                 setTimeout(function() {
-                    navigator.serviceWorker.register('/sw_inspecciones.js', { scope: '/inspecciones/', updateViaCache: 'none' })
+                    navigator.serviceWorker.register('<?= base_url('sw_inspecciones.js') ?>', { scope: '<?= site_url('inspecciones/') ?>', updateViaCache: 'none' })
                         .then(function(reg) {
                             console.log('SW registrado:', reg.scope);
                         })
