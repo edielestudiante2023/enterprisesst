@@ -146,6 +146,122 @@
             </div>
         </div>
 
+        <!-- DETALLE PENDIENTES DEL PERIODO -->
+        <?php
+            $dpp = json_decode($informe['metricas_desglose_json'] ?? '{}', true)['desglose_pendientes_periodo'] ?? [];
+            $cerradosPeriodo = $dpp['cerrados'] ?? [];
+            $vencidosPeriodo = $dpp['vencidos'] ?? [];
+            $sinRespPeriodo  = $dpp['sin_respuesta'] ?? [];
+            $totalCerr = $dpp['total_cerrados'] ?? 0;
+            $aTiempo = $dpp['a_tiempo'] ?? 0;
+            $fueraPlazo = $dpp['fuera_plazo'] ?? 0;
+            $totalVenc = $dpp['total_vencidos'] ?? 0;
+            $totalSR = $dpp['total_sin_respuesta'] ?? 0;
+        ?>
+        <?php if ($totalCerr > 0 || $totalVenc > 0 || $totalSR > 0): ?>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2" style="color:#bd9751;"></i>Detalle de Compromisos / Pendientes del Periodo</h5>
+                <small class="text-muted"><?= date('d/m/Y', strtotime($informe['fecha_desde'])) ?> - <?= date('d/m/Y', strtotime($informe['fecha_hasta'])) ?></small>
+            </div>
+            <div class="card-body">
+                <!-- Resumen rápido -->
+                <div class="row mb-3">
+                    <?php if ($totalCerr > 0): ?>
+                    <div class="col-md-4">
+                        <div class="text-center p-2" style="background:#D1FAE5; border-radius:8px;">
+                            <div style="font-size:24px; font-weight:bold; color:#059669;"><?= $totalCerr ?></div>
+                            <div style="font-size:11px; color:#065F46;">Cerrados (<?= $aTiempo ?> a tiempo, <?= $fueraPlazo ?> fuera de plazo)</div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($totalVenc > 0): ?>
+                    <div class="col-md-4">
+                        <div class="text-center p-2" style="background:#FEE2E2; border-radius:8px;">
+                            <div style="font-size:24px; font-weight:bold; color:#DC2626;"><?= $totalVenc ?></div>
+                            <div style="font-size:11px; color:#991B1B;">Vencidos sin gestión</div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($totalSR > 0): ?>
+                    <div class="col-md-4">
+                        <div class="text-center p-2" style="background:#FEF3C7; border-radius:8px;">
+                            <div style="font-size:24px; font-weight:bold; color:#D97706;"><?= $totalSR ?></div>
+                            <div style="font-size:11px; color:#92400E;">Sin Respuesta del Cliente</div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (!empty($cerradosPeriodo)): ?>
+                <h6 class="mt-3 mb-2"><i class="fas fa-check-circle text-success me-1"></i>Cerrados en el Periodo</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" style="font-size:12px;">
+                        <thead class="table-dark">
+                            <tr><th>Actividad</th><th style="width:110px;">Responsable</th><th style="width:90px;">Plazo</th><th style="width:90px;">Cierre Real</th><th style="width:80px;">A Tiempo</th></tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($cerradosPeriodo as $c): ?>
+                            <?php if ($c['estado'] !== 'SIN RESPUESTA DEL CLIENTE'): ?>
+                            <tr>
+                                <td><?= esc($c['tarea_actividad']) ?></td>
+                                <td><?= esc($c['responsable'] ?? '-') ?></td>
+                                <td><?= !empty($c['fecha_cierre']) && $c['fecha_cierre'] >= '2000-01-01' ? date('d/m/Y', strtotime($c['fecha_cierre'])) : '-' ?></td>
+                                <td><?= !empty($c['fecha_cierre_real']) ? date('d/m/Y', strtotime($c['fecha_cierre_real'])) : '-' ?></td>
+                                <td class="text-center"><?= $c['a_tiempo'] === 1 ? '<span class="badge bg-success">Si</span>' : ($c['a_tiempo'] === 0 ? '<span class="badge bg-danger">No</span>' : '-') ?></td>
+                            </tr>
+                            <?php endif; ?>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+
+                <?php if (!empty($vencidosPeriodo)): ?>
+                <h6 class="mt-3 mb-2"><i class="fas fa-exclamation-triangle text-danger me-1"></i>Vencidos sin Gestión</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" style="font-size:12px;">
+                        <thead style="background:#FEE2E2;">
+                            <tr><th>Actividad</th><th style="width:110px;">Responsable</th><th style="width:90px;">Plazo</th><th style="width:80px;">Días Vencido</th></tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($vencidosPeriodo as $v): ?>
+                            <tr>
+                                <td><?= esc($v['tarea_actividad']) ?></td>
+                                <td><?= esc($v['responsable'] ?? '-') ?></td>
+                                <td><?= date('d/m/Y', strtotime($v['fecha_cierre'])) ?></td>
+                                <td class="text-center"><span class="badge bg-danger"><?= $v['dias_vencido'] ?></span></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+
+                <?php if (!empty($sinRespPeriodo)): ?>
+                <h6 class="mt-3 mb-2"><i class="fas fa-user-clock text-warning me-1"></i>Sin Respuesta del Cliente</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" style="font-size:12px;">
+                        <thead style="background:#FEF3C7;">
+                            <tr><th>Actividad</th><th style="width:110px;">Responsable</th><th style="width:90px;">Plazo</th><th style="width:90px;">Clasificado</th></tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($sinRespPeriodo as $sr): ?>
+                            <tr>
+                                <td><?= esc($sr['tarea_actividad']) ?></td>
+                                <td><?= esc($sr['responsable'] ?? '-') ?></td>
+                                <td><?= !empty($sr['fecha_cierre']) && $sr['fecha_cierre'] >= '2000-01-01' ? date('d/m/Y', strtotime($sr['fecha_cierre'])) : '-' ?></td>
+                                <td><?= !empty($sr['fecha_cierre_real']) ? date('d/m/Y', strtotime($sr['fecha_cierre_real'])) : '-' ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- 6 MODULOS ADICIONALES -->
         <?php
             $desglose = json_decode($informe['metricas_desglose_json'] ?? '{}', true) ?: [];

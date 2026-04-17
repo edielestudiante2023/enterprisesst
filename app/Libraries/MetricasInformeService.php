@@ -291,6 +291,63 @@ class MetricasInformeService
     }
 
     /**
+     * Desglose detallado de pendientes para el periodo del informe.
+     * Retorna: cerrados en el periodo, vencidos, sin respuesta.
+     */
+    public function getDesglosePendientesPeriodo(int $idCliente, string $desde, string $hasta): array
+    {
+        // Pendientes cerrados en el periodo (por fecha_cierre_real)
+        $cerrados = $this->db->table('tbl_pendientes')
+            ->select('tarea_actividad, responsable, fecha_asignacion, fecha_cierre, fecha_cierre_real, estado')
+            ->where('id_cliente', $idCliente)
+            ->whereIn('estado', ['CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'])
+            ->where('fecha_cierre_real >=', $desde)
+            ->where('fecha_cierre_real <=', $hasta)
+            ->orderBy('fecha_cierre_real', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        foreach ($cerrados as &$c) {
+            $c['a_tiempo'] = (!empty($c['fecha_cierre']) && !empty($c['fecha_cierre_real'])
+                && $c['fecha_cierre'] >= '2000-01-01')
+                ? ($c['fecha_cierre_real'] <= $c['fecha_cierre'] ? 1 : 0)
+                : null;
+        }
+        unset($c);
+
+        $aTiempo = count(array_filter($cerrados, fn($c) => $c['a_tiempo'] === 1));
+        $fueraPlazo = count(array_filter($cerrados, fn($c) => $c['a_tiempo'] === 0));
+
+        // Pendientes vencidos (ABIERTA con plazo pasado)
+        $vencidos = $this->db->query("
+            SELECT tarea_actividad, responsable, fecha_asignacion, fecha_cierre,
+                   DATEDIFF(CURDATE(), fecha_cierre) AS dias_vencido
+            FROM tbl_pendientes
+            WHERE id_cliente = ?
+              AND estado = 'ABIERTA'
+              AND fecha_cierre IS NOT NULL
+              AND CAST(fecha_cierre AS CHAR) <> '0000-00-00'
+              AND fecha_cierre >= '2000-01-01'
+              AND fecha_cierre < CURDATE()
+            ORDER BY fecha_cierre ASC
+        ", [$idCliente])->getResultArray();
+
+        // SIN RESPUESTA clasificados en el periodo
+        $sinRespuesta = array_filter($cerrados, fn($c) => $c['estado'] === 'SIN RESPUESTA DEL CLIENTE');
+
+        return [
+            'cerrados'       => $cerrados,
+            'total_cerrados' => count($cerrados),
+            'a_tiempo'       => $aTiempo,
+            'fuera_plazo'    => $fueraPlazo,
+            'vencidos'       => $vencidos,
+            'total_vencidos' => count($vencidos),
+            'sin_respuesta'  => array_values($sinRespuesta),
+            'total_sin_respuesta' => count($sinRespuesta),
+        ];
+    }
+
+    /**
      * Recopila actividades del periodo para el prompt de IA
      */
     public function recopilarActividadesPeriodo(int $idCliente, string $desde, string $hasta): array
@@ -333,19 +390,20 @@ class MetricasInformeService
             $actividades[] = "PTA cerrada ({$t['fecha_cierre']}): {$t['actividad_plandetrabajo']}";
         }
 
-        // Pendientes cerrados en el periodo
+        // Pendientes cerrados en el periodo (por fecha_cierre_real)
         $pendientes = $this->db->table('tbl_pendientes')
-            ->select('tarea_actividad, fecha_cierre')
+            ->select('tarea_actividad, fecha_cierre_real, estado')
             ->where('id_cliente', $idCliente)
-            ->where('estado', 'CERRADA')
-            ->where('fecha_cierre >=', $desde)
-            ->where('fecha_cierre <=', $hasta)
-            ->orderBy('fecha_cierre', 'ASC')
+            ->whereIn('estado', ['CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'])
+            ->where('fecha_cierre_real >=', $desde)
+            ->where('fecha_cierre_real <=', $hasta)
+            ->orderBy('fecha_cierre_real', 'ASC')
             ->get()
             ->getResultArray();
 
         foreach ($pendientes as $p) {
-            $actividades[] = "Compromiso cerrado ({$p['fecha_cierre']}): {$p['tarea_actividad']}";
+            $label = $p['estado'] === 'SIN RESPUESTA DEL CLIENTE' ? 'Sin respuesta' : 'Compromiso cerrado';
+            $actividades[] = "{$label} ({$p['fecha_cierre_real']}): {$p['tarea_actividad']}";
         }
 
         // Firmas electrónicas completadas en el periodo
@@ -451,6 +509,7 @@ class MetricasInformeService
             'desglose_plan_trabajo'    => $this->getDesglosePlanTrabajo($idCliente, $anio),
             'desglose_capacitacion'    => $this->getDesgloseCapacitacion($idCliente, $anio),
             'desglose_pendientes'      => $this->getDesglosePendientes($idCliente, $anio),
+            'desglose_pendientes_periodo' => $this->getDesglosePendientesPeriodo($idCliente, $fechaDesde, $fechaHasta),
             // Documentos cargados en el periodo
             'documentos_cargados_raw'  => $this->getDocumentosCargados($idCliente, $fechaDesde, $fechaHasta),
             // --- 6 módulos adicionales ---
