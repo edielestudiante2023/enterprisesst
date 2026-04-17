@@ -458,7 +458,8 @@
                 <?php else: ?>
                     <h4><i class="fas fa-user me-2"></i>Bienvenido, <strong><?= session()->get('nombre_usuario') ?? 'Consultor' ?></strong></h4>
                 <?php endif; ?>
-                <p class="mb-0"><i class="fas fa-globe me-2"></i>Enterprisesst - Sistemas que Evolucionan</p>
+                <p class="mb-0"><i class="fas fa-building me-2"></i><?= esc(session()->get('razon_social_empresa') ?? 'Sin empresa asignada') ?></p>
+                <p class="mb-0" style="font-size: 11px; opacity: 0.7;"><i class="fas fa-key me-1"></i>Empresa ID: <?= session()->get('id_empresa_consultora') ?? 'NULL' ?> | Superadmin: <?= session()->get('is_superadmin') ? 'SI' : 'NO' ?></p>
             </div>
         </div>
 
