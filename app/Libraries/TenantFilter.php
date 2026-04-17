@@ -193,7 +193,7 @@ class TenantFilter
             [$empresaId]
         )->getResultArray();
 
-        $ids = array_column($rows, 'id_cliente');
+        $ids = array_map('intval', array_column($rows, 'id_cliente'));
         $cache[$empresaId] = $ids;
         return $ids;
     }
