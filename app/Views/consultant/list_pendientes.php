@@ -623,6 +623,14 @@
 
       table.buttons().container().appendTo('#buttonsContainer');
 
+      // Filtro por defecto: mostrar solo ABIERTA al cargar (si no hay estado guardado en stateSave)
+      var savedState = table.state.loaded();
+      var estadoCol = 9; // índice de la columna Estado
+      if (!savedState || !savedState.columns || !savedState.columns[estadoCol] || !savedState.columns[estadoCol].search || !savedState.columns[estadoCol].search.search) {
+          table.column(estadoCol).search('ABIERTA').draw();
+          $('tfoot tr.filters th').eq(estadoCol).find('.filter-search').val('ABIERTA');
+      }
+
       // Generar tarjetas de años dinámicamente
       function generateYearCards() {
         if (!table) return;
