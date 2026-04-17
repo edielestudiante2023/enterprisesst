@@ -201,7 +201,7 @@
 
             <div class="col-md-4">
                 <label class="form-label fw-bold">
-                    <i class="fas fa-calendar-check"></i> Mes Cierre
+                    <i class="fas fa-calendar-check"></i> Mes Plazo
                 </label>
                 <select class="form-select" id="filterMesCierre">
                     <option value="">Todos los meses</option>
@@ -243,7 +243,8 @@
                                 <th>RESPONSABLE</th>
                                 <th>ESTADO</th>
                                 <th>FECHA ASIGNACIÓN</th>
-                                <th>FECHA CIERRE</th>
+                                <th>FECHA DE PLAZO</th>
+                                <th>CIERRE REAL</th>
                                 <th>CUENTA DÍAS</th>
                             </tr>
                         </thead>
@@ -259,6 +260,7 @@
                                     </td>
                                     <td><?= esc($pend['fecha_asignacion'] ?? 'N/A') ?></td>
                                     <td><?= esc($pend['fecha_cierre'] ?? 'N/A') ?></td>
+                                    <td><?= esc($pend['fecha_cierre_real'] ?? '') ?></td>
                                     <td class="text-center">
                                         <span class="badge bg-info"><?= esc($pend['conteo_dias'] ?? '0') ?> días</span>
                                     </td>
@@ -437,6 +439,7 @@
                     estadoBadge,
                     item.fecha_asignacion || 'N/A',
                     item.fecha_cierre || 'N/A',
+                    item.fecha_cierre_real || '',
                     '<span class="badge bg-info">' + (item.conteo_dias || '0') + ' días</span>'
                 ]);
             });

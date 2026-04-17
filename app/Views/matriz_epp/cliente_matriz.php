@@ -55,6 +55,9 @@ table.matriz th{background:#f1f5f9;font-size:.8rem;text-transform:uppercase;padd
       <div style="opacity:.85"><?= esc($cliente['nombre_cliente']) ?> (ID <?= (int)$cliente['id_cliente'] ?>) · <?= (int)$total ?> elementos</div>
     </div>
     <div class="d-flex gap-2">
+      <a href="<?= base_url('matrizEpp/cliente/' . (int)$cliente['id_cliente'] . '/exportarXlsx') ?>" class="btn btn-success">
+        <i class="fa-solid fa-file-excel me-1"></i> Descargar Excel
+      </a>
       <button class="btn btn-warning" onclick="abrirDiffMasivo()">
         <i class="fa-solid fa-arrows-rotate me-1"></i> Resincronizar desde maestro
       </button>

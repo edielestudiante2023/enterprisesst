@@ -22,6 +22,7 @@ class PendientesModel extends Model
         'estado_avance',
         'evidencia_para_cerrarla',
         'id_acta_visita',
+        'fecha_cierre_real',
     ];
 
     protected $useTimestamps = true;
@@ -65,10 +66,16 @@ class PendientesModel extends Model
                 // Calcula la diferencia en días entre fecha_asignacion y la fecha actual
                 $interval = $asignacionDate->diff($currentDate);
                 $conteoDias = $interval->days;
-            } elseif ($estado === 'CERRADA' && $fechaCierre) {
-                $cierreDate = new \DateTime($fechaCierre);
-                $interval = $asignacionDate->diff($cierreDate);
-                $conteoDias = $interval->days;
+            } elseif (in_array($estado, ['CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'], true)) {
+                $fechaCierreReal = isset($data['data']['fecha_cierre_real']) ? $data['data']['fecha_cierre_real'] : null;
+                $fechaRef = $fechaCierreReal ?: $fechaCierre;
+                if ($fechaRef) {
+                    $cierreDate = new \DateTime($fechaRef);
+                    $interval = $asignacionDate->diff($cierreDate);
+                    $conteoDias = $interval->days;
+                } else {
+                    $conteoDias = 0;
+                }
             } else {
                 $conteoDias = 0;
             }
