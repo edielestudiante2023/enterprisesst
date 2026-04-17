@@ -78,12 +78,20 @@ class PendientesController extends Controller
         // Si el campo afecta el cálculo de 'conteo_dias'
         $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
         $estado = ($field === 'estado') ? $value : $pendiente['estado'];
-        $fechaCierre = ($field === 'fecha_cierre') ? $value : $pendiente['fecha_cierre'];
+        $estadosCierreManual = ['CERRADA', 'CERRADA POR FIN CONTRATO'];
+        $estadosCierre = ['CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'];
+
+        // Auto-set fecha_cierre_real al cambiar estado a cierre manual
+        if ($field === 'estado' && in_array($value, $estadosCierreManual, true) && empty($pendiente['fecha_cierre_real'])) {
+            $updateData['fecha_cierre_real'] = date('Y-m-d');
+        }
+
+        $fechaCierreReal = $updateData['fecha_cierre_real'] ?? $pendiente['fecha_cierre_real'] ?? null;
 
         if ($estado === 'ABIERTA') {
             $updateData['conteo_dias'] = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
-        } elseif (($estado === 'CERRADA' || $estado === 'SIN RESPUESTA DEL CLIENTE') && !empty($fechaCierre)) {
-            $updateData['conteo_dias'] = (int) floor((strtotime($fechaCierre) - $fechaAsignacion) / (60 * 60 * 24));
+        } elseif (in_array($estado, $estadosCierre, true) && !empty($fechaCierreReal)) {
+            $updateData['conteo_dias'] = (int) floor((strtotime($fechaCierreReal) - $fechaAsignacion) / (60 * 60 * 24));
         } else {
             $updateData['conteo_dias'] = 0;
         }
@@ -114,13 +122,14 @@ class PendientesController extends Controller
 
             // Calcular conteo_dias dinámicamente
             $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
+            $estadosCierre = ['CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'];
             if ($pendiente['estado'] === 'ABIERTA') {
                 $pendiente['conteo_dias'] = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
-            } elseif (($pendiente['estado'] === 'CERRADA' || $pendiente['estado'] === 'SIN RESPUESTA DEL CLIENTE') && !empty($pendiente['fecha_cierre'])) {
-                $fechaCierre = strtotime($pendiente['fecha_cierre']);
-                $pendiente['conteo_dias'] = (int) floor(($fechaCierre - $fechaAsignacion) / (60 * 60 * 24));
+            } elseif (in_array($pendiente['estado'], $estadosCierre, true) && !empty($pendiente['fecha_cierre_real'])) {
+                $fechaCierreReal = strtotime($pendiente['fecha_cierre_real']);
+                $pendiente['conteo_dias'] = (int) floor(($fechaCierreReal - $fechaAsignacion) / (60 * 60 * 24));
             } else {
-                $pendiente['conteo_dias'] = 0; // Valor por defecto si no se cumple ninguna condición
+                $pendiente['conteo_dias'] = 0;
             }
         }
 
@@ -174,17 +183,26 @@ class PendientesController extends Controller
             // Obtener el registro recién insertado para obtener 'fecha_asignacion'
             $pendiente = $pendientesModel->find($insertedId);
             if ($pendiente) {
+                // Auto-set fecha_cierre_real si se crea ya cerrado (solo cierre manual, no SIN RESPUESTA)
+                $estadosCierreManual = ['CERRADA', 'CERRADA POR FIN CONTRATO'];
+                $estadosCierre = ['CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'];
+                $updateExtra = [];
+                if (in_array($pendiente['estado'], $estadosCierreManual, true) && empty($pendiente['fecha_cierre_real'])) {
+                    $updateExtra['fecha_cierre_real'] = date('Y-m-d');
+                }
+
                 // Calcular 'conteo_dias' basado en el estado
+                $fechaCierreReal = $updateExtra['fecha_cierre_real'] ?? $pendiente['fecha_cierre_real'] ?? null;
                 if ($pendiente['estado'] === 'ABIERTA') {
                     $conteo_dias = (int) floor((time() - strtotime($pendiente['fecha_asignacion'])) / (60 * 60 * 24));
-                } elseif (($pendiente['estado'] === 'CERRADA' || $pendiente['estado'] === 'SIN RESPUESTA DEL CLIENTE') && !empty($pendiente['fecha_cierre'])) {
-                    $conteo_dias = (int) floor((strtotime($pendiente['fecha_cierre']) - strtotime($pendiente['fecha_asignacion'])) / (60 * 60 * 24));
+                } elseif (in_array($pendiente['estado'], $estadosCierre, true) && !empty($fechaCierreReal)) {
+                    $conteo_dias = (int) floor((strtotime($fechaCierreReal) - strtotime($pendiente['fecha_asignacion'])) / (60 * 60 * 24));
                 } else {
                     $conteo_dias = 0;
                 }
 
-                // Actualizar 'conteo_dias'
-                $pendientesModel->update($insertedId, ['conteo_dias' => $conteo_dias]);
+                $updateExtra['conteo_dias'] = $conteo_dias;
+                $pendientesModel->update($insertedId, $updateExtra);
 
                 return redirect()->to('/listPendientes')->with('msg', 'Pendiente agregado exitosamente');
             } else {
@@ -257,16 +275,23 @@ class PendientesController extends Controller
             return redirect()->back()->with('msg', 'Error: No se puede establecer el estado como ABIERTA si ya hay una fecha de cierre.')->withInput();
         } */
 
+        // Auto-set fecha_cierre_real al cerrar (solo cierre manual, no SIN RESPUESTA)
+        $estadosCierreManual = ['CERRADA', 'CERRADA POR FIN CONTRATO'];
+        $estadosCierre = ['CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'];
+        if (in_array($data['estado'], $estadosCierreManual, true) && empty($pendienteActual['fecha_cierre_real'])) {
+            $data['fecha_cierre_real'] = date('Y-m-d');
+        }
+
         // Calcular 'conteo_dias' basado en el estado
+        $fechaCierreReal = $data['fecha_cierre_real'] ?? $pendienteActual['fecha_cierre_real'] ?? null;
         if ($data['estado'] === 'ABIERTA') {
             $conteo_dias = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
-        } elseif (($data['estado'] === 'CERRADA' || $data['estado'] === 'SIN RESPUESTA DEL CLIENTE') && !empty($data['fecha_cierre'])) {
-            $conteo_dias = (int) floor((strtotime($data['fecha_cierre']) - $fechaAsignacion) / (60 * 60 * 24));
+        } elseif (in_array($data['estado'], $estadosCierre, true) && !empty($fechaCierreReal)) {
+            $conteo_dias = (int) floor((strtotime($fechaCierreReal) - $fechaAsignacion) / (60 * 60 * 24));
         } else {
             $conteo_dias = 0;
         }
 
-        // Actualizar 'conteo_dias' en los datos a actualizar
         $data['conteo_dias'] = $conteo_dias;
 
         // Actualizar el pendiente
@@ -313,13 +338,14 @@ class PendientesController extends Controller
         $updatedCount = 0;
         foreach ($pendientes as $pendiente) {
             $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
-            $fechaCierre = !empty($pendiente['fecha_cierre']) ? strtotime($pendiente['fecha_cierre']) : null;
+            $fechaCierreReal = !empty($pendiente['fecha_cierre_real']) ? strtotime($pendiente['fecha_cierre_real']) : null;
             $estado = $pendiente['estado'];
+            $estadosCierre = ['CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'];
 
             if ($estado === 'ABIERTA') {
                 $conteo_dias = (int) floor((time() - $fechaAsignacion) / (60 * 60 * 24));
-            } elseif (($estado === 'CERRADA' || $estado === 'SIN RESPUESTA DEL CLIENTE') && $fechaCierre) {
-                $conteo_dias = (int) floor(($fechaCierre - $fechaAsignacion) / (60 * 60 * 24));
+            } elseif (in_array($estado, $estadosCierre, true) && $fechaCierreReal) {
+                $conteo_dias = (int) floor(($fechaCierreReal - $fechaAsignacion) / (60 * 60 * 24));
             } else {
                 $conteo_dias = 0;
             }

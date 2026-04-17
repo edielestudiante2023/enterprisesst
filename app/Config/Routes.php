@@ -1849,6 +1849,8 @@ $routes->post('matrizEpp/asignarACliente',               'MatrizEppController::a
 $routes->get ('matrizEpp/cliente/(:num)',                'MatrizEppController::clienteMatriz/$1');
 $routes->post('matrizEpp/cliente/(:num)/item/(:num)/editarInline', 'MatrizEppController::clienteEditarInline/$1/$2');
 $routes->post('matrizEpp/cliente/(:num)/item/(:num)/quitar',       'MatrizEppController::clienteQuitarItem/$1/$2');
+// Exportar Excel con fotos
+$routes->get ('matrizEpp/cliente/(:num)/exportarXlsx',   'MatrizEppController::clienteExportarXlsx/$1');
 // Hito C: resincronización desde maestro
 $routes->get ('matrizEpp/cliente/(:num)/item/(:num)/diffMaestro',    'MatrizEppController::clienteDiffMaestro/$1/$2');
 $routes->post('matrizEpp/cliente/(:num)/item/(:num)/resincronizar',  'MatrizEppController::clienteResincronizarItem/$1/$2');

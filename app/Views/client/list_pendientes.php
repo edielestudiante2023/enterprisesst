@@ -369,7 +369,8 @@
                         <th>Responsable</th>
                         <th>Tarea Actividad</th>
                         <th>Fecha de Asignación</th> <!-- Nueva Columna -->
-                        <th>Fecha Cierre</th>
+                        <th>Fecha de Plazo</th>
+                        <th>Cierre Real</th>
                         <th>Estado</th>
                         <th>Conteo Días</th>
                         <th>Estado Avance</th>
@@ -383,7 +384,8 @@
                         <th>Responsable</th>
                         <th>Tarea Actividad</th>
                         <th>Fecha de Asignación</th>
-                        <th>Fecha Cierre</th>
+                        <th>Fecha de Plazo</th>
+                        <th>Cierre Real</th>
                         <th>Estado</th>
                         <th>Conteo Días</th>
                         <th>Estado Avance</th>
@@ -393,7 +395,7 @@
                 <tbody>
                     <?php if (empty($pendientes)): ?>
                         <tr>
-                            <td colspan="10" class="text-center">No hay pendientes registrados.</td> <!-- Actualizado colspan -->
+                            <td colspan="11" class="text-center">No hay pendientes registrados.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($pendientes as $pendiente): ?>
@@ -408,6 +410,7 @@
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['fecha_cierre']); ?>" class="fecha-col">
                                     <?= esc($pendiente['fecha_cierre']); ?>
                                 </td>
+                                <td class="fecha-col"><?= esc($pendiente['fecha_cierre_real'] ?? ''); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['estado']); ?>"><?= esc($pendiente['estado']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['conteo_dias']); ?>"><?= esc($pendiente['conteo_dias']); ?></td>
                                 <td data-bs-toggle="tooltip" title="<?= esc($pendiente['estado_avance']); ?>"><?= esc($pendiente['estado_avance']); ?></td>
@@ -480,11 +483,12 @@
                         <p><strong>Responsable:</strong> ${d[2]}</p>
                         <p><strong>Tarea Actividad:</strong> ${d[3]}</p>
                         <p><strong>Fecha de Asignación:</strong> ${d[4]}</p>
-                        <p><strong>Fecha Cierre:</strong> ${d[5]}</p>
-                        <p><strong>Estado:</strong> ${d[6]}</p>
-                        <p><strong>Conteo Días:</strong> ${d[7]}</p>
-                        <p><strong>Estado Avance:</strong> ${d[8]}</p>
-                        <p><strong>Evidencia:</strong> ${d[9]}</p>
+                        <p><strong>Fecha de Plazo:</strong> ${d[5]}</p>
+                        <p><strong>Cierre Real:</strong> ${d[6]}</p>
+                        <p><strong>Estado:</strong> ${d[7]}</p>
+                        <p><strong>Conteo Días:</strong> ${d[8]}</p>
+                        <p><strong>Estado Avance:</strong> ${d[9]}</p>
+                        <p><strong>Evidencia:</strong> ${d[10]}</p>
                     </div>
                 `;
             }
@@ -504,7 +508,7 @@
                     $(this).html('');
                 } else {
                     var title = $(this).text();
-                    if (title === 'Fecha de Asignación' || title === 'Fecha Cierre') {
+                    if (title === 'Fecha de Asignación' || title === 'Fecha de Plazo' || title === 'Cierre Real') {
                         // Usar un input de fecha para las columnas de fecha
                         $(this).html('<input type="date" class="form-control form-control-sm" placeholder="Filtrar ' + title + '" />');
                     } else {
@@ -563,11 +567,12 @@
                     { width: '15%', targets: 2 }, // Responsable
                     { width: '15%', targets: 3 }, // Tarea Actividad
                     { width: '10%', targets: 4, className: 'fecha-col' }, // Fecha de Asignación
-                    { width: '10%', targets: 5, className: 'fecha-col' }, // Fecha Cierre
-                    { width: '10%', targets: 6 }, // Estado
-                    { width: '10%', targets: 7 }, // Conteo Días
-                    { width: '10%', targets: 8 }, // Estado Avance
-                    { width: '10%', targets: 9 }  // Evidencia
+                    { width: '10%', targets: 5, className: 'fecha-col' }, // Fecha de Plazo
+                    { width: '10%', targets: 6, className: 'fecha-col' }, // Cierre Real
+                    { width: '10%', targets: 7 }, // Estado
+                    { width: '10%', targets: 8 }, // Conteo Días
+                    { width: '10%', targets: 9 }, // Estado Avance
+                    { width: '10%', targets: 10 }  // Evidencia
                 ],
                 initComplete: function () {
                     var api = this.api();
@@ -627,7 +632,7 @@
                             var colSearch = state.columns[index].search.search;
                             if (colSearch) {
                                 var footerCell = $('th', table.column(index).footer()).text();
-                                if (footerCell === 'Fecha de Asignación' || footerCell === 'Fecha Cierre') {
+                                if (footerCell === 'Fecha de Asignación' || footerCell === 'Fecha de Plazo' || footerCell === 'Cierre Real') {
                                     var input = $('input', table.column(index).footer());
                                     input.val(colSearch);
                                 } else {

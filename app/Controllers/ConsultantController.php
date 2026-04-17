@@ -867,7 +867,7 @@ class ConsultantController extends Controller
         // Cerrar todas las actividades en las 3 tablas relacionadas
         $db->query("UPDATE tbl_pta_cliente SET estado_actividad = 'CERRADA POR FIN CONTRATO' WHERE id_cliente = ?", [$id]);
         $db->query("UPDATE tbl_cronog_capacitacion SET estado = 'CERRADA POR FIN CONTRATO' WHERE id_cliente = ?", [$id]);
-        $db->query("UPDATE tbl_pendientes SET estado = 'CERRADA POR FIN CONTRATO' WHERE id_cliente = ?", [$id]);
+        $db->query("UPDATE tbl_pendientes SET estado = 'CERRADA POR FIN CONTRATO', fecha_cierre_real = CURDATE() WHERE id_cliente = ? AND fecha_cierre_real IS NULL", [$id]);
 
         // Marcar cliente como inactivo
         $clientModel->update($id, ['estado' => 'inactivo']);

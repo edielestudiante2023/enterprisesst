@@ -462,6 +462,158 @@ class MatrizEppController extends Controller
         return $this->response->setJSON(['ok' => true]);
     }
 
+    // ========================= EXPORTAR EXCEL =========================
+
+    /**
+     * GET /matrizEpp/cliente/{id_cliente}/exportarXlsx
+     * Descarga la matriz del cliente como XLSX con fotos incrustadas.
+     */
+    public function clienteExportarXlsx(int $idCliente)
+    {
+        $db = Database::connect();
+        $cliente = $db->table('tbl_clientes')
+            ->where('id_cliente', $idCliente)
+            ->get()->getRowArray();
+        if (!$cliente) {
+            return $this->response->setStatusCode(404)->setBody('Cliente no encontrado');
+        }
+
+        $filas = $this->clienteModel->matrizCliente($idCliente);
+        if (empty($filas)) {
+            return redirect()->back()->with('error', 'No hay elementos asignados para exportar');
+        }
+
+        $sp = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sp->getProperties()
+            ->setTitle('Matriz de EPP y Dotación - ' . ($cliente['nombre_cliente'] ?? ''))
+            ->setCreator('Enterprise SST');
+
+        // Agrupar por categoria_tipo (EPP / DOTACION)
+        $porTipo = ['EPP' => [], 'DOTACION' => []];
+        foreach ($filas as $f) {
+            $tipo = $f['categoria_tipo'] ?? 'EPP';
+            $porTipo[$tipo][] = $f;
+        }
+
+        $sheetIndex = 0;
+        foreach ($porTipo as $tipo => $items) {
+            if (empty($items)) continue;
+
+            if ($sheetIndex === 0) {
+                $sheet = $sp->getActiveSheet();
+            } else {
+                $sheet = $sp->createSheet();
+            }
+            $sheet->setTitle($tipo === 'DOTACION' ? 'Dotación' : 'EPP');
+            $sheetIndex++;
+
+            // Encabezado del documento
+            $sheet->setCellValue('A1', 'SISTEMA DE GESTIÓN DE SEGURIDAD Y SALUD EN EL TRABAJO');
+            $sheet->setCellValue('A2', 'MATRIZ DE ELEMENTOS DE PROTECCIÓN PERSONAL' . ($tipo === 'DOTACION' ? ' - DOTACIÓN' : ''));
+            $sheet->setCellValue('A3', 'Empresa: ' . ($cliente['nombre_cliente'] ?? ''));
+            $sheet->setCellValue('E3', 'Código: SST-MT-G-003');
+            $sheet->setCellValue('A4', 'NIT: ' . ($cliente['nit'] ?? $cliente['numero_identificacion'] ?? ''));
+            $sheet->setCellValue('E4', 'Fecha: ' . date('d/m/Y'));
+
+            // Estilo encabezado
+            $sheet->mergeCells('A1:H1');
+            $sheet->mergeCells('A2:H2');
+            $sheet->getStyle('A1:A2')->getFont()->setBold(true)->setSize(12);
+            $sheet->getStyle('A1:H4')->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+            // Cabecera de tabla
+            $row = 6;
+            $headers = ['Foto', 'Categoría', 'Elemento', 'Norma', 'Mantenimiento', 'Frecuencia de cambio', 'Motivos de cambio', 'Momentos de uso', 'Observación'];
+            foreach ($headers as $ci => $h) {
+                $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($ci + 1);
+                $sheet->setCellValue($col . $row, $h);
+            }
+            $headerRange = 'A' . $row . ':I' . $row;
+            $sheet->getStyle($headerRange)->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '1C2437'],
+                ],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+            ]);
+
+            // Anchos de columna
+            $sheet->getColumnDimension('A')->setWidth(12);  // Foto
+            $sheet->getColumnDimension('B')->setWidth(22);  // Categoría
+            $sheet->getColumnDimension('C')->setWidth(28);  // Elemento
+            $sheet->getColumnDimension('D')->setWidth(30);  // Norma
+            $sheet->getColumnDimension('E')->setWidth(30);  // Mantenimiento
+            $sheet->getColumnDimension('F')->setWidth(20);  // Frecuencia
+            $sheet->getColumnDimension('G')->setWidth(28);  // Motivos
+            $sheet->getColumnDimension('H')->setWidth(28);  // Momentos
+            $sheet->getColumnDimension('I')->setWidth(22);  // Observación
+
+            $row = 7;
+            $fotoHeight = 60; // px aprox para la fila
+
+            foreach ($items as $it) {
+                $sheet->getRowDimension($row)->setRowHeight($fotoHeight);
+
+                // Foto (columna A)
+                $fotoRuta = FCPATH . ($it['foto_path'] ?? '');
+                if (!empty($it['foto_path']) && is_file($fotoRuta)) {
+                    $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawing->setName('EPP_' . $it['id_epp']);
+                    $drawing->setDescription($it['elemento'] ?? '');
+                    $drawing->setPath($fotoRuta);
+                    $drawing->setHeight((int)($fotoHeight * 1.33)); // px
+                    $drawing->setCoordinates('A' . $row);
+                    $drawing->setOffsetX(2);
+                    $drawing->setOffsetY(2);
+                    $drawing->setWorksheet($sheet);
+                }
+
+                $sheet->setCellValue('B' . $row, $it['categoria_nombre'] ?? '');
+                $sheet->setCellValue('C' . $row, $it['elemento'] ?? '');
+                $sheet->setCellValue('D' . $row, $it['norma'] ?? '');
+                $sheet->setCellValue('E' . $row, $it['mantenimiento'] ?? '');
+                $sheet->setCellValue('F' . $row, $it['frecuencia_cambio'] ?? '');
+                $sheet->setCellValue('G' . $row, $it['motivos_cambio'] ?? '');
+                $sheet->setCellValue('H' . $row, $it['momentos_uso'] ?? '');
+                $sheet->setCellValue('I' . $row, $it['observacion_cliente'] ?? '');
+
+                // Wrap text en todas las celdas de esta fila
+                $sheet->getStyle('A' . $row . ':I' . $row)->getAlignment()
+                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP)
+                    ->setWrapText(true);
+
+                $row++;
+            }
+
+            // Bordes completos
+            $lastRow = $row - 1;
+            $sheet->getStyle('A6:I' . $lastRow)->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => 'CCCCCC'],
+                    ],
+                ],
+            ]);
+        }
+
+        // Generar y descargar
+        $sp->setActiveSheetIndex(0);
+        $nombreArchivo = 'Matriz_EPP_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $cliente['nombre_cliente'] ?? 'cliente') . '_' . date('Y-m-d') . '.xlsx';
+        $tmp = WRITEPATH . 'uploads/' . $nombreArchivo;
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($sp);
+        $writer->save($tmp);
+        $sp->disconnectWorksheets();
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $nombreArchivo . '"')
+            ->setBody(file_get_contents($tmp));
+    }
+
     // ========================= CATEGORIAS =========================
 
     public function categoriaGuardar()

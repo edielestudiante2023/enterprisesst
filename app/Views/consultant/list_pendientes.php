@@ -371,7 +371,8 @@
             <th>Fecha Asignación</th>
             <th>Responsable</th>
             <th>*Tarea Actividad</th>
-            <th>*Fecha Cierre</th>
+            <th>*Fecha de Plazo</th>
+            <th>Cierre Real</th>
             <th>*Estado</th>
             <th>Conteo Días</th>
             <th>*Estado Avance</th>
@@ -446,7 +447,8 @@
       html += '<tr><td><strong>Fecha Asignación:</strong></td><td>' + (rowData.fecha_asignacion || '') + '</td></tr>';
       html += '<tr><td><strong>Responsable:</strong></td><td>' + (rowData.responsable || '') + '</td></tr>';
       html += '<tr><td><strong>Tarea/Actividad:</strong></td><td>' + (rowData.tarea_actividad || '') + '</td></tr>';
-      html += '<tr><td><strong>Fecha Cierre:</strong></td><td>' + (rowData.fecha_cierre || '') + '</td></tr>';
+      html += '<tr><td><strong>Fecha de Plazo:</strong></td><td>' + (rowData.fecha_cierre || '') + '</td></tr>';
+      html += '<tr><td><strong>Cierre Real:</strong></td><td>' + (rowData.fecha_cierre_real || '') + '</td></tr>';
       html += '<tr><td><strong>Estado:</strong></td><td>' + (rowData.estado || '') + '</td></tr>';
       html += '<tr><td><strong>Conteo Días:</strong></td><td>' + (rowData.conteo_dias || '0') + '</td></tr>';
       html += '<tr><td><strong>Estado Avance:</strong></td><td>' + (rowData.estado_avance || '') + '</td></tr>';
@@ -560,6 +562,12 @@
               data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span class="editable-date" data-field="fecha_cierre" data-id="' + row.id_pendientes + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'fecha_cierre_real',
+            render: function(data) {
+              return data || '';
             }
           },
           {
