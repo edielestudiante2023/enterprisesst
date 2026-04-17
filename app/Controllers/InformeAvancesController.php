@@ -997,16 +997,41 @@ PROMPT;
             $lines[] = '';
         }
 
-        // Pendientes por estado
+        // Pendientes por estado (global anual)
         $pend = $metricas['desglose_pendientes'] ?? [];
         if (!empty($pend)) {
-            $lines[] = 'ESTADO DE COMPROMISOS/PENDIENTES:';
+            $lines[] = 'ESTADO DE COMPROMISOS/PENDIENTES (ANUAL):';
             foreach ($pend as $p) {
                 $det = "{$p['cantidad']} {$p['estado']}";
                 if (!empty($p['promedio_dias']) && floatval($p['promedio_dias']) > 0) {
                     $det .= ' (promedio ' . round(floatval($p['promedio_dias']), 1) . ' días)';
                 }
                 $lines[] = "- {$det}";
+            }
+        }
+
+        // Pendientes detalle del periodo
+        $pendPeriodo = $metricas['desglose_pendientes_periodo'] ?? [];
+        if (!empty($pendPeriodo)) {
+            $lines[] = '';
+            $lines[] = 'COMPROMISOS/PENDIENTES EN ESTE PERIODO:';
+            $tc = $pendPeriodo['total_cerrados'] ?? 0;
+            $at = $pendPeriodo['a_tiempo'] ?? 0;
+            $fp = $pendPeriodo['fuera_plazo'] ?? 0;
+            $tv = $pendPeriodo['total_vencidos'] ?? 0;
+            $tsr = $pendPeriodo['total_sin_respuesta'] ?? 0;
+
+            if ($tc > 0) {
+                $lines[] = "- Cerrados en el periodo: {$tc} ({$at} a tiempo, {$fp} fuera de plazo)";
+            }
+            if ($tv > 0) {
+                $lines[] = "- Vencidos sin gestión: {$tv}";
+            }
+            if ($tsr > 0) {
+                $lines[] = "- Clasificados SIN RESPUESTA DEL CLIENTE: {$tsr}";
+            }
+            if ($tc === 0 && $tv === 0 && $tsr === 0) {
+                $lines[] = "- Sin movimiento de compromisos en este periodo.";
             }
         }
 
@@ -1187,6 +1212,7 @@ PROMPT;
                 'desglose_plan_trabajo' => $metricas['desglose_plan_trabajo'] ?? [],
                 'desglose_capacitacion' => $metricas['desglose_capacitacion'] ?? [],
                 'desglose_pendientes'   => $metricas['desglose_pendientes'] ?? [],
+                'desglose_pendientes_periodo' => $metricas['desglose_pendientes_periodo'] ?? [],
                 'firma_electronica'     => $metricas['firma_electronica'] ?? [],
                 'documentos_sst'        => $metricas['documentos_sst'] ?? [],
                 'indicadores_sst'       => $metricas['indicadores_sst'] ?? [],

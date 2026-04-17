@@ -213,6 +213,14 @@
                 </div>
             </div>
 
+            <!-- Detalle Pendientes del Periodo (se llena por JS) -->
+            <div id="detallePendientesPeriodo" style="display:none;" class="card card-section mb-3">
+                <div class="card-header py-2 bg-white">
+                    <h6 class="mb-0"><i class="fas fa-clipboard-list me-2" style="color:#bd9751;"></i>Detalle de Compromisos / Pendientes del Periodo</h6>
+                </div>
+                <div class="card-body" id="detallePendientesBody"></div>
+            </div>
+
             <!-- SECCION 2b: Evolución Histórica del Cliente -->
             <div class="card card-section" id="seccionEvolucion" style="display:none">
                 <div class="card-header py-3">
@@ -904,6 +912,7 @@
                     desglose_plan_trabajo: d.desglose_plan_trabajo || [],
                     desglose_capacitacion: d.desglose_capacitacion || [],
                     desglose_pendientes: d.desglose_pendientes || [],
+                    desglose_pendientes_periodo: d.desglose_pendientes_periodo || [],
                     puntaje_actual: d.puntaje_actual,
                     puntaje_anterior: d.puntaje_anterior,
                     diferencia_neta: d.diferencia_neta,
@@ -1016,6 +1025,56 @@
             var totalPend = pend.reduce(function(s, p) { return s + (parseInt(p.cantidad) || 0); }, 0);
             $('#metricPend').text(abiertosPend + ' / ' + totalPend);
             $('#detailPend').text(abiertosPend + ' abiertos' + (promDias > 0 ? ' (prom ' + promDias.toFixed(0) + ' dias)' : ''));
+
+            // === Detalle Pendientes del Periodo ===
+            var dpp = data.desglose_pendientes_periodo || {};
+            var cerr = dpp.cerrados || [], venc = dpp.vencidos || [], sr = dpp.sin_respuesta || [];
+            var tc = dpp.total_cerrados || 0, tv = dpp.total_vencidos || 0, tsr = dpp.total_sin_respuesta || 0;
+            var at = dpp.a_tiempo || 0, fp = dpp.fuera_plazo || 0;
+
+            if (tc > 0 || tv > 0 || tsr > 0) {
+                var html = '<div class="row mb-3">';
+                if (tc > 0) html += '<div class="col-md-4"><div class="text-center p-2" style="background:#D1FAE5;border-radius:8px;"><div style="font-size:24px;font-weight:bold;color:#059669;">' + tc + '</div><div style="font-size:11px;color:#065F46;">Cerrados (' + at + ' a tiempo, ' + fp + ' fuera de plazo)</div></div></div>';
+                if (tv > 0) html += '<div class="col-md-4"><div class="text-center p-2" style="background:#FEE2E2;border-radius:8px;"><div style="font-size:24px;font-weight:bold;color:#DC2626;">' + tv + '</div><div style="font-size:11px;color:#991B1B;">Vencidos sin gestion</div></div></div>';
+                if (tsr > 0) html += '<div class="col-md-4"><div class="text-center p-2" style="background:#FEF3C7;border-radius:8px;"><div style="font-size:24px;font-weight:bold;color:#D97706;">' + tsr + '</div><div style="font-size:11px;color:#92400E;">Sin Respuesta del Cliente</div></div></div>';
+                html += '</div>';
+
+                function fmtDate(d) { if (!d || d < '2000') return '-'; var p = d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+                if (cerr.length > 0) {
+                    var cerrFilt = cerr.filter(function(c){ return c.estado !== 'SIN RESPUESTA DEL CLIENTE'; });
+                    if (cerrFilt.length > 0) {
+                        html += '<h6 class="mt-2 mb-1"><i class="fas fa-check-circle text-success me-1"></i>Cerrados en el Periodo</h6>';
+                        html += '<table class="table table-sm table-bordered" style="font-size:12px;"><thead class="table-dark"><tr><th>Actividad</th><th style="width:100px;">Responsable</th><th style="width:85px;">Plazo</th><th style="width:85px;">Cierre Real</th><th style="width:70px;">A Tiempo</th></tr></thead><tbody>';
+                        cerrFilt.forEach(function(c) {
+                            var badge = c.a_tiempo === 1 ? '<span class="badge bg-success">Si</span>' : (c.a_tiempo === 0 ? '<span class="badge bg-danger">No</span>' : '-');
+                            html += '<tr><td>' + (c.tarea_actividad||'') + '</td><td>' + (c.responsable||'-') + '</td><td>' + fmtDate(c.fecha_cierre) + '</td><td>' + fmtDate(c.fecha_cierre_real) + '</td><td class="text-center">' + badge + '</td></tr>';
+                        });
+                        html += '</tbody></table>';
+                    }
+                }
+                if (venc.length > 0) {
+                    html += '<h6 class="mt-2 mb-1"><i class="fas fa-exclamation-triangle text-danger me-1"></i>Vencidos sin Gestion</h6>';
+                    html += '<table class="table table-sm table-bordered" style="font-size:12px;"><thead style="background:#FEE2E2;"><tr><th>Actividad</th><th style="width:100px;">Responsable</th><th style="width:85px;">Plazo</th><th style="width:70px;">Dias Vencido</th></tr></thead><tbody>';
+                    venc.forEach(function(v) {
+                        html += '<tr><td>' + (v.tarea_actividad||'') + '</td><td>' + (v.responsable||'-') + '</td><td>' + fmtDate(v.fecha_cierre) + '</td><td class="text-center"><span class="badge bg-danger">' + (v.dias_vencido||0) + '</span></td></tr>';
+                    });
+                    html += '</tbody></table>';
+                }
+                if (sr.length > 0) {
+                    html += '<h6 class="mt-2 mb-1"><i class="fas fa-user-clock text-warning me-1"></i>Sin Respuesta del Cliente</h6>';
+                    html += '<table class="table table-sm table-bordered" style="font-size:12px;"><thead style="background:#FEF3C7;"><tr><th>Actividad</th><th style="width:100px;">Responsable</th><th style="width:85px;">Plazo</th><th style="width:85px;">Clasificado</th></tr></thead><tbody>';
+                    sr.forEach(function(s) {
+                        html += '<tr><td>' + (s.tarea_actividad||'') + '</td><td>' + (s.responsable||'-') + '</td><td>' + fmtDate(s.fecha_cierre) + '</td><td>' + fmtDate(s.fecha_cierre_real) + '</td></tr>';
+                    });
+                    html += '</tbody></table>';
+                }
+
+                $('#detallePendientesBody').html(html);
+                $('#detallePendientesPeriodo').show();
+            } else {
+                $('#detallePendientesPeriodo').hide();
+            }
         }
 
         // === RENDER 6 MODULOS ADICIONALES ===

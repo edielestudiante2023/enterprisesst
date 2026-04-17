@@ -624,6 +624,102 @@
 <div class="content-text"><?= nl2br(esc($informe['actividades_abiertas'])) ?></div>
 <?php endif; ?>
 
+<!-- DETALLE COMPROMISOS / PENDIENTES DEL PERIODO -->
+<?php
+    $dpp = $desglose['desglose_pendientes_periodo'] ?? [];
+    $pdfCerrados = $dpp['cerrados'] ?? [];
+    $pdfVencidos = $dpp['vencidos'] ?? [];
+    $pdfSR       = $dpp['sin_respuesta'] ?? [];
+    $pdfTotalCerr = $dpp['total_cerrados'] ?? 0;
+    $pdfATiempo   = $dpp['a_tiempo'] ?? 0;
+    $pdfFueraPlazo = $dpp['fuera_plazo'] ?? 0;
+    $pdfTotalVenc = $dpp['total_vencidos'] ?? 0;
+    $pdfTotalSR   = $dpp['total_sin_respuesta'] ?? 0;
+?>
+<?php if ($pdfTotalCerr > 0 || $pdfTotalVenc > 0 || $pdfTotalSR > 0): ?>
+<div class="section-title">COMPROMISOS / PENDIENTES DEL PERIODO</div>
+<div class="content-text" style="font-size:9px; margin-bottom:8px;">
+    <?php if ($pdfTotalCerr > 0): ?>
+        <strong style="color:#059669;">Cerrados: <?= $pdfTotalCerr ?></strong> (<?= $pdfATiempo ?> a tiempo, <?= $pdfFueraPlazo ?> fuera de plazo) &nbsp;
+    <?php endif; ?>
+    <?php if ($pdfTotalVenc > 0): ?>
+        <strong style="color:#DC2626;">Vencidos: <?= $pdfTotalVenc ?></strong> &nbsp;
+    <?php endif; ?>
+    <?php if ($pdfTotalSR > 0): ?>
+        <strong style="color:#D97706;">Sin Respuesta: <?= $pdfTotalSR ?></strong>
+    <?php endif; ?>
+</div>
+
+<?php if (!empty($pdfCerrados)): ?>
+<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:8px;">
+    <thead><tr style="background:#1c2437;color:white;">
+        <th style="padding:4px;text-align:left;">Actividad</th>
+        <th style="padding:4px;text-align:center;width:70px;">Responsable</th>
+        <th style="padding:4px;text-align:center;width:60px;">Plazo</th>
+        <th style="padding:4px;text-align:center;width:60px;">Cierre Real</th>
+        <th style="padding:4px;text-align:center;width:50px;">A Tiempo</th>
+    </tr></thead>
+    <tbody>
+    <?php foreach ($pdfCerrados as $i => $c): ?>
+    <?php if ($c['estado'] !== 'SIN RESPUESTA DEL CLIENTE'): ?>
+    <tr style="background:<?= $i % 2 === 0 ? '#fff' : '#f9fafb' ?>;">
+        <td style="padding:3px;border-bottom:1px solid #e5e7eb;"><?= esc($c['tarea_actividad']) ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;"><?= esc($c['responsable'] ?? '-') ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;"><?= !empty($c['fecha_cierre']) && $c['fecha_cierre'] >= '2000-01-01' ? date('d/m/Y', strtotime($c['fecha_cierre'])) : '-' ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;"><?= !empty($c['fecha_cierre_real']) ? date('d/m/Y', strtotime($c['fecha_cierre_real'])) : '-' ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;color:<?= $c['a_tiempo'] === 1 ? '#059669' : '#DC2626' ?>;font-weight:bold;"><?= $c['a_tiempo'] === 1 ? 'Si' : ($c['a_tiempo'] === 0 ? 'No' : '-') ?></td>
+    </tr>
+    <?php endif; ?>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+<?php endif; ?>
+
+<?php if (!empty($pdfVencidos)): ?>
+<div style="font-size:9px;font-weight:bold;color:#DC2626;margin:6px 0 3px;">Vencidos sin Gestión</div>
+<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:8px;">
+    <thead><tr style="background:#FEE2E2;">
+        <th style="padding:4px;text-align:left;">Actividad</th>
+        <th style="padding:4px;text-align:center;width:70px;">Responsable</th>
+        <th style="padding:4px;text-align:center;width:60px;">Plazo</th>
+        <th style="padding:4px;text-align:center;width:50px;">Días Vencido</th>
+    </tr></thead>
+    <tbody>
+    <?php foreach ($pdfVencidos as $i => $v): ?>
+    <tr style="background:<?= $i % 2 === 0 ? '#fff' : '#f9fafb' ?>;">
+        <td style="padding:3px;border-bottom:1px solid #e5e7eb;"><?= esc($v['tarea_actividad']) ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;"><?= esc($v['responsable'] ?? '-') ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;"><?= date('d/m/Y', strtotime($v['fecha_cierre'])) ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;color:#DC2626;font-weight:bold;"><?= $v['dias_vencido'] ?></td>
+    </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+<?php endif; ?>
+
+<?php if (!empty($pdfSR)): ?>
+<div style="font-size:9px;font-weight:bold;color:#D97706;margin:6px 0 3px;">Sin Respuesta del Cliente</div>
+<table style="width:100%;border-collapse:collapse;font-size:8px;margin-bottom:8px;">
+    <thead><tr style="background:#FEF3C7;">
+        <th style="padding:4px;text-align:left;">Actividad</th>
+        <th style="padding:4px;text-align:center;width:70px;">Responsable</th>
+        <th style="padding:4px;text-align:center;width:60px;">Plazo</th>
+        <th style="padding:4px;text-align:center;width:60px;">Clasificado</th>
+    </tr></thead>
+    <tbody>
+    <?php foreach ($pdfSR as $i => $sr): ?>
+    <tr style="background:<?= $i % 2 === 0 ? '#fff' : '#f9fafb' ?>;">
+        <td style="padding:3px;border-bottom:1px solid #e5e7eb;"><?= esc($sr['tarea_actividad']) ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;"><?= esc($sr['responsable'] ?? '-') ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;"><?= !empty($sr['fecha_cierre']) && $sr['fecha_cierre'] >= '2000-01-01' ? date('d/m/Y', strtotime($sr['fecha_cierre'])) : '-' ?></td>
+        <td style="padding:3px;text-align:center;border-bottom:1px solid #e5e7eb;"><?= !empty($sr['fecha_cierre_real']) ? date('d/m/Y', strtotime($sr['fecha_cierre_real'])) : '-' ?></td>
+    </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+<?php endif; ?>
+<?php endif; ?>
+
 <!-- OBSERVACIONES -->
 <?php if (!empty($informe['observaciones'])): ?>
 <div class="section-title">OBSERVACIONES</div>
