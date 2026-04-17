@@ -389,6 +389,7 @@
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Responsable"></th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Tarea"></th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Fecha"></th>
+            <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Fecha"></th>
             <th>
               <select class="form-control form-control-sm filter-search">
                 <option value="">Todos</option>
