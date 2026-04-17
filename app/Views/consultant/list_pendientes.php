@@ -503,7 +503,8 @@
         responsive: true,
         autoWidth: false,
         dom: 'Bfltip',
-        pageLength: 10,
+        pageLength: 50,
+        order: [[4, 'asc']], // Fecha Asignación ascendente
         buttons: [{
             extend: 'excelHtml5',
             text: 'Exportar a Excel',
@@ -933,6 +934,17 @@
               var newValue = select.val();
               cell.html(newValue || '&nbsp;');
               updateField(id, field, newValue, cell);
+
+              // Auto-set fecha_cierre_real = hoy al cerrar o clasificar sin respuesta
+              if (field === 'estado' && (newValue === 'CERRADA' || newValue === 'SIN RESPUESTA DEL CLIENTE')) {
+                var hoy = new Date().toISOString().split('T')[0];
+                updateField(id, 'fecha_cierre_real', hoy, null);
+                // Actualizar visualmente la celda de Cierre Real en la misma fila
+                var row = cell.closest('tr');
+                row.find('[data-field="fecha_cierre_real"]').text(hoy);
+                // Refrescar tabla para recalcular conteo_dias
+                setTimeout(function() { table.ajax.reload(null, false); }, 500);
+              }
             }, 200);
           });
         } else {

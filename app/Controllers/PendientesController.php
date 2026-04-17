@@ -62,7 +62,7 @@ class PendientesController extends Controller
         $value = $this->request->getPost('value');
 
         // Definir los campos permitidos para actualización
-        $allowedFields = ['tarea_actividad', 'fecha_cierre', 'estado', 'estado_avance', 'evidencia_para_cerrarla', 'fecha_asignacion'];
+        $allowedFields = ['tarea_actividad', 'fecha_cierre', 'estado', 'estado_avance', 'evidencia_para_cerrarla', 'fecha_asignacion', 'fecha_cierre_real'];
         if (!in_array($field, $allowedFields)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Campo no permitido']);
         }
@@ -78,11 +78,10 @@ class PendientesController extends Controller
         // Si el campo afecta el cálculo de 'conteo_dias'
         $fechaAsignacion = strtotime($pendiente['fecha_asignacion']);
         $estado = ($field === 'estado') ? $value : $pendiente['estado'];
-        $estadosCierreManual = ['CERRADA', 'CERRADA POR FIN CONTRATO'];
         $estadosCierre = ['CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'];
 
-        // Auto-set fecha_cierre_real al cambiar estado a cierre manual
-        if ($field === 'estado' && in_array($value, $estadosCierreManual, true) && empty($pendiente['fecha_cierre_real'])) {
+        // Auto-set fecha_cierre_real al cambiar estado a cierre
+        if ($field === 'estado' && in_array($value, $estadosCierre, true) && empty($pendiente['fecha_cierre_real'])) {
             $updateData['fecha_cierre_real'] = date('Y-m-d');
         }
 
