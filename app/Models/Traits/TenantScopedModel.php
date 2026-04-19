@@ -34,9 +34,44 @@ trait TenantScopedModel
         return true;
     }
 
+    /**
+     * Verifica si la tabla del modelo tiene la columna id_cliente.
+     * Cachea el resultado en memoria para evitar consultas repetidas.
+     */
+    private function tableHasIdCliente(): bool
+    {
+        static $cache = [];
+        $table = $this->table;
+        if (isset($cache[$table])) return $cache[$table];
+
+        // Heuristica rapida: si el modelo declara 'id_cliente' en allowedFields,
+        // entonces la columna existe en su tabla.
+        if (property_exists($this, 'allowedFields') && is_array($this->allowedFields)
+            && in_array('id_cliente', $this->allowedFields, true)) {
+            return $cache[$table] = true;
+        }
+
+        // Fallback: consultar INFORMATION_SCHEMA
+        try {
+            $db = \Config\Database::connect();
+            $exists = $db->query(
+                "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = ?
+                   AND COLUMN_NAME = 'id_cliente'
+                 LIMIT 1",
+                [$table]
+            )->getRowArray();
+            return $cache[$table] = (bool)$exists;
+        } catch (\Throwable $e) {
+            return $cache[$table] = false;
+        }
+    }
+
     private function applyTenantScopeToBuilder(): void
     {
         if (!$this->shouldApplyTenantScope()) return;
+        if (!$this->tableHasIdCliente()) return; // tabla sin id_cliente: no filtra
 
         $clientIds = TenantFilter::getMyClientIds();
         if ($clientIds === null) return; // superadmin/CLI
@@ -70,6 +105,7 @@ trait TenantScopedModel
     {
         if ($id === null) return true; // operacion masiva, no validamos por ID individual
         if (!$this->shouldApplyTenantScope()) return true;
+        if (!$this->tableHasIdCliente()) return true; // tabla sin id_cliente: no valida
 
         $record = parent::find($id);
         if (!$record) return true; // registro no existe, el parent manejara el error
