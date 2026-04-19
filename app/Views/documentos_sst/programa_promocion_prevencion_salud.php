@@ -469,8 +469,10 @@
             $estandares = $contexto['estandares_aplicables'] ?? 60;
             $requiereDelegado = !empty($contexto['requiere_delegado_sst']);
 
-            // Determinar si son solo 2 firmantes (7 estandares SIN delegado)
-            $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
+            // Regla negocio 2026-04-19: si delegado SST esta deshabilitado, solo 2 firmantes (Consultor + Rep.Legal)
+            // Ver docs/MODULO_NUMERALES_SGSST/04_FIRMAS_ELECTRONICAS/1_A_CAMBIO_REGLA_FIRMANTES_2026.md
+            // Regla anterior (deshabilitada): $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
+            $esSoloDosFirmantes = !$requiereDelegado;
 
             // Datos del Consultor desde tbl_consultor
             $consultorNombre = $consultor['nombre_consultor'] ?? '';

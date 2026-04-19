@@ -492,10 +492,13 @@ if (!function_exists('convertirMarkdownAHtml')) {
             // Árbol de decisión firmantes (firmas-sistema.md):
             // 1. requiere_delegado_sst = true → 3 firmantes (siempre gana)
             // 2. firmantesDefinidos tiene valores → usar array definido por tipo doc
-            // 3. estandares <= 10 && !delegado → 2 firmantes
-            // 4. Default (>10 estandares) → 3 firmantes
+            // 3. !requiereDelegado → 2 firmantes (Consultor + Rep.Legal)  [regla 2026-04-19]
+            // 4. Solo 3 firmantes si hay delegado activo
             $esDosFirmantesPorDefinicion = !empty($firmantesDefinidos) && count($firmantesDefinidos) <= 2 && !$requiereDelegado;
-            $esSoloDosFirmantes = $esDosFirmantesPorDefinicion || (($estandares <= 10) && !$requiereDelegado);
+            // Regla negocio 2026-04-19: si delegado SST esta deshabilitado, solo 2 firmantes (Consultor + Rep.Legal)
+            // Ver docs/MODULO_NUMERALES_SGSST/04_FIRMAS_ELECTRONICAS/1_A_CAMBIO_REGLA_FIRMANTES_2026.md
+            // Regla anterior (deshabilitada): $esSoloDosFirmantes = $esDosFirmantesPorDefinicion || (($estandares <= 10) && !$requiereDelegado);
+            $esSoloDosFirmantes = $esDosFirmantesPorDefinicion || !$requiereDelegado;
 
             // Datos del Consultor desde tbl_consultor
             $consultorNombre = $consultor['nombre_consultor'] ?? '';
