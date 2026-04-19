@@ -32,6 +32,25 @@ class AuthFilter implements FilterInterface
 
         $role = $session->get('role');
 
+        // Seguridad multi-tenant: verificar que la empresa del usuario no este suspendida/inactiva.
+        // Si se suspendio mientras el usuario estaba logueado, se cierra la sesion aqui.
+        if (!$session->get('is_superadmin')) {
+            $idEmpresa = $session->get('id_empresa_consultora');
+            if ($idEmpresa) {
+                $db = \Config\Database::connect();
+                $empresa = $db->table('tbl_empresa_consultora')
+                    ->select('estado')
+                    ->where('id_empresa_consultora', $idEmpresa)
+                    ->get()->getRowArray();
+                if ($empresa && in_array($empresa['estado'], ['suspendido', 'inactivo'], true)) {
+                    log_message('warning', 'AuthFilter: empresa ' . $idEmpresa . ' en estado ' . $empresa['estado']
+                        . ', cerrando sesion user_id=' . $session->get('id_usuario'));
+                    $session->destroy();
+                    return redirect()->to('/login')->with('msg', 'El acceso de tu empresa esta suspendido. Contacta al administrador.');
+                }
+            }
+        }
+
         // Los usuarios tipo 'miembro' solo pueden acceder a /miembro/*
         // Si intentan acceder a otras rutas protegidas, redirigir a su portal
         if ($role === 'miembro') {

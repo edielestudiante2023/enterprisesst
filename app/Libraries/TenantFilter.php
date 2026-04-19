@@ -102,6 +102,25 @@ class TenantFilter
     }
 
     /**
+     * Verifica si un consultor pertenece a la empresa del usuario en sesion.
+     * Superadmin siempre pasa.
+     */
+    public static function consultorEnMiEmpresa(int $idConsultor): bool
+    {
+        if (self::isSuperAdmin()) return true;
+
+        $empresaId = self::getEmpresaId();
+        if ($empresaId === null) return false;
+
+        $db = Database::connect();
+        $row = $db->table('tbl_consultor')
+            ->where('id_consultor', $idConsultor)
+            ->where('id_empresa_consultora', $empresaId)
+            ->get()->getRowArray();
+        return !empty($row);
+    }
+
+    /**
      * Verifica si un cliente pertenece a la empresa del usuario en sesion.
      * Superadmin siempre pasa.
      */

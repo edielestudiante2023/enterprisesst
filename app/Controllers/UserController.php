@@ -83,13 +83,42 @@ class UserController extends Controller
         }
 
         $tipoUsuario = $this->request->getVar('tipo_usuario');
+
+        // Seguridad: solo superadmin puede crear usuarios tipo superadmin
+        if ($tipoUsuario === 'superadmin' && !TenantFilter::isSuperAdmin()) {
+            log_message('warning', 'addUserPost BLOCKED superadmin escalation user_id=' . session()->get('id_usuario'));
+            return redirect()->back()->with('msg', 'No tienes permiso para crear usuarios con ese tipo.')->withInput();
+        }
+
+        // Seguridad: solo tipos validos
+        if (!in_array($tipoUsuario, ['admin', 'consultant', 'client', 'miembro', 'superadmin'], true)) {
+            return redirect()->back()->with('msg', 'Tipo de usuario invalido.')->withInput();
+        }
+
         $idEntidad = null;
 
         // Asignar id_entidad según el tipo de usuario
         if ($tipoUsuario === 'client') {
             $idEntidad = $this->request->getVar('id_cliente');
-        } elseif (in_array($tipoUsuario, ['consultant', 'admin'])) {
+            // Validar que el cliente pertenezca a la empresa del usuario
+            if ($idEntidad && !TenantFilter::clienteEnMiEmpresa((int)$idEntidad)) {
+                log_message('warning', 'addUserPost BLOCKED cliente ajeno id_cliente=' . $idEntidad);
+                return redirect()->back()->with('msg', 'Cliente invalido.')->withInput();
+            }
+        } elseif (in_array($tipoUsuario, ['consultant', 'admin', 'superadmin'])) {
             $idEntidad = $this->request->getVar('id_consultor');
+            // Validar que el consultor pertenezca a la empresa del usuario (salvo superadmin)
+            if ($idEntidad && !TenantFilter::isSuperAdmin()) {
+                $db = \Config\Database::connect();
+                $consultor = $db->table('tbl_consultor')
+                    ->where('id_consultor', $idEntidad)
+                    ->where('id_empresa_consultora', TenantFilter::getEmpresaId())
+                    ->get()->getRowArray();
+                if (!$consultor) {
+                    log_message('warning', 'addUserPost BLOCKED consultor ajeno id_consultor=' . $idEntidad);
+                    return redirect()->back()->with('msg', 'Consultor invalido.')->withInput();
+                }
+            }
         }
 
         $data = [
@@ -181,14 +210,52 @@ class UserController extends Controller
             return redirect()->to('/admin/users')->with('msg', 'Usuario no encontrado.');
         }
 
+        // Seguridad: admin no puede editar usuarios de otra empresa (salvo superadmin)
+        if (!TenantFilter::isSuperAdmin()) {
+            $empresaDelUsuario = $this->resolverEmpresaDeUsuario($user);
+            if ($empresaDelUsuario !== null && $empresaDelUsuario !== TenantFilter::getEmpresaId()) {
+                log_message('warning', 'editUserPost BLOCKED usuario ajeno id_usuario=' . $id);
+                return redirect()->to('/admin/users')->with('msg', 'No tienes permiso para editar este usuario.');
+            }
+            // Si el usuario editado es superadmin, bloquear
+            if ($user['tipo_usuario'] === 'superadmin') {
+                return redirect()->to('/admin/users')->with('msg', 'No puedes editar un superadmin.');
+            }
+        }
+
         $tipoUsuario = $this->request->getVar('tipo_usuario');
+
+        // Seguridad: solo superadmin puede promover a superadmin
+        if ($tipoUsuario === 'superadmin' && !TenantFilter::isSuperAdmin()) {
+            log_message('warning', 'editUserPost BLOCKED superadmin escalation user_id=' . session()->get('id_usuario'));
+            return redirect()->back()->with('msg', 'No tienes permiso para asignar ese tipo.')->withInput();
+        }
+
+        // Seguridad: tipos validos
+        if (!in_array($tipoUsuario, ['admin', 'consultant', 'client', 'miembro', 'superadmin'], true)) {
+            return redirect()->back()->with('msg', 'Tipo de usuario invalido.')->withInput();
+        }
+
         $idEntidad = null;
 
         // Asignar id_entidad según el tipo de usuario
         if ($tipoUsuario === 'client') {
             $idEntidad = $this->request->getVar('id_cliente');
-        } elseif (in_array($tipoUsuario, ['consultant', 'admin'])) {
+            if ($idEntidad && !TenantFilter::clienteEnMiEmpresa((int)$idEntidad)) {
+                return redirect()->back()->with('msg', 'Cliente invalido.')->withInput();
+            }
+        } elseif (in_array($tipoUsuario, ['consultant', 'admin', 'superadmin'])) {
             $idEntidad = $this->request->getVar('id_consultor');
+            if ($idEntidad && !TenantFilter::isSuperAdmin()) {
+                $db = \Config\Database::connect();
+                $consultor = $db->table('tbl_consultor')
+                    ->where('id_consultor', $idEntidad)
+                    ->where('id_empresa_consultora', TenantFilter::getEmpresaId())
+                    ->get()->getRowArray();
+                if (!$consultor) {
+                    return redirect()->back()->with('msg', 'Consultor invalido.')->withInput();
+                }
+            }
         }
 
         $data = [
@@ -500,5 +567,34 @@ class UserController extends Controller
             </div>
         </body>
         </html>';
+    }
+
+    /**
+     * Resuelve id_empresa_consultora a partir de un registro de tbl_usuarios.
+     * Retorna null si no se puede resolver (usuario sin entidad o entidad no encontrada).
+     */
+    private function resolverEmpresaDeUsuario(array $user): ?int
+    {
+        $tipo = $user['tipo_usuario'] ?? null;
+        $idEntidad = $user['id_entidad'] ?? null;
+        if (!$idEntidad) return null;
+
+        $db = \Config\Database::connect();
+        if (in_array($tipo, ['admin', 'consultant', 'superadmin'], true)) {
+            $row = $db->table('tbl_consultor')
+                ->select('id_empresa_consultora')
+                ->where('id_consultor', $idEntidad)
+                ->get()->getRowArray();
+            return $row ? (int)$row['id_empresa_consultora'] : null;
+        }
+        if (in_array($tipo, ['client', 'miembro'], true)) {
+            $row = $db->table('tbl_clientes cli')
+                ->select('c.id_empresa_consultora')
+                ->join('tbl_consultor c', 'c.id_consultor = cli.id_consultor')
+                ->where('cli.id_cliente', $idEntidad)
+                ->get()->getRowArray();
+            return $row ? (int)$row['id_empresa_consultora'] : null;
+        }
+        return null;
     }
 }

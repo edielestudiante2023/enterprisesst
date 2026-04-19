@@ -102,6 +102,12 @@ class ConsultantDashboardController extends Controller
         return redirect()->back()->with('error', 'Debe seleccionar un consultor.');
     }
 
+    // Seguridad multi-tenant: validar que el consultor pertenezca a la empresa del usuario
+    if (!TenantFilter::consultorEnMiEmpresa((int)$id_consultor)) {
+        log_message('warning', 'addClientPost (ConsDash) BLOCKED consultor ajeno id_consultor=' . $id_consultor);
+        return redirect()->back()->with('error', 'Consultor invalido.');
+    }
+
     $logo = $this->request->getFile('logo');
     $firma = $this->request->getFile('firma_representante_legal');
 
@@ -409,6 +415,13 @@ class ConsultantDashboardController extends Controller
 
         if (!$client) {
             return redirect()->to('/listClients')->with('msg', 'Cliente no encontrado');
+        }
+
+        // Seguridad multi-tenant: validar consultor nuevo
+        $nuevoIdConsultor = $this->request->getVar('id_consultor');
+        if ($nuevoIdConsultor && !TenantFilter::consultorEnMiEmpresa((int)$nuevoIdConsultor)) {
+            log_message('warning', 'updateClient (ConsDash) BLOCKED consultor ajeno id_cliente=' . $id . ' id_consultor=' . $nuevoIdConsultor);
+            return redirect()->back()->with('error', 'Consultor invalido.');
         }
 
         // Datos que siempre se actualizarán
