@@ -2,12 +2,8 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
-use App\Models\Traits\TenantScopedModel;
-
 class DocFirmaModel extends Model
 {
-    use TenantScopedModel;
-
     protected $table = 'tbl_doc_firma_solicitudes';
     protected $primaryKey = 'id_solicitud';
     protected $allowedFields = [

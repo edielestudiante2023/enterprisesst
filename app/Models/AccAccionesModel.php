@@ -3,16 +3,12 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
-use App\Models\Traits\TenantScopedModel;
-
 /**
  * Modelo para gestionar Acciones Correctivas, Preventivas y de Mejora (CAPA)
  * Numerales 7.1.1, 7.1.2, 7.1.3, 7.1.4 - Resolución 0312 de 2019
  */
 class AccAccionesModel extends Model
 {
-    use TenantScopedModel;
-
     protected $table = 'tbl_acc_acciones';
     protected $primaryKey = 'id_accion';
     protected $returnType = 'array';

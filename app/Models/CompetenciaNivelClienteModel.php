@@ -3,12 +3,8 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
-use App\Models\Traits\TenantScopedModel;
-
 class CompetenciaNivelClienteModel extends Model
 {
-    use TenantScopedModel;
-
     protected $table = 'tbl_competencia_nivel_cliente';
     protected $primaryKey = 'id_competencia_nivel';
     protected $returnType = 'array';
