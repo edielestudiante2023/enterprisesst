@@ -361,8 +361,10 @@
                 && !in_array('vigia_sst', $firmantesDefinidosArr)
                 && !in_array('copasst', $firmantesDefinidosArr);
 
-            // Caso: Solo 2 firmantes por estándares (7 estándares sin delegado)
-            $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
+            // Regla negocio 2026-04-19: si delegado SST esta deshabilitado, solo 2 firmantes (Consultor + Rep.Legal)
+            // Ver docs/MODULO_NUMERALES_SGSST/04_FIRMAS_ELECTRONICAS/1_A_CAMBIO_REGLA_FIRMANTES_2026.md
+            // Regla anterior (deshabilitada): $esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;
+            $esSoloDosFirmantes = !$requiereDelegado;
 
             // Datos del Consultor/Responsable SST
             $consultorNombre = $consultor['nombre_consultor'] ?? '';

@@ -1,50 +1,81 @@
-# Continuación: fecha_cierre_real + SIN RESPUESTA DEL CLIENTE
+# Continuacion de Chat - Estado de Sesion
 
-**Fecha:** 2026-04-17
-**Branch:** cycloid
+**Fecha:** 2026-04-19
+**Rama:** cycloid → merge a main (deployado)
 
-## Estado: Bloque 1 COMPLETADO, Bloques 2 y 3 PENDIENTES
+## Que se hizo en esta sesion
 
-## Lo que se hizo
+### Cambio de regla de firmantes en documentos SST
 
-### FASE 0-3: Columna fecha_cierre_real
-- ALTER TABLE tbl_pendientes ADD COLUMN fecha_cierre_real DATE NULL (ejecutado LOCAL + PROD)
-- Backfill: LOCAL 66 filas, PROD 106 filas con DATE(updated_at)
-- PendientesModel: allowedFields + calculateConteoDias usa fecha_cierre_real
-- PendientesController: 4 métodos actualizados (updatePendiente, listPendientes, addPendientePost, editPendientePost, recalcularConteoDias)
-- ConsultantController::retirarCliente(): agrega fecha_cierre_real = CURDATE()
-- SIN RESPUESTA DEL CLIENTE excluido del auto-set manual (solo CERRADA y CERRADA POR FIN CONTRATO auto-llenan fecha_cierre_real)
+**Problema detectado:**
+En el documento "Asignacion Responsable SG-SST" de EMPRESA OMEGA aparecia firma REVISO/COPASST, pero el cliente tiene `requiere_delegado_sst = 0`. El usuario determino que cuando el delegado SST esta deshabilitado, el unico firmante del lado cliente debe ser el Representante Legal.
 
-### FASE 4: UI
-- 4 vistas actualizadas con columna "Cierre Real"
-- Label "Fecha Cierre" renombrado a "Fecha de Plazo" en las 4 vistas de pendientes (solo visual, BD sigue fecha_cierre)
+**Causa raiz:**
+La logica `$esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;` hacia que con `estandares > 10` (EMPRESA OMEGA tiene 60) siempre se mostrara un 3er firmante (Vigia SST o COPASST segun numero de estandares), aun sin delegado.
 
-### Archivos modificados
-1. app/SQL/add_fecha_cierre_real.php (NUEVO)
-2. app/Models/PendientesModel.php
-3. app/Controllers/PendientesController.php
-4. app/Controllers/ConsultantController.php
-5. app/Views/consultant/list_pendientes.php
-6. app/Views/consultant/dashboard_pendientes.php
-7. app/Views/client/list_pendientes.php
-8. app/Views/client/dashboard_pendientes.php
+**Solucion aplicada (opcion global):**
+Se cambio la regla a `$esSoloDosFirmantes = !$requiereDelegado;` en **10 archivos** de vista/templates. La condicion de estandares queda como codigo muerto mientras el delegado este off.
 
-## Lo que falta
+### Archivos modificados (10)
 
-### Bloque 2: Cron auto-clasificación SIN RESPUESTA DEL CLIENTE
-- Crear app/Commands/ClasificarSinRespuesta.php (patrón igual a ResumenPendientes.php)
-- Lógica: pendientes ABIERTOS donde CURDATE() > fecha_cierre + 90 días → estado = 'SIN RESPUESTA DEL CLIENTE', fecha_cierre_real = CURDATE()
-- Email a cliente y consultor informando la clasificación
-- Mensaje: la actividad X fue clasificada SIN RESPUESTA DEL CLIENTE por ausencia de gestión, si tiene soportes que los remita vía email
-- Referencia: app/Commands/ResumenPendientes.php ya tiene enviarEmail() con SendGrid via cURL
+| Archivo | Linea |
+|---------|-------|
+| `app/Views/documentos_sst/asignacion_responsable.php` | 337 |
+| `app/Views/documentos_sst/programa_capacitacion.php` | 477 |
+| `app/Views/documentos_sst/programa_induccion_reinduccion.php` | 365 |
+| `app/Views/documentos_sst/programa_promocion_prevencion_salud.php` | 473 |
+| `app/Views/documentos_sst/plan_objetivos_metas.php` | 475 |
+| `app/Views/documentos_sst/procedimiento_control_documental.php` | 658 |
+| `app/Views/documentos_sst/procedimiento_matriz_legal.php` | 360 |
+| `app/Views/documentos_sst/documento_generico.php` | 498 |
+| `app/Views/documentos_sst/pdf_template.php` | 560 |
+| `app/Views/documentos_sst/word_template.php` | 350 |
 
-### Bloque 3: Mostrar SIN RESPUESTA en informe-avances
-- InformeAvancesController.php: incluir pendientes SIN RESPUESTA DEL CLIENTE en las métricas
-- app/Views/informe_avances/view.php: mostrar sección SIN RESPUESTA
-- app/Views/informe_avances/pdf.php: mostrar sección SIN RESPUESTA
-- El desglose_pendientes ya agrupa por estado, verificar si SIN RESPUESTA llega naturalmente
+En cada uno se preservo la linea anterior como comentario para poder revivirla.
 
-### Decisiones tomadas
-- Solo 1 columna nueva (fecha_cierre_real), no 2 como en PH (porque aquí fecha_cierre nunca se sobrescribe)
-- SIN RESPUESTA DEL CLIENTE solo lo pone el cron, no el usuario manualmente
-- Patrón cron: CI4 BaseCommand + SendGrid cURL (ya probado en ResumenPendientes.php)
+### Documentacion creada
+
+- `docs/MODULO_NUMERALES_SGSST/04_FIRMAS_ELECTRONICAS/1_A_CAMBIO_REGLA_FIRMANTES_2026.md`
+  - Motivacion, regla antigua vs nueva
+  - Lista de archivos afectados
+  - Guia paso a paso para revertir el cambio
+
+### Memoria del agente actualizada
+
+- `memory/firmas-sistema.md` ← arbol de decision actualizado con la nueva regla
+
+## Estado al final de la sesion
+
+- Deploy hecho a `main`
+- Rama activa: `cycloid`
+
+## Que validar despues del deploy
+
+1. Recargar documento `asignacion_responsable_sst` de EMPRESA OMEGA en navegador → debe mostrar solo ELABORO (Consultor) + APROBO (Rep.Legal).
+2. Probar un cliente con `requiere_delegado_sst = 1` → debe seguir mostrando 3 firmantes (Consultor + Delegado + Rep.Legal).
+3. PDF y Word del documento deben reflejar lo mismo que la vista web.
+4. Documentos ya generados NO cambian hasta que se regeneren con "Actualizar Datos".
+
+## Como revertir si se necesita
+
+Ver guia detallada en:
+`docs/MODULO_NUMERALES_SGSST/04_FIRMAS_ELECTRONICAS/1_A_CAMBIO_REGLA_FIRMANTES_2026.md`
+
+Comando rapido para localizar los 10 puntos de cambio:
+```bash
+grep -rn "Regla negocio 2026-04-19" app/Views/documentos_sst/
+```
+
+## Otros cambios incluidos en el commit (no relacionados con esta sesion)
+
+Cambios en working tree preexistentes que entraron en el mismo push:
+
+- `app/Models/AccAccionesModel.php` (M)
+- `app/Models/AccVerificacionesModel.php` (M)
+- `app/Models/CompetenciaNivelClienteModel.php` (M)
+- `app/Models/DocFirmaModel.php` (M)
+- `app/Models/HistorialEstandaresModel.php` (M)
+- `app/Models/HistorialPlanTrabajoModel.php` (M)
+- `app/Models/PtaTransicionesModel.php` (M)
+- `scripts/multitenant_05_diagnostico.php` (nuevo)
+- `scripts/multitenant_06_limpiar_trait.php` (nuevo)

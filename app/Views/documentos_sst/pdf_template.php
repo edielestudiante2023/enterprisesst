@@ -556,8 +556,11 @@ if (!function_exists('renderizarTablaPdf')) {
     $tieneSegundoFirmante = !empty($contenido['tiene_segundo_firmante']) || !empty($contenido['segundo_firmante']['nombre']);
     $firmasRepLegalYSegundo = $esDocResponsabilidadesRepLegal && $tieneSegundoFirmante && !$soloFirmaRepLegal;
 
-    // Determinar si son solo 2 firmantes (7 estándares SIN delegado) - NO aplica para doc responsabilidades rep legal
-    $esSoloDosFirmantes = !$esDocResponsabilidadesRepLegal && ($estandares <= 10) && !$requiereDelegado;
+    // Regla negocio 2026-04-19: si delegado SST esta deshabilitado, solo 2 firmantes (Consultor + Rep.Legal)
+    // Ver docs/MODULO_NUMERALES_SGSST/04_FIRMAS_ELECTRONICAS/1_A_CAMBIO_REGLA_FIRMANTES_2026.md
+    // NO aplica para doc responsabilidades rep legal
+    // Regla anterior (deshabilitada): $esSoloDosFirmantes = !$esDocResponsabilidadesRepLegal && ($estandares <= 10) && !$requiereDelegado;
+    $esSoloDosFirmantes = !$esDocResponsabilidadesRepLegal && !$requiereDelegado;
 
     // Firmantes definidos en TIPOS_DOCUMENTO - tiene prioridad sobre lógica de estándares
     $firmantesDefinidosArr = $firmantesDefinidos ?? null;
