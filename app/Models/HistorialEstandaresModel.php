@@ -3,12 +3,8 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
-use App\Models\Traits\TenantScopedModel;
-
 class HistorialEstandaresModel extends Model
 {
-    use TenantScopedModel;
-
     protected $table = 'historial_resumen_estandares';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
