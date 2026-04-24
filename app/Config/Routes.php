@@ -1563,7 +1563,7 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('acta/(:num)/reenviar-todos', 'MiembroAuthController::reenviarTodos/$1');
     $routes->post('acta/(:num)/reenviar/(:num)', 'MiembroAuthController::reenviarAsistente/$1/$2');
     $routes->post('acta/(:num)/cancelar-firma/(:num)', 'MiembroAuthController::cancelarFirmaAsistente/$1/$2');
-    $routes->post('acta/(:num)/solicitar-reapertura-email', 'MiembroAuthController::solicitarReaperturaEmail/$1');
+    $routes->post('acta/(:num)/solicitar-reapertura', 'MiembroAuthController::solicitarReapertura/$1');
 
     // Inspecciones Locativas (miembro COPASST)
     $routes->get('inspecciones/locativa', 'MiembroInspeccionController::list');

@@ -41,7 +41,7 @@
                         <i class="bi bi-file-word me-1"></i>Word
                     </a>
                     <?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada', 'cerrada'])): ?>
-                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalSolicitarReapertura">
+                    <button type="button" class="btn btn-outline-warning" onclick="solicitarReapertura()">
                         <i class="bi bi-unlock me-1"></i>Solicitar Reabrir
                     </button>
                     <?php endif; ?>
@@ -276,54 +276,87 @@
 <?php endif; ?>
 
 <?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada', 'cerrada'])): ?>
-<!-- Modal Solicitar Reapertura (por email al consultor) -->
-<div class="modal fade" id="modalSolicitarReapertura" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title"><i class="bi bi-unlock me-2"></i>Solicitar Reapertura del Acta</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Su solicitud será enviada por correo al consultor del cliente para su evaluación.
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function solicitarReapertura() {
+    Swal.fire({
+        title: 'Solicitar Reapertura de Acta',
+        html: `
+            <div class="text-start">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre completo <span class="text-danger">*</span></label>
+                    <input type="text" id="swal_nombre" class="form-control" placeholder="Su nombre completo" value="<?= esc($miembro['nombre_completo'] ?? '') ?>">
                 </div>
                 <div class="mb-3">
-                    <label for="motivoReapertura" class="form-label">Motivo de la solicitud <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="motivoReapertura" name="motivo" rows="4" placeholder="Explique por qué se debe reabrir esta acta..." required></textarea>
+                    <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                    <input type="email" id="swal_email" class="form-control" placeholder="su@email.com" value="<?= esc($miembro['email'] ?? '') ?>">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Cargo</label>
+                    <input type="text" id="swal_cargo" class="form-control" placeholder="Su cargo" value="<?= esc($miembro['cargo'] ?? '') ?>">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Justificacion <span class="text-danger">*</span></label>
+                    <textarea id="swal_justificacion" class="form-control" rows="4" placeholder="Explique por que debe reabrirse esta acta..."></textarea>
+                </div>
+                <div class="alert alert-warning small mb-0">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Al aprobar la reapertura, las firmas existentes seran invalidadas y el acta volvera a estado de edicion.
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-warning" onclick="enviarSolicitudReapertura(<?= $acta['id_acta'] ?>)">
-                    <i class="bi bi-envelope me-1"></i>Enviar Solicitud
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-<script>
-function enviarSolicitudReapertura(idActa) {
-    const motivo = document.getElementById('motivoReapertura').value.trim();
-    if (!motivo) { alert('Debe indicar el motivo'); return; }
-    const formData = new FormData();
-    formData.append('motivo', motivo);
-    const csrfName = '<?= csrf_token() ?>';
-    const csrfHash = '<?= csrf_hash() ?>';
-    formData.append(csrfName, csrfHash);
-    fetch('<?= base_url('miembro/acta/') ?>' + idActa + '/solicitar-reapertura-email', {
-        method: 'POST',
-        body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-        alert(data.message || (data.success ? 'Solicitud enviada' : 'Error'));
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('modalSolicitarReapertura')).hide();
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-send me-1"></i> Enviar Solicitud',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545',
+        width: '550px',
+        preConfirm: () => {
+            const nombre = document.getElementById('swal_nombre').value.trim();
+            const email = document.getElementById('swal_email').value.trim();
+            const justificacion = document.getElementById('swal_justificacion').value.trim();
+
+            if (!nombre || !email || !justificacion) {
+                Swal.showValidationMessage('Nombre, email y justificacion son obligatorios');
+                return false;
+            }
+
+            return {
+                solicitante_nombre: nombre,
+                solicitante_email: email,
+                solicitante_cargo: document.getElementById('swal_cargo').value.trim(),
+                justificacion: justificacion
+            };
         }
-    })
-    .catch(e => alert('Error de red: ' + e.message));
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('solicitante_nombre', result.value.solicitante_nombre);
+            formData.append('solicitante_email', result.value.solicitante_email);
+            formData.append('solicitante_cargo', result.value.solicitante_cargo);
+            formData.append('justificacion', result.value.justificacion);
+
+            fetch('<?= base_url("miembro/acta/" . $acta["id_acta"] . "/solicitar-reapertura") ?>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Solicitud Enviada',
+                        text: data.message,
+                        confirmButtonColor: '#28a745'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                }
+            })
+            .catch(() => {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexion. Intente nuevamente.' });
+            });
+        }
+    });
 }
 </script>
 <?php endif; ?>
