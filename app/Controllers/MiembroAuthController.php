@@ -742,6 +742,16 @@ class MiembroAuthController extends BaseController
     }
 
     /**
+     * Crea una instancia de ActasController inicializada con el request/response actual.
+     */
+    private function actasController(): \App\Controllers\ActasController
+    {
+        $ctrl = new \App\Controllers\ActasController();
+        $ctrl->initController($this->request, $this->response, \Config\Services::logger());
+        return $ctrl;
+    }
+
+    /**
      * Reenviar notificación de firma a todos los pendientes (miembro)
      */
     public function reenviarTodos(int $idActa)
@@ -749,9 +759,7 @@ class MiembroAuthController extends BaseController
         if (!$this->validarAccesoActa($idActa)) {
             return redirect()->to('/miembro/dashboard')->with('error', 'No tienes acceso a esta acta');
         }
-        // Delegar al ActasController que ya tiene la lógica completa
-        $ctrl = new \App\Controllers\ActasController();
-        return $ctrl->reenviarTodos($idActa);
+        return $this->actasController()->reenviarTodos($idActa);
     }
 
     /**
@@ -762,8 +770,7 @@ class MiembroAuthController extends BaseController
         if (!$this->validarAccesoActa($idActa)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Sin acceso']);
         }
-        $ctrl = new \App\Controllers\ActasController();
-        return $ctrl->reenviarAsistente($idActa, $idAsistente);
+        return $this->actasController()->reenviarAsistente($idActa, $idAsistente);
     }
 
     /**
@@ -774,8 +781,7 @@ class MiembroAuthController extends BaseController
         if (!$this->validarAccesoActa($idActa)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Sin acceso']);
         }
-        $ctrl = new \App\Controllers\ActasController();
-        return $ctrl->cancelarFirmaAsistente($idActa, $idAsistente);
+        return $this->actasController()->cancelarFirmaAsistente($idActa, $idAsistente);
     }
 
     /**
@@ -786,57 +792,21 @@ class MiembroAuthController extends BaseController
         if (!$this->validarAccesoActa($idActa)) {
             return redirect()->to('/miembro/dashboard')->with('error', 'No tienes acceso a esta acta');
         }
-        $ctrl = new \App\Controllers\ActasController();
-        return $ctrl->exportarWord($idActa);
+        return $this->actasController()->exportarWord($idActa);
     }
 
     /**
-     * Solicitar reapertura del acta vía email al consultor (miembro)
-     * Para miembros esta acción se tramita por correo (no botón directo de reapertura).
+     * Solicitar reapertura del acta (miembro)
+     * Reutiliza el flujo del consultor: crea registro en tbl_acta_solicitudes_reapertura
+     * y envía email al consultor asignado al cliente con token de aprobación.
      */
-    public function solicitarReaperturaEmail(int $idActa)
+    public function solicitarReapertura(int $idActa)
     {
-        $miembro = $this->validarAccesoActa($idActa);
-        if (!$miembro) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Sin acceso']);
+        if (!$this->validarAccesoActa($idActa)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Sin acceso a esta acta']);
         }
-
-        $motivo = trim($this->request->getPost('motivo') ?? '');
-        if (empty($motivo)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Debe indicar el motivo de la reapertura']);
-        }
-
-        $acta = $this->actaModel->getConDetalles($idActa);
-        $comite = $this->comiteModel->getConDetalles($acta['id_comite']);
-        $clienteModel = new ClientModel();
-        $cliente = $clienteModel->find($acta['id_cliente']);
-
-        // Destinatario: consultor asignado al cliente (si existe), si no, email genérico
-        $destinatario = $cliente['email_consultor'] ?? ($cliente['email'] ?? null);
-        if (empty($destinatario)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'No se encontró consultor para notificar. Contacte al administrador.']);
-        }
-
-        $asunto = "Solicitud de Reapertura - Acta {$acta['numero_acta']}";
-        $html = "
-            <p>El miembro <strong>{$miembro['nombre_completo']}</strong> ({$miembro['email']}) del comité <strong>{$comite['tipo_nombre']}</strong> de <strong>{$cliente['nombre_cliente']}</strong> solicita la reapertura del acta <strong>{$acta['numero_acta']}</strong>.</p>
-            <p><strong>Motivo:</strong><br>" . nl2br(esc($motivo)) . "</p>
-            <p>Por favor, gestione esta solicitud desde el módulo de Actas.</p>
-        ";
-
-        try {
-            $email = new \SendGrid\Mail\Mail();
-            $email->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'EnterpriseSST');
-            $email->setSubject($asunto);
-            $email->addTo($destinatario);
-            $email->addContent('text/html', $html);
-            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
-            $sendgrid->send($email);
-            return $this->response->setJSON(['success' => true, 'message' => 'Solicitud enviada al consultor por correo']);
-        } catch (\Exception $e) {
-            log_message('error', 'Error email reapertura miembro: ' . $e->getMessage());
-            return $this->response->setJSON(['success' => false, 'message' => 'Error al enviar la solicitud']);
-        }
+        // Delegar al ActasController que ya tiene toda la lógica (crea solicitud + email con token)
+        return $this->actasController()->solicitarReapertura($idActa);
     }
 
     /**
