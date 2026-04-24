@@ -18,15 +18,33 @@
                     <h1 class="h3 mb-1">Acta <?= esc($acta['numero_acta']) ?></h1>
                     <p class="text-muted mb-0"><?= esc($comite['tipo_nombre']) ?> - <?= date('d/m/Y', strtotime($acta['fecha_reunion'])) ?></p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
+                    <?php if (in_array($acta['estado'], ['borrador', 'en_edicion'])): ?>
+                    <a href="<?= base_url('miembro/actas/editar/' . $acta['id_acta']) ?>" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i>Editar
+                    </a>
+                    <?php endif; ?>
                     <?php if (!empty($miembroEnComite['puede_cerrar_actas']) && in_array($acta['estado'], ['borrador', 'en_edicion'])): ?>
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCerrarActa">
-                        <i class="bi bi-check-circle me-1"></i>Cerrar y Enviar a Firmas
+                        <i class="bi bi-send me-1"></i>Enviar a Firmas
                     </button>
                     <?php endif; ?>
-                    <a href="<?= base_url('miembro/acta/' . $acta['id_acta'] . '/pdf') ?>" class="btn btn-outline-danger" target="_blank">
-                        <i class="bi bi-file-pdf me-1"></i>Descargar PDF
+                    <?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada', 'cerrada'])): ?>
+                    <a href="<?= base_url('miembro/acta/' . $acta['id_acta'] . '/firmas') ?>" class="btn btn-outline-primary">
+                        <i class="bi bi-pen me-1"></i>Estado de Firmas
                     </a>
+                    <?php endif; ?>
+                    <a href="<?= base_url('miembro/acta/' . $acta['id_acta'] . '/pdf') ?>" class="btn btn-outline-danger" target="_blank">
+                        <i class="bi bi-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="<?= base_url('miembro/acta/' . $acta['id_acta'] . '/word') ?>" class="btn btn-outline-primary">
+                        <i class="bi bi-file-word me-1"></i>Word
+                    </a>
+                    <?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada', 'cerrada'])): ?>
+                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalSolicitarReapertura">
+                        <i class="bi bi-unlock me-1"></i>Solicitar Reabrir
+                    </button>
+                    <?php endif; ?>
                     <a href="<?= base_url('miembro/comite/' . $comite['id_comite']) ?>" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-1"></i>Volver
                     </a>
@@ -245,16 +263,69 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form action="<?= base_url('miembro/acta/' . $acta['id_acta'] . '/cerrar') ?>" method="POST" style="display:inline;">
+                <form action="<?= base_url('miembro/acta/' . $acta['id_acta'] . '/enviar-firmas') ?>" method="POST" style="display:inline;">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle me-1"></i>Cerrar y Enviar a Firmas
+                        <i class="bi bi-send me-1"></i>Enviar a Firmas
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+<?php endif; ?>
+
+<?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada', 'cerrada'])): ?>
+<!-- Modal Solicitar Reapertura (por email al consultor) -->
+<div class="modal fade" id="modalSolicitarReapertura" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-unlock me-2"></i>Solicitar Reapertura del Acta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Su solicitud será enviada por correo al consultor del cliente para su evaluación.
+                </div>
+                <div class="mb-3">
+                    <label for="motivoReapertura" class="form-label">Motivo de la solicitud <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="motivoReapertura" name="motivo" rows="4" placeholder="Explique por qué se debe reabrir esta acta..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" onclick="enviarSolicitudReapertura(<?= $acta['id_acta'] ?>)">
+                    <i class="bi bi-envelope me-1"></i>Enviar Solicitud
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function enviarSolicitudReapertura(idActa) {
+    const motivo = document.getElementById('motivoReapertura').value.trim();
+    if (!motivo) { alert('Debe indicar el motivo'); return; }
+    const formData = new FormData();
+    formData.append('motivo', motivo);
+    const csrfName = '<?= csrf_token() ?>';
+    const csrfHash = '<?= csrf_hash() ?>';
+    formData.append(csrfName, csrfHash);
+    fetch('<?= base_url('miembro/acta/') ?>' + idActa + '/solicitar-reapertura-email', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        alert(data.message || (data.success ? 'Solicitud enviada' : 'Error'));
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalSolicitarReapertura')).hide();
+        }
+    })
+    .catch(e => alert('Error de red: ' + e.message));
+}
+</script>
 <?php endif; ?>
 
 <?= $this->endSection() ?>

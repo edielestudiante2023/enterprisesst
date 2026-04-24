@@ -462,6 +462,384 @@ class MiembroAuthController extends BaseController
     }
 
     /**
+     * Verifica que el miembro logueado pertenece al comité del acta.
+     * Devuelve el miembro (row) si tiene acceso, o null si no.
+     */
+    private function validarAccesoActa(int $idActa): ?array
+    {
+        $session = session();
+        $email = $session->get('email_miembro');
+        $idCliente = $session->get('user_id');
+
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta) return null;
+
+        $miembro = $this->miembroModel
+            ->where('id_comite', $acta['id_comite'])
+            ->where('email', $email)
+            ->where('estado', 'activo')
+            ->first();
+
+        return $miembro ?: null;
+    }
+
+    /**
+     * Editar acta - muestra el formulario (paridad con consultor)
+     */
+    public function editarActa(int $idActa)
+    {
+        if (!$this->validarAccesoActa($idActa)) {
+            return redirect()->to('/miembro/dashboard')->with('error', 'No tienes acceso a esta acta');
+        }
+
+        $acta = $this->actaModel->getConDetalles($idActa);
+
+        if (!$acta) {
+            return redirect()->to('/miembro/dashboard')->with('error', 'Acta no encontrada');
+        }
+
+        if (!in_array($acta['estado'], ['borrador', 'en_edicion'])) {
+            return redirect()->to('/miembro/acta/' . $idActa)->with('error', 'Esta acta ya no puede editarse');
+        }
+
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($acta['id_cliente']);
+        $comite = $this->comiteModel->getConDetalles($acta['id_comite']);
+        $compromisosPendientes = $this->compromisosModel->getPendientesActasAnteriores($acta['id_comite']);
+        $miembros = $this->miembroModel->getActivosPorComite($acta['id_comite']);
+        $asistentes = $this->asistentesModel->getByActa($idActa);
+
+        // URLs de la vista editar_acta.php en contexto miembro
+        $urlBase = base_url('miembro');
+        return view('actas/editar_acta', [
+            'cliente' => $cliente,
+            'comite' => $comite,
+            'acta' => $acta,
+            'compromisos' => $acta['compromisos'] ?? [],
+            'compromisosPendientes' => $compromisosPendientes,
+            'miembros' => $miembros,
+            'asistentes' => $asistentes,
+            'urlBreadcrumbComites' => $urlBase . '/dashboard',
+            'urlBreadcrumbComite'  => $urlBase . '/comite/' . $comite['id_comite'],
+            'urlCompromisos'       => $urlBase . '/comite/' . $comite['id_comite'] . '/compromisos',
+            'urlActualizar'        => $urlBase . '/actas/editar/' . $idActa,
+            'urlEnviarFirmas'      => $urlBase . '/acta/' . $idActa . '/enviar-firmas',
+            'urlCerrar'            => $urlBase . '/acta/' . $idActa . '/cerrar',
+            'urlFirmas'            => $urlBase . '/acta/' . $idActa . '/firmas',
+            'urlVerActa'           => $urlBase . '/acta/' . $idActa,
+            'urlVolverComite'      => $urlBase . '/comite/' . $comite['id_comite'],
+        ]);
+    }
+
+    /**
+     * Actualizar acta (POST) - paridad con consultor
+     */
+    public function actualizarActa(int $idActa)
+    {
+        if (!$this->validarAccesoActa($idActa)) {
+            return redirect()->to('/miembro/dashboard')->with('error', 'No tienes acceso a esta acta');
+        }
+
+        $acta = $this->actaModel->find($idActa);
+
+        if (!$acta || !in_array($acta['estado'], ['borrador', 'en_edicion'])) {
+            return redirect()->back()->with('error', 'Acta no encontrada o no editable');
+        }
+
+        // Orden del día
+        $ordenPuntos = $this->request->getPost('orden_punto') ?? [];
+        $ordenTemas  = $this->request->getPost('orden_tema') ?? [];
+        $ordenDia = [];
+        foreach ($ordenPuntos as $i => $punto) {
+            $tema = $ordenTemas[$i] ?? '';
+            if (!empty(trim($tema))) {
+                $ordenDia[] = ['punto' => (int) $punto, 'tema' => trim($tema)];
+            }
+        }
+
+        // Desarrollo
+        $desarrolloPost = $this->request->getPost('desarrollo') ?? [];
+        $desarrollo = [];
+        foreach ($desarrolloPost as $punto => $descripcion) {
+            $desarrollo[(int) $punto] = $descripcion;
+        }
+
+        $this->actaModel->update($idActa, [
+            'orden_del_dia' => json_encode($ordenDia, JSON_UNESCAPED_UNICODE),
+            'desarrollo' => json_encode($desarrollo),
+            'conclusiones' => $this->request->getPost('conclusiones'),
+            'observaciones' => $this->request->getPost('observaciones'),
+            'proxima_reunion_fecha' => $this->request->getPost('proxima_reunion_fecha') ?: null,
+            'proxima_reunion_hora' => $this->request->getPost('proxima_reunion_hora') ?: null,
+            'proxima_reunion_lugar' => $this->request->getPost('proxima_reunion_lugar') ?: null,
+        ]);
+
+        // Asistencia
+        $asistio = $this->request->getPost('asistio') ?? [];
+        $asistentesActa = $this->asistentesModel->getByActa($idActa);
+        foreach ($asistentesActa as $asistente) {
+            if (($asistente['tipo_asistente'] ?? '') === 'asesor') continue;
+            $marcado = in_array((string)$asistente['id_miembro'], $asistio, true);
+            if ($marcado && !$asistente['asistio']) {
+                $this->asistentesModel->marcarPresente($asistente['id_asistente']);
+            } elseif (!$marcado && $asistente['asistio']) {
+                $this->asistentesModel->marcarAusente($asistente['id_asistente']);
+            }
+        }
+
+        // Recalcular quórum
+        $quorumPresente = $this->asistentesModel->calcularQuorumPresente($idActa);
+        $hayQuorum = $this->asistentesModel->hayQuorum($idActa);
+        $this->actaModel->update($idActa, [
+            'quorum_presente' => $quorumPresente,
+            'hay_quorum' => $hayQuorum ? 1 : 0
+        ]);
+
+        // Compromisos existentes
+        $compromisosIds    = $this->request->getPost('compromiso_id') ?? [];
+        $compromisosDesc   = $this->request->getPost('compromiso_descripcion') ?? [];
+        $compromisosResp   = $this->request->getPost('compromiso_responsable') ?? [];
+        $compromisosEstado = $this->request->getPost('compromiso_estado') ?? [];
+        $compromisosFecha  = $this->request->getPost('compromiso_fecha') ?? [];
+        foreach ($compromisosIds as $i => $idCompromiso) {
+            if (!empty($idCompromiso)) {
+                $updateData = [
+                    'descripcion' => $compromisosDesc[$i] ?? '',
+                    'estado' => $compromisosEstado[$i] ?? 'pendiente',
+                    'fecha_vencimiento' => $compromisosFecha[$i] ?? null,
+                ];
+                if (!empty($compromisosResp[$i])) {
+                    $asistente = $this->asistentesModel->find($compromisosResp[$i]);
+                    if ($asistente) {
+                        $updateData['responsable_nombre'] = $asistente['nombre_completo'];
+                        $updateData['responsable_email'] = $asistente['email'];
+                    }
+                }
+                $this->compromisosModel->update($idCompromiso, $updateData);
+            }
+        }
+
+        // Compromisos nuevos
+        $nuevosDesc  = $this->request->getPost('nuevo_compromiso_descripcion') ?? [];
+        $nuevosResp  = $this->request->getPost('nuevo_compromiso_responsable') ?? [];
+        $nuevosFecha = $this->request->getPost('nuevo_compromiso_fecha') ?? [];
+        foreach ($nuevosDesc as $i => $desc) {
+            if (!empty($desc) && !empty($nuevosResp[$i])) {
+                $asistente = $this->asistentesModel->find($nuevosResp[$i]);
+                $this->compromisosModel->crearCompromiso([
+                    'id_acta' => $idActa,
+                    'id_comite' => $acta['id_comite'],
+                    'id_cliente' => $acta['id_cliente'],
+                    'descripcion' => $desc,
+                    'responsable_nombre' => $asistente['nombre_completo'] ?? '',
+                    'responsable_email' => $asistente['email'] ?? null,
+                    'fecha_compromiso' => $acta['fecha_reunion'],
+                    'fecha_vencimiento' => $nuevosFecha[$i] ?? date('Y-m-d', strtotime('+30 days'))
+                ]);
+            }
+        }
+
+        return redirect()->to('/miembro/actas/editar/' . $idActa)
+            ->with('success', 'Acta actualizada correctamente');
+    }
+
+    /**
+     * Enviar acta a firmas (miembro) - paridad con consultor
+     */
+    public function enviarAFirmas(int $idActa)
+    {
+        $miembroEnComite = $this->validarAccesoActa($idActa);
+        if (!$miembroEnComite) {
+            return redirect()->to('/miembro/dashboard')->with('error', 'No tienes acceso a esta acta');
+        }
+
+        $acta = $this->actaModel->find($idActa);
+
+        if (!in_array($acta['estado'], ['borrador', 'en_edicion'])) {
+            return redirect()->back()->with('error', 'Esta acta ya fue cerrada');
+        }
+
+        if (empty($this->asistentesModel->getPresentes($idActa))) {
+            return redirect()->back()->with('error', 'Debe marcar al menos un asistente antes de enviar el acta');
+        }
+
+        if ($this->actaModel->cerrarYEnviarAFirmas($idActa, $miembroEnComite['id_miembro'])) {
+            $asistentes = $this->asistentesModel->getPresentes($idActa);
+            $actaActualizada = $this->actaModel->find($idActa);
+            $comite = $this->comiteModel->getConDetalles($acta['id_comite']);
+
+            // Delegar el envío de emails al método privado del ActasController
+            $actasCtrl = new \App\Controllers\ActasController();
+            $reflection = new \ReflectionClass($actasCtrl);
+            $enviarEmail = $reflection->getMethod('enviarEmailFirmaActa');
+            $enviarEmail->setAccessible(true);
+
+            $emailsEnviados = [];
+            $emailsFallidos = [];
+            $sinEmail = [];
+
+            foreach ($asistentes as $asistente) {
+                if (!empty($asistente['email'])) {
+                    $token = bin2hex(random_bytes(32));
+                    $this->asistentesModel->update($asistente['id_asistente'], [
+                        'token_firma' => $token,
+                        'token_expira' => date('Y-m-d H:i:s', strtotime('+7 days')),
+                        'estado_firma' => 'pendiente'
+                    ]);
+
+                    $ok = $enviarEmail->invoke($actasCtrl, $asistente, $token, $actaActualizada, $comite);
+
+                    if ($ok) {
+                        $this->asistentesModel->update($asistente['id_asistente'], [
+                            'notificacion_enviada_at' => date('Y-m-d H:i:s')
+                        ]);
+                        $emailsEnviados[] = $asistente['email'];
+                    } else {
+                        $emailsFallidos[] = $asistente['email'];
+                    }
+                } else {
+                    $sinEmail[] = $asistente['nombre_completo'];
+                }
+            }
+
+            $mensaje = 'Acta cerrada y enviada a firmas.';
+            if (!empty($emailsEnviados)) $mensaje .= ' Emails enviados a: ' . implode(', ', $emailsEnviados) . '.';
+            if (!empty($emailsFallidos)) $mensaje .= ' FALLIDOS: ' . implode(', ', $emailsFallidos) . '.';
+            if (!empty($sinEmail))       $mensaje .= ' Sin email: ' . implode(', ', $sinEmail) . '.';
+
+            return redirect()->to('/miembro/acta/' . $idActa . '/firmas')->with('success', $mensaje);
+        }
+
+        return redirect()->back()->with('error', 'Error al cerrar el acta');
+    }
+
+    /**
+     * Estado de firmas del acta (miembro)
+     */
+    public function estadoFirmas(int $idActa)
+    {
+        if (!$this->validarAccesoActa($idActa)) {
+            return redirect()->to('/miembro/dashboard')->with('error', 'No tienes acceso a esta acta');
+        }
+
+        $acta = $this->actaModel->getConDetalles($idActa);
+        if (!$acta) {
+            return redirect()->to('/miembro/dashboard')->with('error', 'Acta no encontrada');
+        }
+
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($acta['id_cliente']);
+        $comite = $this->comiteModel->getConDetalles($acta['id_comite']);
+        $asistentes = $this->asistentesModel->getByActa($idActa);
+
+        return view('actas/estado_firmas', [
+            'cliente' => $cliente,
+            'comite' => $comite,
+            'acta' => $acta,
+            'asistentes' => $asistentes,
+            'esMiembro' => true,
+        ]);
+    }
+
+    /**
+     * Reenviar notificación de firma a todos los pendientes (miembro)
+     */
+    public function reenviarTodos(int $idActa)
+    {
+        if (!$this->validarAccesoActa($idActa)) {
+            return redirect()->to('/miembro/dashboard')->with('error', 'No tienes acceso a esta acta');
+        }
+        // Delegar al ActasController que ya tiene la lógica completa
+        $ctrl = new \App\Controllers\ActasController();
+        return $ctrl->reenviarTodos($idActa);
+    }
+
+    /**
+     * Reenviar notificación a un asistente específico (miembro)
+     */
+    public function reenviarAsistente(int $idActa, int $idAsistente)
+    {
+        if (!$this->validarAccesoActa($idActa)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Sin acceso']);
+        }
+        $ctrl = new \App\Controllers\ActasController();
+        return $ctrl->reenviarAsistente($idActa, $idAsistente);
+    }
+
+    /**
+     * Cancelar firma de un asistente (miembro)
+     */
+    public function cancelarFirmaAsistente(int $idActa, int $idAsistente)
+    {
+        if (!$this->validarAccesoActa($idActa)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Sin acceso']);
+        }
+        $ctrl = new \App\Controllers\ActasController();
+        return $ctrl->cancelarFirmaAsistente($idActa, $idAsistente);
+    }
+
+    /**
+     * Exportar Word del acta (miembro)
+     */
+    public function exportarWord(int $idActa)
+    {
+        if (!$this->validarAccesoActa($idActa)) {
+            return redirect()->to('/miembro/dashboard')->with('error', 'No tienes acceso a esta acta');
+        }
+        $ctrl = new \App\Controllers\ActasController();
+        return $ctrl->exportarWord($idActa);
+    }
+
+    /**
+     * Solicitar reapertura del acta vía email al consultor (miembro)
+     * Para miembros esta acción se tramita por correo (no botón directo de reapertura).
+     */
+    public function solicitarReaperturaEmail(int $idActa)
+    {
+        $miembro = $this->validarAccesoActa($idActa);
+        if (!$miembro) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Sin acceso']);
+        }
+
+        $motivo = trim($this->request->getPost('motivo') ?? '');
+        if (empty($motivo)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Debe indicar el motivo de la reapertura']);
+        }
+
+        $acta = $this->actaModel->getConDetalles($idActa);
+        $comite = $this->comiteModel->getConDetalles($acta['id_comite']);
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($acta['id_cliente']);
+
+        // Destinatario: consultor asignado al cliente (si existe), si no, email genérico
+        $destinatario = $cliente['email_consultor'] ?? ($cliente['email'] ?? null);
+        if (empty($destinatario)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No se encontró consultor para notificar. Contacte al administrador.']);
+        }
+
+        $asunto = "Solicitud de Reapertura - Acta {$acta['numero_acta']}";
+        $html = "
+            <p>El miembro <strong>{$miembro['nombre_completo']}</strong> ({$miembro['email']}) del comité <strong>{$comite['tipo_nombre']}</strong> de <strong>{$cliente['nombre_cliente']}</strong> solicita la reapertura del acta <strong>{$acta['numero_acta']}</strong>.</p>
+            <p><strong>Motivo:</strong><br>" . nl2br(esc($motivo)) . "</p>
+            <p>Por favor, gestione esta solicitud desde el módulo de Actas.</p>
+        ";
+
+        try {
+            $email = new \SendGrid\Mail\Mail();
+            $email->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'EnterpriseSST');
+            $email->setSubject($asunto);
+            $email->addTo($destinatario);
+            $email->addContent('text/html', $html);
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $sendgrid->send($email);
+            return $this->response->setJSON(['success' => true, 'message' => 'Solicitud enviada al consultor por correo']);
+        } catch (\Exception $e) {
+            log_message('error', 'Error email reapertura miembro: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al enviar la solicitud']);
+        }
+    }
+
+    /**
      * Cerrar acta y enviar a firmas
      */
     public function cerrarActa(int $idActa)

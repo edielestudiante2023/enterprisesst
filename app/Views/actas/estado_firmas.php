@@ -2,15 +2,40 @@
 
 <?= $this->section('content') ?>
 
+<?php
+$esMiembro = $esMiembro ?? false;
+if ($esMiembro) {
+    $urlBreadcrumbComites = base_url('miembro/dashboard');
+    $urlBreadcrumbComite  = base_url('miembro/comite/' . $comite['id_comite']);
+    $urlBreadcrumbActa    = base_url('miembro/acta/' . $acta['id_acta']);
+    $urlReenviarTodos     = base_url('miembro/acta/' . $acta['id_acta'] . '/reenviar-todos');
+    $urlEnviarFirmas      = base_url('miembro/acta/' . $acta['id_acta'] . '/enviar-firmas');
+    $urlReenviarBase      = base_url('miembro/acta/' . $acta['id_acta'] . '/reenviar/');
+    $urlCancelarBase      = base_url('miembro/acta/' . $acta['id_acta'] . '/cancelar-firma/');
+    $urlVerActa           = base_url('miembro/acta/' . $acta['id_acta']);
+    $urlVolverComite      = base_url('miembro/comite/' . $comite['id_comite']);
+} else {
+    $urlBreadcrumbComites = base_url('actas/' . $cliente['id_cliente']);
+    $urlBreadcrumbComite  = base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite']);
+    $urlBreadcrumbActa    = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta']);
+    $urlReenviarTodos     = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/reenviar-todos');
+    $urlEnviarFirmas      = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/enviar-firmas');
+    $urlReenviarBase      = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/reenviar/');
+    $urlCancelarBase      = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/cancelar-firma/');
+    $urlVerActa           = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta']);
+    $urlVolverComite      = base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite']);
+}
+?>
+
 <div class="container-fluid py-4">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="<?= base_url('actas/' . $cliente['id_cliente']) ?>">Comites</a></li>
-                    <li class="breadcrumb-item"><a href="<?= base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite']) ?>"><?= esc($comite['codigo']) ?></a></li>
-                    <li class="breadcrumb-item"><a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta']) ?>">Acta <?= esc($acta['numero_acta']) ?></a></li>
+                    <li class="breadcrumb-item"><a href="<?= $urlBreadcrumbComites ?>">Comites</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $urlBreadcrumbComite ?>"><?= esc($comite['codigo']) ?></a></li>
+                    <li class="breadcrumb-item"><a href="<?= $urlBreadcrumbActa ?>">Acta <?= esc($acta['numero_acta']) ?></a></li>
                     <li class="breadcrumb-item active">Estado de Firmas</li>
                 </ol>
             </nav>
@@ -64,13 +89,13 @@
                 <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-people me-2"></i>Detalle de Firmantes</h5>
                     <?php if ($acta['estado'] === 'pendiente_firma' && ($totalAsist - $firmados) > 0): ?>
-                    <form action="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/reenviar-todos') ?>" method="post" class="d-inline">
+                    <form action="<?= $urlReenviarTodos ?>" method="post" class="d-inline">
                         <button type="submit" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-envelope me-1"></i> Reenviar a pendientes
                         </button>
                     </form>
                     <?php elseif (in_array($acta['estado'], ['borrador', 'en_edicion'])): ?>
-                    <form action="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/enviar-firmas') ?>" method="post" class="d-inline">
+                    <form action="<?= $urlEnviarFirmas ?>" method="post" class="d-inline">
                         <button type="submit" class="btn btn-success btn-sm">
                             <i class="bi bi-send me-1"></i> Enviar a Firmas
                         </button>
@@ -140,8 +165,8 @@
                                         </button>
                                         <?php elseif ($asist['asistio'] && empty($asist['firma_fecha']) && $acta['estado'] === 'pendiente_firma'): ?>
                                         <?php $urlFirmaActa = base_url('acta/firmar/' . ($asist['token_firma'] ?? '')); ?>
-                                        <?php $urlReenviarActa = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/reenviar/' . $asist['id_asistente']); ?>
-                                        <?php $urlCancelarActa = base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/cancelar-firma/' . $asist['id_asistente']); ?>
+                                        <?php $urlReenviarActa = $urlReenviarBase . $asist['id_asistente']; ?>
+                                        <?php $urlCancelarActa = $urlCancelarBase . $asist['id_asistente']; ?>
                                         <div class="btn-group btn-group-sm">
                                             <button type="button" class="btn btn-outline-info" title="Copiar enlace de firma"
                                                     onclick="copiarEnlaceFirma('<?= $urlFirmaActa ?>', '<?= esc($asist['nombre_completo']) ?>')">
@@ -261,10 +286,10 @@
 
             <!-- Acciones -->
             <div class="d-grid gap-2">
-                <a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta']) ?>" class="btn btn-outline-primary">
+                <a href="<?= $urlVerActa ?>" class="btn btn-outline-primary">
                     <i class="bi bi-eye me-1"></i> Ver Acta
                 </a>
-                <a href="<?= base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite']) ?>" class="btn btn-outline-secondary">
+                <a href="<?= $urlVolverComite ?>" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i> Volver al Comite
                 </a>
             </div>
