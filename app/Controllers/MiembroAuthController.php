@@ -785,6 +785,22 @@ class MiembroAuthController extends BaseController
     }
 
     /**
+     * Servir imagen de firma (miembro) - valida que el miembro tenga acceso al acta
+     * del asistente, delega en ActasController::firmaImagen.
+     */
+    public function firmaImagen(int $idAsistente)
+    {
+        $asistente = $this->asistentesModel->find($idAsistente);
+        if (!$asistente) {
+            return $this->response->setStatusCode(404)->setBody('Firma no encontrada');
+        }
+        if (!$this->validarAccesoActa((int) $asistente['id_acta'])) {
+            return $this->response->setStatusCode(403)->setBody('Sin acceso');
+        }
+        return $this->actasController()->firmaImagen($idAsistente);
+    }
+
+    /**
      * Exportar Word del acta (miembro)
      */
     public function exportarWord(int $idActa)
