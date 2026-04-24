@@ -1564,6 +1564,7 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('acta/(:num)/reenviar/(:num)', 'MiembroAuthController::reenviarAsistente/$1/$2');
     $routes->post('acta/(:num)/cancelar-firma/(:num)', 'MiembroAuthController::cancelarFirmaAsistente/$1/$2');
     $routes->post('acta/(:num)/solicitar-reapertura', 'MiembroAuthController::solicitarReapertura/$1');
+    $routes->get('acta/firma-imagen/(:num)', 'MiembroAuthController::firmaImagen/$1');
 
     // Inspecciones Locativas (miembro COPASST)
     $routes->get('inspecciones/locativa', 'MiembroInspeccionController::list');

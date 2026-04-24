@@ -317,7 +317,7 @@ if ($esMiembro) {
 <script>
 function verFirma(idAsistente, nombre) {
     document.getElementById('nombreFirmante').textContent = nombre;
-    document.getElementById('imagenFirma').src = '<?= base_url('actas/firma-imagen/') ?>' + idAsistente;
+    document.getElementById('imagenFirma').src = '<?= $esMiembro ? base_url('miembro/acta/firma-imagen/') : base_url('actas/firma-imagen/') ?>' + idAsistente;
     new bootstrap.Modal(document.getElementById('modalVerFirma')).show();
 }
 </script>
