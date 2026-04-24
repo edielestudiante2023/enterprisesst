@@ -2,14 +2,27 @@
 
 <?= $this->section('content') ?>
 
+<?php
+// Contexto de URLs: consultor (por defecto) o miembro. Permite que la misma vista funcione para ambos.
+$urlBreadcrumbComites = $urlBreadcrumbComites ?? base_url('actas/' . $cliente['id_cliente']);
+$urlBreadcrumbComite  = $urlBreadcrumbComite  ?? base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite']);
+$urlCompromisos       = $urlCompromisos       ?? base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite'] . '/compromisos');
+$urlActualizar        = $urlActualizar        ?? base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/actualizar');
+$urlEnviarFirmas      = $urlEnviarFirmas      ?? base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/enviar-firmas');
+$urlCerrar            = $urlCerrar            ?? base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/cerrar');
+$urlFirmas            = $urlFirmas            ?? base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/firmas');
+$urlVerActa           = $urlVerActa           ?? base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta']);
+$urlVolverComite      = $urlVolverComite      ?? base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite']);
+?>
+
 <div class="container-fluid py-4">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="<?= base_url('actas/' . $cliente['id_cliente']) ?>">Comites</a></li>
-                    <li class="breadcrumb-item"><a href="<?= base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite']) ?>"><?= esc($comite['codigo']) ?></a></li>
+                    <li class="breadcrumb-item"><a href="<?= $urlBreadcrumbComites ?>">Comites</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $urlBreadcrumbComite ?>"><?= esc($comite['codigo']) ?></a></li>
                     <li class="breadcrumb-item active">Editar Acta <?= esc($acta['numero_acta']) ?></li>
                 </ol>
             </nav>
@@ -19,7 +32,7 @@
                     <p class="text-muted mb-0"><?= esc($cliente['nombre_cliente']) ?> - <?= esc($comite['tipo_nombre']) ?></p>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <a href="<?= base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite'] . '/compromisos') ?>"
+                    <a href="<?= $urlCompromisos ?>"
                        class="btn btn-warning" title="Ver dashboard de compromisos" target="_blank">
                         <i class="bi bi-list-task me-1"></i>Dashboard Compromisos <i class="bi bi-box-arrow-up-right small"></i>
                     </a>
@@ -41,7 +54,7 @@
     </div>
 
 
-    <form action="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/actualizar') ?>" method="post" id="formActa">
+    <form action="<?= $urlActualizar ?>" method="post" id="formActa">
         <div class="row">
             <!-- Datos de la reunión -->
             <div class="col-lg-8">
@@ -360,7 +373,7 @@
                             </li>
                             <?php endforeach; ?>
                         </ul>
-                        <a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/firmas') ?>" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                        <a href="<?= $urlFirmas ?>" class="btn btn-outline-primary btn-sm w-100 mt-3">
                             <i class="bi bi-eye me-1"></i> Ver detalle de firmas
                         </a>
                     </div>
@@ -385,10 +398,10 @@
                     </button>
                     <?php endif; ?>
 
-                    <a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta']) ?>" class="btn btn-outline-secondary">
+                    <a href="<?= $urlVerActa ?>" class="btn btn-outline-secondary">
                         Ver Acta
                     </a>
-                    <a href="<?= base_url('actas/' . $cliente['id_cliente'] . '/comite/' . $comite['id_comite']) ?>" class="btn btn-outline-secondary">
+                    <a href="<?= $urlVolverComite ?>" class="btn btn-outline-secondary">
                         Volver al Comite
                     </a>
                 </div>
@@ -415,7 +428,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form action="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/enviar-firmas') ?>" method="post">
+                <form action="<?= $urlEnviarFirmas ?>" method="post">
                     <button type="submit" class="btn btn-success">
                         <i class="bi bi-send me-1"></i> Enviar a Firmas
                     </button>
@@ -442,7 +455,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form action="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/cerrar') ?>" method="post">
+                <form action="<?= $urlCerrar ?>" method="post">
                     <button type="submit" class="btn btn-warning">
                         <i class="bi bi-lock me-1"></i> Cerrar Acta
                     </button>

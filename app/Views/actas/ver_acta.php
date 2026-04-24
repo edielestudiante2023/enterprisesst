@@ -31,8 +31,11 @@
                         <?= ucfirst(str_replace('_', ' ', $acta['estado'])) ?>
                     </span>
 
+                    <?php
+                        $ctxPrefix = $ctxPrefix ?? 'actas';
+                    ?>
                     <?php if ($acta['estado'] === 'borrador' || $acta['estado'] === 'pendiente_firma'): ?>
-                    <a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/acta/' . $acta['id_acta'] . '/editar') ?>" class="btn btn-primary btn-sm">
+                    <a href="<?= base_url($ctxPrefix . '/editar/' . $acta['id_acta']) ?>" class="btn btn-primary btn-sm">
                         <i class="bi bi-pencil me-1"></i> Editar
                     </a>
                     <?php endif; ?>

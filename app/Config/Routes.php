@@ -1554,6 +1554,17 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('acta/(:num)/cerrar', 'MiembroAuthController::cerrarActa/$1');
     $routes->get('compromisos', 'MiembroAuthController::misCompromisos');
 
+    // Paridad con consultor: editar, enviar a firmas, estado de firmas, word, reaperturar por email
+    $routes->get('actas/editar/(:num)', 'MiembroAuthController::editarActa/$1');
+    $routes->post('actas/editar/(:num)', 'MiembroAuthController::actualizarActa/$1');
+    $routes->post('acta/(:num)/enviar-firmas', 'MiembroAuthController::enviarAFirmas/$1');
+    $routes->get('acta/(:num)/firmas', 'MiembroAuthController::estadoFirmas/$1');
+    $routes->get('acta/(:num)/word', 'MiembroAuthController::exportarWord/$1');
+    $routes->post('acta/(:num)/reenviar-todos', 'MiembroAuthController::reenviarTodos/$1');
+    $routes->post('acta/(:num)/reenviar/(:num)', 'MiembroAuthController::reenviarAsistente/$1/$2');
+    $routes->post('acta/(:num)/cancelar-firma/(:num)', 'MiembroAuthController::cancelarFirmaAsistente/$1/$2');
+    $routes->post('acta/(:num)/solicitar-reapertura-email', 'MiembroAuthController::solicitarReaperturaEmail/$1');
+
     // Inspecciones Locativas (miembro COPASST)
     $routes->get('inspecciones/locativa', 'MiembroInspeccionController::list');
     $routes->get('inspecciones/locativa/create', 'MiembroInspeccionController::create');
