@@ -77,8 +77,8 @@ trait TenantScopedModel
         if ($clientIds === null) return; // superadmin/CLI
 
         if (empty($clientIds)) {
-            // No tiene clientes: no devolver nada
-            $this->where('1', 0, false);
+            // No tiene clientes: filtrar por id imposible para retornar 0 filas
+            $this->whereIn($this->table . '.id_cliente', [0]);
             return;
         }
 
