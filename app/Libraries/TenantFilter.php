@@ -167,8 +167,8 @@ class TenantFilter
 
         $empresaId = self::getEmpresaId();
         if ($empresaId === null) {
-            // Sin empresa -> no ve nada
-            $builder->where('1', 0, false);
+            // Sin empresa -> no ve nada (filtra por id imposible)
+            $builder->whereIn($aliasClientes . '.id_consultor', [0]);
             return $builder;
         }
 
@@ -229,7 +229,7 @@ class TenantFilter
 
         $empresaId = self::getEmpresaId();
         if ($empresaId === null) {
-            $builder->where('1', 0, false);
+            $builder->whereIn($aliasUsuarios . '.id_usuario', [0]);
             return $builder;
         }
 
@@ -255,7 +255,7 @@ class TenantFilter
 
         $empresaId = self::getEmpresaId();
         if ($empresaId === null) {
-            $builder->where('1', 0, false);
+            $builder->where($aliasConsultor . '.id_empresa_consultora', -1);
             return $builder;
         }
 
