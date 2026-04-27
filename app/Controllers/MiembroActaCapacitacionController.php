@@ -277,6 +277,156 @@ class MiembroActaCapacitacionController extends BaseController
         return $this->response->setJSON(['success' => true, 'url' => $url, 'nombre' => $asistente['nombre_completo']]);
     }
 
+    /**
+     * AJAX: guarda/actualiza UN asistente individual (sin tocar el resto del form).
+     */
+    public function saveAsistente(int $idActa)
+    {
+        $miembro = $this->getMiembroAny();
+        if (!$miembro) return $this->response->setJSON(['success' => false, 'error' => 'No autenticado']);
+
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta || (int)$acta['id_cliente'] !== (int)$miembro['id_cliente']) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Sin acceso al acta']);
+        }
+        if ($acta['estado'] === 'completo') {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta ya finalizada']);
+        }
+
+        $nombre = trim((string)$this->request->getPost('nombre_completo'));
+        if ($nombre === '') {
+            return $this->response->setJSON(['success' => false, 'error' => 'Nombre requerido']);
+        }
+
+        $payload = [
+            'id_acta_capacitacion' => $idActa,
+            'nombre_completo'      => $nombre,
+            'tipo_documento'       => $this->request->getPost('tipo_documento') ?: 'CC',
+            'numero_documento'     => $this->request->getPost('numero_documento') ?: null,
+            'cargo'                => $this->request->getPost('cargo') ?: null,
+            'area_dependencia'     => $this->request->getPost('area_dependencia') ?: null,
+            'email'                => $this->request->getPost('email') ?: null,
+            'celular'              => $this->request->getPost('celular') ?: null,
+            'orden'                => (int)($this->request->getPost('orden') ?: 1),
+        ];
+
+        $idAsistente = $this->request->getPost('id_asistente');
+        if ($idAsistente && ($existente = $this->asistenteModel->find((int)$idAsistente))
+            && (int)$existente['id_acta_capacitacion'] === $idActa) {
+            $this->asistenteModel->update((int)$idAsistente, $payload);
+            $id = (int)$idAsistente;
+        } else {
+            $this->asistenteModel->insert($payload);
+            $id = (int)$this->asistenteModel->getInsertID();
+        }
+
+        $asistente = $this->asistenteModel->find($id);
+        return $this->response->setJSON([
+            'success'    => true,
+            'id'         => $id,
+            'asistente'  => $asistente,
+        ]);
+    }
+
+    /**
+     * AJAX: genera token (si no existe) y envía email con el enlace de firma al asistente.
+     */
+    public function enviarEmailFirma(int $idAsistente)
+    {
+        $miembro = $this->getMiembroAny();
+        if (!$miembro) return $this->response->setJSON(['success' => false, 'error' => 'No autenticado']);
+
+        $asistente = $this->asistenteModel->find($idAsistente);
+        if (!$asistente) return $this->response->setJSON(['success' => false, 'error' => 'Asistente no encontrado']);
+
+        $acta = $this->actaModel->find($asistente['id_acta_capacitacion']);
+        if (!$acta || (int)$acta['id_cliente'] !== (int)$miembro['id_cliente']) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Sin acceso']);
+        }
+        if (!empty($asistente['firma_path'])) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Este asistente ya firmó']);
+        }
+        if (empty($asistente['email'])) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Este asistente no tiene email registrado']);
+        }
+
+        // Reutiliza token vigente o genera uno nuevo
+        $token = $asistente['token_firma'];
+        $vigente = $token && $asistente['token_expiracion'] && strtotime($asistente['token_expiracion']) > time();
+        if (!$vigente) {
+            $token = bin2hex(random_bytes(32));
+            $this->asistenteModel->update($idAsistente, [
+                'token_firma'      => $token,
+                'token_expiracion' => date('Y-m-d H:i:s', strtotime('+7 days')),
+            ]);
+        }
+
+        $cliente = (new ClientModel())->find($acta['id_cliente']);
+        $ok = $this->enviarEmailFirmaCapacitacion($asistente, $token, $acta, $cliente);
+
+        return $this->response->setJSON([
+            'success' => $ok,
+            'email'   => $asistente['email'],
+            'error'   => $ok ? null : 'No se pudo enviar el email',
+        ]);
+    }
+
+    private function enviarEmailFirmaCapacitacion(array $asistente, string $token, array $acta, ?array $cliente): bool
+    {
+        $urlFirma = base_url("acta-capacitacion/firmar-remoto/{$token}");
+        $tema = esc($acta['tema'] ?? '');
+        $fecha = date('d/m/Y', strtotime($acta['fecha_capacitacion']));
+        $modalidad = ucfirst($acta['modalidad'] ?? 'virtual');
+        $nombreCliente = esc($cliente['nombre_cliente'] ?? '');
+        $nombre = esc($asistente['nombre_completo']);
+
+        $mensaje = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 20px; text-align: center;'>
+                <h2 style='color: white; margin: 0;'>Solicitud de Firma - Acta de Capacitación</h2>
+            </div>
+            <div style='padding: 30px; background: #f8f9fa;'>
+                <p>Estimado/a <strong>{$nombre}</strong>,</p>
+                <p>Se requiere su firma electrónica para confirmar la asistencia a la siguiente capacitación:</p>
+                <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #bd9751;'>
+                    <p style='margin: 5px 0;'><strong>Empresa:</strong> {$nombreCliente}</p>
+                    <p style='margin: 5px 0;'><strong>Tema:</strong> {$tema}</p>
+                    <p style='margin: 5px 0;'><strong>Fecha:</strong> {$fecha}</p>
+                    <p style='margin: 5px 0;'><strong>Modalidad:</strong> {$modalidad}</p>
+                </div>
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='{$urlFirma}' style='background: #bd9751; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; display: inline-block;'>
+                        Firmar Acta de Capacitación
+                    </a>
+                </div>
+                <p style='color: #666; font-size: 12px;'>O copie este enlace en su navegador:</p>
+                <p style='word-break: break-all; background: #e9ecef; padding: 10px; border-radius: 4px; font-size: 12px;'>{$urlFirma}</p>
+                <hr style='border: none; border-top: 1px solid #dee2e6; margin: 20px 0;'>
+                <p style='color: #666; font-size: 11px;'>
+                    <strong>Importante:</strong> Este enlace es personal e intransferible. No lo comparta con nadie.<br>
+                    El enlace expirará en 7 días.
+                </p>
+            </div>
+            <div style='background: #1e3a5f; padding: 15px; text-align: center;'>
+                <p style='color: #94a3b8; font-size: 11px; margin: 0;'>EnterpriseSST - Sistema de Gestión de Seguridad y Salud en el Trabajo</p>
+            </div>
+        </div>";
+
+        try {
+            $email = new \SendGrid\Mail\Mail();
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
+            $email->setSubject("Firma requerida: Capacitación - {$tema} - {$nombreCliente}");
+            $email->addTo($asistente['email'], $asistente['nombre_completo']);
+            $email->addContent("text/html", $mensaje);
+            $sg = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sg->send($email);
+            return $response->statusCode() >= 200 && $response->statusCode() < 300;
+        } catch (\Exception $e) {
+            log_message('error', 'Error email firma capacitacion: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function finalizar($id)
     {
         $miembro = $this->getMiembroAny();
