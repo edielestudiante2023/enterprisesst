@@ -102,6 +102,71 @@ class CronogcapacitacionController extends Controller
             'observaciones'
         ];
 
+        // Caso especial: nombre_capacitacion no es columna del cronograma. Resuelve o crea
+        // en tbl_capacitaciones y reasigna id_capacitacion. Si no existe en catalogo y no
+        // viene confirm_create=1, devuelve requires_confirm para que el frontend pregunte.
+        if ($field === 'nombre_capacitacion') {
+            $nuevoNombre = trim((string) $value);
+            if ($nuevoNombre === '') {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'El nombre de la capacitacion no puede estar vacio'
+                ]);
+            }
+
+            $confirmCreate = (string) $this->request->getPost('confirm_create') === '1';
+
+            $capacitacionModel = new CapacitacionModel();
+            $cronogModel = new CronogcapacitacionModel();
+
+            $existente = $capacitacionModel
+                ->where('LOWER(TRIM(capacitacion))', mb_strtolower($nuevoNombre))
+                ->first();
+
+            if (!$existente && !$confirmCreate) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'requires_confirm' => true,
+                    'message' => 'No existe en el catalogo',
+                    'nombre' => $nuevoNombre
+                ]);
+            }
+
+            $isNew = false;
+            if ($existente) {
+                $idCapacitacion = (int) $existente['id_capacitacion'];
+                $nombreFinal = $existente['capacitacion'];
+            } else {
+                $idCapacitacion = $capacitacionModel->insert([
+                    'capacitacion' => $nuevoNombre,
+                    'objetivo_capacitacion' => 'Por definir',
+                    'observaciones' => 'Creada por edicion inline desde cronograma'
+                ]);
+                if (!$idCapacitacion) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'No se pudo crear la capacitacion en el catalogo'
+                    ]);
+                }
+                $isNew = true;
+                $nombreFinal = $nuevoNombre;
+            }
+
+            if ($cronogModel->update($id, ['id_capacitacion' => $idCapacitacion])) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => $isNew ? 'Nueva capacitacion creada' : 'Capacitacion asignada',
+                    'newValue' => $nombreFinal,
+                    'is_new_capacitacion' => $isNew,
+                    'id_capacitacion' => $idCapacitacion
+                ]);
+            }
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No se pudo actualizar el cronograma'
+            ]);
+        }
+
         if ($field === 'modalidad') {
             $value = $this->normalizarModalidad($value);
         }
