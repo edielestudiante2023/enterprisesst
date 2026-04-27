@@ -295,10 +295,14 @@
         <!-- Sidebar -->
         <div class="col-lg-4">
             <!-- Asistentes -->
+            <?php
+            $asistentesPresentes = array_filter($asistentes, fn($a) => !empty($a['asistio']));
+            $totalPresentes = count($asistentesPresentes);
+            ?>
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-people me-2"></i>Asistentes</h5>
-                    <span class="badge bg-primary"><?= count($asistentes) ?></span>
+                    <span class="badge bg-primary" title="Presentes / Total registrados"><?= $totalPresentes ?> / <?= count($asistentes) ?></span>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush">
@@ -318,10 +322,28 @@
                                 <span class="badge bg-success" title="Firmado: <?= date('d/m/Y H:i', strtotime($asist['firma_fecha'])) ?>">
                                     <i class="bi bi-check-lg"></i>
                                 </span>
-                            <?php else: ?>
-                                <span class="badge bg-secondary" title="Pendiente de firma">
-                                    <i class="bi bi-clock"></i>
+                            <?php elseif (empty($asist['asistio'])): ?>
+                                <span class="badge bg-danger" title="Ausente - no requiere firma">
+                                    <i class="bi bi-x-lg"></i> Ausente
                                 </span>
+                            <?php else: ?>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="badge bg-secondary" title="Pendiente de firma">
+                                        <i class="bi bi-clock"></i>
+                                    </span>
+                                    <?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada']) && ($asist['tipo_asistente'] ?? '') !== 'asesor'): ?>
+                                        <?php if (!empty($solicitudesMarcarAusente[$asist['id_asistente']] ?? null)): ?>
+                                            <span class="badge bg-warning text-dark" title="Solicitud de marcar ausente pendiente de aprobacion">
+                                                <i class="bi bi-hourglass-split"></i>
+                                            </span>
+                                        <?php else: ?>
+                                            <button type="button" class="btn btn-link btn-sm p-0 text-danger" title="Solicitar marcar como ausente"
+                                                    onclick="solicitarMarcarAusente(<?= (int)$asist['id_asistente'] ?>, <?= json_encode($asist['nombre_completo']) ?>)">
+                                                <i class="bi bi-person-x-fill"></i>
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
                         </li>
                         <?php endforeach; ?>
@@ -336,8 +358,8 @@
                 </div>
                 <div class="card-body">
                     <?php
-                    $firmados = count(array_filter($asistentes, fn($a) => !empty($a['firma_fecha'])));
-                    $totalAsist = count($asistentes);
+                    $firmados = count(array_filter($asistentesPresentes, fn($a) => !empty($a['firma_fecha'])));
+                    $totalAsist = $totalPresentes;
                     $porcentaje = $totalAsist > 0 ? ($firmados / $totalAsist) * 100 : 0;
                     ?>
 
@@ -464,6 +486,96 @@ function solicitarReapertura() {
             formData.append('justificacion', result.value.justificacion);
 
             fetch('<?= base_url("actas/solicitar-reapertura/" . $acta["id_acta"]) ?>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Solicitud Enviada',
+                        text: data.message,
+                        confirmButtonColor: '#28a745'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                }
+            })
+            .catch(() => {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexion. Intente nuevamente.' });
+            });
+        }
+    });
+}
+</script>
+<?php endif; ?>
+
+<?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada'])): ?>
+<?php if (empty($solicitudReaperturaPendiente)): ?><?php /* sweetalert ya cargado arriba */ ?>
+<?php else: ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<?php endif; ?>
+<script>
+function solicitarMarcarAusente(idAsistente, nombreAsistente) {
+    Swal.fire({
+        title: 'Marcar como Ausente',
+        html: `
+            <div class="text-start">
+                <div class="alert alert-warning small">
+                    <strong>Persona:</strong> ${nombreAsistente}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Su nombre completo <span class="text-danger">*</span></label>
+                    <input type="text" id="swal_ma_nombre" class="form-control" placeholder="Quien solicita el cambio">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Su email <span class="text-danger">*</span></label>
+                    <input type="email" id="swal_ma_email" class="form-control" placeholder="su@email.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Su cargo</label>
+                    <input type="text" id="swal_ma_cargo" class="form-control" placeholder="Su cargo">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Justificacion <span class="text-danger">*</span></label>
+                    <textarea id="swal_ma_justificacion" class="form-control" rows="4" placeholder="Explique por que esta persona debe figurar como ausente..."></textarea>
+                </div>
+                <div class="alert alert-info small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    El consultor recibira un email para aprobar. Las firmas existentes de otras personas NO se afectan.
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-send me-1"></i> Enviar Solicitud',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#f97316',
+        width: '550px',
+        preConfirm: () => {
+            const nombre = document.getElementById('swal_ma_nombre').value.trim();
+            const email = document.getElementById('swal_ma_email').value.trim();
+            const just = document.getElementById('swal_ma_justificacion').value.trim();
+            if (!nombre || !email || !just) {
+                Swal.showValidationMessage('Nombre, email y justificacion son obligatorios');
+                return false;
+            }
+            return {
+                solicitante_nombre: nombre,
+                solicitante_email: email,
+                solicitante_cargo: document.getElementById('swal_ma_cargo').value.trim(),
+                justificacion: just
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('solicitante_nombre', result.value.solicitante_nombre);
+            formData.append('solicitante_email', result.value.solicitante_email);
+            formData.append('solicitante_cargo', result.value.solicitante_cargo);
+            formData.append('justificacion', result.value.justificacion);
+
+            fetch('<?= base_url("actas/solicitar-marcar-ausente/" . $acta["id_acta"]) ?>/' + idAsistente, {
                 method: 'POST',
                 body: formData
             })

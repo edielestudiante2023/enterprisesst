@@ -994,12 +994,16 @@ class ActasController extends BaseController
         $reaperturaModel = new \App\Models\ActaSolicitudReaperturaModel();
         $solicitudPendiente = $reaperturaModel->tieneSolicitudPendiente($idActa);
 
+        $marcarAusenteModel = new \App\Models\ActaSolicitudMarcarAusenteModel();
+        $solicitudesMarcarAusente = $marcarAusenteModel->getMapaPendientesPorActa($idActa);
+
         return view('actas/ver_acta', [
             'cliente' => $cliente,
             'comite' => $comite,
             'acta' => $acta,
             'asistentes' => $asistentes,
-            'solicitudReaperturaPendiente' => $solicitudPendiente
+            'solicitudReaperturaPendiente' => $solicitudPendiente,
+            'solicitudesMarcarAusente' => $solicitudesMarcarAusente
         ]);
     }
 
@@ -2087,6 +2091,169 @@ class ActasController extends BaseController
             return $statusCode >= 200 && $statusCode < 300;
         } catch (\Exception $e) {
             log_message('error', 'Error enviando email de reapertura via SendGrid: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Solicitar marcar a un asistente como ausente retroactivamente
+     * (acta ya en pendiente_firma o firmada). Requiere autorizacion del consultor.
+     */
+    public function solicitarMarcarAusente(int $idActa, int $idAsistente)
+    {
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Acta no encontrada']);
+        }
+
+        if (!in_array($acta['estado'], ['pendiente_firma', 'firmada'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Solo se puede solicitar para actas en pendiente de firma o firmadas']);
+        }
+
+        $asistente = $this->asistentesModel->find($idAsistente);
+        if (!$asistente || (int)$asistente['id_acta'] !== (int)$idActa) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Asistente no encontrado en esta acta']);
+        }
+
+        if (!empty($asistente['firma_fecha'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Esta persona ya firmo el acta. Si necesita revertir su firma, use Reapertura.']);
+        }
+
+        if (empty($asistente['asistio'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Esta persona ya esta marcada como ausente']);
+        }
+
+        $solicitudModel = new \App\Models\ActaSolicitudMarcarAusenteModel();
+
+        if ($solicitudModel->tieneSolicitudPendientePorAsistente($idAsistente)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Ya hay una solicitud pendiente para esta persona']);
+        }
+
+        $nombre = $this->request->getPost('solicitante_nombre');
+        $email = $this->request->getPost('solicitante_email');
+        $cargo = $this->request->getPost('solicitante_cargo');
+        $justificacion = $this->request->getPost('justificacion');
+
+        if (empty($nombre) || empty($email) || empty($justificacion)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Nombre, email y justificacion son obligatorios']);
+        }
+
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($acta['id_cliente']);
+        $consultorModel = new \App\Models\ConsultantModel();
+        $consultor = $consultorModel->find($cliente['id_consultor'] ?? 0);
+
+        if (!$consultor || empty($consultor['correo_consultor'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No hay consultor asignado a este cliente']);
+        }
+
+        $id = $solicitudModel->crearSolicitud([
+            'id_acta' => $idActa,
+            'id_asistente' => $idAsistente,
+            'id_cliente' => $acta['id_cliente'],
+            'solicitante_nombre' => $nombre,
+            'solicitante_email' => $email,
+            'solicitante_cargo' => $cargo,
+            'justificacion' => $justificacion
+        ]);
+
+        if (!$id) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Error al crear la solicitud']);
+        }
+
+        $solicitud = $solicitudModel->find($id);
+        $token = $solicitud['token'];
+
+        $comite = $this->comiteModel->getConDetalles($acta['id_comite']);
+        $enviado = $this->enviarEmailMarcarAusente($consultor, $token, $acta, $comite, $asistente, $nombre, $cargo, $justificacion);
+
+        if (!$enviado) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Solicitud creada pero hubo un error al enviar el email. Contacte al administrador.']);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Solicitud enviada al consultor ' . $consultor['nombre_consultor'] . '. Recibira una notificacion cuando sea procesada.'
+        ]);
+    }
+
+    /**
+     * Email de solicitud de marcar ausente al consultor
+     */
+    private function enviarEmailMarcarAusente(array $consultor, string $token, array $acta, array $comite, array $asistente, string $solicitante, string $cargo, string $justificacion): bool
+    {
+        $urlAprobar = base_url("acta/aprobar-marcar-ausente/{$token}");
+        $tipoComite = $comite['tipo_nombre'] ?? 'Comite';
+        $fechaReunion = date('d/m/Y', strtotime($acta['fecha_reunion']));
+        $nombreAsistente = htmlspecialchars($asistente['nombre_completo'], ENT_QUOTES, 'UTF-8');
+
+        $mensaje = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+            <div style='background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 20px; text-align: center;'>
+                <h2 style='color: white; margin: 0;'>Solicitud de Marcar Asistente como Ausente</h2>
+            </div>
+            <div style='padding: 30px; background: #f8f9fa;'>
+                <p>Estimado/a <strong>{$consultor['nombre_consultor']}</strong>,</p>
+                <p>Se ha recibido una solicitud para marcar a un asistente como ausente en la siguiente acta:</p>
+
+                <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;'>
+                    <p style='margin: 5px 0;'><strong>Acta N&deg;:</strong> {$acta['numero_acta']}</p>
+                    <p style='margin: 5px 0;'><strong>Comite:</strong> {$tipoComite}</p>
+                    <p style='margin: 5px 0;'><strong>Fecha reunion:</strong> {$fechaReunion}</p>
+                    <p style='margin: 5px 0;'><strong>Estado actual:</strong> {$acta['estado']}</p>
+                </div>
+
+                <div style='background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;'>
+                    <p style='margin: 5px 0;'><strong>Persona a marcar como ausente:</strong></p>
+                    <p style='margin: 5px 0; font-size: 16px;'><strong>{$nombreAsistente}</strong></p>
+                </div>
+
+                <div style='background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;'>
+                    <p style='margin: 5px 0;'><strong>Solicitado por:</strong> {$solicitante}</p>
+                    <p style='margin: 5px 0;'><strong>Cargo:</strong> {$cargo}</p>
+                    <p style='margin: 5px 0;'><strong>Justificacion:</strong></p>
+                    <p style='margin: 5px 0; font-style: italic;'>\"{$justificacion}\"</p>
+                </div>
+
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='{$urlAprobar}' style='background: #f97316; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; display: inline-block;'>
+                        Revisar Solicitud
+                    </a>
+                </div>
+
+                <p style='color: #666; font-size: 12px;'>O copie este enlace en su navegador:</p>
+                <p style='word-break: break-all; background: #e9ecef; padding: 10px; border-radius: 4px; font-size: 12px;'>{$urlAprobar}</p>
+
+                <hr style='border: none; border-top: 1px solid #dee2e6; margin: 20px 0;'>
+                <p style='color: #666; font-size: 11px;'>
+                    <strong>Importante:</strong> Este enlace expirara en 48 horas.<br>
+                    Si aprueba, esta persona quedara marcada como ausente, no recibira recordatorios de firma y no contara en el indicador de firmas pendientes. Las firmas existentes de otras personas NO se afectan.
+                </p>
+            </div>
+            <div style='background: #1e3a5f; padding: 15px; text-align: center;'>
+                <p style='color: #94a3b8; font-size: 11px; margin: 0;'>
+                    EnterpriseSST - Sistema de Gestion de Seguridad y Salud en el Trabajo
+                </p>
+            </div>
+        </div>
+        ";
+
+        try {
+            $email = new \SendGrid\Mail\Mail();
+            $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
+            $email->setSubject("Solicitud Marcar Ausente: Acta {$acta['numero_acta']} - {$nombreAsistente}");
+            $email->addTo($consultor['correo_consultor'], $consultor['nombre_consultor']);
+            $email->addContent("text/html", $mensaje);
+
+            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($email);
+
+            $statusCode = $response->statusCode();
+            log_message('info', "SendGrid marcar ausente email enviado a {$consultor['correo_consultor']} - Status: {$statusCode}");
+
+            return $statusCode >= 200 && $statusCode < 300;
+        } catch (\Exception $e) {
+            log_message('error', 'Error enviando email marcar ausente via SendGrid: ' . $e->getMessage());
             return false;
         }
     }

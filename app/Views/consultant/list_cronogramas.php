@@ -718,6 +718,10 @@
         <button id="btnEliminarSeleccionados" class="btn btn-danger btn-sm me-2" style="display:none;">
           <i class="fas fa-trash-alt"></i> Eliminar seleccionados (<span id="countSeleccionados">0</span>)
         </button>
+        <button id="btnEnviarPtaIA" class="btn btn-sm me-2" style="display:none; background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; border: none;"
+                title="Crea actividades en el PTA del cliente a partir de las capacitaciones seleccionadas. Usa IA para sugerir numeral, PHVA, redaccion y responsable.">
+          <i class="fas fa-robot"></i> Enviar a PTA con IA (<span id="countSeleccionadosPta">0</span>)
+        </button>
         <div id="buttonsContainer" class="d-inline-block"></div>
       </div>
     </div>
@@ -739,6 +743,7 @@
             <th>*Fecha de Realización</th>
             <th>*Estado</th>
             <th>*Perfil de Asistentes</th>
+            <th>*Modalidad</th>
             <th>*Capacitador</th>
             <th>*Horas de Duración</th>
             <th>*Indicador de Realización</th>
@@ -785,6 +790,14 @@
                 <option value="TRABAJADORES_RIESGOS_CRITICOS">TRABAJADORES_RIESGOS_CRITICOS</option>
                 <option value="PERSONAL_ASEO_MANTENIMIENTO">PERSONAL_ASEO_MANTENIMIENTO</option>
                 <option value="BRIGADA">BRIGADA</option>
+              </select>
+            </th>
+            <th>
+              <select class="form-select form-select-sm filter-search">
+                <option value="">Todas</option>
+                <option value="PRESENCIAL">Presencial</option>
+                <option value="VIRTUAL">Virtual</option>
+                <option value="MIXTA">Mixta</option>
               </select>
             </th>
             <th><input type="text" class="form-control form-control-sm filter-search" placeholder="Filtrar Capacitador"></th>
@@ -834,6 +847,77 @@
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" id="btnConfirmarEliminarBulk" class="btn btn-danger">
             <i class="fas fa-trash-alt"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Enviar capacitaciones seleccionadas al PTA con sugerencias IA -->
+  <div class="modal fade" id="enviarPtaIAModal" tabindex="-1" aria-labelledby="enviarPtaIAModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header" style="background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff;">
+          <h5 class="modal-title" id="enviarPtaIAModalLabel">
+            <i class="fas fa-robot"></i> Enviar Capacitaciones al PTA con IA
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="ptaIaStep1Preview">
+            <p class="mb-2"><strong>Cliente:</strong> <span id="ptaIaClienteNombre">-</span></p>
+            <p class="text-muted small mb-2">Se crearan <strong><span id="ptaIaPreviewCount">0</span></strong> actividades en <code>tbl_pta_cliente</code> con estado <strong>ABIERTA</strong> y <code>fecha_propuesta = fecha_programada</code>. Las que ya fueron enviadas previamente (marca <code>[ORIGEN: Cronograma #X]</code>) se omitiran.</p>
+            <div class="table-responsive" style="max-height: 320px;">
+              <table class="table table-sm table-striped table-bordered">
+                <thead class="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Capacitacion</th>
+                    <th>Fecha Programada</th>
+                    <th>Estado Cronog.</th>
+                    <th>Perfil</th>
+                  </tr>
+                </thead>
+                <tbody id="ptaIaPreviewTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="ptaIaStep2Edit" style="display:none;">
+            <p class="mb-2"><i class="fas fa-info-circle"></i> Revisa y edita las sugerencias de la IA antes de insertar. Todos los campos son editables.</p>
+            <div class="table-responsive" style="max-height: 420px;">
+              <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th style="min-width:140px;">Capacitacion</th>
+                    <th style="min-width:90px;">Fuente / Tipo Servicio</th>
+                    <th style="width:60px;">PHVA</th>
+                    <th style="min-width:90px;">Numeral</th>
+                    <th style="min-width:240px;">Actividad PTA</th>
+                    <th style="min-width:140px;">Responsable Sugerido</th>
+                    <th style="min-width:130px;">Fecha Propuesta</th>
+                    <th style="min-width:200px;">Observaciones</th>
+                  </tr>
+                </thead>
+                <tbody id="ptaIaEditTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="ptaIaStep3Result" style="display:none;"></div>
+
+          <div id="ptaIaLoading" class="text-center py-3" style="display:none;">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+            <p class="mt-2 mb-0" id="ptaIaLoadingMsg">Procesando...</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" id="btnPtaIaGenerar" class="btn" style="background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; border: none;">
+            <i class="fas fa-robot"></i> Generar sugerencias con IA
+          </button>
+          <button type="button" id="btnPtaIaInsertar" class="btn btn-success" style="display:none;">
+            <i class="fas fa-check"></i> Insertar en PTA (<span id="ptaIaInsertCount">0</span>)
           </button>
         </div>
       </div>
@@ -955,6 +1039,7 @@
       html += '<tr><td style="width:30%;"><strong>Fecha de Realización:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.fecha_de_realizacion || '') + '</td></tr>';
       html += '<tr><td style="width:30%;"><strong>Estado:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.estado || '') + '</td></tr>';
       html += '<tr><td style="width:30%;"><strong>Perfil de Asistentes:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.perfil_de_asistentes || '') + '</td></tr>';
+      html += '<tr><td style="width:30%;"><strong>Modalidad:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.modalidad || 'PRESENCIAL') + '</td></tr>';
       html += '<tr><td style="width:30%;"><strong>Capacitador:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.nombre_del_capacitador || '') + '</td></tr>';
       html += '<tr><td style="width:30%;"><strong>Horas de Duración:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.horas_de_duracion_de_la_capacitacion || '') + '</td></tr>';
       html += '<tr><td style="width:30%;"><strong>Indicador de Realización:</strong></td><td style="width:70%; overflow:auto;">' + (rowData.indicador_de_realizacion_de_la_capacitacion || '') + '</td></tr>';
@@ -1086,7 +1171,7 @@
             searchable: false,
             className: 'dt-center',
             render: function(data, type, row) {
-              return '<input type="checkbox" class="row-checkbox" data-id="' + row.id_cronograma_capacitacion + '">';
+              return '<input type="checkbox" class="row-checkbox" data-id="' + row.id_cronograma_capacitacion + '" data-cliente="' + (row.id_cliente || '') + '" data-fecha="' + (row.fecha_programada || '') + '" data-capacitacion="' + (row.nombre_capacitacion || '').replace(/"/g, '&quot;') + '" data-estado="' + (row.estado || '') + '" data-perfil="' + (row.perfil_de_asistentes || '') + '" data-modalidad="' + (row.modalidad || 'PRESENCIAL') + '">';
             }
           },
           {
@@ -1139,7 +1224,7 @@
               data = (data === null || data === "") ? "" : data;
               if (type !== 'display') return data;
               var displayText = data || '&nbsp;';
-              return '<div class="cell-truncate"><span class="editable" data-field="nombre_capacitacion" data-id="' + row.id_cronograma_capacitacion + '">' + displayText + '</span></div>';
+              return '<div class="cell-truncate"><span data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span></div>';
             }
           },
           {
@@ -1193,6 +1278,17 @@
               data = (data === null || data === "") ? "" : data;
               var displayText = data || '&nbsp;';
               return '<span class="editable-select" data-field="perfil_de_asistentes" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span>';
+            }
+          },
+          {
+            data: 'modalidad',
+            render: function(data, type, row) {
+              var val = (data || 'PRESENCIAL').toUpperCase();
+              if (type !== 'display') return val;
+              var bg = '#16a34a'; // verde - presencial
+              if (val === 'VIRTUAL') bg = '#0891b2'; // azul - virtual
+              else if (val === 'MIXTA') bg = '#7c3aed'; // morado - mixta
+              return '<span class="editable-select modalidad-badge" data-field="modalidad" data-id="' + row.id_cronograma_capacitacion + '" style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;color:#fff;background:' + bg + ';cursor:pointer;">' + val + '</span>';
             }
           },
           {
@@ -1589,6 +1685,8 @@
             options = ['PROGRAMADA', 'EJECUTADA', 'CANCELADA POR EL CLIENTE', 'REPROGRAMADA'];
           } else if (field === 'perfil_de_asistentes') {
             options = ['TODOS', 'DIRECTIVOS_ALTA_GERENCIA', 'JEFES_Y_SUPERVISORES', 'VIGIA_SST', 'BRIGADA_EMERGENCIAS', 'COMITE_SEGURIDAD_VIAL', 'MIEMBROS_COPASST', 'MIEMBROS_COMITE_CONVIVENCIA', 'TRABAJADORES_RIESGOS_CRITICOS', 'PERSONAL_ASEO_MANTENIMIENTO', 'BRIGADA'];
+          } else if (field === 'modalidad') {
+            options = ['PRESENCIAL', 'VIRTUAL', 'MIXTA'];
           } else if (field === 'indicador_de_realizacion_de_la_capacitacion') {
             options = ['SIN CALIFICAR', 'SE EJECUTO EN LA FECHA O ANTES', 'SE EJECUTO DESPUES', 'DECLINADA', 'NO SE REALIZÓ'];
           }
@@ -1651,6 +1749,20 @@
                 else if (value === 'REPROGRAMADA') cls = 'estado-reprogramada';
                 cell.addClass(cls);
                 updateStatusCounts();
+              }
+
+              // Si cambio modalidad, repintar el badge de color
+              if (field === 'modalidad') {
+                var v = (value || 'PRESENCIAL').toUpperCase();
+                var bg = '#16a34a';
+                if (v === 'VIRTUAL') bg = '#0891b2';
+                else if (v === 'MIXTA') bg = '#7c3aed';
+                cell.text(v);
+                cell.css({
+                  display: 'inline-block', padding: '2px 8px', 'border-radius': '10px',
+                  'font-size': '11px', 'font-weight': '600', color: '#fff', background: bg, cursor: 'pointer'
+                });
+                cell.addClass('modalidad-badge');
               }
 
               // Si se actualizaron los campos que afectan el % Cobertura, reconstruir progress bar
@@ -2021,10 +2133,13 @@
       function updateBulkDeleteButton() {
         var count = $('.row-checkbox:checked').length;
         $('#countSeleccionados').text(count);
+        $('#countSeleccionadosPta').text(count);
         if (count > 0) {
           $('#btnEliminarSeleccionados').show();
+          $('#btnEnviarPtaIA').show();
         } else {
           $('#btnEliminarSeleccionados').hide();
+          $('#btnEnviarPtaIA').hide();
         }
       }
 
@@ -2101,6 +2216,203 @@
           },
           complete: function() {
             $btn.prop('disabled', false).html('<i class="fas fa-trash-alt"></i> Eliminar');
+          }
+        });
+      });
+
+      // ===================================================================
+      // ENVIAR A PTA CON IA (capacitaciones seleccionadas -> tbl_pta_cliente)
+      // ===================================================================
+      var ptaIaSeleccion = [];      // [{id, fecha, capacitacion, estado, perfil}]
+      var ptaIaSugerencias = [];    // respuesta IA: [{id_cronograma_capacitacion, tipo_servicio, phva, ...}]
+      var ptaIaClienteId = null;
+      var ptaIaClienteNombre = '';
+
+      $('#btnEnviarPtaIA').on('click', function() {
+        // Recoger seleccion + validar mismo cliente
+        var clientes = {};
+        ptaIaSeleccion = [];
+        $('.row-checkbox:checked').each(function() {
+          var $cb = $(this);
+          var idCli = $cb.data('cliente') || '';
+          if (idCli) clientes[idCli] = true;
+          ptaIaSeleccion.push({
+            id: $cb.data('id'),
+            id_cliente: idCli,
+            fecha: $cb.data('fecha') || '',
+            capacitacion: $cb.data('capacitacion') || '',
+            estado: $cb.data('estado') || '',
+            perfil: $cb.data('perfil') || ''
+          });
+        });
+
+        if (ptaIaSeleccion.length === 0) return;
+
+        var clientesUnicos = Object.keys(clientes);
+        if (clientesUnicos.length > 1) {
+          showToast('Solo puede enviar a PTA capacitaciones de un mismo cliente. Filtre por cliente o ajuste su seleccion.', 'warning');
+          return;
+        }
+
+        ptaIaClienteId = clientesUnicos[0] || $('#clientSelect').val() || '';
+        ptaIaClienteNombre = $('#clientSelect option:selected').text() || ('Cliente ' + ptaIaClienteId);
+        if (!ptaIaClienteId) {
+          showToast('No se pudo determinar el cliente de las filas seleccionadas.', 'danger');
+          return;
+        }
+
+        // Render preview (paso 1)
+        $('#ptaIaClienteNombre').text(ptaIaClienteNombre);
+        $('#ptaIaPreviewCount').text(ptaIaSeleccion.length);
+        var rowsHtml = '';
+        ptaIaSeleccion.forEach(function(it, idx) {
+          rowsHtml += '<tr>'
+            + '<td>' + (idx + 1) + '</td>'
+            + '<td>' + $('<div/>').text(it.capacitacion).html() + '</td>'
+            + '<td>' + $('<div/>').text(it.fecha).html() + '</td>'
+            + '<td>' + $('<div/>').text(it.estado).html() + '</td>'
+            + '<td>' + $('<div/>').text(it.perfil).html() + '</td>'
+            + '</tr>';
+        });
+        $('#ptaIaPreviewTbody').html(rowsHtml);
+
+        // Reset estado del modal
+        $('#ptaIaStep1Preview').show();
+        $('#ptaIaStep2Edit').hide();
+        $('#ptaIaStep3Result').hide().empty();
+        $('#ptaIaLoading').hide();
+        $('#btnPtaIaGenerar').show().prop('disabled', false).html('<i class="fas fa-robot"></i> Generar sugerencias con IA');
+        $('#btnPtaIaInsertar').hide();
+
+        $('#enviarPtaIAModal').modal('show');
+      });
+
+      // Paso 2: pedir sugerencias a la IA
+      $('#btnPtaIaGenerar').on('click', function() {
+        if (ptaIaSeleccion.length === 0) return;
+        var $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Consultando IA...');
+        $('#ptaIaLoading').show();
+        $('#ptaIaLoadingMsg').text('La IA esta sugiriendo numeral, PHVA, redaccion y responsable...');
+
+        var ids = ptaIaSeleccion.map(function(it) { return it.id; });
+
+        $.ajax({
+          url: '<?= base_url('/cronogCapacitacion/sugerirPta') ?>',
+          method: 'POST',
+          data: {
+            ids: ids,
+            id_cliente: ptaIaClienteId,
+            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+          },
+          dataType: 'json',
+          success: function(response) {
+            $('#ptaIaLoading').hide();
+            if (!response.success) {
+              showToast('IA: ' + (response.message || 'Error desconocido'), 'danger');
+              $btn.prop('disabled', false).html('<i class="fas fa-robot"></i> Reintentar');
+              return;
+            }
+            ptaIaSugerencias = response.sugerencias || [];
+            renderPtaIaEditTable();
+            $('#ptaIaStep1Preview').hide();
+            $('#ptaIaStep2Edit').show();
+            $btn.hide();
+            $('#btnPtaIaInsertar').show();
+            $('#ptaIaInsertCount').text(ptaIaSugerencias.length);
+          },
+          error: function(xhr) {
+            $('#ptaIaLoading').hide();
+            $btn.prop('disabled', false).html('<i class="fas fa-robot"></i> Reintentar');
+            showToast('Error de red al consultar IA.', 'danger');
+          }
+        });
+      });
+
+      function renderPtaIaEditTable() {
+        var html = '';
+        ptaIaSugerencias.forEach(function(s, idx) {
+          var capNombre = (ptaIaSeleccion[idx] && ptaIaSeleccion[idx].capacitacion) || ('#' + s.id_cronograma_capacitacion);
+          html += '<tr data-idx="' + idx + '">'
+            + '<td><small class="text-muted">' + $('<div/>').text(capNombre).html() + '</small></td>'
+            + '<td><input type="text" class="form-control form-control-sm pta-fld" data-fld="tipo_servicio" value="' + escapeAttr(s.tipo_servicio || 'CAPACITACION') + '"></td>'
+            + '<td>'
+              + '<select class="form-select form-select-sm pta-fld" data-fld="phva">'
+                + ['P','H','V','A'].map(function(v){ return '<option value="' + v + '"' + ((s.phva||'H') === v ? ' selected' : '') + '>' + v + '</option>'; }).join('')
+              + '</select>'
+            + '</td>'
+            + '<td><input type="text" class="form-control form-control-sm pta-fld" data-fld="numeral" value="' + escapeAttr(s.numeral || '') + '"></td>'
+            + '<td><textarea class="form-control form-control-sm pta-fld" data-fld="actividad" rows="2">' + $('<div/>').text(s.actividad || '').html() + '</textarea></td>'
+            + '<td><input type="text" class="form-control form-control-sm pta-fld" data-fld="responsable_sugerido" value="' + escapeAttr(s.responsable_sugerido || '') + '"></td>'
+            + '<td><input type="date" class="form-control form-control-sm pta-fld" data-fld="fecha_propuesta" value="' + escapeAttr(s.fecha_propuesta || '') + '"></td>'
+            + '<td><textarea class="form-control form-control-sm pta-fld" data-fld="observaciones" rows="2">' + $('<div/>').text(s.observaciones || '').html() + '</textarea></td>'
+            + '</tr>';
+        });
+        $('#ptaIaEditTbody').html(html);
+      }
+
+      function escapeAttr(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      // Paso 3: insertar en tbl_pta_cliente
+      $('#btnPtaIaInsertar').on('click', function() {
+        var $btn = $(this);
+        // Recoger valores editados
+        var filas = [];
+        $('#ptaIaEditTbody tr').each(function() {
+          var idx = parseInt($(this).data('idx'), 10);
+          var base = ptaIaSugerencias[idx] || {};
+          var row = {
+            id_cronograma_capacitacion: base.id_cronograma_capacitacion
+          };
+          $(this).find('.pta-fld').each(function() {
+            row[$(this).data('fld')] = $(this).val();
+          });
+          filas.push(row);
+        });
+
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Insertando...');
+        $('#ptaIaLoading').show();
+        $('#ptaIaLoadingMsg').text('Insertando actividades en tbl_pta_cliente...');
+
+        $.ajax({
+          url: '<?= base_url('/cronogCapacitacion/insertarEnPta') ?>',
+          method: 'POST',
+          data: {
+            id_cliente: ptaIaClienteId,
+            filas: JSON.stringify(filas),
+            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+          },
+          dataType: 'json',
+          success: function(response) {
+            $('#ptaIaLoading').hide();
+            if (!response.success) {
+              $btn.prop('disabled', false).html('<i class="fas fa-check"></i> Reintentar');
+              showToast('Error: ' + (response.message || 'No se pudieron insertar.'), 'danger');
+              return;
+            }
+            // Mostrar resumen
+            var anioInsert = '';
+            if (filas.length > 0 && filas[0].fecha_propuesta) {
+              anioInsert = (filas[0].fecha_propuesta.split('-')[0] || '');
+            }
+            var ptaUrl = '<?= base_url('/pta-cliente-nueva/list') ?>?cliente=' + encodeURIComponent(ptaIaClienteId) + (anioInsert ? '&anio=' + encodeURIComponent(anioInsert) : '&ver_todos=1&anio=todos');
+            var html = '<div class="alert alert-success">'
+              + '<h6 class="mb-2"><i class="fas fa-check-circle"></i> Listo</h6>'
+              + '<p class="mb-1"><strong>Insertadas:</strong> ' + (response.insertadas || 0) + '</p>'
+              + '<p class="mb-1"><strong>Omitidas (duplicadas por origen):</strong> ' + (response.omitidas_duplicadas || 0) + '</p>'
+              + '<a href="' + ptaUrl + '" target="_blank" class="btn btn-sm btn-primary mt-2"><i class="fas fa-external-link-alt"></i> Ver en PTA del cliente</a>'
+              + '</div>';
+            $('#ptaIaStep2Edit').hide();
+            $('#ptaIaStep3Result').html(html).show();
+            $btn.hide();
+            showToast('Actividades enviadas al PTA correctamente.', 'success');
+          },
+          error: function() {
+            $('#ptaIaLoading').hide();
+            $btn.prop('disabled', false).html('<i class="fas fa-check"></i> Reintentar');
+            showToast('Error de red al insertar en PTA.', 'danger');
           }
         });
       });

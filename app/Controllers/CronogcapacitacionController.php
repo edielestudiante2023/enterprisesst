@@ -90,6 +90,7 @@ class CronogcapacitacionController extends Controller
             'fecha_de_realizacion',
             'estado',
             'perfil_de_asistentes',
+            'modalidad',
             'nombre_del_capacitador',
             'horas_de_duracion_de_la_capacitacion',
             'indicador_de_realizacion_de_la_capacitacion',
@@ -100,6 +101,10 @@ class CronogcapacitacionController extends Controller
             'promedio_de_calificaciones',
             'observaciones'
         ];
+
+        if ($field === 'modalidad') {
+            $value = $this->normalizarModalidad($value);
+        }
 
         if (!in_array($field, $allowedFields)) {
             log_message('error', 'Campo no permitido: ' . $field);
@@ -218,6 +223,7 @@ class CronogcapacitacionController extends Controller
             'fecha_de_realizacion' => $this->request->getPost('fecha_de_realizacion'),
             'estado' => $this->request->getPost('estado'),
             'perfil_de_asistentes' => $this->request->getPost('perfil_de_asistentes'),
+            'modalidad' => $this->normalizarModalidad($this->request->getPost('modalidad')),
             'nombre_del_capacitador' => $this->request->getPost('nombre_del_capacitador'),
             'horas_de_duracion_de_la_capacitacion' => $this->request->getPost('horas_de_duracion_de_la_capacitacion'),
             'indicador_de_realizacion_de_la_capacitacion' => $this->request->getPost('indicador_de_realizacion_de_la_capacitacion'),
@@ -284,6 +290,7 @@ class CronogcapacitacionController extends Controller
             'fecha_de_realizacion' => $this->request->getPost('fecha_de_realizacion'),
             'estado' => $this->request->getPost('estado'),
             'perfil_de_asistentes' => $this->request->getPost('perfil_de_asistentes'),
+            'modalidad' => $this->normalizarModalidad($this->request->getPost('modalidad')),
             'nombre_del_capacitador' => $this->request->getPost('nombre_del_capacitador'),
             'horas_de_duracion_de_la_capacitacion' => $this->request->getPost('horas_de_duracion_de_la_capacitacion'),
             'indicador_de_realizacion_de_la_capacitacion' => $this->request->getPost('indicador_de_realizacion_de_la_capacitacion'),
@@ -803,6 +810,7 @@ class CronogcapacitacionController extends Controller
         $tema = trim($this->request->getPost('tema') ?? '');
         $idCliente = $this->request->getPost('id_cliente');
         $fechaProgramada = $this->request->getPost('fecha_programada');
+        $modalidad = $this->normalizarModalidad($this->request->getPost('modalidad'));
 
         if (empty($tema) || empty($idCliente) || empty($fechaProgramada)) {
             return $this->response->setJSON([
@@ -820,7 +828,7 @@ class CronogcapacitacionController extends Controller
         }
 
         try {
-            $resultado = $this->llamarOpenAICapacitacion($tema, $apiKey);
+            $resultado = $this->llamarOpenAICapacitacion($tema, $apiKey, $modalidad);
 
             if (!$resultado['success']) {
                 return $this->response->setJSON([
@@ -868,6 +876,7 @@ class CronogcapacitacionController extends Controller
                 'fecha_de_realizacion' => null,
                 'estado' => 'PROGRAMADA',
                 'perfil_de_asistentes' => $datos['perfil_de_asistentes'] ?? 'TODOS',
+                'modalidad' => $modalidad,
                 'nombre_del_capacitador' => 'ASESOR SST',
                 'horas_de_duracion_de_la_capacitacion' => $datos['horas_sugeridas'] ?? 1,
                 'indicador_de_realizacion_de_la_capacitacion' => 'SIN CALIFICAR',
@@ -887,6 +896,7 @@ class CronogcapacitacionController extends Controller
                         'capacitacion' => $datos['capacitacion'],
                         'objetivo' => $datos['objetivo_capacitacion'] ?? '',
                         'perfil' => $datos['perfil_de_asistentes'] ?? 'TODOS',
+                        'modalidad' => $modalidad,
                         'horas' => $datos['horas_sugeridas'] ?? 1,
                         'nueva' => !$existente
                     ]
@@ -910,11 +920,18 @@ class CronogcapacitacionController extends Controller
     /**
      * Llama a OpenAI para generar datos de capacitación SST
      */
-    private function llamarOpenAICapacitacion(string $tema, string $apiKey): array
+    private function llamarOpenAICapacitacion(string $tema, string $apiKey, string $modalidad = 'PRESENCIAL'): array
     {
-        $systemPrompt = 'Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia. Genera una capacitación SST basada en el tema proporcionado. Responde SOLO en formato JSON válido sin markdown ni bloques de código.';
+        $systemPrompt = 'Eres un experto en Seguridad y Salud en el Trabajo (SST) de Colombia. Genera una capacitación SST basada en el tema y la modalidad proporcionados. Responde SOLO en formato JSON válido sin markdown ni bloques de código.';
+
+        $hintModalidad = match ($modalidad) {
+            'VIRTUAL'    => 'Modalidad: VIRTUAL (sesion en linea sincronica). Sugiere horas mas cortas (1-2h) y enfasis en componente teorico/audiovisual.',
+            'MIXTA'      => 'Modalidad: MIXTA (parte virtual + parte presencial). Sugiere horas intermedias (2-3h) combinando teoria virtual con practica presencial.',
+            default      => 'Modalidad: PRESENCIAL (presencial en sitio del cliente). Permite practica directa, simulacros y demostraciones; horas estandar (2-4h).'
+        };
 
         $userPrompt = "Genera una capacitación SST sobre el tema: \"{$tema}\".
+{$hintModalidad}
 Responde con este JSON exacto:
 {
   \"capacitacion\": \"nombre formal de la capacitación en SST\",
@@ -971,6 +988,321 @@ Para perfil_de_asistentes usa uno de: TODOS, BRIGADA, MIEMBROS_COPASST, RESPONSA
         }
 
         return ['success' => false, 'error' => 'Respuesta inesperada de OpenAI'];
+    }
+
+    /**
+     * Normaliza el valor recibido para la columna modalidad.
+     * Garantiza que sea uno de: VIRTUAL | PRESENCIAL | MIXTA. Default PRESENCIAL.
+     */
+    private function normalizarModalidad($valor): string
+    {
+        $v = strtoupper(trim((string) ($valor ?? '')));
+        if (in_array($v, ['VIRTUAL', 'PRESENCIAL', 'MIXTA'], true)) {
+            return $v;
+        }
+        return 'PRESENCIAL';
+    }
+
+    // ============================================================
+    // ENVIAR CAPACITACIONES SELECCIONADAS A tbl_pta_cliente CON IA
+    // ============================================================
+
+    /**
+     * Recibe ids de cronograma + id_cliente. Valida mismo cliente y llama a la IA
+     * (gpt-4o-mini) para sugerir campos PTA. Devuelve un array de sugerencias
+     * (una por capacitacion) con: id_cronograma_capacitacion, tipo_servicio, phva,
+     * numeral, actividad, responsable_sugerido, fecha_propuesta, observaciones.
+     * El estado_actividad se fija siempre como ABIERTA en la insercion (no se incluye aqui).
+     */
+    public function sugerirPta()
+    {
+        $ids = $this->request->getPost('ids');
+        $idCliente = $this->request->getPost('id_cliente');
+
+        if (empty($ids) || !is_array($ids)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No se recibieron ids.']);
+        }
+        $ids = array_values(array_filter(array_map('intval', $ids)));
+        if (empty($ids)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Ids invalidos.']);
+        }
+        if (empty($idCliente)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'id_cliente requerido.']);
+        }
+
+        $cronogModel = new CronogcapacitacionModel();
+        $capacitacionModel = new CapacitacionModel();
+        $clientModel = new ClientModel();
+
+        $cronogs = $cronogModel->whereIn('id_cronograma_capacitacion', $ids)->findAll();
+        if (empty($cronogs)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No se encontraron cronogramas.']);
+        }
+
+        // Defensa en profundidad: todas las filas deben ser del mismo cliente
+        $clientesUnicos = array_unique(array_map(static fn($c) => (string) $c['id_cliente'], $cronogs));
+        if (count($clientesUnicos) > 1) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Las capacitaciones seleccionadas pertenecen a clientes distintos.'
+            ]);
+        }
+        if ((string) $clientesUnicos[0] !== (string) $idCliente) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'El cliente declarado no coincide con el de las filas.'
+            ]);
+        }
+
+        $cliente = $clientModel->find($idCliente);
+        $razonSocial = $cliente['nombre_cliente'] ?? 'La empresa';
+
+        // Enriquecer con datos de la capacitacion
+        $items = [];
+        foreach ($cronogs as $c) {
+            $cap = $capacitacionModel->find($c['id_capacitacion']);
+            $items[] = [
+                'id_cronograma_capacitacion' => (int) $c['id_cronograma_capacitacion'],
+                'fecha_programada' => $c['fecha_programada'] ?? '',
+                'estado' => $c['estado'] ?? '',
+                'perfil_de_asistentes' => $c['perfil_de_asistentes'] ?? '',
+                'modalidad' => $c['modalidad'] ?? 'PRESENCIAL',
+                'horas' => $c['horas_de_duracion_de_la_capacitacion'] ?? '',
+                'capacitador' => $c['nombre_del_capacitador'] ?? '',
+                'capacitacion' => $cap['capacitacion'] ?? 'Capacitacion sin nombre',
+                'objetivo' => $cap['objetivo_capacitacion'] ?? ''
+            ];
+        }
+
+        $resp = $this->llamarIASugerirPta($razonSocial, $items);
+        if (!$resp['success']) {
+            return $this->response->setJSON(['success' => false, 'message' => $resp['error'] ?? 'Error IA']);
+        }
+
+        // Normalizar: garantizar que cada item tenga sugerencia (con fallback)
+        $sugerenciasIA = $resp['sugerencias'];
+        $byId = [];
+        foreach ($sugerenciasIA as $s) {
+            if (isset($s['id_cronograma_capacitacion'])) {
+                $byId[(int) $s['id_cronograma_capacitacion']] = $s;
+            }
+        }
+
+        $out = [];
+        foreach ($items as $it) {
+            $sug = $byId[$it['id_cronograma_capacitacion']] ?? [];
+            $obsBase = trim(sprintf(
+                'Capacitador: %s. Perfil: %s. Modalidad: %s. Duracion: %s h.',
+                $it['capacitador'] !== '' ? $it['capacitador'] : 'N/A',
+                $it['perfil_de_asistentes'] !== '' ? $it['perfil_de_asistentes'] : 'N/A',
+                $it['modalidad'] !== '' ? $it['modalidad'] : 'PRESENCIAL',
+                $it['horas'] !== '' ? $it['horas'] : 'N/A'
+            ));
+            $obsIA = trim((string) ($sug['observaciones'] ?? ''));
+            $out[] = [
+                'id_cronograma_capacitacion' => $it['id_cronograma_capacitacion'],
+                'tipo_servicio' => $sug['tipo_servicio'] ?? 'CAPACITACION',
+                'phva' => in_array(($sug['phva'] ?? 'H'), ['P','H','V','A'], true) ? $sug['phva'] : 'H',
+                'numeral' => (string) ($sug['numeral'] ?? ''),
+                'actividad' => (string) ($sug['actividad'] ?? ('Realizar capacitacion: ' . $it['capacitacion'])),
+                'responsable_sugerido' => (string) ($sug['responsable_sugerido'] ?? 'Responsable del SG-SST'),
+                'fecha_propuesta' => $it['fecha_programada'], // siempre del cronograma
+                'observaciones' => trim($obsBase . ($obsIA !== '' ? ' ' . $obsIA : ''))
+            ];
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'sugerencias' => $out,
+            'tokens' => $resp['tokens'] ?? 0
+        ]);
+    }
+
+    /**
+     * Llama a OpenAI gpt-4o-mini con un prompt especifico para mapear capacitaciones
+     * a campos del PTA. Devuelve un array con clave 'sugerencias' (una por id).
+     */
+    protected function llamarIASugerirPta(string $razonSocial, array $items): array
+    {
+        $apiKey = env('OPENAI_API_KEY', '');
+        if (empty($apiKey)) {
+            return ['success' => false, 'error' => 'OPENAI_API_KEY no configurada'];
+        }
+        $model = env('OPENAI_MODEL', 'gpt-4o-mini');
+
+        $systemPrompt = "Eres un asistente experto en SST (Colombia) que mapea capacitaciones programadas a actividades del Plan de Trabajo Anual (PTA), siguiendo Resolucion 0312/2019 y Decreto 1072/2015.\n"
+            . "Para cada capacitacion recibida devuelve un objeto con: id_cronograma_capacitacion, tipo_servicio, phva, numeral, actividad, responsable_sugerido, observaciones.\n"
+            . "Reglas:\n"
+            . "1. tipo_servicio: nombre del programa SST al que pertenece (ej: CAPACITACION, PROGRAMA RIESGO BIOLOGICO, BRIGADA EMERGENCIAS, etc.). Por defecto 'CAPACITACION'.\n"
+            . "2. phva: uno de P, H, V, A. Capacitaciones tipicas son H (Hacer); evaluacion de capacitacion seria V; planeacion de capacitacion seria P.\n"
+            . "3. numeral: numeral de Resolucion 0312/2019 o articulo de Decreto 1072/2015 que mejor aplique (ej: '7.2', '6.1.2').\n"
+            . "4. actividad: redaccion profesional de 2-3 lineas describiendo la accion en el PTA.\n"
+            . "5. responsable_sugerido: ej Responsable del SG-SST, COPASST, ARL, Brigada, Capacitador externo.\n"
+            . "6. observaciones: 1 linea breve adicional si aporta valor (puede quedar vacia). Considera la modalidad (VIRTUAL/PRESENCIAL/MIXTA) si es relevante para la actividad.\n"
+            . "Responde SOLO con JSON valido en un objeto raiz {\"sugerencias\": [ ... ]}, sin markdown ni texto extra.";
+
+        $itemsJson = json_encode(array_map(static function ($it) {
+            return [
+                'id_cronograma_capacitacion' => $it['id_cronograma_capacitacion'],
+                'capacitacion' => $it['capacitacion'],
+                'objetivo' => $it['objetivo'],
+                'fecha_programada' => $it['fecha_programada'],
+                'estado_cronograma' => $it['estado'],
+                'perfil_asistentes' => $it['perfil_de_asistentes'],
+                'modalidad' => $it['modalidad'],
+                'horas' => $it['horas']
+            ];
+        }, $items), JSON_UNESCAPED_UNICODE);
+
+        $userPrompt = "EMPRESA: {$razonSocial}\n"
+            . "CAPACITACIONES (JSON):\n{$itemsJson}\n\n"
+            . "Devuelve SOLO: {\"sugerencias\":[{\"id_cronograma_capacitacion\":N,\"tipo_servicio\":\"...\",\"phva\":\"P|H|V|A\",\"numeral\":\"...\",\"actividad\":\"...\",\"responsable_sugerido\":\"...\",\"observaciones\":\"...\"}, ...]}";
+
+        $payload = [
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt]
+            ],
+            'temperature' => 0.4,
+            'max_tokens' => 1500,
+            'response_format' => ['type' => 'json_object']
+        ];
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        if ($err) {
+            return ['success' => false, 'error' => "Conexion: {$err}"];
+        }
+        $result = json_decode($response, true);
+        if ($httpCode !== 200) {
+            return ['success' => false, 'error' => $result['error']['message'] ?? ('HTTP ' . $httpCode)];
+        }
+        $contenido = $result['choices'][0]['message']['content'] ?? null;
+        if (!$contenido) {
+            return ['success' => false, 'error' => 'Respuesta vacia'];
+        }
+        $contenido = trim($contenido);
+        $contenido = preg_replace('/^```(?:json)?\s*/i', '', $contenido);
+        $contenido = preg_replace('/\s*```$/', '', $contenido);
+        $parsed = json_decode($contenido, true);
+        if (!is_array($parsed) || !isset($parsed['sugerencias']) || !is_array($parsed['sugerencias'])) {
+            return ['success' => false, 'error' => 'JSON IA invalido', 'raw' => $contenido];
+        }
+
+        return [
+            'success' => true,
+            'sugerencias' => $parsed['sugerencias'],
+            'tokens' => $result['usage']['total_tokens'] ?? 0
+        ];
+    }
+
+    /**
+     * Inserta las filas confirmadas en tbl_pta_cliente. Idempotencia por marca
+     * "[ORIGEN: Cronograma #X]" en observaciones: si ya existe un registro para
+     * el mismo cliente con esa marca, se omite. Estado siempre ABIERTA.
+     */
+    public function insertarEnPta()
+    {
+        $idCliente = $this->request->getPost('id_cliente');
+        $filasJson = $this->request->getPost('filas');
+
+        if (empty($idCliente)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'id_cliente requerido.']);
+        }
+        $filas = json_decode((string) $filasJson, true);
+        if (!is_array($filas) || empty($filas)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Filas invalidas.']);
+        }
+
+        $ptaModel = new \App\Models\PtaClienteNuevaModel();
+
+        $insertadas = 0;
+        $omitidas = 0;
+        $idsCreados = [];
+        $errores = [];
+
+        foreach ($filas as $f) {
+            $idCronog = (int) ($f['id_cronograma_capacitacion'] ?? 0);
+            if ($idCronog <= 0) {
+                $omitidas++;
+                continue;
+            }
+
+            $marca = '[ORIGEN: Cronograma #' . $idCronog . ']';
+
+            // Idempotencia: ya existe registro de este cronograma para este cliente?
+            $existe = $ptaModel
+                ->where('id_cliente', $idCliente)
+                ->like('observaciones', $marca)
+                ->first();
+            if ($existe) {
+                $omitidas++;
+                continue;
+            }
+
+            $obs = trim((string) ($f['observaciones'] ?? ''));
+            $obs = $obs === '' ? $marca : $obs . ' ' . $marca;
+
+            $phva = strtoupper((string) ($f['phva'] ?? 'H'));
+            if (!in_array($phva, ['P','H','V','A'], true)) {
+                $phva = 'H';
+            }
+
+            $fechaProp = (string) ($f['fecha_propuesta'] ?? '');
+            if ($fechaProp === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaProp)) {
+                // fallback: traer fecha del cronograma
+                $cron = (new CronogcapacitacionModel())->find($idCronog);
+                $fechaProp = $cron['fecha_programada'] ?? date('Y-m-d');
+            }
+
+            $data = [
+                'id_cliente' => $idCliente,
+                'tipo_servicio' => trim((string) ($f['tipo_servicio'] ?? 'CAPACITACION')),
+                'phva_plandetrabajo' => $phva,
+                'numeral_plandetrabajo' => trim((string) ($f['numeral'] ?? '')),
+                'actividad_plandetrabajo' => trim((string) ($f['actividad'] ?? '')),
+                'responsable_sugerido_plandetrabajo' => trim((string) ($f['responsable_sugerido'] ?? '')),
+                'fecha_propuesta' => $fechaProp,
+                'estado_actividad' => 'ABIERTA',
+                'observaciones' => $obs
+            ];
+
+            try {
+                $newId = $ptaModel->insert($data, true);
+                if ($newId) {
+                    $insertadas++;
+                    $idsCreados[] = $newId;
+                } else {
+                    $errores[] = 'No se pudo insertar cronograma #' . $idCronog;
+                }
+            } catch (\Throwable $e) {
+                $errores[] = 'Error #' . $idCronog . ': ' . $e->getMessage();
+            }
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'insertadas' => $insertadas,
+            'omitidas_duplicadas' => $omitidas,
+            'ids_creados' => $idsCreados,
+            'errores' => $errores
+        ]);
     }
 
 }

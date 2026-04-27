@@ -23,6 +23,7 @@ class CronogcapacitacionModel extends Model
         'fecha_de_realizacion',
         'estado',
         'perfil_de_asistentes',
+        'modalidad',
         'nombre_del_capacitador',
         'horas_de_duracion_de_la_capacitacion',
         'indicador_de_realizacion_de_la_capacitacion',

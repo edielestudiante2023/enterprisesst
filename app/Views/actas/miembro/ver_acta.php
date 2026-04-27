@@ -223,9 +223,11 @@
                                 <br><small class="text-muted"><?= esc($asist['cargo'] ?? '') ?></small>
                             </div>
                             <?php if (!empty($asist['firma_fecha'])): ?>
-                                <span class="badge bg-success"><i class="bi bi-check"></i></span>
+                                <span class="badge bg-success" title="Firmado"><i class="bi bi-check"></i></span>
+                            <?php elseif (empty($asist['asistio'])): ?>
+                                <span class="badge bg-danger" title="Ausente - no requiere firma"><i class="bi bi-x"></i> Ausente</span>
                             <?php elseif ($acta['estado'] === 'pendiente_firma'): ?>
-                                <span class="badge bg-secondary"><i class="bi bi-clock"></i></span>
+                                <span class="badge bg-secondary" title="Pendiente de firma"><i class="bi bi-clock"></i></span>
                             <?php endif; ?>
                         </li>
                         <?php endforeach; ?>

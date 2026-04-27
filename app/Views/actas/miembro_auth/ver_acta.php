@@ -136,7 +136,23 @@
                                     </td>
                                     <td>
                                         <?php if ($asist['asistio']): ?>
-                                            <span class="badge bg-success">Si</span>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <span class="badge bg-success">Si</span>
+                                                <?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada'])
+                                                          && empty($asist['firma_fecha'])
+                                                          && ($asist['tipo_asistente'] ?? '') !== 'asesor'): ?>
+                                                    <?php if (!empty($solicitudesMarcarAusente[$asist['id_asistente']] ?? null)): ?>
+                                                        <span class="badge bg-warning text-dark" title="Solicitud pendiente de aprobacion del consultor">
+                                                            <i class="bi bi-hourglass-split"></i> Pendiente
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <button type="button" class="btn btn-link btn-sm p-0 text-danger" title="Solicitar marcar como ausente"
+                                                                onclick="solicitarMarcarAusenteMiembro(<?= (int)$asist['id_asistente'] ?>, <?= json_encode($asist['nombre_completo']) ?>)">
+                                                            <i class="bi bi-person-x-fill"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                            </div>
                                         <?php else: ?>
                                             <span class="badge bg-danger">No</span>
                                         <?php endif; ?>
@@ -336,6 +352,93 @@ function solicitarReapertura() {
             formData.append('justificacion', result.value.justificacion);
 
             fetch('<?= base_url("miembro/acta/" . $acta["id_acta"] . "/solicitar-reapertura") ?>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Solicitud Enviada',
+                        text: data.message,
+                        confirmButtonColor: '#28a745'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                }
+            })
+            .catch(() => {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexion. Intente nuevamente.' });
+            });
+        }
+    });
+}
+</script>
+<?php endif; ?>
+
+<?php if (in_array($acta['estado'], ['pendiente_firma', 'firmada'])): ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function solicitarMarcarAusenteMiembro(idAsistente, nombreAsistente) {
+    Swal.fire({
+        title: 'Marcar como Ausente',
+        html: `
+            <div class="text-start">
+                <div class="alert alert-warning small">
+                    <strong>Persona:</strong> ${nombreAsistente}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Su nombre completo <span class="text-danger">*</span></label>
+                    <input type="text" id="swal_mam_nombre" class="form-control" placeholder="Quien solicita el cambio">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Su email <span class="text-danger">*</span></label>
+                    <input type="email" id="swal_mam_email" class="form-control" placeholder="su@email.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Su cargo</label>
+                    <input type="text" id="swal_mam_cargo" class="form-control" placeholder="Su cargo">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Justificacion <span class="text-danger">*</span></label>
+                    <textarea id="swal_mam_justificacion" class="form-control" rows="4" placeholder="Explique por que esta persona debe figurar como ausente..."></textarea>
+                </div>
+                <div class="alert alert-info small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    El consultor recibira un email para aprobar. Las firmas existentes de otras personas NO se afectan.
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-send me-1"></i> Enviar Solicitud',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#f97316',
+        width: '550px',
+        preConfirm: () => {
+            const nombre = document.getElementById('swal_mam_nombre').value.trim();
+            const email = document.getElementById('swal_mam_email').value.trim();
+            const just = document.getElementById('swal_mam_justificacion').value.trim();
+            if (!nombre || !email || !just) {
+                Swal.showValidationMessage('Nombre, email y justificacion son obligatorios');
+                return false;
+            }
+            return {
+                solicitante_nombre: nombre,
+                solicitante_email: email,
+                solicitante_cargo: document.getElementById('swal_mam_cargo').value.trim(),
+                justificacion: just
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('solicitante_nombre', result.value.solicitante_nombre);
+            formData.append('solicitante_email', result.value.solicitante_email);
+            formData.append('solicitante_cargo', result.value.solicitante_cargo);
+            formData.append('justificacion', result.value.justificacion);
+
+            fetch('<?= base_url("acta/" . $acta["id_acta"] . "/solicitar-marcar-ausente") ?>/' + idAsistente, {
                 method: 'POST',
                 body: formData
             })

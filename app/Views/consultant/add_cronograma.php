@@ -357,6 +357,14 @@
                                     </optgroup>
                                 </select>
                             </div>
+                            <div class="mb-3">
+                                <label for="modalidad" class="form-label">Modalidad</label>
+                                <select name="modalidad" id="modalidad" class="form-select">
+                                    <option value="PRESENCIAL" selected>Presencial</option>
+                                    <option value="VIRTUAL">Virtual</option>
+                                    <option value="MIXTA">Mixta (Hibrida)</option>
+                                </select>
+                            </div>
                             <div class="mb-0">
                                 <label for="nombre_del_capacitador" class="form-label">Nombre del Capacitador</label>
                                 <input type="text" name="nombre_del_capacitador" id="nombre_del_capacitador" class="form-control">
@@ -536,6 +544,15 @@
                         <label for="ia_fecha" class="form-label fw-bold">Fecha programada</label>
                         <input type="date" id="ia_fecha" class="form-control">
                     </div>
+                    <div class="mb-3">
+                        <label for="ia_modalidad" class="form-label fw-bold">Modalidad</label>
+                        <select id="ia_modalidad" class="form-select">
+                            <option value="PRESENCIAL" selected>Presencial</option>
+                            <option value="VIRTUAL">Virtual</option>
+                            <option value="MIXTA">Mixta (Hibrida)</option>
+                        </select>
+                        <div class="form-text">La IA tendra en cuenta la modalidad para sugerir horas y perfil.</div>
+                    </div>
                     <div id="ia_resultado" class="d-none">
                         <hr>
                         <div class="alert alert-success mb-0" id="ia_resultado_contenido"></div>
@@ -596,6 +613,7 @@
             var tema = $('#ia_tema').val();
             var idCliente = $('#ia_cliente').val();
             var fecha = $('#ia_fecha').val();
+            var modalidad = $('#ia_modalidad').val() || 'PRESENCIAL';
 
             if (!tema || !idCliente || !fecha) {
                 $('#ia_error_contenido').text('Por favor completa todos los campos.');
@@ -613,7 +631,7 @@
             $.ajax({
                 url: '<?= base_url("/cronogCapacitacion/generarConIA") ?>',
                 type: 'POST',
-                data: { tema: tema, id_cliente: idCliente, fecha_programada: fecha },
+                data: { tema: tema, id_cliente: idCliente, fecha_programada: fecha, modalidad: modalidad },
                 dataType: 'json',
                 success: function(response) {
                     $('#btnGenerarIA').prop('disabled', false);
@@ -625,6 +643,7 @@
                         var html = '<strong>Capacitación:</strong> ' + d.capacitacion + '<br>';
                         html += '<strong>Objetivo:</strong> ' + d.objetivo + '<br>';
                         html += '<strong>Perfil:</strong> ' + d.perfil + '<br>';
+                        html += '<strong>Modalidad:</strong> ' + (d.modalidad || modalidad) + '<br>';
                         html += '<strong>Horas:</strong> ' + d.horas + '<br>';
                         html += d.nueva ? '<em>Se creó nueva capacitación en el catálogo.</em>' : '<em>Ya existía en el catálogo.</em>';
                         $('#ia_resultado_contenido').html(html);

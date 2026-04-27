@@ -355,6 +355,8 @@ $routes->get('/cronogCapacitacion/getClients', 'CronogcapacitacionController::ge
 $routes->get('/cronogCapacitacion/getClientContract', 'CronogcapacitacionController::getClientContract');
 $routes->post('/cronogCapacitacion/socializarEmail', 'CronogcapacitacionController::socializarEmail');
 $routes->post('/cronogCapacitacion/generarConIA', 'CronogcapacitacionController::generarConIA');
+$routes->post('/cronogCapacitacion/sugerirPta', 'CronogcapacitacionController::sugerirPta');
+$routes->post('/cronogCapacitacion/insertarEnPta', 'CronogcapacitacionController::insertarEnPta');
 
 $routes->get('/listPlanDeTrabajoAnual', 'PlanDeTrabajoAnualController::listPlanDeTrabajoAnual');
 $routes->get('/addPlanDeTrabajoAnual', 'PlanDeTrabajoAnualController::addPlanDeTrabajoAnual');
@@ -1447,6 +1449,13 @@ $routes->post('/actas/solicitar-reapertura/(:num)', 'ActasController::solicitarR
 $routes->get('/acta/aprobar-reapertura/(:segment)', 'ActaFirmaPublicaController::aprobarReapertura/$1');
 $routes->post('/acta/aprobar-reapertura/(:segment)', 'ActaFirmaPublicaController::procesarReapertura/$1');
 
+// Solicitar marcar asistente como ausente (autenticado)
+$routes->post('/actas/solicitar-marcar-ausente/(:num)/(:num)', 'ActasController::solicitarMarcarAusente/$1/$2');
+
+// Aprobar/rechazar marcar ausente por token (público)
+$routes->get('/acta/aprobar-marcar-ausente/(:segment)', 'ActaFirmaPublicaController::aprobarMarcarAusente/$1');
+$routes->post('/acta/aprobar-marcar-ausente/(:segment)', 'ActaFirmaPublicaController::procesarMarcarAusente/$1');
+
 // Verificar código de acta (público)
 $routes->get('/acta/verificar', 'ActaFirmaPublicaController::verificarActa');
 $routes->post('/acta/verificar', 'ActaFirmaPublicaController::verificarActa');
@@ -1564,6 +1573,7 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('acta/(:num)/reenviar/(:num)', 'MiembroAuthController::reenviarAsistente/$1/$2');
     $routes->post('acta/(:num)/cancelar-firma/(:num)', 'MiembroAuthController::cancelarFirmaAsistente/$1/$2');
     $routes->post('acta/(:num)/solicitar-reapertura', 'MiembroAuthController::solicitarReapertura/$1');
+    $routes->post('acta/(:num)/solicitar-marcar-ausente/(:num)', 'MiembroAuthController::solicitarMarcarAusente/$1/$2');
     $routes->get('acta/firma-imagen/(:num)', 'MiembroAuthController::firmaImagen/$1');
 
     // Inspecciones Locativas (miembro COPASST)
