@@ -192,6 +192,9 @@ class MiembroAuthController extends BaseController
             ->where('estado', 'activo')
             ->first();
 
+        $marcarAusenteModel = new \App\Models\ActaSolicitudMarcarAusenteModel();
+        $solicitudesMarcarAusente = $marcarAusenteModel->getMapaPendientesPorActa($idActa);
+
         return view('actas/miembro_auth/ver_acta', [
             'miembro' => $miembro,
             'miembroEnComite' => $miembroEnComite,
@@ -199,7 +202,8 @@ class MiembroAuthController extends BaseController
             'comite' => $comite,
             'acta' => $acta,
             'asistentes' => $asistentes,
-            'compromisos' => $compromisos
+            'compromisos' => $compromisos,
+            'solicitudesMarcarAusente' => $solicitudesMarcarAusente
         ]);
     }
 
@@ -823,6 +827,17 @@ class MiembroAuthController extends BaseController
         }
         // Delegar al ActasController que ya tiene toda la lógica (crea solicitud + email con token)
         return $this->actasController()->solicitarReapertura($idActa);
+    }
+
+    /**
+     * Solicitar marcar asistente como ausente (miembro autenticado)
+     */
+    public function solicitarMarcarAusente(int $idActa, int $idAsistente)
+    {
+        if (!$this->validarAccesoActa($idActa)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Sin acceso a esta acta']);
+        }
+        return $this->actasController()->solicitarMarcarAusente($idActa, $idAsistente);
     }
 
     /**

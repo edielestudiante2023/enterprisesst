@@ -337,9 +337,12 @@ $urlVolverComite      = $urlVolverComite      ?? base_url('actas/' . $cliente['i
                         <?php endif; ?>
 
                         <hr>
+                        <?php
+                        $asistentesPresentesEdit = array_filter($asistentes, fn($a) => !empty($a['asistio']));
+                        ?>
                         <div class="d-flex justify-content-between">
-                            <small class="text-muted">Asistentes:</small>
-                            <strong id="conteoAsistentes"><?= count($asistentes) ?></strong>
+                            <small class="text-muted">Asistentes (presentes / total):</small>
+                            <strong id="conteoAsistentes"><?= count($asistentesPresentesEdit) ?> / <?= count($asistentes) ?></strong>
                         </div>
                     </div>
                 </div>
@@ -352,8 +355,8 @@ $urlVolverComite      = $urlVolverComite      ?? base_url('actas/' . $cliente['i
                     </div>
                     <div class="card-body">
                         <?php
-                        $firmados = count(array_filter($asistentes, fn($a) => !empty($a['firma_fecha'])));
-                        $totalAsist = count($asistentes);
+                        $firmados = count(array_filter($asistentesPresentesEdit, fn($a) => !empty($a['firma_fecha'])));
+                        $totalAsist = count($asistentesPresentesEdit);
                         $porcentaje = $totalAsist > 0 ? ($firmados / $totalAsist) * 100 : 0;
                         ?>
                         <div class="progress mb-3" style="height: 25px;">
@@ -366,9 +369,11 @@ $urlVolverComite      = $urlVolverComite      ?? base_url('actas/' . $cliente['i
                             <li class="d-flex justify-content-between align-items-center py-1">
                                 <span><?= esc($asist['nombre_completo']) ?></span>
                                 <?php if (!empty($asist['firma_fecha'])): ?>
-                                    <span class="badge bg-success"><i class="bi bi-check"></i></span>
+                                    <span class="badge bg-success" title="Firmado"><i class="bi bi-check"></i></span>
+                                <?php elseif (empty($asist['asistio'])): ?>
+                                    <span class="badge bg-danger" title="Ausente"><i class="bi bi-x"></i></span>
                                 <?php else: ?>
-                                    <span class="badge bg-secondary"><i class="bi bi-clock"></i></span>
+                                    <span class="badge bg-secondary" title="Pendiente"><i class="bi bi-clock"></i></span>
                                 <?php endif; ?>
                             </li>
                             <?php endforeach; ?>

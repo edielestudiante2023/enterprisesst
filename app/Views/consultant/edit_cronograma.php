@@ -317,6 +317,15 @@
                                     </optgroup>
                                 </select>
                             </div>
+                            <?php $modalidadActual = strtoupper($cronograma['modalidad'] ?? 'PRESENCIAL'); ?>
+                            <div class="mb-3">
+                                <label for="modalidad" class="form-label">Modalidad</label>
+                                <select name="modalidad" id="modalidad" class="form-select">
+                                    <option value="PRESENCIAL" <?= $modalidadActual === 'PRESENCIAL' ? 'selected' : '' ?>>Presencial</option>
+                                    <option value="VIRTUAL" <?= $modalidadActual === 'VIRTUAL' ? 'selected' : '' ?>>Virtual</option>
+                                    <option value="MIXTA" <?= $modalidadActual === 'MIXTA' ? 'selected' : '' ?>>Mixta (Hibrida)</option>
+                                </select>
+                            </div>
                             <div class="mb-0">
                                 <label for="nombre_del_capacitador" class="form-label">Nombre del Capacitador</label>
                                 <input type="text" name="nombre_del_capacitador" id="nombre_del_capacitador" class="form-control" value="<?= esc($cronograma['nombre_del_capacitador']) ?>" required>

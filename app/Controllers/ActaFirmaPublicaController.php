@@ -518,4 +518,88 @@ class ActaFirmaPublicaController extends BaseController
             'mensaje' => 'Acción no válida.'
         ]);
     }
+
+    /**
+     * Vista pública para aprobar/rechazar marcar como ausente
+     */
+    public function aprobarMarcarAusente(string $token)
+    {
+        $solicitudModel = new \App\Models\ActaSolicitudMarcarAusenteModel();
+        $solicitud = $solicitudModel->getByToken($token);
+
+        if (!$solicitud) {
+            return view('actas/publico/marcar_ausente_resultado', [
+                'resultado' => 'error',
+                'mensaje' => 'El enlace es invalido o ha expirado. La solicitud puede haber sido procesada anteriormente o el plazo de 48 horas vencio.'
+            ]);
+        }
+
+        $acta = $this->actaModel->find($solicitud['id_acta']);
+        $asistente = $this->asistentesModel->find($solicitud['id_asistente']);
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($solicitud['id_cliente']);
+        $comiteModel = new ComiteModel();
+        $comite = $comiteModel->getConDetalles($acta['id_comite']);
+
+        return view('actas/publico/aprobar_marcar_ausente', [
+            'solicitud' => $solicitud,
+            'acta' => $acta,
+            'asistente' => $asistente,
+            'cliente' => $cliente,
+            'comite' => $comite,
+            'token' => $token
+        ]);
+    }
+
+    /**
+     * Procesar aprobacion/rechazo de marcar ausente (POST publico)
+     */
+    public function procesarMarcarAusente(string $token)
+    {
+        $solicitudModel = new \App\Models\ActaSolicitudMarcarAusenteModel();
+        $solicitud = $solicitudModel->getByToken($token);
+
+        if (!$solicitud) {
+            return view('actas/publico/marcar_ausente_resultado', [
+                'resultado' => 'error',
+                'mensaje' => 'El enlace es invalido o ha expirado.'
+            ]);
+        }
+
+        $accion = $this->request->getPost('accion');
+
+        if ($accion === 'aprobar') {
+            $solicitudModel->aprobar($solicitud['id'], 'Consultor (via enlace)');
+
+            $justificacion = 'Marcado retroactivamente. Solicitud: ' . substr($solicitud['justificacion'], 0, 200);
+            $this->asistentesModel->marcarAusente($solicitud['id_asistente'], $justificacion, true);
+
+            // Recalcular total_firmantes y verificar si las firmas estan completas
+            $totalFirmantes = $this->asistentesModel->contarQuienesDebenFirmar($solicitud['id_acta']);
+            $this->actaModel->update($solicitud['id_acta'], ['total_firmantes' => $totalFirmantes]);
+            $this->actaModel->verificarFirmasCompletas($solicitud['id_acta']);
+
+            $asistente = $this->asistentesModel->find($solicitud['id_asistente']);
+            return view('actas/publico/marcar_ausente_resultado', [
+                'resultado' => 'aprobada',
+                'mensaje' => 'La solicitud fue aprobada. La persona ahora figura como ausente y no requiere firma.',
+                'acta' => $this->actaModel->find($solicitud['id_acta']),
+                'asistente' => $asistente
+            ]);
+
+        } elseif ($accion === 'rechazar') {
+            $motivo = $this->request->getPost('motivo_rechazo') ?: 'Sin motivo especificado';
+            $solicitudModel->rechazar($solicitud['id'], $motivo);
+
+            return view('actas/publico/marcar_ausente_resultado', [
+                'resultado' => 'rechazada',
+                'mensaje' => 'La solicitud para marcar como ausente ha sido rechazada.'
+            ]);
+        }
+
+        return view('actas/publico/marcar_ausente_resultado', [
+            'resultado' => 'error',
+            'mensaje' => 'Accion no valida.'
+        ]);
+    }
 }
