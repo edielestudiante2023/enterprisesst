@@ -639,6 +639,16 @@
       if (!savedState || !savedState.columns || !savedState.columns[estadoCol] || !savedState.columns[estadoCol].search || !savedState.columns[estadoCol].search.search) {
           table.column(estadoCol).search('ABIERTA').draw();
           $('tfoot tr.filters th').eq(estadoCol).find('.filter-search').val('ABIERTA');
+          // Sync con card "Abiertas" para que active state visual coincida con el filtro
+          activeStatus = 'ABIERTA';
+          $('.card-status[data-status="ABIERTA"]').addClass('active');
+      } else {
+          // Restaurar activeStatus desde state guardado para que cards reflejen el filtro persistido
+          var savedEstado = savedState.columns[estadoCol].search.search;
+          if (savedEstado) {
+              activeStatus = savedEstado;
+              $('.card-status[data-status="' + savedEstado + '"]').addClass('active');
+          }
       }
 
       // Generar tarjetas de años dinámicamente
@@ -846,6 +856,11 @@
           activeStatus = status;
         }
 
+        // Sync con filtro de columna del tfoot (sino chocan: tfoot=ABIERTA + card=CERRADA -> 0 filas)
+        var estadoColIdx = 9;
+        $('tfoot tr.filters th').eq(estadoColIdx).find('.filter-search').val(activeStatus || '');
+        table.column(estadoColIdx).search(activeStatus || '');
+
         applyFilters();
       });
 
@@ -884,7 +899,21 @@
       // Filtros por columna en el tfoot (se actualizó el selector a .filter-search)
       $('tfoot .filter-search').on('keyup change', function() {
         var index = $(this).parent().index();
-        table.column(index).search($(this).val()).draw();
+        var val = $(this).val();
+        var estadoColIdx = 9;
+
+        if (index === estadoColIdx) {
+          // Cambio en filtro de Estado: sincronizar cards y dejar que applyFilters dibuje
+          activeStatus = val || null;
+          $('.card-status').removeClass('active');
+          if (activeStatus) {
+            $('.card-status[data-status="' + activeStatus + '"]').addClass('active');
+          }
+          table.column(index).search(val);
+          applyFilters();
+        } else {
+          table.column(index).search(val).draw();
+        }
       });
 
       // Evento para expandir/contraer fila (child row)
