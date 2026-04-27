@@ -1623,6 +1623,8 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->get('acta-capacitacion/pdf/(:num)', 'MiembroActaCapacitacionController::generatePdf/$1');
     $routes->post('acta-capacitacion/finalizar/(:num)', 'MiembroActaCapacitacionController::finalizar/$1');
     $routes->post('acta-capacitacion/generar-token-firma/(:num)', 'MiembroActaCapacitacionController::generarTokenFirma/$1');
+    $routes->post('acta-capacitacion/asistente/save/(:num)', 'MiembroActaCapacitacionController::saveAsistente/$1');
+    $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'MiembroActaCapacitacionController::enviarEmailFirma/$1');
 });
 
 // Acceso de miembros del comité (por token - legacy/alternativo)
@@ -1707,6 +1709,8 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('acta-capacitacion/pdf/(:num)', 'ActaCapacitacionController::generatePdf/$1');
     $routes->post('acta-capacitacion/finalizar/(:num)', 'ActaCapacitacionController::finalizar/$1');
     $routes->post('acta-capacitacion/generar-token-firma/(:num)', 'ActaCapacitacionController::generarTokenFirma/$1');
+    $routes->post('acta-capacitacion/asistente/save/(:num)', 'ActaCapacitacionController::saveAsistente/$1');
+    $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'ActaCapacitacionController::enviarEmailFirma/$1');
     $routes->get('acta-capacitacion/delete/(:num)', 'ActaCapacitacionController::delete/$1');
 
     // Inspeccion Locativa

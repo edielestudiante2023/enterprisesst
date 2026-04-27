@@ -213,7 +213,7 @@
       <i class="fas fa-tasks"></i> Filtrar por Estado
     </div>
     <div class="row mb-4">
-      <div class="col-md-4">
+      <div class="col-md-6 col-lg-3">
         <div class="card text-white bg-primary card-clickable card-status" data-status="ABIERTA">
           <div class="card-body text-center">
             <h5 class="card-title">Abiertas</h5>
@@ -221,7 +221,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-6 col-lg-3">
         <div class="card text-white bg-danger card-clickable card-status" data-status="CERRADA">
           <div class="card-body text-center">
             <h5 class="card-title">Cerradas</h5>
@@ -229,7 +229,15 @@
           </div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="card text-white bg-dark card-clickable card-status" data-status="CERRADA POR FIN CONTRATO">
+          <div class="card-body text-center">
+            <h5 class="card-title">Cerradas por Fin de Contrato</h5>
+            <p class="card-text display-6" id="countCerradaContrato">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
         <div class="card text-white bg-warning card-clickable card-status" data-status="SIN RESPUESTA DEL CLIENTE">
           <div class="card-body text-center">
             <h5 class="card-title">Sin Respuesta del Cliente</h5>
@@ -395,6 +403,7 @@
                 <option value="">Todos</option>
                 <option value="ABIERTA">ABIERTA</option>
                 <option value="CERRADA">CERRADA</option>
+                <option value="CERRADA POR FIN CONTRATO">CERRADA POR FIN CONTRATO</option>
                 <option value="SIN RESPUESTA DEL CLIENTE">SIN RESPUESTA DEL CLIENTE</option>
               </select>
             </th>
@@ -678,6 +687,7 @@
 
         var countAbierta = 0;
         var countCerrada = 0;
+        var countCerradaContrato = 0;
         var countSinRespuesta = 0;
 
         table.rows({search: 'applied'}).every(function() {
@@ -687,6 +697,8 @@
             countAbierta++;
           } else if (estado === 'CERRADA') {
             countCerrada++;
+          } else if (estado === 'CERRADA POR FIN CONTRATO') {
+            countCerradaContrato++;
           } else if (estado === 'SIN RESPUESTA DEL CLIENTE') {
             countSinRespuesta++;
           }
@@ -694,6 +706,7 @@
 
         $('#countAbierta').text(countAbierta);
         $('#countCerrada').text(countCerrada);
+        $('#countCerradaContrato').text(countCerradaContrato);
         $('#countSinRespuesta').text(countSinRespuesta);
       }
 
@@ -914,7 +927,7 @@
         } else if (cell.hasClass('editable-select')) {
           var options = [];
           if (field === 'estado') {
-            options = ['ABIERTA', 'CERRADA', 'SIN RESPUESTA DEL CLIENTE'];
+            options = ['ABIERTA', 'CERRADA', 'CERRADA POR FIN CONTRATO', 'SIN RESPUESTA DEL CLIENTE'];
           }
           // Agregar otras opciones si es necesario
           var select = $('<select>', {
@@ -936,7 +949,7 @@
               updateField(id, field, newValue, cell);
 
               // Auto-set fecha_cierre_real = hoy al cerrar o clasificar sin respuesta
-              if (field === 'estado' && (newValue === 'CERRADA' || newValue === 'SIN RESPUESTA DEL CLIENTE')) {
+              if (field === 'estado' && (newValue === 'CERRADA' || newValue === 'CERRADA POR FIN CONTRATO' || newValue === 'SIN RESPUESTA DEL CLIENTE')) {
                 var hoy = new Date().toISOString().split('T')[0];
                 updateField(id, 'fecha_cierre_real', hoy, null);
                 // Actualizar visualmente la celda de Cierre Real en la misma fila

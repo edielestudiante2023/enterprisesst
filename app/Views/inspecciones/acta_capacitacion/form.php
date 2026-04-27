@@ -8,6 +8,12 @@ $action = $isEdit
 $tokenUrlBase = $ctx === 'consultor'
     ? 'inspecciones/acta-capacitacion/generar-token-firma/'
     : 'miembro/acta-capacitacion/generar-token-firma/';
+$saveAsistUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/acta-capacitacion/asistente/save/'
+    : 'miembro/acta-capacitacion/asistente/save/';
+$emailUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/acta-capacitacion/asistente/enviar-email/'
+    : 'miembro/acta-capacitacion/asistente/enviar-email/';
 ?>
 
 <div class="container-fluid px-3">
@@ -190,12 +196,32 @@ $tokenUrlBase = $ctx === 'consultor'
                                             </div>
                                         </div>
                                         <?php if (empty($a['firma_path'])): ?>
-                                        <div class="mt-2">
-                                            <button type="button" class="btn btn-sm btn-success btn-whatsapp-firma w-100"
-                                                data-asistente-id="<?= $a['id'] ?>"
-                                                data-nombre="<?= esc($a['nombre_completo']) ?>">
-                                                <i class="fab fa-whatsapp"></i> Enviar enlace de firma por WhatsApp
+                                        <div class="mt-2 d-grid gap-1">
+                                            <button type="button" class="btn btn-sm btn-primary btn-save-asist"
+                                                data-asistente-id="<?= $a['id'] ?>">
+                                                <i class="fas fa-save"></i> Guardar este asistente
                                             </button>
+                                            <div class="d-flex gap-1">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary btn-copiar-firma flex-fill"
+                                                    data-asistente-id="<?= $a['id'] ?>"
+                                                    data-nombre="<?= esc($a['nombre_completo']) ?>"
+                                                    title="Copiar enlace">
+                                                    <i class="fas fa-copy"></i> Copiar
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-primary btn-email-firma flex-fill"
+                                                    data-asistente-id="<?= $a['id'] ?>"
+                                                    data-nombre="<?= esc($a['nombre_completo']) ?>"
+                                                    data-email="<?= esc($a['email'] ?? '') ?>"
+                                                    title="Enviar enlace al email">
+                                                    <i class="fas fa-envelope"></i> Email
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-success btn-whatsapp-firma flex-fill"
+                                                    data-asistente-id="<?= $a['id'] ?>"
+                                                    data-nombre="<?= esc($a['nombre_completo']) ?>"
+                                                    title="Compartir por WhatsApp">
+                                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                                </button>
+                                            </div>
                                         </div>
                                         <?php endif; ?>
                                     </div>
@@ -297,12 +323,221 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-12"><input type="email" name="asistente_email[]" class="form-control form-control-sm" placeholder="Email (opcional)"></div>
                         <div class="col-12"><input type="text" name="asistente_celular[]" class="form-control form-control-sm" placeholder="Celular (opcional)"></div>
                     </div>
+                    <div class="mt-2 d-grid gap-1">
+                        <button type="button" class="btn btn-sm btn-primary btn-save-asist" data-asistente-id="">
+                            <i class="fas fa-save"></i> Guardar este asistente
+                        </button>
+                    </div>
                 </div>
             </div>`;
         document.getElementById('asistentesContainer').insertAdjacentHTML('beforeend', html);
         updateAsist();
         var sec = document.getElementById('secAsist');
         if (!sec.classList.contains('show')) new bootstrap.Collapse(sec, { toggle: true });
+    });
+
+    var saveAsistUrlBase = '<?= site_url($saveAsistUrlBase) ?>';
+    var emailUrlBase = '<?= site_url($emailUrlBase) ?>';
+    var idActaActual = <?= (int)($acta['id'] ?? 0) ?>;
+
+    // Inyecta el bloque de 3 botones (Copiar/Email/WhatsApp) en una fila después de guardarla
+    function inyectarBotonesFirma(row, idAsistente, nombre, email) {
+        if (row.querySelector('.btn-whatsapp-firma')) return; // ya existen
+        var div = document.createElement('div');
+        div.className = 'd-flex gap-1 mt-1';
+        div.innerHTML = ''
+            + '<button type="button" class="btn btn-sm btn-outline-secondary btn-copiar-firma flex-fill" '
+            +   'data-asistente-id="' + idAsistente + '" data-nombre="' + nombre + '" title="Copiar enlace">'
+            +   '<i class="fas fa-copy"></i> Copiar</button>'
+            + '<button type="button" class="btn btn-sm btn-outline-primary btn-email-firma flex-fill" '
+            +   'data-asistente-id="' + idAsistente + '" data-nombre="' + nombre + '" data-email="' + (email || '') + '" title="Enviar enlace al email">'
+            +   '<i class="fas fa-envelope"></i> Email</button>'
+            + '<button type="button" class="btn btn-sm btn-success btn-whatsapp-firma flex-fill" '
+            +   'data-asistente-id="' + idAsistente + '" data-nombre="' + nombre + '" title="Compartir por WhatsApp">'
+            +   '<i class="fab fa-whatsapp"></i> WhatsApp</button>';
+        var saveBtn = row.querySelector('.btn-save-asist');
+        if (saveBtn && saveBtn.parentElement) {
+            saveBtn.parentElement.appendChild(div);
+        }
+    }
+
+    // ===== Guardar UN asistente (AJAX) =====
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-save-asist');
+        if (!btn) return;
+
+        if (!idActaActual) {
+            Swal.fire('Guarda primero el acta', 'Primero guarda el acta como borrador para poder agregar asistentes.', 'info');
+            return;
+        }
+
+        var row = btn.closest('.asistente-row');
+        var nombre = (row.querySelector('input[name="asistente_nombre[]"]') || {}).value || '';
+        if (!nombre.trim()) {
+            Swal.fire({ icon: 'warning', title: 'Nombre requerido', text: 'Ingresa el nombre del asistente.' });
+            return;
+        }
+
+        var idAsistente = btn.dataset.asistenteId || (row.querySelector('input[name="asistente_id[]"]') || {}).value || '';
+        var email = (row.querySelector('input[name="asistente_email[]"]') || {}).value || '';
+        var fd = new FormData();
+        fd.append(csrfName, csrfHash);
+        fd.append('id_asistente', idAsistente);
+        fd.append('nombre_completo', nombre);
+        fd.append('tipo_documento', (row.querySelector('select[name="asistente_tipo_doc[]"]') || {}).value || 'CC');
+        fd.append('numero_documento', (row.querySelector('input[name="asistente_num_doc[]"]') || {}).value || '');
+        fd.append('cargo', (row.querySelector('input[name="asistente_cargo[]"]') || {}).value || '');
+        fd.append('area_dependencia', (row.querySelector('input[name="asistente_area[]"]') || {}).value || '');
+        fd.append('email', email);
+        fd.append('celular', (row.querySelector('input[name="asistente_celular[]"]') || {}).value || '');
+        var rows = Array.from(document.querySelectorAll('.asistente-row'));
+        fd.append('orden', String(rows.indexOf(row) + 1));
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+        fetch(saveAsistUrlBase + idActaActual, {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            if (!data.success) {
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar este asistente';
+                Swal.fire('Error', data.error || 'No se pudo guardar', 'error');
+                return;
+            }
+            // Actualiza ID en la fila
+            var hiddenId = row.querySelector('input[name="asistente_id[]"]');
+            if (hiddenId) hiddenId.value = data.id;
+            row.dataset.asistenteId = data.id;
+            btn.dataset.asistenteId = data.id;
+            btn.innerHTML = '<i class="fas fa-check"></i> Guardado';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+
+            // Actualiza badge "Sin guardar" → "Guardado"
+            var badge = row.querySelector('.badge.bg-secondary');
+            if (badge) {
+                badge.textContent = 'Guardado';
+                badge.classList.remove('bg-secondary');
+                badge.classList.add('bg-success');
+            }
+
+            // Inyecta botones de firma si aún no existen
+            inyectarBotonesFirma(row, data.id, nombre, email);
+
+            Swal.fire({ icon: 'success', title: 'Asistente guardado', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
+        })
+        .catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Guardar este asistente';
+            Swal.fire('Error', 'Error de conexión', 'error');
+        });
+    });
+
+    // ===== Copiar enlace =====
+    function generarTokenYHacer(idAsistente, callback) {
+        var fd = new FormData();
+        fd.append(csrfName, csrfHash);
+        fetch(tokenUrlBase + idAsistente, {
+            method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) {
+                Swal.fire('Error', data.error || 'No se pudo generar el enlace', 'error');
+                return;
+            }
+            callback(data.url);
+        })
+        .catch(function() { Swal.fire('Error', 'Error de conexión', 'error'); });
+    }
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-copiar-firma');
+        if (!btn) return;
+        var idAsistente = btn.dataset.asistenteId;
+        if (!idAsistente) {
+            Swal.fire('Guarda primero', 'Guarda este asistente antes de copiar el enlace.', 'info');
+            return;
+        }
+        Swal.fire({ title: 'Generando enlace...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+        generarTokenYHacer(idAsistente, function(url) {
+            navigator.clipboard.writeText(url).then(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Enlace copiado',
+                    html: '<p style="font-size:13px;">El enlace ya está en tu portapapeles. Pégalo donde necesites.</p>'
+                        + '<div style="background:#f8f9fa;border-radius:8px;padding:10px;font-size:11px;word-break:break-all;border:1px solid #dee2e6;">'
+                        + url + '</div>',
+                    confirmButtonText: 'Cerrar',
+                });
+            }).catch(function() {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Copia manualmente',
+                    html: '<div style="background:#f8f9fa;border-radius:8px;padding:10px;font-size:11px;word-break:break-all;border:1px solid #dee2e6;">'
+                        + url + '</div>',
+                    confirmButtonText: 'Cerrar',
+                });
+            });
+        });
+    });
+
+    // ===== Email firma =====
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-email-firma');
+        if (!btn) return;
+
+        var idAsistente = btn.dataset.asistenteId;
+        var nombre = btn.dataset.nombre;
+        var email = btn.dataset.email;
+
+        if (!idAsistente) {
+            Swal.fire('Guarda primero', 'Guarda este asistente antes de enviar el email.', 'info');
+            return;
+        }
+        // Si el dataset email está vacío, intenta leerlo del input por si lo acaban de escribir
+        if (!email) {
+            var row = btn.closest('.asistente-row');
+            email = (row && row.querySelector('input[name="asistente_email[]"]')) ? row.querySelector('input[name="asistente_email[]"]').value : '';
+        }
+        if (!email) {
+            Swal.fire('Sin email', 'Este asistente no tiene email registrado. Edita la fila y guárdala primero.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Enviar email de firma',
+            html: '<p style="font-size:14px;">Se enviará un enlace de firma a:<br><strong>' + email + '</strong><br>(' + nombre + ')</p>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-paper-plane"></i> Enviar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd',
+        }).then(function(r) {
+            if (!r.isConfirmed) return;
+            Swal.fire({ title: 'Enviando email...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+            var fd = new FormData();
+            fd.append(csrfName, csrfHash);
+
+            fetch(emailUrlBase + idAsistente, {
+                method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    Swal.fire({ icon: 'success', title: '¡Email enviado!', text: 'Enviado a ' + (data.email || email), confirmButtonColor: '#0d6efd' });
+                } else {
+                    Swal.fire('Error', data.error || 'No se pudo enviar el email', 'error');
+                }
+            })
+            .catch(function() { Swal.fire('Error', 'Error de conexión', 'error'); });
+        });
     });
 
     // ===== WhatsApp firma remota =====
