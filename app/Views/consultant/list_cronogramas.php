@@ -1027,6 +1027,7 @@
   <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.colVis.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
     // Función para formatear la fila expandible (detalles) con 30% para el nombre y 70% para el texto (con overflow auto)
@@ -1224,7 +1225,8 @@
               data = (data === null || data === "") ? "" : data;
               if (type !== 'display') return data;
               var displayText = data || '&nbsp;';
-              return '<div class="cell-truncate"><span data-bs-toggle="tooltip" title="' + data + '">' + displayText + '</span></div>';
+              var titleSafe = (data || '').replace(/"/g, '&quot;');
+              return '<div class="cell-truncate"><span class="editable" data-field="nombre_capacitacion" data-id="' + row.id_cronograma_capacitacion + '" data-bs-toggle="tooltip" title="' + titleSafe + '">' + displayText + '</span></div>';
             }
           },
           {
@@ -1727,18 +1729,66 @@
       });
 
       // Función para enviar la actualización vía AJAX
-      function updateField(id, field, value, cell) {
+      function updateField(id, field, value, cell, confirmCreate) {
+        var payload = { id: id, field: field, value: value };
+        if (confirmCreate) payload.confirm_create = '1';
         $.ajax({
           url: '<?= base_url('/api/updatecronogCapacitacion') ?>',
           method: 'POST',
-          data: {
-            id: id,
-            field: field,
-            value: value
-          },
+          data: payload,
           success: function(response) {
+            // Caso especial: nombre de capacitacion no existe en catalogo, pedir confirmacion
+            if (!response.success && response.requires_confirm && field === 'nombre_capacitacion') {
+              if (typeof Swal === 'undefined') {
+                if (confirm('La capacitación "' + response.nombre + '" no existe en el catálogo. ¿Crear una nueva entrada?')) {
+                  updateField(id, field, value, cell, true);
+                } else {
+                  table.ajax.reload(null, false);
+                }
+                return;
+              }
+              Swal.fire({
+                title: '¿Crear nueva capacitación?',
+                html: 'No existe <strong>"' + $('<div/>').text(response.nombre).html() + '"</strong> en el catálogo de capacitaciones.<br><br>¿Deseas crearla y asignarla a este cronograma?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-plus"></i> Sí, crear nueva',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#16a34a',
+                cancelButtonColor: '#6b7280'
+              }).then(function(result) {
+                if (result.isConfirmed) {
+                  updateField(id, field, value, cell, true);
+                } else {
+                  // Cancelar: recargar la celda con el valor original
+                  table.ajax.reload(null, false);
+                  showToast('Cambio cancelado', 'info');
+                }
+              });
+              return;
+            }
+
             if (response.success) {
               console.log('Registro actualizado correctamente');
+
+              // Si se creo nueva capacitacion en el catalogo, avisar
+              if (field === 'nombre_capacitacion' && response.is_new_capacitacion) {
+                if (typeof Swal !== 'undefined') {
+                  Swal.fire({
+                    title: 'Nueva capacitación creada',
+                    html: 'Se creó <strong>"' + $('<div/>').text(response.newValue).html() + '"</strong> en el catálogo y se asignó a este cronograma.<br><small class="text-muted">Recuerda completar el objetivo desde el catálogo si es necesario.</small>',
+                    icon: 'success',
+                    timer: 4000,
+                    showConfirmButton: true
+                  });
+                } else {
+                  showToast('Nueva capacitación "' + response.newValue + '" creada en el catálogo.', 'success');
+                }
+                table.ajax.reload(null, false);
+              } else if (field === 'nombre_capacitacion') {
+                showToast('Capacitación reasignada: ' + response.newValue, 'success');
+                table.ajax.reload(null, false);
+              }
 
               // Si se cambio el estado, actualizar badge
               if (field === 'estado') {
