@@ -422,7 +422,10 @@ class RegistroAsistenciaController extends BaseController
             return redirect()->back()->with('error', 'PDF no encontrado');
         }
 
-        $this->servirPdf($fullPath, 'registro_asistencia_' . $id . '.pdf');
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="registro_asistencia_' . $id . '.pdf"')
+            ->setBody(file_get_contents($fullPath));
     }
 
     // ── REGENERAR PDF ──

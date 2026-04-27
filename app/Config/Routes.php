@@ -1370,6 +1370,10 @@ $routes->get('/comites-elecciones/firma/reenviar/(:num)', 'ComitesEleccionesCont
 $routes->get('acta-visita/firmar-remoto/(:any)', 'Inspecciones\ActaVisitaController::firmarRemoto/$1');
 $routes->post('acta-visita/procesar-firma-remota', 'Inspecciones\ActaVisitaController::procesarFirmaRemota');
 
+// Rutas PUBLICAS de firma remota acta de capacitacion (sin autenticacion)
+$routes->get('acta-capacitacion/firmar-remoto/(:any)', 'Inspecciones\ActaCapacitacionController::firmarRemoto/$1');
+$routes->post('acta-capacitacion/procesar-firma-remota', 'Inspecciones\ActaCapacitacionController::procesarFirmaRemota');
+
 // Rutas PUBLICAS de firma remota investigacion accidente (sin autenticacion)
 $routes->get('investigacion-accidente/firmar-remoto/(:any)', 'Inspecciones\InvestigacionAccidenteController::firmarRemoto/$1');
 $routes->post('investigacion-accidente/procesar-firma-remota', 'Inspecciones\InvestigacionAccidenteController::procesarFirmaRemota');
@@ -1608,6 +1612,17 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('inspecciones/investigacion-accidente/enviar-enlace-firma/(:num)', 'MiembroInvestigacionAccidenteController::enviarEnlaceFirma/$1');
     $routes->post('inspecciones/investigacion-accidente/finalizar/(:num)', 'MiembroInvestigacionAccidenteController::finalizar/$1');
     $routes->get('inspecciones/investigacion-accidente/pdf/(:num)', 'MiembroInvestigacionAccidenteController::generatePdf/$1');
+
+    // Acta de Capacitacion (transversal a TODOS los comites — sin filtro COPASST)
+    $routes->get('acta-capacitacion', 'MiembroActaCapacitacionController::list');
+    $routes->get('acta-capacitacion/create', 'MiembroActaCapacitacionController::create');
+    $routes->post('acta-capacitacion/store', 'MiembroActaCapacitacionController::store');
+    $routes->get('acta-capacitacion/edit/(:num)', 'MiembroActaCapacitacionController::edit/$1');
+    $routes->post('acta-capacitacion/update/(:num)', 'MiembroActaCapacitacionController::update/$1');
+    $routes->get('acta-capacitacion/view/(:num)', 'MiembroActaCapacitacionController::view/$1');
+    $routes->get('acta-capacitacion/pdf/(:num)', 'MiembroActaCapacitacionController::generatePdf/$1');
+    $routes->post('acta-capacitacion/finalizar/(:num)', 'MiembroActaCapacitacionController::finalizar/$1');
+    $routes->post('acta-capacitacion/generar-token-firma/(:num)', 'MiembroActaCapacitacionController::generarTokenFirma/$1');
 });
 
 // Acceso de miembros del comité (por token - legacy/alternativo)
@@ -1680,6 +1695,19 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('acta-visita/delete/(:num)', 'ActaVisitaController::delete/$1');
     $routes->get('acta-visita/api/pta-actividades', 'ActaVisitaController::getPtaActividades');
     $routes->post('acta-visita/generar-token-firma/(:num)', 'ActaVisitaController::generarTokenFirma/$1');
+
+    // Acta de Capacitacion
+    $routes->get('acta-capacitacion', 'ActaCapacitacionController::list');
+    $routes->get('acta-capacitacion/create', 'ActaCapacitacionController::create');
+    $routes->get('acta-capacitacion/create/(:num)', 'ActaCapacitacionController::create/$1');
+    $routes->post('acta-capacitacion/store', 'ActaCapacitacionController::store');
+    $routes->get('acta-capacitacion/edit/(:num)', 'ActaCapacitacionController::edit/$1');
+    $routes->post('acta-capacitacion/update/(:num)', 'ActaCapacitacionController::update/$1');
+    $routes->get('acta-capacitacion/view/(:num)', 'ActaCapacitacionController::view/$1');
+    $routes->get('acta-capacitacion/pdf/(:num)', 'ActaCapacitacionController::generatePdf/$1');
+    $routes->post('acta-capacitacion/finalizar/(:num)', 'ActaCapacitacionController::finalizar/$1');
+    $routes->post('acta-capacitacion/generar-token-firma/(:num)', 'ActaCapacitacionController::generarTokenFirma/$1');
+    $routes->get('acta-capacitacion/delete/(:num)', 'ActaCapacitacionController::delete/$1');
 
     // Inspeccion Locativa
     $routes->get('inspeccion-locativa', 'InspeccionLocativaController::list');
