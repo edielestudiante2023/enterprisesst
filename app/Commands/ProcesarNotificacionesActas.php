@@ -12,19 +12,23 @@ use App\Models\ComiteModel;
 use App\Models\ClientModel;
 
 /**
- * Comando para procesar notificaciones diarias de actas
+ * Comando para procesar notificaciones diarias y semanales de actas
  *
  * Ejecutar con: php spark actas:notificaciones
  *
- * Tareas (en orden):
- * 1. Generar recordatorios de firma pendiente (diarios)
- * 2. Generar alertas de actas faltantes del mes
- * 3. Generar alertas de tareas vencidas/por vencer
- * 4. Enviar TODAS las notificaciones pendientes (incluye las recién generadas)
- * 5. Resumen semanal a consultores (solo lunes)
+ * Modo diario (sin flags):
+ * 1. Recordatorios de firma pendiente
+ * 2. Alertas de actas faltantes del mes (solo entre dia 25 y fin de mes)
+ * 3. Alertas de tareas proximas a vencer (7 dias)
+ * 4. Enviar notificaciones pendientes en cola
  *
- * CRON recomendado (7:00 AM diario):
- * 0 7 * * * cd /ruta/al/proyecto && php spark actas:notificaciones >> writable/logs/cron-actas.log 2>&1
+ * Modo semanal (--resumen):
+ * - Email consolidado por comite con tareas vencidas
+ * - TO: presidente + secretario | CC: resto miembros + consultor
+ *
+ * CRON recomendado:
+ * 0 7 * * * cd /ruta && php spark actas:notificaciones >> writable/logs/cron-actas.log 2>&1
+ * 0 8 * * 1 cd /ruta && php spark actas:notificaciones --resumen >> writable/logs/cron-actas-resumen.log 2>&1
  */
 class ProcesarNotificacionesActas extends BaseCommand
 {
@@ -101,11 +105,8 @@ class ProcesarNotificacionesActas extends BaseCommand
             $this->generarAlertasTareasVencidas();
         }
 
-        if ($todo || $soloResumen) {
-            // Resumen semanal solo lunes (o forzar con --resumen)
-            if ($soloResumen || date('N') == 1) {
-                $this->enviarResumenSemanal();
-            }
+        if ($soloResumen) {
+            $this->enviarConsolidadoSemanalVencidas();
         }
 
         // FASE 2: ENVIAR todas las notificaciones pendientes (incluye las recién generadas)
@@ -172,13 +173,13 @@ class ProcesarNotificacionesActas extends BaseCommand
     }
 
     /**
-     * Generar alertas de actas faltantes del mes (después del día 10)
+     * Generar alertas de actas faltantes del mes (entre dia 25 y fin de mes)
      */
     protected function generarAlertasActasFaltantes(): void
     {
         $diaActual = (int) date('j');
 
-        if ($diaActual < 10) {
+        if ($diaActual < 25) {
             return;
         }
 
@@ -223,47 +224,16 @@ class ProcesarNotificacionesActas extends BaseCommand
     }
 
     /**
-     * Generar alertas de tareas vencidas y próximas a vencer
+     * Generar alertas de tareas proximas a vencer (las vencidas se manejan en el cron semanal --resumen)
      */
     protected function generarAlertasTareasVencidas(): void
     {
-        CLI::write('[TAREAS] Verificando tareas vencidas...', 'light_gray');
+        CLI::write('[TAREAS] Verificando tareas proximas a vencer...', 'light_gray');
 
-        // Marcar tareas vencidas automáticamente
+        // Marcar tareas vencidas automaticamente (cambia estado pero NO notifica aqui)
         $this->compromisosModel->marcarVencidos();
 
-        // Tareas vencidas sin notificación reciente (cada 7 días)
-        $vencidas = $this->compromisosModel
-            ->select('tbl_acta_compromisos.*, tbl_cliente.nombre_cliente')
-            ->join('tbl_cliente', 'tbl_cliente.id_cliente = tbl_acta_compromisos.id_cliente')
-            ->where('tbl_acta_compromisos.estado', 'vencido')
-            ->where('(tbl_acta_compromisos.ultima_notificacion_at IS NULL OR tbl_acta_compromisos.ultima_notificacion_at < DATE_SUB(NOW(), INTERVAL 7 DAY))')
-            ->findAll();
-
-        foreach ($vencidas as $tarea) {
-            if (!empty($tarea['responsable_email'])) {
-                $this->notificacionModel->programar([
-                    'id_cliente' => $tarea['id_cliente'],
-                    'tipo' => 'tarea_vencida',
-                    'id_compromiso' => $tarea['id_compromiso'],
-                    'destinatario_email' => $tarea['responsable_email'],
-                    'destinatario_nombre' => $tarea['responsable_nombre'],
-                    'destinatario_tipo' => 'responsable',
-                    'asunto' => "URGENTE: Tarea vencida desde " . date('d/m/Y', strtotime($tarea['fecha_vencimiento'])),
-                    'cuerpo' => "La tarea '{$tarea['descripcion']}' esta vencida. Por favor actualice su estado."
-                ]);
-
-                $this->compromisosModel->update($tarea['id_compromiso'], [
-                    'ultima_notificacion_at' => date('Y-m-d H:i:s'),
-                    'total_notificaciones' => ($tarea['total_notificaciones'] ?? 0) + 1
-                ]);
-
-                $this->generados++;
-                CLI::write("  [GENERADO] Vencida: {$tarea['responsable_email']} - {$tarea['nombre_cliente']}", 'red');
-            }
-        }
-
-        // Tareas próximas a vencer (7 días, notificar cada 3 días)
+        // Tareas proximas a vencer (7 dias, notificar cada 3 dias)
         $proximasVencer = $this->compromisosModel->getProximosAVencer(7);
 
         foreach ($proximasVencer as $tarea) {
@@ -350,48 +320,236 @@ class ProcesarNotificacionesActas extends BaseCommand
     }
 
     /**
-     * Enviar resumen semanal a consultores (solo lunes o con --resumen)
+     * Enviar email consolidado semanal por comite con tareas vencidas
+     * TO: presidente + secretario | CC: resto miembros + consultor del cliente
      */
-    protected function enviarResumenSemanal(): void
+    protected function enviarConsolidadoSemanalVencidas(): void
     {
-        CLI::write('[RESUMEN] Generando resumenes semanales...', 'light_gray');
+        CLI::write('[CONSOLIDADO SEMANAL] Generando emails de tareas vencidas por comite...', 'light_gray');
 
+        // Marcar vencidos por si el cron diario aun no corrio hoy
+        $this->compromisosModel->marcarVencidos();
+
+        $miembroModel = new \App\Models\MiembroComiteModel();
         $consultorModel = new \App\Models\ConsultantModel();
-        $consultores = $consultorModel->findAll();
+        $clientes = $this->clienteModel->where('estado', 'activo')->findAll();
 
-        foreach ($consultores as $consultor) {
-            if (empty($consultor['correo_consultor'])) continue;
+        foreach ($clientes as $cliente) {
+            $comites = $this->comiteModel->getByCliente($cliente['id_cliente']);
+            if (empty($comites)) continue;
 
-            $clientes = $this->clienteModel
-                ->where('id_consultor', $consultor['id_consultor'])
-                ->where('estado', 'activo')
-                ->findAll();
+            // Consultor del cliente (CC)
+            $emailConsultor = null;
+            $nombreConsultor = null;
+            if (!empty($cliente['id_consultor'])) {
+                $consultor = $consultorModel->find($cliente['id_consultor']);
+                if ($consultor && !empty($consultor['correo_consultor'])) {
+                    $emailConsultor = $consultor['correo_consultor'];
+                    $nombreConsultor = $consultor['nombre_consultor'] ?? '';
+                }
+            }
 
-            if (empty($clientes)) continue;
+            foreach ($comites as $comite) {
+                // Compromisos vencidos del comite
+                $vencidos = $this->compromisosModel
+                    ->select('tbl_acta_compromisos.*, tbl_actas.numero_acta')
+                    ->join('tbl_actas', 'tbl_actas.id_acta = tbl_acta_compromisos.id_acta', 'left')
+                    ->where('tbl_acta_compromisos.id_comite', $comite['id_comite'])
+                    ->whereIn('tbl_acta_compromisos.estado', ['pendiente', 'en_proceso', 'vencido'])
+                    ->where('tbl_acta_compromisos.fecha_vencimiento <', date('Y-m-d'))
+                    ->orderBy('tbl_acta_compromisos.fecha_vencimiento', 'ASC')
+                    ->findAll();
 
-            $resumenTotal = [
-                'actas_pendientes' => 0,
-                'tareas_vencidas' => 0,
-                'tareas_por_vencer' => 0
+                if (empty($vencidos)) continue;
+
+                // Miembros del comite
+                $miembros = $miembroModel->getActivosPorComite($comite['id_comite']);
+                if (empty($miembros)) {
+                    CLI::write("  [SKIP] Comite {$comite['codigo']} sin miembros - {$cliente['nombre_cliente']}", 'yellow');
+                    continue;
+                }
+
+                $presidente = $miembroModel->getPresidente($comite['id_comite']);
+                $secretario = $miembroModel->getSecretario($comite['id_comite']);
+
+                // TO: presidente + secretario (con fallback al primer miembro si faltan ambos)
+                $toList = [];
+                if (!empty($presidente['email'])) {
+                    $toList[] = ['email' => $presidente['email'], 'name' => $presidente['nombre_completo']];
+                }
+                if (!empty($secretario['email']) && (!$presidente || $secretario['email'] !== $presidente['email'])) {
+                    $toList[] = ['email' => $secretario['email'], 'name' => $secretario['nombre_completo']];
+                }
+                if (empty($toList)) {
+                    foreach ($miembros as $m) {
+                        if (!empty($m['email'])) {
+                            $toList[] = ['email' => $m['email'], 'name' => $m['nombre_completo']];
+                            break;
+                        }
+                    }
+                }
+                if (empty($toList)) {
+                    CLI::write("  [SKIP] Comite {$comite['codigo']} sin emails validos", 'yellow');
+                    continue;
+                }
+
+                // CC: resto de miembros (excluyendo los que ya estan en TO) + consultor
+                $emailsTo = array_column($toList, 'email');
+                $ccList = [];
+                foreach ($miembros as $m) {
+                    if (!empty($m['email']) && !in_array($m['email'], $emailsTo) && !in_array($m['email'], array_column($ccList, 'email'))) {
+                        $ccList[] = ['email' => $m['email'], 'name' => $m['nombre_completo']];
+                    }
+                }
+                if (!empty($emailConsultor) && !in_array($emailConsultor, $emailsTo) && !in_array($emailConsultor, array_column($ccList, 'email'))) {
+                    $ccList[] = ['email' => $emailConsultor, 'name' => $nombreConsultor];
+                }
+
+                // Construir cuerpo
+                $tipoComite = $comite['codigo'] ?? 'COMITE';
+                $asunto = "[{$tipoComite}] Tareas vencidas - {$cliente['nombre_cliente']}";
+                $cuerpo = $this->construirCuerpoConsolidado($comite, $cliente, $vencidos);
+
+                // Enviar
+                $resultado = $this->enviarEmailDirecto($toList, $ccList, $asunto, $cuerpo, 'tarea_vencida');
+
+                if ($resultado) {
+                    // Marcar las tareas como notificadas
+                    foreach ($vencidos as $v) {
+                        $this->compromisosModel->update($v['id_compromiso'], [
+                            'ultima_notificacion_at' => date('Y-m-d H:i:s'),
+                            'total_notificaciones' => ($v['total_notificaciones'] ?? 0) + 1
+                        ]);
+                    }
+                    $this->enviados++;
+                    $destinatariosLog = implode(',', $emailsTo);
+                    CLI::write("  [OK] {$tipoComite} {$cliente['nombre_cliente']} -> {$destinatariosLog} (" . count($vencidos) . " vencidas)", 'green');
+                } else {
+                    $this->errores++;
+                    CLI::write("  [ERROR] {$tipoComite} {$cliente['nombre_cliente']}", 'red');
+                }
+            }
+        }
+    }
+
+    /**
+     * Construir HTML del cuerpo del email consolidado
+     */
+    protected function construirCuerpoConsolidado(array $comite, array $cliente, array $vencidos): string
+    {
+        $tipoComite = $comite['tipo_nombre'] ?? $comite['codigo'] ?? 'Comite';
+        $hoy = date('Y-m-d');
+
+        $filas = '';
+        foreach ($vencidos as $v) {
+            $diasVencido = (int) ((strtotime($hoy) - strtotime($v['fecha_vencimiento'])) / 86400);
+            $fechaVenc = date('d/m/Y', strtotime($v['fecha_vencimiento']));
+            $responsable = htmlspecialchars($v['responsable_nombre'] ?? '-', ENT_QUOTES, 'UTF-8');
+            $descripcion = htmlspecialchars($v['descripcion'] ?? '', ENT_QUOTES, 'UTF-8');
+            $numActa = htmlspecialchars($v['numero_acta'] ?? '-', ENT_QUOTES, 'UTF-8');
+
+            $filas .= "<tr>"
+                . "<td style=\"padding:8px;border:1px solid #e5e7eb;\">{$numActa}</td>"
+                . "<td style=\"padding:8px;border:1px solid #e5e7eb;\">{$descripcion}</td>"
+                . "<td style=\"padding:8px;border:1px solid #e5e7eb;\">{$responsable}</td>"
+                . "<td style=\"padding:8px;border:1px solid #e5e7eb;text-align:center;\">{$fechaVenc}</td>"
+                . "<td style=\"padding:8px;border:1px solid #e5e7eb;text-align:center;color:#dc2626;font-weight:bold;\">{$diasVencido} dias</td>"
+                . "</tr>";
+        }
+
+        $total = count($vencidos);
+        $tipoComiteHtml = htmlspecialchars($tipoComite, ENT_QUOTES, 'UTF-8');
+        $clienteHtml = htmlspecialchars($cliente['nombre_cliente'], ENT_QUOTES, 'UTF-8');
+
+        return "<p>Comite: <strong>{$tipoComiteHtml}</strong></p>"
+            . "<p>Empresa: <strong>{$clienteHtml}</strong></p>"
+            . "<p>El siguiente listado contiene <strong>{$total} compromiso(s) vencido(s)</strong> que requieren gestion:</p>"
+            . "<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;\">"
+            . "<thead><tr style=\"background:#f3f4f6;\">"
+            . "<th style=\"padding:8px;border:1px solid #e5e7eb;text-align:left;\">Acta</th>"
+            . "<th style=\"padding:8px;border:1px solid #e5e7eb;text-align:left;\">Compromiso</th>"
+            . "<th style=\"padding:8px;border:1px solid #e5e7eb;text-align:left;\">Responsable</th>"
+            . "<th style=\"padding:8px;border:1px solid #e5e7eb;\">Vencimiento</th>"
+            . "<th style=\"padding:8px;border:1px solid #e5e7eb;\">Dias vencido</th>"
+            . "</tr></thead><tbody>{$filas}</tbody></table>"
+            . "<p style=\"margin-top:15px;\">Por favor coordinen el cierre de estas actividades con los responsables indicados.</p>";
+    }
+
+    /**
+     * Enviar email directo via SendGrid con multiples TO y CC (no usa la cola)
+     * @param array $toList lista de [email, name]
+     * @param array $ccList lista de [email, name]
+     */
+    protected function enviarEmailDirecto(array $toList, array $ccList, string $asunto, string $cuerpoHtml, string $tipo): bool
+    {
+        if ($this->modoTest) {
+            $tos = implode(',', array_column($toList, 'email'));
+            CLI::write("    [TEST] -> {$tos}: {$asunto}", 'light_gray');
+            return true;
+        }
+
+        if (empty($this->sendgridApiKey)) {
+            CLI::write("    [WARN] SENDGRID_API_KEY no configurada en .env", 'yellow');
+            return false;
+        }
+
+        try {
+            $personalization = [
+                'to' => $toList,
+                'subject' => $asunto
+            ];
+            if (!empty($ccList)) {
+                $personalization['cc'] = $ccList;
+            }
+
+            $nombrePrincipal = $toList[0]['name'] ?? '';
+            $emailData = [
+                'personalizations' => [$personalization],
+                'from' => [
+                    'email' => $this->sendgridFromEmail,
+                    'name' => $this->sendgridFromName
+                ],
+                'content' => [[
+                    'type' => 'text/html',
+                    'value' => $this->generarHtmlEmail($nombrePrincipal, $asunto, $cuerpoHtml, $tipo)
+                ]],
+                'tracking_settings' => [
+                    'click_tracking' => ['enable' => false, 'enable_text' => false]
+                ]
             ];
 
-            foreach ($clientes as $cliente) {
-                $resumenTotal['actas_pendientes'] += count($this->actaModel->getPendientesFirma($cliente['id_cliente']));
-                $resumenTotal['tareas_vencidas'] += count($this->compromisosModel->getVencidos($cliente['id_cliente']));
-                $resumenTotal['tareas_por_vencer'] += count($this->compromisosModel->getProximosAVencer(7, $cliente['id_cliente']));
+            $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+            curl_setopt_array($ch, [
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($emailData),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $this->sendgridApiKey,
+                    'Content-Type: application/json'
+                ],
+                CURLOPT_TIMEOUT => 30
+            ]);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            if (!empty($curlError)) {
+                CLI::write("    [CURL] {$curlError}", 'red');
+                return false;
             }
 
-            if ($resumenTotal['actas_pendientes'] > 0 || $resumenTotal['tareas_vencidas'] > 0) {
-                $this->notificacionModel->programarResumenSemanal(
-                    $clientes[0]['id_cliente'],
-                    $consultor['correo_consultor'],
-                    $consultor['nombre_consultor'],
-                    $resumenTotal
-                );
-
-                $this->generados++;
-                CLI::write("  [GENERADO] Resumen: {$consultor['correo_consultor']}", 'light_blue');
+            if ($httpCode < 200 || $httpCode >= 300) {
+                CLI::write("    [SENDGRID] HTTP {$httpCode}: {$response}", 'red');
+                return false;
             }
+
+            return true;
+
+        } catch (\Exception $e) {
+            CLI::write("    [EXCEPTION] " . $e->getMessage(), 'red');
+            return false;
         }
     }
 
