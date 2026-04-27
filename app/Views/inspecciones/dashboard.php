@@ -234,5 +234,10 @@
             <div><strong>Investigacion AT/IT</strong></div>
             <div class="count">(<?= $totalInvestigaciones ?>)</div>
         </a>
+        <a href="<?= site_url('inspecciones/acta-capacitacion') ?>" class="card-tipo">
+            <i class="fas fa-graduation-cap"></i>
+            <div><strong>Actas Capacitacion</strong></div>
+            <div class="count">(<?= $totalCapacitaciones ?? 0 ?>)</div>
+        </a>
     </div>
 </div>

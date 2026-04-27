@@ -11,6 +11,7 @@ use App\Models\InspeccionSenalizacionModel;
 use App\Models\RegistroAsistenciaModel;
 use App\Models\PausaActivaModel;
 use App\Models\InvestigacionAccidenteModel;
+use App\Models\ActaCapacitacionModel;
 use App\Models\ClientModel;
 use App\Models\PendientesModel;
 use App\Models\VencimientosMantenimientoModel;
@@ -52,6 +53,9 @@ class InspeccionesController extends BaseController
         $invAccidenteModel = new InvestigacionAccidenteModel();
         $totalInvestigaciones = $invAccidenteModel->where('estado', 'completo')->countAllResults();
 
+        $actaCapModel = new ActaCapacitacionModel();
+        $totalCapacitaciones = $actaCapModel->where('estado', 'completo')->countAllResults();
+
         $data = [
             'title'                    => 'Inspecciones SST',
             'pendientes'               => $pendientes,
@@ -68,6 +72,7 @@ class InspeccionesController extends BaseController
             'totalAsistencia'          => $totalAsistencia,
             'totalPausas'              => $totalPausas,
             'totalInvestigaciones'     => $totalInvestigaciones,
+            'totalCapacitaciones'      => $totalCapacitaciones,
             'nombre'                 => session()->get('nombre_usuario'),
         ];
 

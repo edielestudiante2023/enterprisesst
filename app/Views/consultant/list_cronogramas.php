@@ -1134,8 +1134,6 @@
         autoWidth: false,
         dom: 'Bfltip',
         pageLength: 25,
-        scrollX: true,
-        scrollCollapse: true,
         buttons: [{
             extend: 'excelHtml5',
             text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
