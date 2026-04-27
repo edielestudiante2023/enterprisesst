@@ -490,6 +490,28 @@
         .toast-container { z-index: 9999; }
         .toast { min-width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,.15); margin-bottom: 8px; }
     </style>
+    <script>
+        // Auto-restaura filtros del formulario desde localStorage cuando la URL no trae cliente.
+        // Se ejecuta lo antes posible para evitar "flash" de la pagina vacia.
+        (function autoRestorePtaFormFilters() {
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('cliente')) return;
+                if (urlParams.has('__no_restore')) return;
+                var raw = localStorage.getItem('pta_filters_form_v1');
+                if (!raw) return;
+                var saved = JSON.parse(raw);
+                if (!saved || !saved.cliente) return;
+                var qs = new URLSearchParams();
+                qs.set('cliente', saved.cliente);
+                if (saved.anio) qs.set('anio', saved.anio);
+                if (saved.fecha_desde) qs.set('fecha_desde', saved.fecha_desde);
+                if (saved.fecha_hasta) qs.set('fecha_hasta', saved.fecha_hasta);
+                if (saved.ver_todos === '1') qs.set('ver_todos', '1');
+                window.location.replace(window.location.pathname + '?' + qs.toString());
+            } catch (e) { /* no-op */ }
+        })();
+    </script>
 </head>
 
 <body>
@@ -1056,14 +1078,56 @@
             var activeStatus = null;
             var activePrograma = null;
 
-            // Guardar filtros de tarjetas en sessionStorage antes de reload
+            // ============ PERSISTENCIA DE FILTROS (localStorage) ============
+            var STORAGE_KEY_FORM = 'pta_filters_form_v1';
+            var STORAGE_KEY_CARDS_PREFIX = 'pta_filters_cards_v1_';
+            var DEFAULT_CARD_STATUS = 'ABIERTA'; // Default = Activas
+
+            function getCurrentClienteId() {
+                return $('#cliente').val() || '';
+            }
+
+            function saveFormFiltersToStorage() {
+                try {
+                    var data = {
+                        cliente: $('#cliente').val() || '',
+                        anio: $('#anio').val() || '',
+                        fecha_desde: $('#fecha_desde').val() || '',
+                        fecha_hasta: $('#fecha_hasta').val() || '',
+                        ver_todos: $('#verTodosFlag').length ? '1' : ''
+                    };
+                    if (data.cliente) {
+                        localStorage.setItem(STORAGE_KEY_FORM, JSON.stringify(data));
+                    }
+                } catch (e) { /* no-op */ }
+            }
+
+            function saveCardFiltersToStorage() {
+                try {
+                    var cliente = getCurrentClienteId();
+                    if (!cliente) return;
+                    var data = {
+                        year: activeYear,
+                        month: activeMonth,
+                        status: activeStatus,
+                        programa: activePrograma
+                    };
+                    localStorage.setItem(STORAGE_KEY_CARDS_PREFIX + cliente, JSON.stringify(data));
+                } catch (e) { /* no-op */ }
+            }
+
+            function loadCardFiltersFromStorage() {
+                try {
+                    var cliente = getCurrentClienteId();
+                    if (!cliente) return null;
+                    var raw = localStorage.getItem(STORAGE_KEY_CARDS_PREFIX + cliente);
+                    return raw ? JSON.parse(raw) : null;
+                } catch (e) { return null; }
+            }
+
+            // Mantiene compat con el flujo de edicion: persiste y recarga.
             function reloadWithFilters() {
-                sessionStorage.setItem('ptaCardFilters', JSON.stringify({
-                    year: activeYear,
-                    month: activeMonth,
-                    status: activeStatus,
-                    programa: activePrograma
-                }));
+                saveCardFiltersToStorage();
                 location.reload();
             }
 
@@ -1211,6 +1275,7 @@
                 }
 
                 applyFilters();
+                saveCardFiltersToStorage();
             });
 
             // Click en tarjetas de mes
@@ -1229,6 +1294,7 @@
                 }
 
                 applyFilters();
+                saveCardFiltersToStorage();
             });
 
             // Click en tarjetas de estado
@@ -1247,6 +1313,7 @@
                 }
 
                 applyFilters();
+                saveCardFiltersToStorage();
             });
 
             // Click en tarjetas de programa
@@ -1263,6 +1330,7 @@
                 }
 
                 applyFilters();
+                saveCardFiltersToStorage();
             });
 
             // Generar tarjetas de programa dinámicamente desde los datos de la tabla
@@ -1308,6 +1376,7 @@
             }
 
             // Botón para limpiar todos los filtros de tarjetas
+            // Resetea al valor por defecto: Activas (ABIERTA).
             $('#btnClearCardFilters').on('click', function() {
                 // Limpiar estados
                 activeYear = null;
@@ -1324,13 +1393,28 @@
                 // Limpiar filtros personalizados de DataTables
                 $.fn.dataTable.ext.search.pop();
 
-                if (table) {
-                    table.draw();
-                    generateYearCards(); // Regenerar tarjetas de año
-                    generateProgramaCards(); // Regenerar tarjetas de programa
+                // Re-aplicar filtro por defecto: Activas (ABIERTA)
+                var cliente = getCurrentClienteId();
+                var msg = 'Filtros de tarjetas limpiados. Mostrando todos los registros.';
+                if (cliente) {
+                    activeStatus = DEFAULT_CARD_STATUS;
+                    $('.card-status[data-status="' + DEFAULT_CARD_STATUS + '"]').addClass('active');
+                    msg = 'Filtros restablecidos al valor por defecto (Activas).';
                 }
 
-                showAlert('Filtros de tarjetas limpiados. Mostrando todos los registros.', 'info');
+                saveCardFiltersToStorage();
+
+                if (table) {
+                    if (cliente) {
+                        applyFilters();
+                    } else {
+                        table.draw();
+                    }
+                    generateYearCards();
+                    generateProgramaCards();
+                }
+
+                showAlert(msg, 'info');
             });
 
             // Botón para mostrar todos los registros (limpiar filtros de fecha)
@@ -1404,6 +1488,9 @@
                     e.preventDefault();
                     return false;
                 }
+
+                // Persistir filtros del formulario para futuras visitas.
+                saveFormFiltersToStorage();
             });
 
             // Función para mostrar alertas mejoradas
@@ -1583,33 +1670,42 @@
                 generateYearCards();
                 generateProgramaCards();
 
-                // Restaurar filtros de tarjetas desde sessionStorage (si venimos de un reload)
-                var savedFilters = sessionStorage.getItem('ptaCardFilters');
-                if (savedFilters) {
-                    sessionStorage.removeItem('ptaCardFilters');
-                    var f = JSON.parse(savedFilters);
-                    if (f.year) {
-                        activeYear = f.year;
-                        $('.card-year[data-year="' + f.year + '"]').addClass('active');
+                // Restaurar filtros de tarjetas desde localStorage (persistente entre sesiones).
+                // Si no hay filtros guardados para este cliente, aplicar default = Activas (ABIERTA).
+                var clienteVal = getCurrentClienteId();
+                var savedCardFilters = loadCardFiltersFromStorage();
+                var aplicarFiltrosCard = false;
+
+                if (savedCardFilters) {
+                    if (savedCardFilters.year) {
+                        activeYear = savedCardFilters.year;
+                        $('.card-year[data-year="' + savedCardFilters.year + '"]').addClass('active');
                     }
-                    if (f.month) {
-                        activeMonth = f.month;
-                        $('.card-month[data-month="' + f.month + '"]').addClass('active');
+                    if (savedCardFilters.month) {
+                        activeMonth = savedCardFilters.month;
+                        $('.card-month[data-month="' + savedCardFilters.month + '"]').addClass('active');
                     }
-                    if (f.status) {
-                        activeStatus = f.status;
-                        $('.card-status[data-status="' + f.status + '"]').addClass('active');
+                    if (savedCardFilters.status) {
+                        activeStatus = savedCardFilters.status;
+                        $('.card-status[data-status="' + savedCardFilters.status + '"]').addClass('active');
                     }
-                    if (f.programa) {
-                        activePrograma = f.programa;
-                        $('.card-programa[data-programa="' + f.programa + '"]').addClass('active');
+                    if (savedCardFilters.programa) {
+                        activePrograma = savedCardFilters.programa;
+                        $('.card-programa[data-programa="' + savedCardFilters.programa + '"]').addClass('active');
                     }
-                    if (f.year || f.month || f.status || f.programa) {
-                        // Abrir el panel de filtros y aplicar
-                        $('#cardFiltersPanel').addClass('show');
-                        $('.filter-toggle-btn').removeClass('collapsed');
-                        applyFilters();
-                    }
+                    aplicarFiltrosCard = !!(activeYear || activeMonth || activeStatus || activePrograma);
+                } else if (clienteVal) {
+                    // Default en primer ingreso: filtrar por Activas
+                    activeStatus = DEFAULT_CARD_STATUS;
+                    $('.card-status[data-status="' + DEFAULT_CARD_STATUS + '"]').addClass('active');
+                    saveCardFiltersToStorage();
+                    aplicarFiltrosCard = true;
+                }
+
+                if (aplicarFiltrosCard) {
+                    $('#cardFiltersPanel').addClass('show');
+                    $('.filter-toggle-btn').removeClass('collapsed');
+                    applyFilters();
                 }
 
                 // Helpers para construir HTML de badge y progress bar
@@ -1876,8 +1972,16 @@
             }
 
             $('#resetFilters').click(function() {
+                // Limpiar tambien la persistencia: una limpieza explicita = pagina en blanco.
+                try {
+                    var clienteIdLimpiar = $('#cliente').val();
+                    localStorage.removeItem(STORAGE_KEY_FORM);
+                    if (clienteIdLimpiar) {
+                        localStorage.removeItem(STORAGE_KEY_CARDS_PREFIX + clienteIdLimpiar);
+                    }
+                } catch (e) { /* no-op */ }
                 $('#filterForm')[0].reset();
-                window.location.href = "<?= site_url('/pta-cliente-nueva/list') ?>";
+                window.location.href = "<?= site_url('/pta-cliente-nueva/list') ?>?__no_restore=1";
             });
 
             // Manejador para el botón Calificar Cerradas
