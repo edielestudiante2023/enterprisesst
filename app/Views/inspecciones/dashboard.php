@@ -30,7 +30,7 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-2">
+            <div class="mt-2 d-flex gap-2 flex-wrap">
                 <?php if ($doc['estado'] === 'borrador'): ?>
                     <a href="<?= site_url('inspecciones/acta-visita/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                         Continuar editando <i class="fas fa-arrow-right ms-1"></i>
@@ -40,6 +40,12 @@
                         Ir a firmas <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 <?php endif; ?>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/acta-visita/delete/' . $doc['id']) ?>"
+                    data-tipo="acta de visita"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
             </div>
         </div>
     </div>
@@ -65,10 +71,16 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-2">
+            <div class="mt-2 d-flex gap-2 flex-wrap">
                 <a href="<?= site_url('inspecciones/inspeccion-locativa/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/inspeccion-locativa/delete/' . $doc['id']) ?>"
+                    data-tipo="inspeccion locativa"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
             </div>
         </div>
     </div>
@@ -94,10 +106,16 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-2">
+            <div class="mt-2 d-flex gap-2 flex-wrap">
                 <a href="<?= site_url('inspecciones/extintores/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/extintores/delete/' . $doc['id']) ?>"
+                    data-tipo="inspeccion de extintores"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
             </div>
         </div>
     </div>
@@ -123,10 +141,16 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-2">
+            <div class="mt-2 d-flex gap-2 flex-wrap">
                 <a href="<?= site_url('inspecciones/botiquin/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/botiquin/delete/' . $doc['id']) ?>"
+                    data-tipo="inspeccion de botiquin"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
             </div>
         </div>
     </div>
@@ -152,10 +176,16 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-2">
+            <div class="mt-2 d-flex gap-2 flex-wrap">
                 <a href="<?= site_url('inspecciones/senalizacion/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/senalizacion/delete/' . $doc['id']) ?>"
+                    data-tipo="inspeccion de senalizacion"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
             </div>
         </div>
     </div>
@@ -181,10 +211,16 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-2">
+            <div class="mt-2 d-flex gap-2 flex-wrap">
                 <a href="<?= site_url('inspecciones/registro-asistencia/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
                     Continuar editando <i class="fas fa-arrow-right ms-1"></i>
                 </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/registro-asistencia/delete/' . $doc['id']) ?>"
+                    data-tipo="registro de asistencia"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
             </div>
         </div>
     </div>
@@ -241,3 +277,42 @@
         </a>
     </div>
 </div>
+
+<script>
+(function () {
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.btn-delete-doc');
+        if (!btn) return;
+        e.preventDefault();
+
+        var url    = btn.dataset.url    || '';
+        var tipo   = btn.dataset.tipo   || 'documento';
+        var nombre = btn.dataset.nombre || '';
+
+        if (!url) return;
+
+        Swal.fire({
+            icon: 'warning',
+            title: '¿Eliminar este documento?',
+            html: 'Vas a eliminar la <strong>' + tipo + '</strong> de '
+                + '<strong>' + nombre + '</strong>.<br><br>'
+                + '<span style="color:#dc3545;font-size:13px;">Esta acción no se puede deshacer.</span>',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true,
+            focusCancel: true,
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+            Swal.fire({
+                title: 'Eliminando...',
+                allowOutsideClick: false,
+                didOpen: function () { Swal.showLoading(); }
+            });
+            window.location.href = url;
+        });
+    });
+})();
+</script>
