@@ -76,6 +76,46 @@ class DebugTenant extends BaseController
         $out[] = '=== Ultima query SQL generada ===';
         $out[] = $db->getLastQuery()->getQuery();
 
+        // Ejecutar el flujo COMPLETO del controller list() — incluyendo el loop
+        // que enriquece con total_asistentes / total_firmados.
+        $out[] = '';
+        $out[] = '=== Flujo COMPLETO de list() (con foreach enriquecido) ===';
+        $actaModel2 = new ActaCapacitacionModel();
+        $asistenteModel = new \App\Models\ActaCapacitacionAsistenteModel();
+        $actasFull = $actaModel2
+            ->select('tbl_acta_capacitacion.*, tbl_clientes.nombre_cliente, tbl_consultor.nombre_consultor')
+            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_acta_capacitacion.id_cliente', 'left')
+            ->join('tbl_consultor', 'tbl_consultor.id_consultor = tbl_acta_capacitacion.id_consultor', 'left')
+            ->orderBy('tbl_acta_capacitacion.fecha_capacitacion', 'DESC')
+            ->findAll();
+        $out[] = 'Despues de findAll: ' . count($actasFull) . ' filas';
+        try {
+            foreach ($actasFull as &$a) {
+                $a['total_asistentes'] = $asistenteModel
+                    ->where('id_acta_capacitacion', $a['id'])->countAllResults(false);
+                $a['total_firmados'] = $asistenteModel
+                    ->where('id_acta_capacitacion', $a['id'])
+                    ->where('firma_path IS NOT NULL', null, false)->countAllResults(false);
+            }
+            unset($a);
+            $out[] = 'Despues del foreach: ' . count($actasFull) . ' filas';
+            foreach ($actasFull as $a) {
+                $out[] = sprintf("  id=%s | cliente=%s | total_asist=%s | firmados=%s",
+                    $a['id'], $a['nombre_cliente'] ?? '?',
+                    $a['total_asistentes'] ?? '?', $a['total_firmados'] ?? '?');
+            }
+        } catch (\Throwable $e) {
+            $out[] = 'EXCEPCION en foreach: ' . $e->getMessage();
+        }
+
+        // Renderizar la vista list.php con los datos y comparar
+        $out[] = '';
+        $out[] = '=== Render de view list.php (cuantas cards genera) ===';
+        $rendered = view('inspecciones/acta_capacitacion/list', ['actas' => $actasFull]);
+        $cardCount = substr_count($rendered, 'card-inspeccion');
+        $out[] = "Tarjetas card-inspeccion en HTML: $cardCount";
+        $out[] = "Tamano del HTML rendered: " . strlen($rendered) . " bytes";
+
         return '<pre style="font-family:monospace;font-size:13px;background:#f3f4f6;padding:20px;">'
             . htmlspecialchars(implode("\n", $out)) . '</pre>';
     }
