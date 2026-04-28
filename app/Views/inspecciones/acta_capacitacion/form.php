@@ -20,6 +20,9 @@ $deleteAsistUrlBase = $ctx === 'consultor'
 $statusUrlBase = $ctx === 'consultor'
     ? 'inspecciones/acta-capacitacion/asistentes-status/'
     : 'miembro/acta-capacitacion/asistentes-status/';
+$tokenInscripcionUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/acta-capacitacion/generar-token-inscripcion/'
+    : 'miembro/acta-capacitacion/generar-token-inscripcion/';
 ?>
 
 <div class="container-fluid px-3">
@@ -148,6 +151,24 @@ $statusUrlBase = $ctx === 'consultor'
                                 <i class="fas fa-exclamation-triangle"></i>
                                 Para que el botón <strong>Enviar WhatsApp</strong> funcione, primero <strong>guarda</strong> el asistente recién agregado.
                             </div>
+                        <?php endif; ?>
+
+                        <?php if ($isEdit): ?>
+                        <div class="mb-3 p-3 rounded" style="background:#fff7ed;border:1px solid #fed7aa;">
+                            <div class="d-flex justify-content-between align-items-center" style="gap:10px;">
+                                <div style="font-size:13px;line-height:1.4;">
+                                    <strong style="color:#9a3412;">
+                                        <i class="fas fa-qrcode"></i> Auto-inscripcion via QR
+                                    </strong>
+                                    <div class="text-muted" style="font-size:12px;">
+                                        Cada asistente escanea el QR con su celular y llena sus datos. Mas rapido para grupos grandes.
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-warning" id="btnMostrarQR" style="white-space:nowrap;font-weight:600;">
+                                    <i class="fas fa-qrcode"></i> Mostrar QR
+                                </button>
+                            </div>
+                        </div>
                         <?php endif; ?>
 
                         <?php
@@ -413,6 +434,100 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnsEnvio.forEach(function(b) { b.style.display = 'none'; });
             }
         });
+    }
+
+    // ===== QR de auto-inscripcion =====
+    var tokenInscripcionUrlBase = '<?= site_url($tokenInscripcionUrlBase) ?>';
+
+    function mostrarQrModal(data) {
+        Swal.fire({
+            title: '<i class="fas fa-qrcode" style="color:#bd9751;"></i> QR de auto-inscripcion',
+            html:
+                '<div style="text-align:center;">'
+                + '<div style="background:white;padding:14px;border:2px solid #e5e7eb;border-radius:12px;display:inline-block;max-width:320px;width:100%;">'
+                +   data.qr_svg
+                + '</div>'
+                + '<p style="font-size:13px;color:#6b7280;margin-top:14px;line-height:1.4;">'
+                +   'Acerca el celular de cada asistente para que escanee.<br>'
+                +   'Llena sus datos y firma desde su propio celular.'
+                + '</p>'
+                + '<div style="background:#f3f4f6;padding:10px;border-radius:8px;margin-top:10px;font-size:11px;word-break:break-all;color:#374151;">'
+                +   data.url
+                + '</div>'
+                + '<div class="d-flex gap-2 mt-3">'
+                +   '<button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="btnCopiarQrUrl"><i class="fas fa-copy"></i> Copiar enlace</button>'
+                +   '<button type="button" class="btn btn-sm btn-outline-danger flex-fill" id="btnRotarQrUrl"><i class="fas fa-redo"></i> Generar nuevo</button>'
+                + '</div>'
+                + '</div>',
+            width: 460,
+            showConfirmButton: true,
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#bd9751',
+            didOpen: function() {
+                var btnCopiar = document.getElementById('btnCopiarQrUrl');
+                if (btnCopiar) {
+                    btnCopiar.addEventListener('click', function() {
+                        navigator.clipboard.writeText(data.url).then(function() {
+                            btnCopiar.innerHTML = '<i class="fas fa-check"></i> Copiado';
+                            setTimeout(function() { btnCopiar.innerHTML = '<i class="fas fa-copy"></i> Copiar enlace'; }, 1500);
+                        });
+                    });
+                }
+                var btnRotar = document.getElementById('btnRotarQrUrl');
+                if (btnRotar) {
+                    btnRotar.addEventListener('click', function() {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '¿Generar un nuevo QR?',
+                            html: 'El QR actual <strong>dejara de funcionar</strong>. Cualquier persona que tenga el enlace anterior no podra inscribirse.',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Si, regenerar',
+                            cancelButtonText: 'Cancelar',
+                            reverseButtons: true,
+                        }).then(function(res) {
+                            if (!res.isConfirmed) return;
+                            generarQR(true);
+                        });
+                    });
+                }
+            }
+        });
+    }
+
+    function generarQR(regenerar) {
+        if (!idActaActual) {
+            Swal.fire('Guarda primero el acta', 'Primero guarda el acta como borrador para generar el QR.', 'info');
+            return;
+        }
+        Swal.fire({ title: 'Generando QR...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+        var fd = new FormData();
+        fd.append(csrfName, csrfHash);
+        if (regenerar) fd.append('regenerar', '1');
+
+        fetch(tokenInscripcionUrlBase + idActaActual, {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) {
+                Swal.fire('Error', data.error || 'No se pudo generar el QR', 'error');
+                return;
+            }
+            mostrarQrModal(data);
+        })
+        .catch(function() {
+            Swal.fire('Error de conexion', 'No se pudo generar el QR.', 'error');
+        });
+    }
+
+    var btnQR = document.getElementById('btnMostrarQR');
+    if (btnQR) {
+        btnQR.addEventListener('click', function() { generarQR(false); });
     }
 
     var btnRefresh = document.getElementById('btnRefreshFirmas');

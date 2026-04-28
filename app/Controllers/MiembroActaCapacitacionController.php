@@ -518,6 +518,54 @@ class MiembroActaCapacitacionController extends BaseController
     }
 
     /**
+     * AJAX (auth miembro): genera o reutiliza token de auto-inscripcion del acta.
+     */
+    public function generarTokenInscripcion(int $idActa)
+    {
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+        }
+        if ($acta['estado'] === 'completo') {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta finalizada, no acepta inscripciones']);
+        }
+
+        $token = $acta['token_inscripcion'] ?? null;
+        $regenerar = $this->request->getPost('regenerar') === '1';
+        if (!$token || $regenerar) {
+            $token = bin2hex(random_bytes(24));
+            $this->actaModel->update($idActa, ['token_inscripcion' => $token]);
+        }
+
+        $url = base_url("acta-capacitacion/inscripcion/{$token}");
+        return $this->response->setJSON([
+            'success' => true,
+            'token'   => $token,
+            'url'     => $url,
+            'qr_svg'  => $this->generarQrSvg($url),
+        ]);
+    }
+
+    private function generarQrSvg(string $url): string
+    {
+        if (class_exists('\\chillerlan\\QRCode\\QRCode')) {
+            try {
+                $opts = new \chillerlan\QRCode\QROptions([
+                    'outputType' => \chillerlan\QRCode\QRCode::OUTPUT_MARKUP_SVG,
+                    'eccLevel'   => \chillerlan\QRCode\QRCode::ECC_M,
+                    'scale'      => 8,
+                    'imageBase64'=> false,
+                ]);
+                return (new \chillerlan\QRCode\QRCode($opts))->render($url);
+            } catch (\Throwable $e) {
+                log_message('error', 'QR local fallo, fallback: ' . $e->getMessage());
+            }
+        }
+        $apiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' . urlencode($url);
+        return '<img src="' . esc($apiUrl) . '" alt="QR" style="width:100%;height:auto;">';
+    }
+
+    /**
      * AJAX: estado actual de asistentes del acta para refrescar la vista.
      */
     public function getAsistentesStatus(int $idActa)
