@@ -529,10 +529,12 @@ class ActaCapacitacionController extends BaseController
             }
         }
 
-        foreach (array_keys($existentes) as $idExistente) {
-            if (!in_array($idExistente, $idsRecibidos, true)) {
-                $this->asistenteModel->delete($idExistente);
-            }
+        foreach ($existentes as $idExistente => $registro) {
+            if (in_array($idExistente, $idsRecibidos, true)) continue;
+            // Proteccion critica: NUNCA borrar un asistente que ya firmo,
+            // aunque no venga en el POST (evita perder firmas almacenadas en disco).
+            if (!empty($registro['firma_path']) || !empty($registro['firmado_at'])) continue;
+            $this->asistenteModel->delete($idExistente);
         }
     }
 
