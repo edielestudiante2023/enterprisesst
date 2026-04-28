@@ -1378,6 +1378,9 @@ $routes->post('acta-capacitacion/procesar-firma-remota', 'Inspecciones\ActaCapac
 $routes->get('acta-capacitacion/inscripcion/(:any)', 'Inspecciones\ActaCapacitacionController::inscripcion/$1');
 $routes->post('acta-capacitacion/procesar-inscripcion', 'Inspecciones\ActaCapacitacionController::procesarInscripcion');
 
+// DEBUG TEMPORAL: dump de session + tenant filter (BORRAR DESPUES)
+$routes->get('debug-tenant', 'DebugTenant::index');
+
 // Rutas PUBLICAS de firma remota investigacion accidente (sin autenticacion)
 $routes->get('investigacion-accidente/firmar-remoto/(:any)', 'Inspecciones\InvestigacionAccidenteController::firmarRemoto/$1');
 $routes->post('investigacion-accidente/procesar-firma-remota', 'Inspecciones\InvestigacionAccidenteController::procesarFirmaRemota');
