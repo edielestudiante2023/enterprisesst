@@ -17,8 +17,15 @@ class ActaCapacitacionModel extends Model
         'dictada_por', 'nombre_capacitador', 'entidad_capacitadora',
         'modalidad', 'enlace_grabacion', 'objetivos', 'contenido', 'observaciones',
         'ruta_pdf', 'estado',
+        'token_inscripcion',
         'created_at', 'updated_at',
     ];
+
+    public function findByTokenInscripcion(string $token): ?array
+    {
+        if (empty($token)) return null;
+        return $this->where('token_inscripcion', $token)->first();
+    }
     protected $useTimestamps = true;
 
     public function getByCliente(int $idCliente): array

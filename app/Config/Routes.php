@@ -1374,6 +1374,10 @@ $routes->post('acta-visita/procesar-firma-remota', 'Inspecciones\ActaVisitaContr
 $routes->get('acta-capacitacion/firmar-remoto/(:any)', 'Inspecciones\ActaCapacitacionController::firmarRemoto/$1');
 $routes->post('acta-capacitacion/procesar-firma-remota', 'Inspecciones\ActaCapacitacionController::procesarFirmaRemota');
 
+// Rutas PUBLICAS de auto-inscripcion via QR (sin autenticacion)
+$routes->get('acta-capacitacion/inscripcion/(:any)', 'Inspecciones\ActaCapacitacionController::inscripcion/$1');
+$routes->post('acta-capacitacion/procesar-inscripcion', 'Inspecciones\ActaCapacitacionController::procesarInscripcion');
+
 // Rutas PUBLICAS de firma remota investigacion accidente (sin autenticacion)
 $routes->get('investigacion-accidente/firmar-remoto/(:any)', 'Inspecciones\InvestigacionAccidenteController::firmarRemoto/$1');
 $routes->post('investigacion-accidente/procesar-firma-remota', 'Inspecciones\InvestigacionAccidenteController::procesarFirmaRemota');
@@ -1627,6 +1631,7 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('acta-capacitacion/asistente/delete/(:num)/(:num)', 'MiembroActaCapacitacionController::deleteAsistente/$1/$2');
     $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'MiembroActaCapacitacionController::enviarEmailFirma/$1');
     $routes->get('acta-capacitacion/asistentes-status/(:num)', 'MiembroActaCapacitacionController::getAsistentesStatus/$1');
+    $routes->post('acta-capacitacion/generar-token-inscripcion/(:num)', 'MiembroActaCapacitacionController::generarTokenInscripcion/$1');
 });
 
 // Acceso de miembros del comité (por token - legacy/alternativo)
@@ -1715,6 +1720,7 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->post('acta-capacitacion/asistente/delete/(:num)/(:num)', 'ActaCapacitacionController::deleteAsistente/$1/$2');
     $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'ActaCapacitacionController::enviarEmailFirma/$1');
     $routes->get('acta-capacitacion/asistentes-status/(:num)', 'ActaCapacitacionController::getAsistentesStatus/$1');
+    $routes->post('acta-capacitacion/generar-token-inscripcion/(:num)', 'ActaCapacitacionController::generarTokenInscripcion/$1');
     $routes->get('acta-capacitacion/delete/(:num)', 'ActaCapacitacionController::delete/$1');
 
     // Inspeccion Locativa

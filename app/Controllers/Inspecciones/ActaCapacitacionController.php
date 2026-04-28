@@ -531,6 +531,166 @@ class ActaCapacitacionController extends BaseController
     }
 
     /**
+     * AJAX (auth): genera o reutiliza el token de auto-inscripcion del acta.
+     * Devuelve la URL publica para imprimir como QR y mostrar a los asistentes.
+     */
+    public function generarTokenInscripcion(int $idActa)
+    {
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+        }
+        if ($acta['estado'] === 'completo') {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta finalizada, no acepta inscripciones']);
+        }
+
+        $token = $acta['token_inscripcion'] ?? null;
+        $regenerar = $this->request->getPost('regenerar') === '1';
+        if (!$token || $regenerar) {
+            $token = bin2hex(random_bytes(24));
+            $this->actaModel->update($idActa, ['token_inscripcion' => $token]);
+        }
+
+        $url = base_url("acta-capacitacion/inscripcion/{$token}");
+        return $this->response->setJSON([
+            'success' => true,
+            'token'   => $token,
+            'url'     => $url,
+            'qr_svg'  => $this->generarQrSvg($url),
+        ]);
+    }
+
+    /**
+     * Genera un QR como SVG inline a partir de una URL.
+     * Usa chillerlan/php-qrcode si esta instalado; si no, usa api.qrserver.com.
+     */
+    private function generarQrSvg(string $url): string
+    {
+        if (class_exists('\\chillerlan\\QRCode\\QRCode')) {
+            try {
+                $opts = new \chillerlan\QRCode\QROptions([
+                    'outputType' => \chillerlan\QRCode\QRCode::OUTPUT_MARKUP_SVG,
+                    'eccLevel'   => \chillerlan\QRCode\QRCode::ECC_M,
+                    'scale'      => 8,
+                    'imageBase64'=> false,
+                ]);
+                return (new \chillerlan\QRCode\QRCode($opts))->render($url);
+            } catch (\Throwable $e) {
+                log_message('error', 'QR local fallo, fallback a api externa: ' . $e->getMessage());
+            }
+        }
+        // Fallback: imagen via API externa
+        $apiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' . urlencode($url);
+        return '<img src="' . esc($apiUrl) . '" alt="QR" style="width:100%;height:auto;">';
+    }
+
+    // ============================================================
+    // ENDPOINTS PUBLICOS DE AUTO-INSCRIPCION (sin auth, token = autenticacion)
+    // ============================================================
+
+    /**
+     * Vista publica: form de auto-inscripcion. Se accede via QR.
+     */
+    public function inscripcion(string $token)
+    {
+        $acta = $this->actaModel->findByTokenInscripcion($token);
+        if (!$acta) {
+            return view('inspecciones/acta_capacitacion/inscripcion_error', [
+                'mensaje' => 'Este enlace no es valido. Solicita uno nuevo al organizador.'
+            ]);
+        }
+        if ($acta['estado'] === 'completo') {
+            return view('inspecciones/acta_capacitacion/inscripcion_error', [
+                'mensaje' => 'Esta acta ya fue cerrada y no acepta nuevas inscripciones.'
+            ]);
+        }
+
+        $cliente = (new ClientModel())->find($acta['id_cliente']);
+        return view('inspecciones/acta_capacitacion/inscripcion_publica', [
+            'token'   => $token,
+            'acta'    => $acta,
+            'cliente' => $cliente,
+        ]);
+    }
+
+    /**
+     * POST publico: procesa la inscripcion de un asistente.
+     * Una sola respuesta por numero_documento dentro del mismo acta.
+     */
+    public function procesarInscripcion()
+    {
+        $token  = trim((string)$this->request->getPost('token'));
+        $nombre = trim((string)$this->request->getPost('nombre_completo'));
+        $tipoDoc = trim((string)$this->request->getPost('tipo_documento')) ?: 'CC';
+        $numDoc = trim((string)$this->request->getPost('numero_documento'));
+        $cargo  = trim((string)$this->request->getPost('cargo'));
+        $area   = trim((string)$this->request->getPost('area_dependencia'));
+        $email  = trim((string)$this->request->getPost('email'));
+        $celular = trim((string)$this->request->getPost('celular'));
+
+        if (!$token || !$nombre || !$numDoc) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error'   => 'Nombre completo y numero de documento son obligatorios.',
+            ]);
+        }
+
+        $acta = $this->actaModel->findByTokenInscripcion($token);
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Enlace invalido o expirado.']);
+        }
+        if ($acta['estado'] === 'completo') {
+            return $this->response->setJSON(['success' => false, 'error' => 'Esta acta ya fue cerrada.']);
+        }
+
+        // Anti-duplicado: mismo numero_documento dentro del mismo acta
+        $existe = $this->asistenteModel
+            ->where('id_acta_capacitacion', $acta['id'])
+            ->where('numero_documento', $numDoc)
+            ->first();
+        if ($existe) {
+            return $this->response->setJSON([
+                'success' => false,
+                'duplicado' => true,
+                'error'   => 'Ya hay un asistente registrado con este numero de documento.',
+            ]);
+        }
+
+        // Calcular orden = ultimo + 1
+        $ultimo = $this->asistenteModel
+            ->select('MAX(orden) AS max_orden')
+            ->where('id_acta_capacitacion', $acta['id'])
+            ->first();
+        $orden = isset($ultimo['max_orden']) ? ((int)$ultimo['max_orden']) + 1 : 1;
+
+        $this->asistenteModel->insert([
+            'id_acta_capacitacion' => $acta['id'],
+            'nombre_completo'      => $nombre,
+            'tipo_documento'       => $tipoDoc,
+            'numero_documento'     => $numDoc,
+            'cargo'                => $cargo ?: null,
+            'area_dependencia'     => $area ?: null,
+            'email'                => $email ?: null,
+            'celular'              => $celular ?: null,
+            'orden'                => $orden,
+        ]);
+        $idAsistente = (int)$this->asistenteModel->getInsertID();
+
+        // Generar token de firma para que pueda firmar inmediatamente
+        $tokenFirma = bin2hex(random_bytes(32));
+        $this->asistenteModel->update($idAsistente, [
+            'token_firma'      => $tokenFirma,
+            'token_expiracion' => date('Y-m-d H:i:s', strtotime('+7 days')),
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'id_asistente' => $idAsistente,
+            'url_firmar' => base_url("acta-capacitacion/firmar-remoto/{$tokenFirma}"),
+        ]);
+    }
+
+    /**
      * AJAX: devuelve el estado actual de todos los asistentes del acta para
      * que la vista pueda refrescar badges (Firmado / Enlace enviado / pendiente)
      * sin recargar toda la pagina.
