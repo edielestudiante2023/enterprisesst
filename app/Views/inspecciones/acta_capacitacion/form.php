@@ -158,9 +158,15 @@ $emailUrlBase = $ctx === 'consultor'
                                                     <span class="badge bg-warning text-dark" style="font-size:10px;"><i class="fas fa-clock"></i> Enlace enviado</span>
                                                 <?php endif; ?>
                                             </strong>
+                                            <?php if (empty($a['firma_path'])): ?>
                                             <button type="button" class="btn btn-sm btn-outline-danger btn-remove-asist" style="min-height:32px;">
                                                 <i class="fas fa-times"></i>
                                             </button>
+                                            <?php else: ?>
+                                            <span class="text-muted small" title="No se puede quitar: ya firmo">
+                                                <i class="fas fa-lock"></i>
+                                            </span>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="row g-2">
                                             <div class="col-12">
