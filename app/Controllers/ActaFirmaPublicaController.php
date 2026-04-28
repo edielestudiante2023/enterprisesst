@@ -174,6 +174,25 @@ class ActaFirmaPublicaController extends BaseController
             $consultor = $consultorModel->find($cliente['id_consultor']);
 
             if ($consultor && !empty($consultor['correo_consultor'])) {
+                $nombreClienteEsc = htmlspecialchars($cliente['nombre_cliente'] ?? '', ENT_QUOTES, 'UTF-8');
+                $numeroEsc = htmlspecialchars($acta['numero_acta'] ?? '', ENT_QUOTES, 'UTF-8');
+                $asistEsc = htmlspecialchars($asistente['nombre_completo'] ?? '', ENT_QUOTES, 'UTF-8');
+                $pct = $total > 0 ? (int)round($firmados * 100 / $total) : 0;
+
+                $cuerpoHtml = "
+                    <div style='background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:18px;margin-bottom:16px;'>
+                        <p style='margin:0 0 6px;color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;'>Empresa</p>
+                        <p style='margin:0;font-size:16px;font-weight:600;color:#111827;'>{$nombreClienteEsc}</p>
+                    </div>
+                    <p style='margin:0 0 12px;font-size:15px;'><strong>{$asistEsc}</strong> firmó el acta <strong>{$numeroEsc}</strong>.</p>
+                    <div style='background:#ecfdf5;border-left:4px solid #10b981;padding:14px 16px;border-radius:6px;margin:16px 0;'>
+                        <p style='margin:0 0 8px;font-size:14px;color:#065f46;'>Progreso de firmas</p>
+                        <div style='background:#d1fae5;border-radius:999px;height:10px;overflow:hidden;'>
+                            <div style='background:#10b981;height:100%;width:{$pct}%;'></div>
+                        </div>
+                        <p style='margin:8px 0 0;font-size:13px;color:#065f46;'><strong>{$firmados}</strong> de <strong>{$total}</strong> firmas completadas ({$pct}%)</p>
+                    </div>";
+
                 $this->notificacionModel->programar([
                     'id_cliente' => $acta['id_cliente'],
                     'tipo' => 'firma_completada',
@@ -181,9 +200,8 @@ class ActaFirmaPublicaController extends BaseController
                     'destinatario_email' => $consultor['correo_consultor'],
                     'destinatario_nombre' => $consultor['nombre_consultor'],
                     'destinatario_tipo' => 'consultor',
-                    'asunto' => "Firma recibida - Acta {$acta['numero_acta']} ({$firmados}/{$total})",
-                    'cuerpo' => "{$asistente['nombre_completo']} ha firmado el acta {$acta['numero_acta']}. " .
-                               "Firmas completadas: {$firmados} de {$total}."
+                    'asunto' => "[{$cliente['nombre_cliente']}] Firma recibida - Acta {$acta['numero_acta']} ({$firmados}/{$total})",
+                    'cuerpo' => $cuerpoHtml,
                 ]);
             }
         }
@@ -202,12 +220,26 @@ class ActaFirmaPublicaController extends BaseController
         $clienteModel = new ClientModel();
         $cliente = $clienteModel->find($acta['id_cliente']);
 
+        $nombreClienteEsc = htmlspecialchars($cliente['nombre_cliente'] ?? '', ENT_QUOTES, 'UTF-8');
+        $numeroEsc = htmlspecialchars($acta['numero_acta'] ?? '', ENT_QUOTES, 'UTF-8');
+
         // Notificar al consultor
         if (!empty($cliente['id_consultor'])) {
             $consultorModel = new \App\Models\ConsultantModel();
             $consultor = $consultorModel->find($cliente['id_consultor']);
 
             if ($consultor && !empty($consultor['correo_consultor'])) {
+                $cuerpoHtml = "
+                    <div style='background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:18px;margin-bottom:16px;'>
+                        <p style='margin:0 0 6px;color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;'>Empresa</p>
+                        <p style='margin:0;font-size:16px;font-weight:600;color:#111827;'>{$nombreClienteEsc}</p>
+                    </div>
+                    <div style='background:#ecfdf5;border:2px solid #10b981;border-radius:10px;padding:20px;text-align:center;margin:16px 0;'>
+                        <div style='font-size:36px;margin-bottom:6px;'>🎉</div>
+                        <p style='margin:0 0 4px;font-size:18px;font-weight:700;color:#065f46;'>Acta {$numeroEsc} cerrada</p>
+                        <p style='margin:0;color:#047857;font-size:14px;'>Todos los asistentes firmaron y el acta está lista para consulta.</p>
+                    </div>";
+
                 $this->notificacionModel->programar([
                     'id_cliente' => $acta['id_cliente'],
                     'tipo' => 'acta_firmada_completa',
@@ -215,14 +247,21 @@ class ActaFirmaPublicaController extends BaseController
                     'destinatario_email' => $consultor['correo_consultor'],
                     'destinatario_nombre' => $consultor['nombre_consultor'],
                     'destinatario_tipo' => 'consultor',
-                    'asunto' => "Acta COMPLETADA - {$acta['numero_acta']}",
-                    'cuerpo' => "El acta {$acta['numero_acta']} ha sido firmada por todos los asistentes y está lista."
+                    'asunto' => "[{$cliente['nombre_cliente']}] Acta COMPLETADA - {$acta['numero_acta']}",
+                    'cuerpo' => $cuerpoHtml,
                 ]);
             }
         }
 
         // Notificar al cliente
         if (!empty($cliente['correo_cliente'])) {
+            $cuerpoHtml = "
+                <div style='background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:18px;margin-bottom:16px;'>
+                    <p style='margin:0 0 6px;color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;'>Empresa</p>
+                    <p style='margin:0;font-size:16px;font-weight:600;color:#111827;'>{$nombreClienteEsc}</p>
+                </div>
+                <p style='margin:0 0 12px;font-size:15px;'>El acta de comité <strong>{$numeroEsc}</strong> ha sido firmada por todos los asistentes y está disponible para consulta.</p>";
+
             $this->notificacionModel->programar([
                 'id_cliente' => $acta['id_cliente'],
                 'tipo' => 'acta_firmada_completa',
@@ -230,8 +269,8 @@ class ActaFirmaPublicaController extends BaseController
                 'destinatario_email' => $cliente['correo_cliente'],
                 'destinatario_nombre' => $cliente['nombre_cliente'],
                 'destinatario_tipo' => 'cliente',
-                'asunto' => "Acta de comité firmada - {$acta['numero_acta']}",
-                'cuerpo' => "El acta {$acta['numero_acta']} ha sido firmada y está disponible para consulta."
+                'asunto' => "Acta de comité firmada - {$acta['numero_acta']} - {$cliente['nombre_cliente']}",
+                'cuerpo' => $cuerpoHtml,
             ]);
         }
     }
