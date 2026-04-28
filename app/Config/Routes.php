@@ -1624,6 +1624,7 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('acta-capacitacion/finalizar/(:num)', 'MiembroActaCapacitacionController::finalizar/$1');
     $routes->post('acta-capacitacion/generar-token-firma/(:num)', 'MiembroActaCapacitacionController::generarTokenFirma/$1');
     $routes->post('acta-capacitacion/asistente/save/(:num)', 'MiembroActaCapacitacionController::saveAsistente/$1');
+    $routes->post('acta-capacitacion/asistente/delete/(:num)/(:num)', 'MiembroActaCapacitacionController::deleteAsistente/$1/$2');
     $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'MiembroActaCapacitacionController::enviarEmailFirma/$1');
 });
 
@@ -1710,6 +1711,7 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->post('acta-capacitacion/finalizar/(:num)', 'ActaCapacitacionController::finalizar/$1');
     $routes->post('acta-capacitacion/generar-token-firma/(:num)', 'ActaCapacitacionController::generarTokenFirma/$1');
     $routes->post('acta-capacitacion/asistente/save/(:num)', 'ActaCapacitacionController::saveAsistente/$1');
+    $routes->post('acta-capacitacion/asistente/delete/(:num)/(:num)', 'ActaCapacitacionController::deleteAsistente/$1/$2');
     $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'ActaCapacitacionController::enviarEmailFirma/$1');
     $routes->get('acta-capacitacion/delete/(:num)', 'ActaCapacitacionController::delete/$1');
 

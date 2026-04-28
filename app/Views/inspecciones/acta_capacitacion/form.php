@@ -14,6 +14,9 @@ $saveAsistUrlBase = $ctx === 'consultor'
 $emailUrlBase = $ctx === 'consultor'
     ? 'inspecciones/acta-capacitacion/asistente/enviar-email/'
     : 'miembro/acta-capacitacion/asistente/enviar-email/';
+$deleteAsistUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/acta-capacitacion/asistente/delete/'
+    : 'miembro/acta-capacitacion/asistente/delete/';
 ?>
 
 <div class="container-fluid px-3">
@@ -296,11 +299,69 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    var deleteAsistUrlBase = '<?= site_url($deleteAsistUrlBase) ?>';
+
     document.addEventListener('click', function(e) {
-        if (e.target.closest('.btn-remove-asist')) {
-            e.target.closest('.asistente-row').remove();
+        var btnRm = e.target.closest('.btn-remove-asist');
+        if (!btnRm) return;
+
+        var row = btnRm.closest('.asistente-row');
+        var hiddenId = row.querySelector('input[name="asistente_id[]"]');
+        var idAsistente = (hiddenId && hiddenId.value) ? hiddenId.value : '';
+        var nombre = (row.querySelector('input[name="asistente_nombre[]"]') || {}).value || 'sin nombre';
+
+        // Si la fila aun no fue guardada en BD (no tiene id), solo quitar del DOM
+        if (!idAsistente) {
+            row.remove();
             updateAsist();
+            return;
         }
+
+        // Confirmar antes de eliminar de BD
+        Swal.fire({
+            icon: 'warning',
+            title: '¿Eliminar este asistente?',
+            html: 'Vas a eliminar a <strong>' + nombre + '</strong> del acta.<br><br>'
+                + '<span style="color:#dc3545;font-size:13px;">Esta acción no se puede deshacer.</span>',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true,
+            focusCancel: true,
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            if (!idActaActual) {
+                // No hay acta guardada, solo remover del DOM
+                row.remove();
+                updateAsist();
+                return;
+            }
+
+            var fd = new FormData();
+            fd.append(csrfName, csrfHash);
+
+            fetch(deleteAsistUrlBase + idActaActual + '/' + idAsistente, {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) {
+                    Swal.fire('No se pudo eliminar', data.error || 'Intenta de nuevo', 'error');
+                    return;
+                }
+                row.remove();
+                updateAsist();
+                Swal.fire({ icon: 'success', title: 'Asistente eliminado', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
+            })
+            .catch(function() {
+                Swal.fire('Error de conexión', 'No se pudo eliminar el asistente.', 'error');
+            });
+        });
     });
 
     document.getElementById('btnAddAsist').addEventListener('click', function() {
