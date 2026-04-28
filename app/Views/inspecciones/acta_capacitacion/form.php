@@ -17,6 +17,9 @@ $emailUrlBase = $ctx === 'consultor'
 $deleteAsistUrlBase = $ctx === 'consultor'
     ? 'inspecciones/acta-capacitacion/asistente/delete/'
     : 'miembro/acta-capacitacion/asistente/delete/';
+$statusUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/acta-capacitacion/asistentes-status/'
+    : 'miembro/acta-capacitacion/asistentes-status/';
 ?>
 
 <div class="container-fluid px-3">
@@ -147,6 +150,30 @@ $deleteAsistUrlBase = $ctx === 'consultor'
                             </div>
                         <?php endif; ?>
 
+                        <?php
+                        $totalAsist = count($asistentes ?? []);
+                        $firmadosAsist = 0;
+                        foreach (($asistentes ?? []) as $__a) { if (!empty($__a['firma_path'])) $firmadosAsist++; }
+                        $pctAsist = $totalAsist > 0 ? (int) round($firmadosAsist * 100 / $totalAsist) : 0;
+                        ?>
+                        <?php if ($isEdit && $totalAsist > 0): ?>
+                        <div id="firmasProgreso" class="mb-3 p-2 rounded" style="background:#f8f9fa;border:1px solid #e5e7eb;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span style="font-size:13px;font-weight:600;color:#111827;">
+                                    <i class="fas fa-signature text-success"></i>
+                                    Firmas: <span id="firmasFirmados"><?= $firmadosAsist ?></span> de <span id="firmasTotal"><?= $totalAsist ?></span>
+                                    (<span id="firmasPct"><?= $pctAsist ?></span>%)
+                                </span>
+                                <button type="button" id="btnRefreshFirmas" class="btn btn-sm btn-outline-primary" style="font-size:12px;padding:3px 10px;">
+                                    <i class="fas fa-sync-alt"></i> Actualizar
+                                </button>
+                            </div>
+                            <div style="background:#e5e7eb;border-radius:999px;height:8px;overflow:hidden;">
+                                <div id="firmasBar" style="background:#10b981;height:100%;width:<?= $pctAsist ?>%;transition:width 0.3s;"></div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
                         <div id="asistentesContainer">
                             <?php if (!empty($asistentes)): ?>
                                 <?php foreach ($asistentes as $i => $a): ?>
@@ -155,12 +182,21 @@ $deleteAsistUrlBase = $ctx === 'consultor'
                                         <input type="hidden" name="asistente_id[]" value="<?= $a['id'] ?>">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <strong style="font-size:13px;">Asistente #<span class="asist-num"><?= $i + 1 ?></span>
+                                                <span class="asist-status-badge">
                                                 <?php if (!empty($a['firma_path'])): ?>
                                                     <span class="badge bg-success" style="font-size:10px;"><i class="fas fa-check"></i> Firmado</span>
                                                 <?php elseif (!empty($a['token_firma'])): ?>
                                                     <span class="badge bg-warning text-dark" style="font-size:10px;"><i class="fas fa-clock"></i> Enlace enviado</span>
                                                 <?php endif; ?>
+                                                </span>
                                             </strong>
+                                            <?php if (!empty($a['firmado_at'])): ?>
+                                            <div class="asist-firmado-at text-muted" style="font-size:11px;margin-top:2px;">
+                                                <i class="fas fa-clock"></i> Firmó el <?= date('d/m/Y H:i', strtotime($a['firmado_at'])) ?>
+                                            </div>
+                                            <?php else: ?>
+                                            <div class="asist-firmado-at text-muted" style="font-size:11px;margin-top:2px;display:none;"></div>
+                                            <?php endif; ?>
                                             <?php if (empty($a['firma_path'])): ?>
                                             <button type="button" class="btn btn-sm btn-outline-danger btn-remove-asist" style="min-height:32px;">
                                                 <i class="fas fa-times"></i>
@@ -300,6 +336,117 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     var deleteAsistUrlBase = '<?= site_url($deleteAsistUrlBase) ?>';
+    var statusUrlBase = '<?= site_url($statusUrlBase) ?>';
+
+    function fmtFechaFirma(iso) {
+        if (!iso) return '';
+        try {
+            var d = new Date(iso.replace(' ', 'T'));
+            if (isNaN(d.getTime())) return '';
+            var dd = String(d.getDate()).padStart(2, '0');
+            var mm = String(d.getMonth() + 1).padStart(2, '0');
+            var yy = d.getFullYear();
+            var hh = String(d.getHours()).padStart(2, '0');
+            var mi = String(d.getMinutes()).padStart(2, '0');
+            return dd + '/' + mm + '/' + yy + ' ' + hh + ':' + mi;
+        } catch (e) { return ''; }
+    }
+
+    function aplicarEstadoAsistentes(data) {
+        if (!data || !data.asistentes) return;
+
+        // Actualizar barra de progreso
+        var elFirmados = document.getElementById('firmasFirmados');
+        var elTotal    = document.getElementById('firmasTotal');
+        var elPct      = document.getElementById('firmasPct');
+        var elBar      = document.getElementById('firmasBar');
+        if (elFirmados) elFirmados.textContent = data.firmados;
+        if (elTotal)    elTotal.textContent    = data.total;
+        if (elPct)      elPct.textContent      = data.pct;
+        if (elBar)      elBar.style.width      = data.pct + '%';
+
+        // Actualizar cada fila
+        var byId = {};
+        data.asistentes.forEach(function(a) { byId[String(a.id)] = a; });
+
+        document.querySelectorAll('.asistente-row').forEach(function(row) {
+            var hidden = row.querySelector('input[name="asistente_id[]"]');
+            var id = hidden ? hidden.value : '';
+            if (!id || !byId[id]) return;
+            var info = byId[id];
+
+            // Badge de estado
+            var badgeWrap = row.querySelector('.asist-status-badge');
+            if (badgeWrap) {
+                if (info.firmado) {
+                    badgeWrap.innerHTML = '<span class="badge bg-success" style="font-size:10px;"><i class="fas fa-check"></i> Firmado</span>';
+                } else if (info.enlace_enviado) {
+                    badgeWrap.innerHTML = '<span class="badge bg-warning text-dark" style="font-size:10px;"><i class="fas fa-clock"></i> Enlace enviado</span>';
+                } else {
+                    badgeWrap.innerHTML = '';
+                }
+            }
+
+            // Timestamp de firma
+            var stampEl = row.querySelector('.asist-firmado-at');
+            if (stampEl) {
+                if (info.firmado && info.firmado_at) {
+                    stampEl.style.display = '';
+                    stampEl.innerHTML = '<i class="fas fa-clock"></i> Firmó el ' + fmtFechaFirma(info.firmado_at);
+                } else {
+                    stampEl.style.display = 'none';
+                    stampEl.innerHTML = '';
+                }
+            }
+
+            // Si firmo: ocultar boton X y botones de envio (Copiar/Email/WhatsApp)
+            if (info.firmado) {
+                var btnRm = row.querySelector('.btn-remove-asist');
+                if (btnRm) {
+                    var lock = document.createElement('span');
+                    lock.className = 'text-muted small';
+                    lock.title = 'No se puede quitar: ya firmo';
+                    lock.innerHTML = '<i class="fas fa-lock"></i>';
+                    btnRm.replaceWith(lock);
+                }
+                var btnsEnvio = row.querySelectorAll('.btn-copiar-firma, .btn-email-firma, .btn-whatsapp-firma, .btn-save-asist');
+                btnsEnvio.forEach(function(b) { b.style.display = 'none'; });
+            }
+        });
+    }
+
+    var btnRefresh = document.getElementById('btnRefreshFirmas');
+    if (btnRefresh) {
+        btnRefresh.addEventListener('click', function() {
+            if (!idActaActual) return;
+            var origHtml = btnRefresh.innerHTML;
+            btnRefresh.disabled = true;
+            btnRefresh.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+
+            fetch(statusUrlBase + idActaActual, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                cache: 'no-store',
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = origHtml;
+                if (!data.success) {
+                    Swal.fire('No se pudo actualizar', data.error || 'Intenta de nuevo', 'error');
+                    return;
+                }
+                aplicarEstadoAsistentes(data);
+                Swal.fire({ icon: 'success', title: 'Estado actualizado', toast: true, position: 'top', showConfirmButton: false, timer: 1200 });
+            })
+            .catch(function() {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = origHtml;
+                Swal.fire('Error de conexión', 'No se pudo actualizar el estado.', 'error');
+            });
+        });
+    }
+
 
     document.addEventListener('click', function(e) {
         var btnRm = e.target.closest('.btn-remove-asist');

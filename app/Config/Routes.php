@@ -1626,6 +1626,7 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('acta-capacitacion/asistente/save/(:num)', 'MiembroActaCapacitacionController::saveAsistente/$1');
     $routes->post('acta-capacitacion/asistente/delete/(:num)/(:num)', 'MiembroActaCapacitacionController::deleteAsistente/$1/$2');
     $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'MiembroActaCapacitacionController::enviarEmailFirma/$1');
+    $routes->get('acta-capacitacion/asistentes-status/(:num)', 'MiembroActaCapacitacionController::getAsistentesStatus/$1');
 });
 
 // Acceso de miembros del comité (por token - legacy/alternativo)
@@ -1713,6 +1714,7 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->post('acta-capacitacion/asistente/save/(:num)', 'ActaCapacitacionController::saveAsistente/$1');
     $routes->post('acta-capacitacion/asistente/delete/(:num)/(:num)', 'ActaCapacitacionController::deleteAsistente/$1/$2');
     $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'ActaCapacitacionController::enviarEmailFirma/$1');
+    $routes->get('acta-capacitacion/asistentes-status/(:num)', 'ActaCapacitacionController::getAsistentesStatus/$1');
     $routes->get('acta-capacitacion/delete/(:num)', 'ActaCapacitacionController::delete/$1');
 
     // Inspeccion Locativa

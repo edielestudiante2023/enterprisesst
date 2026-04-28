@@ -518,6 +518,39 @@ class MiembroActaCapacitacionController extends BaseController
     }
 
     /**
+     * AJAX: estado actual de asistentes del acta para refrescar la vista.
+     */
+    public function getAsistentesStatus(int $idActa)
+    {
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+        }
+        $asistentes = $this->asistenteModel->getByActa($idActa);
+        $resumen = [];
+        $firmados = 0;
+        foreach ($asistentes as $a) {
+            $tieneFirma = !empty($a['firma_path']);
+            if ($tieneFirma) $firmados++;
+            $resumen[] = [
+                'id'              => (int)$a['id'],
+                'nombre_completo' => $a['nombre_completo'],
+                'firmado'         => $tieneFirma,
+                'firmado_at'      => $a['firmado_at'] ?? null,
+                'enlace_enviado'  => !$tieneFirma && !empty($a['token_firma']),
+            ];
+        }
+        $total = count($resumen);
+        return $this->response->setJSON([
+            'success'  => true,
+            'total'    => $total,
+            'firmados' => $firmados,
+            'pct'      => $total > 0 ? (int) round($firmados * 100 / $total) : 0,
+            'asistentes' => $resumen,
+        ]);
+    }
+
+    /**
      * AJAX: elimina UN asistente especifico. Bloquea si ya firmo.
      */
     public function deleteAsistente(int $idActa, int $idAsistente)
