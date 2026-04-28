@@ -477,6 +477,8 @@ class MiembroActaCapacitacionController extends BaseController
 
     private function saveAsistentes(int $idActa): void
     {
+        // NO-DESTRUCTIVO: solo INSERT/UPDATE. La eliminacion se hace via
+        // endpoint dedicado deleteAsistente() con confirmacion del usuario.
         $ids       = $this->request->getPost('asistente_id') ?? [];
         $nombres   = $this->request->getPost('asistente_nombre') ?? [];
         $tiposDoc  = $this->request->getPost('asistente_tipo_doc') ?? [];
@@ -490,7 +492,6 @@ class MiembroActaCapacitacionController extends BaseController
         foreach ($this->asistenteModel->getByActa($idActa) as $a) {
             $existentes[$a['id']] = $a;
         }
-        $idsRecibidos = [];
 
         foreach ($nombres as $i => $nombre) {
             if (empty(trim($nombre))) continue;
@@ -510,19 +511,35 @@ class MiembroActaCapacitacionController extends BaseController
 
             if ($existenteId && isset($existentes[$existenteId])) {
                 $this->asistenteModel->update($existenteId, $payload);
-                $idsRecibidos[] = $existenteId;
             } else {
                 $this->asistenteModel->insert($payload);
-                $idsRecibidos[] = $this->asistenteModel->getInsertID();
             }
+        }
+    }
+
+    /**
+     * AJAX: elimina UN asistente especifico. Bloquea si ya firmo.
+     */
+    public function deleteAsistente(int $idActa, int $idAsistente)
+    {
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+        }
+        if ($acta['estado'] === 'completo') {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta finalizada']);
         }
 
-        // Eliminar los que el usuario quitó del form
-        foreach (array_keys($existentes) as $idExistente) {
-            if (!in_array($idExistente, $idsRecibidos, true)) {
-                $this->asistenteModel->delete($idExistente);
-            }
+        $asistente = $this->asistenteModel->find($idAsistente);
+        if (!$asistente || (int)$asistente['id_acta_capacitacion'] !== $idActa) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Asistente no encontrado']);
         }
+        if (!empty($asistente['firma_path']) || !empty($asistente['firmado_at'])) {
+            return $this->response->setJSON(['success' => false, 'error' => 'No se puede eliminar: ya firmo']);
+        }
+
+        $this->asistenteModel->delete($idAsistente);
+        return $this->response->setJSON(['success' => true]);
     }
 
     private function generarPdfInterno(int $id): ?string
