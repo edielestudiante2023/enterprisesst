@@ -1154,16 +1154,22 @@ class ActasController extends BaseController
         $tipoComite = $comite['tipo_nombre'] ?? 'Comité';
         $fechaReunion = date('d/m/Y', strtotime($acta['fecha_reunion']));
 
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($acta['id_cliente']);
+        $nombreCliente = htmlspecialchars($cliente['nombre_cliente'] ?? '-', ENT_QUOTES, 'UTF-8');
+
         $mensaje = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
             <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 20px; text-align: center;'>
                 <h2 style='color: white; margin: 0;'>Solicitud de Firma - Acta de Reunión</h2>
+                <p style='color: #cbd5e1; margin: 6px 0 0; font-size: 13px;'>{$nombreCliente}</p>
             </div>
             <div style='padding: 30px; background: #f8f9fa;'>
                 <p>Estimado/a <strong>{$asistente['nombre_completo']}</strong>,</p>
                 <p>Se requiere su firma electrónica para el acta de la reunión del <strong>{$tipoComite}</strong>.</p>
 
                 <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3B82F6;'>
+                    <p style='margin: 5px 0;'><strong>Empresa:</strong> {$nombreCliente}</p>
                     <p style='margin: 5px 0;'><strong>Acta N°:</strong> {$acta['numero_acta']}</p>
                     <p style='margin: 5px 0;'><strong>Comité:</strong> {$tipoComite}</p>
                     <p style='margin: 5px 0;'><strong>Fecha reunión:</strong> {$fechaReunion}</p>
@@ -1195,7 +1201,7 @@ class ActasController extends BaseController
         try {
             $email = new \SendGrid\Mail\Mail();
             $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
-            $email->setSubject("Firma requerida: Acta {$acta['numero_acta']} - {$tipoComite}");
+            $email->setSubject("[{$cliente['nombre_cliente']}] Firma requerida: Acta {$acta['numero_acta']} - {$tipoComite}");
             $email->addTo($asistente['email'], $asistente['nombre_completo']);
             $email->addContent("text/html", $mensaje);
 
@@ -2029,16 +2035,22 @@ class ActasController extends BaseController
         $tipoComite = $comite['tipo_nombre'] ?? 'Comité';
         $fechaReunion = date('d/m/Y', strtotime($acta['fecha_reunion']));
 
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($acta['id_cliente']);
+        $nombreCliente = htmlspecialchars($cliente['nombre_cliente'] ?? '-', ENT_QUOTES, 'UTF-8');
+
         $mensaje = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
             <div style='background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 20px; text-align: center;'>
                 <h2 style='color: white; margin: 0;'>Solicitud de Reapertura de Acta</h2>
+                <p style='color: #fde2e4; margin: 6px 0 0; font-size: 13px;'>{$nombreCliente}</p>
             </div>
             <div style='padding: 30px; background: #f8f9fa;'>
                 <p>Estimado/a <strong>{$consultor['nombre_consultor']}</strong>,</p>
                 <p>Se ha recibido una solicitud de reapertura para la siguiente acta:</p>
 
                 <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;'>
+                    <p style='margin: 5px 0;'><strong>Empresa:</strong> {$nombreCliente}</p>
                     <p style='margin: 5px 0;'><strong>Acta N°:</strong> {$acta['numero_acta']}</p>
                     <p style='margin: 5px 0;'><strong>Comité:</strong> {$tipoComite}</p>
                     <p style='margin: 5px 0;'><strong>Fecha reunión:</strong> {$fechaReunion}</p>
@@ -2078,7 +2090,7 @@ class ActasController extends BaseController
         try {
             $email = new \SendGrid\Mail\Mail();
             $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
-            $email->setSubject("Solicitud de Reapertura: Acta {$acta['numero_acta']} - {$tipoComite}");
+            $email->setSubject("[{$cliente['nombre_cliente']}] Solicitud de Reapertura: Acta {$acta['numero_acta']} - {$tipoComite}");
             $email->addTo($consultor['correo_consultor'], $consultor['nombre_consultor']);
             $email->addContent("text/html", $mensaje);
 
@@ -2187,16 +2199,22 @@ class ActasController extends BaseController
         $fechaReunion = date('d/m/Y', strtotime($acta['fecha_reunion']));
         $nombreAsistente = htmlspecialchars($asistente['nombre_completo'], ENT_QUOTES, 'UTF-8');
 
+        $clienteModel = new ClientModel();
+        $cliente = $clienteModel->find($acta['id_cliente']);
+        $nombreCliente = htmlspecialchars($cliente['nombre_cliente'] ?? '-', ENT_QUOTES, 'UTF-8');
+
         $mensaje = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
             <div style='background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 20px; text-align: center;'>
                 <h2 style='color: white; margin: 0;'>Solicitud de Marcar Asistente como Ausente</h2>
+                <p style='color: #ffe8d6; margin: 6px 0 0; font-size: 13px;'>{$nombreCliente}</p>
             </div>
             <div style='padding: 30px; background: #f8f9fa;'>
                 <p>Estimado/a <strong>{$consultor['nombre_consultor']}</strong>,</p>
                 <p>Se ha recibido una solicitud para marcar a un asistente como ausente en la siguiente acta:</p>
 
                 <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;'>
+                    <p style='margin: 5px 0;'><strong>Empresa:</strong> {$nombreCliente}</p>
                     <p style='margin: 5px 0;'><strong>Acta N&deg;:</strong> {$acta['numero_acta']}</p>
                     <p style='margin: 5px 0;'><strong>Comite:</strong> {$tipoComite}</p>
                     <p style='margin: 5px 0;'><strong>Fecha reunion:</strong> {$fechaReunion}</p>
@@ -2241,7 +2259,7 @@ class ActasController extends BaseController
         try {
             $email = new \SendGrid\Mail\Mail();
             $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
-            $email->setSubject("Solicitud Marcar Ausente: Acta {$acta['numero_acta']} - {$nombreAsistente}");
+            $email->setSubject("[{$cliente['nombre_cliente']}] Solicitud Marcar Ausente: Acta {$acta['numero_acta']} - {$nombreAsistente}");
             $email->addTo($consultor['correo_consultor'], $consultor['nombre_consultor']);
             $email->addContent("text/html", $mensaje);
 
