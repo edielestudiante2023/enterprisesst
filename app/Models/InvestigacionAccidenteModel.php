@@ -40,4 +40,17 @@ class InvestigacionAccidenteModel extends Model
             ->orderBy('tbl_investigacion_accidente.fecha_evento', 'DESC')
             ->findAll();
     }
+
+    /**
+     * Investigaciones en estado borrador o pendiente_firma (para dashboard).
+     */
+    public function getAllPendientes(): array
+    {
+        return $this->select('tbl_investigacion_accidente.*, tbl_clientes.nombre_cliente, tbl_consultor.nombre_consultor')
+            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_investigacion_accidente.id_cliente', 'left')
+            ->join('tbl_consultor', 'tbl_consultor.id_consultor = tbl_investigacion_accidente.id_consultor', 'left')
+            ->whereIn('tbl_investigacion_accidente.estado', ['borrador', 'pendiente_firma'])
+            ->orderBy('tbl_investigacion_accidente.fecha_evento', 'DESC')
+            ->findAll();
+    }
 }

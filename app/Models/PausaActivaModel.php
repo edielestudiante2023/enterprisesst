@@ -27,4 +27,17 @@ class PausaActivaModel extends Model
             ->orderBy('tbl_pausas_activas.fecha_actividad', 'DESC')
             ->findAll();
     }
+
+    /**
+     * Pausas activas en estado borrador o pendiente_firma (para dashboard).
+     */
+    public function getAllPendientes(): array
+    {
+        return $this->select('tbl_pausas_activas.*, tbl_clientes.nombre_cliente, tbl_consultor.nombre_consultor')
+            ->join('tbl_clientes', 'tbl_clientes.id_cliente = tbl_pausas_activas.id_cliente', 'left')
+            ->join('tbl_consultor', 'tbl_consultor.id_consultor = tbl_pausas_activas.id_consultor', 'left')
+            ->whereIn('tbl_pausas_activas.estado', ['borrador', 'pendiente_firma'])
+            ->orderBy('tbl_pausas_activas.fecha_actividad', 'DESC')
+            ->findAll();
+    }
 }

@@ -48,32 +48,38 @@ class InspeccionesController extends BaseController
         $totalAsistencia = $registroAsistModel->where('estado', 'completo')->countAllResults();
 
         $pausasModel = new PausaActivaModel();
+        $pendientesPausas = $pausasModel->getAllPendientes();
         $totalPausas = $pausasModel->where('estado', 'completo')->countAllResults();
 
         $invAccidenteModel = new InvestigacionAccidenteModel();
+        $pendientesInvestigaciones = $invAccidenteModel->getAllPendientes();
         $totalInvestigaciones = $invAccidenteModel->where('estado', 'completo')->countAllResults();
 
         $actaCapModel = new ActaCapacitacionModel();
+        $pendientesCapacitaciones = $actaCapModel->getAllPendientes();
         $totalCapacitaciones = $actaCapModel->where('estado', 'completo')->countAllResults();
 
         $data = [
-            'title'                    => 'Inspecciones SST',
-            'pendientes'               => $pendientes,
-            'pendientesLocativas'      => $pendientesLocativas,
-            'pendientesExtintores'     => $pendientesExtintores,
-            'pendientesBotiquin'       => $pendientesBotiquin,
-            'pendientesSenalizacion'   => $pendientesSenalizacion,
-            'pendientesAsistencia'     => $pendientesAsistencia,
-            'totalActas'               => $totalActas,
-            'totalLocativas'           => $totalLocativas,
-            'totalExtintores'          => $totalExtintores,
-            'totalBotiquin'            => $totalBotiquin,
-            'totalSenalizacion'        => $totalSenalizacion,
-            'totalAsistencia'          => $totalAsistencia,
-            'totalPausas'              => $totalPausas,
-            'totalInvestigaciones'     => $totalInvestigaciones,
-            'totalCapacitaciones'      => $totalCapacitaciones,
-            'nombre'                 => session()->get('nombre_usuario'),
+            'title'                     => 'Inspecciones SST',
+            'pendientes'                => $pendientes,
+            'pendientesLocativas'       => $pendientesLocativas,
+            'pendientesExtintores'      => $pendientesExtintores,
+            'pendientesBotiquin'        => $pendientesBotiquin,
+            'pendientesSenalizacion'    => $pendientesSenalizacion,
+            'pendientesAsistencia'      => $pendientesAsistencia,
+            'pendientesPausas'          => $pendientesPausas,
+            'pendientesInvestigaciones' => $pendientesInvestigaciones,
+            'pendientesCapacitaciones'  => $pendientesCapacitaciones,
+            'totalActas'                => $totalActas,
+            'totalLocativas'            => $totalLocativas,
+            'totalExtintores'           => $totalExtintores,
+            'totalBotiquin'             => $totalBotiquin,
+            'totalSenalizacion'         => $totalSenalizacion,
+            'totalAsistencia'           => $totalAsistencia,
+            'totalPausas'               => $totalPausas,
+            'totalInvestigaciones'      => $totalInvestigaciones,
+            'totalCapacitaciones'       => $totalCapacitaciones,
+            'nombre'                    => session()->get('nombre_usuario'),
         ];
 
         return view('inspecciones/layout_pwa', [

@@ -227,6 +227,126 @@
     <?php endforeach; ?>
     <?php endif; ?>
 
+    <!-- Pendientes Capacitaciones -->
+    <?php if (!empty($pendientesCapacitaciones)): ?>
+    <div class="section-title">Pendientes Capacitaciones</div>
+    <?php foreach ($pendientesCapacitaciones as $doc): ?>
+    <div class="card card-inspeccion <?= esc($doc['estado']) ?>">
+        <div class="card-body py-3 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>
+                        <?php if ($doc['estado'] === 'borrador'): ?>
+                            <i class="fas fa-edit text-warning"></i>
+                        <?php else: ?>
+                            <i class="fas fa-signature text-orange"></i>
+                        <?php endif; ?>
+                        Capacitación - <?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>
+                    </strong>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= esc($doc['tema'] ?? 'Sin tema') ?>
+                    </div>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= date('d/m/Y', strtotime($doc['fecha_capacitacion'])) ?>
+                        &middot;
+                        <span class="badge badge-<?= esc($doc['estado']) ?>" style="font-size: 11px;">
+                            <?= $doc['estado'] === 'borrador' ? 'Borrador' : 'Pend. Firma' ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2 d-flex gap-2 flex-wrap">
+                <a href="<?= site_url('inspecciones/acta-capacitacion/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
+                    Continuar editando <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/acta-capacitacion/delete/' . $doc['id']) ?>"
+                    data-tipo="acta de capacitación"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+    <?php endif; ?>
+
+    <!-- Pendientes Pausas Activas -->
+    <?php if (!empty($pendientesPausas)): ?>
+    <div class="section-title">Pendientes Pausas Activas</div>
+    <?php foreach ($pendientesPausas as $doc): ?>
+    <div class="card card-inspeccion <?= esc($doc['estado']) ?>">
+        <div class="card-body py-3 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>
+                        <i class="fas fa-edit text-warning"></i>
+                        Pausa Activa - <?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>
+                    </strong>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= date('d/m/Y', strtotime($doc['fecha_actividad'])) ?>
+                        &middot;
+                        <span class="badge badge-borrador" style="font-size: 11px;">Borrador</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2 d-flex gap-2 flex-wrap">
+                <a href="<?= site_url('inspecciones/pausas-activas/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
+                    Continuar editando <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/pausas-activas/delete/' . $doc['id']) ?>"
+                    data-tipo="pausa activa"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+    <?php endif; ?>
+
+    <!-- Pendientes Investigaciones AT/IT -->
+    <?php if (!empty($pendientesInvestigaciones)): ?>
+    <div class="section-title">Pendientes Investigaciones AT/IT</div>
+    <?php foreach ($pendientesInvestigaciones as $doc): ?>
+    <div class="card card-inspeccion <?= esc($doc['estado']) ?>">
+        <div class="card-body py-3 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>
+                        <?php if ($doc['estado'] === 'borrador'): ?>
+                            <i class="fas fa-edit text-warning"></i>
+                        <?php else: ?>
+                            <i class="fas fa-signature text-orange"></i>
+                        <?php endif; ?>
+                        Investigación <?= esc($doc['tipo_evento'] ?? '') ?> - <?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>
+                    </strong>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= !empty($doc['fecha_evento']) ? date('d/m/Y', strtotime($doc['fecha_evento'])) : '-' ?>
+                        &middot;
+                        <span class="badge badge-<?= esc($doc['estado']) ?>" style="font-size: 11px;">
+                            <?= $doc['estado'] === 'borrador' ? 'Borrador' : 'Pend. Firma' ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2 d-flex gap-2 flex-wrap">
+                <a href="<?= site_url('inspecciones/investigacion-accidente/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
+                    Continuar editando <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/investigacion-accidente/delete/' . $doc['id']) ?>"
+                    data-tipo="investigación AT/IT"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+    <?php endif; ?>
+
     <!-- Grid de inspecciones -->
     <div class="section-title">Inspecciones</div>
     <div class="grid-inspecciones mb-4">
