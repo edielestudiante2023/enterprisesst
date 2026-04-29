@@ -168,13 +168,42 @@ class AuthController extends Controller
     public function forgotPasswordPost()
     {
         $session = session();
-        $email = $this->request->getVar('email');
+        $emailRaw = $this->request->getVar('email');
+        $email = trim((string) $emailRaw);
+
+        // [FORGOT_PASSWORD] - log de diagnostico
+        log_message('info', '[FORGOT_PASSWORD] Solicitud recibida'
+            . ' | email_raw=' . json_encode($emailRaw)
+            . ' | email_trim=' . json_encode($email)
+            . ' | length=' . strlen((string) $emailRaw)
+            . ' | trim_length=' . strlen($email)
+            . ' | ip=' . $this->request->getIPAddress());
+
+        if ($email === '') {
+            log_message('warning', '[FORGOT_PASSWORD] Email vacio recibido');
+            $session->setFlashdata('msg', 'Debes ingresar un correo electrónico.');
+            return redirect()->to('/forgot-password');
+        }
 
         $userModel = new UserModel();
+
+        // Busqueda 1: exacta (como antes)
         $user = $userModel->findByEmail($email);
+        log_message('info', '[FORGOT_PASSWORD] Busqueda exacta'
+            . ' | encontrado=' . ($user ? 'SI' : 'NO')
+            . ($user ? ' | id_usuario=' . $user['id_usuario'] . ' | email_bd=' . json_encode($user['email']) . ' | estado=' . $user['estado'] : ''));
+
+        // Busqueda 2: case-insensitive si la primera fallo (por si esta guardado con mayusculas distintas)
+        if (!$user) {
+            $user = $userModel->where('LOWER(TRIM(email))', mb_strtolower($email))->first();
+            log_message('info', '[FORGOT_PASSWORD] Busqueda case-insensitive'
+                . ' | encontrado=' . ($user ? 'SI' : 'NO')
+                . ($user ? ' | id_usuario=' . $user['id_usuario'] . ' | email_bd=' . json_encode($user['email']) : ''));
+        }
 
         if (!$user) {
             // No revelar si el email existe o no (seguridad)
+            log_message('warning', '[FORGOT_PASSWORD] Usuario no encontrado para email: ' . $email);
             $session->setFlashdata('msg_success', 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.');
             return redirect()->to('/forgot-password');
         }
@@ -184,14 +213,26 @@ class AuthController extends Controller
         $expira = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
         // Guardar token en la base de datos
-        $userModel->update($user['id_usuario'], [
+        $updateOk = $userModel->update($user['id_usuario'], [
             'token_recuperacion' => $token,
             'token_expira' => $expira
         ]);
+        log_message('info', '[FORGOT_PASSWORD] UPDATE token'
+            . ' | id_usuario=' . $user['id_usuario']
+            . ' | resultado=' . ($updateOk ? 'OK' : 'FAIL')
+            . ($updateOk ? '' : ' | errors=' . json_encode($userModel->errors())));
 
         // Enviar email con SendGrid
         $resetLink = base_url('/reset-password/' . $token);
+        log_message('info', '[FORGOT_PASSWORD] Enviando email'
+            . ' | to=' . $user['email']
+            . ' | nombre=' . $user['nombre_completo']
+            . ' | reset_link=' . $resetLink);
+
         $emailSent = $this->sendPasswordResetEmail($user['email'], $user['nombre_completo'], $resetLink);
+
+        log_message('info', '[FORGOT_PASSWORD] Resultado SendGrid'
+            . ' | enviado=' . ($emailSent ? 'SI' : 'NO'));
 
         if ($emailSent) {
             $session->setFlashdata('msg_success', 'Se ha enviado un enlace de recuperación a tu correo electrónico.');
@@ -260,13 +301,21 @@ class AuthController extends Controller
 
         $email->addContent("text/html", $emailContent);
 
-        $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+        $apiKey = getenv('SENDGRID_API_KEY');
+        log_message('info', '[FORGOT_PASSWORD] SendGrid API key presente: ' . (empty($apiKey) ? 'NO' : 'SI'));
+
+        $sendgrid = new \SendGrid($apiKey);
 
         try {
             $response = $sendgrid->send($email);
-            return $response->statusCode() >= 200 && $response->statusCode() < 300;
+            $statusCode = $response->statusCode();
+            $body = $response->body();
+            log_message('info', '[FORGOT_PASSWORD] SendGrid response'
+                . ' | status=' . $statusCode
+                . ' | body=' . substr($body, 0, 300));
+            return $statusCode >= 200 && $statusCode < 300;
         } catch (\Exception $e) {
-            log_message('error', 'Error enviando email de recuperación: ' . $e->getMessage());
+            log_message('error', '[FORGOT_PASSWORD] Excepcion SendGrid: ' . $e->getMessage());
             return false;
         }
     }

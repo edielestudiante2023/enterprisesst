@@ -616,6 +616,7 @@ $routes->post('/admin/users/edit/(:num)', 'UserController::editUserPost/$1');
 $routes->get('/admin/users/delete/(:num)', 'UserController::deleteUser/$1');
 $routes->get('/admin/users/toggle/(:num)', 'UserController::toggleStatus/$1');
 $routes->get('/admin/users/reset-password/(:num)', 'UserController::resetPassword/$1');
+$routes->post('/admin/users/reset-password/(:num)', 'UserController::resetPassword/$1');
 /* Ruta de cuenta bloqueada: */
 
 
