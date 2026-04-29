@@ -19,6 +19,7 @@ use App\Filters\ClientFilter;
 use App\Filters\AuthOrApiKeyFilter;
 use App\Filters\TenantGuardFilter;
 use App\Filters\SuperAdminOnlyFilter;
+use App\Filters\NoCacheFilter;
 
 class Filters extends BaseFilters
 {
@@ -48,6 +49,7 @@ class Filters extends BaseFilters
         'authOrApiKey'   => AuthOrApiKeyFilter::class,
         'tenantguard'    => TenantGuardFilter::class,
         'superadminonly'  => SuperAdminOnlyFilter::class,
+        'nocache'         => NoCacheFilter::class,
     ];
 
     /**
@@ -88,6 +90,7 @@ class Filters extends BaseFilters
         'after' => [
             // 'honeypot',
             // 'secureheaders',
+            'nocache',
         ],
     ];
 
