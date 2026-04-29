@@ -354,18 +354,47 @@ class UserController extends Controller
             return redirect()->to('/admin/users')->with('msg', 'Usuario no encontrado.');
         }
 
-        // Generar contraseña temporal
-        $tempPassword = 'Temp' . rand(1000, 9999) . '!';
+        // Seguridad: admin no puede resetear usuarios de otra empresa (salvo superadmin)
+        if (!\App\Libraries\TenantFilter::isSuperAdmin()) {
+            $empresaDelUsuario = $this->resolverEmpresaDeUsuario($user);
+            if ($empresaDelUsuario !== null && $empresaDelUsuario !== \App\Libraries\TenantFilter::getEmpresaId()) {
+                log_message('warning', '[RESET_PASSWORD] BLOCKED usuario ajeno id_usuario=' . $id);
+                return redirect()->to('/admin/users')->with('msg', 'No tienes permiso para resetear este usuario.');
+            }
+        }
+
+        // Permitir password manual via POST, sino generar automatica
+        $passwordManual = trim((string) $this->request->getPost('password_manual'));
+
+        if ($passwordManual !== '') {
+            // Validar longitud minima
+            if (strlen($passwordManual) < 6) {
+                return redirect()->to('/admin/users')->with('msg', 'La contraseña debe tener al menos 6 caracteres.');
+            }
+            $tempPassword = $passwordManual;
+            $origen = 'manual';
+        } else {
+            // Generar contraseña temporal automatica
+            $tempPassword = 'Temp' . rand(1000, 9999) . '!';
+            $origen = 'auto';
+        }
+
+        log_message('info', '[RESET_PASSWORD] Reseteando password'
+            . ' | id_usuario=' . $id
+            . ' | email=' . $user['email']
+            . ' | origen=' . $origen);
 
         if ($this->userModel->updateUser($id, ['password' => $tempPassword])) {
             // Enviar email con la nueva contraseña
             $emailSent = $this->sendTempPasswordEmail($user['email'], $user['nombre_completo'], $tempPassword);
 
+            $msg = "Contrasena reseteada. Nueva contrasena: <strong>{$tempPassword}</strong>";
             if ($emailSent) {
-                return redirect()->to('/admin/users')->with('msg', "Contraseña reseteada exitosamente. Se ha enviado la nueva contraseña al correo: {$user['email']}");
+                $msg .= " | Email enviado a {$user['email']}.";
             } else {
-                return redirect()->to('/admin/users')->with('msg', "Contraseña reseteada pero hubo un error al enviar el email. Nueva contraseña temporal: {$tempPassword}");
+                $msg .= " | El email no pudo enviarse, entrega la contrasena manualmente.";
             }
+            return redirect()->to('/admin/users')->with('msg', $msg);
         }
 
         return redirect()->to('/admin/users')->with('msg', 'Error al resetear la contraseña.');

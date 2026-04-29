@@ -209,9 +209,17 @@
                                 <a href="<?= base_url('/admin/users/toggle/' . $user['id_usuario']) ?>" class="btn btn-sm btn-info" title="Cambiar Estado">
                                     <?= $user['estado'] === 'activo' ? 'Desactivar' : 'Activar' ?>
                                 </a>
-                                <a href="<?= base_url('/admin/users/reset-password/' . $user['id_usuario']) ?>" class="btn btn-sm btn-secondary" onclick="return confirm('¿Resetear contraseña de este usuario?')" title="Resetear Contraseña">
+                                <button type="button" class="btn btn-sm btn-secondary"
+                                        onclick="resetPasswordPrompt(<?= $user['id_usuario'] ?>, '<?= esc($user['email'], 'js') ?>')"
+                                        title="Resetear Contraseña">
                                     Reset Pass
-                                </a>
+                                </button>
+                                <form id="resetPassForm-<?= $user['id_usuario'] ?>"
+                                      method="post"
+                                      action="<?= base_url('/admin/users/reset-password/' . $user['id_usuario']) ?>"
+                                      style="display:none;">
+                                    <input type="hidden" name="password_manual" value="">
+                                </form>
                                 <a href="<?= base_url('/admin/users/delete/' . $user['id_usuario']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de eliminar este usuario?')" title="Eliminar">
                                     Eliminar
                                 </a>
@@ -245,6 +253,23 @@
     <script src="https://cdn.datatables.net/buttons/1.7.0/js/buttons.colVis.min.js"></script>
 
     <script>
+        function resetPasswordPrompt(userId, userEmail) {
+            var msg = 'Resetear contrasena de: ' + userEmail + '\n\n' +
+                      'Escribe la nueva contrasena (minimo 6 caracteres) o deja vacio para que el sistema genere una automatica.';
+            var input = prompt(msg, '');
+            if (input === null) return; // cancelado
+
+            var trimmed = (input || '').trim();
+            if (trimmed.length > 0 && trimmed.length < 6) {
+                alert('La contrasena debe tener al menos 6 caracteres.');
+                return;
+            }
+
+            var form = document.getElementById('resetPassForm-' + userId);
+            form.querySelector('input[name="password_manual"]').value = trimmed;
+            form.submit();
+        }
+
         $(document).ready(function () {
             // Configurar DataTables para usar la segunda fila del thead como filtros
             var table = $('#usersTable').DataTable({
