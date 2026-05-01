@@ -1100,7 +1100,7 @@ class ActasController extends BaseController
                     $token = bin2hex(random_bytes(32));
                     $this->asistentesModel->update($asistente['id_asistente'], [
                         'token_firma' => $token,
-                        'token_expira' => date('Y-m-d H:i:s', strtotime('+7 days')),
+                        'token_expira' => date('Y-m-d H:i:s', strtotime('+30 days')),
                         'estado_firma' => 'pendiente'
                     ]);
 
@@ -1262,7 +1262,7 @@ class ActasController extends BaseController
         $token = bin2hex(random_bytes(32));
         $this->asistentesModel->update($idAsistente, [
             'token_firma' => $token,
-            'token_expira' => date('Y-m-d H:i:s', strtotime('+7 days'))
+            'token_expira' => date('Y-m-d H:i:s', strtotime('+30 days'))
         ]);
 
         // Programar notificación
@@ -1310,7 +1310,7 @@ class ActasController extends BaseController
                 $token = bin2hex(random_bytes(32));
                 $this->asistentesModel->update($asistente['id_asistente'], [
                     'token_firma' => $token,
-                    'token_expira' => date('Y-m-d H:i:s', strtotime('+7 days')),
+                    'token_expira' => date('Y-m-d H:i:s', strtotime('+30 days')),
                     'estado_firma' => 'pendiente'
                 ]);
 
@@ -1382,7 +1382,7 @@ class ActasController extends BaseController
         $token = bin2hex(random_bytes(32));
         $this->asistentesModel->update($idAsistente, [
             'token_firma' => $token,
-            'token_expira' => date('Y-m-d H:i:s', strtotime('+7 days')),
+            'token_expira' => date('Y-m-d H:i:s', strtotime('+30 days')),
             'estado_firma' => 'pendiente'
         ]);
 
