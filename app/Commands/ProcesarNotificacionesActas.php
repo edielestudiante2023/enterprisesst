@@ -152,6 +152,21 @@ class ProcesarNotificacionesActas extends BaseCommand
                 $diasPendiente = (int) ceil((time() - strtotime($asistente['notificacion_enviada_at'])) / 86400);
             }
 
+            // Renovar token si esta expirado o expira hoy: el recordatorio
+            // SIEMPRE debe llevar un link valido por 30 dias mas. Bug previo:
+            // tokens vencian a 7 dias, cron seguia mandando recordatorios con
+            // links muertos que mostraban "Enlace no valido" al asistente.
+            $tokenFirma  = $asistente['token_firma'] ?? '';
+            $tokenExpira = $asistente['token_expira'] ?? null;
+            if (empty($tokenFirma) || !$tokenExpira || strtotime($tokenExpira) <= time()) {
+                $tokenFirma = bin2hex(random_bytes(32));
+                $this->asistentesModel->update($asistente['id_asistente'], [
+                    'token_firma'  => $tokenFirma,
+                    'token_expira' => date('Y-m-d H:i:s', strtotime('+30 days')),
+                ]);
+                CLI::write("  [TOKEN RENOVADO] {$asistente['email']} - Acta {$asistente['numero_acta']}", 'yellow');
+            }
+
             $this->notificacionModel->programarRecordatorioFirma(
                 $asistente['id_acta'],
                 $asistente['id_asistente'],
@@ -159,7 +174,7 @@ class ProcesarNotificacionesActas extends BaseCommand
                 $asistente['nombre_completo'],
                 $acta['id_cliente'],
                 $asistente['numero_acta'],
-                $asistente['token_firma'] ?? '',
+                $tokenFirma,
                 $diasPendiente
             );
 
