@@ -717,6 +717,18 @@
                                 Configure quienes firmaran los documentos del SG-SST. Para empresas grandes, puede configurar un Delegado SST que firma antes del Representante Legal.
                             </p>
 
+                            <div class="alert alert-warning d-flex align-items-start" role="alert">
+                                <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+                                <div>
+                                    <strong>Importante:</strong> si cambias o actualizas el Representante Legal o el Delegado SST,
+                                    recuerda actualizarlos tambien en el modulo
+                                    <a href="<?= base_url('responsables-sst/' . ($cliente['id_cliente'] ?? 0)) ?>" class="alert-link">
+                                        Responsables SG-SST
+                                    </a>
+                                    para mantener la matriz oficial de responsables al dia.
+                                </div>
+                            </div>
+
                             <!-- Toggle Delegado SST -->
                             <div class="alert alert-light border mb-4">
                                 <div class="form-check form-switch">

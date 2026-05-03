@@ -62,6 +62,13 @@
                                 <input type="hidden" name="id_responsable" value="<?= $responsable['id_responsable'] ?>">
                             <?php endif; ?>
 
+                            <!-- Aviso de prellenado desde Contexto -->
+                            <div id="avisoPrellenado" class="alert alert-info alert-dismissible fade show" style="display:none;" role="alert">
+                                <i class="bi bi-magic me-1"></i>
+                                Datos prellenados desde el <strong>Contexto SST</strong> del cliente. Puedes ajustarlos si es necesario antes de guardar.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                            </div>
+
                             <!-- Tipo de Rol -->
                             <div class="mb-4">
                                 <label class="form-label fw-bold">Tipo de Rol <span class="text-danger">*</span></label>
@@ -244,6 +251,65 @@
 
         tipoRol.addEventListener('change', toggleCamposSST);
         toggleCamposSST(); // Ejecutar al cargar
+
+        // ── Pre-llenado desde Contexto SST ──────────────────────────────────
+        // Solo aplica al CREAR (no al editar), y solo para tipos representante_legal y delegado_sst
+        const esEdicion = <?= $responsable ? 'true' : 'false' ?>;
+        const contextoData = <?= json_encode([
+            'representante_legal_nombre' => $contexto['representante_legal_nombre'] ?? '',
+            'representante_legal_cargo' => $contexto['representante_legal_cargo'] ?? '',
+            'representante_legal_email' => $contexto['representante_legal_email'] ?? '',
+            'representante_legal_cedula' => $contexto['representante_legal_cedula'] ?? '',
+            'delegado_sst_nombre' => $contexto['delegado_sst_nombre'] ?? '',
+            'delegado_sst_cargo' => $contexto['delegado_sst_cargo'] ?? '',
+            'delegado_sst_email' => $contexto['delegado_sst_email'] ?? '',
+            'delegado_sst_cedula' => $contexto['delegado_sst_cedula'] ?? '',
+        ]) ?>;
+
+        function prellenarDesdeContexto() {
+            if (esEdicion) return; // no auto-rellenar al editar
+            const tipo = tipoRol.value;
+            let data = null;
+            if (tipo === 'representante_legal') {
+                data = {
+                    nombre: contextoData.representante_legal_nombre,
+                    cargo: contextoData.representante_legal_cargo,
+                    email: contextoData.representante_legal_email,
+                    cedula: contextoData.representante_legal_cedula
+                };
+            } else if (tipo === 'delegado_sst' || tipo === 'responsable_sgsst') {
+                data = {
+                    nombre: contextoData.delegado_sst_nombre,
+                    cargo: contextoData.delegado_sst_cargo,
+                    email: contextoData.delegado_sst_email,
+                    cedula: contextoData.delegado_sst_cedula
+                };
+            }
+            if (!data) return;
+
+            // Solo prellenar campos que estan vacios para no sobreescribir lo que el usuario ya escribio
+            const nombreField = document.querySelector('input[name="nombre_completo"]');
+            const cargoField = document.querySelector('input[name="cargo"]');
+            const emailField = document.querySelector('input[name="email"]');
+            const cedulaField = document.querySelector('input[name="numero_documento"]');
+
+            if (nombreField && !nombreField.value && data.nombre) nombreField.value = data.nombre;
+            if (cargoField && !cargoField.value && data.cargo) cargoField.value = data.cargo;
+            if (emailField && !emailField.value && data.email) emailField.value = data.email;
+            if (cedulaField && !cedulaField.value && data.cedula) cedulaField.value = data.cedula;
+
+            if (data.nombre || data.email || data.cedula) {
+                // Aviso visual no intrusivo
+                const alerta = document.getElementById('avisoPrellenado');
+                if (alerta) {
+                    alerta.style.display = 'block';
+                    setTimeout(() => { alerta.style.display = 'none'; }, 6000);
+                }
+            }
+        }
+
+        tipoRol.addEventListener('change', prellenarDesdeContexto);
+        prellenarDesdeContexto(); // Ejecutar al cargar por si ya hay tipo seleccionado
 
         // Visual feedback para el switch de crear usuario
         const checkCrear = document.getElementById('checkCrearUsuario');

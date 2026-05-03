@@ -72,6 +72,7 @@ class ResponsablesSSTController extends BaseController
         $data = [
             'titulo' => 'Agregar Responsable',
             'cliente' => $cliente,
+            'contexto' => $contexto,
             'estandares' => $estandares,
             'tiposRol' => $this->getRolesDisponibles($estandares),
             'responsable' => null
@@ -102,6 +103,7 @@ class ResponsablesSSTController extends BaseController
         $data = [
             'titulo' => 'Editar Responsable',
             'cliente' => $cliente,
+            'contexto' => $contexto,
             'estandares' => $estandares,
             'tiposRol' => $this->getRolesDisponibles($estandares),
             'responsable' => $responsable
