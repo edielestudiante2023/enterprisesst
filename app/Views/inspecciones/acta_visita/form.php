@@ -98,7 +98,7 @@ $action = $isEdit ? site_url('inspecciones/acta-visita/update/' . $acta['id']) :
                                     <div class="col-5">
                                         <select name="integrante_rol[]" class="form-select">
                                             <option value="">Rol...</option>
-                                            <?php foreach (['CLIENTE', 'CONSULTOR CYCLOID TALENT'] as $rol): ?>
+                                            <?php foreach (['CLIENTE', 'CONSULTOR'] as $rol): ?>
                                             <option value="<?= $rol ?>" <?= $integrante['rol'] === $rol ? 'selected' : '' ?>><?= $rol ?></option>
                                             <?php endforeach; ?>
                                         </select>
@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add integrante
     document.getElementById('btnAddIntegrante').addEventListener('click', function() {
-        const roles = ['CLIENTE', 'CONSULTOR CYCLOID TALENT'];
+        const roles = ['CLIENTE', 'CONSULTOR'];
         const options = roles.map(r => '<option value="' + r + '">' + r + '</option>').join('');
         const html = `
             <div class="row g-2 mb-2 integrante-row">
@@ -761,7 +761,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.ubicacion_gps) document.getElementById('ubicacionGps').value = data.ubicacion_gps;
 
         // Integrantes
-        const roles = ['CLIENTE', 'CONSULTOR CYCLOID TALENT'];
+        const roles = ['CLIENTE', 'CONSULTOR'];
         const roleOpts = roles.map(r => '<option value="' + r + '">' + r + '</option>').join('');
         (data.integrantes || []).forEach(int => {
             const html = '<div class="row g-2 mb-2 integrante-row"><div class="col-5"><input type="text" name="integrante_nombre[]" class="form-control" placeholder="Nombre" value="' + (int.nombre||'').replace(/"/g,'&quot;') + '"></div><div class="col-5"><select name="integrante_rol[]" class="form-select"><option value="">Rol...</option>' + roleOpts + '</select></div><div class="col-2 text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" style="min-height:44px;"><i class="fas fa-times"></i></button></div></div>';

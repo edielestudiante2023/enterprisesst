@@ -204,7 +204,21 @@
         <p>FECHA: <strong><?= strftime('%d de %B de %Y', strtotime($client['fecha_ingreso'])); ?></strong></p>
 
         <p>
-            <b><?= $client['nombre_rep_legal'] ?></b> con documento de identidad <b><?= $client['cedula_rep_legal'] ?></b> como representante legal de <b><?= $client['nombre_cliente'] ?></b>, nombró a la empresa CYCLOID TALENT S.A.S, asignando como responsable a la profesional en Seguridad y Salud en el Trabajo, <b><?= $consultant['nombre_consultor'] ?></b> con documento de identidad <b><?= $consultant['cedula_consultor'] ?></b>, con número de licencia <b><?= $consultant['numero_licencia'] ?></b>, asignada para la responsabilidad, <?= $clientPolicy['policy_content'] ?>
+            <?php
+                // Multi-tenant: resolver razon social de empresa consultora del consultor asignado
+                $empresaConsultoraNombre = 'CYCLOID TALENT S.A.S';
+                if (!empty($consultant['id_empresa_consultora'])) {
+                    $emp = \Config\Database::connect()
+                        ->table('tbl_empresa_consultora')
+                        ->select('razon_social')
+                        ->where('id_empresa_consultora', $consultant['id_empresa_consultora'])
+                        ->get()->getRowArray();
+                    if ($emp && !empty($emp['razon_social'])) {
+                        $empresaConsultoraNombre = strtoupper($emp['razon_social']);
+                    }
+                }
+            ?>
+            <b><?= $client['nombre_rep_legal'] ?></b> con documento de identidad <b><?= $client['cedula_rep_legal'] ?></b> como representante legal de <b><?= $client['nombre_cliente'] ?></b>, nombró a la empresa <b><?= esc($empresaConsultoraNombre) ?></b>, asignando como responsable a la profesional en Seguridad y Salud en el Trabajo, <b><?= $consultant['nombre_consultor'] ?></b> con documento de identidad <b><?= $consultant['cedula_consultor'] ?></b>, con número de licencia <b><?= $consultant['numero_licencia'] ?></b>, asignada para la responsabilidad, <?= $clientPolicy['policy_content'] ?>
         </p>
 
         <div class="signature-container">
