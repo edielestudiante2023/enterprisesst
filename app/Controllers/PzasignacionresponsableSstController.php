@@ -214,7 +214,20 @@ class PzasignacionresponsableSstController extends Controller
         $licenciaConsultor = $consultor['numero_licencia'] ?? '';  // Campo correcto: numero_licencia
 
         $estandares = (int)($contexto['estandares_aplicables'] ?? 7);
+
+        // Multi-tenant: razon social de la empresa consultora del consultor asignado
+        // Default a CYCLOID TALENT S.A.S si no hay match (compatibilidad).
         $empresaConsultora = 'CYCLOID TALENT S.A.S';
+        if ($consultor && !empty($consultor['id_empresa_consultora'])) {
+            $db = \Config\Database::connect();
+            $emp = $db->table('tbl_empresa_consultora')
+                ->select('razon_social')
+                ->where('id_empresa_consultora', $consultor['id_empresa_consultora'])
+                ->get()->getRowArray();
+            if ($emp && !empty($emp['razon_social'])) {
+                $empresaConsultora = strtoupper($emp['razon_social']);
+            }
+        }
 
         // Texto con datos en negrita usando HTML
         // Nota: numero_licencia ya incluye fecha (ej: "4241 de 19/08/2022")
