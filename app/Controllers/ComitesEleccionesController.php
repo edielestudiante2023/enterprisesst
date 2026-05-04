@@ -686,6 +686,14 @@ class ComitesEleccionesController extends BaseController
                 ->withInput();
         }
 
+        // Validar email no conflictivo con otro rol del sistema
+        $conflicto = $this->validarEmailNoConflictivo($email);
+        if ($conflicto) {
+            return redirect()->back()
+                ->with('error', $this->mensajeConflictoEmail($conflicto, $nombreCompleto))
+                ->withInput();
+        }
+
         // Procesar foto del candidato
         $rutaFoto = null;
         $foto = $this->request->getFile('foto');
@@ -1052,6 +1060,19 @@ class ComitesEleccionesController extends BaseController
 
         // Actualizar datos
         $nombreCompleto = trim($this->request->getPost('nombre_completo') ?? '');
+        $emailNuevo = trim($this->request->getPost('email') ?? '');
+
+        // Validar email solo si cambio (evita falso positivo si el usuario
+        // edita otros campos sin tocar el email)
+        if (strtolower($emailNuevo) !== strtolower((string)($candidato['email'] ?? ''))) {
+            $conflicto = $this->validarEmailNoConflictivo($emailNuevo);
+            if ($conflicto) {
+                return redirect()->back()
+                    ->with('error', $this->mensajeConflictoEmail($conflicto, $nombreCompleto))
+                    ->withInput();
+            }
+        }
+
         $this->db->table('tbl_candidatos_comite')
             ->where('id_candidato', $idCandidato)
             ->update([
@@ -1060,7 +1081,7 @@ class ComitesEleccionesController extends BaseController
                 'apellidos'       => '',
                 'cargo' => $this->request->getPost('cargo'),
                 'area' => $this->request->getPost('area'),
-                'email' => $this->request->getPost('email'),
+                'email' => $emailNuevo,
                 'telefono' => $this->request->getPost('telefono'),
                 'foto' => $rutaFoto,
                 'updated_at' => date('Y-m-d H:i:s')
@@ -1091,6 +1112,17 @@ class ComitesEleccionesController extends BaseController
         $email = trim($this->request->getJSON(true)['email'] ?? '');
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->response->setStatusCode(422)->setJSON(['error' => 'Email invalido']);
+        }
+
+        // Validar email no conflictivo con otro rol del sistema
+        if (strtolower($email) !== strtolower((string)($candidato['email'] ?? ''))) {
+            $conflicto = $this->validarEmailNoConflictivo($email);
+            if ($conflicto) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'error'    => $this->mensajeConflictoEmail($conflicto, $candidato['nombre_completo'] ?? ''),
+                    'conflict' => true,
+                ]);
+            }
         }
 
         $this->db->table('tbl_candidatos_comite')
@@ -5446,5 +5478,65 @@ class ComitesEleccionesController extends BaseController
             log_message('error', 'Error enviando email designacion: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Verifica que el email no este registrado con otro rol que no sea
+     * miembro de comite. Permite que la misma persona sea miembro de
+     * varios comites con el mismo email — pero no que un cliente,
+     * consultor, admin o superadmin se registre como candidato.
+     *
+     * @return array|null null = OK, array con info del conflicto si hay
+     */
+    private function validarEmailNoConflictivo(string $email): ?array
+    {
+        $email = trim(strtolower($email));
+        if (empty($email)) {
+            return null;
+        }
+
+        $existente = $this->db->table('tbl_usuarios')
+            ->where('LOWER(email)', $email)
+            ->get()
+            ->getRowArray();
+
+        if (!$existente) {
+            return null;
+        }
+
+        // Si ya es miembro, no es conflicto
+        if ($existente['tipo_usuario'] === 'miembro') {
+            return null;
+        }
+
+        $rolEsp = match ($existente['tipo_usuario']) {
+            'client'      => 'Cliente',
+            'consultant'  => 'Consultor',
+            'admin'       => 'Administrador',
+            'superadmin'  => 'Super Administrador',
+            default       => $existente['tipo_usuario']
+        };
+
+        return [
+            'email'            => $email,
+            'nombre_existente' => $existente['nombre_completo'] ?? '',
+            'rol_existente'    => $rolEsp,
+        ];
+    }
+
+    /**
+     * Construye el mensaje de error para mostrar al usuario cuando hay
+     * conflicto de email.
+     */
+    private function mensajeConflictoEmail(array $conflicto, string $nombreCandidato = ''): string
+    {
+        $email   = esc($conflicto['email']);
+        $nombre  = esc($conflicto['nombre_existente']);
+        $rol     = esc($conflicto['rol_existente']);
+        $cand    = $nombreCandidato !== '' ? esc($nombreCandidato) : 'Este miembro';
+
+        return "El email \"{$email}\" ya esta registrado en el sistema con el rol de \"{$rol}\" "
+             . "({$nombre}). No es posible registrar a \"{$cand}\" con el mismo email. "
+             . "Por favor ingresa un email diferente para evitar conflictos con su cuenta actual.";
     }
 }
