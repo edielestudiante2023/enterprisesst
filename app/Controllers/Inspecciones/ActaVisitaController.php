@@ -133,9 +133,10 @@ class ActaVisitaController extends BaseController
         // Guardar fotos
         $this->saveFotos($idActa);
 
-        // Procesar checkboxes PTA (solo en submit real)
+        // Procesar checkboxes PTA y Pendientes (solo en submit real)
         if (!$isAutosave) {
             $this->savePtaActividades($idActa);
+            $this->savePendientesActividades($idActa);
         }
 
         if ($isAutosave) {
@@ -206,9 +207,10 @@ class ActaVisitaController extends BaseController
         $this->saveCompromisos($id);
         $this->saveFotos($id);
 
-        // Procesar checkboxes PTA (solo en submit real)
+        // Procesar checkboxes PTA y Pendientes (solo en submit real)
         if (!$this->isAutosaveRequest()) {
             $this->savePtaActividades($id);
+            $this->savePendientesActividades($id);
         }
 
         if ($this->isAutosaveRequest()) {
@@ -327,6 +329,7 @@ class ActaVisitaController extends BaseController
         }
 
         $this->savePtaActividades($id);
+        $this->savePendientesActividades($id);
 
         // Marcar como confirmado (una sola oportunidad)
         $this->actaModel->update($id, ['pta_confirmado' => 1]);
@@ -1218,6 +1221,119 @@ class ActaVisitaController extends BaseController
                 $ptaModel->update($idPta, ['observaciones' => $obsFinal]);
 
                 PtaAuditService::log($idPta, 'UPDATE', 'observaciones', $obsActual, $obsFinal, $metodo, (int) $acta['id_cliente']);
+            }
+        }
+    }
+
+    /**
+     * API: pendientes ABIERTOS de un cliente para mostrar en form acta_visita
+     * Si se edita un acta, marca como ya cerrados los que tienen id_acta_visita = idActa
+     */
+    public function getPendientesAbiertos()
+    {
+        $idCliente = (int) $this->request->getGet('id_cliente');
+        $fechaVisita = $this->request->getGet('fecha_visita');
+        $idActa = (int) $this->request->getGet('id_acta');
+
+        if (!$idCliente || !$fechaVisita) {
+            return $this->response->setJSON(['actividades' => [], 'links' => []]);
+        }
+
+        $pendientesModel = new \App\Models\PendientesModel();
+
+        // Pendientes ABIERTOS del cliente +
+        // pendientes ya CERRADOS por este acta especifica (para mostrar checkbox checked+disabled al editar)
+        $builder = $pendientesModel->builder();
+        $builder->where('id_cliente', $idCliente);
+        if ($idActa) {
+            $builder->groupStart()
+                ->where('estado', 'ABIERTA')
+                ->orGroupStart()
+                    ->where('id_acta_visita', $idActa)
+                    ->whereIn('estado', ['CERRADA', 'CERRADA POR FIN CONTRATO'])
+                ->groupEnd()
+            ->groupEnd();
+        } else {
+            $builder->where('estado', 'ABIERTA');
+        }
+        $rows = $builder->orderBy('fecha_cierre', 'ASC')->get()->getResultArray();
+
+        $mesVisita = (int) date('m', strtotime($fechaVisita));
+
+        $actividades = [];
+        $links = [];
+        foreach ($rows as $r) {
+            $idPend = (int) $r['id_pendientes'];
+            $mesPlazo = $r['fecha_cierre'] ? (int) date('m', strtotime($r['fecha_cierre'])) : 0;
+            $cerradaEnEsteActa = $idActa && (int) ($r['id_acta_visita'] ?? 0) === $idActa
+                && in_array($r['estado'], ['CERRADA', 'CERRADA POR FIN CONTRATO'], true);
+
+            $actividades[] = [
+                'id_pendientes'    => $idPend,
+                'tarea_actividad'  => $r['tarea_actividad'],
+                'responsable'      => $r['responsable'] ?? '',
+                'fecha_cierre'     => $r['fecha_cierre'],
+                'rezagada'         => $mesPlazo && $mesPlazo < $mesVisita,
+                'estado'           => $r['estado'],
+            ];
+            if ($cerradaEnEsteActa) {
+                $links[$idPend] = ['cerrada' => 1];
+            }
+        }
+
+        return $this->response->setJSON([
+            'actividades' => $actividades,
+            'links'       => $links,
+        ]);
+    }
+
+    /**
+     * Procesar checkboxes de pendientes en form acta_visita:
+     * - Cerrar pendientes marcados (estado=CERRADA, fecha_cierre_real, id_acta_visita)
+     * - Para no marcados: concatenar justificacion en evidencia_para_cerrarla
+     */
+    private function savePendientesActividades(int $idActa): void
+    {
+        $pendIds = $this->request->getPost('pendiente_id') ?? [];
+        $checked = $this->request->getPost('pendiente_checked') ?? [];
+        $justificaciones = $this->request->getPost('pendiente_justificacion') ?? [];
+
+        if (empty($pendIds)) return;
+
+        $acta = $this->actaModel->find($idActa);
+        if (!$acta) return;
+
+        $pendientesModel = new \App\Models\PendientesModel();
+
+        foreach ($pendIds as $idPend) {
+            $idPend = (int) $idPend;
+            $pendRecord = $pendientesModel->find($idPend);
+            if (!$pendRecord) continue;
+
+            // Validacion: debe pertenecer al cliente del acta
+            if ((int) $pendRecord['id_cliente'] !== (int) $acta['id_cliente']) continue;
+
+            $esCerrada = in_array((string) $idPend, $checked, true);
+
+            // Cerrar pendiente marcado si aun esta ABIERTA
+            if ($esCerrada && $pendRecord['estado'] === 'ABIERTA') {
+                $pendientesModel->update($idPend, [
+                    'estado'            => 'CERRADA',
+                    'fecha_cierre_real' => $acta['fecha_visita'],
+                    'id_acta_visita'    => $idActa,
+                ]);
+            }
+
+            // No marcado con justificacion: concatenar en evidencia
+            if (!$esCerrada && !empty($justificaciones[$idPend])) {
+                $justTexto = trim($justificaciones[$idPend]);
+                $prefijo = "[Acta Visita #{$idActa} - {$acta['fecha_visita']}] No cerrada: ";
+                $nuevaObs = $prefijo . $justTexto;
+
+                $obsActual = $pendRecord['evidencia_para_cerrarla'] ?? '';
+                $obsFinal = $obsActual ? $obsActual . "\n" . $nuevaObs : $nuevaObs;
+
+                $pendientesModel->update($idPend, ['evidencia_para_cerrarla' => $obsFinal]);
             }
         }
     }

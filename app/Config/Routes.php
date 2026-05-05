@@ -1704,6 +1704,7 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('acta-visita/enviar-email/(:num)', 'ActaVisitaController::enviarEmail/$1');
     $routes->get('acta-visita/delete/(:num)', 'ActaVisitaController::delete/$1');
     $routes->get('acta-visita/api/pta-actividades', 'ActaVisitaController::getPtaActividades');
+    $routes->get('acta-visita/api/pendientes-abiertos', 'ActaVisitaController::getPendientesAbiertos');
     $routes->post('acta-visita/generar-token-firma/(:num)', 'ActaVisitaController::generarTokenFirma/$1');
 
     // Acta de Capacitacion
