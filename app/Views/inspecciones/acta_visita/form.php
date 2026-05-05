@@ -175,6 +175,20 @@ $action = $isEdit ? site_url('inspecciones/acta-visita/update/' . $acta['id']) :
                 </div>
             </div>
 
+            <!-- PENDIENTES ABIERTOS -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#secPendientes">
+                        Pendientes Abiertos (<span id="countPendientes">0</span>)
+                    </button>
+                </h2>
+                <div id="secPendientes" class="accordion-collapse collapse" data-bs-parent="#accordionActa">
+                    <div class="accordion-body" id="pendientesContent">
+                        <p class="text-muted" style="font-size:13px;">Selecciona un cliente y fecha para ver los pendientes abiertos.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- OBSERVACIONES -->
             <div class="accordion-item">
                 <h2 class="accordion-header">
@@ -310,18 +324,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Cargar temas abiertos y PTA al cambiar cliente
+    // Cargar temas abiertos, PTA y Pendientes al cambiar cliente
     $('#selectCliente').on('change', function() {
         const id = this.value;
         if (id) {
             loadTemasAbiertos(id);
             loadPtaActividades();
+            loadPendientesAbiertos();
         }
     });
 
-    // Recargar PTA al cambiar fecha
+    // Recargar PTA y Pendientes al cambiar fecha
     document.querySelector('[name="fecha_visita"]').addEventListener('change', function() {
         loadPtaActividades();
+        loadPendientesAbiertos();
     });
 
     function loadTemasAbiertos(idCliente) {
@@ -427,6 +443,127 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(loadPtaActividades, 500);
     }
 
+    // ============================================================
+    // PENDIENTES ABIERTOS (mismo patron que PTA)
+    // ============================================================
+    function loadPendientesAbiertos() {
+        const idCliente = document.getElementById('selectCliente').value;
+        const fechaVisita = document.querySelector('[name="fecha_visita"]').value;
+        const container = document.getElementById('pendientesContent');
+
+        if (!idCliente || !fechaVisita) {
+            container.innerHTML = '<p class="text-muted" style="font-size:13px;">Selecciona un cliente y fecha para ver los pendientes abiertos.</p>';
+            document.getElementById('countPendientes').textContent = '0';
+            return;
+        }
+
+        container.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando pendientes...</p>';
+
+        let url = '<?= site_url('inspecciones/acta-visita/api/pendientes-abiertos') ?>?id_cliente=' + idCliente + '&fecha_visita=' + fechaVisita;
+        if (actaId) url += '&id_acta=' + actaId;
+
+        fetch(url).then(r => r.json()).then(data => {
+            const actividades = data.actividades || [];
+            const links = data.links || {};
+
+            if (actividades.length === 0) {
+                container.innerHTML = '<p class="text-muted" style="font-size:13px;"><i class="fas fa-check-circle text-success"></i> No hay pendientes abiertos para este cliente.</p>';
+                document.getElementById('countPendientes').textContent = '0';
+                return;
+            }
+
+            document.getElementById('countPendientes').textContent = actividades.length;
+
+            let html = '<div class="list-group list-group-flush">';
+            actividades.forEach(act => {
+                const linkData = links[act.id_pendientes];
+                const yaCerradaPrev = linkData && parseInt(linkData.cerrada) === 1;
+                const checkedAttr = yaCerradaPrev ? 'checked disabled' : '';
+                const badgeRezagada = act.rezagada ? ' <span class="badge bg-warning text-dark" style="font-size:10px;">VENCIDO</span>' : '';
+                const badgeCerrada = yaCerradaPrev ? ' <span class="badge bg-success" style="font-size:10px;">CERRADA</span>' : '';
+                const respText = act.responsable ? ' | Responsable: ' + act.responsable : '';
+
+                html += '<label class="list-group-item d-flex align-items-start gap-2" style="font-size:13px; cursor:pointer;">';
+                html += '<input type="hidden" name="pendiente_id[]" value="' + act.id_pendientes + '">';
+                html += '<input type="checkbox" name="pendiente_checked[]" value="' + act.id_pendientes + '" class="form-check-input mt-1 pendiente-checkbox" ' + checkedAttr + ' style="min-width:18px;">';
+                html += '<div>';
+                html += (act.tarea_actividad || '');
+                html += badgeRezagada + badgeCerrada;
+                html += '<br><small class="text-muted">Plazo: ' + (act.fecha_cierre || 'sin definir') + respText + '</small>';
+                html += '</div>';
+                html += '</label>';
+            });
+            html += '</div>';
+            html += '<small class="text-muted d-block mt-2" style="font-size:11px;"><i class="fas fa-info-circle"></i> Marca los pendientes que cerraste en esta visita. Los no marcados pediran justificacion al guardar.</small>';
+
+            container.innerHTML = html;
+        }).catch(() => {
+            container.innerHTML = '<p class="text-danger" style="font-size:13px;"><i class="fas fa-exclamation-triangle"></i> Error cargando pendientes.</p>';
+        });
+    }
+
+    // Cargar pendientes al inicio si ya hay cliente
+    if (clienteId) {
+        setTimeout(loadPendientesAbiertos, 600);
+    }
+
+    /**
+     * SweetAlert encadenado: pide justificacion por cada pendiente no marcado
+     */
+    function askPendientesJustifications(callback) {
+        const allIds = document.querySelectorAll('input[name="pendiente_id[]"]');
+        const checkedIds = Array.from(document.querySelectorAll('input[name="pendiente_checked[]"]:checked')).map(c => c.value);
+
+        const unchecked = [];
+        allIds.forEach(input => {
+            const id = input.value;
+            const checkbox = input.nextElementSibling;
+            if (!checkedIds.includes(id) && !checkbox.disabled) {
+                const label = input.closest('label');
+                const texto = label ? label.querySelector('div').textContent.trim().split('\n')[0] : 'Pendiente ' + id;
+                unchecked.push({ id, texto });
+            }
+        });
+
+        if (unchecked.length === 0) {
+            callback({});
+            return;
+        }
+
+        const justificaciones = {};
+        let index = 0;
+
+        function pedirSiguiente() {
+            if (index >= unchecked.length) {
+                callback(justificaciones);
+                return;
+            }
+            const item = unchecked[index];
+            Swal.fire({
+                title: 'Justificacion requerida (Pendiente)',
+                html: '<div style="text-align:left; font-size:13px; margin-bottom:10px;"><strong>Pendiente no cerrado:</strong><br>' + item.texto + '</div>',
+                input: 'textarea',
+                inputPlaceholder: 'Explica por que no se cerro este pendiente...',
+                inputAttributes: { 'aria-label': 'Justificacion' },
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: (index + 1) + '/' + unchecked.length + ' Siguiente',
+                confirmButtonColor: '#bd9751',
+                allowOutsideClick: false,
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) return 'La justificacion es obligatoria';
+                }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    justificaciones[item.id] = result.value.trim();
+                    index++;
+                    pedirSiguiente();
+                }
+            });
+        }
+        pedirSiguiente();
+    }
+
     /**
      * SweetAlert encadenado: pide justificacion por cada actividad PTA no marcada
      */
@@ -488,46 +625,70 @@ document.addEventListener('DOMContentLoaded', function() {
         pedirSiguiente();
     }
 
-    // --- Interceptor de submit para PTA justificaciones ---
+    // --- Interceptor de submit para PTA + Pendientes (justificaciones encadenadas) ---
     const actaForm = document.getElementById('actaForm');
+
+    function tieneNoMarcadas(idSelector, checkedSelector) {
+        const items = document.querySelectorAll(idSelector);
+        if (items.length === 0) return false;
+        const checkedIds = Array.from(document.querySelectorAll(checkedSelector)).map(c => c.value);
+        let hay = false;
+        items.forEach(input => {
+            const checkbox = input.nextElementSibling;
+            if (!checkedIds.includes(input.value) && !checkbox.disabled) {
+                hay = true;
+            }
+        });
+        return hay;
+    }
+
+    function inyectarJustificaciones(prefijo, justificaciones) {
+        Object.keys(justificaciones).forEach(id => {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = prefijo + '[' + id + ']';
+            hidden.value = justificaciones[id];
+            actaForm.appendChild(hidden);
+        });
+    }
+
     actaForm.addEventListener('submit', function(e) {
-        // Si ya procesamos PTA, dejar pasar
-        if (actaForm._ptaProcessed) {
-            actaForm._ptaProcessed = false;
+        if (actaForm._activitiesProcessed) {
+            actaForm._activitiesProcessed = false;
             return;
         }
 
-        // Si no hay items PTA, dejar pasar
-        const ptaItems = document.querySelectorAll('input[name="pta_actividad_id[]"]');
-        if (ptaItems.length === 0) return;
+        const necesitaPta = tieneNoMarcadas('input[name="pta_actividad_id[]"]', 'input[name="pta_actividad_checked[]"]:checked');
+        const necesitaPend = tieneNoMarcadas('input[name="pendiente_id[]"]', 'input[name="pendiente_checked[]"]:checked');
 
-        // Verificar si hay items no checked (excluyendo disabled)
-        const checkedIds = Array.from(document.querySelectorAll('input[name="pta_actividad_checked[]"]:checked')).map(c => c.value);
-        let hayNoMarcadas = false;
-        ptaItems.forEach(input => {
-            const checkbox = input.nextElementSibling;
-            if (!checkedIds.includes(input.value) && !checkbox.disabled) {
-                hayNoMarcadas = true;
-            }
-        });
-
-        if (!hayNoMarcadas) return;
+        if (!necesitaPta && !necesitaPend) return;
 
         e.preventDefault();
 
-        askPtaJustifications(function(justificaciones) {
-            // Inyectar hidden inputs con justificaciones
-            Object.keys(justificaciones).forEach(id => {
-                const hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.name = 'pta_justificacion[' + id + ']';
-                hidden.value = justificaciones[id];
-                actaForm.appendChild(hidden);
-            });
-
-            actaForm._ptaProcessed = true;
+        const finalizar = () => {
+            actaForm._activitiesProcessed = true;
             actaForm.requestSubmit();
-        });
+        };
+
+        const fasePendientes = () => {
+            if (necesitaPend) {
+                askPendientesJustifications(function(j) {
+                    inyectarJustificaciones('pendiente_justificacion', j);
+                    finalizar();
+                });
+            } else {
+                finalizar();
+            }
+        };
+
+        if (necesitaPta) {
+            askPtaJustifications(function(j) {
+                inyectarJustificaciones('pta_justificacion', j);
+                fasePendientes();
+            });
+        } else {
+            fasePendientes();
+        }
     });
 
     // --- Interceptor "Ir a firmas" para PTA ---
