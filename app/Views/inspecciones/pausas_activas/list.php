@@ -1,6 +1,3 @@
-<link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-<link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
-
 <style>
     .table-actions { white-space: nowrap; }
     .table-actions .btn { padding: 4px 8px; font-size: 12px; }
@@ -28,7 +25,6 @@
         <table id="tablaInspecciones" class="table table-striped table-bordered table-hover" style="width:100%">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Cliente</th>
                     <th>Fecha</th>
                     <th>Registros</th>
@@ -36,7 +32,6 @@
                     <th>Acciones</th>
                 </tr>
                 <tr class="filters-row">
-                    <th><input type="text" placeholder="ID"></th>
                     <th><input type="text" placeholder="Cliente"></th>
                     <th><input type="text" placeholder="Fecha"></th>
                     <th><input type="text" placeholder="#"></th>
@@ -53,9 +48,8 @@
             <tbody>
             <?php foreach (($inspecciones ?? []) as $insp): ?>
                 <tr>
-                    <td><?= $insp['id'] ?></td>
                     <td><?= esc($insp['nombre_cliente'] ?? 'Sin cliente') ?></td>
-                    <td><?= date('d/m/Y', strtotime($insp['fecha_actividad'])) ?></td>
+                    <td data-order="<?= $insp['fecha_actividad'] ?>"><?= date('d/m/Y', strtotime($insp['fecha_actividad'])) ?></td>
                     <td><?= (int)($insp['total_registros'] ?? 0) ?></td>
                     <td><span class="badge badge-<?= esc($insp['estado']) ?>"><?= $insp['estado'] === 'completo' ? 'Completo' : 'Borrador' ?></span></td>
                     <td class="table-actions">
@@ -73,18 +67,11 @@
     </div>
 </div>
 
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
 <script>
-$(document).ready(function() {
-    var table = $('#tablaInspecciones').DataTable({
+whenDtReady(function($) {
+    $('#tablaInspecciones').DataTable({
         language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
-        order: [[0, 'desc']],
+        order: [[1, 'desc']],
         pageLength: 25,
         dom: 'Bfrtip',
         buttons: [{ extend: 'excelHtml5', text: 'Excel', className: 'btn btn-success btn-sm' }],
@@ -99,16 +86,14 @@ $(document).ready(function() {
         }
     });
 
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const url = this.href;
-            Swal.fire({
-                title: 'Eliminar registro?',
-                icon: 'warning', showCancelButton: true,
-                confirmButtonColor: '#dc3545', confirmButtonText: 'Si, eliminar', cancelButtonText: 'Cancelar',
-            }).then(result => { if (result.isConfirmed) window.location.href = url; });
-        });
+    $('.btn-delete').on('click', function(e) {
+        e.preventDefault();
+        const url = this.href;
+        Swal.fire({
+            title: 'Eliminar registro?',
+            icon: 'warning', showCancelButton: true,
+            confirmButtonColor: '#dc3545', confirmButtonText: 'Si, eliminar', cancelButtonText: 'Cancelar',
+        }).then(result => { if (result.isConfirmed) window.location.href = url; });
     });
 });
 </script>
