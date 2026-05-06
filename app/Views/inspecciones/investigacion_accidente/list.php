@@ -81,13 +81,8 @@
 
 <script>
 whenDtReady(function($) {
-    $('#tablaInvestigaciones').DataTable({
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+    $('#tablaInvestigaciones').DataTable(dtConfigBase({
         order: [[1, 'desc']],
-        pageLength: 25,
-        dom: 'Bfrtip',
-        buttons: [{ extend: 'excelHtml5', text: 'Excel', className: 'btn btn-success btn-sm' }],
-        orderCellsTop: true,
         initComplete: function () {
             this.api().columns().every(function (idx) {
                 var column = this;
@@ -96,7 +91,7 @@ whenDtReady(function($) {
                 });
             });
         }
-    });
+    }));
 
     $('.btn-delete').on('click', function(e) {
         e.preventDefault();
