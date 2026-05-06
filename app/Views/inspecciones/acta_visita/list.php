@@ -1,7 +1,3 @@
-<!-- DataTables CSS / JS -->
-<link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-<link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
-
 <style>
     .table-actions { white-space: nowrap; }
     .table-actions .btn { padding: 4px 8px; font-size: 12px; }
@@ -26,7 +22,6 @@
         <table id="tablaActas" class="table table-striped table-bordered table-hover" style="width:100%">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Cliente</th>
                     <th>Fecha</th>
                     <th>Hora</th>
@@ -35,7 +30,6 @@
                     <th>Acciones</th>
                 </tr>
                 <tr class="filters-row">
-                    <th><input type="text" placeholder="ID"></th>
                     <th><input type="text" placeholder="Cliente"></th>
                     <th><input type="text" placeholder="Fecha"></th>
                     <th><input type="text" placeholder="Hora"></th>
@@ -58,9 +52,8 @@
                     $estadoLabel = ['borrador' => 'Borrador', 'pendiente_firma' => 'Pend. Firma', 'completo' => 'Completo'][$estado] ?? $estado;
                 ?>
                 <tr>
-                    <td><?= $acta['id'] ?></td>
                     <td><?= esc($acta['nombre_cliente'] ?? 'Sin cliente') ?></td>
-                    <td><?= date('d/m/Y', strtotime($acta['fecha_visita'])) ?></td>
+                    <td data-order="<?= $acta['fecha_visita'] ?>"><?= date('d/m/Y', strtotime($acta['fecha_visita'])) ?></td>
                     <td><?= date('g:i A', strtotime($acta['hora_visita'])) ?></td>
                     <td><?= esc($acta['motivo']) ?></td>
                     <td><span class="badge badge-<?= esc($estado) ?>"><?= $estadoLabel ?></span></td>
@@ -92,53 +85,37 @@
     </div>
 </div>
 
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
 <script>
-$(document).ready(function() {
+whenDtReady(function($) {
     var table = $('#tablaActas').DataTable({
         language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
-        order: [[0, 'desc']],
+        order: [[1, 'desc']],
         pageLength: 25,
         dom: 'Bfrtip',
         buttons: [{ extend: 'excelHtml5', text: 'Excel', className: 'btn btn-success btn-sm' }],
         orderCellsTop: true,
-        fixedHeader: false,
         initComplete: function () {
-            // Filtros por columna en la segunda fila del thead
             this.api().columns().every(function (idx) {
                 var column = this;
-                $('input, select', $('.filters-row th').eq(idx)).on('keyup change clear', function () {
-                    if (column.search() !== this.value) {
-                        column.search(this.value).draw();
-                    }
+                $('input, select', $('.filters-row th').eq(idx)).on('keyup change', function () {
+                    if (column.search() !== this.value) column.search(this.value).draw();
                 });
             });
         }
     });
 
-    // Confirmar eliminacion
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const url = this.href;
-            Swal.fire({
-                title: 'Eliminar acta?',
-                text: 'Esta accion no se puede deshacer',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                confirmButtonText: 'Si, eliminar',
-                cancelButtonText: 'Cancelar',
-            }).then(result => {
-                if (result.isConfirmed) window.location.href = url;
-            });
-        });
+    $('.btn-delete').on('click', function(e) {
+        e.preventDefault();
+        const url = this.href;
+        Swal.fire({
+            title: 'Eliminar acta?',
+            text: 'Esta accion no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Si, eliminar',
+            cancelButtonText: 'Cancelar',
+        }).then(result => { if (result.isConfirmed) window.location.href = url; });
     });
 });
 </script>
