@@ -371,6 +371,30 @@
                 window.addEventListener('load', function() { callback(window.jQuery); });
             }
         };
+
+        // Configuracion DataTables comun para todas las listas de inspecciones
+        // Bootstrap 5 dom: l = lengthMenu, f = filter, r = processing,
+        //                  t = table, i = info, p = pagination, B = buttons
+        window.dtConfigBase = function(extra) {
+            extra = extra || {};
+            var config = {
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                searching: true,
+                paging: true,
+                info: true,
+                ordering: true,
+                orderCellsTop: true,
+                dom: "<'row mb-2'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                buttons: (window.jQuery && window.jQuery.fn.dataTable.Buttons)
+                    ? [{ extend: 'excelHtml5', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn btn-success btn-sm' }]
+                    : []
+            };
+            return Object.assign(config, extra);
+        };
     </script>
 
     <!-- Service Worker Registration -->
