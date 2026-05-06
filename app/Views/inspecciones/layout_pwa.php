@@ -18,6 +18,9 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <!-- DataTables CSS (se cargan en head para evitar flash visual al renderizar tablas) -->
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
 
     <style>
         :root {
@@ -305,6 +308,39 @@
     </style>
 </head>
 <body>
+    <!-- Helpers DataTables: definidos antes del content para que las vistas los puedan invocar.
+         jQuery+DT cargan al final del body; el fallback addEventListener('load') espera a que esten listos. -->
+    <script>
+        window.whenDtReady = function(callback) {
+            if (typeof window.jQuery !== 'undefined' && window.jQuery.fn.DataTable) {
+                callback(window.jQuery);
+            } else {
+                window.addEventListener('load', function() { callback(window.jQuery); });
+            }
+        };
+
+        window.dtConfigBase = function(extra) {
+            extra = extra || {};
+            var config = {
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                searching: true,
+                paging: true,
+                info: true,
+                ordering: true,
+                orderCellsTop: true,
+                dom: "<'row mb-2'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                buttons: (window.jQuery && window.jQuery.fn.dataTable.Buttons)
+                    ? [{ extend: 'excelHtml5', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn btn-success btn-sm' }]
+                    : []
+            };
+            return Object.assign(config, extra);
+        };
+    </script>
+
     <!-- Top Bar -->
     <div class="pwa-topbar">
         <button class="btn-back" onclick="history.back()">
@@ -353,49 +389,13 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <!-- DataTables (para todas las listas del modulo) -->
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables JS (CSS en head; helpers definidos antes del content) -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script>
-        // Helper global: espera a jQuery+DataTables y ejecuta callback
-        window.whenDtReady = function(callback) {
-            if (typeof window.jQuery !== 'undefined' && window.jQuery.fn.DataTable) {
-                callback(window.jQuery);
-            } else {
-                window.addEventListener('load', function() { callback(window.jQuery); });
-            }
-        };
-
-        // Configuracion DataTables comun para todas las listas de inspecciones
-        // Bootstrap 5 dom: l = lengthMenu, f = filter, r = processing,
-        //                  t = table, i = info, p = pagination, B = buttons
-        window.dtConfigBase = function(extra) {
-            extra = extra || {};
-            var config = {
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
-                pageLength: 25,
-                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-                searching: true,
-                paging: true,
-                info: true,
-                ordering: true,
-                orderCellsTop: true,
-                dom: "<'row mb-2'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
-                     "<'row'<'col-sm-12'tr>>" +
-                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-                buttons: (window.jQuery && window.jQuery.fn.dataTable.Buttons)
-                    ? [{ extend: 'excelHtml5', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn btn-success btn-sm' }]
-                    : []
-            };
-            return Object.assign(config, extra);
-        };
-    </script>
 
     <!-- Service Worker Registration -->
     <script>
