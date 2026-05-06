@@ -931,11 +931,14 @@ class ActaVisitaController extends BaseController
         $temas = $this->temaModel->getByActa($id);
         $compromisos = (new PendientesModel())->where('id_acta_visita', $id)->findAll();
 
-        // Pendientes abiertos del cliente
+        // Pendientes abiertos del cliente (excluye los compromisos de este mismo acta)
         $pendientesAbiertos = (new PendientesModel())
             ->where('id_cliente', $acta['id_cliente'])
             ->where('estado', 'ABIERTA')
-            ->where('id_acta_visita IS NULL OR id_acta_visita !=', $id)
+            ->groupStart()
+                ->where('id_acta_visita IS NULL', null, false)
+                ->orWhere('id_acta_visita !=', $id)
+            ->groupEnd()
             ->findAll();
 
         // Mantenimientos por vencer
