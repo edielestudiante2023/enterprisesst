@@ -77,10 +77,16 @@ $totalPasos = count($firmantes);
                     Siguiente <i class="fas fa-arrow-right"></i>
                 </button>
             <?php else: ?>
-                <button type="button" class="btn btn-pwa btn-pwa-primary" id="btnFinalizar" onclick="finalizarActa()"
-                        style="min-height:40px; font-size:15px;">
-                    <i class="fas fa-file-pdf"></i> Finalizar y generar PDF
-                </button>
+                <div class="d-flex flex-column gap-2 align-items-end">
+                    <button type="button" class="btn btn-pwa btn-pwa-primary" id="btnFinalizar" onclick="finalizarActa()"
+                            style="min-height:40px; font-size:15px;">
+                        <i class="fas fa-file-pdf"></i> Finalizar y generar PDF
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-dark" id="btnFinalizarSinFirma" onclick="finalizarSinFirma()"
+                            style="font-size:13px;">
+                        <i class="fas fa-file-alt"></i> Finalizar sin firma del cliente
+                    </button>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -380,6 +386,78 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(() => {
                 Swal.close();
                 Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'Verifica tu conexión a internet.' });
+            });
+        });
+    };
+
+    // Finalizar acta sin firma del cliente (enlace compartido por WhatsApp/email)
+    window.finalizarSinFirma = function() {
+        const motivos = [
+            'Cliente no disponible durante la visita',
+            'Firma enviada por WhatsApp/email, pendiente de respuesta',
+            'Token de firma vencido por demora del cliente',
+        ];
+        const opcionesHtml = motivos.map(function(m) {
+            return '<label style="display:block;text-align:left;padding:6px 0;font-size:14px;cursor:pointer;">'
+                + '<input type="radio" name="motivoSinFirma" value="' + m + '" style="margin-right:8px;">' + m
+                + '</label>';
+        }).join('');
+
+        Swal.fire({
+            title: 'Finalizar sin firma del cliente',
+            html: '<p style="font-size:13px;color:#666;">El acta quedara completa. El PDF indicara el motivo por el que no se obtuvo la firma del cliente.</p>'
+                  + '<div style="text-align:left;margin-top:8px;">' + opcionesHtml + '</div>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Finalizar sin firma',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#bd9751',
+            preConfirm: function() {
+                const sel = document.querySelector('input[name="motivoSinFirma"]:checked');
+                if (!sel) {
+                    Swal.showValidationMessage('Selecciona el motivo');
+                    return false;
+                }
+                return sel.value;
+            },
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            const motivo = result.value;
+
+            Swal.fire({ title: 'Generando PDF...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+            fetch('<?= site_url('inspecciones/acta-visita/finalizar-sin-firma/') ?>' + actaId, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ motivo: motivo }),
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                Swal.close();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Acta finalizada',
+                        html: '<p>PDF generado sin firma del cliente.</p>',
+                        confirmButtonText: 'Ver PDF',
+                        showCancelButton: true,
+                        cancelButtonText: 'Volver al inicio',
+                        confirmButtonColor: '#bd9751',
+                    }).then(function(r) {
+                        if (r.isConfirmed) {
+                            window.open('<?= site_url('inspecciones/acta-visita/pdf/') ?>' + actaId, '_blank');
+                            window.location.href = '<?= site_url('inspecciones/acta-visita') ?>';
+                        } else {
+                            window.location.href = '<?= site_url('inspecciones') ?>';
+                        }
+                    });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'No se pudo finalizar el acta.' });
+                }
+            })
+            .catch(function() {
+                Swal.close();
+                Swal.fire({ icon: 'error', title: 'Error de conexion', text: 'Verifica tu conexion a internet.' });
             });
         });
     };

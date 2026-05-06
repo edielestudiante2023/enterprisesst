@@ -297,6 +297,11 @@
                 <td style="padding: 10px 12px; text-align: center; vertical-align: bottom;">
                     <?php if (!empty($firmas[$slot['tipo']])): ?>
                         <img src="<?= $firmas[$slot['tipo']] ?>" style="max-height: 56px; max-width: 168px;"><br>
+                    <?php elseif ($slot['tipo'] === 'administrador' && !empty($acta['motivo_sin_firma'])): ?>
+                        <div style="font-size: 8.5pt; color: #b85450; font-style: italic; padding: 6px 4px; text-align: left;">
+                            <strong>Sin firma del cliente.</strong><br>
+                            Motivo: <?= esc($acta['motivo_sin_firma']) ?>
+                        </div>
                     <?php endif; ?>
                     <div style="border-top: 1px solid #333; width: 80%; margin: 5px auto 0; padding-top: 3px;">
                         <small style="color: #666;">Firma</small>
