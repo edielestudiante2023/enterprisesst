@@ -513,6 +513,78 @@ class ActaVisitaController extends BaseController
     }
 
     /**
+     * Finalizar acta sin firma del cliente (cuando el enlace fue compartido por WhatsApp/email
+     * pero el cliente no firmo durante la visita). Registra el motivo y genera el PDF.
+     */
+    public function finalizarSinFirma($id)
+    {
+        $acta = $this->actaModel->find($id);
+        if (!$acta) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+        }
+
+        $motivo = trim($this->request->getJSON(true)['motivo'] ?? '');
+        if (!$motivo) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Debes indicar el motivo']);
+        }
+
+        if (empty($acta['firma_consultor'])) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Falta la firma del consultor']);
+        }
+
+        $this->actaModel->update($id, ['motivo_sin_firma' => $motivo]);
+
+        $pdfPath = $this->generarPdfInterno($id);
+        if (!$pdfPath) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Error al generar PDF']);
+        }
+
+        $this->actaModel->update($id, [
+            'ruta_pdf' => $pdfPath,
+            'estado'   => 'completo',
+        ]);
+
+        $acta = $this->actaModel->find($id);
+        $this->uploadToReportes($acta, $pdfPath);
+
+        $emailResult = InspeccionEmailNotifier::enviar(
+            (int) $acta['id_cliente'],
+            (int) $acta['id_consultor'],
+            'ACTA DE VISITA',
+            $acta['fecha_visita'],
+            $pdfPath,
+            (int) $acta['id'],
+            'ActaVisita'
+        );
+        $emailMsg = $emailResult['success']
+            ? $emailResult['message']
+            : '(Email no enviado: ' . $emailResult['error'] . ')';
+
+        try {
+            $idDoc = $this->registrarVersionDocumento(
+                (int)$acta['id_cliente'],
+                'acta_visita',
+                'Actas de Visita',
+                json_encode($acta),
+                "Acta de visita realizada el {$acta['fecha_visita']} (sin firma del cliente)",
+                'AV-' . $acta['id_cliente'],
+                (int)date('Y', strtotime($acta['fecha_visita']))
+            );
+            if ($idDoc) {
+                $this->actaModel->update($id, ['id_documento_sst' => $idDoc]);
+            }
+        } catch (\Throwable $e) {
+            log_message('warning', 'registrarVersionDocumento acta_visita finalizarSinFirma failed: ' . $e->getMessage());
+        }
+
+        return $this->response->setJSON([
+            'success'   => true,
+            'pdf_url'   => base_url($pdfPath),
+            'email_msg' => $emailMsg,
+        ]);
+    }
+
+    /**
      * Ver/descargar PDF - siempre regenera desde el template actual
      */
     public function generatePdf($id)
