@@ -20,6 +20,12 @@ $routes->get('/', 'AuthController::login');
 $routes->get('/login', 'AuthController::login');
 $routes->post('/loginPost', 'AuthController::loginPost');
 $routes->get('/logout', 'AuthController::logout');
+
+// Selector de contexto (post-login) para usuarios cliente/miembro con 2+ contextos
+$routes->get('/seleccionar-contexto', 'ContextoSelectorController::index');
+$routes->post('/seleccionar-contexto/atar', 'ContextoSelectorController::atar');
+$routes->post('/salir-contexto', 'ContextoSelectorController::salir');
+$routes->get('/salir-contexto', 'ContextoSelectorController::salir');
 $routes->get('/dashboardclient', 'ClientController::index');
 $routes->get('/dashboardclient', 'ClientController::dashboard');
 $routes->get('/dashboardclient', 'ClientController::dashboardSimplified');
