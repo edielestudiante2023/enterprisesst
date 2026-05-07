@@ -67,8 +67,8 @@ $action = $isEdit ? site_url('inspecciones/pausas-activas/update/' . $inspeccion
                                             </button>
                                         </div>
                                         <div class="mb-2">
-                                            <label class="form-label" style="font-size:12px;">Tipo de pausa</label>
-                                            <input type="text" name="registro_tipo[]" class="form-control" value="<?= esc($r['tipo_pausa']) ?>" placeholder="Ej: Estiramiento, Relajacion visual..." required>
+                                            <label class="form-label" style="font-size:12px;">Descripción del Registro Fotográfico</label>
+                                            <input type="text" name="registro_tipo[]" class="form-control" value="<?= esc($r['tipo_pausa']) ?>" placeholder="Describe la actividad mostrada en la foto" required>
                                         </div>
                                         <div>
                                             <label class="form-label" style="font-size:12px;">Foto evidencia</label>
@@ -174,8 +174,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         </button>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label" style="font-size:12px;">Tipo de pausa</label>
-                        <input type="text" name="registro_tipo[]" class="form-control" placeholder="Ej: Estiramiento, Relajacion visual..." required>
+                        <label class="form-label" style="font-size:12px;">Descripción del Registro Fotográfico</label>
+                        <input type="text" name="registro_tipo[]" class="form-control" placeholder="Describe la actividad mostrada en la foto" required>
                     </div>
                     <div>
                         <label class="form-label" style="font-size:12px;">Foto evidencia</label>
