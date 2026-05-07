@@ -374,6 +374,13 @@
             <div class="welcome-header text-center fade-in-up">
                 <h1><i class="fas fa-building"></i> ¡<?= esc($client['nombre_cliente']) ?>!</h1>
                 <p>Bienvenido a Enterprisesst, tu aplicativo especializado en SG-SST</p>
+                <?php helper('contexto'); if (tieneMultiplesContextos()): ?>
+                <p class="mt-2">
+                    <span class="badge rounded-pill bg-light text-dark px-3 py-2" style="font-size: 0.85rem;">
+                        <i class="fas fa-building me-1"></i> Estás operando como: <strong>Cliente</strong>
+                    </span>
+                </p>
+                <?php endif; ?>
             </div>
 
             <!-- Quick Access Buttons -->
@@ -522,8 +529,16 @@
             </div>
             <?php endif; ?>
 
-            <!-- Botón de cerrar sesión -->
-            <div class="text-center mt-4 fade-in-up">
+            <!-- Botones de sesión -->
+            <?php helper('contexto'); ?>
+            <div class="text-center mt-4 fade-in-up d-flex gap-2 justify-content-center flex-wrap">
+                <?php if (tieneMultiplesContextos()): ?>
+                <a href="<?= base_url('salir-contexto') ?>" rel="noopener noreferrer">
+                    <button type="button" class="btn btn-logout" aria-label="Cambiar contexto" style="background: #4a3f6b;">
+                        <i class="fas fa-exchange-alt me-2"></i>Cambiar contexto
+                    </button>
+                </a>
+                <?php endif; ?>
                 <a href="<?= base_url('/logout') ?>" rel="noopener noreferrer">
                     <button type="button" class="btn btn-logout" aria-label="Cerrar Sesión">
                         <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión

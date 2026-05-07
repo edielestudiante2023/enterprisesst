@@ -237,6 +237,17 @@
         </div>
     </nav>
 
+    <!-- Banner Modo Confidencial (Comite de Convivencia) -->
+    <?php helper('contexto'); if (esContextoCocolab()): ?>
+    <div style="background: linear-gradient(90deg, #880e4f 0%, #ad1457 100%); color: #fff; padding: 0.55rem 1rem; text-align: center; font-size: 0.92rem; font-weight: 500; letter-spacing: 0.02em;">
+        <i class="bi bi-shield-lock-fill me-2"></i>
+        MODO CONFIDENCIAL — Comite de Convivencia Laboral
+        <span class="d-none d-md-inline ms-2 opacity-75" style="font-size: 0.82rem;">
+            Ley 1010 / Res. 3461 — Sesion auditada, cierre por inactividad: 10 min
+        </span>
+    </div>
+    <?php endif; ?>
+
     <!-- Flash Messages -->
     <div class="container-fluid mt-3">
         <?php if (session()->getFlashdata('success')): ?>

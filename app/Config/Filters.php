@@ -17,6 +17,7 @@ use App\Filters\AuthFilter;
 use App\Filters\MiembroFilter;
 use App\Filters\ClientFilter;
 use App\Filters\ContextoFilter;
+use App\Filters\ConvivenciaAuditFilter;
 use App\Filters\AuthOrApiKeyFilter;
 use App\Filters\TenantGuardFilter;
 use App\Filters\SuperAdminOnlyFilter;
@@ -47,7 +48,8 @@ class Filters extends BaseFilters
         'auth'           => AuthFilter::class,
         'miembro'        => MiembroFilter::class,
         'clientfilter'   => ClientFilter::class,
-        'contexto'       => ContextoFilter::class,
+        'contexto'         => ContextoFilter::class,
+        'convivenciaaudit' => ConvivenciaAuditFilter::class,
         'authOrApiKey'   => AuthOrApiKeyFilter::class,
         'tenantguard'    => TenantGuardFilter::class,
         'superadminonly'  => SuperAdminOnlyFilter::class,
@@ -167,6 +169,15 @@ class Filters extends BaseFilters
                 'pausasActivas/*',
                 'acciones-correctivas/*',
                 'indicadores-sst/*',
+            ],
+        ],
+        // ConvivenciaAuditFilter: si el contexto activo es miembro de COCOLAB,
+        // aplica timeout corto (10 min) y registra el acceso en tbl_auditoria_convivencia.
+        // Para otros contextos es passthrough.
+        'convivenciaaudit' => [
+            'before' => [
+                'miembro/*',
+                'actas/*',
             ],
         ],
         'tenantguard' => [
