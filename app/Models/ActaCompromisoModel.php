@@ -154,6 +154,23 @@ class ActaCompromisoModel extends Model
      */
     public function crearCompromiso(array $data): int|false
     {
+        // Idempotencia: si ya existe un compromiso identico (misma acta + descripcion +
+        // responsable_email) creado en los ultimos 60 segundos, devolver su id en lugar
+        // de insertar duplicado. Protege contra doble-click, retries de red, back-button.
+        $descripcion     = trim((string)($data['descripcion'] ?? ''));
+        $responsableMail = trim((string)($data['responsable_email'] ?? ''));
+        if ($descripcion !== '' && !empty($data['id_acta'])) {
+            $existente = $this->where('id_acta', $data['id_acta'])
+                              ->where('descripcion', $descripcion)
+                              ->where('responsable_email', $responsableMail)
+                              ->where('created_at >=', date('Y-m-d H:i:s', time() - 60))
+                              ->orderBy('id_compromiso', 'DESC')
+                              ->first();
+            if ($existente) {
+                return (int) $existente['id_compromiso'];
+            }
+        }
+
         // Obtener último número de compromiso del acta
         $ultimo = $this->where('id_acta', $data['id_acta'])
                        ->orderBy('numero_compromiso', 'DESC')

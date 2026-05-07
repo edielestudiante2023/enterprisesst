@@ -268,6 +268,21 @@
 </div>
 
 <script>
+// Anti doble-submit: deshabilita el boton al primer clic para evitar duplicados
+// (compromisos del array compromiso_descripcion[] se reinsertaban si el usuario
+// hacia doble-click antes del redirect)
+document.getElementById('formActa')?.addEventListener('submit', function(e) {
+    const btn = this.querySelector('button[type="submit"]');
+    if (!btn) return;
+    if (btn.dataset.submitted === '1') {
+        e.preventDefault();
+        return false;
+    }
+    btn.dataset.submitted = '1';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Guardando...';
+});
+
 // Mostrar/ocultar enlace virtual
 function toggleEnlace() {
     const modalidad = document.getElementById('selectModalidad').value;
