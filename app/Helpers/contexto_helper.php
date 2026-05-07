@@ -135,6 +135,41 @@ if (!function_exists('tieneMultiplesContextos')) {
     }
 }
 
+if (!function_exists('verificarComiteCoincideContexto')) {
+    /**
+     * Verifica que el id_comite del recurso solicitado coincide con el contexto
+     * activo. Si no, devuelve un redirect listo para `return` desde el controller.
+     *
+     * Uso en controllers:
+     *   $r = verificarComiteCoincideContexto($idComite);
+     *   if ($r !== null) return $r;
+     *
+     * Reglas:
+     *   - Sin contexto activo o contexto cliente: deja pasar (lo bloquea otro filtro).
+     *   - Contexto miembro con id_comite != $idComiteRecurso: redirect a /miembro/dashboard.
+     *   - Match: null (sigue el flujo).
+     */
+    function verificarComiteCoincideContexto(int $idComiteRecurso)
+    {
+        $ctx = contextoActual();
+        if ($ctx === null) return null;
+        if (($ctx['tipo'] ?? '') !== 'miembro') return null;
+
+        $idCtx = $ctx['id_comite'] ?? null;
+        if ($idCtx === null) return null;
+
+        if ((int) $idCtx !== $idComiteRecurso) {
+            log_message('warning', '[RBAC] Acceso bloqueado: contexto id_comite=' . $idCtx
+                . ' intento acceder a id_comite=' . $idComiteRecurso
+                . ' usuario=' . session()->get('id_usuario'));
+            return redirect()->to('/miembro/dashboard')
+                ->with('error', 'No tienes acceso a ese comite con tu contexto actual. Cambia de contexto si lo necesitas.');
+        }
+
+        return null;
+    }
+}
+
 if (!function_exists('limpiarContextoEnSesion')) {
     /**
      * Quita el contexto activo y las claves legacy para forzar re-seleccion.

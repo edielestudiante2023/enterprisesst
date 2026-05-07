@@ -106,6 +106,10 @@ class MiembroAuthController extends BaseController
      */
     public function verComite(int $idComite)
     {
+        helper('contexto');
+        $r = verificarComiteCoincideContexto($idComite);
+        if ($r !== null) return $r;
+
         $session = session();
         $email = $session->get('email_miembro');
         $idCliente = $session->get('user_id');
@@ -277,6 +281,10 @@ class MiembroAuthController extends BaseController
      */
     public function compromisosComite(int $idComite)
     {
+        helper('contexto');
+        $r = verificarComiteCoincideContexto($idComite);
+        if ($r !== null) return $r;
+
         $session = session();
         $email = $session->get('email_miembro');
         $idCliente = $session->get('user_id');
@@ -329,6 +337,10 @@ class MiembroAuthController extends BaseController
      */
     public function nuevaActa(int $idComite)
     {
+        helper('contexto');
+        $r = verificarComiteCoincideContexto($idComite);
+        if ($r !== null) return $r;
+
         $session = session();
         $email = $session->get('email_miembro');
         $idCliente = $session->get('user_id');
@@ -378,6 +390,10 @@ class MiembroAuthController extends BaseController
      */
     public function guardarActa(int $idComite)
     {
+        helper('contexto');
+        $r = verificarComiteCoincideContexto($idComite);
+        if ($r !== null) return $r;
+
         $session = session();
         $email = $session->get('email_miembro');
 
@@ -479,12 +495,22 @@ class MiembroAuthController extends BaseController
      */
     private function validarAccesoActa(int $idActa): ?array
     {
+        helper('contexto');
         $session = session();
         $email = $session->get('email_miembro');
         $idCliente = $session->get('user_id');
 
         $acta = $this->actaModel->find($idActa);
         if (!$acta) return null;
+
+        // RBAC contexto: si hay contexto miembro atado a otro comite, denegar.
+        $ctxComite = idComiteContexto();
+        if ($ctxComite !== null && (int) $ctxComite !== (int) $acta['id_comite']) {
+            log_message('warning', '[RBAC] validarAccesoActa: contexto id_comite=' . $ctxComite
+                . ' intento acceder a acta id_comite=' . $acta['id_comite']
+                . ' usuario=' . $session->get('id_usuario'));
+            return null;
+        }
 
         $miembro = $this->miembroModel
             ->where('id_comite', $acta['id_comite'])
