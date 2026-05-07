@@ -60,18 +60,19 @@ class MiembroAuthController extends BaseController
             return redirect()->to('/login')->with('msg', 'Sesion invalida');
         }
 
-        // Si hay contexto atado a un comite especifico, ir directo a ese comite
-        // (evita el dashboard "mezclado" para miembros multi-comite).
-        $idComiteCtx = idComiteContexto();
-        if ($idComiteCtx !== null) {
-            return redirect()->to('/miembro/comite/' . $idComiteCtx);
-        }
-
         $clienteModel = new ClientModel();
         $cliente = $clienteModel->find($idCliente);
 
         // Obtener todos los comités a los que pertenece este miembro
         $comites = $this->miembroModel->getComitesPorEmail($email, $idCliente);
+
+        // Si hay contexto atado a un comite especifico, mostrar solo ese
+        // comite en el dashboard (preserva aislamiento) pero deja intactas
+        // las quick-access cards (Mis Compromisos, etc).
+        $idComiteCtx = idComiteContexto();
+        if ($idComiteCtx !== null) {
+            $comites = array_values(array_filter($comites, fn($c) => (int) $c['id_comite'] === (int) $idComiteCtx));
+        }
 
         // Obtener estadísticas de cada comité
         foreach ($comites as &$comiteItem) {
