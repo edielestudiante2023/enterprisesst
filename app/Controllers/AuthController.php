@@ -7,6 +7,7 @@ use App\Models\ConsultantModel;
 use App\Models\UserModel;
 use App\Models\SessionModel;
 use App\Libraries\TenantFilter;
+use App\Libraries\ContextoResolver;
 use CodeIgniter\Controller;
 
 class AuthController extends Controller
@@ -75,18 +76,48 @@ class AuthController extends Controller
             );
 
             // Configurar sesión según tipo de usuario (detección automática)
-            if ($tipoUsuario === 'client') {
-                $session->set(array_merge([
-                    'user_id'       => $user['id_entidad'], // id_cliente para compatibilidad
-                    'id_usuario'    => $user['id_usuario'],
-                    'id_sesion'     => $idSesion, // ID de la sesión para tracking
-                    'role'          => 'client',
-                    'isLoggedIn'    => true,
-                    'last_activity' => time() // Para control de inactividad
-                ], $tenantSession));
-                return redirect()->to('/dashboard');
+            // Nuevo flujo (2026-05): para client/miembro se calculan contextos disponibles.
+            // Si hay 1 -> entra directo. Si hay 2+ -> selector. admin/consultant/superadmin
+            // mantienen el flujo legacy (no usan contextos).
+            if ($tipoUsuario === 'client' || $tipoUsuario === 'miembro') {
+                helper('contexto');
 
-            } elseif ($tipoUsuario === 'admin') {
+                // Sesion base sin role/user_id todavia: esos los seteara atarContextoEnSesion
+                $session->set(array_merge([
+                    'id_usuario'    => $user['id_usuario'],
+                    'id_sesion'     => $idSesion,
+                    'isLoggedIn'    => true,
+                    'last_activity' => time(),
+                ], $tenantSession));
+
+                $contextos = ContextoResolver::getContextosDisponibles($user);
+
+                if (count($contextos) === 0) {
+                    // Caso defensivo: usuario sin contextos validos. Logout suave.
+                    log_message('warning', "[LOGIN] Usuario id={$user['id_usuario']} sin contextos disponibles");
+                    $session->destroy();
+                    $session->setFlashdata('msg', 'Tu usuario no tiene accesos configurados. Contacta al administrador.');
+                    return redirect()->to('/login');
+                }
+
+                // Guardar la lista completa en sesion para que el switcher del header
+                // sepa si tiene 2+ contextos sin tener que consultar BD en cada render.
+                $session->set('contextos_disponibles', $contextos);
+
+                if (count($contextos) === 1) {
+                    // 1 solo contexto: atar y entrar directo (compat con usuarios actuales).
+                    atarContextoEnSesion($contextos[0]);
+                    if ($contextos[0]['tipo'] === 'cliente') {
+                        return redirect()->to('/dashboard');
+                    }
+                    return redirect()->to('/miembro/dashboard');
+                }
+
+                // 2+ contextos: mostrar selector.
+                return redirect()->to('/seleccionar-contexto');
+            }
+
+            if ($tipoUsuario === 'admin') {
                 $session->set(array_merge([
                     'user_id'       => $user['id_entidad'], // id_consultor para compatibilidad
                     'id_usuario'    => $user['id_usuario'],
@@ -121,20 +152,8 @@ class AuthController extends Controller
                     'last_activity' => time()
                 ], $tenantSession));
                 return redirect()->to('/admin/dashboard');
-
-            } elseif ($tipoUsuario === 'miembro') {
-                // Usuario miembro de comité - acceso restringido a actas
-                $session->set(array_merge([
-                    'user_id'       => $user['id_entidad'], // id_cliente para obtener datos
-                    'id_usuario'    => $user['id_usuario'],
-                    'id_sesion'     => $idSesion,
-                    'role'          => 'miembro',
-                    'email_miembro' => $user['email'], // Para identificar al miembro
-                    'isLoggedIn'    => true,
-                    'last_activity' => time()
-                ], $tenantSession));
-                return redirect()->to('/miembro/dashboard');
             }
+            // Nota: client y miembro se manejan arriba via ContextoResolver.
         }
 
         // Registrar intento fallido si el usuario existe

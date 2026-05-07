@@ -16,6 +16,7 @@ use App\Filters\SessionTimeoutFilter;
 use App\Filters\AuthFilter;
 use App\Filters\MiembroFilter;
 use App\Filters\ClientFilter;
+use App\Filters\ContextoFilter;
 use App\Filters\AuthOrApiKeyFilter;
 use App\Filters\TenantGuardFilter;
 use App\Filters\SuperAdminOnlyFilter;
@@ -46,6 +47,7 @@ class Filters extends BaseFilters
         'auth'           => AuthFilter::class,
         'miembro'        => MiembroFilter::class,
         'clientfilter'   => ClientFilter::class,
+        'contexto'       => ContextoFilter::class,
         'authOrApiKey'   => AuthOrApiKeyFilter::class,
         'tenantguard'    => TenantGuardFilter::class,
         'superadminonly'  => SuperAdminOnlyFilter::class,
@@ -145,6 +147,26 @@ class Filters extends BaseFilters
                 'indicadores-sst/*',
                 'pdfUnificado*',
                 'generarPdfUnificado*',
+            ],
+        ],
+        // ContextoFilter: redirige a /seleccionar-contexto si el usuario es client/miembro
+        // y aun no ha atado contexto. admin/consultant/superadmin pasan sin restriccion.
+        'contexto' => [
+            'before' => [
+                'dashboard',
+                'dashboard/*',
+                'client/*',
+                'miembro/*',
+                'actas/*',
+                'cronograma/*',
+                'pendientes/*',
+                'plan-trabajo/*',
+                'evaluacion/*',
+                'matriz/*',
+                'inventario/*',
+                'pausasActivas/*',
+                'acciones-correctivas/*',
+                'indicadores-sst/*',
             ],
         ],
         'tenantguard' => [

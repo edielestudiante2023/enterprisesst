@@ -178,6 +178,41 @@
                         </span>
                     </li>
                     <?php endif; ?>
+
+                    <?php
+                    // Indicador de contexto activo + boton "Cambiar contexto"
+                    helper('contexto');
+                    $ctxActivo = contextoActual();
+                    ?>
+                    <?php if ($ctxActivo !== null): ?>
+                        <?php
+                        $badgeBg = $ctxActivo['tipo'] === 'cliente' ? 'bg-info-subtle text-info-emphasis' :
+                                   (($ctxActivo['codigo_comite'] ?? '') === 'COCOLAB' ? 'bg-danger-subtle text-danger-emphasis' :
+                                   (($ctxActivo['codigo_comite'] ?? '') === 'COPASST' ? 'bg-success-subtle text-success-emphasis' :
+                                   'bg-warning-subtle text-warning-emphasis'));
+                        $iconCtx = $ctxActivo['tipo'] === 'cliente' ? 'bi-building' :
+                                   match($ctxActivo['codigo_comite'] ?? '') {
+                                       'COCOLAB' => 'bi-shield-lock-fill',
+                                       'COPASST' => 'bi-shield-check',
+                                       'BRIGADA' => 'bi-fire',
+                                       default => 'bi-people',
+                                   };
+                        $tipoLabel = $ctxActivo['tipo'] === 'cliente' ? 'Cliente' : ($ctxActivo['codigo_comite'] ?? 'Miembro');
+                        ?>
+                        <li class="nav-item d-flex align-items-center mx-2">
+                            <span class="badge rounded-pill <?= $badgeBg ?> px-3 py-2" style="font-size: 0.78rem;">
+                                <i class="bi <?= $iconCtx ?> me-1"></i>
+                                <?= esc($tipoLabel) ?>
+                            </span>
+                        </li>
+                        <?php if (tieneMultiplesContextos()): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= base_url('salir-contexto') ?>" title="Cambiar contexto">
+                                <i class="bi bi-arrow-left-right me-1"></i>Cambiar
+                            </a>
+                        </li>
+                        <?php endif; ?>
+                    <?php endif; ?>
                     <li class="nav-item">
                         <a class="nav-link" href="<?= base_url($dashboardUrl) ?>">
                             <i class="bi bi-house me-1"></i> Dashboard

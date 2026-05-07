@@ -51,12 +51,20 @@ class MiembroAuthController extends BaseController
      */
     public function dashboard()
     {
+        helper('contexto');
         $session = session();
         $email = $session->get('email_miembro');
         $idCliente = $session->get('user_id');
 
         if (!$email || !$idCliente) {
             return redirect()->to('/login')->with('msg', 'Sesion invalida');
+        }
+
+        // Si hay contexto atado a un comite especifico, ir directo a ese comite
+        // (evita el dashboard "mezclado" para miembros multi-comite).
+        $idComiteCtx = idComiteContexto();
+        if ($idComiteCtx !== null) {
+            return redirect()->to('/miembro/comite/' . $idComiteCtx);
         }
 
         $clienteModel = new ClientModel();
