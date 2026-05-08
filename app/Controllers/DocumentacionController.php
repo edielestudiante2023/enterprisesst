@@ -777,6 +777,8 @@ class DocumentacionController extends Controller
             'contextoCliente' => $contextoCliente ?? null,
             'vistaContenido' => $vistaPath,
             'programasFasesInfo' => $programasFasesInfo ?? [],
+            // Reportes vinculados desde el reportList (referencias sin duplicar archivo)
+            'reportesVinculados' => (new \App\Models\CarpetaReporteVinculoModel())->getByCarpeta($idCarpeta),
         ];
 
         return view('documentacion/carpeta', $data);

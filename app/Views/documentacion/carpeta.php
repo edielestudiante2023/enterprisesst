@@ -70,6 +70,13 @@
                 ]) ?>
             </div>
         <?php endif; ?>
+
+        <!-- Vincular reportes del reportList (referencias sin duplicar archivo) -->
+        <?= view('documentacion/_components/vincular_reportes', [
+            'carpeta'            => $carpeta,
+            'cliente'            => $cliente,
+            'reportesVinculados' => $reportesVinculados ?? [],
+        ]) ?>
     </div>
 
     <!-- Modal para Adjuntar Firmado -->
