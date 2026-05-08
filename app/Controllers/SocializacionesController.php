@@ -90,6 +90,9 @@ class SocializacionesController extends Controller
             'cuerpoPreset'   => $emailPreset['cuerpo'],
             'historial'      => $historial,
             'codigoFt'       => $tipoObj->getCodigoBase(),
+            // Periodo viene SIEMPRE de la conformacion del comite, nunca manual
+            'periodoInicio'  => $proceso['fecha_inicio_periodo'] ?? null,
+            'periodoFin'     => $proceso['fecha_fin_periodo'] ?? null,
         ]);
     }
 
@@ -108,9 +111,10 @@ class SocializacionesController extends Controller
 
         $svc = new SocializadorService();
 
-        // 1) Capturar datos del form
-        $periodoInicio = $this->request->getPost('periodo_inicio');
-        $periodoFin    = $this->request->getPost('periodo_fin');
+        // 1) Capturar datos del form. El periodo NO viene del form: se lee del proceso
+        // electoral (tbl_procesos_electorales.fecha_inicio_periodo / fecha_fin_periodo).
+        $periodoInicio = $proceso['fecha_inicio_periodo'] ?? null;
+        $periodoFin    = $proceso['fecha_fin_periodo']    ?? null;
         $asunto        = trim((string) $this->request->getPost('asunto')) ?: $this->presetEmailMiembros($tipoComite, $cliente['nombre_cliente'], $proceso['anio'])['asunto'];
         $cuerpoHtml    = trim((string) $this->request->getPost('cuerpo')) ?: $this->presetEmailMiembros($tipoComite, $cliente['nombre_cliente'], $proceso['anio'])['cuerpo'];
 
@@ -143,8 +147,9 @@ class SocializacionesController extends Controller
         ]);
         $rutaPdfRel = $svc->generarPdfDesdeHtml($htmlPdf, "miembros_{$tipoComite}_{$cliente['id_cliente']}");
 
-        // 4) Enviar por email
-        $resultado = $svc->enviarPdfPorEmail($rutaPdfRel, $destinatarios, $asunto, $cuerpoHtml, $cliente['nombre_cliente'] ?? 'EnterpriseSST');
+        // 4) Enviar por email (con CC al consultor del cliente)
+        $cc = $this->consultorDelCliente((int) $cliente['id_cliente']);
+        $resultado = $svc->enviarPdfPorEmail($rutaPdfRel, $destinatarios, $asunto, $cuerpoHtml, $cliente['nombre_cliente'] ?? 'EnterpriseSST', $cc);
 
         // 5) PDF de evidencia
         $rutaEvidenciaRel = $svc->generarPdfEvidencia(
@@ -310,8 +315,9 @@ class SocializacionesController extends Controller
         ]);
         $rutaPdfRel = $svc->generarPdfDesdeHtml($htmlPdf, "cronograma_{$tipoComite}_{$cliente['id_cliente']}_{$anio}");
 
-        // 4) Enviar
-        $resultado = $svc->enviarPdfPorEmail($rutaPdfRel, $destinatarios, $asunto, $cuerpoHtml, $cliente['nombre_cliente'] ?? 'EnterpriseSST');
+        // 4) Enviar (CC consultor del cliente)
+        $cc = $this->consultorDelCliente((int) $cliente['id_cliente']);
+        $resultado = $svc->enviarPdfPorEmail($rutaPdfRel, $destinatarios, $asunto, $cuerpoHtml, $cliente['nombre_cliente'] ?? 'EnterpriseSST', $cc);
 
         // 5) Evidencia
         $rutaEvidenciaRel = $svc->generarPdfEvidencia(
@@ -413,6 +419,26 @@ class SocializacionesController extends Controller
             ];
         }
         return $miembros;
+    }
+
+    /**
+     * Devuelve ['email','nombre'] del consultor responsable del cliente, o null si no se puede determinar.
+     * El consultor va en CC en cada email de socializacion (ver tbl_clientes.id_consultor -> tbl_consultor).
+     */
+    private function consultorDelCliente(int $idCliente): ?array
+    {
+        $row = $this->db->table('tbl_clientes c')
+            ->select('co.id_consultor, co.nombre_consultor, co.correo_consultor')
+            ->join('tbl_consultor co', 'co.id_consultor = c.id_consultor', 'left')
+            ->where('c.id_cliente', $idCliente)
+            ->get()->getRowArray();
+
+        if (!$row || empty($row['correo_consultor'])) return null;
+
+        return [
+            'email'  => trim((string) $row['correo_consultor']),
+            'nombre' => trim((string) ($row['nombre_consultor'] ?? '')),
+        ];
     }
 
     private function imgToBase64(string $rutaAbs): string
