@@ -83,7 +83,7 @@ class MiembroActaCapacitacionController extends BaseController
                 'cliente' => $clienteModel->find($miembro['id_cliente']),
                 'miembro' => $miembro,
             ]),
-            'title'   => 'Actas de Capacitación',
+            'title'   => 'Reportes de Capacitación',
             'miembro' => $miembro,
         ]);
     }
@@ -96,7 +96,7 @@ class MiembroActaCapacitacionController extends BaseController
         $clienteModel = new ClientModel();
         return view('inspecciones/miembro/layout_pwa_miembro', [
             'content' => view('inspecciones/acta_capacitacion/form', [
-                'title'      => 'Nueva Acta de Capacitación',
+                'title'      => 'Nuevo Reporte de Capacitación',
                 'acta'       => null,
                 'asistentes' => [],
                 'cliente'    => $clienteModel->find($miembro['id_cliente']),
@@ -104,7 +104,7 @@ class MiembroActaCapacitacionController extends BaseController
                 'idCliente'  => $miembro['id_cliente'],
                 'contexto'   => 'miembro',
             ]),
-            'title'   => 'Nueva Acta de Capacitación',
+            'title'   => 'Nuevo Reporte de Capacitación',
             'miembro' => $miembro,
         ]);
     }
@@ -147,7 +147,7 @@ class MiembroActaCapacitacionController extends BaseController
 
         if ($isAutosave) return $this->autosaveJsonSuccess($idActa);
         return redirect()->to('/miembro/acta-capacitacion/edit/' . $idActa)
-            ->with('msg', 'Guardada como borrador');
+            ->with('msg', 'Guardado como borrador');
     }
 
     public function edit($id)
@@ -157,16 +157,16 @@ class MiembroActaCapacitacionController extends BaseController
 
         $acta = $this->actaModel->find($id);
         if (!$acta || (int)$acta['id_cliente'] !== (int)$miembro['id_cliente'] || $acta['estado'] === 'completo') {
-            return redirect()->to('/miembro/acta-capacitacion')->with('error', 'No encontrada o no editable');
+            return redirect()->to('/miembro/acta-capacitacion')->with('error', 'No encontrado o no editable');
         }
         if ($acta['creado_por_tipo'] === 'miembro' && (int)$acta['id_miembro'] !== (int)$miembro['id_miembro']) {
-            return redirect()->to('/miembro/acta-capacitacion')->with('error', 'Solo puedes editar tus propias actas');
+            return redirect()->to('/miembro/acta-capacitacion')->with('error', 'Solo puedes editar tus propios reportes');
         }
 
         $clienteModel = new ClientModel();
         return view('inspecciones/miembro/layout_pwa_miembro', [
             'content' => view('inspecciones/acta_capacitacion/form', [
-                'title'      => 'Editar Acta de Capacitación',
+                'title'      => 'Editar Reporte de Capacitación',
                 'acta'       => $acta,
                 'asistentes' => $this->asistenteModel->getByActa((int)$id),
                 'cliente'    => $clienteModel->find($miembro['id_cliente']),
@@ -174,7 +174,7 @@ class MiembroActaCapacitacionController extends BaseController
                 'idCliente'  => $miembro['id_cliente'],
                 'contexto'   => 'miembro',
             ]),
-            'title'   => 'Editar Acta de Capacitación',
+            'title'   => 'Editar Reporte de Capacitación',
             'miembro' => $miembro,
         ]);
     }
@@ -212,7 +212,7 @@ class MiembroActaCapacitacionController extends BaseController
         if ($this->request->getPost('finalizar')) return $this->finalizar($id);
         if ($this->isAutosaveRequest()) return $this->autosaveJsonSuccess((int)$id);
 
-        return redirect()->to('/miembro/acta-capacitacion/edit/' . $id)->with('msg', 'Actualizada');
+        return redirect()->to('/miembro/acta-capacitacion/edit/' . $id)->with('msg', 'Actualizado');
     }
 
     public function view($id)
@@ -243,7 +243,7 @@ class MiembroActaCapacitacionController extends BaseController
                 'asistentes'   => $this->asistenteModel->getByActa((int)$id),
                 'contexto'     => 'miembro',
             ]),
-            'title'   => 'Ver Acta de Capacitación',
+            'title'   => 'Ver Reporte de Capacitación',
             'miembro' => $miembro,
         ]);
     }
@@ -287,10 +287,10 @@ class MiembroActaCapacitacionController extends BaseController
 
         $acta = $this->actaModel->find($idActa);
         if (!$acta || (int)$acta['id_cliente'] !== (int)$miembro['id_cliente']) {
-            return $this->response->setJSON(['success' => false, 'error' => 'Sin acceso al acta']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Sin acceso al reporte']);
         }
         if ($acta['estado'] === 'completo') {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta ya finalizada']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte ya finalizado']);
         }
 
         $nombre = trim((string)$this->request->getPost('nombre_completo'));
@@ -383,7 +383,7 @@ class MiembroActaCapacitacionController extends BaseController
         $mensaje = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
             <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 20px; text-align: center;'>
-                <h2 style='color: white; margin: 0;'>Solicitud de Firma - Acta de Capacitación</h2>
+                <h2 style='color: white; margin: 0;'>Solicitud de Firma - Reporte de Capacitación</h2>
             </div>
             <div style='padding: 30px; background: #f8f9fa;'>
                 <p>Estimado/a <strong>{$nombre}</strong>,</p>
@@ -396,7 +396,7 @@ class MiembroActaCapacitacionController extends BaseController
                 </div>
                 <div style='text-align: center; margin: 30px 0;'>
                     <a href='{$urlFirma}' style='background: #bd9751; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; display: inline-block;'>
-                        Firmar Acta de Capacitación
+                        Firmar Reporte de Capacitación
                     </a>
                 </div>
                 <p style='color: #666; font-size: 12px;'>O copie este enlace en su navegador:</p>
@@ -451,7 +451,7 @@ class MiembroActaCapacitacionController extends BaseController
             $this->notificarConsultor($cliente, $miembro, $acta);
         }
 
-        return redirect()->to('/miembro/acta-capacitacion/view/' . $id)->with('msg', 'Acta finalizada.');
+        return redirect()->to('/miembro/acta-capacitacion/view/' . $id)->with('msg', 'Reporte finalizado.');
     }
 
     public function generatePdf($id)
@@ -524,10 +524,10 @@ class MiembroActaCapacitacionController extends BaseController
     {
         $acta = $this->actaModel->find($idActa);
         if (!$acta) {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte no encontrado']);
         }
         if ($acta['estado'] === 'completo') {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta finalizada, no acepta inscripciones']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte finalizado, no acepta inscripciones']);
         }
 
         $token = $acta['token_inscripcion'] ?? null;
@@ -572,7 +572,7 @@ class MiembroActaCapacitacionController extends BaseController
     {
         $acta = $this->actaModel->find($idActa);
         if (!$acta) {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte no encontrado']);
         }
         $asistentes = $this->asistenteModel->getByActa($idActa);
         $resumen = [];
@@ -605,10 +605,10 @@ class MiembroActaCapacitacionController extends BaseController
     {
         $acta = $this->actaModel->find($idActa);
         if (!$acta) {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte no encontrado']);
         }
         if ($acta['estado'] === 'completo') {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta finalizada']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte finalizado']);
         }
 
         $asistente = $this->asistenteModel->find($idAsistente);
@@ -700,7 +700,7 @@ class MiembroActaCapacitacionController extends BaseController
         copy(FCPATH . $pdfPath, $destDir . '/' . $fileName);
 
         $data = [
-            'titulo_reporte'  => 'ACTA DE CAPACITACION - ' . ($cliente['nombre_cliente'] ?? '') . ' - ' . $acta['fecha_capacitacion'],
+            'titulo_reporte'  => 'REPORTE DE CAPACITACIÓN - ' . ($cliente['nombre_cliente'] ?? '') . ' - ' . $acta['fecha_capacitacion'],
             'id_detailreport' => 6,
             'id_report_type'  => 4,
             'id_cliente'      => $acta['id_cliente'],
@@ -735,11 +735,11 @@ class MiembroActaCapacitacionController extends BaseController
         $mensaje = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
             <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 20px; text-align: center;'>
-                <h2 style='color: white; margin: 0;'>Nueva Acta de Capacitación</h2>
+                <h2 style='color: white; margin: 0;'>Nuevo Reporte de Capacitación</h2>
             </div>
             <div style='padding: 30px; background: #f8f9fa;'>
                 <p>Estimado/a <strong>{$consultor['nombre_consultor']}</strong>,</p>
-                <p>Un miembro del comité ha registrado un acta de capacitación:</p>
+                <p>Un miembro del comité ha registrado un reporte de capacitación:</p>
                 <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #bd9751;'>
                     <p style='margin: 5px 0;'><strong>Cliente:</strong> {$cliente['nombre_cliente']}</p>
                     <p style='margin: 5px 0;'><strong>Tema:</strong> {$tema}</p>
@@ -758,7 +758,7 @@ class MiembroActaCapacitacionController extends BaseController
         try {
             $email = new \SendGrid\Mail\Mail();
             $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
-            $email->setSubject("Acta Capacitación - {$cliente['nombre_cliente']} - {$fecha}");
+            $email->setSubject("Reporte de Capacitación - {$cliente['nombre_cliente']} - {$fecha}");
             $email->addTo($consultor['correo_consultor'], $consultor['nombre_consultor']);
             $email->addContent("text/html", $mensaje);
             $response = (new \SendGrid(getenv('SENDGRID_API_KEY')))->send($email);

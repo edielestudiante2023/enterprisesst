@@ -227,9 +227,9 @@
     <?php endforeach; ?>
     <?php endif; ?>
 
-    <!-- Pendientes Capacitaciones -->
+    <!-- Pendientes Reportes de Capacitacion -->
     <?php if (!empty($pendientesCapacitaciones)): ?>
-    <div class="section-title">Pendientes Capacitaciones</div>
+    <div class="section-title">Pendientes Reportes de Capacitación</div>
     <?php foreach ($pendientesCapacitaciones as $doc): ?>
     <div class="card card-inspeccion <?= esc($doc['estado']) ?>">
         <div class="card-body py-3 px-3">
@@ -261,7 +261,7 @@
                 </a>
                 <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
                     data-url="<?= site_url('inspecciones/acta-capacitacion/delete/' . $doc['id']) ?>"
-                    data-tipo="acta de capacitación"
+                    data-tipo="reporte de capacitación"
                     data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
@@ -392,7 +392,7 @@
         </a>
         <a href="<?= site_url('inspecciones/acta-capacitacion') ?>" class="card-tipo">
             <i class="fas fa-graduation-cap"></i>
-            <div><strong>Actas Capacitacion</strong></div>
+            <div><strong>Reporte de Capacitación QR</strong></div>
             <div class="count">(<?= $totalCapacitaciones ?? 0 ?>)</div>
         </a>
     </div>

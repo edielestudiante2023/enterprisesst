@@ -43,7 +43,7 @@
                         <i class="bi bi-mortarboard text-primary fs-4"></i>
                     </div>
                     <div>
-                        <h5 class="mb-1 text-dark">Actas de Capacitación</h5>
+                        <h5 class="mb-1 text-dark">Reportes de Capacitación</h5>
                         <p class="text-muted mb-0 small">Registrar capacitación y firmas por WhatsApp</p>
                     </div>
                 </div>

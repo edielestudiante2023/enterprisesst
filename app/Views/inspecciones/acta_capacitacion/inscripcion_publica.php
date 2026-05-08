@@ -95,7 +95,7 @@
             </form>
 
             <p class="text-center text-muted mt-3" style="font-size: 11px;">
-                Tus datos seran usados unicamente para el acta de capacitacion.
+                Tus datos seran usados unicamente para el reporte de capacitacion.
             </p>
         </div>
     </div>
