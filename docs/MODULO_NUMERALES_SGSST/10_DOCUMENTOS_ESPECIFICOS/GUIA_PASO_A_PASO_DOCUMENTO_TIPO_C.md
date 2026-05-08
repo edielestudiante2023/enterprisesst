@@ -377,21 +377,90 @@ public function generarSocializacionMiembros(int $idProceso)
 
 ---
 
-## PASO 8: Visibilidad en el Reportlist
+## PASO 8: Visibilidad en el Reportlist (`/reportList`)
 
-**Donde:** `app/Controllers/DocumentacionController.php`
+**IMPORTANTE — distincion entre dos sistemas:**
 
-**Que hacer:** Si quieres que el documento aparezca en la carpeta de docs del cliente
-(la que se ve en `/client/{id}/documentacion-fases`), agregar el `tipo_documento` al
-mapeo de `tipoCarpetaFases`:
+| Sistema | URL | Tabla | Cuando usar |
+|---------|-----|-------|-------------|
+| `/reportList` | dashboard principal de archivos del cliente | `tbl_reporte` | **Default**: PDFs entregables, evidencias, soportes que el consultor sube al cliente |
+| Documentacion-fases | dentro del cliente, organizada por carpetas SST | `tbl_documentos_sst` + `DocumentacionController` | Solo para documentos "vivos" con versionamiento + firmas (politicas, programas) |
+
+**Para PDFs generados (socializaciones, evidencias, actas exportadas, reportes ad-hoc) usa `tbl_reporte`.**
+El error tipico es insertar SOLO en `tbl_documentos_sst` y luego que el cliente NO lo vea
+en `/reportList`.
+
+### 8a) Subir el PDF a `tbl_reporte` (helper reusable)
+
+Usa `App\Libraries\SocializadorService::subirAReportes()`. El servicio:
+1. Copia el PDF a `public/uploads/{nit_cliente}/` con nombre nuevo.
+2. Inserta (o actualiza si ya existe segun la idempotency key) en `tbl_reporte`.
+3. Devuelve el `id_reporte`.
 
 ```php
-// DocumentacionController.php (alrededor de la linea 320)
-'1.1.6' => 'conformacion_copasst', // ya existia para acta_constitucion_copasst
+$svc = new \App\Libraries\SocializadorService();
+
+$tipoR = \App\Libraries\SocializadorService::tipoReporteParaSocializacion('COPASST', 'miembros');
+//   $tipoR = ['id_report_type' => 1, 'id_detailreport' => 5]
+
+$idReporte = $svc->subirAReportes(
+    idCliente:       $cliente['id_cliente'],
+    rutaPdfRelativa: $rutaPdfRel,                                  // p.ej. 'uploads/socializaciones/X.pdf'
+    titulo:          'Socializacion Miembros COPASST - Empresa X',
+    idReportType:    $tipoR['id_report_type'],
+    idDetailReport:  $tipoR['id_detailreport'],
+    idempotencyKey:  "soc_miembros_COPASST_proc{$idProceso}_principal",
+    estado:          'CERRADO'
+);
 ```
 
-Si tu nuevo doc va a la misma carpeta que el acta de conformacion, no hace falta tocar
-nada. Si va en su propia carpeta, agregar el mapeo.
+### 8b) Mapeo de tipos para socializaciones
+
+El metodo estatico `SocializadorService::tipoReporteParaSocializacion($tipoComite, $tipoSocializacion)`
+devuelve los IDs correctos:
+
+| Comite | id_report_type | Tabla `report_type_table` |
+|--------|----------------|---------------------------|
+| COPASST | 1 | "Comité Paritario..." |
+| COCOLAB | 2 | "Comité de Convivencia..." |
+| BRIGADA | 11 | "Brigada de Emergencias" |
+
+| Tipo de socializacion | id_detailreport | Tabla `detail_report` |
+|-----------------------|-----------------|-----------------------|
+| miembros (Acta) | 5 | "Acta de Conformación" |
+| cronograma | 14 | "Comunicaciones o Circulares" |
+| (otros) | 19 | "Soporte de Gestión" |
+
+Para nuevos tipos de comite o socializacion, anade el case en
+`SocializadorService::tipoReporteParaSocializacion`.
+
+### 8c) Idempotencia (importante)
+
+Cada upload usa una `idempotencyKey` que se almacena en `tbl_reporte.observaciones`.
+Si el usuario reenvia/regenera, el servicio detecta el registro previo (busqueda LIKE
+sobre observaciones) y **actualiza** en vez de duplicar. Esto evita N filas de la
+misma socializacion en el reportList.
+
+**Convencion sugerida para la key:**
+- `soc_miembros_{TIPO_COMITE}_proc{idProceso}_principal`
+- `soc_miembros_{TIPO_COMITE}_proc{idProceso}_evidencia`
+- `soc_cronograma_{TIPO_COMITE}_proc{idProceso}_anio{N}_principal`
+- `soc_cronograma_{TIPO_COMITE}_proc{idProceso}_anio{N}_evidencia`
+
+### 8d) Para casos no-socializacion
+
+Para otros tipos (ej. acta de visita), usar el mismo patron de `subirAReportes()` o
+copiar la idea de `App\Controllers\Inspecciones\ActaVisitaController::uploadToReportes`
+que es la implementacion original de referencia.
+
+### 8e) Carpeta SST opcional (documentacion-fases)
+
+Solo si tu PDF debe aparecer **tambien** dentro del cliente en su carpeta organizativa
+(`/client/{id}/documentacion-fases`), edita `app/Controllers/DocumentacionController.php`
+y anade el mapeo `tipo_documento -> tipoCarpetaFases` (alrededor de la linea 320).
+Esto requiere insertar en `tbl_documentos_sst` ademas de `tbl_reporte`.
+
+Para socializaciones generalmente **NO** es necesario (no son documentos vivos con firma).
 
 ---
 
