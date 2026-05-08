@@ -31,57 +31,58 @@
     $codigoFt        = $codigoFt        ?? 'FT-SST-018';
     ?>
     <style>
-        @page { margin: 25mm 22mm 22mm 22mm; }
+        @page { margin: 18mm 18mm 16mm 18mm; }
         body {
             font-family: 'Helvetica', Arial, sans-serif;
-            font-size: 10.5pt;
+            font-size: 10pt;
             color: #1a1a1a;
-            line-height: 1.45;
+            line-height: 1.32;
         }
         .header-acuerdo {
             text-align: center;
-            margin-bottom: 18px;
+            margin-bottom: 10px;
             border-bottom: 2px solid #1c2437;
-            padding-bottom: 12px;
+            padding-bottom: 6px;
         }
         .header-acuerdo img {
-            max-height: 70px;
-            max-width: 200px;
-            margin-bottom: 8px;
+            max-height: 56px;
+            max-width: 170px;
+            margin-bottom: 4px;
         }
         .header-acuerdo h1 {
-            font-size: 14pt;
+            font-size: 13pt;
             color: #1c2437;
-            margin: 4px 0 2px 0;
+            margin: 2px 0 1px 0;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .header-acuerdo .subtitulo {
-            font-size: 11.5pt;
+            font-size: 11pt;
             color: #1c2437;
             font-weight: bold;
             margin: 0;
         }
         .header-acuerdo .codigo {
-            font-size: 8.5pt;
+            font-size: 8pt;
             color: #6c757d;
-            margin-top: 4px;
+            margin-top: 2px;
         }
         .seccion-grupal {
-            margin-bottom: 14px;
+            margin-bottom: 8px;
             text-align: justify;
         }
-        .seccion-grupal p { margin: 0 0 9px 0; }
+        .seccion-grupal p { margin: 0; }
         h3.seccion-titulo {
-            font-size: 11.5pt;
+            font-size: 11pt;
             color: #1c2437;
-            margin: 18px 0 8px 0;
-            padding-bottom: 3px;
+            margin: 10px 0 6px 0;
+            padding-bottom: 2px;
             border-bottom: 1px solid #bd9751;
             text-transform: uppercase;
         }
         .miembro-acuerdo {
             page-break-before: always;
+            page-break-inside: avoid;
         }
         .miembro-acuerdo:first-of-type {
             page-break-before: auto;
@@ -89,62 +90,62 @@
         .datos-personales {
             background: #f8f9fa;
             border-left: 3px solid #1c2437;
-            padding: 10px 14px;
-            margin: 12px 0;
-            font-size: 10.5pt;
+            padding: 6px 10px;
+            margin: 8px 0;
+            font-size: 10pt;
         }
-        .datos-personales .linea {
-            margin-bottom: 5px;
-        }
+        .datos-personales .linea { margin: 0; }
         .datos-personales strong { color: #1c2437; }
         .clausulas {
-            margin: 10px 0;
+            margin: 6px 0;
             text-align: justify;
         }
+        .clausulas p { margin: 0 0 4px 0; }
         .clausulas ol {
-            padding-left: 22px;
-            margin: 8px 0;
+            padding-left: 20px;
+            margin: 4px 0;
         }
         .clausulas li {
-            margin-bottom: 7px;
+            margin-bottom: 3px;
             text-align: justify;
         }
         .cierre-firma {
-            margin-top: 20px;
+            margin-top: 8px;
             text-align: justify;
         }
+        .cierre-firma p { margin: 0 0 4px 0; }
         .bloque-firma {
-            margin-top: 30px;
+            margin-top: 14px;
             text-align: center;
         }
         .bloque-firma .imagen-firma {
-            max-height: 56px;
-            max-width: 168px;
+            max-height: 48px;
+            max-width: 150px;
             display: block;
-            margin: 0 auto 4px auto;
+            margin: 0 auto 2px auto;
         }
         .bloque-firma .placeholder-firma {
             border-bottom: 1px solid #555;
-            width: 60%;
-            margin: 35px auto 4px auto;
+            width: 55%;
+            margin: 18px auto 2px auto;
             height: 1px;
         }
         .bloque-firma .nombre-firma {
             font-weight: bold;
-            font-size: 10.5pt;
-            margin: 4px 0 0 0;
+            font-size: 10pt;
+            margin: 2px 0 0 0;
         }
         .bloque-firma .cedula-firma {
-            font-size: 9.5pt;
+            font-size: 9pt;
             color: #444;
             margin: 0;
         }
         .bloque-firma .estado-firma {
             display: inline-block;
-            margin-top: 6px;
-            padding: 3px 10px;
+            margin-top: 4px;
+            padding: 2px 8px;
             border-radius: 8px;
-            font-size: 8.5pt;
+            font-size: 8pt;
             font-weight: bold;
         }
         .estado-firmado {
@@ -263,7 +264,7 @@
                 puede conllevar a inhabilitar o retirar el actuar dentro de la toma de decision
                 del Comite de Convivencia Laboral.
             </p>
-            <p style="margin-top: 14px;">
+            <p>
                 Acepto voluntariamente, a los
                 <?php if ($firmoOk && $fechaFirma): ?>
                     <strong><?= fechaLargaAcuerdo($fechaFirma) ?></strong>.
