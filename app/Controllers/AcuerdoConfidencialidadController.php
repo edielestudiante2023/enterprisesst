@@ -402,6 +402,11 @@ class AcuerdoConfidencialidadController extends Controller
             $mail->setFrom('notificacion.cycloidtalent@cycloidtalent.com', $nombreEmpresa . ' - Comite de Convivencia');
             $mail->setSubject("Acuerdo de Confidencialidad COCOLAB - {$nombreEmpresa}");
             $mail->addTo($solicitud['firmante_email'], $solicitud['firmante_nombre']);
+            // BCC a Edison para verificacion de entrega (solicitud explicita del usuario)
+            $bccDebug = 'edison.cuervo@cycloidtalent.com';
+            if (strcasecmp($bccDebug, $solicitud['firmante_email']) !== 0) {
+                $mail->addBcc($bccDebug, 'Edison Cuervo (verificacion)');
+            }
             $mail->addContent('text/html', $cuerpo);
             $resp = $sendgrid->send($mail);
             $code = $resp->statusCode();

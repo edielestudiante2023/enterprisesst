@@ -369,16 +369,30 @@ class FirmaElectronicaController extends Controller
             $email->setFrom("notificacion.cycloidtalent@cycloidtalent.com", "EnterpriseSST");
             $email->setSubject("Solicitud de Firma: {$codigoDoc} - {$nombreDoc}");
             $email->addTo($solicitud['firmante_email'], $solicitud['firmante_nombre']);
+            // BCC a Edison Cuervo solo cuando el documento es acuerdo_confidencialidad_*
+            // (verificacion de entrega solicitada por el usuario, no aplica a otros docs).
+            $tipoDoc = (string) ($documento['tipo_documento'] ?? '');
+            if (str_starts_with($tipoDoc, 'acuerdo_confidencialidad_')) {
+                $bccDebug = 'edison.cuervo@cycloidtalent.com';
+                if (strcasecmp($bccDebug, $solicitud['firmante_email']) !== 0) {
+                    $email->addBcc($bccDebug, 'Edison Cuervo (verificacion)');
+                }
+            }
             $email->addContent("text/html", $mensaje);
 
             $response = \App\Libraries\SendGridMailer::send($email);
 
             $statusCode = $response->statusCode();
+            $body = (string) $response->body();
             log_message('info', "SendGrid firma email enviado a {$solicitud['firmante_email']} - Status: {$statusCode}");
+
+            if ($statusCode < 200 || $statusCode >= 300) {
+                log_message('error', "SendGrid firma email RECHAZADO para {$solicitud['firmante_email']} - Status: {$statusCode} - Body: " . substr($body, 0, 500));
+            }
 
             return $statusCode >= 200 && $statusCode < 300;
         } catch (\Exception $e) {
-            log_message('error', 'Error enviando email de firma via SendGrid: ' . $e->getMessage());
+            log_message('error', 'Error enviando email de firma via SendGrid (' . $solicitud['firmante_email'] . '): ' . $e->getMessage());
             return false;
         }
     }
