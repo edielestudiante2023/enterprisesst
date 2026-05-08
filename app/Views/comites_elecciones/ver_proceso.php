@@ -1124,6 +1124,23 @@ $permitirGestionCandidatos = true;
                     </div>
                     <?php endif; ?>
 
+                    <!-- Socializacion del Comite (miembros + cronograma) -->
+                    <hr class="my-4">
+                    <div class="text-center">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-megaphone me-1"></i>
+                            Socializar el <?= esc($proceso['tipo_comite']) ?> con los colaboradores
+                        </h6>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/socializar/miembros') ?>" class="btn btn-info text-white">
+                                <i class="bi bi-people-fill me-1"></i>Socializar Miembros
+                            </a>
+                            <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/socializar/cronograma') ?>" class="btn btn-outline-info">
+                                <i class="bi bi-calendar-event me-1"></i>Socializar Cronograma
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- Boton de Recomposicion del Comite -->
                     <?php if (!$esVistaHistorica): ?>
                     <hr class="my-4">
