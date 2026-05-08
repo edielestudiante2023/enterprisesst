@@ -58,16 +58,19 @@ class VinculoReporteController extends Controller
                 ->groupEnd();
         }
 
-        $rows = $builder->get()->getResultArray();
-
-        // Si nos pasaron id_carpeta, marcar los que ya estan vinculados para que
-        // el frontend pueda deshabilitarlos en el Select2.
+        // Si nos pasaron id_carpeta, EXCLUIR los ya vinculados del resultado
+        // (no mostrarlos para evitar confusion).
         $yaVinculados = [];
         if ($idCarpeta > 0) {
             $vModel = new CarpetaReporteVinculoModel();
             $existentes = $vModel->where('id_carpeta', $idCarpeta)->findAll();
-            foreach ($existentes as $v) $yaVinculados[(int) $v['id_reporte']] = true;
+            foreach ($existentes as $v) $yaVinculados[] = (int) $v['id_reporte'];
+            if (!empty($yaVinculados)) {
+                $builder->whereNotIn('r.id_reporte', $yaVinculados);
+            }
         }
+
+        $rows = $builder->get()->getResultArray();
 
         $items = [];
         foreach ($rows as $r) {
@@ -79,7 +82,6 @@ class VinculoReporteController extends Controller
                 'estado'         => $r['estado'] ?? '',
                 'fecha'          => $r['created_at'] ? date('Y-m-d', strtotime($r['created_at'])) : '',
                 'enlace'         => $r['enlace'] ?? '',
-                'ya_vinculado'   => isset($yaVinculados[(int) $r['id_reporte']]),
             ];
         }
 
@@ -87,7 +89,9 @@ class VinculoReporteController extends Controller
     }
 
     /**
-     * Crea un vinculo carpeta-reporte. POST: id_carpeta, id_reporte, observacion?
+     * Crea uno o varios vinculos carpeta-reporte.
+     * POST: id_carpeta (int), id_reporte (array o int), observacion (opcional).
+     * El form envia id_reporte como arreglo cuando el Select2 es multiple.
      */
     public function agregar()
     {
@@ -96,48 +100,84 @@ class VinculoReporteController extends Controller
         }
 
         $idCarpeta = (int) $this->request->getPost('id_carpeta');
-        $idReporte = (int) $this->request->getPost('id_reporte');
         $observacion = trim((string) $this->request->getPost('observacion'));
+        $rawIds = $this->request->getPost('id_reporte');
 
-        if ($idCarpeta <= 0 || $idReporte <= 0) {
-            return redirect()->back()->with('error', 'Datos invalidos para el vinculo.');
+        // Aceptar tanto array (multiple Select2) como un solo valor (compat)
+        $idsReportes = [];
+        if (is_array($rawIds)) {
+            foreach ($rawIds as $r) {
+                $r = (int) $r;
+                if ($r > 0) $idsReportes[] = $r;
+            }
+        } else {
+            $r = (int) $rawIds;
+            if ($r > 0) $idsReportes[] = $r;
+        }
+        $idsReportes = array_values(array_unique($idsReportes));
+
+        if ($idCarpeta <= 0 || empty($idsReportes)) {
+            return redirect()->back()->with('error', 'Selecciona al menos un reporte para vincular.');
         }
 
-        // Validar que la carpeta exista y obtener su id_cliente
         $carpeta = (new DocCarpetaModel())->find($idCarpeta);
         if (!$carpeta) {
             return redirect()->back()->with('error', 'Carpeta no encontrada.');
         }
+        $idClienteCarpeta = (int) $carpeta['id_cliente'];
 
-        // Validar que el reporte pertenezca al MISMO cliente que la carpeta
-        $reporte = $this->db->table('tbl_reporte')
-            ->where('id_reporte', $idReporte)
-            ->get()->getRowArray();
-        if (!$reporte) {
-            return redirect()->back()->with('error', 'Reporte no encontrado.');
-        }
-        if ((int) $reporte['id_cliente'] !== (int) $carpeta['id_cliente']) {
-            log_message('warning', '[VinculoReporte] intento de vincular reporte de otro cliente: '
-                . "carpeta_cliente={$carpeta['id_cliente']} reporte_cliente={$reporte['id_cliente']} "
-                . "user_id=" . session()->get('id_usuario'));
-            return redirect()->back()->with('error', 'El reporte no pertenece al cliente de la carpeta.');
-        }
+        // Cargar todos los reportes solicitados de un golpe y validar ownership.
+        $reportes = $this->db->table('tbl_reporte')
+            ->whereIn('id_reporte', $idsReportes)
+            ->get()->getResultArray();
+        $reportesPorId = [];
+        foreach ($reportes as $r) $reportesPorId[(int) $r['id_reporte']] = $r;
 
         $vModel = new CarpetaReporteVinculoModel();
-        if ($vModel->existeVinculo($idCarpeta, $idReporte)) {
-            return redirect()->back()->with('warning', 'El reporte ya estaba vinculado a esta carpeta.');
+        $vinculados = 0;
+        $omitidosOtroCliente = 0;
+        $omitidosYaExisten = 0;
+        $omitidosNoEncontrados = 0;
+
+        foreach ($idsReportes as $idReporte) {
+            $r = $reportesPorId[$idReporte] ?? null;
+            if (!$r) { $omitidosNoEncontrados++; continue; }
+
+            if ((int) $r['id_cliente'] !== $idClienteCarpeta) {
+                log_message('warning', '[VinculoReporte] cross-cliente: carpeta_cliente='
+                    . $idClienteCarpeta . ' reporte=' . $idReporte
+                    . ' cliente_reporte=' . $r['id_cliente']
+                    . ' user=' . session()->get('id_usuario'));
+                $omitidosOtroCliente++;
+                continue;
+            }
+            if ($vModel->existeVinculo($idCarpeta, $idReporte)) {
+                $omitidosYaExisten++;
+                continue;
+            }
+
+            $vModel->insert([
+                'id_carpeta'  => $idCarpeta,
+                'id_reporte'  => $idReporte,
+                'id_cliente'  => $idClienteCarpeta,
+                'observacion' => $observacion ?: null,
+                'created_by'  => session()->get('id_usuario'),
+                'created_at'  => date('Y-m-d H:i:s'),
+            ]);
+            $vinculados++;
         }
 
-        $vModel->insert([
-            'id_carpeta'  => $idCarpeta,
-            'id_reporte'  => $idReporte,
-            'id_cliente'  => (int) $carpeta['id_cliente'],
-            'observacion' => $observacion ?: null,
-            'created_by'  => session()->get('id_usuario'),
-            'created_at'  => date('Y-m-d H:i:s'),
-        ]);
+        // Construir mensaje resumen
+        if ($vinculados === 0) {
+            return redirect()->back()->with('warning', 'No se vinculo ningun reporte (todos ya existian o no pertenecian al cliente).');
+        }
 
-        return redirect()->back()->with('success', 'Reporte vinculado a la carpeta.');
+        $partes = ["{$vinculados} vinculado(s)"];
+        if ($omitidosYaExisten > 0)     $partes[] = "{$omitidosYaExisten} ya existia(n)";
+        if ($omitidosOtroCliente > 0)   $partes[] = "{$omitidosOtroCliente} de otro cliente (omitido)";
+        if ($omitidosNoEncontrados > 0) $partes[] = "{$omitidosNoEncontrados} no encontrado(s)";
+
+        return redirect()->back()->with('success', implode(' · ', $partes));
     }
 
     /**

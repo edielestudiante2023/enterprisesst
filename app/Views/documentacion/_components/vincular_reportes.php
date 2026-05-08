@@ -116,10 +116,11 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
                             <i class="bi bi-search me-1"></i>Buscar reporte del cliente
                             <strong><?= esc($cliente['nombre_cliente'] ?? '') ?></strong>
                         </label>
-                        <select name="id_reporte" id="selectVincularReporte" class="form-select" required style="width:100%;">
-                            <option value=""></option>
-                        </select>
-                        <div class="form-text">Busca por titulo, tipo o categoria del reporte. Los ya vinculados aparecen deshabilitados.</div>
+                        <select name="id_reporte[]" id="selectVincularReporte" class="form-select" multiple="multiple" required style="width:100%;"></select>
+                        <div class="form-text">
+                            Puedes seleccionar <strong>varios reportes a la vez</strong> (clic en cada uno).
+                            Los ya vinculados a esta carpeta NO aparecen en la lista.
+                        </div>
                     </div>
 
                     <div class="mb-2">
@@ -131,7 +132,9 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-link-45deg me-1"></i>Vincular</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-link-45deg me-1"></i>Vincular seleccionados
+                    </button>
                 </div>
             </form>
         </div>
@@ -173,8 +176,10 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
 
         $sel.select2({
             dropdownParent: $('#modalVincularReporte'),
-            placeholder: 'Escribe para buscar un reporte del cliente...',
+            placeholder: 'Escribe para buscar reportes (puedes seleccionar varios)...',
             allowClear: true,
+            multiple: true,
+            closeOnSelect: false, // permite seleccionar varios sin cerrar el dropdown
             minimumInputLength: 0,
             width: '100%',
             ajax: {
@@ -193,22 +198,15 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
             },
             templateResult: function (item) {
                 if (!item.id) return item.text;
-                const dis = item.ya_vinculado ? ' <span class="badge bg-warning text-dark ms-1">YA VINCULADO</span>' : '';
-                const tipo = item.tipo_reporte ? `<span class="badge bg-info-subtle text-info-emphasis ms-1">${item.tipo_reporte}</span>` : '';
-                const fecha = item.fecha ? `<small class="text-muted ms-1">${item.fecha}</small>` : '';
-                return $(`<div><strong>${item.text}</strong>${dis}<br><small>${tipo} ${fecha}</small></div>`);
+                const tipo  = item.tipo_reporte ? `<span class="badge bg-info-subtle text-info-emphasis me-1">${item.tipo_reporte}</span>` : '';
+                const det   = item.detalle ? `<span class="badge bg-secondary-subtle text-secondary-emphasis me-1">${item.detalle}</span>` : '';
+                const fecha = item.fecha ? `<small class="text-muted">${item.fecha}</small>` : '';
+                return $(`<div class="py-1"><strong>${item.text}</strong><br><small>${tipo}${det}${fecha}</small></div>`);
             },
             templateSelection: function (item) {
                 return item.text || item.id;
             },
             language: { searching: () => 'Buscando...', noResults: () => 'Sin resultados', inputTooShort: () => 'Escribe para buscar' }
-        });
-
-        $sel.on('select2:selecting', function (e) {
-            if (e.params.args.data && e.params.args.data.ya_vinculado) {
-                e.preventDefault();
-                alert('Este reporte ya esta vinculado a esta carpeta.');
-            }
         });
     }
 
