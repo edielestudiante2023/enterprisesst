@@ -506,34 +506,111 @@ class SocializadorService
     // =========================================================================
 
     /**
-     * Inserta un registro en tbl_documentos_sst con el PDF asociado.
-     * Devuelve el id_documento creado.
+     * Sube el PDF al reportList del cliente (tbl_reporte).
+     *
+     * Imita el patron de App\Controllers\Inspecciones\ActaVisitaController::uploadToReportes:
+     *   - copia el PDF a public/uploads/{nit_cliente}/ con un nombre nuevo
+     *   - inserta en tbl_reporte con id_report_type + id_detailreport apropiados
+     *   - usa 'observaciones' para incluir un identificador unico que permite
+     *     detectar duplicados en re-envios y actualizar en lugar de duplicar.
+     *
+     * @param int    $idCliente
+     * @param string $rutaPdfRelativa     PDF actual (uploads/socializaciones/...)
+     * @param string $titulo              Titulo del reporte ej "Socializacion COPASST 2026"
+     * @param int    $idReportType        FK a report_type_table (1=COPASST, 2=COCOLAB, 11=BRIGADA)
+     * @param int    $idDetailReport      FK a detail_report (5=Acta Conformacion, 14=Comunicaciones)
+     * @param string $idempotencyKey      Identificador unico para detectar duplicados, ej "socializacion_miembros:20:7"
+     * @param string $estado              Estado del reporte ('CERRADO' por defecto)
+     * @return int                        id_reporte creado o actualizado, 0 si fallo
      */
-    public function guardarEnReportlist(
+    public function subirAReportes(
         int $idCliente,
-        string $tipoDocumento,
-        string $titulo,
-        string $codigo,
         string $rutaPdfRelativa,
-        ?string $contenidoSnapshotJson = null,
-        ?string $observaciones = null
+        string $titulo,
+        int $idReportType,
+        int $idDetailReport,
+        string $idempotencyKey,
+        string $estado = 'CERRADO'
     ): int {
         $db = \Config\Database::connect();
-        $db->table('tbl_documentos_sst')->insert([
+
+        // Resolver nit_cliente para el path final (compatibilidad con reportList)
+        $cliente = $db->table('tbl_clientes')->where('id_cliente', $idCliente)->get()->getRowArray();
+        if (!$cliente) {
+            log_message('error', '[SocializadorService::subirAReportes] cliente no encontrado: ' . $idCliente);
+            return 0;
+        }
+        $nitCliente = $cliente['nit_cliente'] ?? ('cliente_' . $idCliente);
+
+        // Copiar PDF a public/uploads/{nit_cliente}/
+        $destDir = ROOTPATH . 'public/uploads/' . $nitCliente;
+        if (!is_dir($destDir)) {
+            @mkdir($destDir, 0755, true);
+        }
+        $rutaAbsOrigen = FCPATH . $rutaPdfRelativa;
+        if (!is_file($rutaAbsOrigen)) {
+            log_message('error', '[SocializadorService::subirAReportes] PDF origen no encontrado: ' . $rutaAbsOrigen);
+            return 0;
+        }
+        $fileName = pathinfo($rutaPdfRelativa, PATHINFO_FILENAME) . '_' . date('Ymd_His') . '.pdf';
+        $destPath = $destDir . DIRECTORY_SEPARATOR . $fileName;
+        @copy($rutaAbsOrigen, $destPath);
+
+        $enlace = base_url('uploads/' . $nitCliente . '/' . $fileName);
+        $observaciones = 'Generado automaticamente desde modulo de socializaciones de comites. ' . $idempotencyKey;
+
+        // Idempotencia: si ya existe un reporte con esta key, actualizar en vez de duplicar.
+        $existente = $db->table('tbl_reporte')
+            ->where('id_cliente', $idCliente)
+            ->where('id_report_type', $idReportType)
+            ->where('id_detailreport', $idDetailReport)
+            ->like('observaciones', $idempotencyKey)
+            ->get()->getRowArray();
+
+        $data = [
+            'titulo_reporte'  => $titulo,
+            'id_detailreport' => $idDetailReport,
+            'id_report_type'  => $idReportType,
             'id_cliente'      => $idCliente,
-            'tipo_documento'  => $tipoDocumento,
-            'titulo'          => $titulo,
-            'codigo'          => $codigo,
-            'anio'            => (int) date('Y'),
-            'contenido'       => $contenidoSnapshotJson,
-            'archivo_pdf'     => $rutaPdfRelativa,
-            'version'         => 1,
-            'estado'          => 'generado',
+            'estado'          => $estado,
             'observaciones'   => $observaciones,
-            'created_at'      => date('Y-m-d H:i:s'),
-            'created_by'      => session()->get('id_usuario') ?? session()->get('id_consultor') ?? null,
-        ]);
+            'enlace'          => $enlace,
+            'updated_at'      => date('Y-m-d H:i:s'),
+        ];
+
+        if ($existente) {
+            $db->table('tbl_reporte')->where('id_reporte', $existente['id_reporte'])->update($data);
+            return (int) $existente['id_reporte'];
+        }
+
+        $data['created_at'] = date('Y-m-d H:i:s');
+        $db->table('tbl_reporte')->insert($data);
         return (int) $db->insertID();
+    }
+
+    /**
+     * Devuelve el (id_report_type, id_detailreport) recomendado para una socializacion.
+     * Centralizado aqui para que controllers no necesiten saber los IDs hardcodeados.
+     *
+     * @return array{id_report_type:int, id_detailreport:int}
+     */
+    public static function tipoReporteParaSocializacion(string $tipoComite, string $tipoSocializacion): array
+    {
+        $idReportType = match(strtoupper($tipoComite)) {
+            'COPASST' => 1,
+            'COCOLAB' => 2,
+            'BRIGADA' => 11,
+            default   => 12, // "Reportes SST" generico fallback
+        };
+        $idDetailReport = match($tipoSocializacion) {
+            'miembros'   => 5,  // "Acta de Conformación"
+            'cronograma' => 14, // "Comunicaciones o Circulares"
+            default      => 19, // "Soporte de Gestión" generico
+        };
+        return [
+            'id_report_type'  => $idReportType,
+            'id_detailreport' => $idDetailReport,
+        ];
     }
 
     /**

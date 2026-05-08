@@ -183,19 +183,23 @@ class SocializacionesController extends Controller
             'fallidos'       => $resultado['fallidos'],
         ]);
 
-        $idDocPrincipal = $svc->guardarEnReportlist(
-            $cliente['id_cliente'], $tipoDoc,
+        // Subir AMBOS PDFs (principal + evidencia) al reportList del cliente (tbl_reporte).
+        $tipoR = \App\Libraries\SocializadorService::tipoReporteParaSocializacion($tipoComite, 'miembros');
+        $idDocPrincipal = $svc->subirAReportes(
+            (int) $cliente['id_cliente'],
+            $rutaPdfRel,
             "Socializacion Miembros {$tipoComite} - " . ($cliente['nombre_cliente'] ?? ''),
-            $tipoObj->getCodigoBase(),
-            $rutaPdfRel, $snapshot,
-            "Generado desde proceso electoral ID {$idProceso}"
+            $tipoR['id_report_type'],
+            $tipoR['id_detailreport'],
+            "soc_miembros_{$tipoComite}_proc{$idProceso}_principal"
         );
-        $idDocEvidencia = $svc->guardarEnReportlist(
-            $cliente['id_cliente'], $tipoDoc . '_evidencia',
-            "Evidencia Socializacion Miembros {$tipoComite}",
-            $tipoObj->getCodigoBase() . '-EVD',
-            $rutaEvidenciaRel, null,
-            "Evidencia de envio (id_doc_principal={$idDocPrincipal})"
+        $idDocEvidencia = $svc->subirAReportes(
+            (int) $cliente['id_cliente'],
+            $rutaEvidenciaRel,
+            "Evidencia Socializacion Miembros {$tipoComite} - " . ($cliente['nombre_cliente'] ?? ''),
+            $tipoR['id_report_type'],
+            $tipoR['id_detailreport'],
+            "soc_miembros_{$tipoComite}_proc{$idProceso}_evidencia"
         );
 
         $estado = $resultado['fallidos'] === 0 ? 'enviado'
@@ -356,18 +360,23 @@ class SocializacionesController extends Controller
             'fallidos'        => $resultado['fallidos'],
         ]);
 
-        $idDocPrincipal = $svc->guardarEnReportlist(
-            $cliente['id_cliente'], $tipoDoc,
+        // Subir AMBOS PDFs (principal + evidencia) al reportList del cliente (tbl_reporte).
+        $tipoR = \App\Libraries\SocializadorService::tipoReporteParaSocializacion($tipoComite, 'cronograma');
+        $idDocPrincipal = $svc->subirAReportes(
+            (int) $cliente['id_cliente'],
+            $rutaPdfRel,
             "Cronograma {$tipoComite} {$anio} - " . ($cliente['nombre_cliente'] ?? ''),
-            $tipoObj->getCodigoBase(), $rutaPdfRel, $snapshot,
-            "Generado desde proceso electoral ID {$idProceso}"
+            $tipoR['id_report_type'],
+            $tipoR['id_detailreport'],
+            "soc_cronograma_{$tipoComite}_proc{$idProceso}_anio{$anio}_principal"
         );
-        $idDocEvidencia = $svc->guardarEnReportlist(
-            $cliente['id_cliente'], $tipoDoc . '_evidencia',
-            "Evidencia Cronograma {$tipoComite} {$anio}",
-            $tipoObj->getCodigoBase() . '-EVD',
-            $rutaEvidenciaRel, null,
-            "Evidencia de envio (id_doc_principal={$idDocPrincipal})"
+        $idDocEvidencia = $svc->subirAReportes(
+            (int) $cliente['id_cliente'],
+            $rutaEvidenciaRel,
+            "Evidencia Cronograma {$tipoComite} {$anio} - " . ($cliente['nombre_cliente'] ?? ''),
+            $tipoR['id_report_type'],
+            $tipoR['id_detailreport'],
+            "soc_cronograma_{$tipoComite}_proc{$idProceso}_anio{$anio}_evidencia"
         );
 
         $estado = $resultado['fallidos'] === 0 ? 'enviado'
