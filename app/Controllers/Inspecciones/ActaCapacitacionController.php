@@ -47,7 +47,7 @@ class ActaCapacitacionController extends BaseController
 
         return view('inspecciones/layout_pwa', [
             'content' => view('inspecciones/acta_capacitacion/list', ['actas' => $actas]),
-            'title'   => 'Actas de Capacitación',
+            'title'   => 'Reportes de Capacitación',
         ]);
     }
 
@@ -55,13 +55,13 @@ class ActaCapacitacionController extends BaseController
     {
         return view('inspecciones/layout_pwa', [
             'content' => view('inspecciones/acta_capacitacion/form', [
-                'title'      => 'Nueva Acta de Capacitación',
+                'title'      => 'Nuevo Reporte de Capacitación',
                 'acta'       => null,
                 'asistentes' => [],
                 'idCliente'  => $idCliente,
                 'contexto'   => 'consultor',
             ]),
-            'title' => 'Nueva Acta de Capacitación',
+            'title' => 'Nuevo Reporte de Capacitación',
         ]);
     }
 
@@ -106,24 +106,24 @@ class ActaCapacitacionController extends BaseController
 
         if ($isAutosave) return $this->autosaveJsonSuccess($idActa);
         return redirect()->to('/inspecciones/acta-capacitacion/edit/' . $idActa)
-            ->with('msg', 'Guardada como borrador');
+            ->with('msg', 'Guardado como borrador');
     }
 
     public function edit($id)
     {
         $acta = $this->actaModel->find($id);
-        if (!$acta) return redirect()->to('/inspecciones/acta-capacitacion')->with('error', 'No encontrada');
+        if (!$acta) return redirect()->to('/inspecciones/acta-capacitacion')->with('error', 'No encontrado');
         if ($acta['estado'] === 'completo') return redirect()->to('/inspecciones/acta-capacitacion/view/' . $id);
 
         return view('inspecciones/layout_pwa', [
             'content' => view('inspecciones/acta_capacitacion/form', [
-                'title'      => 'Editar Acta de Capacitación',
+                'title'      => 'Editar Reporte de Capacitación',
                 'acta'       => $acta,
                 'asistentes' => $this->asistenteModel->getByActa((int)$id),
                 'idCliente'  => $acta['id_cliente'],
                 'contexto'   => 'consultor',
             ]),
-            'title' => 'Editar Acta de Capacitación',
+            'title' => 'Editar Reporte de Capacitación',
         ]);
     }
 
@@ -162,7 +162,7 @@ class ActaCapacitacionController extends BaseController
         if ($this->request->getPost('finalizar')) return $this->finalizar($id);
         if ($this->isAutosaveRequest()) return $this->autosaveJsonSuccess((int)$id);
 
-        return redirect()->to('/inspecciones/acta-capacitacion/edit/' . $id)->with('msg', 'Actualizada');
+        return redirect()->to('/inspecciones/acta-capacitacion/edit/' . $id)->with('msg', 'Actualizado');
     }
 
     public function view($id)
@@ -189,7 +189,7 @@ class ActaCapacitacionController extends BaseController
                 'asistentes'   => $this->asistenteModel->getByActa((int)$id),
                 'contexto'     => 'consultor',
             ]),
-            'title' => 'Ver Acta de Capacitación',
+            'title' => 'Ver Reporte de Capacitación',
         ]);
     }
 
@@ -202,7 +202,7 @@ class ActaCapacitacionController extends BaseController
         if (!$asistente) return $this->response->setJSON(['success' => false, 'error' => 'Asistente no encontrado']);
 
         $acta = $this->actaModel->find($asistente['id_acta_capacitacion']);
-        if (!$acta) return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+        if (!$acta) return $this->response->setJSON(['success' => false, 'error' => 'Reporte no encontrado']);
         if (!empty($asistente['firma_path'])) {
             return $this->response->setJSON(['success' => false, 'error' => 'Este asistente ya firmó']);
         }
@@ -223,9 +223,9 @@ class ActaCapacitacionController extends BaseController
     public function saveAsistente(int $idActa)
     {
         $acta = $this->actaModel->find($idActa);
-        if (!$acta) return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+        if (!$acta) return $this->response->setJSON(['success' => false, 'error' => 'Reporte no encontrado']);
         if ($acta['estado'] === 'completo') {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta ya finalizada']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte ya finalizado']);
         }
 
         $nombre = trim((string)$this->request->getPost('nombre_completo'));
@@ -271,7 +271,7 @@ class ActaCapacitacionController extends BaseController
         if (!$asistente) return $this->response->setJSON(['success' => false, 'error' => 'Asistente no encontrado']);
 
         $acta = $this->actaModel->find($asistente['id_acta_capacitacion']);
-        if (!$acta) return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+        if (!$acta) return $this->response->setJSON(['success' => false, 'error' => 'Reporte no encontrado']);
         if (!empty($asistente['firma_path'])) {
             return $this->response->setJSON(['success' => false, 'error' => 'Este asistente ya firmó']);
         }
@@ -311,7 +311,7 @@ class ActaCapacitacionController extends BaseController
         $mensaje = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
             <div style='background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 20px; text-align: center;'>
-                <h2 style='color: white; margin: 0;'>Solicitud de Firma - Acta de Capacitación</h2>
+                <h2 style='color: white; margin: 0;'>Solicitud de Firma - Reporte de Capacitación</h2>
             </div>
             <div style='padding: 30px; background: #f8f9fa;'>
                 <p>Estimado/a <strong>{$nombre}</strong>,</p>
@@ -324,7 +324,7 @@ class ActaCapacitacionController extends BaseController
                 </div>
                 <div style='text-align: center; margin: 30px 0;'>
                     <a href='{$urlFirma}' style='background: #bd9751; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; display: inline-block;'>
-                        Firmar Acta de Capacitación
+                        Firmar Reporte de Capacitación
                     </a>
                 </div>
                 <p style='color: #666; font-size: 12px;'>O copie este enlace en su navegador:</p>
@@ -367,7 +367,7 @@ class ActaCapacitacionController extends BaseController
         $acta = $this->actaModel->find($id);
         $this->uploadToReportes($acta, $pdfPath);
 
-        return redirect()->to('/inspecciones/acta-capacitacion/view/' . $id)->with('msg', 'Acta finalizada.');
+        return redirect()->to('/inspecciones/acta-capacitacion/view/' . $id)->with('msg', 'Reporte finalizado.');
     }
 
     public function generatePdf($id)
@@ -389,10 +389,10 @@ class ActaCapacitacionController extends BaseController
         $acta = $this->actaModel->find($id);
         if (!$acta) return redirect()->to('/inspecciones/acta-capacitacion');
         if ($acta['estado'] === 'completo') {
-            return redirect()->back()->with('error', 'No se pueden borrar actas finalizadas');
+            return redirect()->back()->with('error', 'No se pueden borrar reportes finalizados');
         }
         $this->actaModel->delete($id);
-        return redirect()->to('/inspecciones/acta-capacitacion')->with('msg', 'Acta eliminada');
+        return redirect()->to('/inspecciones/acta-capacitacion')->with('msg', 'Reporte eliminado');
     }
 
     // ============================================================
@@ -424,7 +424,7 @@ class ActaCapacitacionController extends BaseController
         $acta = $this->actaModel->find($asistente['id_acta_capacitacion']);
         if (!$acta) {
             return view('inspecciones/acta_capacitacion/firma_remota_error', [
-                'mensaje' => 'Acta no encontrada.'
+                'mensaje' => 'Reporte no encontrado.'
             ]);
         }
 
@@ -538,10 +538,10 @@ class ActaCapacitacionController extends BaseController
     {
         $acta = $this->actaModel->find($idActa);
         if (!$acta) {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte no encontrado']);
         }
         if ($acta['estado'] === 'completo') {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta finalizada, no acepta inscripciones']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte finalizado, no acepta inscripciones']);
         }
 
         $token = $acta['token_inscripcion'] ?? null;
@@ -601,7 +601,7 @@ class ActaCapacitacionController extends BaseController
         }
         if ($acta['estado'] === 'completo') {
             return view('inspecciones/acta_capacitacion/inscripcion_error', [
-                'mensaje' => 'Esta acta ya fue cerrada y no acepta nuevas inscripciones.'
+                'mensaje' => 'Este reporte ya fue cerrado y no acepta nuevas inscripciones.'
             ]);
         }
 
@@ -640,7 +640,7 @@ class ActaCapacitacionController extends BaseController
             return $this->response->setJSON(['success' => false, 'error' => 'Enlace invalido o expirado.']);
         }
         if ($acta['estado'] === 'completo') {
-            return $this->response->setJSON(['success' => false, 'error' => 'Esta acta ya fue cerrada.']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Este reporte ya fue cerrado.']);
         }
 
         // Anti-duplicado: mismo numero_documento dentro del mismo acta
@@ -699,7 +699,7 @@ class ActaCapacitacionController extends BaseController
     {
         $acta = $this->actaModel->find($idActa);
         if (!$acta) {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte no encontrado']);
         }
 
         $asistentes = $this->asistenteModel->getByActa($idActa);
@@ -735,15 +735,15 @@ class ActaCapacitacionController extends BaseController
     {
         $acta = $this->actaModel->find($idActa);
         if (!$acta) {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta no encontrada']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte no encontrado']);
         }
         if ($acta['estado'] === 'completo') {
-            return $this->response->setJSON(['success' => false, 'error' => 'Acta finalizada, no se puede modificar']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Reporte finalizado, no se puede modificar']);
         }
 
         $asistente = $this->asistenteModel->find($idAsistente);
         if (!$asistente || (int)$asistente['id_acta_capacitacion'] !== $idActa) {
-            return $this->response->setJSON(['success' => false, 'error' => 'Asistente no encontrado en esta acta']);
+            return $this->response->setJSON(['success' => false, 'error' => 'Asistente no encontrado en este reporte']);
         }
         if (!empty($asistente['firma_path']) || !empty($asistente['firmado_at'])) {
             return $this->response->setJSON(['success' => false, 'error' => 'No se puede eliminar: este asistente ya firmo']);
@@ -831,7 +831,7 @@ class ActaCapacitacionController extends BaseController
         copy(FCPATH . $pdfPath, $destDir . '/' . $fileName);
 
         $data = [
-            'titulo_reporte'  => 'ACTA DE CAPACITACION - ' . ($cliente['nombre_cliente'] ?? '') . ' - ' . $acta['fecha_capacitacion'],
+            'titulo_reporte'  => 'REPORTE DE CAPACITACIÓN - ' . ($cliente['nombre_cliente'] ?? '') . ' - ' . $acta['fecha_capacitacion'],
             'id_detailreport' => 6,
             'id_report_type'  => 4,
             'id_cliente'      => $acta['id_cliente'],

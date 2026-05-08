@@ -1,7 +1,7 @@
 <div class="container-fluid px-3">
     <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
         <div>
-            <h6 class="mb-0">Actas de Capacitación</h6>
+            <h6 class="mb-0">Reportes de Capacitación</h6>
             <small class="text-muted"><?= esc($cliente['nombre_cliente'] ?? '') ?></small>
         </div>
         <a href="<?= site_url('miembro/acta-capacitacion/create') ?>" class="btn btn-sm btn-pwa-primary" style="width:auto; padding: 8px 16px;">
@@ -12,7 +12,7 @@
     <?php if (empty($actas)): ?>
         <div class="text-center text-muted py-5">
             <i class="fas fa-graduation-cap fa-3x mb-3" style="opacity:0.3;"></i>
-            <p>No hay actas de capacitación registradas</p>
+            <p>No hay reportes de capacitación registrados</p>
             <a href="<?= site_url('miembro/acta-capacitacion/create') ?>" class="btn btn-pwa-primary" style="width:auto; padding: 8px 24px;">
                 Registrar primera capacitación
             </a>

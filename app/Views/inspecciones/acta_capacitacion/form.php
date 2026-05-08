@@ -144,7 +144,7 @@ $tokenInscripcionUrlBase = $ctx === 'consultor'
                         <?php if (!$isEdit): ?>
                             <div class="alert alert-info py-2" style="font-size:13px;">
                                 <i class="fas fa-info-circle"></i>
-                                Guarda primero el acta como borrador. Después podrás agregar asistentes y enviar enlaces de firma por WhatsApp.
+                                Guarda primero el reporte como borrador. Después podrás agregar asistentes y enviar enlaces de firma por WhatsApp.
                             </div>
                         <?php else: ?>
                             <div class="alert alert-warning py-2" style="font-size:13px;">
@@ -498,7 +498,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function generarQR(regenerar) {
         if (!idActaActual) {
-            Swal.fire('Guarda primero el acta', 'Primero guarda el acta como borrador para generar el QR.', 'info');
+            Swal.fire('Guarda primero el reporte', 'Primero guarda el reporte como borrador para generar el QR.', 'info');
             return;
         }
         Swal.fire({ title: 'Generando QR...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
@@ -583,7 +583,7 @@ document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
             icon: 'warning',
             title: '¿Eliminar este asistente?',
-            html: 'Vas a eliminar a <strong>' + nombre + '</strong> del acta.<br><br>'
+            html: 'Vas a eliminar a <strong>' + nombre + '</strong> del reporte.<br><br>'
                 + '<span style="color:#dc3545;font-size:13px;">Esta acción no se puede deshacer.</span>',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
@@ -696,7 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!btn) return;
 
         if (!idActaActual) {
-            Swal.fire('Guarda primero el acta', 'Primero guarda el acta como borrador para poder agregar asistentes.', 'info');
+            Swal.fire('Guarda primero el reporte', 'Primero guarda el reporte como borrador para poder agregar asistentes.', 'info');
             return;
         }
 
@@ -878,7 +878,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var nombre = btn.dataset.nombre;
 
         if (!idAsistente) {
-            Swal.fire('Guarda primero', 'Guarda el acta para generar el enlace de este asistente.', 'info');
+            Swal.fire('Guarda primero', 'Guarda el reporte para generar el enlace de este asistente.', 'info');
             return;
         }
 
@@ -910,7 +910,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 var url = data.url;
-                var texto = encodeURIComponent('Hola ' + nombre + ', por favor firma el acta de capacitación haciendo clic en este enlace (vence en 7 días):\n' + url);
+                var texto = encodeURIComponent('Hola ' + nombre + ', por favor firma el reporte de capacitación haciendo clic en este enlace (vence en 7 días):\n' + url);
                 var waUrl = 'https://wa.me/?text=' + texto;
 
                 Swal.fire({

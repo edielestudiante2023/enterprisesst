@@ -56,7 +56,7 @@
         <tr>
             <td style="border:1px solid #333; text-align:center; padding:6px 10px; vertical-align:middle;">
                 <div style="font-size:10pt; font-weight:bold; color:#333;">
-                    ACTA DE CAPACITACIÓN
+                    REPORTE DE CAPACITACIÓN
                 </div>
             </td>
         </tr>

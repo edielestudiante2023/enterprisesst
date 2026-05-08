@@ -1,6 +1,6 @@
 <div class="container-fluid px-3">
     <div class="mt-2 mb-3 d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">Acta de Capacitación</h6>
+        <h6 class="mb-0">Reporte de Capacitación</h6>
         <span class="badge badge-<?= esc($acta['estado']) ?>">
             <?= $acta['estado'] === 'completo' ? 'Completo' : 'Borrador' ?>
         </span>
