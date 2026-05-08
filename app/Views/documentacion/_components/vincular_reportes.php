@@ -23,7 +23,7 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-secondary bg-gradient text-white d-flex justify-content-between align-items-center">
         <h6 class="mb-0">
-            <i class="bi bi-link-45deg me-2"></i>Documentos vinculados desde el reportList
+            <i class="bi bi-link-45deg me-2"></i>Documentos vinculados desde la Lista de Reportes
         </h6>
         <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalVincularReporte">
             <i class="bi bi-plus-circle me-1"></i>Vincular documento existente
@@ -33,7 +33,7 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
         <?php if (empty($reportesVinculados)): ?>
             <div class="text-center py-4 text-muted">
                 <i class="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
-                <small>No hay documentos vinculados desde el reportList.</small><br>
+                <small>No hay documentos vinculados desde la Lista de Reportes.</small><br>
                 <small class="text-muted">
                     Use el boton para traer aqui un reporte existente del cliente como referencia
                     (no se crea un PDF nuevo).
@@ -74,7 +74,7 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
                                 </a>
                                 <?php endif; ?>
                                 <form method="post" action="<?= base_url('documentacion/vinculo/' . $v['id_vinculo'] . '/quitar') ?>"
-                                      class="d-inline" onsubmit="return confirm('Quitar este vinculo? El reporte original NO se borra del reportList.');">
+                                      class="d-inline" onsubmit="return confirm('Quitar este vinculo? El reporte original NO se borra de la Lista de Reportes.');">
                                     <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Quitar vinculo">
                                         <i class="bi bi-x-lg"></i>
@@ -99,7 +99,7 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
                 <input type="hidden" name="id_carpeta" value="<?= (int) $carpeta['id_carpeta'] ?>">
 
                 <div class="modal-header bg-secondary text-white">
-                    <h5 class="modal-title"><i class="bi bi-link-45deg me-2"></i>Vincular documento del reportList</h5>
+                    <h5 class="modal-title"><i class="bi bi-link-45deg me-2"></i>Vincular documento de la Lista de Reportes</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -108,7 +108,7 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
                         <i class="bi bi-info-circle me-1"></i>
                         Esta accion <strong>no crea un nuevo PDF</strong>. Solo registra una referencia
                         del documento existente para visualizarlo desde esta carpeta.
-                        El archivo original se mantiene intacto en el reportList.
+                        El archivo original se mantiene intacto en la Lista de Reportes.
                     </div>
 
                     <div class="mb-3">
