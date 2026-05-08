@@ -138,27 +138,41 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
     </div>
 </div>
 
-<!-- Select2 (requiere jQuery + Select2 CSS/JS — se incluyen aqui si no estan) -->
+<!--
+  Select2 + jQuery: el componente garantiza el orden correcto de carga.
+  En documentacion/carpeta.php, _components/scripts.php (que carga jQuery)
+  esta DESPUES de este componente. Por eso aqui forzamos el orden:
+  1) jQuery (solo si no esta ya cargado por otro lado)
+  2) Select2 (depende de jQuery, asi que va despues)
+  3) Select2 CSS
+  4) Init diferido (espera a que ambos esten listos)
+-->
 <?php if (!defined('VINCULAR_REPORTES_ASSETS_LOADED')): ?>
     <?php define('VINCULAR_REPORTES_ASSETS_LOADED', true); ?>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <script>
+        // Carga sincrona de jQuery si no esta ya cargado, con document.write
+        // (el unico metodo que garantiza orden con scripts inline posteriores)
+        if (typeof window.jQuery === 'undefined') {
+            document.write('<scr' + 'ipt src="https://code.jquery.com/jquery-3.7.1.min.js"><\/scr' + 'ipt>');
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <?php endif; ?>
 
 <script>
 (function(){
-    // Esperar a que jQuery este cargado
     function init() {
-        if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined') {
+        if (typeof window.jQuery === 'undefined' || typeof window.jQuery.fn.select2 === 'undefined') {
             return setTimeout(init, 80);
         }
-
-        const $sel = jQuery('#selectVincularReporte');
+        const $ = window.jQuery;
+        const $sel = $('#selectVincularReporte');
         if (!$sel.length || $sel.data('select2-initialized')) return;
         $sel.data('select2-initialized', true);
 
         $sel.select2({
-            dropdownParent: jQuery('#modalVincularReporte'),
+            dropdownParent: $('#modalVincularReporte'),
             placeholder: 'Escribe para buscar un reporte del cliente...',
             allowClear: true,
             minimumInputLength: 0,
@@ -172,6 +186,9 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
                         q: params.term || '',
                         id_carpeta: <?= (int) $carpeta['id_carpeta'] ?>
                     };
+                },
+                error: function (xhr, status, err) {
+                    console.error('[VincularReporte] AJAX error:', xhr.status, status, err, xhr.responseText);
                 }
             },
             templateResult: function (item) {
@@ -179,7 +196,7 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
                 const dis = item.ya_vinculado ? ' <span class="badge bg-warning text-dark ms-1">YA VINCULADO</span>' : '';
                 const tipo = item.tipo_reporte ? `<span class="badge bg-info-subtle text-info-emphasis ms-1">${item.tipo_reporte}</span>` : '';
                 const fecha = item.fecha ? `<small class="text-muted ms-1">${item.fecha}</small>` : '';
-                return jQuery(`<div><strong>${item.text}</strong>${dis}<br><small>${tipo} ${fecha}</small></div>`);
+                return $(`<div><strong>${item.text}</strong>${dis}<br><small>${tipo} ${fecha}</small></div>`);
             },
             templateSelection: function (item) {
                 return item.text || item.id;
@@ -187,7 +204,6 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
             language: { searching: () => 'Buscando...', noResults: () => 'Sin resultados', inputTooShort: () => 'Escribe para buscar' }
         });
 
-        // Bloquear los ya vinculados al seleccionar
         $sel.on('select2:selecting', function (e) {
             if (e.params.args.data && e.params.args.data.ya_vinculado) {
                 e.preventDefault();
@@ -195,6 +211,15 @@ if (in_array($carpeta['tipo'] ?? '', ['raiz', 'phva'], true)) return;
             }
         });
     }
-    init();
+
+    // Iniciar cuando el modal se abra (asi dropdownParent existe y es visible)
+    function bindOnModalShow() {
+        if (typeof window.jQuery === 'undefined') return setTimeout(bindOnModalShow, 80);
+        const $ = window.jQuery;
+        $('#modalVincularReporte').on('shown.bs.modal', init);
+        // Tambien intentar init inmediato (por si el modal ya estaba)
+        init();
+    }
+    bindOnModalShow();
 })();
 </script>
