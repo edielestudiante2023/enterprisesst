@@ -1358,6 +1358,13 @@ $routes->get('/comites-elecciones/proceso/(:num)/acta/descargar', 'ComitesElecci
 $routes->get('/comites-elecciones/proceso/(:num)/acta/word', 'ComitesEleccionesController::exportarActaWord/$1');
 $routes->post('/comites-elecciones/proceso/(:num)/acta/actualizar-repositorio', 'ComitesEleccionesController::actualizarRepositorio/$1');
 
+// Acuerdo de Confidencialidad COCOLAB (Ley 1010 / Res 652 / Res 3461)
+$routes->get('/comites-elecciones/proceso/(:num)/acuerdo-confidencialidad/generar', 'AcuerdoConfidencialidadController::generar/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/acuerdo-confidencialidad/descargar', 'AcuerdoConfidencialidadController::descargar/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/acuerdo-confidencialidad/firmas', 'AcuerdoConfidencialidadController::solicitarFirmas/$1');
+$routes->post('/comites-elecciones/acuerdo-confidencialidad/crear-solicitudes', 'AcuerdoConfidencialidadController::crearSolicitudes');
+$routes->get('/comites-elecciones/proceso/(:num)/acuerdo-confidencialidad/subir-reportlist', 'AcuerdoConfidencialidadController::subirAReportList/$1');
+
 // Socializaciones de comites (miembros + cronograma) - PDF generado y enviado por email
 $routes->get('/comites-elecciones/socializaciones/plantilla-csv', 'SocializacionesController::plantillaCsv');
 $routes->get('/comites-elecciones/proceso/(:num)/socializar/miembros', 'SocializacionesController::formularioMiembros/$1');
@@ -1396,6 +1403,14 @@ $routes->post('acta-capacitacion/procesar-firma-remota', 'Inspecciones\ActaCapac
 // Rutas PUBLICAS de auto-inscripcion via QR (sin autenticacion)
 $routes->get('acta-capacitacion/inscripcion/(:any)', 'Inspecciones\ActaCapacitacionController::inscripcion/$1');
 $routes->post('acta-capacitacion/procesar-inscripcion', 'Inspecciones\ActaCapacitacionController::procesarInscripcion');
+
+// Rutas PUBLICAS de firma remota lista de asistencia (sin autenticacion)
+$routes->get('lista-asistencia/firmar-remoto/(:any)', 'Inspecciones\ListaAsistenciaController::firmarRemoto/$1');
+$routes->post('lista-asistencia/procesar-firma-remota', 'Inspecciones\ListaAsistenciaController::procesarFirmaRemota');
+
+// Rutas PUBLICAS de auto-inscripcion lista de asistencia via QR (sin autenticacion)
+$routes->get('lista-asistencia/inscripcion/(:any)', 'Inspecciones\ListaAsistenciaController::inscripcion/$1');
+$routes->post('lista-asistencia/procesar-inscripcion', 'Inspecciones\ListaAsistenciaController::procesarInscripcion');
 
 // Rutas PUBLICAS de firma remota investigacion accidente (sin autenticacion)
 $routes->get('investigacion-accidente/firmar-remoto/(:any)', 'Inspecciones\InvestigacionAccidenteController::firmarRemoto/$1');
@@ -1651,6 +1666,22 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'MiembroActaCapacitacionController::enviarEmailFirma/$1');
     $routes->get('acta-capacitacion/asistentes-status/(:num)', 'MiembroActaCapacitacionController::getAsistentesStatus/$1');
     $routes->post('acta-capacitacion/generar-token-inscripcion/(:num)', 'MiembroActaCapacitacionController::generarTokenInscripcion/$1');
+
+    // Lista de Asistencia (transversal a TODOS los comites — sin filtro COPASST)
+    $routes->get('lista-asistencia', 'MiembroListaAsistenciaController::list');
+    $routes->get('lista-asistencia/create', 'MiembroListaAsistenciaController::create');
+    $routes->post('lista-asistencia/store', 'MiembroListaAsistenciaController::store');
+    $routes->get('lista-asistencia/edit/(:num)', 'MiembroListaAsistenciaController::edit/$1');
+    $routes->post('lista-asistencia/update/(:num)', 'MiembroListaAsistenciaController::update/$1');
+    $routes->get('lista-asistencia/view/(:num)', 'MiembroListaAsistenciaController::view/$1');
+    $routes->get('lista-asistencia/pdf/(:num)', 'MiembroListaAsistenciaController::generatePdf/$1');
+    $routes->post('lista-asistencia/finalizar/(:num)', 'MiembroListaAsistenciaController::finalizar/$1');
+    $routes->post('lista-asistencia/generar-token-firma/(:num)', 'MiembroListaAsistenciaController::generarTokenFirma/$1');
+    $routes->post('lista-asistencia/asistente/save/(:num)', 'MiembroListaAsistenciaController::saveAsistente/$1');
+    $routes->post('lista-asistencia/asistente/delete/(:num)/(:num)', 'MiembroListaAsistenciaController::deleteAsistente/$1/$2');
+    $routes->post('lista-asistencia/asistente/enviar-email/(:num)', 'MiembroListaAsistenciaController::enviarEmailFirma/$1');
+    $routes->get('lista-asistencia/asistentes-status/(:num)', 'MiembroListaAsistenciaController::getAsistentesStatus/$1');
+    $routes->post('lista-asistencia/generar-token-inscripcion/(:num)', 'MiembroListaAsistenciaController::generarTokenInscripcion/$1');
 });
 
 // Acceso de miembros del comité (por token - legacy/alternativo)
@@ -1743,6 +1774,24 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('acta-capacitacion/asistentes-status/(:num)', 'ActaCapacitacionController::getAsistentesStatus/$1');
     $routes->post('acta-capacitacion/generar-token-inscripcion/(:num)', 'ActaCapacitacionController::generarTokenInscripcion/$1');
     $routes->get('acta-capacitacion/delete/(:num)', 'ActaCapacitacionController::delete/$1');
+
+    // Lista de Asistencia (convocatorias diferentes a capacitacion)
+    $routes->get('lista-asistencia', 'ListaAsistenciaController::list');
+    $routes->get('lista-asistencia/create', 'ListaAsistenciaController::create');
+    $routes->get('lista-asistencia/create/(:num)', 'ListaAsistenciaController::create/$1');
+    $routes->post('lista-asistencia/store', 'ListaAsistenciaController::store');
+    $routes->get('lista-asistencia/edit/(:num)', 'ListaAsistenciaController::edit/$1');
+    $routes->post('lista-asistencia/update/(:num)', 'ListaAsistenciaController::update/$1');
+    $routes->get('lista-asistencia/view/(:num)', 'ListaAsistenciaController::view/$1');
+    $routes->get('lista-asistencia/pdf/(:num)', 'ListaAsistenciaController::generatePdf/$1');
+    $routes->post('lista-asistencia/finalizar/(:num)', 'ListaAsistenciaController::finalizar/$1');
+    $routes->post('lista-asistencia/generar-token-firma/(:num)', 'ListaAsistenciaController::generarTokenFirma/$1');
+    $routes->post('lista-asistencia/asistente/save/(:num)', 'ListaAsistenciaController::saveAsistente/$1');
+    $routes->post('lista-asistencia/asistente/delete/(:num)/(:num)', 'ListaAsistenciaController::deleteAsistente/$1/$2');
+    $routes->post('lista-asistencia/asistente/enviar-email/(:num)', 'ListaAsistenciaController::enviarEmailFirma/$1');
+    $routes->get('lista-asistencia/asistentes-status/(:num)', 'ListaAsistenciaController::getAsistentesStatus/$1');
+    $routes->post('lista-asistencia/generar-token-inscripcion/(:num)', 'ListaAsistenciaController::generarTokenInscripcion/$1');
+    $routes->get('lista-asistencia/delete/(:num)', 'ListaAsistenciaController::delete/$1');
 
     // Inspeccion Locativa
     $routes->get('inspeccion-locativa', 'InspeccionLocativaController::list');

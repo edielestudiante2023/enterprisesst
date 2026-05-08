@@ -97,6 +97,8 @@ class DocumentoSSTFactory
         'diccionario_competencias_cliente' => DiccionarioCompetenciasCliente::class,
         // Talento Humano - Matriz de EPP y Dotacion (SST-MT-G-003)
         'matriz_epp' => MatrizEpp::class,
+        // Acuerdo de Confidencialidad COCOLAB (Ley 1010/2006, Res 652/2012, Res 3461/2025)
+        'acuerdo_confidencialidad_cocolab' => AcuerdoConfidencialidadCocolab::class,
         // Socializaciones de comites (PDFs distribuidos por email)
         'socializacion_miembros_copasst' => SocializacionMiembrosCopasst::class,
         'socializacion_miembros_cocolab' => SocializacionMiembrosCocolab::class,
