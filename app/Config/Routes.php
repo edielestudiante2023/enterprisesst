@@ -1353,6 +1353,13 @@ $routes->get('/comites-elecciones/proceso/(:num)/acta/descargar', 'ComitesElecci
 $routes->get('/comites-elecciones/proceso/(:num)/acta/word', 'ComitesEleccionesController::exportarActaWord/$1');
 $routes->post('/comites-elecciones/proceso/(:num)/acta/actualizar-repositorio', 'ComitesEleccionesController::actualizarRepositorio/$1');
 
+// Socializaciones de comites (miembros + cronograma) - PDF generado y enviado por email
+$routes->get('/comites-elecciones/socializaciones/plantilla-csv', 'SocializacionesController::plantillaCsv');
+$routes->get('/comites-elecciones/proceso/(:num)/socializar/miembros', 'SocializacionesController::formularioMiembros/$1');
+$routes->post('/comites-elecciones/proceso/(:num)/socializar/miembros/enviar', 'SocializacionesController::enviarMiembros/$1');
+$routes->get('/comites-elecciones/proceso/(:num)/socializar/cronograma', 'SocializacionesController::formularioCronograma/$1');
+$routes->post('/comites-elecciones/proceso/(:num)/socializar/cronograma/enviar', 'SocializacionesController::enviarCronograma/$1');
+
 // Firmas electronicas del Acta de Constitucion
 $routes->get('/comites-elecciones/proceso/(:num)/firmas', 'ComitesEleccionesController::solicitarFirmasActa/$1');
 $routes->post('/comites-elecciones/proceso/crear-solicitudes-acta', 'ComitesEleccionesController::crearSolicitudesActa');

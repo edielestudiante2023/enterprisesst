@@ -97,6 +97,13 @@ class DocumentoSSTFactory
         'diccionario_competencias_cliente' => DiccionarioCompetenciasCliente::class,
         // Talento Humano - Matriz de EPP y Dotacion (SST-MT-G-003)
         'matriz_epp' => MatrizEpp::class,
+        // Socializaciones de comites (PDFs distribuidos por email)
+        'socializacion_miembros_copasst' => SocializacionMiembrosCopasst::class,
+        'socializacion_miembros_cocolab' => SocializacionMiembrosCocolab::class,
+        'socializacion_miembros_brigada' => SocializacionMiembrosBrigada::class,
+        'socializacion_cronograma_copasst' => SocializacionCronogramaCopasst::class,
+        'socializacion_cronograma_cocolab' => SocializacionCronogramaCocolab::class,
+        'socializacion_cronograma_brigada' => SocializacionCronogramaBrigada::class,
     ];
 
     /**

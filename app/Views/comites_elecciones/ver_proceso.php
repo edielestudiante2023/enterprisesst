@@ -950,6 +950,26 @@ $permitirGestionCandidatos = true;
             </div>
             <?php endif; ?>
 
+            <!-- Socializacion del Comite (miembros + cronograma) -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-megaphone me-2"></i>Socializacion del <?= esc($proceso['tipo_comite']) ?></h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Genera un PDF con los miembros electos o el cronograma de reuniones, y envialo por email a los colaboradores cargando un CSV con sus correos.
+                    </p>
+                    <div class="d-grid gap-2 d-md-flex">
+                        <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/socializar/miembros') ?>" class="btn btn-info text-white">
+                            <i class="bi bi-people-fill me-1"></i>Socializar Miembros del <?= esc($proceso['tipo_comite']) ?>
+                        </a>
+                        <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/socializar/cronograma') ?>" class="btn btn-outline-info">
+                            <i class="bi bi-calendar-event me-1"></i>Socializar Cronograma de Reuniones
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0"><i class="bi bi-pen me-2"></i>Pendiente de Firmas</h5>
