@@ -749,6 +749,11 @@ $routes->get('/documentacion', 'DocumentacionController::index');
 $routes->get('/documentacion/(:num)', 'DocumentacionController::index/$1');
 $routes->get('/documentacion/seleccionar-cliente', 'DocumentacionController::seleccionarCliente');
 $routes->get('/documentacion/carpeta/(:num)', 'DocumentacionController::carpeta/$1');
+
+// Vinculos carpeta <-> reportList (referencias sin duplicar archivo)
+$routes->get('/documentacion/vinculo/reportes-disponibles/(:num)', 'VinculoReporteController::reportesDisponibles/$1');
+$routes->post('/documentacion/vinculo/agregar', 'VinculoReporteController::agregar');
+$routes->post('/documentacion/vinculo/(:num)/quitar', 'VinculoReporteController::quitar/$1');
 $routes->get('/documentacion/documentos/(:num)', 'DocumentacionController::documentos/$1');
 $routes->get('/documentacion/ver/(:num)', 'DocumentacionController::verDocumento/$1');
 $routes->get('/documentacion/buscar/(:num)', 'DocumentacionController::buscar/$1');
