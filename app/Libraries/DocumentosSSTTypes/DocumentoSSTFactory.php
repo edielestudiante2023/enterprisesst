@@ -101,6 +101,9 @@ class DocumentoSSTFactory
         'socializacion_miembros_copasst' => SocializacionMiembrosCopasst::class,
         'socializacion_miembros_cocolab' => SocializacionMiembrosCocolab::class,
         'socializacion_miembros_brigada' => SocializacionMiembrosBrigada::class,
+        'socializacion_cronograma_copasst' => SocializacionCronogramaCopasst::class,
+        'socializacion_cronograma_cocolab' => SocializacionCronogramaCocolab::class,
+        'socializacion_cronograma_brigada' => SocializacionCronogramaBrigada::class,
     ];
 
     /**
