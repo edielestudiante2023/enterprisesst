@@ -14,6 +14,12 @@
                target="_blank" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-eye me-1"></i>Vista previa PDF
             </a>
+            <?php if (!empty($documento['id_documento'])): ?>
+            <a href="<?= base_url('firma/estado/' . $documento['id_documento']) ?>"
+               target="_blank" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-clipboard-check me-1"></i>Ver detalle de firmas
+            </a>
+            <?php endif; ?>
             <a href="<?= base_url('comites-elecciones/' . $proceso['id_cliente'] . '/proceso/' . $proceso['id_proceso']) ?>"
                class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i>Volver al proceso
@@ -68,6 +74,7 @@
                                     <th>Email</th>
                                     <th>Representacion</th>
                                     <th>Estado de firma</th>
+                                    <th style="width:140px;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -109,6 +116,9 @@
                                     <td>
                                         <?php if ($firmado): ?>
                                             <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Firmado</span>
+                                            <?php if (!empty($sol['fecha_firma'])): ?>
+                                                <div class="small text-muted"><?= esc(date('d/m/Y H:i', strtotime($sol['fecha_firma']))) ?></div>
+                                            <?php endif; ?>
                                         <?php elseif ($pendiente): ?>
                                             <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Pendiente</span>
                                             <?php if (!empty($sol['fecha_expiracion'])): ?>
@@ -116,6 +126,34 @@
                                             <?php endif; ?>
                                         <?php else: ?>
                                             <span class="badge bg-secondary">Sin solicitud</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($sol && !empty($sol['id_solicitud'])): ?>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <?php if ($pendiente): ?>
+                                                <form method="post" action="<?= base_url('firma/reenviar/' . (int) $sol['id_solicitud']) ?>"
+                                                      class="d-inline" onsubmit="return confirm('Reenviar correo de firma a <?= esc($m['email']) ?>?');">
+                                                    <?= csrf_field() ?>
+                                                    <button type="submit" class="btn btn-outline-primary" title="Reenviar email">
+                                                        <i class="bi bi-envelope-arrow-up"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="<?= base_url('firma/cancelar/' . (int) $sol['id_solicitud']) ?>"
+                                                      class="d-inline" onsubmit="return confirm('Cancelar esta solicitud? El miembro NO podra firmar con el enlace actual.');">
+                                                    <?= csrf_field() ?>
+                                                    <button type="submit" class="btn btn-outline-danger" title="Cancelar solicitud">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                </form>
+                                                <?php endif; ?>
+                                                <a href="<?= base_url('firma/audit-log/' . (int) $sol['id_solicitud']) ?>"
+                                                   target="_blank" class="btn btn-outline-info" title="Ver bitacora">
+                                                    <i class="bi bi-list-task"></i>
+                                                </a>
+                                            </div>
+                                        <?php else: ?>
+                                            <span class="small text-muted">-</span>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
