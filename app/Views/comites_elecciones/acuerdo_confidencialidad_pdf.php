@@ -198,7 +198,6 @@
     <?php foreach ($miembros as $i => $m):
         $nombre = trim($m['nombre'] ?? '');
         $cedula = trim($m['cedula'] ?? '');
-        $lugarExpedicion = trim($m['lugar_expedicion'] ?? '');
         // Firma electronica del miembro (key: miembro_{idMiembro})
         $tipoFirmaKey = 'miembro_' . ($m['id_miembro'] ?? $i);
         $firma = $firmasElectronicas[$tipoFirmaKey] ?? null;
@@ -211,9 +210,8 @@
         <div class="datos-personales">
             <div class="linea">
                 Yo, <strong><?= esc($nombre ?: '__________________________________________') ?></strong>,
-                identificado(a) con cedula de ciudadania numero
+                identificado(a) con documento de identidad numero
                 <strong><?= esc($cedula ?: '___________________') ?></strong>,
-                expedida en <strong><?= esc($lugarExpedicion ?: '_________________________') ?></strong>,
                 en mi calidad de miembro del Comite de Convivencia Laboral de
                 <strong><?= esc($razonSocialUpper) ?></strong>,
             </div>
