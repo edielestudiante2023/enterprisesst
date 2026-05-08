@@ -121,6 +121,7 @@ class AcuerdoConfidencialidadController extends Controller
         $orden = ($maxOrden && $maxOrden->orden_firma) ? (int) $maxOrden->orden_firma + 1 : 1;
 
         $creadas = 0; $omitidas = 0; $sinEmail = 0;
+        $emailsOk = 0; $emailsFallidos = 0; $erroresEmail = [];
 
         foreach ($miembrosSeleccionados as $idMiembroRaw) {
             $idMiembro = (string) $idMiembroRaw;
@@ -159,28 +160,51 @@ class AcuerdoConfidencialidadController extends Controller
             ];
             $this->db->table('tbl_doc_firma_solicitudes')->insert($solicitud);
             $idSolicitud = (int) $this->db->insertID();
-
-            $this->enviarEmailFirma($solicitud, $documento, $data);
-            $this->db->table('tbl_doc_firma_audit_log')->insert([
-                'id_solicitud' => $idSolicitud,
-                'evento'       => 'correo_enviado',
-                'fecha_hora'   => date('Y-m-d H:i:s'),
-                'ip_address'   => $this->request->getIPAddress(),
-                'detalles'     => json_encode(['via' => 'acuerdo_confidencialidad']),
-            ]);
             $creadas++;
+
+            // Capturar resultado real del envio para reportar al usuario
+            $resEmail = $this->enviarEmailFirma($solicitud, $documento, $data);
+            if ($resEmail['ok']) {
+                $emailsOk++;
+                $this->db->table('tbl_doc_firma_audit_log')->insert([
+                    'id_solicitud' => $idSolicitud,
+                    'evento'       => 'correo_enviado',
+                    'fecha_hora'   => date('Y-m-d H:i:s'),
+                    'ip_address'   => $this->request->getIPAddress(),
+                    'detalles'     => json_encode(['via' => 'acuerdo_confidencialidad']),
+                ]);
+            } else {
+                $emailsFallidos++;
+                $erroresEmail[] = $email . ': ' . ($resEmail['error'] ?? 'desconocido');
+                $this->db->table('tbl_doc_firma_audit_log')->insert([
+                    'id_solicitud' => $idSolicitud,
+                    'evento'       => 'correo_fallo',
+                    'fecha_hora'   => date('Y-m-d H:i:s'),
+                    'ip_address'   => $this->request->getIPAddress(),
+                    'detalles'     => json_encode(['via' => 'acuerdo_confidencialidad', 'error' => $resEmail['error']]),
+                ]);
+            }
         }
 
         $this->db->table('tbl_documentos_sst')
             ->where('id_documento', $idDocumento)
             ->update(['estado' => 'pendiente_firma', 'updated_at' => date('Y-m-d H:i:s')]);
 
-        $partes = ["{$creadas} solicitud(es) creadas y enviadas"];
-        if ($omitidas > 0) $partes[] = "{$omitidas} omitida(s) (ya existian o miembro no encontrado)";
-        if ($sinEmail > 0) $partes[] = "{$sinEmail} sin email valido";
+        $partes = ["{$creadas} solicitud(es) creadas"];
+        if ($emailsOk > 0)        $partes[] = "{$emailsOk} email(s) enviado(s) OK";
+        if ($emailsFallidos > 0)  $partes[] = "{$emailsFallidos} email(s) fallido(s)";
+        if ($omitidas > 0)        $partes[] = "{$omitidas} omitida(s) (ya existian)";
+        if ($sinEmail > 0)        $partes[] = "{$sinEmail} sin email valido";
+
+        $tipoFlash = ($emailsFallidos > 0 || $sinEmail > 0) ? 'warning' : ($creadas > 0 ? 'success' : 'warning');
+        $msg = implode(' . ', $partes);
+        if (!empty($erroresEmail)) {
+            $msg .= ' | Detalle de fallos: ' . implode('; ', array_slice($erroresEmail, 0, 3));
+            if (count($erroresEmail) > 3) $msg .= ' (y ' . (count($erroresEmail) - 3) . ' mas)';
+        }
 
         return redirect()->to("/comites-elecciones/proceso/{$idProceso}/acuerdo-confidencialidad/firmas")
-            ->with($creadas > 0 ? 'success' : 'warning', implode(' . ', $partes));
+            ->with($tipoFlash, $msg);
     }
 
     /**
@@ -245,12 +269,14 @@ class AcuerdoConfidencialidadController extends Controller
         foreach ($rows as $c) {
             // Resolver id_miembro: usar id_candidato si no hay tabla puente activa
             $idMiembro = $c['id_miembro'] ?? $c['id_candidato'] ?? null;
+            // El campo real en tbl_candidatos_comite es 'documento_identidad'.
+            // (Fallback a 'documento' o 'cedula' por compatibilidad con otras tablas)
+            $documento = $c['documento_identidad'] ?? $c['documento'] ?? $c['cedula'] ?? '';
             $miembros[] = [
                 'id_miembro'      => $idMiembro,
                 'id_candidato'    => $c['id_candidato'] ?? null,
                 'nombre'          => trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? '')),
-                'cedula'          => $c['cedula'] ?? '',
-                'lugar_expedicion'=> $c['lugar_expedicion_cedula'] ?? $c['lugar_expedicion'] ?? '',
+                'cedula'          => $documento,
                 'cargo'           => $c['cargo'] ?? 'Miembro Comite de Convivencia',
                 'representacion'  => $c['representacion'] ?? '',
                 'tipo_plaza'      => $c['tipo_plaza'] ?? '',
@@ -332,10 +358,17 @@ class AcuerdoConfidencialidadController extends Controller
         return $this->db->table('tbl_documentos_sst')->where('id_documento', $idDoc)->get()->getRowArray();
     }
 
-    private function enviarEmailFirma(array $solicitud, array $documento, array $data): bool
+    /**
+     * Envia el correo de firma. Devuelve ['ok' => bool, 'error' => string|null]
+     * para que crearSolicitudes pueda reportar exito/fallo per-destinatario.
+     */
+    private function enviarEmailFirma(array $solicitud, array $documento, array $data): array
     {
         $apiKey = getenv('SENDGRID_API_KEY');
-        if (empty($apiKey) || $apiKey === 'SG.xxxxxx') return false;
+        if (empty($apiKey) || $apiKey === 'SG.xxxxxx') {
+            log_message('error', '[AcuerdoConfidencialidad] SENDGRID_API_KEY no configurada o es placeholder');
+            return ['ok' => false, 'error' => 'SENDGRID_API_KEY no configurada'];
+        }
 
         $linkFirma = base_url('firmar/' . $solicitud['token']);
         $nombreEmpresa = $data['cliente']['nombre_cliente'] ?? '';
@@ -371,10 +404,19 @@ class AcuerdoConfidencialidadController extends Controller
             $mail->addTo($solicitud['firmante_email'], $solicitud['firmante_nombre']);
             $mail->addContent('text/html', $cuerpo);
             $resp = $sendgrid->send($mail);
-            return $resp->statusCode() >= 200 && $resp->statusCode() < 300;
+            $code = $resp->statusCode();
+            $body = (string) $resp->body();
+
+            if ($code >= 200 && $code < 300) {
+                log_message('info', "[AcuerdoConfidencialidad] correo enviado OK a {$solicitud['firmante_email']} - status {$code}");
+                return ['ok' => true, 'error' => null];
+            }
+
+            log_message('error', "[AcuerdoConfidencialidad] sendgrid rechazo para {$solicitud['firmante_email']} - status {$code} - body: " . substr($body, 0, 500));
+            return ['ok' => false, 'error' => "SendGrid HTTP {$code}: " . substr($body, 0, 200)];
         } catch (\Throwable $e) {
-            log_message('error', '[AcuerdoConfidencialidad] sendgrid error: ' . $e->getMessage());
-            return false;
+            log_message('error', '[AcuerdoConfidencialidad] sendgrid exception para ' . $solicitud['firmante_email'] . ': ' . $e->getMessage());
+            return ['ok' => false, 'error' => $e->getMessage()];
         }
     }
 
