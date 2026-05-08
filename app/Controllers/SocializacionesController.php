@@ -375,24 +375,40 @@ class SocializacionesController extends Controller
     // =========================================================================
 
     /**
-     * Carga miembros electos del proceso, con foto en base64 lista para el PDF.
+     * Carga los miembros del proceso (electos+designados+aprobados) con foto en base64.
+     * Reproduce la misma logica de obtenerDatosActa() en ComitesEleccionesController:
+     * - trabajadores: representacion=trabajador, estado IN (elegido, aprobado)
+     * - empleador:    representacion=empleador,  estado IN (designado, aprobado)
      */
     private function cargarMiembrosElectos(int $idProceso): array
     {
-        $rows = $this->db->table('tbl_candidatos')
+        // Trabajadores electos/aprobados (ordenados por votos)
+        $trabajadores = $this->db->table('tbl_candidatos_comite')
             ->where('id_proceso', $idProceso)
-            ->where('estado', 'electo')
-            ->orderBy('representacion', 'ASC')
+            ->where('representacion', 'trabajador')
+            ->whereIn('estado', ['elegido', 'aprobado'])
+            ->orderBy('votos_obtenidos', 'DESC')
+            ->orderBy('apellidos', 'ASC')
+            ->get()->getResultArray();
+
+        // Empleador designados/aprobados (principales antes que suplentes)
+        $empleador = $this->db->table('tbl_candidatos_comite')
+            ->where('id_proceso', $idProceso)
+            ->where('representacion', 'empleador')
+            ->whereIn('estado', ['designado', 'aprobado'])
+            ->orderBy('tipo_plaza', 'ASC')
             ->orderBy('apellidos', 'ASC')
             ->get()->getResultArray();
 
         $miembros = [];
-        foreach ($rows as $c) {
+        foreach (array_merge($empleador, $trabajadores) as $c) {
+            $tipoPlaza = strtolower($c['tipo_plaza'] ?? '');
             $miembros[] = [
                 'nombre'         => trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? '')),
                 'cargo'          => $c['cargo'] ?? '',
-                'rol_comite'     => $c['rol_comite'] ?? 'miembro',
+                'rol_comite'     => $tipoPlaza === 'suplente' ? 'Suplente' : 'Principal',
                 'representacion' => $c['representacion'] ?? '',
+                'tipo_plaza'     => $tipoPlaza,
                 'foto_base64'    => !empty($c['foto']) ? $this->imgToBase64(FCPATH . $c['foto']) : '',
             ];
         }
