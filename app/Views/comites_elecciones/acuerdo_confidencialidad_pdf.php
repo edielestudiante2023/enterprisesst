@@ -6,11 +6,17 @@
     <?php
     // Auxiliares
     if (!function_exists('fechaLargaAcuerdo')) {
+        /**
+         * Formato largo con fecha y hora para el cierre del acuerdo cuando ya
+         * fue firmado: "8 dias del mes de mayo del ano 2026, a las 14:32 horas".
+         */
         function fechaLargaAcuerdo($fecha) {
             if (!$fecha) return '___________________';
             $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
             $ts = strtotime($fecha);
-            return date('d', $ts) . ' dias del mes de ' . $meses[(int)date('n', $ts) - 1] . ' del ano ' . date('Y', $ts);
+            return date('d', $ts) . ' dias del mes de ' . $meses[(int)date('n', $ts) - 1]
+                 . ' del ano ' . date('Y', $ts)
+                 . ', a las ' . date('H:i', $ts) . ' horas';
         }
     }
 
@@ -269,7 +275,7 @@
                 <?php if ($firmoOk && $fechaFirma): ?>
                     <strong><?= fechaLargaAcuerdo($fechaFirma) ?></strong>.
                 <?php else: ?>
-                    <strong>_____ dias del mes de _____________ del ano _______</strong>.
+                    <strong>_____ dias del mes de _____________ del ano _______, a las __:__ horas</strong>.
                 <?php endif; ?>
             </p>
         </div>
