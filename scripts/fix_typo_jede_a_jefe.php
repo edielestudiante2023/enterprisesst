@@ -30,16 +30,19 @@ $c->set_charset('utf8mb4');
 
 // 1) Listar registros antes (snapshot)
 echo "ANTES del fix:\n";
+// Tabla => [pk, columna_cargo]
 $tablas = [
-    'tbl_candidatos_comite' => 'id_candidato',
-    'tbl_comite_miembros'   => 'id_miembro',
+    'tbl_candidatos_comite'    => ['pk' => 'id_candidato',  'col' => 'cargo'],
+    'tbl_comite_miembros'      => ['pk' => 'id_miembro',    'col' => 'cargo'],
+    'tbl_doc_firma_solicitudes'=> ['pk' => 'id_solicitud',  'col' => 'firmante_cargo'],
 ];
 $snapshots = [];
-foreach ($tablas as $tabla => $pk) {
-    $r = $c->query("SELECT {$pk} AS id, cargo FROM {$tabla} WHERE cargo LIKE '%JEDE%'");
+foreach ($tablas as $tabla => $cfg) {
+    $pk = $cfg['pk']; $col = $cfg['col'];
+    $r = $c->query("SELECT {$pk} AS id, {$col} AS cargo FROM {$tabla} WHERE {$col} LIKE '%JEDE%'");
     while ($row = $r->fetch_assoc()) {
-        $snapshots[] = ['tabla' => $tabla, 'id' => $row['id'], 'cargo_antes' => $row['cargo']];
-        echo "  {$tabla} id={$row['id']} -> [{$row['cargo']}]\n";
+        $snapshots[] = ['tabla' => $tabla, 'pk' => $pk, 'col' => $col, 'id' => $row['id'], 'cargo_antes' => $row['cargo']];
+        echo "  {$tabla}.{$col} id={$row['id']} -> [{$row['cargo']}]\n";
     }
 }
 echo "\nTotal a actualizar: " . count($snapshots) . "\n";
@@ -60,10 +63,11 @@ if (!$apply) {
 try {
     $c->begin_transaction();
 
-    foreach ($tablas as $tabla => $pk) {
-        $sql = "UPDATE {$tabla} SET cargo = REPLACE(cargo, 'JEDE', 'JEFE') WHERE cargo LIKE '%JEDE%'";
+    foreach ($tablas as $tabla => $cfg) {
+        $col = $cfg['col'];
+        $sql = "UPDATE {$tabla} SET {$col} = REPLACE({$col}, 'JEDE', 'JEFE') WHERE {$col} LIKE '%JEDE%'";
         if (!$c->query($sql)) throw new \Exception("Error en {$tabla}: " . $c->error);
-        echo "OK {$tabla}: {$c->affected_rows} fila(s) actualizadas\n";
+        echo "OK {$tabla}.{$col}: {$c->affected_rows} fila(s) actualizadas\n";
     }
 
     $c->commit();
@@ -76,16 +80,17 @@ try {
 
 // 3) Verificar
 echo "\nVerificacion (debe haber 0 ocurrencias de JEDE):\n";
-foreach ($tablas as $tabla => $pk) {
-    $r = $c->query("SELECT COUNT(*) c FROM {$tabla} WHERE cargo LIKE '%JEDE%'");
+foreach ($tablas as $tabla => $cfg) {
+    $col = $cfg['col'];
+    $r = $c->query("SELECT COUNT(*) c FROM {$tabla} WHERE {$col} LIKE '%JEDE%'");
     $row = $r->fetch_assoc();
-    echo "  {$tabla}: {$row['c']} ocurrencia(s) restante(s)\n";
+    echo "  {$tabla}.{$col}: {$row['c']} ocurrencia(s) restante(s)\n";
 }
 
 // Mostrar nuevos valores
 echo "\nDESPUES del fix:\n";
 foreach ($snapshots as $s) {
-    $r = $c->query("SELECT cargo FROM {$s['tabla']} WHERE " . ($s['tabla'] === 'tbl_candidatos_comite' ? 'id_candidato' : 'id_miembro') . " = " . (int)$s['id']);
+    $r = $c->query("SELECT {$s['col']} AS cargo FROM {$s['tabla']} WHERE {$s['pk']} = " . (int)$s['id']);
     $row = $r->fetch_assoc();
     echo "  {$s['tabla']} id={$s['id']}: [{$s['cargo_antes']}] -> [{$row['cargo']}]\n";
 }
