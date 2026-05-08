@@ -50,6 +50,21 @@
             </a>
         </div>
 
+        <!-- Lista de Asistencia: TRANSVERSAL — visible para todos los comites -->
+        <div class="col-md-6 mb-3">
+            <a href="<?= base_url('miembro/lista-asistencia') ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-clipboard-check text-warning fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1 text-dark">Lista de Asistencia</h5>
+                        <p class="text-muted mb-0 small">Registrar asistencia a reuniones, asambleas y otras convocatorias</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
         <?php if (!empty($esCopasst)): ?>
         <div class="col-md-6 mb-3">
             <a href="<?= base_url('miembro/inspecciones/locativa') ?>" class="card border-0 shadow-sm text-decoration-none h-100">

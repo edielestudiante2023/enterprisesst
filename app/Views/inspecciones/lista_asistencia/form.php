@@ -1,0 +1,934 @@
+<?php
+$isEdit = !empty($lista);
+$ctx = $contexto ?? 'miembro';
+$baseUrl = $ctx === 'consultor' ? 'inspecciones/lista-asistencia' : 'miembro/lista-asistencia';
+$action = $isEdit
+    ? site_url($baseUrl . '/update/' . $lista['id'])
+    : site_url($baseUrl . '/store');
+$tokenUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/lista-asistencia/generar-token-firma/'
+    : 'miembro/lista-asistencia/generar-token-firma/';
+$saveAsistUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/lista-asistencia/asistente/save/'
+    : 'miembro/lista-asistencia/asistente/save/';
+$emailUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/lista-asistencia/asistente/enviar-email/'
+    : 'miembro/lista-asistencia/asistente/enviar-email/';
+$deleteAsistUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/lista-asistencia/asistente/delete/'
+    : 'miembro/lista-asistencia/asistente/delete/';
+$statusUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/lista-asistencia/asistentes-status/'
+    : 'miembro/lista-asistencia/asistentes-status/';
+$tokenInscripcionUrlBase = $ctx === 'consultor'
+    ? 'inspecciones/lista-asistencia/generar-token-inscripcion/'
+    : 'miembro/lista-asistencia/generar-token-inscripcion/';
+?>
+
+<div class="container-fluid px-3">
+    <form method="post" action="<?= $action ?>" id="listaAsistForm">
+        <?= csrf_field() ?>
+
+        <div class="accordion mt-2" id="accLista">
+            <!-- Datos Generales -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#secDatos">
+                        Datos Generales
+                    </button>
+                </h2>
+                <div id="secDatos" class="accordion-collapse collapse show" data-bs-parent="#accLista">
+                    <div class="accordion-body">
+                        <?php if ($ctx === 'miembro'): ?>
+                        <input type="hidden" name="id_cliente" value="<?= $idCliente ?? ($lista['id_cliente'] ?? '') ?>">
+                        <div class="mb-3">
+                            <label class="form-label">Cliente</label>
+                            <input type="text" class="form-control" value="<?= esc($cliente['nombre_cliente'] ?? '') ?>" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Registrado por</label>
+                            <input type="text" class="form-control" value="<?= esc($miembro['nombre_completo'] ?? '') ?>" readonly>
+                        </div>
+                        <?php else: ?>
+                        <div class="mb-3">
+                            <label class="form-label">Cliente *</label>
+                            <select name="id_cliente" id="selectClienteLista" class="form-select" required>
+                                <option value="">Cargando...</option>
+                            </select>
+                        </div>
+                        <?php endif; ?>
+
+                        <div class="mb-3">
+                            <label class="form-label">Motivo / Asunto *</label>
+                            <input type="text" name="motivo" class="form-control"
+                                value="<?= esc($lista['motivo'] ?? '') ?>" placeholder="Ej: Reunión mensual COPASST" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Fecha *</label>
+                                <input type="date" name="fecha_actividad" class="form-control"
+                                    value="<?= $lista['fecha_actividad'] ?? date('Y-m-d') ?>" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Hora inicio</label>
+                                <input type="time" name="hora_inicio" class="form-control"
+                                    value="<?= $lista['hora_inicio'] ?? '' ?>">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Hora fin</label>
+                                <input type="time" name="hora_fin" class="form-control"
+                                    value="<?= $lista['hora_fin'] ?? '' ?>">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Modalidad</label>
+                            <select name="modalidad" class="form-select">
+                                <?php foreach (['presencial','virtual','mixta'] as $op): ?>
+                                    <option value="<?= $op ?>" <?= ($lista['modalidad'] ?? 'presencial') === $op ? 'selected' : '' ?>><?= ucfirst($op) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Convocada por</label>
+                            <input type="text" name="convocada_por" class="form-control"
+                                value="<?= esc($lista['convocada_por'] ?? '') ?>" placeholder="Ej: Presidente del Comité">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Lugar</label>
+                            <input type="text" name="lugar" class="form-control"
+                                value="<?= esc($lista['lugar'] ?? '') ?>" placeholder="Ej: Sala de juntas / Meet">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Enlace grabación</label>
+                            <input type="url" name="enlace_grabacion" class="form-control"
+                                value="<?= esc($lista['enlace_grabacion'] ?? '') ?>" placeholder="https://...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Agenda / Orden del día</label>
+                            <textarea name="agenda" class="form-control" rows="3" placeholder="1. Apertura&#10;2. Lectura del orden del día&#10;3. ..."><?= esc($lista['agenda'] ?? '') ?></textarea>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">Observaciones</label>
+                            <textarea name="observaciones" class="form-control" rows="2"><?= esc($lista['observaciones'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Asistentes -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#secAsist">
+                        Asistentes (<span id="countAsist"><?= count($asistentes ?? []) ?></span>)
+                    </button>
+                </h2>
+                <div id="secAsist" class="accordion-collapse collapse" data-bs-parent="#accLista">
+                    <div class="accordion-body">
+                        <?php if (!$isEdit): ?>
+                            <div class="alert alert-info py-2" style="font-size:13px;">
+                                <i class="fas fa-info-circle"></i>
+                                Guarda primero la lista como borrador. Después podrás agregar asistentes y enviar enlaces de firma por WhatsApp.
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-warning py-2" style="font-size:13px;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Para que el botón <strong>Enviar WhatsApp</strong> funcione, primero <strong>guarda</strong> el asistente recién agregado.
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if ($isEdit): ?>
+                        <div class="mb-3 p-3 rounded" style="background:#fff7ed;border:1px solid #fed7aa;">
+                            <div class="d-flex justify-content-between align-items-center" style="gap:10px;">
+                                <div style="font-size:13px;line-height:1.4;">
+                                    <strong style="color:#9a3412;">
+                                        <i class="fas fa-qrcode"></i> Auto-inscripcion via QR
+                                    </strong>
+                                    <div class="text-muted" style="font-size:12px;">
+                                        Cada asistente escanea el QR con su celular y llena sus datos. Mas rapido para grupos grandes.
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-warning" id="btnMostrarQR" style="white-space:nowrap;font-weight:600;">
+                                    <i class="fas fa-qrcode"></i> Mostrar QR
+                                </button>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php
+                        $totalAsist = count($asistentes ?? []);
+                        $firmadosAsist = 0;
+                        foreach (($asistentes ?? []) as $__a) { if (!empty($__a['firma_path'])) $firmadosAsist++; }
+                        $pctAsist = $totalAsist > 0 ? (int) round($firmadosAsist * 100 / $totalAsist) : 0;
+                        ?>
+                        <?php if ($isEdit && $totalAsist > 0): ?>
+                        <div id="firmasProgreso" class="mb-3 p-2 rounded" style="background:#f8f9fa;border:1px solid #e5e7eb;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span style="font-size:13px;font-weight:600;color:#111827;">
+                                    <i class="fas fa-signature text-success"></i>
+                                    Firmas: <span id="firmasFirmados"><?= $firmadosAsist ?></span> de <span id="firmasTotal"><?= $totalAsist ?></span>
+                                    (<span id="firmasPct"><?= $pctAsist ?></span>%)
+                                </span>
+                                <button type="button" id="btnRefreshFirmas" class="btn btn-sm btn-outline-primary" style="font-size:12px;padding:3px 10px;">
+                                    <i class="fas fa-sync-alt"></i> Actualizar
+                                </button>
+                            </div>
+                            <div style="background:#e5e7eb;border-radius:999px;height:8px;overflow:hidden;">
+                                <div id="firmasBar" style="background:#10b981;height:100%;width:<?= $pctAsist ?>%;transition:width 0.3s;"></div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <div id="asistentesContainer">
+                            <?php if (!empty($asistentes)): ?>
+                                <?php foreach ($asistentes as $i => $a): ?>
+                                <div class="card mb-3 asistente-row" data-asistente-id="<?= $a['id'] ?>">
+                                    <div class="card-body p-2">
+                                        <input type="hidden" name="asistente_id[]" value="<?= $a['id'] ?>">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong style="font-size:13px;">Asistente #<span class="asist-num"><?= $i + 1 ?></span>
+                                                <span class="asist-status-badge">
+                                                <?php if (!empty($a['firma_path'])): ?>
+                                                    <span class="badge bg-success" style="font-size:10px;"><i class="fas fa-check"></i> Firmado</span>
+                                                <?php elseif (!empty($a['token_firma'])): ?>
+                                                    <span class="badge bg-warning text-dark" style="font-size:10px;"><i class="fas fa-clock"></i> Enlace enviado</span>
+                                                <?php endif; ?>
+                                                </span>
+                                            </strong>
+                                            <?php if (!empty($a['firmado_at'])): ?>
+                                            <div class="asist-firmado-at text-muted" style="font-size:11px;margin-top:2px;">
+                                                <i class="fas fa-clock"></i> Firmó el <?= date('d/m/Y H:i', strtotime($a['firmado_at'])) ?>
+                                            </div>
+                                            <?php else: ?>
+                                            <div class="asist-firmado-at text-muted" style="font-size:11px;margin-top:2px;display:none;"></div>
+                                            <?php endif; ?>
+                                            <?php if (empty($a['firma_path'])): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-asist" style="min-height:32px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            <?php else: ?>
+                                            <span class="text-muted small" title="No se puede quitar: ya firmo">
+                                                <i class="fas fa-lock"></i>
+                                            </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <input type="text" name="asistente_nombre[]" class="form-control form-control-sm"
+                                                    value="<?= esc($a['nombre_completo']) ?>" placeholder="Nombre completo *" required>
+                                            </div>
+                                            <div class="col-4">
+                                                <select name="asistente_tipo_doc[]" class="form-select form-select-sm">
+                                                    <?php foreach (['CC','CE','PA','TI','NIT'] as $td): ?>
+                                                        <option value="<?= $td ?>" <?= ($a['tipo_documento'] ?? 'CC') === $td ? 'selected' : '' ?>><?= $td ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-8">
+                                                <input type="text" name="asistente_num_doc[]" class="form-control form-control-sm"
+                                                    value="<?= esc($a['numero_documento'] ?? '') ?>" placeholder="Número documento">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="text" name="asistente_cargo[]" class="form-control form-control-sm"
+                                                    value="<?= esc($a['cargo'] ?? '') ?>" placeholder="Cargo">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="text" name="asistente_area[]" class="form-control form-control-sm"
+                                                    value="<?= esc($a['area_dependencia'] ?? '') ?>" placeholder="Área / Dependencia">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="email" name="asistente_email[]" class="form-control form-control-sm"
+                                                    value="<?= esc($a['email'] ?? '') ?>" placeholder="Email (opcional)">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="text" name="asistente_celular[]" class="form-control form-control-sm"
+                                                    value="<?= esc($a['celular'] ?? '') ?>" placeholder="Celular (opcional)">
+                                            </div>
+                                        </div>
+                                        <?php if (empty($a['firma_path'])): ?>
+                                        <div class="mt-2 d-grid gap-1">
+                                            <button type="button" class="btn btn-sm btn-primary btn-save-asist"
+                                                data-asistente-id="<?= $a['id'] ?>">
+                                                <i class="fas fa-save"></i> Guardar este asistente
+                                            </button>
+                                            <div class="d-flex gap-1">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary btn-copiar-firma flex-fill"
+                                                    data-asistente-id="<?= $a['id'] ?>"
+                                                    data-nombre="<?= esc($a['nombre_completo']) ?>"
+                                                    title="Copiar enlace">
+                                                    <i class="fas fa-copy"></i> Copiar
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-primary btn-email-firma flex-fill"
+                                                    data-asistente-id="<?= $a['id'] ?>"
+                                                    data-nombre="<?= esc($a['nombre_completo']) ?>"
+                                                    data-email="<?= esc($a['email'] ?? '') ?>"
+                                                    title="Enviar enlace al email">
+                                                    <i class="fas fa-envelope"></i> Email
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-success btn-whatsapp-firma flex-fill"
+                                                    data-asistente-id="<?= $a['id'] ?>"
+                                                    data-nombre="<?= esc($a['nombre_completo']) ?>"
+                                                    title="Compartir por WhatsApp">
+                                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-dark mt-2" id="btnAddAsist">
+                            <i class="fas fa-plus"></i> Agregar asistente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-3 mt-3 mb-5 pb-3">
+            <button type="submit" class="btn btn-pwa btn-pwa-outline py-3" style="font-size:17px;">
+                <i class="fas fa-save"></i> Guardar borrador
+            </button>
+            <?php if ($isEdit): ?>
+            <button type="button" class="btn btn-pwa btn-pwa-primary py-3" style="font-size:17px;" id="btnFinalizar">
+                <i class="fas fa-check-circle"></i> Finalizar y generar PDF
+            </button>
+            <?php endif; ?>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var csrfName = '<?= csrf_token() ?>';
+    var csrfHash = '<?= csrf_hash() ?>';
+    var tokenUrlBase = '<?= site_url($tokenUrlBase) ?>';
+
+    <?php if ($ctx === 'consultor'): ?>
+    var clienteIdSel = '<?= $idCliente ?? ($lista['id_cliente'] ?? '') ?>';
+    if (typeof $ !== 'undefined') {
+        $.ajax({
+            url: '<?= site_url('inspecciones/api/clientes') ?>',
+            dataType: 'json',
+            success: function(data) {
+                var sel = document.getElementById('selectClienteLista');
+                if (!sel) return;
+                sel.innerHTML = '<option value="">Seleccionar cliente...</option>';
+                data.forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.id_cliente;
+                    opt.textContent = c.nombre_cliente;
+                    if (clienteIdSel && String(c.id_cliente) === String(clienteIdSel)) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+                if ($('#selectClienteLista').select2) {
+                    $('#selectClienteLista').select2({ placeholder: 'Seleccionar cliente...', width: '100%' });
+                }
+            }
+        });
+    }
+    <?php endif; ?>
+
+    function updateAsist() {
+        var rows = document.querySelectorAll('.asistente-row');
+        document.getElementById('countAsist').textContent = rows.length;
+        rows.forEach((row, i) => {
+            var num = row.querySelector('.asist-num');
+            if (num) num.textContent = i + 1;
+        });
+    }
+
+    var deleteAsistUrlBase = '<?= site_url($deleteAsistUrlBase) ?>';
+    var statusUrlBase = '<?= site_url($statusUrlBase) ?>';
+
+    function fmtFechaFirma(iso) {
+        if (!iso) return '';
+        try {
+            var d = new Date(iso.replace(' ', 'T'));
+            if (isNaN(d.getTime())) return '';
+            var dd = String(d.getDate()).padStart(2, '0');
+            var mm = String(d.getMonth() + 1).padStart(2, '0');
+            var yy = d.getFullYear();
+            var hh = String(d.getHours()).padStart(2, '0');
+            var mi = String(d.getMinutes()).padStart(2, '0');
+            return dd + '/' + mm + '/' + yy + ' ' + hh + ':' + mi;
+        } catch (e) { return ''; }
+    }
+
+    function aplicarEstadoAsistentes(data) {
+        if (!data || !data.asistentes) return;
+
+        var elFirmados = document.getElementById('firmasFirmados');
+        var elTotal    = document.getElementById('firmasTotal');
+        var elPct      = document.getElementById('firmasPct');
+        var elBar      = document.getElementById('firmasBar');
+        if (elFirmados) elFirmados.textContent = data.firmados;
+        if (elTotal)    elTotal.textContent    = data.total;
+        if (elPct)      elPct.textContent      = data.pct;
+        if (elBar)      elBar.style.width      = data.pct + '%';
+
+        var byId = {};
+        data.asistentes.forEach(function(a) { byId[String(a.id)] = a; });
+
+        document.querySelectorAll('.asistente-row').forEach(function(row) {
+            var hidden = row.querySelector('input[name="asistente_id[]"]');
+            var id = hidden ? hidden.value : '';
+            if (!id || !byId[id]) return;
+            var info = byId[id];
+
+            var badgeWrap = row.querySelector('.asist-status-badge');
+            if (badgeWrap) {
+                if (info.firmado) {
+                    badgeWrap.innerHTML = '<span class="badge bg-success" style="font-size:10px;"><i class="fas fa-check"></i> Firmado</span>';
+                } else if (info.enlace_enviado) {
+                    badgeWrap.innerHTML = '<span class="badge bg-warning text-dark" style="font-size:10px;"><i class="fas fa-clock"></i> Enlace enviado</span>';
+                } else {
+                    badgeWrap.innerHTML = '';
+                }
+            }
+
+            var stampEl = row.querySelector('.asist-firmado-at');
+            if (stampEl) {
+                if (info.firmado && info.firmado_at) {
+                    stampEl.style.display = '';
+                    stampEl.innerHTML = '<i class="fas fa-clock"></i> Firmó el ' + fmtFechaFirma(info.firmado_at);
+                } else {
+                    stampEl.style.display = 'none';
+                    stampEl.innerHTML = '';
+                }
+            }
+
+            if (info.firmado) {
+                var btnRm = row.querySelector('.btn-remove-asist');
+                if (btnRm) {
+                    var lock = document.createElement('span');
+                    lock.className = 'text-muted small';
+                    lock.title = 'No se puede quitar: ya firmo';
+                    lock.innerHTML = '<i class="fas fa-lock"></i>';
+                    btnRm.replaceWith(lock);
+                }
+                var btnsEnvio = row.querySelectorAll('.btn-copiar-firma, .btn-email-firma, .btn-whatsapp-firma, .btn-save-asist');
+                btnsEnvio.forEach(function(b) { b.style.display = 'none'; });
+            }
+        });
+    }
+
+    var tokenInscripcionUrlBase = '<?= site_url($tokenInscripcionUrlBase) ?>';
+
+    function mostrarQrModal(data) {
+        Swal.fire({
+            title: '<i class="fas fa-qrcode" style="color:#bd9751;"></i> QR de auto-inscripcion',
+            html:
+                '<div style="text-align:center;">'
+                + '<div style="background:white;padding:14px;border:2px solid #e5e7eb;border-radius:12px;display:inline-block;max-width:320px;width:100%;">'
+                +   data.qr_svg
+                + '</div>'
+                + '<p style="font-size:13px;color:#6b7280;margin-top:14px;line-height:1.4;">'
+                +   'Acerca el celular de cada asistente para que escanee.<br>'
+                +   'Llena sus datos y firma desde su propio celular.'
+                + '</p>'
+                + '<div style="background:#f3f4f6;padding:10px;border-radius:8px;margin-top:10px;font-size:11px;word-break:break-all;color:#374151;">'
+                +   data.url
+                + '</div>'
+                + '<div class="d-flex gap-2 mt-3">'
+                +   '<button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="btnCopiarQrUrl"><i class="fas fa-copy"></i> Copiar enlace</button>'
+                +   '<button type="button" class="btn btn-sm btn-outline-danger flex-fill" id="btnRotarQrUrl"><i class="fas fa-redo"></i> Generar nuevo</button>'
+                + '</div>'
+                + '</div>',
+            width: 460,
+            showConfirmButton: true,
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#bd9751',
+            didOpen: function() {
+                var btnCopiar = document.getElementById('btnCopiarQrUrl');
+                if (btnCopiar) {
+                    btnCopiar.addEventListener('click', function() {
+                        navigator.clipboard.writeText(data.url).then(function() {
+                            btnCopiar.innerHTML = '<i class="fas fa-check"></i> Copiado';
+                            setTimeout(function() { btnCopiar.innerHTML = '<i class="fas fa-copy"></i> Copiar enlace'; }, 1500);
+                        });
+                    });
+                }
+                var btnRotar = document.getElementById('btnRotarQrUrl');
+                if (btnRotar) {
+                    btnRotar.addEventListener('click', function() {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '¿Generar un nuevo QR?',
+                            html: 'El QR actual <strong>dejara de funcionar</strong>. Cualquier persona que tenga el enlace anterior no podra inscribirse.',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Si, regenerar',
+                            cancelButtonText: 'Cancelar',
+                            reverseButtons: true,
+                        }).then(function(res) {
+                            if (!res.isConfirmed) return;
+                            generarQR(true);
+                        });
+                    });
+                }
+            }
+        });
+    }
+
+    function generarQR(regenerar) {
+        if (!idListaActual) {
+            Swal.fire('Guarda primero la lista', 'Primero guarda la lista como borrador para generar el QR.', 'info');
+            return;
+        }
+        Swal.fire({ title: 'Generando QR...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+        var fd = new FormData();
+        fd.append(csrfName, csrfHash);
+        if (regenerar) fd.append('regenerar', '1');
+
+        fetch(tokenInscripcionUrlBase + idListaActual, {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) {
+                Swal.fire('Error', data.error || 'No se pudo generar el QR', 'error');
+                return;
+            }
+            mostrarQrModal(data);
+        })
+        .catch(function() {
+            Swal.fire('Error de conexion', 'No se pudo generar el QR.', 'error');
+        });
+    }
+
+    var btnQR = document.getElementById('btnMostrarQR');
+    if (btnQR) {
+        btnQR.addEventListener('click', function() { generarQR(false); });
+    }
+
+    var btnRefresh = document.getElementById('btnRefreshFirmas');
+    if (btnRefresh) {
+        btnRefresh.addEventListener('click', function() {
+            if (!idListaActual) return;
+            var origHtml = btnRefresh.innerHTML;
+            btnRefresh.disabled = true;
+            btnRefresh.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+
+            fetch(statusUrlBase + idListaActual, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                cache: 'no-store',
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = origHtml;
+                if (!data.success) {
+                    Swal.fire('No se pudo actualizar', data.error || 'Intenta de nuevo', 'error');
+                    return;
+                }
+                aplicarEstadoAsistentes(data);
+                Swal.fire({ icon: 'success', title: 'Estado actualizado', toast: true, position: 'top', showConfirmButton: false, timer: 1200 });
+            })
+            .catch(function() {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = origHtml;
+                Swal.fire('Error de conexión', 'No se pudo actualizar el estado.', 'error');
+            });
+        });
+    }
+
+
+    document.addEventListener('click', function(e) {
+        var btnRm = e.target.closest('.btn-remove-asist');
+        if (!btnRm) return;
+
+        var row = btnRm.closest('.asistente-row');
+        var hiddenId = row.querySelector('input[name="asistente_id[]"]');
+        var idAsistente = (hiddenId && hiddenId.value) ? hiddenId.value : '';
+        var nombre = (row.querySelector('input[name="asistente_nombre[]"]') || {}).value || 'sin nombre';
+
+        if (!idAsistente) {
+            row.remove();
+            updateAsist();
+            return;
+        }
+
+        Swal.fire({
+            icon: 'warning',
+            title: '¿Eliminar este asistente?',
+            html: 'Vas a eliminar a <strong>' + nombre + '</strong> de la lista.<br><br>'
+                + '<span style="color:#dc3545;font-size:13px;">Esta acción no se puede deshacer.</span>',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true,
+            focusCancel: true,
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            if (!idListaActual) {
+                row.remove();
+                updateAsist();
+                return;
+            }
+
+            var fd = new FormData();
+            fd.append(csrfName, csrfHash);
+
+            fetch(deleteAsistUrlBase + idListaActual + '/' + idAsistente, {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) {
+                    Swal.fire('No se pudo eliminar', data.error || 'Intenta de nuevo', 'error');
+                    return;
+                }
+                row.remove();
+                updateAsist();
+                Swal.fire({ icon: 'success', title: 'Asistente eliminado', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
+            })
+            .catch(function() {
+                Swal.fire('Error de conexión', 'No se pudo eliminar el asistente.', 'error');
+            });
+        });
+    });
+
+    document.getElementById('btnAddAsist').addEventListener('click', function() {
+        var num = document.querySelectorAll('.asistente-row').length + 1;
+        var html = `
+            <div class="card mb-3 asistente-row" data-asistente-id="">
+                <div class="card-body p-2">
+                    <input type="hidden" name="asistente_id[]" value="">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong style="font-size:13px;">Asistente #<span class="asist-num">${num}</span>
+                            <span class="badge bg-secondary" style="font-size:10px;">Sin guardar</span>
+                        </strong>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-asist" style="min-height:32px;"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-12"><input type="text" name="asistente_nombre[]" class="form-control form-control-sm" placeholder="Nombre completo *" required></div>
+                        <div class="col-4">
+                            <select name="asistente_tipo_doc[]" class="form-select form-select-sm">
+                                <option value="CC" selected>CC</option><option value="CE">CE</option>
+                                <option value="PA">PA</option><option value="TI">TI</option><option value="NIT">NIT</option>
+                            </select>
+                        </div>
+                        <div class="col-8"><input type="text" name="asistente_num_doc[]" class="form-control form-control-sm" placeholder="Número documento"></div>
+                        <div class="col-12"><input type="text" name="asistente_cargo[]" class="form-control form-control-sm" placeholder="Cargo"></div>
+                        <div class="col-12"><input type="text" name="asistente_area[]" class="form-control form-control-sm" placeholder="Área / Dependencia"></div>
+                        <div class="col-12"><input type="email" name="asistente_email[]" class="form-control form-control-sm" placeholder="Email (opcional)"></div>
+                        <div class="col-12"><input type="text" name="asistente_celular[]" class="form-control form-control-sm" placeholder="Celular (opcional)"></div>
+                    </div>
+                    <div class="mt-2 d-grid gap-1">
+                        <button type="button" class="btn btn-sm btn-primary btn-save-asist" data-asistente-id="">
+                            <i class="fas fa-save"></i> Guardar este asistente
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        document.getElementById('asistentesContainer').insertAdjacentHTML('beforeend', html);
+        updateAsist();
+        var sec = document.getElementById('secAsist');
+        if (!sec.classList.contains('show')) new bootstrap.Collapse(sec, { toggle: true });
+    });
+
+    var saveAsistUrlBase = '<?= site_url($saveAsistUrlBase) ?>';
+    var emailUrlBase = '<?= site_url($emailUrlBase) ?>';
+    var idListaActual = <?= (int)($lista['id'] ?? 0) ?>;
+
+    function inyectarBotonesFirma(row, idAsistente, nombre, email) {
+        if (row.querySelector('.btn-whatsapp-firma')) return;
+        var div = document.createElement('div');
+        div.className = 'd-flex gap-1 mt-1';
+        div.innerHTML = ''
+            + '<button type="button" class="btn btn-sm btn-outline-secondary btn-copiar-firma flex-fill" '
+            +   'data-asistente-id="' + idAsistente + '" data-nombre="' + nombre + '" title="Copiar enlace">'
+            +   '<i class="fas fa-copy"></i> Copiar</button>'
+            + '<button type="button" class="btn btn-sm btn-outline-primary btn-email-firma flex-fill" '
+            +   'data-asistente-id="' + idAsistente + '" data-nombre="' + nombre + '" data-email="' + (email || '') + '" title="Enviar enlace al email">'
+            +   '<i class="fas fa-envelope"></i> Email</button>'
+            + '<button type="button" class="btn btn-sm btn-success btn-whatsapp-firma flex-fill" '
+            +   'data-asistente-id="' + idAsistente + '" data-nombre="' + nombre + '" title="Compartir por WhatsApp">'
+            +   '<i class="fab fa-whatsapp"></i> WhatsApp</button>';
+        var saveBtn = row.querySelector('.btn-save-asist');
+        if (saveBtn && saveBtn.parentElement) {
+            saveBtn.parentElement.appendChild(div);
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-save-asist');
+        if (!btn) return;
+
+        if (!idListaActual) {
+            Swal.fire('Guarda primero la lista', 'Primero guarda la lista como borrador para poder agregar asistentes.', 'info');
+            return;
+        }
+
+        var row = btn.closest('.asistente-row');
+        var nombre = (row.querySelector('input[name="asistente_nombre[]"]') || {}).value || '';
+        if (!nombre.trim()) {
+            Swal.fire({ icon: 'warning', title: 'Nombre requerido', text: 'Ingresa el nombre del asistente.' });
+            return;
+        }
+
+        var idAsistente = btn.dataset.asistenteId || (row.querySelector('input[name="asistente_id[]"]') || {}).value || '';
+        var email = (row.querySelector('input[name="asistente_email[]"]') || {}).value || '';
+        var fd = new FormData();
+        fd.append(csrfName, csrfHash);
+        fd.append('id_asistente', idAsistente);
+        fd.append('nombre_completo', nombre);
+        fd.append('tipo_documento', (row.querySelector('select[name="asistente_tipo_doc[]"]') || {}).value || 'CC');
+        fd.append('numero_documento', (row.querySelector('input[name="asistente_num_doc[]"]') || {}).value || '');
+        fd.append('cargo', (row.querySelector('input[name="asistente_cargo[]"]') || {}).value || '');
+        fd.append('area_dependencia', (row.querySelector('input[name="asistente_area[]"]') || {}).value || '');
+        fd.append('email', email);
+        fd.append('celular', (row.querySelector('input[name="asistente_celular[]"]') || {}).value || '');
+        var rows = Array.from(document.querySelectorAll('.asistente-row'));
+        fd.append('orden', String(rows.indexOf(row) + 1));
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+        fetch(saveAsistUrlBase + idListaActual, {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            if (!data.success) {
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar este asistente';
+                Swal.fire('Error', data.error || 'No se pudo guardar', 'error');
+                return;
+            }
+            var hiddenId = row.querySelector('input[name="asistente_id[]"]');
+            if (hiddenId) hiddenId.value = data.id;
+            row.dataset.asistenteId = data.id;
+            btn.dataset.asistenteId = data.id;
+            btn.innerHTML = '<i class="fas fa-check"></i> Guardado';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+
+            var badge = row.querySelector('.badge.bg-secondary');
+            if (badge) {
+                badge.textContent = 'Guardado';
+                badge.classList.remove('bg-secondary');
+                badge.classList.add('bg-success');
+            }
+
+            inyectarBotonesFirma(row, data.id, nombre, email);
+
+            Swal.fire({ icon: 'success', title: 'Asistente guardado', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
+        })
+        .catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Guardar este asistente';
+            Swal.fire('Error', 'Error de conexión', 'error');
+        });
+    });
+
+    function generarTokenYHacer(idAsistente, callback) {
+        var fd = new FormData();
+        fd.append(csrfName, csrfHash);
+        fetch(tokenUrlBase + idAsistente, {
+            method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) {
+                Swal.fire('Error', data.error || 'No se pudo generar el enlace', 'error');
+                return;
+            }
+            callback(data.url);
+        })
+        .catch(function() { Swal.fire('Error', 'Error de conexión', 'error'); });
+    }
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-copiar-firma');
+        if (!btn) return;
+        var idAsistente = btn.dataset.asistenteId;
+        if (!idAsistente) {
+            Swal.fire('Guarda primero', 'Guarda este asistente antes de copiar el enlace.', 'info');
+            return;
+        }
+        Swal.fire({ title: 'Generando enlace...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+        generarTokenYHacer(idAsistente, function(url) {
+            navigator.clipboard.writeText(url).then(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Enlace copiado',
+                    html: '<p style="font-size:13px;">El enlace ya está en tu portapapeles. Pégalo donde necesites.</p>'
+                        + '<div style="background:#f8f9fa;border-radius:8px;padding:10px;font-size:11px;word-break:break-all;border:1px solid #dee2e6;">'
+                        + url + '</div>',
+                    confirmButtonText: 'Cerrar',
+                });
+            }).catch(function() {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Copia manualmente',
+                    html: '<div style="background:#f8f9fa;border-radius:8px;padding:10px;font-size:11px;word-break:break-all;border:1px solid #dee2e6;">'
+                        + url + '</div>',
+                    confirmButtonText: 'Cerrar',
+                });
+            });
+        });
+    });
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-email-firma');
+        if (!btn) return;
+
+        var idAsistente = btn.dataset.asistenteId;
+        var nombre = btn.dataset.nombre;
+        var email = btn.dataset.email;
+
+        if (!idAsistente) {
+            Swal.fire('Guarda primero', 'Guarda este asistente antes de enviar el email.', 'info');
+            return;
+        }
+        if (!email) {
+            var row = btn.closest('.asistente-row');
+            email = (row && row.querySelector('input[name="asistente_email[]"]')) ? row.querySelector('input[name="asistente_email[]"]').value : '';
+        }
+        if (!email) {
+            Swal.fire('Sin email', 'Este asistente no tiene email registrado. Edita la fila y guárdala primero.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Enviar email de firma',
+            html: '<p style="font-size:14px;">Se enviará un enlace de firma a:<br><strong>' + email + '</strong><br>(' + nombre + ')</p>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-paper-plane"></i> Enviar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd',
+        }).then(function(r) {
+            if (!r.isConfirmed) return;
+            Swal.fire({ title: 'Enviando email...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+            var fd = new FormData();
+            fd.append(csrfName, csrfHash);
+
+            fetch(emailUrlBase + idAsistente, {
+                method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    Swal.fire({ icon: 'success', title: '¡Email enviado!', text: 'Enviado a ' + (data.email || email), confirmButtonColor: '#0d6efd' });
+                } else {
+                    Swal.fire('Error', data.error || 'No se pudo enviar el email', 'error');
+                }
+            })
+            .catch(function() { Swal.fire('Error', 'Error de conexión', 'error'); });
+        });
+    });
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-whatsapp-firma');
+        if (!btn) return;
+
+        var idAsistente = btn.dataset.asistenteId;
+        var nombre = btn.dataset.nombre;
+
+        if (!idAsistente) {
+            Swal.fire('Guarda primero', 'Guarda la lista para generar el enlace de este asistente.', 'info');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Enviar enlace de firma',
+            html: '<p style="font-size:14px;">Se generará un enlace para que <strong>' + nombre + '</strong> firme desde su celular.<br><small class="text-muted">Vence en 7 días.</small></p>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fab fa-whatsapp"></i> Generar enlace',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#25D366',
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            Swal.fire({ title: 'Generando enlace...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+            var formData = new FormData();
+            formData.append(csrfName, csrfHash);
+
+            fetch(tokenUrlBase + idAsistente, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) {
+                    Swal.fire('Error', data.error || 'No se pudo generar el enlace', 'error');
+                    return;
+                }
+                var url = data.url;
+                var texto = encodeURIComponent('Hola ' + nombre + ', por favor firma la lista de asistencia haciendo clic en este enlace (vence en 7 días):\n' + url);
+                var waUrl = 'https://wa.me/?text=' + texto;
+
+                Swal.fire({
+                    title: 'Enlace generado',
+                    html: '<p style="font-size:13px;">Comparte con <strong>' + nombre + '</strong>:</p>'
+                          + '<div style="background:#f8f9fa;border-radius:8px;padding:10px;font-size:11px;word-break:break-all;margin-bottom:12px;border:1px solid #dee2e6;">'
+                          + url + '</div>'
+                          + '<button type="button" id="btnCopiar" class="btn btn-sm btn-outline-secondary"><i class="fas fa-copy"></i> Copiar enlace</button>',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fab fa-whatsapp"></i> Abrir WhatsApp',
+                    cancelButtonText: 'Cerrar',
+                    confirmButtonColor: '#25D366',
+                    didOpen: function() {
+                        document.getElementById('btnCopiar').addEventListener('click', function() {
+                            navigator.clipboard.writeText(url).then(function() {
+                                var b = document.getElementById('btnCopiar');
+                                b.innerHTML = '<i class="fas fa-check"></i> Copiado';
+                                b.classList.remove('btn-outline-secondary'); b.classList.add('btn-success');
+                            });
+                        });
+                    }
+                }).then(function(r) {
+                    if (r.isConfirmed) window.open(waUrl, '_blank');
+                });
+            })
+            .catch(function() { Swal.fire('Error', 'Error de conexión', 'error'); });
+        });
+    });
+
+    var btnFinalizar = document.getElementById('btnFinalizar');
+    if (btnFinalizar) {
+        btnFinalizar.addEventListener('click', function(e) {
+            if (document.querySelectorAll('.asistente-row').length === 0) {
+                Swal.fire({ icon: 'warning', title: 'Agrega al menos 1 asistente antes de finalizar', confirmButtonColor: '#bd9751' });
+                return;
+            }
+            Swal.fire({
+                title: '¿Finalizar?',
+                html: 'Se generará el PDF con las firmas registradas a la fecha.<br><small>Los asistentes que aún no firmaron quedarán sin firma en el documento.</small>',
+                icon: 'question', showCancelButton: true,
+                confirmButtonText: 'Sí, finalizar', cancelButtonText: 'Cancelar', confirmButtonColor: '#bd9751',
+            }).then(r => {
+                if (r.isConfirmed) {
+                    var i = document.createElement('input');
+                    i.type = 'hidden'; i.name = 'finalizar'; i.value = '1';
+                    document.getElementById('listaAsistForm').appendChild(i);
+                    document.getElementById('listaAsistForm').submit();
+                }
+            });
+        });
+    }
+});
+</script>

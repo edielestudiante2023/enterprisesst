@@ -1141,6 +1141,25 @@ $permitirGestionCandidatos = true;
                         </div>
                     </div>
 
+                    <?php if (strtoupper($proceso['tipo_comite']) === 'COCOLAB'): ?>
+                    <!-- Acuerdo de Confidencialidad (solo COCOLAB) -->
+                    <hr class="my-4">
+                    <div class="text-center">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-shield-lock-fill me-1 text-danger"></i>
+                            Acuerdo de Confidencialidad - Ley 1010 / Res 3461
+                        </h6>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <a href="<?= base_url('comites-elecciones/proceso/' . $proceso['id_proceso'] . '/acuerdo-confidencialidad/firmas') ?>" class="btn btn-danger">
+                                <i class="bi bi-pen-fill me-1"></i>Gestionar Acuerdo y Firmas
+                            </a>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Documento legal individual firmado por cada miembro del Comite de Convivencia.
+                        </small>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Boton de Recomposicion del Comite -->
                     <?php if (!$esVistaHistorica): ?>
                     <hr class="my-4">

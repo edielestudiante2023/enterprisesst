@@ -271,6 +271,46 @@
     <?php endforeach; ?>
     <?php endif; ?>
 
+    <!-- Pendientes Lista de Asistencia -->
+    <?php if (!empty($pendientesListaAsistencia)): ?>
+    <div class="section-title">Pendientes Lista de Asistencia</div>
+    <?php foreach ($pendientesListaAsistencia as $doc): ?>
+    <div class="card card-inspeccion <?= esc($doc['estado']) ?>">
+        <div class="card-body py-3 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>
+                        <i class="fas fa-edit text-warning"></i>
+                        Lista de Asistencia - <?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>
+                    </strong>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= esc($doc['motivo'] ?? 'Sin motivo') ?>
+                    </div>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= date('d/m/Y', strtotime($doc['fecha_actividad'])) ?>
+                        &middot;
+                        <span class="badge badge-<?= esc($doc['estado']) ?>" style="font-size: 11px;">
+                            <?= $doc['estado'] === 'borrador' ? 'Borrador' : 'Pend. Firma' ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2 d-flex gap-2 flex-wrap">
+                <a href="<?= site_url('inspecciones/lista-asistencia/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
+                    Continuar editando <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/lista-asistencia/delete/' . $doc['id']) ?>"
+                    data-tipo="lista de asistencia"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+    <?php endif; ?>
+
     <!-- Pendientes Pausas Activas -->
     <?php if (!empty($pendientesPausas)): ?>
     <div class="section-title">Pendientes Pausas Activas</div>
@@ -394,6 +434,11 @@
             <i class="fas fa-graduation-cap"></i>
             <div><strong>Reporte de Capacitación QR</strong></div>
             <div class="count">(<?= $totalCapacitaciones ?? 0 ?>)</div>
+        </a>
+        <a href="<?= site_url('inspecciones/lista-asistencia') ?>" class="card-tipo">
+            <i class="fas fa-clipboard-list"></i>
+            <div><strong>Lista de Asistencia QR</strong></div>
+            <div class="count">(<?= $totalListaAsistencia ?? 0 ?>)</div>
         </a>
     </div>
 </div>

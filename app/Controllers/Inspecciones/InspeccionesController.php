@@ -12,6 +12,7 @@ use App\Models\RegistroAsistenciaModel;
 use App\Models\PausaActivaModel;
 use App\Models\InvestigacionAccidenteModel;
 use App\Models\ActaCapacitacionModel;
+use App\Models\ListaAsistenciaModel;
 use App\Models\ClientModel;
 use App\Models\PendientesModel;
 use App\Models\VencimientosMantenimientoModel;
@@ -59,6 +60,10 @@ class InspeccionesController extends BaseController
         $pendientesCapacitaciones = $actaCapModel->getAllPendientes();
         $totalCapacitaciones = $actaCapModel->where('estado', 'completo')->countAllResults();
 
+        $listaAsistModel = new ListaAsistenciaModel();
+        $pendientesListaAsistencia = $listaAsistModel->getAllPendientes();
+        $totalListaAsistencia = $listaAsistModel->where('estado', 'completo')->countAllResults();
+
         $data = [
             'title'                     => 'Inspecciones SST',
             'pendientes'                => $pendientes,
@@ -70,6 +75,7 @@ class InspeccionesController extends BaseController
             'pendientesPausas'          => $pendientesPausas,
             'pendientesInvestigaciones' => $pendientesInvestigaciones,
             'pendientesCapacitaciones'  => $pendientesCapacitaciones,
+            'pendientesListaAsistencia' => $pendientesListaAsistencia,
             'totalActas'                => $totalActas,
             'totalLocativas'            => $totalLocativas,
             'totalExtintores'           => $totalExtintores,
@@ -79,6 +85,7 @@ class InspeccionesController extends BaseController
             'totalPausas'               => $totalPausas,
             'totalInvestigaciones'      => $totalInvestigaciones,
             'totalCapacitaciones'       => $totalCapacitaciones,
+            'totalListaAsistencia'      => $totalListaAsistencia,
             'nombre'                    => session()->get('nombre_usuario'),
         ];
 
