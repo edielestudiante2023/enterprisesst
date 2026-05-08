@@ -237,10 +237,8 @@ class SocializadorService
                 $mail->setFrom('notificacion.cycloidtalent@cycloidtalent.com', $nombreEmpresa . ' - SST');
                 $mail->setSubject($asunto);
                 $mail->addTo($email, $nombre ?: $email);
-                if ($cc !== null && strcasecmp($cc['email'], $email) !== 0) {
-                    // CC al consultor en cada envio (omitir si por casualidad coincide con el destinatario)
-                    $mail->addCc($cc['email'], $cc['nombre'] ?? $cc['email']);
-                }
+                // NOTA: el consultor NO va en CC por destinatario. Se le envia un unico
+                // email-resumen al final via enviarResumenAlConsultor().
                 $mail->addContent('text/html', $cuerpoHtml);
 
                 $attachment = new \SendGrid\Mail\Attachment();
@@ -269,6 +267,146 @@ class SocializadorService
         }
 
         return ['ok' => $ok, 'fallidos' => $fallidos, 'detalle' => $detalle, 'cc' => $cc];
+    }
+
+    // =========================================================================
+    // 3b) Email-resumen al consultor (UN solo correo, no CC por destinatario)
+    // =========================================================================
+
+    /**
+     * Envia UN solo email al consultor responsable del cliente con resumen del
+     * envio masivo: ambos PDFs adjuntos (principal + evidencia) y listado de
+     * destinatarios con su status. Llamar despues de enviarPdfPorEmail().
+     *
+     * @return array{success:bool, error:?string}
+     */
+    public function enviarResumenAlConsultor(
+        string $pdfPrincipalRel,
+        string $pdfEvidenciaRel,
+        array $consultor,                // ['email','nombre']
+        string $tipoSocializacionLabel,  // ej: "Miembros COPASST" / "Cronograma COPASST 2026"
+        string $nombreEmpresa,
+        array $resultadoEnvio
+    ): array {
+        if (empty($consultor['email']) || !filter_var($consultor['email'], FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'error' => 'Consultor sin email valido'];
+        }
+
+        $apiKey = getenv('SENDGRID_API_KEY');
+        if (empty($apiKey) || $apiKey === 'SG.xxxxxx') {
+            return ['success' => false, 'error' => 'SENDGRID_API_KEY no configurada'];
+        }
+
+        $detalle = $resultadoEnvio['detalle'] ?? [];
+        $ok = (int)($resultadoEnvio['ok'] ?? 0);
+        $fallidos = (int)($resultadoEnvio['fallidos'] ?? 0);
+        $total = $ok + $fallidos;
+
+        // Construir listado HTML
+        $filasHtml = '';
+        $i = 1;
+        foreach ($detalle as $d) {
+            $color = $d['status'] === 'ok' ? '#0a6e2e' : '#a40000';
+            $statusTxt = $d['status'] === 'ok' ? 'OK' : 'FALLIDO';
+            $errorTxt = !empty($d['error']) ? ' (' . esc($d['error']) . ')' : '';
+            $filasHtml .= "<tr>"
+                . "<td style='padding:4px 8px;border:1px solid #ddd;'>{$i}</td>"
+                . "<td style='padding:4px 8px;border:1px solid #ddd;'>" . esc($d['nombre'] ?? '') . "</td>"
+                . "<td style='padding:4px 8px;border:1px solid #ddd;'>" . esc($d['email']) . "</td>"
+                . "<td style='padding:4px 8px;border:1px solid #ddd;color:{$color};font-weight:bold;'>{$statusTxt}{$errorTxt}</td>"
+                . "</tr>";
+            $i++;
+        }
+        if ($filasHtml === '') {
+            $filasHtml = "<tr><td colspan='4' style='padding:8px;text-align:center;color:#888;'>(sin destinatarios)</td></tr>";
+        }
+
+        $asunto = "Resumen de socializacion: {$tipoSocializacionLabel} - {$nombreEmpresa}";
+
+        $cuerpoHtml = "<!DOCTYPE html><html><head><meta charset='utf-8'></head>
+        <body style='font-family:Arial,sans-serif;font-size:13px;color:#1c2437;'>
+            <div style='max-width:680px;margin:0 auto;padding:18px;'>
+                <h2 style='color:#1c2437;margin:0 0 8px 0;'>Resumen de socializacion</h2>
+                <p style='color:#6c757d;margin:0 0 18px 0;'>" . esc($tipoSocializacionLabel) . " - " . esc($nombreEmpresa) . "</p>
+
+                <p>Estimado(a) " . esc($consultor['nombre'] ?? 'consultor(a)') . ",</p>
+                <p>Se completo el proceso de socializacion via email a los colaboradores. Adjunto encontrara el documento principal enviado y el PDF de evidencia.</p>
+
+                <table style='width:100%;border-collapse:collapse;margin:14px 0;'>
+                    <tr>
+                        <td style='padding:10px;background:#f8f9fa;border:1px solid #ddd;text-align:center;'>
+                            <div style='font-size:24px;font-weight:bold;'>{$total}</div>
+                            <div style='color:#6c757d;font-size:11px;'>Total destinatarios</div>
+                        </td>
+                        <td style='padding:10px;background:#e8f5e9;border:1px solid #ddd;text-align:center;'>
+                            <div style='font-size:24px;font-weight:bold;color:#0a6e2e;'>{$ok}</div>
+                            <div style='color:#6c757d;font-size:11px;'>Enviados OK</div>
+                        </td>
+                        <td style='padding:10px;background:#fce4ec;border:1px solid #ddd;text-align:center;'>
+                            <div style='font-size:24px;font-weight:bold;color:#a40000;'>{$fallidos}</div>
+                            <div style='color:#6c757d;font-size:11px;'>Fallidos</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <h3 style='font-size:14px;border-bottom:1px solid #bd9751;padding-bottom:4px;margin-top:18px;'>Listado de destinatarios</h3>
+                <table style='width:100%;border-collapse:collapse;font-size:12px;'>
+                    <thead>
+                        <tr style='background:#1c2437;color:#fff;'>
+                            <th style='padding:6px 8px;border:1px solid #1c2437;'>#</th>
+                            <th style='padding:6px 8px;border:1px solid #1c2437;text-align:left;'>Nombre</th>
+                            <th style='padding:6px 8px;border:1px solid #1c2437;text-align:left;'>Email</th>
+                            <th style='padding:6px 8px;border:1px solid #1c2437;'>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>{$filasHtml}</tbody>
+                </table>
+
+                <p style='margin-top:18px;color:#6c757d;font-size:11px;'>
+                    Adjuntos: el PDF principal socializado y el PDF de evidencia con el detalle completo del envio.
+                    Este correo se envia automaticamente al consultor responsable del cliente, no requiere accion.
+                </p>
+            </div>
+        </body></html>";
+
+        try {
+            $mail = new \SendGrid\Mail\Mail();
+            $mail->setFrom('notificacion.cycloidtalent@cycloidtalent.com', 'EnterpriseSST - Notificacion');
+            $mail->setSubject($asunto);
+            $mail->addTo($consultor['email'], $consultor['nombre'] ?? $consultor['email']);
+            $mail->addContent('text/html', $cuerpoHtml);
+
+            // Adjunto 1: PDF principal
+            $rutaAbsPrincipal = FCPATH . $pdfPrincipalRel;
+            if (is_file($rutaAbsPrincipal)) {
+                $att1 = new \SendGrid\Mail\Attachment();
+                $att1->setContent(base64_encode(file_get_contents($rutaAbsPrincipal)));
+                $att1->setType('application/pdf');
+                $att1->setFilename(basename($rutaAbsPrincipal));
+                $att1->setDisposition('attachment');
+                $mail->addAttachment($att1);
+            }
+            // Adjunto 2: PDF evidencia
+            $rutaAbsEvid = FCPATH . $pdfEvidenciaRel;
+            if (is_file($rutaAbsEvid)) {
+                $att2 = new \SendGrid\Mail\Attachment();
+                $att2->setContent(base64_encode(file_get_contents($rutaAbsEvid)));
+                $att2->setType('application/pdf');
+                $att2->setFilename(basename($rutaAbsEvid));
+                $att2->setDisposition('attachment');
+                $mail->addAttachment($att2);
+            }
+
+            $sendgrid = new \SendGrid($apiKey);
+            $resp = $sendgrid->send($mail);
+            $code = $resp->statusCode();
+            if ($code >= 200 && $code < 300) {
+                return ['success' => true, 'error' => null];
+            }
+            return ['success' => false, 'error' => 'HTTP ' . $code];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
     }
 
     // =========================================================================

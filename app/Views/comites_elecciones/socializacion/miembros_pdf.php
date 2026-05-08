@@ -122,7 +122,7 @@
             background: #f8f9fa;
             border-left: 4px solid #1c2437;
             padding: 14px 18px;
-            margin-top: 14px;
+            margin: 0 0 18px 0;
             font-size: 11px;
             line-height: 1.5;
             color: #333;
@@ -191,12 +191,7 @@ $renderGrupo = function(array $miembros) {
 };
 ?>
 
-<div class="seccion-titulo">Representantes del Empleador</div>
-<?php $renderGrupo($empleador ?? []); ?>
-
-<div class="seccion-titulo">Representantes de los Trabajadores</div>
-<?php $renderGrupo($trabajadores ?? []); ?>
-
+<!-- Mensaje del comite primero (formato carta: introduccion antes que datos) -->
 <div class="mensaje-box">
     <?php
     $mensaje = $mensajeComite ?? '';
@@ -207,6 +202,12 @@ $renderGrupo = function(array $miembros) {
         <p><?= nl2br(esc($parrafo)) ?></p>
     <?php endforeach; ?>
 </div>
+
+<div class="seccion-titulo">Representantes del Empleador</div>
+<?php $renderGrupo($empleador ?? []); ?>
+
+<div class="seccion-titulo">Representantes de los Trabajadores</div>
+<?php $renderGrupo($trabajadores ?? []); ?>
 
 <div class="footer">
     Documento generado el <?= esc(date('d/m/Y')) ?> por EnterpriseSST &middot;

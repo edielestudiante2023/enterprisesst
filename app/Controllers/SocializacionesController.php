@@ -147,15 +147,25 @@ class SocializacionesController extends Controller
         ]);
         $rutaPdfRel = $svc->generarPdfDesdeHtml($htmlPdf, "miembros_{$tipoComite}_{$cliente['id_cliente']}");
 
-        // 4) Enviar por email (con CC al consultor del cliente)
-        $cc = $this->consultorDelCliente((int) $cliente['id_cliente']);
-        $resultado = $svc->enviarPdfPorEmail($rutaPdfRel, $destinatarios, $asunto, $cuerpoHtml, $cliente['nombre_cliente'] ?? 'EnterpriseSST', $cc);
+        // 4) Enviar por email (UN email por colaborador, sin CC al consultor)
+        $resultado = $svc->enviarPdfPorEmail($rutaPdfRel, $destinatarios, $asunto, $cuerpoHtml, $cliente['nombre_cliente'] ?? 'EnterpriseSST');
 
         // 5) PDF de evidencia
         $rutaEvidenciaRel = $svc->generarPdfEvidencia(
             $rutaPdfRel, $asunto, $cuerpoHtml, $resultado,
             $cliente['nombre_cliente'] ?? '', "Miembros {$tipoComite}"
         );
+
+        // 5b) UN solo email-resumen al consultor responsable del cliente
+        $consultor = $this->consultorDelCliente((int) $cliente['id_cliente']);
+        if ($consultor !== null) {
+            $svc->enviarResumenAlConsultor(
+                $rutaPdfRel, $rutaEvidenciaRel, $consultor,
+                "Miembros {$tipoComite}",
+                $cliente['nombre_cliente'] ?? '',
+                $resultado
+            );
+        }
 
         // 6) Persistir snapshot + 2 docs en tbl_documentos_sst + 1 en tbl_socializaciones
         $snapshot = $tipoObj->buildContenidoSnapshot([
@@ -315,15 +325,25 @@ class SocializacionesController extends Controller
         ]);
         $rutaPdfRel = $svc->generarPdfDesdeHtml($htmlPdf, "cronograma_{$tipoComite}_{$cliente['id_cliente']}_{$anio}");
 
-        // 4) Enviar (CC consultor del cliente)
-        $cc = $this->consultorDelCliente((int) $cliente['id_cliente']);
-        $resultado = $svc->enviarPdfPorEmail($rutaPdfRel, $destinatarios, $asunto, $cuerpoHtml, $cliente['nombre_cliente'] ?? 'EnterpriseSST', $cc);
+        // 4) Enviar (UN email por colaborador, sin CC al consultor)
+        $resultado = $svc->enviarPdfPorEmail($rutaPdfRel, $destinatarios, $asunto, $cuerpoHtml, $cliente['nombre_cliente'] ?? 'EnterpriseSST');
 
         // 5) Evidencia
         $rutaEvidenciaRel = $svc->generarPdfEvidencia(
             $rutaPdfRel, $asunto, $cuerpoHtml, $resultado,
             $cliente['nombre_cliente'] ?? '', "Cronograma {$tipoComite} {$anio}"
         );
+
+        // 5b) UN solo email-resumen al consultor responsable del cliente
+        $consultor = $this->consultorDelCliente((int) $cliente['id_cliente']);
+        if ($consultor !== null) {
+            $svc->enviarResumenAlConsultor(
+                $rutaPdfRel, $rutaEvidenciaRel, $consultor,
+                "Cronograma {$tipoComite} {$anio}",
+                $cliente['nombre_cliente'] ?? '',
+                $resultado
+            );
+        }
 
         // 6) Persistir
         $snapshot = $tipoObj->buildContenidoSnapshot([
