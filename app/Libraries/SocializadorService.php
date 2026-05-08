@@ -183,14 +183,16 @@ class SocializadorService
      * @param string $asunto
      * @param string $cuerpoHtml       HTML del cuerpo del email
      * @param string $nombreEmpresa    Para el From friendly name
-     * @return array{ok:int, fallidos:int, detalle:array<array{email,nombre,status,error}>}
+     * @param array|null $cc           Opcional: ['email','nombre'] del consultor a copiar en cada envio
+     * @return array{ok:int, fallidos:int, detalle:array<array{email,nombre,status,error}>, cc:?array}
      */
     public function enviarPdfPorEmail(
         string $pdfRutaRelativa,
         array $destinatarios,
         string $asunto,
         string $cuerpoHtml,
-        string $nombreEmpresa
+        string $nombreEmpresa,
+        ?array $cc = null
     ): array {
         $apiKey = getenv('SENDGRID_API_KEY');
         if (empty($apiKey) || $apiKey === 'SG.xxxxxx') {
@@ -199,7 +201,15 @@ class SocializadorService
                 'email' => $d['email'], 'nombre' => $d['nombre'] ?? '',
                 'status' => 'fallido', 'error' => 'SENDGRID_API_KEY no configurada',
             ], $destinatarios);
-            return ['ok' => 0, 'fallidos' => count($destinatarios), 'detalle' => $detalle];
+            return ['ok' => 0, 'fallidos' => count($destinatarios), 'detalle' => $detalle, 'cc' => $cc];
+        }
+
+        // Validar email de CC (si viene mal lo dejamos en null sin romper)
+        if ($cc !== null) {
+            $ccEmail = trim((string)($cc['email'] ?? ''));
+            if ($ccEmail === '' || !filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
+                $cc = null;
+            }
         }
 
         $rutaAbs = FCPATH . $pdfRutaRelativa;
@@ -227,6 +237,10 @@ class SocializadorService
                 $mail->setFrom('notificacion.cycloidtalent@cycloidtalent.com', $nombreEmpresa . ' - SST');
                 $mail->setSubject($asunto);
                 $mail->addTo($email, $nombre ?: $email);
+                if ($cc !== null && strcasecmp($cc['email'], $email) !== 0) {
+                    // CC al consultor en cada envio (omitir si por casualidad coincide con el destinatario)
+                    $mail->addCc($cc['email'], $cc['nombre'] ?? $cc['email']);
+                }
                 $mail->addContent('text/html', $cuerpoHtml);
 
                 $attachment = new \SendGrid\Mail\Attachment();
@@ -254,7 +268,7 @@ class SocializadorService
             usleep(100000); // 0.1s entre envios para no saturar SendGrid
         }
 
-        return ['ok' => $ok, 'fallidos' => $fallidos, 'detalle' => $detalle];
+        return ['ok' => $ok, 'fallidos' => $fallidos, 'detalle' => $detalle, 'cc' => $cc];
     }
 
     // =========================================================================
@@ -295,6 +309,12 @@ class SocializadorService
         }
 
         $fecha = date('d/m/Y H:i');
+        $ccInfo = $resultadoEnvio['cc'] ?? null;
+        $ccLinea = '';
+        if ($ccInfo && !empty($ccInfo['email'])) {
+            $ccLinea = '<div><strong>Con copia (CC) en cada envio:</strong> '
+                     . esc(($ccInfo['nombre'] ?? '') . ' &lt;' . $ccInfo['email'] . '&gt;') . '</div>';
+        }
         $html = "<!DOCTYPE html><html><head><meta charset='utf-8'>
         <style>
             body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #1c2437; }
@@ -317,6 +337,7 @@ class SocializadorService
             <div><strong>Tipo:</strong> {$tipoSocializacionLabel}</div>
             <div><strong>Documento adjunto:</strong> {$nombreAdjunto}</div>
             <div><strong>Asunto del correo:</strong> " . esc($asunto) . "</div>
+            {$ccLinea}
         </div>
 
         <div class='stats'>

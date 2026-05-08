@@ -32,14 +32,19 @@
                         <i class="bi bi-file-pdf me-1"></i>Datos del PDF a generar
                     </div>
                     <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Periodo - Inicio <span class="text-danger">*</span></label>
-                                <input type="date" name="periodo_inicio" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Periodo - Fin <span class="text-danger">*</span></label>
-                                <input type="date" name="periodo_fin" class="form-control" required>
+                        <div class="alert alert-light border d-flex align-items-center mb-3">
+                            <i class="bi bi-calendar-range text-primary me-2 fs-5"></i>
+                            <div class="flex-grow-1">
+                                <small class="text-muted d-block">Periodo del comite (de la conformacion, no editable)</small>
+                                <strong>
+                                    <?php if (!empty($periodoInicio) && !empty($periodoFin)): ?>
+                                        <?= esc(date('d/m/Y', strtotime($periodoInicio))) ?>
+                                        <span class="mx-2 text-muted">-</span>
+                                        <?= esc(date('d/m/Y', strtotime($periodoFin))) ?>
+                                    <?php else: ?>
+                                        <span class="text-danger">El proceso no tiene periodo definido</span>
+                                    <?php endif; ?>
+                                </strong>
                             </div>
                         </div>
 
