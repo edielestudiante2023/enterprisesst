@@ -198,20 +198,28 @@ class DocumentosSSTController extends BaseController
             return redirect()->back()->with('error', 'Tipo de documento no válido');
         }
 
-        $anio = (int)date('Y');
+        // Anio: por defecto el actual; pero permitir override via query string (?anio=)
+        $anioGet = $this->request->getGet('anio');
+        $anio = (is_numeric($anioGet) && (int)$anioGet >= 2000) ? (int)$anioGet : (int)date('Y');
+
+        // Trimestre opcional para tipos trimestrales (informe_trimestral_*). NULL para los demas.
+        $trimestreGet = $this->request->getGet('trimestre');
+        $trimestre = (is_numeric($trimestreGet) && $trimestreGet >= 1 && $trimestreGet <= 4) ? (int)$trimestreGet : null;
 
         // Obtener contexto del cliente
         $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
 
-        // Verificar si ya existe el documento
-        $documentoExistente = $this->db->table('tbl_documentos_sst')
+        // Verificar si ya existe el documento (trimestre solo si fue suministrado)
+        $qDocExistente = $this->db->table('tbl_documentos_sst')
             ->where('id_cliente', $idCliente)
             ->where('tipo_documento', $tipo)
-            ->where('anio', $anio)
-            ->get()
-            ->getRowArray();
+            ->where('anio', $anio);
+        if ($trimestre !== null) {
+            $qDocExistente->where('trimestre', $trimestre);
+        }
+        $documentoExistente = $qDocExistente->get()->getRowArray();
 
         // Obtener datos para las secciones
         $cronogramaService = new CronogramaIAService();
@@ -327,6 +335,7 @@ class DocumentosSSTController extends BaseController
             'tipoDoc' => $tipoDoc,
             'secciones' => $secciones,
             'anio' => $anio,
+            'trimestre' => $trimestre,
             'estandares' => $estandares,
             'contexto' => $contexto,
             'documento' => $documentoExistente,
@@ -648,6 +657,8 @@ class DocumentosSSTController extends BaseController
         $tipo = $this->request->getPost('tipo');
         $seccionKey = $this->request->getPost('seccion');
         $anio = $this->request->getPost('anio') ?? (int)date('Y');
+        $trimestrePost = $this->request->getPost('trimestre');
+        $trimestre = (is_numeric($trimestrePost) && $trimestrePost >= 1 && $trimestrePost <= 4) ? (int)$trimestrePost : null;
         $contextoAdicional = $this->request->getPost('contexto_adicional') ?? '';
         $modo = $this->request->getPost('modo') ?? 'completo';
         $contenidoActual = $this->request->getPost('contenido_actual') ?? '';
@@ -661,6 +672,13 @@ class DocumentosSSTController extends BaseController
         $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
         $estandares = $contexto['estandares_aplicables'] ?? 7;
+
+        // Inyectar anio y (opcional) trimestre al contexto para que getContextoBase los lea
+        $contexto = is_array($contexto) ? $contexto : [];
+        $contexto['anio'] = (int)$anio;
+        if ($trimestre !== null) {
+            $contexto['trimestre'] = $trimestre;
+        }
 
         // Generar contenido según el modo
         try {
@@ -1516,6 +1534,8 @@ Se debe generar acta que registre:
         $seccionKey = $this->request->getPost('seccion');
         $contenido = $this->request->getPost('contenido');
         $anio = $this->request->getPost('anio') ?? (int)date('Y');
+        $trimestrePost = $this->request->getPost('trimestre');
+        $trimestre = (is_numeric($trimestrePost) && $trimestrePost >= 1 && $trimestrePost <= 4) ? (int)$trimestrePost : null;
 
         // Obtener información de la sección desde servicio (arquitectura escalable)
         $tipoDoc = $this->configService->obtenerTipoDocumento($tipo);
@@ -1531,13 +1551,15 @@ Se debe generar acta que registre:
             }
         }
 
-        // Obtener o crear documento
-        $documento = $this->db->table('tbl_documentos_sst')
+        // Obtener o crear documento (trimestre solo si fue suministrado)
+        $qDoc = $this->db->table('tbl_documentos_sst')
             ->where('id_cliente', $idCliente)
             ->where('tipo_documento', $tipo)
-            ->where('anio', $anio)
-            ->get()
-            ->getRowArray();
+            ->where('anio', $anio);
+        if ($trimestre !== null) {
+            $qDoc->where('trimestre', $trimestre);
+        }
+        $documento = $qDoc->get()->getRowArray();
 
         $contenidoDoc = $documento ? json_decode($documento['contenido'], true) : ['secciones' => []];
 
@@ -1589,7 +1611,7 @@ Se debe generar acta que registre:
 
             // Obtener nombre del documento desde servicio
             $tipoDocConfig = $this->configService->obtenerTipoDocumento($tipo);
-            $this->db->table('tbl_documentos_sst')->insert([
+            $datosInsert = [
                 'id_cliente' => $idCliente,
                 'tipo_documento' => $tipo,
                 'codigo' => $codigoDocumento,
@@ -1600,7 +1622,11 @@ Se debe generar acta que registre:
                 'estado' => 'borrador',
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
-            ]);
+            ];
+            if ($trimestre !== null) {
+                $datosInsert['trimestre'] = $trimestre;
+            }
+            $this->db->table('tbl_documentos_sst')->insert($datosInsert);
 
             // Retornar id_documento para actualizar UI de firmas
             $nuevoIdDocumento = $this->db->insertID();
@@ -1629,13 +1655,17 @@ Se debe generar acta que registre:
         $tipo = $this->request->getPost('tipo');
         $seccionKey = $this->request->getPost('seccion');
         $anio = $this->request->getPost('anio') ?? (int)date('Y');
+        $trimestrePost = $this->request->getPost('trimestre');
+        $trimestre = (is_numeric($trimestrePost) && $trimestrePost >= 1 && $trimestrePost <= 4) ? (int)$trimestrePost : null;
 
-        $documento = $this->db->table('tbl_documentos_sst')
+        $qDoc = $this->db->table('tbl_documentos_sst')
             ->where('id_cliente', $idCliente)
             ->where('tipo_documento', $tipo)
-            ->where('anio', $anio)
-            ->get()
-            ->getRowArray();
+            ->where('anio', $anio);
+        if ($trimestre !== null) {
+            $qDoc->where('trimestre', $trimestre);
+        }
+        $documento = $qDoc->get()->getRowArray();
 
         if (!$documento) {
             return $this->response->setJSON(['success' => false, 'message' => 'Documento no encontrado']);
@@ -6127,6 +6157,157 @@ Se debe generar acta que registre:
             'firmasElectronicas' => $firmasElectronicas,
             'firmantesDefinidos' => $this->configService->obtenerFirmantes('procedimiento_auditoria_anual'),
             'tipoDocumento' => 'procedimiento_auditoria_anual'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * 1.1.6 - Vista previa del Informe Trimestral del COPASST.
+     * Requiere ?trimestre=1..4 en query string para identificar el documento.
+     */
+    public function informeTrimestralCopasst(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $trimestreGet = $this->request->getGet('trimestre');
+        $trimestre = (is_numeric($trimestreGet) && $trimestreGet >= 1 && $trimestreGet <= 4) ? (int)$trimestreGet : null;
+
+        if ($trimestre === null) {
+            return redirect()->to(base_url('documentacion/cliente/' . $idCliente))
+                ->with('error', 'Falta parametro trimestre (1-4) para el Informe Trimestral del COPASST.');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'informe_trimestral_copasst')
+            ->where('anio', $anio)
+            ->where('trimestre', $trimestre)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/informe_trimestral_copasst/' . $idCliente . '?anio=' . $anio . '&trimestre=' . $trimestre))
+                ->with('error', 'Documento no encontrado. Genere primero el Informe Trimestral del COPASST para el trimestre ' . $trimestre . ' del ' . $anio . '.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'informe_trimestral_copasst');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
+
+        $data = [
+            'titulo' => 'Informe Trimestral del COPASST - T' . $trimestre . '/' . $anio . ' - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'trimestre' => $trimestre,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('informe_trimestral_copasst'),
+            'tipoDocumento' => 'informe_trimestral_copasst'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * 1.1.6 - Vista previa del Informe Anual del COPASST.
+     */
+    public function informeAnualCopasst(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'informe_anual_copasst')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/informe_anual_copasst/' . $idCliente . '?anio=' . $anio))
+                ->with('error', 'Documento no encontrado. Genere primero el Informe Anual del COPASST para ' . $anio . '.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'informe_anual_copasst');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
+
+        $data = [
+            'titulo' => 'Informe Anual del COPASST - ' . $anio . ' - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('informe_anual_copasst'),
+            'tipoDocumento' => 'informe_anual_copasst'
         ];
 
         return view('documentos_sst/documento_generico', $data);

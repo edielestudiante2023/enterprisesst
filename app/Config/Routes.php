@@ -1103,6 +1103,10 @@ $routes->get('/documentos-sst/(:num)/reglamento-higiene-seguridad/(:num)', 'Docu
 $routes->get('/documentos-sst/(:num)/procedimiento-auditoria-anual/(:num)', 'DocumentosSSTController::procedimientoAuditoriaAnual/$1/$2');
 $routes->post('/documentos-sst/adjuntar-soporte-auditoria-anual', 'DocumentosSSTController::adjuntarSoporteAuditoriaAnual');
 
+// 1.1.6 Informes de gestion del COPASST (trimestral usa ?trimestre=1..4)
+$routes->get('/documentos-sst/(:num)/informe-trimestral-copasst/(:num)', 'DocumentosSSTController::informeTrimestralCopasst/$1/$2');
+$routes->get('/documentos-sst/(:num)/informe-anual-copasst/(:num)',     'DocumentosSSTController::informeAnualCopasst/$1/$2');
+
 // 5.1.1 Plan de Prevencion, Preparacion y Respuesta ante Emergencias
 $routes->get('/documentos-sst/(:num)/plan-emergencias/(:num)', 'DocumentosSSTController::planEmergencias/$1/$2');
 

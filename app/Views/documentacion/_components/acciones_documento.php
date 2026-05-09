@@ -71,7 +71,15 @@ $mapaRutas = [
     'plan_emergencias' => 'plan-emergencias/' . $docSST['anio'],
     // 6.1.2 Procedimiento de Auditoria Anual
     'procedimiento_auditoria_anual' => 'procedimiento-auditoria-anual/' . $docSST['anio'],
+    // 1.1.6 Informes de gestion del COPASST (el trimestral agrega ?trimestre=N abajo)
+    'informe_trimestral_copasst' => 'informe-trimestral-copasst/' . $docSST['anio'],
+    'informe_anual_copasst' => 'informe-anual-copasst/' . $docSST['anio'],
 ];
+
+// Para el informe trimestral, el query string ?trimestre=N es parte de la URL de "Ver"
+if ($tipoDoc === 'informe_trimestral_copasst' && !empty($docSST['trimestre'])) {
+    $mapaRutas['informe_trimestral_copasst'] .= '?trimestre=' . (int)$docSST['trimestre'];
+}
 
 // Presupuesto SST tiene ruta diferente
 if ($tipoDoc === 'presupuesto_sst') {
@@ -153,6 +161,11 @@ if ($tipoDoc === 'programa_capacitacion') {
     $urlEditar = base_url('documentos/generar/plan_emergencias/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 } elseif ($tipoDoc === 'procedimiento_auditoria_anual') {
     $urlEditar = base_url('documentos/generar/procedimiento_auditoria_anual/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
+} elseif ($tipoDoc === 'informe_trimestral_copasst') {
+    $trimSuffix = !empty($docSST['trimestre']) ? '&trimestre=' . (int)$docSST['trimestre'] : '';
+    $urlEditar = base_url('documentos/generar/informe_trimestral_copasst/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio'] . $trimSuffix);
+} elseif ($tipoDoc === 'informe_anual_copasst') {
+    $urlEditar = base_url('documentos/generar/informe_anual_copasst/' . $cliente['id_cliente'] . '?anio=' . $docSST['anio']);
 }
 ?>
 <div class="btn-group btn-group-sm">

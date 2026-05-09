@@ -628,6 +628,9 @@
         const idCliente = <?= $cliente['id_cliente'] ?>;
         const tipo = '<?= $tipo ?>';
         const anio = <?= $anio ?>;
+        // Trimestre opcional (solo aplica para tipos trimestrales como informe_trimestral_copasst)
+        const trimestre = <?= isset($trimestre) && $trimestre !== null ? (int)$trimestre : 'null' ?>;
+        const trimestreParam = trimestre !== null ? `&trimestre=${trimestre}` : '';
         const secciones = <?= json_encode(array_column($secciones, 'key')) ?>;
         const seccionesNombres = <?= json_encode(array_column($secciones, 'nombre', 'key')) ?>;
         const seccionesNumeros = <?= json_encode(array_column($secciones, 'numero', 'key')) ?>;
@@ -1113,7 +1116,7 @@
             }
 
             try {
-                let body = `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccionKey}&anio=${anio}&modo=${modo}`;
+                let body = `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccionKey}&anio=${anio}&modo=${modo}${trimestreParam}`;
                 if (contextoAdicional) {
                     body += `&contexto_adicional=${encodeURIComponent(contextoAdicional)}`;
                 }
@@ -1191,7 +1194,7 @@
                             'Content-Type': 'application/x-www-form-urlencoded',
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccion}&anio=${anio}&contenido=${encodeURIComponent(textarea.value)}`
+                        body: `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccion}&anio=${anio}&contenido=${encodeURIComponent(textarea.value)}${trimestreParam}`
                     });
 
                     const data = await response.json();
@@ -1241,7 +1244,7 @@
                             'Content-Type': 'application/x-www-form-urlencoded',
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccion}&anio=${anio}`
+                        body: `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccion}&anio=${anio}${trimestreParam}`
                     });
 
                     const data = await response.json();
@@ -1533,7 +1536,7 @@
                             'Content-Type': 'application/x-www-form-urlencoded',
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccion}&anio=${anio}&contenido=${encodeURIComponent(textarea.value)}`
+                        body: `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccion}&anio=${anio}&contenido=${encodeURIComponent(textarea.value)}${trimestreParam}`
                     });
 
                     const data = await response.json();
@@ -1592,7 +1595,7 @@
                             'Content-Type': 'application/x-www-form-urlencoded',
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccion}&anio=${anio}`
+                        body: `id_cliente=${idCliente}&tipo=${tipo}&seccion=${seccion}&anio=${anio}${trimestreParam}`
                     });
 
                     const data = await response.json();

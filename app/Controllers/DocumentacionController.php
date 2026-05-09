@@ -753,6 +753,20 @@ class DocumentacionController extends Controller
                 ->getResultArray();
         }
 
+        // 1.1.6 Informes IA del COPASST (trimestral + anual). Conviven con los soportes manuales en la misma carpeta.
+        $informesCopasst = [];
+        if ($tipoCarpetaFases === 'conformacion_copasst') {
+            $db = $db ?? \Config\Database::connect();
+            $informesCopasst = $db->table('tbl_documentos_sst')
+                ->whereIn('tipo_documento', ['informe_trimestral_copasst', 'informe_anual_copasst'])
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->orderBy('anio', 'DESC')
+                ->orderBy('tipo_documento', 'ASC')
+                ->orderBy('trimestre', 'ASC')
+                ->orderBy('updated_at', 'DESC')
+                ->get()->getResultArray();
+        }
+
         // Determinar qué vista de tipo cargar
         $vistaTipo = $tipoCarpetaFases ?? 'generica';
         $vistaPath = "documentacion/_tipos/{$vistaTipo}";
@@ -774,6 +788,7 @@ class DocumentacionController extends Controller
             'documentoExistente' => $documentoExistente,
             'documentosSSTAprobados' => $documentosSSTAprobados,
             'soportesAdicionales' => $soportesAdicionales,
+            'informesCopasst' => $informesCopasst,
             'contextoCliente' => $contextoCliente ?? null,
             'vistaContenido' => $vistaPath,
             'programasFasesInfo' => $programasFasesInfo ?? [],
