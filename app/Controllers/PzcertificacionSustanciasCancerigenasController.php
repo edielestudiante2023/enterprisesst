@@ -1,0 +1,352 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\ClientModel;
+use App\Models\ClienteContextoSstModel;
+use Config\Database;
+use CodeIgniter\Controller;
+
+/**
+ * Controlador para el documento "Certificacion de No Sustancias Cancerigenas / Toxicidad Aguda"
+ * Estandar 4.1.3 - Resolucion 0312/2019
+ *
+ * Patron B: documento simple auto-generado desde contexto del cliente (sin IA).
+ * La empresa certifica que NO maneja, almacena, manipula, transporta ni transforma sustancias
+ * clasificadas como cancerigenas (IARC Grupos 1, 2A, 2B) ni con toxicidad aguda segun el
+ * Sistema Globalmente Armonizado de Clasificacion (SGA / Decreto 1496 de 2018).
+ *
+ * Replica al 100% el patron de PzcertificacionAltoRiesgoController.
+ */
+class PzcertificacionSustanciasCancerigenasController extends Controller
+{
+    protected $db;
+    protected ClientModel $clienteModel;
+
+    // Configuracion del documento
+    protected const TIPO_DOCUMENTO   = 'certificacion_no_sustancias_cancerigenas';
+    protected const NOMBRE_DOCUMENTO = 'Certificacion de No Sustancias Cancerigenas';
+    protected const CODIGO_TIPO      = 'CERT';
+    protected const CODIGO_TEMA      = 'NSC';
+
+    public function __construct()
+    {
+        $this->db = Database::connect();
+        $this->clienteModel = new ClientModel();
+    }
+
+    /**
+     * Genera el documento automaticamente desde el contexto del cliente.
+     */
+    public function crear(int $idCliente)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $anio = (int) date('Y');
+
+        $documentoExistente = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', self::TIPO_DOCUMENTO)
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if ($documentoExistente) {
+            return redirect()->to(base_url("documentos-sst/{$idCliente}/certificacion-sustancias-cancerigenas/{$anio}"));
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        if (!$contexto) {
+            return redirect()->back()->with('error', 'Debe configurar el contexto SST del cliente antes de generar este documento.');
+        }
+
+        $contenido = $this->construirContenido($cliente, $contexto, $anio);
+        $codigoDocumento = $this->generarCodigo($idCliente);
+
+        $this->db->table('tbl_documentos_sst')->insert([
+            'id_cliente'       => $idCliente,
+            'tipo_documento'   => self::TIPO_DOCUMENTO,
+            'codigo'           => $codigoDocumento,
+            'titulo'           => self::NOMBRE_DOCUMENTO,
+            'anio'             => $anio,
+            'contenido'        => json_encode($contenido, JSON_UNESCAPED_UNICODE),
+            'version'          => 1,
+            'estado'           => 'aprobado',
+            'fecha_aprobacion' => date('Y-m-d H:i:s'),
+            'created_at'       => date('Y-m-d H:i:s'),
+            'updated_at'       => date('Y-m-d H:i:s')
+        ]);
+
+        $idDocumento = $this->db->insertID();
+
+        $session = session();
+        $this->db->table('tbl_doc_versiones_sst')->insert([
+            'id_documento'        => $idDocumento,
+            'id_cliente'          => $idCliente,
+            'codigo'              => $codigoDocumento,
+            'titulo'              => self::NOMBRE_DOCUMENTO,
+            'anio'                => $anio,
+            'version'             => 1,
+            'version_texto'       => '1.0',
+            'tipo_cambio'         => 'mayor',
+            'descripcion_cambio'  => 'Elaboracion inicial del documento',
+            'contenido_snapshot'  => json_encode($contenido, JSON_UNESCAPED_UNICODE),
+            'estado'              => 'vigente',
+            'autorizado_por'      => $session->get('nombre_usuario') ?? 'Sistema',
+            'autorizado_por_id'   => $session->get('id_usuario'),
+            'fecha_autorizacion'  => date('Y-m-d H:i:s'),
+            'created_at'          => date('Y-m-d H:i:s')
+        ]);
+
+        return redirect()->to(base_url("documentos-sst/{$idCliente}/certificacion-sustancias-cancerigenas/{$anio}"))
+            ->with('success', 'Certificacion de No Sustancias Cancerigenas generada exitosamente.');
+    }
+
+    /**
+     * Vista previa del documento.
+     */
+    public function ver(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', self::TIPO_DOCUMENTO)
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->back()->with('error', 'Documento no encontrado. Genere primero la Certificacion de No Sustancias Cancerigenas.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento'], $contexto ?? [], $cliente);
+
+        $delegadoNombre   = trim($contexto['delegado_sst_nombre'] ?? '');
+        $delegadoCargo    = trim($contexto['delegado_sst_cargo']  ?? 'Responsable del SG-SST');
+        $requiereDelegado = !empty($delegadoNombre);
+
+        $data = [
+            'titulo'              => self::NOMBRE_DOCUMENTO . ' - ' . $cliente['nombre_cliente'],
+            'cliente'             => $cliente,
+            'documento'           => $documento,
+            'contenido'           => $contenido,
+            'anio'                => $anio,
+            'versiones'           => $versiones,
+            'contexto'            => $contexto,
+            'firmasElectronicas'  => $firmasElectronicas,
+            'delegadoNombre'      => $delegadoNombre,
+            'delegadoCargo'       => $delegadoCargo,
+            'requiereDelegado'    => $requiereDelegado
+        ];
+
+        return view('documentos_sst/certificacion_sustancias_cancerigenas', $data);
+    }
+
+    /**
+     * Construye el contenido del documento desde el contexto.
+     */
+    protected function construirContenido(array $cliente, array $contexto, int $anio): array
+    {
+        $nombreCliente    = $cliente['nombre_cliente']   ?? '';
+        $nitCliente       = $cliente['nit_cliente']      ?? '';
+        $direccionCliente = $cliente['direccion_cliente'] ?? $contexto['direccion'] ?? '';
+
+        $nombreRepLegal = $contexto['representante_legal_nombre'] ?? $cliente['nombre_cliente'];
+        $cedulaRepLegal = $contexto['representante_legal_cedula'] ?? '';
+
+        $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        $mes   = $meses[(int) date('m') - 1];
+        $fechaTexto = "Bogota, " . date('d') . " de {$mes} de " . date('Y');
+
+        $textoCertificacion = "Por medio de la presente, <strong>{$nombreCliente}</strong>, identificada con NIT "
+            . "<strong>{$nitCliente}</strong>, en cumplimiento del numeral 4.1.3 - Identificacion de sustancias "
+            . "catalogadas como cancerigenas o con toxicidad aguda de la Resolucion 0312 de 2019 del Ministerio "
+            . "del Trabajo, del Decreto 1072 de 2015, de la Resolucion 2400 de 1979, del Decreto 1496 de 2018 "
+            . "(Sistema Globalmente Armonizado de Clasificacion y Etiquetado de Productos Quimicos - SGA/GHS), "
+            . "del Convenio 170 de la OIT y demas normatividad aplicable, CERTIFICA que en sus procesos productivos, "
+            . "administrativos, operativos y de mantenimiento <strong>NO se manejan, almacenan, manipulan, "
+            . "transportan ni transforman sustancias clasificadas como cancerigenas</strong> (Grupos 1, 2A y 2B "
+            . "segun la Agencia Internacional de Investigacion sobre el Cancer - IARC) ni sustancias con "
+            . "<strong>toxicidad aguda</strong> segun los criterios del SGA adoptados por el Decreto 1496 de 2018.";
+
+        $textoComplemento = "Esta certificacion se sustenta en la revision documental de la matriz de identificacion "
+            . "de peligros y valoracion de riesgos, en la verificacion de las Fichas de Datos de Seguridad (FDS) de "
+            . "los productos quimicos utilizados, en la inspeccion fisica de las areas de trabajo realizada por el "
+            . "Responsable del SG-SST y en la validacion con los responsables de los procesos sobre la naturaleza "
+            . "de las sustancias empleadas. En consecuencia, {$nombreCliente} no requiere implementar el Programa "
+            . "de Vigilancia Epidemiologica (PVE) para sustancias cancerigenas ni los protocolos especificos "
+            . "definidos en la Resolucion 1013 de 2008 (GATISO Benceno) y demas guias del Ministerio del Trabajo.";
+
+        $textoCierre = "La presente certificacion tendra vigencia anual o hasta que se modifiquen los procesos "
+            . "productivos de la empresa, evento en el cual debera actualizarse. Se expide a solicitud de parte "
+            . "interesada y para los fines que estime convenientes.";
+
+        return [
+            'secciones' => [
+                ['key' => 'encabezado',    'titulo' => '', 'contenido' => $fechaTexto . "\nA quien corresponda:", 'aprobado' => true],
+                ['key' => 'certificacion', 'titulo' => '', 'contenido' => $textoCertificacion,                    'aprobado' => true],
+                ['key' => 'complemento',   'titulo' => '', 'contenido' => $textoComplemento,                       'aprobado' => true],
+                ['key' => 'cierre',        'titulo' => '', 'contenido' => $textoCierre,                            'aprobado' => true],
+            ],
+            'empresa' => [
+                'nombre'    => $nombreCliente,
+                'nit'       => $nitCliente,
+                'direccion' => $direccionCliente
+            ],
+            'vigencia' => $anio,
+            'fecha_expedicion' => $fechaTexto,
+            'representante_legal' => [
+                'nombre' => $nombreRepLegal,
+                'cedula' => $cedulaRepLegal
+            ]
+        ];
+    }
+
+    /**
+     * Genera codigo unico via SP.
+     */
+    protected function generarCodigo(int $idCliente): string
+    {
+        $query = $this->db->query(
+            "CALL sp_generar_codigo_documento(?, ?, ?, @codigo)",
+            [$idCliente, self::CODIGO_TIPO, self::CODIGO_TEMA]
+        );
+        $query->getResult();
+
+        if (method_exists($query, 'freeResult')) {
+            $query->freeResult();
+        }
+        while ($this->db->connID->next_result()) {
+            $this->db->connID->store_result();
+        }
+
+        $result = $this->db->query("SELECT @codigo as codigo")->getRow();
+        return $result->codigo ?? (self::CODIGO_TIPO . '-' . self::CODIGO_TEMA . '-001');
+    }
+
+    /**
+     * Regenera con datos actualizados (nueva version).
+     */
+    public function regenerar(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cliente no encontrado']);
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', self::TIPO_DOCUMENTO)
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Documento no encontrado']);
+        }
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        if (!$contexto) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Contexto SST no configurado']);
+        }
+
+        $nuevoRepLegalNombre = $this->request->getPost('representante_legal_nombre');
+        $nuevoRepLegalCedula = $this->request->getPost('representante_legal_cedula');
+
+        $datosActualizar = [];
+        if ($nuevoRepLegalNombre && $nuevoRepLegalNombre !== ($contexto['representante_legal_nombre'] ?? '')) {
+            $datosActualizar['representante_legal_nombre'] = $nuevoRepLegalNombre;
+        }
+        if ($nuevoRepLegalCedula !== null && $nuevoRepLegalCedula !== ($contexto['representante_legal_cedula'] ?? '')) {
+            $datosActualizar['representante_legal_cedula'] = $nuevoRepLegalCedula;
+        }
+        if (!empty($datosActualizar)) {
+            $datosActualizar['updated_at'] = date('Y-m-d H:i:s');
+            $this->db->table('tbl_cliente_contexto_sst')
+                ->where('id_cliente', $idCliente)
+                ->update($datosActualizar);
+            $contexto = $contextoModel->getByCliente($idCliente);
+        }
+
+        $nuevoContenido = $this->construirContenido($cliente, $contexto, $anio);
+
+        $versionActual = (int) $documento['version'];
+        $nuevaVersion  = $versionActual + 1;
+        $versionTexto  = $nuevaVersion . '.0';
+
+        $descripcionCambio = $this->request->getPost('descripcion_cambio')
+            ?? 'Actualizacion de datos de representante legal';
+
+        $this->db->table('tbl_documentos_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->update([
+                'contenido'   => json_encode($nuevoContenido, JSON_UNESCAPED_UNICODE),
+                'version'     => $nuevaVersion,
+                'estado'      => 'pendiente_firma',
+                'updated_at'  => date('Y-m-d H:i:s')
+            ]);
+
+        $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado', 'vigente')
+            ->update(['estado' => 'historico']);
+
+        $session = session();
+        $this->db->table('tbl_doc_versiones_sst')->insert([
+            'id_documento'       => $documento['id_documento'],
+            'id_cliente'         => $idCliente,
+            'codigo'             => $documento['codigo'],
+            'titulo'             => self::NOMBRE_DOCUMENTO,
+            'anio'               => $anio,
+            'version'            => $nuevaVersion,
+            'version_texto'      => $versionTexto,
+            'tipo_cambio'        => 'mayor',
+            'descripcion_cambio' => $descripcionCambio,
+            'contenido_snapshot' => json_encode($nuevoContenido, JSON_UNESCAPED_UNICODE),
+            'estado'             => 'pendiente_firma',
+            'autorizado_por'     => $session->get('nombre_usuario') ?? 'Sistema',
+            'autorizado_por_id'  => $session->get('id_usuario'),
+            'fecha_autorizacion' => date('Y-m-d H:i:s'),
+            'created_at'         => date('Y-m-d H:i:s')
+        ]);
+
+        $this->db->table('tbl_doc_firma_solicitudes')
+            ->where('id_documento', $documento['id_documento'])
+            ->where('estado !=', 'firmado')
+            ->update(['estado' => 'cancelada']);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Documento actualizado a version ' . $versionTexto . '. Pendiente de firma.',
+            'nueva_version' => $versionTexto
+        ]);
+    }
+
+    protected function obtenerFirmasElectronicas(int $idDocumento, array $contexto = [], array $cliente = []): array
+    {
+        $firmaModel = new \App\Models\DocFirmaModel();
+        return $firmaModel->obtenerFirmasElectronicasValidadas($idDocumento, $contexto, $cliente);
+    }
+}

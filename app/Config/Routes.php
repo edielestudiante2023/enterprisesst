@@ -1148,6 +1148,11 @@ $routes->post('/documentos-sst/(:num)/crear-certificacion-alto-riesgo', 'Pzcerti
 $routes->get('/documentos-sst/(:num)/certificacion-alto-riesgo/(:num)', 'PzcertificacionAltoRiesgoController::ver/$1/$2');
 $routes->post('/documentos-sst/(:num)/regenerar-certificacion-alto-riesgo/(:num)', 'PzcertificacionAltoRiesgoController::regenerar/$1/$2');
 
+// 4.1.3 Certificacion de No Sustancias Cancerigenas (Patron B - controlador independiente)
+$routes->post('/documentos-sst/(:num)/crear-certificacion-sustancias-cancerigenas',          'PzcertificacionSustanciasCancerigenasController::crear/$1');
+$routes->get('/documentos-sst/(:num)/certificacion-sustancias-cancerigenas/(:num)',          'PzcertificacionSustanciasCancerigenasController::ver/$1/$2');
+$routes->post('/documentos-sst/(:num)/regenerar-certificacion-sustancias-cancerigenas/(:num)', 'PzcertificacionSustanciasCancerigenasController::regenerar/$1/$2');
+
 // 1.1.2 Responsabilidades en el SG-SST (4 documentos separados)
 // Responsabilidades del Representante Legal (firma digital)
 $routes->post('/documentos-sst/(:num)/crear-responsabilidades-rep-legal', 'PzresponsabilidadesRepLegalController::crear/$1');

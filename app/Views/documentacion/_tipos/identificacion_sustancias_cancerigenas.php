@@ -1,27 +1,26 @@
 <?php
 /**
  * Vista de Tipo: 4.1.3 Identificacion de Sustancias Cancerigenas o con Toxicidad Aguda
- * Procedimiento simple con IA (sin fases previas)
+ * Carpeta con dropdown dual: procedimiento (IA) o certificacion de NO maneja (auto-generada).
  * Variables: $carpeta, $cliente, $documentosSSTAprobados, $soportesAdicionales, $subcarpetas
  */
 
-// Verificar si hay documento aprobado para el ano actual
-$hayAprobadoAnioActual = false;
+// Detectar documentos existentes del anio actual para condicionar el dropdown
+$docsExistentesTipos = [];
 if (!empty($documentosSSTAprobados)) {
     foreach ($documentosSSTAprobados as $d) {
         if (($d['anio'] ?? '') == date('Y')) {
-            $hayAprobadoAnioActual = true;
-            break;
+            $docsExistentesTipos[$d['tipo_documento']] = true;
         }
     }
 }
 ?>
 
-<!-- Card de Carpeta con Boton IA -->
+<!-- Card de Carpeta con Dropdown -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <div class="row align-items-center">
-            <div class="col-md-8">
+            <div class="col-md-7">
                 <h4 class="mb-1">
                     <i class="bi bi-folder-fill text-warning me-2"></i>
                     <?= esc($carpeta['nombre']) ?>
@@ -33,20 +32,56 @@ if (!empty($documentosSSTAprobados)) {
                     <p class="text-muted mb-0 mt-1"><?= esc($carpeta['descripcion']) ?></p>
                 <?php endif; ?>
             </div>
-            <div class="col-md-4 text-end">
-                <?php if ($hayAprobadoAnioActual): ?>
-                    <a href="<?= base_url('documentos/generar/identificacion_sustancias_cancerigenas/' . $cliente['id_cliente']) ?>"
-                       class="btn btn-outline-success">
-                        <i class="bi bi-arrow-repeat me-1"></i>Nueva version <?= date('Y') ?>
-                    </a>
-                <?php else: ?>
-                    <a href="<?= base_url('documentos/generar/identificacion_sustancias_cancerigenas/' . $cliente['id_cliente']) ?>"
-                       class="btn btn-success">
-                        <i class="bi bi-magic me-1"></i>Crear con IA <?= date('Y') ?>
-                    </a>
-                <?php endif; ?>
+            <div class="col-md-5 text-end">
+                <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#modalAdjuntarSoporteISC">
+                    <i class="bi bi-cloud-upload me-1"></i>Adjuntar Soporte
+                </button>
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-plus-lg me-1"></i>Nuevo Documento
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <?php if (!isset($docsExistentesTipos['identificacion_sustancias_cancerigenas'])): ?>
+                        <li>
+                            <a href="<?= base_url('documentos/generar/identificacion_sustancias_cancerigenas/' . $cliente['id_cliente']) ?>" class="dropdown-item">
+                                <i class="bi bi-radioactive me-2 text-warning"></i>Procedimiento Identificacion (IA)
+                            </a>
+                        </li>
+                        <?php else: ?>
+                        <li><span class="dropdown-item text-muted"><i class="bi bi-check-circle me-2"></i>Procedimiento creado <?= date('Y') ?></span></li>
+                        <?php endif; ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <?php if (!isset($docsExistentesTipos['certificacion_no_sustancias_cancerigenas'])): ?>
+                        <li>
+                            <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-certificacion-sustancias-cancerigenas') ?>" method="post" style="display:inline;">
+                                <button type="submit" class="dropdown-item">
+                                    <i class="bi bi-file-earmark-check me-2 text-success"></i>Certificacion No Sustancias Cancerigenas
+                                </button>
+                            </form>
+                        </li>
+                        <?php else: ?>
+                        <li><span class="dropdown-item text-muted"><i class="bi bi-check-circle me-2"></i>Certificacion creada <?= date('Y') ?></span></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Marco normativo aplicable -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>Marco Normativo Aplicable</h6>
+    </div>
+    <div class="card-body">
+        <ul class="list-unstyled mb-0 small">
+            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i><strong>Resolucion 0312/2019:</strong> Estandar 4.1.3 — Identificacion de sustancias cancerigenas o con toxicidad aguda</li>
+            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i><strong>Decreto 1496/2018:</strong> Sistema Globalmente Armonizado de Clasificacion (SGA / GHS)</li>
+            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i><strong>Resolucion 2400/1979:</strong> Estatuto de Seguridad Industrial</li>
+            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i><strong>Decreto 1072/2015:</strong> Decreto Unico Reglamentario del Sector Trabajo</li>
+            <li><i class="bi bi-check-circle text-success me-2"></i><strong>IARC:</strong> Clasificacion de cancerigenos (Grupos 1, 2A, 2B)</li>
+        </ul>
     </div>
 </div>
 

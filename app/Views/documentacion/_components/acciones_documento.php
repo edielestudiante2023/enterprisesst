@@ -77,6 +77,8 @@ $mapaRutas = [
     // 1.1.8 Informes de gestion del COCOLAB
     'informe_trimestral_cocolab' => 'informe-trimestral-cocolab/' . $docSST['anio'],
     'informe_anual_cocolab' => 'informe-anual-cocolab/' . $docSST['anio'],
+    // 4.1.3 Certificacion de No Sustancias Cancerigenas (auto-generada)
+    'certificacion_no_sustancias_cancerigenas' => 'certificacion-sustancias-cancerigenas/' . $docSST['anio'],
 ];
 
 // Para los informes trimestrales, el query string ?trimestre=N es parte de la URL de "Ver"
