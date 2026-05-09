@@ -6177,7 +6177,7 @@ Se debe generar acta que registre:
         $trimestre = (is_numeric($trimestreGet) && $trimestreGet >= 1 && $trimestreGet <= 4) ? (int)$trimestreGet : null;
 
         if ($trimestre === null) {
-            return redirect()->to(base_url('documentacion/cliente/' . $idCliente))
+            return redirect()->to(base_url('documentacion/' . $idCliente))
                 ->with('error', 'Falta parametro trimestre (1-4) para el Informe Trimestral del COPASST.');
         }
 
