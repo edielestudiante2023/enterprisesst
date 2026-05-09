@@ -173,8 +173,9 @@ class PzasignacionresponsableSstController extends Controller
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        // Obtener firmas electronicas
-        $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento']);
+        // Obtener firmas electronicas (debe pasar contexto y cliente para validar cedulas;
+        // sin ellos las firmas de delegado_sst y representante_legal se descartan).
+        $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento'], $contexto ?? [], $cliente);
 
         // Lista de consultores para el modal de actualizar datos
         $consultorModelLista = new ConsultantModel();

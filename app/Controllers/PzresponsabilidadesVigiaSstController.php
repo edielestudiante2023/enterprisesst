@@ -187,8 +187,9 @@ class PzresponsabilidadesVigiaSstController extends Controller
             $consultor = $consultorModel->find($idConsultor);
         }
 
-        // Obtener firmas electronicas
-        $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento']);
+        // Obtener firmas electronicas (pasar contexto y cliente — sin ellos
+        // las firmas de delegado_sst, representante_legal y vigia_sst se descartan).
+        $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento'], $contexto ?? [], $cliente);
 
         // Obtener vigia actual
         $vigia = $this->obtenerVigia($idCliente);

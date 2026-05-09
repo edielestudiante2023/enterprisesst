@@ -145,8 +145,9 @@ class PzcertificacionAltoRiesgoController extends Controller
         $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
 
-        // Obtener firmas electronicas
-        $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento']);
+        // Obtener firmas electronicas (pasar contexto y cliente — sin ellos
+        // las firmas de delegado_sst y representante_legal se descartan por validacion de cedula).
+        $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento'], $contexto ?? [], $cliente);
 
         // Datos del Delegado SST
         $delegadoNombre = trim($contexto['delegado_sst_nombre'] ?? '');
