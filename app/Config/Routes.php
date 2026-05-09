@@ -1107,6 +1107,10 @@ $routes->post('/documentos-sst/adjuntar-soporte-auditoria-anual', 'DocumentosSST
 $routes->get('/documentos-sst/(:num)/informe-trimestral-copasst/(:num)', 'DocumentosSSTController::informeTrimestralCopasst/$1/$2');
 $routes->get('/documentos-sst/(:num)/informe-anual-copasst/(:num)',     'DocumentosSSTController::informeAnualCopasst/$1/$2');
 
+// 1.1.8 Informes de gestion del COCOLAB (Comite de Convivencia Laboral)
+$routes->get('/documentos-sst/(:num)/informe-trimestral-cocolab/(:num)', 'DocumentosSSTController::informeTrimestralCocolab/$1/$2');
+$routes->get('/documentos-sst/(:num)/informe-anual-cocolab/(:num)',     'DocumentosSSTController::informeAnualCocolab/$1/$2');
+
 // 5.1.1 Plan de Prevencion, Preparacion y Respuesta ante Emergencias
 $routes->get('/documentos-sst/(:num)/plan-emergencias/(:num)', 'DocumentosSSTController::planEmergencias/$1/$2');
 

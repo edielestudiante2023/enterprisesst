@@ -90,9 +90,48 @@ class SmokeInformesCopasst extends BaseCommand
             CLI::write($e->getTraceAsString());
         }
 
+        // Test COCOLAB (cliente con COCOLAB activo)
+        CLI::write("\n=== COCOLAB ===", 'cyan');
+        $rowCoc = $db->table('tbl_comites c')
+            ->select('c.id_cliente')
+            ->join('tbl_tipos_comite t', 't.id_tipo = c.id_tipo')
+            ->where('t.codigo', 'COCOLAB')
+            ->where('c.estado', 'activo')
+            ->orderBy('c.id_comite', 'DESC')
+            ->limit(1)
+            ->get()->getRowArray();
+        if ($rowCoc) {
+            $idClienteCoc = (int) $rowCoc['id_cliente'];
+            $clienteCoc = $db->table('tbl_clientes')->where('id_cliente', $idClienteCoc)->get()->getRowArray() ?? [];
+            $clienteCoc['id_cliente'] = $idClienteCoc;
+            $contextoCoc = (new \App\Models\ClienteContextoSstModel())->getByCliente($idClienteCoc) ?? [];
+            $contextoCoc['anio'] = (int) date('Y');
+            $contextoCoc['trimestre'] = $trimestre;
+            try {
+                $hCT = DocumentoSSTFactory::crear('informe_trimestral_cocolab');
+                CLI::write('clase: ' . get_class($hCT) . ' | secciones: ' . count($hCT->getSecciones()));
+                $ctxCT = $hCT->getContextoBase($clienteCoc, $contextoCoc);
+                CLI::write('--- contexto COCOLAB trimestral (primeros 1500 chars) ---');
+                CLI::write(mb_substr($ctxCT, 0, 1500));
+                CLI::write('--- (longitud total: ' . mb_strlen($ctxCT) . ' chars) ---', 'light_gray');
+
+                $hCA = DocumentoSSTFactory::crear('informe_anual_cocolab');
+                CLI::write('clase: ' . get_class($hCA) . ' | secciones: ' . count($hCA->getSecciones()));
+                $ctxCA = $hCA->getContextoBase($clienteCoc, $contextoCoc);
+                CLI::write('--- contexto COCOLAB anual (primeros 1500 chars) ---');
+                CLI::write(mb_substr($ctxCA, 0, 1500));
+                CLI::write('--- (longitud total: ' . mb_strlen($ctxCA) . ' chars) ---', 'light_gray');
+            } catch (\Throwable $e) {
+                CLI::error('FAIL COCOLAB: ' . $e->getMessage());
+                CLI::write($e->getTraceAsString());
+            }
+        } else {
+            CLI::write('(no hay COCOLAB activo en local — saltando)', 'yellow');
+        }
+
         // Test 3: BD
         CLI::write("\n=== BD ===", 'cyan');
-        foreach (['informe_trimestral_copasst', 'informe_anual_copasst'] as $t) {
+        foreach (['informe_trimestral_copasst', 'informe_anual_copasst', 'informe_trimestral_cocolab', 'informe_anual_cocolab'] as $t) {
             $r = $db->table('tbl_doc_tipo_configuracion')->where('tipo_documento', $t)->get()->getRowArray();
             if ($r) {
                 $cnt = $db->table('tbl_doc_secciones_config')->where('id_tipo_config', $r['id_tipo_config'])->countAllResults();
