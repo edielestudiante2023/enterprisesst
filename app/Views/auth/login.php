@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="EnterpriseSST">
-    <link rel="manifest" href="<?= base_url('manifest_inspecciones.json') ?>">
+    <link rel="manifest" href="<?= base_url('manifest_login.json') ?>">
     <link rel="apple-touch-icon" href="<?= base_url('assets/icons/icon-192.png') ?>">
 
     <!-- Bootstrap 5 CSS -->

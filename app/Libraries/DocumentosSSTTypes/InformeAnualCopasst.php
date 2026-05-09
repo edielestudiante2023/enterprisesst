@@ -145,12 +145,18 @@ class InformeAnualCopasst extends AbstractDocumentoSST
         $out .= "\n";
 
         if (!empty($idsActas)) {
-            $asist = $db->table('tbl_acta_asistentes')
-                ->select('nombre_completo, cargo, COUNT(*) AS total, SUM(asistio) AS asistio')
-                ->whereIn('id_acta', $idsActas)
-                ->groupBy('nombre_completo, cargo')
-                ->orderBy('asistio', 'DESC')
-                ->get()->getResultArray();
+            // Raw SQL: CodeIgniter QueryBuilder se rompe con comas dentro del SELECT.
+            $placeholders = implode(',', array_fill(0, count($idsActas), '?'));
+            $asist = $db->query(
+                "SELECT nombre_completo, cargo,
+                        COUNT(*) AS total,
+                        SUM(asistio) AS asistio
+                 FROM tbl_acta_asistentes
+                 WHERE id_acta IN ({$placeholders})
+                 GROUP BY nombre_completo, cargo
+                 ORDER BY asistio DESC",
+                $idsActas
+            )->getResultArray();
 
             $out .= "ASISTENCIA ANUAL (por persona):\n";
             foreach ($asist as $a) {
@@ -214,14 +220,17 @@ class InformeAnualCopasst extends AbstractDocumentoSST
                 ->where('fecha_reunion <=', $r['fin'])
                 ->countAllResults();
 
-            $asistInfo = $db->table('tbl_acta_asistentes a')
-                ->select('SUM(a.asistio) AS asistio, COUNT(*) AS total')
-                ->join('tbl_actas ac', 'ac.id_acta = a.id_acta')
-                ->where('ac.id_comite', $idComite)
-                ->where('ac.anio', $anio)
-                ->where('ac.fecha_reunion >=', $r['inicio'])
-                ->where('ac.fecha_reunion <=', $r['fin'])
-                ->get()->getRowArray();
+            // Raw SQL: comas en SELECT
+            $asistInfo = $db->query(
+                "SELECT SUM(a.asistio) AS asistio, COUNT(*) AS total
+                 FROM tbl_acta_asistentes a
+                 JOIN tbl_actas ac ON ac.id_acta = a.id_acta
+                 WHERE ac.id_comite = ?
+                   AND ac.anio = ?
+                   AND ac.fecha_reunion >= ?
+                   AND ac.fecha_reunion <= ?",
+                [$idComite, $anio, $r['inicio'], $r['fin']]
+            )->getRowArray();
 
             $tot = (int) ($asistInfo['total'] ?? 0);
             $as  = (int) ($asistInfo['asistio'] ?? 0);
