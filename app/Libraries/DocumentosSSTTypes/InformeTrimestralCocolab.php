@@ -3,55 +3,55 @@
 namespace App\Libraries\DocumentosSSTTypes;
 
 /**
- * Clase InformeTrimestralCopasst
+ * Clase InformeTrimestralCocolab
  *
- * Informe trimestral de gestion del COPASST (numeral 1.1.6 — vive en la carpeta de Conformacion COPASST).
+ * Informe trimestral de gestion del COCOLAB / Comite de Convivencia Laboral (numeral 1.1.8).
  *
- * Flujo: secciones_ia (Tipo A estructural — 1 parte, sin PTA editable previo).
- * Particularidad: sobrescribe getContextoBase() para inyectar a la IA datos REALES del comite consultados
- * de las tablas del modulo /actas/20 (tbl_actas, tbl_acta_asistentes, tbl_acta_compromisos,
- * tbl_comites, tbl_comite_miembros) filtrados por anio + trimestre.
+ * Flujo: secciones_ia. Sobrescribe getContextoBase() para inyectar a la IA datos REALES del comite
+ * consultados de las tablas del modulo /actas (filtrando por tbl_tipos_comite.codigo='COCOLAB'),
+ * filtrados por anio + trimestre.
  *
- * El consultor selecciona el trimestre (1-4) al hacer click en el boton "Generar Informe Trimestral".
+ * Mantiene confidencialidad sobre los casos atendidos: los prompts en BD instruyen a la IA a NO
+ * mencionar nombres de quejosos / denunciados ni areas individualizables.
  *
- * Ver docs/MODULO_NUMERALES_SGSST/10_DOCUMENTOS_ESPECIFICOS/InformeTrimestralCopasst.md
+ * Ver docs/MODULO_NUMERALES_SGSST/10_DOCUMENTOS_ESPECIFICOS/InformeTrimestralCocolab.md
  *
  * @package App\Libraries\DocumentosSSTTypes
  */
-class InformeTrimestralCopasst extends AbstractDocumentoSST
+class InformeTrimestralCocolab extends AbstractDocumentoSST
 {
     public function getTipoDocumento(): string
     {
-        return 'informe_trimestral_copasst';
+        return 'informe_trimestral_cocolab';
     }
 
     public function getNombre(): string
     {
-        return 'Informe Trimestral de Gestion del COPASST';
+        return 'Informe Trimestral de Gestion del COCOLAB';
     }
 
     public function getDescripcion(): string
     {
-        return 'Informe trimestral de la gestion del COPASST con datos reales de actas y compromisos del periodo.';
+        return 'Informe trimestral del Comite de Convivencia Laboral con datos reales y casos en agregado anonimo.';
     }
 
     public function getEstandar(): ?string
     {
-        return '1.1.6';
+        return '1.1.8';
     }
 
     public function getSecciones(): array
     {
         return [
-            ['numero' => 1, 'nombre' => 'Resumen Ejecutivo',                                  'key' => 'resumen_ejecutivo'],
-            ['numero' => 2, 'nombre' => 'Conformacion del COPASST',                           'key' => 'conformacion_comite'],
-            ['numero' => 3, 'nombre' => 'Reuniones Realizadas',                               'key' => 'reuniones_realizadas'],
-            ['numero' => 4, 'nombre' => 'Asistencia',                                         'key' => 'asistencia'],
-            ['numero' => 5, 'nombre' => 'Decisiones y Votaciones',                            'key' => 'decisiones_votaciones'],
-            ['numero' => 6, 'nombre' => 'Cumplimiento del Cronograma',                        'key' => 'cumplimiento_cronograma'],
-            ['numero' => 7, 'nombre' => 'Hallazgos Identificados',                            'key' => 'hallazgos'],
-            ['numero' => 8, 'nombre' => 'Recomendaciones del Consultor SST',                  'key' => 'recomendaciones_ia'],
-            ['numero' => 9, 'nombre' => 'Compromisos / Plan de Accion del Proximo Trimestre', 'key' => 'plan_accion_proximo'],
+            ['numero' => 1, 'nombre' => 'Resumen Ejecutivo',                                   'key' => 'resumen_ejecutivo'],
+            ['numero' => 2, 'nombre' => 'Conformacion del COCOLAB',                            'key' => 'conformacion_comite'],
+            ['numero' => 3, 'nombre' => 'Reuniones Realizadas',                                'key' => 'reuniones_realizadas'],
+            ['numero' => 4, 'nombre' => 'Asistencia',                                          'key' => 'asistencia'],
+            ['numero' => 5, 'nombre' => 'Casos / Quejas Atendidos',                            'key' => 'casos_atendidos'],
+            ['numero' => 6, 'nombre' => 'Cumplimiento del Cronograma',                         'key' => 'cumplimiento_cronograma'],
+            ['numero' => 7, 'nombre' => 'Hallazgos / Tendencias',                              'key' => 'hallazgos'],
+            ['numero' => 8, 'nombre' => 'Recomendaciones del Consultor SST',                   'key' => 'recomendaciones_ia'],
+            ['numero' => 9, 'nombre' => 'Compromisos / Plan de Accion del Proximo Trimestre',  'key' => 'plan_accion_proximo'],
         ];
     }
 
@@ -61,7 +61,7 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
     }
 
     /**
-     * Sobrescribe getContextoBase para inyectar datos reales del COPASST en el trimestre.
+     * Sobrescribe getContextoBase para inyectar datos reales del COCOLAB en el trimestre.
      */
     public function getContextoBase(array $cliente, ?array $contexto): string
     {
@@ -69,25 +69,25 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
         $anio      = (int) ($contexto['anio'] ?? date('Y'));
         $trimestre = (int) ($contexto['trimestre'] ?? 0);
         if ($trimestre < 1 || $trimestre > 4) {
-            // Default: trimestre actual
             $trimestre = (int) ceil(((int) date('n')) / 3);
         }
 
         $base = parent::getContextoBase($cliente, $contexto);
-        $rangoTrim = self::rangoFechasTrimestre($anio, $trimestre);
+        $rangoTrim = InformeTrimestralCopasst::rangoFechasTrimestre($anio, $trimestre);
 
         $bloque = $this->bloqueComite($idCliente, $anio, $rangoTrim, $trimestre);
 
         return $base
             . "\n\n============================================================\n"
-            . "DATOS REALES DEL COMITE EN EL TRIMESTRE {$trimestre} DEL ANIO {$anio}\n"
+            . "DATOS REALES DEL COCOLAB EN EL TRIMESTRE {$trimestre} DEL ANIO {$anio}\n"
             . "Periodo: {$rangoTrim['inicio']} a {$rangoTrim['fin']}\n"
+            . "RECORDATORIO: mantener confidencialidad sobre los casos. NO nombres de quejosos / denunciados, NO areas individualizables.\n"
             . "============================================================\n"
             . $bloque;
     }
 
     /**
-     * Obtiene los datos crudos del COPASST para el periodo y los formatea como texto plano.
+     * Datos crudos del COCOLAB para el periodo (texto plano para la IA).
      */
     protected function bloqueComite(int $idCliente, int $anio, array $rango, int $trimestre): string
     {
@@ -97,13 +97,13 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
             ->select('c.id_comite, c.fecha_conformacion, c.fecha_vencimiento, c.dia_reunion_preferido, c.lugar_habitual, c.estado, t.codigo, t.nombre AS tipo_nombre, t.periodicidad_dias, t.quorum_minimo_porcentaje')
             ->join('tbl_tipos_comite t', 't.id_tipo = c.id_tipo')
             ->where('c.id_cliente', $idCliente)
-            ->where('t.codigo', 'COPASST')
+            ->where('t.codigo', 'COCOLAB')
             ->where('c.estado', 'activo')
             ->orderBy('c.created_at', 'DESC')
             ->get()->getRowArray();
 
         if (!$comite) {
-            return "[ATENCION] No hay COPASST activo registrado para este cliente en /actas. La IA debera generar el informe asumiendo que aun no hay datos operativos del comite.\n";
+            return "[ATENCION] No hay COCOLAB activo registrado para este cliente en /actas. La IA debera generar el informe asumiendo que aun no hay datos operativos del comite.\n";
         }
 
         $idComite = (int) $comite['id_comite'];
@@ -117,7 +117,6 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
         $out .= "- Periodicidad esperada: cada {$comite['periodicidad_dias']} dias\n";
         $out .= "- Quorum minimo: {$comite['quorum_minimo_porcentaje']}%\n\n";
 
-        // Miembros activos
         $miembros = $db->table('tbl_comite_miembros')
             ->select('nombre_completo, cargo, area_dependencia, representacion, tipo_miembro, rol_comite, fecha_ingreso, fecha_retiro, estado')
             ->where('id_comite', $idComite)
@@ -127,17 +126,15 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
         $out .= "MIEMBROS DEL COMITE (" . count($miembros) . "):\n";
         foreach ($miembros as $m) {
             $rol = $m['rol_comite'] ?: '';
-            $estado = $m['estado'];
             $linea = "- {$m['nombre_completo']} | {$m['cargo']} | rep={$m['representacion']} | tipo={$m['tipo_miembro']} | rol={$rol} | ingreso={$m['fecha_ingreso']}";
             if (!empty($m['fecha_retiro'])) {
                 $linea .= " | retiro={$m['fecha_retiro']}";
             }
-            $linea .= " | estado={$estado}";
+            $linea .= " | estado={$m['estado']}";
             $out .= $linea . "\n";
         }
         $out .= "\n";
 
-        // Actas del trimestre
         $actas = $db->table('tbl_actas')
             ->select('id_acta, numero_acta, fecha_reunion, hora_inicio, hora_fin, lugar, modalidad, quorum_requerido, quorum_presente, hay_quorum, orden_del_dia, conclusiones, observaciones, estado')
             ->where('id_comite', $idComite)
@@ -154,7 +151,7 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
         $idsActas = [];
         foreach ($actas as $a) {
             $idsActas[] = (int) $a['id_acta'];
-            $orden = $a['orden_del_dia'] ? trim(strip_tags(self::resumirJson($a['orden_del_dia']))) : '';
+            $orden = $a['orden_del_dia'] ? trim(strip_tags(InformeTrimestralCopasst::resumirJson($a['orden_del_dia']))) : '';
             $concl = $a['conclusiones'] ? trim(mb_substr($a['conclusiones'], 0, 400)) : '';
             $out .= "- Acta #{$a['numero_acta']} | {$a['fecha_reunion']} {$a['hora_inicio']}-{$a['hora_fin']} | {$a['modalidad']} | lugar: {$a['lugar']} | quorum: {$a['quorum_presente']}/{$a['quorum_requerido']} (" . ($a['hay_quorum'] ? 'SI' : 'NO') . ") | estado: {$a['estado']}\n";
             if ($orden) $out .= "   Orden del dia (resumen): {$orden}\n";
@@ -163,8 +160,7 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
         }
         $out .= "\n";
 
-        // Asistencia agregada (si hay actas) — raw SQL porque CodeIgniter QueryBuilder
-        // rompe el SELECT cuando hay comas internas dentro de CASE WHEN.
+        // Asistencia agregada (raw SQL para evitar el bug del parser de QueryBuilder con CASE WHEN)
         if (!empty($idsActas)) {
             $placeholders = implode(',', array_fill(0, count($idsActas), '?'));
             $asist = $db->query(
@@ -205,7 +201,6 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
             $out .= "\n";
         }
 
-        // Compromisos vigentes (de cualquier acta del comite, aun no cerrados al final del trimestre)
         $abiertos = $db->table('tbl_acta_compromisos')
             ->select('numero_compromiso, descripcion, responsable_nombre, fecha_vencimiento, estado, porcentaje_avance')
             ->where('id_comite', $idComite)
@@ -220,43 +215,5 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
         }
 
         return $out;
-    }
-
-    /**
-     * Devuelve fechas inicio/fin (YYYY-MM-DD) del trimestre dentro del anio.
-     */
-    public static function rangoFechasTrimestre(int $anio, int $trimestre): array
-    {
-        $mapa = [
-            1 => ['01-01', '03-31'],
-            2 => ['04-01', '06-30'],
-            3 => ['07-01', '09-30'],
-            4 => ['10-01', '12-31'],
-        ];
-        $r = $mapa[$trimestre] ?? $mapa[1];
-        return ['inicio' => $anio . '-' . $r[0], 'fin' => $anio . '-' . $r[1]];
-    }
-
-    /**
-     * Resume un JSON de orden_del_dia (estructura: array de items con 'tema').
-     * Si no es JSON, devuelve los primeros 200 caracteres.
-     * Public para reusarlo desde InformeAnualCopasst e InformeTrimestralCocolab/InformeAnualCocolab.
-     */
-    public static function resumirJson(?string $valor): string
-    {
-        if (empty($valor)) return '';
-        $decoded = json_decode($valor, true);
-        if (is_array($decoded)) {
-            $items = [];
-            foreach ($decoded as $item) {
-                if (is_array($item)) {
-                    $items[] = $item['tema'] ?? $item['titulo'] ?? $item['descripcion'] ?? json_encode($item);
-                } else {
-                    $items[] = (string) $item;
-                }
-            }
-            return implode(' | ', array_slice($items, 0, 8));
-        }
-        return mb_substr($valor, 0, 200);
     }
 }

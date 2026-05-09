@@ -109,6 +109,9 @@ class DocumentoSSTFactory
         // 1.1.6 Informes de gestion del COPASST (trimestral y anual) — leen datos reales del modulo /actas
         'informe_trimestral_copasst' => InformeTrimestralCopasst::class,
         'informe_anual_copasst' => InformeAnualCopasst::class,
+        // 1.1.8 Informes de gestion del COCOLAB (Comite de Convivencia Laboral)
+        'informe_trimestral_cocolab' => InformeTrimestralCocolab::class,
+        'informe_anual_cocolab' => InformeAnualCocolab::class,
     ];
 
     /**

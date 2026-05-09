@@ -6321,6 +6321,157 @@ Se debe generar acta que registre:
         return view('documentos_sst/documento_generico', $data);
     }
 
+    /**
+     * 1.1.8 - Vista previa del Informe Trimestral del COCOLAB.
+     * Requiere ?trimestre=1..4 en query string.
+     */
+    public function informeTrimestralCocolab(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $trimestreGet = $this->request->getGet('trimestre');
+        $trimestre = (is_numeric($trimestreGet) && $trimestreGet >= 1 && $trimestreGet <= 4) ? (int)$trimestreGet : null;
+
+        if ($trimestre === null) {
+            return redirect()->to(base_url('documentacion/' . $idCliente))
+                ->with('error', 'Falta parametro trimestre (1-4) para el Informe Trimestral del COCOLAB.');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'informe_trimestral_cocolab')
+            ->where('anio', $anio)
+            ->where('trimestre', $trimestre)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/informe_trimestral_cocolab/' . $idCliente . '?anio=' . $anio . '&trimestre=' . $trimestre))
+                ->with('error', 'Documento no encontrado. Genere primero el Informe Trimestral del COCOLAB para el trimestre ' . $trimestre . ' del ' . $anio . '.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'informe_trimestral_cocolab');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
+
+        $data = [
+            'titulo' => 'Informe Trimestral del COCOLAB - T' . $trimestre . '/' . $anio . ' - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'trimestre' => $trimestre,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('informe_trimestral_cocolab'),
+            'tipoDocumento' => 'informe_trimestral_cocolab'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
+    /**
+     * 1.1.8 - Vista previa del Informe Anual del COCOLAB.
+     */
+    public function informeAnualCocolab(int $idCliente, int $anio)
+    {
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return redirect()->back()->with('error', 'Cliente no encontrado');
+        }
+
+        $documento = $this->db->table('tbl_documentos_sst')
+            ->where('id_cliente', $idCliente)
+            ->where('tipo_documento', 'informe_anual_cocolab')
+            ->where('anio', $anio)
+            ->get()
+            ->getRowArray();
+
+        if (!$documento) {
+            return redirect()->to(base_url('documentos/generar/informe_anual_cocolab/' . $idCliente . '?anio=' . $anio))
+                ->with('error', 'Documento no encontrado. Genere primero el Informe Anual del COCOLAB para ' . $anio . '.');
+        }
+
+        $contenido = json_decode($documento['contenido'], true);
+        if (!empty($contenido['secciones'])) {
+            $contenido['secciones'] = $this->normalizarSecciones($contenido['secciones'], 'informe_anual_cocolab');
+        }
+
+        $versiones = $this->db->table('tbl_doc_versiones_sst')
+            ->where('id_documento', $documento['id_documento'])
+            ->orderBy('fecha_autorizacion', 'ASC')
+            ->get()->getResultArray();
+
+        $responsableModel = new ResponsableSSTModel();
+        $responsables = $responsableModel->getByCliente($idCliente);
+
+        $contextoModel = new ClienteContextoSstModel();
+        $contexto = $contextoModel->getByCliente($idCliente);
+
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultorModel = new \App\Models\ConsultantModel();
+            $consultor = $consultorModel->find($idConsultor);
+        }
+
+        $firmaModelVal = new \App\Models\DocFirmaModel();
+        $firmasElectronicas = $firmaModelVal->obtenerFirmasElectronicasValidadas(
+            $documento['id_documento'],
+            $contexto ?? [],
+            $cliente ?? []
+        );
+
+        $data = [
+            'titulo' => 'Informe Anual del COCOLAB - ' . $anio . ' - ' . $cliente['nombre_cliente'],
+            'cliente' => $cliente,
+            'documento' => $documento,
+            'contenido' => $contenido,
+            'anio' => $anio,
+            'versiones' => $versiones,
+            'responsables' => $responsables,
+            'contexto' => $contexto,
+            'consultor' => $consultor,
+            'firmasElectronicas' => $firmasElectronicas,
+            'firmantesDefinidos' => $this->configService->obtenerFirmantes('informe_anual_cocolab'),
+            'tipoDocumento' => 'informe_anual_cocolab'
+        ];
+
+        return view('documentos_sst/documento_generico', $data);
+    }
+
     public function planEmergencias(int $idCliente, int $anio)
     {
         $cliente = $this->clienteModel->find($idCliente);

@@ -767,6 +767,20 @@ class DocumentacionController extends Controller
                 ->get()->getResultArray();
         }
 
+        // 1.1.8 Informes IA del COCOLAB (trimestral + anual).
+        $informesCocolab = [];
+        if ($tipoCarpetaFases === 'comite_convivencia') {
+            $db = $db ?? \Config\Database::connect();
+            $informesCocolab = $db->table('tbl_documentos_sst')
+                ->whereIn('tipo_documento', ['informe_trimestral_cocolab', 'informe_anual_cocolab'])
+                ->where('id_cliente', $cliente['id_cliente'])
+                ->orderBy('anio', 'DESC')
+                ->orderBy('tipo_documento', 'ASC')
+                ->orderBy('trimestre', 'ASC')
+                ->orderBy('updated_at', 'DESC')
+                ->get()->getResultArray();
+        }
+
         // Determinar qué vista de tipo cargar
         $vistaTipo = $tipoCarpetaFases ?? 'generica';
         $vistaPath = "documentacion/_tipos/{$vistaTipo}";
@@ -789,6 +803,7 @@ class DocumentacionController extends Controller
             'documentosSSTAprobados' => $documentosSSTAprobados,
             'soportesAdicionales' => $soportesAdicionales,
             'informesCopasst' => $informesCopasst,
+            'informesCocolab' => $informesCocolab,
             'contextoCliente' => $contextoCliente ?? null,
             'vistaContenido' => $vistaPath,
             'programasFasesInfo' => $programasFasesInfo ?? [],
