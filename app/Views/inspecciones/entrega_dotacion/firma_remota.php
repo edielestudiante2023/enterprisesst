@@ -25,20 +25,22 @@
         table.items-table { width:100%; border-collapse:collapse; font-size:13px; }
         table.items-table th { background:#f3f4f6; text-align:left; padding:6px 8px; font-size:11px; color:#374151; }
         table.items-table td { padding:6px 8px; border-bottom:1px solid #e5e7eb; }
+        .badge-buen-estado { background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:20px; font-weight:600; font-size:12px; }
+        .badge-mal-estado { background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:20px; font-weight:600; font-size:12px; }
     </style>
 </head>
 <body>
 
 <div class="top-bar">
     <div class="logo">EnterpriseSST</div>
-    <h6><i class="fas fa-helmet-safety me-2"></i>Entrega de Dotación</h6>
+    <h6><i class="fas fa-mitten me-2"></i>Entrega de Dotación</h6>
     <p><?= esc($cliente['nombre_cliente'] ?? '') ?> &middot; <?= date('d M Y', strtotime($entrega['fecha_entrega'])) ?></p>
 </div>
 
 <div class="container-fluid px-3 pt-3">
     <div class="aviso-firma mb-3">
         <i class="fas fa-pen-nib me-1"></i>
-        Hola <strong><?= esc($asistente['nombre_completo']) ?></strong>, revisa los elementos que estás recibiendo y firma al final para confirmar el recibido.
+        Hola <strong><?= esc($asistente['nombre_completo']) ?></strong>, revisa el resumen y firma para confirmar el recibido de la dotación.
     </div>
 
     <div class="entrega-card">
@@ -68,23 +70,41 @@
                 <tr>
                     <th>Elemento</th>
                     <th style="width:60px;">Cant.</th>
-                    <th style="width:60px;">Talla</th>
-                    <th style="width:90px;">Marca</th>
+                    <th style="width:80px;">Marca</th>
+                    <th style="width:60px;">Tu talla</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($items as $it): ?>
+                <?php $tallaOp = $tallas_map[$it['id']] ?? ''; ?>
                 <tr>
                     <td><?= esc($it['descripcion']) ?></td>
                     <td><?= esc($it['cantidad']) ?></td>
-                    <td><?= esc($it['talla'] ?? '-') ?></td>
                     <td><?= esc($it['marca'] ?? '-') ?></td>
+                    <td><strong><?= $tallaOp !== '' ? esc($tallaOp) : '-' ?></strong></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
         <?php else: ?>
         <p class="text-muted" style="font-size:13px; margin:0;">Sin elementos registrados.</p>
+        <?php endif; ?>
+    </div>
+
+    <div class="entrega-card">
+        <div class="section-title"><i class="fas fa-clipboard-check"></i> CONFIRMACIÓN DE BUEN ESTADO</div>
+        <?php if (($asistente['recibido_buen_estado'] ?? '') === 'si'): ?>
+            <span class="badge-buen-estado"><i class="fas fa-check-circle"></i> Recibido en buen estado</span>
+        <?php elseif (($asistente['recibido_buen_estado'] ?? '') === 'no'): ?>
+            <span class="badge-mal-estado"><i class="fas fa-times-circle"></i> NO en buen estado</span>
+            <?php if (!empty($asistente['observaciones_recibido'])): ?>
+            <div class="text-muted mt-2" style="font-size:12px;">
+                <strong>Problema reportado:</strong><br>
+                <?= nl2br(esc($asistente['observaciones_recibido'])) ?>
+            </div>
+            <?php endif; ?>
+        <?php else: ?>
+            <span class="text-muted" style="font-size:12px;">Sin confirmación.</span>
         <?php endif; ?>
     </div>
 
@@ -98,7 +118,7 @@
         </div>
 
         <p class="text-muted" style="font-size:12px; margin-bottom:8px;">
-            Al firmar, declaro haber recibido a satisfacción los elementos listados, en buen estado y conforme a lo solicitado.
+            Al firmar, declaro haber recibido los elementos listados con las tallas y el estado registrados arriba.
         </p>
 
         <canvas id="canvasFirma" class="firma-canvas" width="600" height="220" style="height:220px;"></canvas>
@@ -177,7 +197,7 @@
 
         Swal.fire({
             title: 'Confirmar recibido',
-            text: 'Al firmar declaras haber recibido a satisfacción los elementos listados. ¿Continuar?',
+            text: 'Al firmar declaras haber recibido la dotación con la información registrada. ¿Continuar?',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Sí, firmar',

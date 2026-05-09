@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\EntregaDotacionModel;
 use App\Models\EntregaDotacionAsistenteModel;
 use App\Models\EntregaDotacionItemModel;
+use App\Models\EntregaDotacionAsistenteTallaModel;
 use App\Models\ClientModel;
 use App\Models\ConsultantModel;
 use App\Models\ReporteModel;
@@ -29,12 +30,14 @@ class EntregaDotacionController extends BaseController
     protected EntregaDotacionModel $entregaModel;
     protected EntregaDotacionAsistenteModel $asistenteModel;
     protected EntregaDotacionItemModel $itemModel;
+    protected EntregaDotacionAsistenteTallaModel $tallaModel;
 
     public function __construct()
     {
         $this->entregaModel = new EntregaDotacionModel();
         $this->asistenteModel = new EntregaDotacionAsistenteModel();
         $this->itemModel = new EntregaDotacionItemModel();
+        $this->tallaModel = new EntregaDotacionAsistenteTallaModel();
     }
 
     public function list()
@@ -66,6 +69,7 @@ class EntregaDotacionController extends BaseController
             'content' => view('inspecciones/entrega_dotacion/form', [
                 'title'      => 'Nueva Entrega de Dotación',
                 'entrega'    => null,
+                'items'      => [],
                 'asistentes' => [],
                 'idCliente'  => $idCliente,
                 'contexto'   => 'consultor',
@@ -102,6 +106,8 @@ class EntregaDotacionController extends BaseController
         ]);
         $idEntrega = $this->entregaModel->getInsertID();
 
+        $this->saveItemsGlobales((int)$idEntrega);
+
         if ($isAutosave) return $this->autosaveJsonSuccess($idEntrega);
         return redirect()->to('/inspecciones/entrega-dotacion/edit/' . $idEntrega)
             ->with('msg', 'Guardado como borrador');
@@ -114,9 +120,10 @@ class EntregaDotacionController extends BaseController
         if ($entrega['estado'] === 'completo') return redirect()->to('/inspecciones/entrega-dotacion/view/' . $id);
 
         $asistentes = $this->asistenteModel->getByEntrega((int)$id);
-        // Inyectar items por cada asistente
+        $items = $this->itemModel->getByEntrega((int)$id);
+        // Inyectar tallas por asistente para mostrar en read-only
         foreach ($asistentes as &$a) {
-            $a['items'] = $this->itemModel->getByAsistente((int)$a['id']);
+            $a['tallas_map'] = $this->tallaModel->getMapByAsistente((int)$a['id']);
         }
         unset($a);
 
@@ -124,6 +131,7 @@ class EntregaDotacionController extends BaseController
             'content' => view('inspecciones/entrega_dotacion/form', [
                 'title'      => 'Editar Entrega de Dotación',
                 'entrega'    => $entrega,
+                'items'      => $items,
                 'asistentes' => $asistentes,
                 'idCliente'  => $entrega['id_cliente'],
                 'contexto'   => 'consultor',
@@ -154,6 +162,8 @@ class EntregaDotacionController extends BaseController
             'observaciones'       => $this->request->getPost('observaciones'),
         ]);
 
+        $this->saveItemsGlobales((int)$id);
+
         if ($this->request->getPost('finalizar')) return $this->finalizar($id);
         if ($this->isAutosaveRequest()) return $this->autosaveJsonSuccess((int)$id);
 
@@ -169,14 +179,16 @@ class EntregaDotacionController extends BaseController
         $consultantModel = new ConsultantModel();
 
         $asistentes = $this->asistenteModel->getByEntrega((int)$id);
+        $items = $this->itemModel->getByEntrega((int)$id);
         foreach ($asistentes as &$a) {
-            $a['items'] = $this->itemModel->getByAsistente((int)$a['id']);
+            $a['tallas_map'] = $this->tallaModel->getMapByAsistente((int)$a['id']);
         }
         unset($a);
 
         return view('inspecciones/layout_pwa', [
             'content' => view('inspecciones/entrega_dotacion/view', [
                 'entrega'    => $entrega,
+                'items'      => $items,
                 'cliente'    => $clienteModel->find($entrega['id_cliente']),
                 'consultor'  => $entrega['id_consultor'] ? $consultantModel->find($entrega['id_consultor']) : null,
                 'asistentes' => $asistentes,
@@ -211,8 +223,8 @@ class EntregaDotacionController extends BaseController
     }
 
     /**
-     * AJAX: guarda/actualiza UN asistente individual junto con SUS items.
-     * Espera arrays paralelos: item_descripcion[], item_cantidad[], item_talla[], item_marca[].
+     * AJAX: guarda/actualiza UN asistente individual (solo datos personales).
+     * Los items son globales de la entrega — no se asocian al asistente.
      */
     public function saveAsistente(int $idEntrega)
     {
@@ -249,27 +261,7 @@ class EntregaDotacionController extends BaseController
             $id = (int)$this->asistenteModel->getInsertID();
         }
 
-        // Reemplazar items: borrar todos los actuales del asistente e insertar los nuevos
-        $this->itemModel->deleteByAsistente($id);
-        $descs    = $this->request->getPost('item_descripcion') ?? [];
-        $cants    = $this->request->getPost('item_cantidad') ?? [];
-        $tallas   = $this->request->getPost('item_talla') ?? [];
-        $marcas   = $this->request->getPost('item_marca') ?? [];
-        foreach ($descs as $i => $desc) {
-            $desc = trim((string)$desc);
-            if ($desc === '') continue;
-            $this->itemModel->insert([
-                'id_entrega_dotacion_asistente' => $id,
-                'descripcion' => $desc,
-                'cantidad'    => trim((string)($cants[$i] ?? '1')) ?: '1',
-                'talla'       => trim((string)($tallas[$i] ?? '')) ?: null,
-                'marca'       => trim((string)($marcas[$i] ?? '')) ?: null,
-                'orden'       => $i + 1,
-            ]);
-        }
-
         $asistente = $this->asistenteModel->find($id);
-        $asistente['items'] = $this->itemModel->getByAsistente($id);
         return $this->response->setJSON([
             'success'   => true,
             'id'        => $id,
@@ -451,14 +443,16 @@ class EntregaDotacionController extends BaseController
         }
 
         $cliente = (new ClientModel())->find($entrega['id_cliente']);
-        $items = $this->itemModel->getByAsistente((int)$asistente['id']);
+        $items = $this->itemModel->getByEntrega((int)$entrega['id']);
+        $tallasMap = $this->tallaModel->getMapByAsistente((int)$asistente['id']);
 
         return view('inspecciones/entrega_dotacion/firma_remota', [
-            'token'     => $token,
-            'entrega'   => $entrega,
-            'cliente'   => $cliente,
-            'asistente' => $asistente,
-            'items'     => $items,
+            'token'      => $token,
+            'entrega'    => $entrega,
+            'cliente'    => $cliente,
+            'asistente'  => $asistente,
+            'items'      => $items,
+            'tallas_map' => $tallasMap,
         ]);
     }
 
@@ -553,7 +547,9 @@ class EntregaDotacionController extends BaseController
     }
 
     /**
-     * Vista publica: form de auto-inscripcion del operario (incluye items).
+     * Vista publica: form de auto-inscripcion del operario.
+     * Muestra los items globales pre-cargados de la entrega para que el operario
+     * solo digite SU talla por cada uno y confirme buen estado.
      */
     public function inscripcion(string $token)
     {
@@ -570,15 +566,19 @@ class EntregaDotacionController extends BaseController
         }
 
         $cliente = (new ClientModel())->find($entrega['id_cliente']);
+        $items = $this->itemModel->getByEntrega((int)$entrega['id']);
         return view('inspecciones/entrega_dotacion/inscripcion_publica', [
             'token'   => $token,
             'entrega' => $entrega,
             'cliente' => $cliente,
+            'items'   => $items,
         ]);
     }
 
     /**
-     * POST publico: procesa la inscripcion del operario + sus items + redirige al canvas de firma.
+     * POST publico: procesa la inscripcion del operario.
+     * Guarda: datos personales + tallas (una por cada item global) +
+     * recibido_buen_estado + observaciones_recibido. Redirige al canvas de firma.
      */
     public function procesarInscripcion()
     {
@@ -591,10 +591,25 @@ class EntregaDotacionController extends BaseController
         $email   = trim((string)$this->request->getPost('email'));
         $celular = trim((string)$this->request->getPost('celular'));
 
+        $recibidoBuenEstado = trim((string)$this->request->getPost('recibido_buen_estado'));
+        $observacionesRecibido = trim((string)$this->request->getPost('observaciones_recibido'));
+
         if (!$token || !$nombre || !$numDoc) {
             return $this->response->setJSON([
                 'success' => false,
                 'error'   => 'Nombre completo y numero de documento son obligatorios.',
+            ]);
+        }
+        if (!in_array($recibidoBuenEstado, ['si', 'no'], true)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error'   => 'Debes indicar si recibiste la dotacion en buen estado.',
+            ]);
+        }
+        if ($recibidoBuenEstado === 'no' && $observacionesRecibido === '') {
+            return $this->response->setJSON([
+                'success' => false,
+                'error'   => 'Debes describir por que la dotacion no esta en buen estado.',
             ]);
         }
 
@@ -626,34 +641,25 @@ class EntregaDotacionController extends BaseController
         $orden = isset($ultimo['max_orden']) ? ((int)$ultimo['max_orden']) + 1 : 1;
 
         $this->asistenteModel->insert([
-            'id_entrega_dotacion' => $entrega['id'],
-            'nombre_completo'     => $nombre,
-            'tipo_documento'      => $tipoDoc,
-            'numero_documento'    => $numDoc,
-            'cargo'               => $cargo ?: null,
-            'area_dependencia'    => $area ?: null,
-            'email'               => $email ?: null,
-            'celular'             => $celular ?: null,
-            'orden'               => $orden,
+            'id_entrega_dotacion'    => $entrega['id'],
+            'nombre_completo'        => $nombre,
+            'tipo_documento'         => $tipoDoc,
+            'numero_documento'       => $numDoc,
+            'cargo'                  => $cargo ?: null,
+            'area_dependencia'       => $area ?: null,
+            'email'                  => $email ?: null,
+            'celular'                => $celular ?: null,
+            'orden'                  => $orden,
+            'recibido_buen_estado'   => $recibidoBuenEstado,
+            'observaciones_recibido' => $recibidoBuenEstado === 'no' ? $observacionesRecibido : null,
         ]);
         $idAsistente = (int)$this->asistenteModel->getInsertID();
 
-        // Items que el operario digitó al inscribirse
-        $descs    = $this->request->getPost('item_descripcion') ?? [];
-        $cants    = $this->request->getPost('item_cantidad') ?? [];
-        $tallas   = $this->request->getPost('item_talla') ?? [];
-        $marcas   = $this->request->getPost('item_marca') ?? [];
-        foreach ($descs as $i => $desc) {
-            $desc = trim((string)$desc);
-            if ($desc === '') continue;
-            $this->itemModel->insert([
-                'id_entrega_dotacion_asistente' => $idAsistente,
-                'descripcion' => $desc,
-                'cantidad'    => trim((string)($cants[$i] ?? '1')) ?: '1',
-                'talla'       => trim((string)($tallas[$i] ?? '')) ?: null,
-                'marca'       => trim((string)($marcas[$i] ?? '')) ?: null,
-                'orden'       => $i + 1,
-            ]);
+        // Tallas: el operario digito una por cada item global
+        // Espera array tallas[id_item] => string
+        $tallasPost = $this->request->getPost('tallas') ?? [];
+        if (is_array($tallasPost)) {
+            $this->tallaModel->replaceForAsistente($idAsistente, $tallasPost);
         }
 
         // Token de firma
@@ -724,6 +730,58 @@ class EntregaDotacionController extends BaseController
         return $this->response->setJSON(['success' => true]);
     }
 
+    /**
+     * Guarda los items GLOBALES de una entrega desde el form del consultor.
+     * Reemplaza todos los items actuales por los recibidos en el POST.
+     * Espera arrays paralelos: item_id[], item_descripcion[], item_cantidad[], item_marca[].
+     */
+    private function saveItemsGlobales(int $idEntrega): void
+    {
+        $ids   = $this->request->getPost('item_id') ?? [];
+        $descs = $this->request->getPost('item_descripcion') ?? [];
+        $cants = $this->request->getPost('item_cantidad') ?? [];
+        $marcas = $this->request->getPost('item_marca') ?? [];
+
+        if (!is_array($descs)) return;
+
+        // Recolectar IDs validos del POST para conservar tallas asociadas
+        $idsConservar = [];
+        $payloads = [];
+        foreach ($descs as $i => $desc) {
+            $desc = trim((string)$desc);
+            if ($desc === '') continue;
+            $existenteId = isset($ids[$i]) && $ids[$i] !== '' ? (int)$ids[$i] : null;
+            $payloads[] = [
+                'existente_id' => $existenteId,
+                'data' => [
+                    'id_entrega_dotacion' => $idEntrega,
+                    'descripcion'         => $desc,
+                    'cantidad'            => trim((string)($cants[$i] ?? '1')) ?: '1',
+                    'marca'               => trim((string)($marcas[$i] ?? '')) ?: null,
+                    'orden'               => $i + 1,
+                ],
+            ];
+            if ($existenteId) $idsConservar[] = $existenteId;
+        }
+
+        // Borrar items existentes que ya NO estan en el POST (asi se eliminan tallas asociadas via CASCADE)
+        $existentes = $this->itemModel->getByEntrega($idEntrega);
+        foreach ($existentes as $ex) {
+            if (!in_array((int)$ex['id'], $idsConservar, true)) {
+                $this->itemModel->delete((int)$ex['id']);
+            }
+        }
+
+        // INSERT/UPDATE de los payloads
+        foreach ($payloads as $p) {
+            if ($p['existente_id'] && in_array($p['existente_id'], array_column($existentes, 'id'))) {
+                $this->itemModel->update($p['existente_id'], $p['data']);
+            } else {
+                $this->itemModel->insert($p['data']);
+            }
+        }
+    }
+
     // ============================================================
     // GENERACIÓN DE PDFs
     // ============================================================
@@ -744,7 +802,8 @@ class EntregaDotacionController extends BaseController
         $consultantModel = new ConsultantModel();
         $cliente = $clientModel->find($entrega['id_cliente']);
         $consultor = $entrega['id_consultor'] ? $consultantModel->find($entrega['id_consultor']) : null;
-        $items = $this->itemModel->getByAsistente($idAsistente);
+        $items = $this->itemModel->getByEntrega((int)$entrega['id']);
+        $tallasMap = $this->tallaModel->getMapByAsistente($idAsistente);
 
         $logoBase64 = '';
         if (!empty($cliente['logo'])) {
@@ -765,6 +824,7 @@ class EntregaDotacionController extends BaseController
             'consultor'   => $consultor,
             'asistente'   => $asistente,
             'items'       => $items,
+            'tallas_map'  => $tallasMap,
             'logoBase64'  => $logoBase64,
             'firmaBase64' => $firmaBase64,
         ]);

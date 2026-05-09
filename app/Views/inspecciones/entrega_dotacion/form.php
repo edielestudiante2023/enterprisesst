@@ -10,6 +10,7 @@ $emailUrlBase            = 'inspecciones/entrega-dotacion/asistente/enviar-email
 $deleteAsistUrlBase      = 'inspecciones/entrega-dotacion/asistente/delete/';
 $statusUrlBase           = 'inspecciones/entrega-dotacion/asistentes-status/';
 $tokenInscripcionUrlBase = 'inspecciones/entrega-dotacion/generar-token-inscripcion/';
+$itemsGlobales = $items ?? [];
 ?>
 
 <div class="container-fluid px-3">
@@ -17,6 +18,7 @@ $tokenInscripcionUrlBase = 'inspecciones/entrega-dotacion/generar-token-inscripc
         <?= csrf_field() ?>
 
         <div class="accordion mt-2" id="accEntrega">
+
             <!-- Datos Generales -->
             <div class="accordion-item">
                 <h2 class="accordion-header">
@@ -69,7 +71,57 @@ $tokenInscripcionUrlBase = 'inspecciones/entrega-dotacion/generar-token-inscripc
                 </div>
             </div>
 
-            <!-- Operarios y sus items -->
+            <!-- ELEMENTOS ENTREGADOS (globales — todos los operarios reciben lo mismo) -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#secItems">
+                        <i class="fas fa-list me-2"></i> Elementos Entregados (<span id="countItems"><?= count($itemsGlobales) ?></span>)
+                    </button>
+                </h2>
+                <div id="secItems" class="accordion-collapse collapse show" data-bs-parent="#accEntrega">
+                    <div class="accordion-body">
+                        <div class="alert alert-info py-2" style="font-size:13px;">
+                            <i class="fas fa-info-circle"></i>
+                            Esta es la lista de elementos que recibirán <strong>todos los operarios</strong>. La <strong>talla</strong> la digita cada operario al escanear su QR.
+                            Si alguien necesita elementos diferentes, crea otra entrega aparte.
+                        </div>
+                        <div id="itemsContainer">
+                            <?php foreach ($itemsGlobales as $i => $it): ?>
+                            <div class="card mb-2 item-row">
+                                <div class="card-body p-2">
+                                    <input type="hidden" name="item_id[]" value="<?= $it['id'] ?>">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong style="font-size:13px;">Item #<span class="item-num"><?= $i + 1 ?></span></strong>
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item" style="min-height:32px;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-12">
+                                            <input type="text" name="item_descripcion[]" class="form-control form-control-sm"
+                                                value="<?= esc($it['descripcion']) ?>" placeholder="Descripción del elemento *" required>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" name="item_cantidad[]" class="form-control form-control-sm"
+                                                value="<?= esc($it['cantidad']) ?>" placeholder="Cant.">
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" name="item_marca[]" class="form-control form-control-sm"
+                                                value="<?= esc($it['marca'] ?? '') ?>" placeholder="Marca (opcional)">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-dark mt-2" id="btnAddItem">
+                            <i class="fas fa-plus"></i> Agregar elemento
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operarios (solo datos personales — items son globales arriba) -->
             <div class="accordion-item">
                 <h2 class="accordion-header">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#secAsist">
@@ -81,7 +133,7 @@ $tokenInscripcionUrlBase = 'inspecciones/entrega-dotacion/generar-token-inscripc
                         <?php if (!$isEdit): ?>
                             <div class="alert alert-info py-2" style="font-size:13px;">
                                 <i class="fas fa-info-circle"></i>
-                                Guarda primero la entrega como borrador. Después podrás agregar operarios e ítems entregados.
+                                Guarda primero la entrega como borrador y los elementos. Después agrega los operarios o reparte el QR para que se inscriban solos.
                             </div>
                         <?php else: ?>
                             <div class="alert alert-warning py-2" style="font-size:13px;">
@@ -98,7 +150,7 @@ $tokenInscripcionUrlBase = 'inspecciones/entrega-dotacion/generar-token-inscripc
                                         <i class="fas fa-qrcode"></i> Auto-inscripcion via QR
                                     </strong>
                                     <div class="text-muted" style="font-size:12px;">
-                                        Cada operario escanea el QR, llena sus datos y los items recibidos, y firma desde su celular.
+                                        Cada operario escanea el QR, llena sus datos y sus tallas, confirma estado y firma desde su celular.
                                     </div>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-warning" id="btnMostrarQR" style="white-space:nowrap;font-weight:600;">
@@ -191,37 +243,38 @@ $tokenInscripcionUrlBase = 'inspecciones/entrega-dotacion/generar-token-inscripc
                                             </div>
                                         </div>
 
-                                        <!-- Items del operario -->
-                                        <div class="mt-2 p-2 rounded" style="background:#f9fafb; border:1px solid #e5e7eb;">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <strong style="font-size:12px;"><i class="fas fa-list"></i> Elementos entregados</strong>
-                                                <button type="button" class="btn btn-sm btn-outline-dark btn-add-item" style="font-size:11px; padding:2px 8px;">
-                                                    <i class="fas fa-plus"></i> Item
-                                                </button>
-                                            </div>
-                                            <div class="items-container">
-                                                <?php if (!empty($a['items'])): ?>
-                                                    <?php foreach ($a['items'] as $it): ?>
-                                                    <div class="item-row mb-1">
-                                                        <div class="row g-1">
-                                                            <div class="col-12">
-                                                                <input type="text" class="form-control form-control-sm input-item-desc" value="<?= esc($it['descripcion']) ?>" placeholder="Descripción">
-                                                            </div>
-                                                            <div class="col-3"><input type="text" class="form-control form-control-sm input-item-cant" value="<?= esc($it['cantidad']) ?>" placeholder="Cant." style="font-size:11px;"></div>
-                                                            <div class="col-3"><input type="text" class="form-control form-control-sm input-item-talla" value="<?= esc($it['talla'] ?? '') ?>" placeholder="Talla" style="font-size:11px;"></div>
-                                                            <div class="col-4"><input type="text" class="form-control form-control-sm input-item-marca" value="<?= esc($it['marca'] ?? '') ?>" placeholder="Marca" style="font-size:11px;"></div>
-                                                            <div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-item" style="font-size:11px; padding:2px 6px;"><i class="fas fa-times"></i></button></div>
-                                                        </div>
-                                                    </div>
-                                                    <?php endforeach; ?>
-                                                <?php endif; ?>
+                                        <?php if (!empty($a['tallas_map'])): ?>
+                                        <div class="mt-2 p-2 rounded" style="background:#f9fafb; border:1px solid #e5e7eb; font-size:11px;">
+                                            <strong><i class="fas fa-ruler"></i> Tallas registradas por el operario:</strong>
+                                            <div class="text-muted mt-1">
+                                                <?php foreach ($itemsGlobales as $itGlobal): ?>
+                                                    <?php $talla = $a['tallas_map'][$itGlobal['id']] ?? ''; ?>
+                                                    <?php if ($talla !== ''): ?>
+                                                        <div><?= esc($itGlobal['descripcion']) ?>: <strong><?= esc($talla) ?></strong></div>
+                                                    <?php endif; ?>
+                                                <?php endforeach; ?>
                                             </div>
                                         </div>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($a['recibido_buen_estado'])): ?>
+                                        <div class="mt-2" style="font-size:11px;">
+                                            <strong>¿Recibió en buen estado?</strong>
+                                            <?php if ($a['recibido_buen_estado'] === 'si'): ?>
+                                                <span class="badge bg-success">SÍ</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-danger">NO</span>
+                                                <?php if (!empty($a['observaciones_recibido'])): ?>
+                                                    <div class="text-muted mt-1"><i class="fas fa-comment-alt"></i> <?= esc($a['observaciones_recibido']) ?></div>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php endif; ?>
 
                                         <?php if (empty($a['firma_path'])): ?>
                                         <div class="mt-2 d-grid gap-1">
                                             <button type="button" class="btn btn-sm btn-primary btn-save-asist" data-asistente-id="<?= $a['id'] ?>">
-                                                <i class="fas fa-save"></i> Guardar este operario y sus items
+                                                <i class="fas fa-save"></i> Guardar este operario
                                             </button>
                                             <div class="d-flex gap-1">
                                                 <button type="button" class="btn btn-sm btn-outline-secondary btn-copiar-firma flex-fill" data-asistente-id="<?= $a['id'] ?>" data-nombre="<?= esc($a['nombre_completo']) ?>">
@@ -297,6 +350,54 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ============================================================
+    // ITEMS GLOBALES (NUEVO)
+    // ============================================================
+    function updateItemsCount() {
+        var rows = document.querySelectorAll('.item-row');
+        document.getElementById('countItems').textContent = rows.length;
+        rows.forEach((row, i) => {
+            var num = row.querySelector('.item-num');
+            if (num) num.textContent = i + 1;
+        });
+    }
+
+    function newItemHtml(num) {
+        return '<div class="card mb-2 item-row">'
+             + '<div class="card-body p-2">'
+             +   '<input type="hidden" name="item_id[]" value="">'
+             +   '<div class="d-flex justify-content-between align-items-center mb-1">'
+             +       '<strong style="font-size:13px;">Item #<span class="item-num">' + num + '</span></strong>'
+             +       '<button type="button" class="btn btn-sm btn-outline-danger btn-remove-item" style="min-height:32px;"><i class="fas fa-times"></i></button>'
+             +   '</div>'
+             +   '<div class="row g-2">'
+             +       '<div class="col-12"><input type="text" name="item_descripcion[]" class="form-control form-control-sm" placeholder="Descripción del elemento *" required></div>'
+             +       '<div class="col-4"><input type="text" name="item_cantidad[]" class="form-control form-control-sm" value="1" placeholder="Cant."></div>'
+             +       '<div class="col-8"><input type="text" name="item_marca[]" class="form-control form-control-sm" placeholder="Marca (opcional)"></div>'
+             +   '</div>'
+             + '</div>'
+             + '</div>';
+    }
+
+    document.getElementById('btnAddItem').addEventListener('click', function() {
+        var num = document.querySelectorAll('.item-row').length + 1;
+        document.getElementById('itemsContainer').insertAdjacentHTML('beforeend', newItemHtml(num));
+        updateItemsCount();
+    });
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-remove-item');
+        if (!btn) return;
+        var row = btn.closest('.item-row');
+        if (row) {
+            row.remove();
+            updateItemsCount();
+        }
+    });
+
+    // ============================================================
+    // OPERARIOS
+    // ============================================================
     function updateAsist() {
         var rows = document.querySelectorAll('.asistente-row');
         document.getElementById('countAsist').textContent = rows.length;
@@ -305,35 +406,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (num) num.textContent = i + 1;
         });
     }
-
-    function itemRowHtml(desc, cant, talla, marca) {
-        return '<div class="item-row mb-1">'
-             + '<div class="row g-1">'
-             +   '<div class="col-12"><input type="text" class="form-control form-control-sm input-item-desc" value="' + (desc||'') + '" placeholder="Descripción"></div>'
-             +   '<div class="col-3"><input type="text" class="form-control form-control-sm input-item-cant" value="' + (cant||'1') + '" placeholder="Cant." style="font-size:11px;"></div>'
-             +   '<div class="col-3"><input type="text" class="form-control form-control-sm input-item-talla" value="' + (talla||'') + '" placeholder="Talla" style="font-size:11px;"></div>'
-             +   '<div class="col-4"><input type="text" class="form-control form-control-sm input-item-marca" value="' + (marca||'') + '" placeholder="Marca" style="font-size:11px;"></div>'
-             +   '<div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-item" style="font-size:11px; padding:2px 6px;"><i class="fas fa-times"></i></button></div>'
-             + '</div>'
-             + '</div>';
-    }
-
-    document.addEventListener('click', function(e) {
-        var btn = e.target.closest('.btn-add-item');
-        if (!btn) return;
-        var card = btn.closest('.asistente-row');
-        if (!card) return;
-        var container = card.querySelector('.items-container');
-        if (!container) return;
-        container.insertAdjacentHTML('beforeend', itemRowHtml('', '1', '', ''));
-    });
-
-    document.addEventListener('click', function(e) {
-        var btn = e.target.closest('.btn-remove-item');
-        if (!btn) return;
-        var row = btn.closest('.item-row');
-        if (row) row.remove();
-    });
 
     function asistRowHtml(num) {
         return '<div class="card mb-3 asistente-row" data-asistente-id="">'
@@ -353,15 +425,8 @@ document.addEventListener('DOMContentLoaded', function() {
              +       '<div class="col-12"><input type="email" class="form-control form-control-sm input-email" placeholder="Email (opcional)"></div>'
              +       '<div class="col-12"><input type="text" class="form-control form-control-sm input-celular" placeholder="Celular (opcional)"></div>'
              +   '</div>'
-             +   '<div class="mt-2 p-2 rounded" style="background:#f9fafb; border:1px solid #e5e7eb;">'
-             +       '<div class="d-flex justify-content-between align-items-center mb-1">'
-             +           '<strong style="font-size:12px;"><i class="fas fa-list"></i> Elementos entregados</strong>'
-             +           '<button type="button" class="btn btn-sm btn-outline-dark btn-add-item" style="font-size:11px; padding:2px 8px;"><i class="fas fa-plus"></i> Item</button>'
-             +       '</div>'
-             +       '<div class="items-container">' + itemRowHtml('', '1', '', '') + '</div>'
-             +   '</div>'
              +   '<div class="mt-2 d-grid gap-1">'
-             +       '<button type="button" class="btn btn-sm btn-primary btn-save-asist" data-asistente-id=""><i class="fas fa-save"></i> Guardar este operario y sus items</button>'
+             +       '<button type="button" class="btn btn-sm btn-primary btn-save-asist" data-asistente-id=""><i class="fas fa-save"></i> Guardar este operario</button>'
              +   '</div>'
              + '</div>'
              + '</div>';
@@ -378,7 +443,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         var btnRm = e.target.closest('.btn-remove-asist');
         if (!btnRm) return;
-
         var row = btnRm.closest('.asistente-row');
         if (!row) return;
         var idAsistente = row.dataset.asistenteId || '';
@@ -404,11 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
             focusCancel: true,
         }).then(function(result) {
             if (!result.isConfirmed) return;
-            if (!idEntregaActual) {
-                row.remove();
-                updateAsist();
-                return;
-            }
+            if (!idEntregaActual) { row.remove(); updateAsist(); return; }
 
             var fd = new FormData();
             fd.append(csrfName, csrfHash);
@@ -426,22 +486,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(function() { Swal.fire('Error de conexión', 'No se pudo eliminar.', 'error'); });
         });
     });
-
-    function collectItems(card) {
-        var rows = card.querySelectorAll('.item-row');
-        var items = [];
-        rows.forEach(function(row) {
-            var d = (row.querySelector('.input-item-desc') || {}).value || '';
-            if (!d.trim()) return;
-            items.push({
-                desc: d.trim(),
-                cant: ((row.querySelector('.input-item-cant') || {}).value || '1').trim(),
-                talla: ((row.querySelector('.input-item-talla') || {}).value || '').trim(),
-                marca: ((row.querySelector('.input-item-marca') || {}).value || '').trim(),
-            });
-        });
-        return items;
-    }
 
     document.addEventListener('click', function(e) {
         var btn = e.target.closest('.btn-save-asist');
@@ -474,15 +518,6 @@ document.addEventListener('DOMContentLoaded', function() {
         var rowsAll = Array.from(document.querySelectorAll('.asistente-row'));
         fd.append('orden', String(rowsAll.indexOf(row) + 1));
 
-        // Items
-        var items = collectItems(row);
-        items.forEach(function(it) {
-            fd.append('item_descripcion[]', it.desc);
-            fd.append('item_cantidad[]', it.cant);
-            fd.append('item_talla[]', it.talla);
-            fd.append('item_marca[]', it.marca);
-        });
-
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
@@ -493,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(function(data) {
             btn.disabled = false;
             if (!data.success) {
-                btn.innerHTML = '<i class="fas fa-save"></i> Guardar este operario y sus items';
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar este operario';
                 Swal.fire('Error', data.error || 'No se pudo guardar', 'error');
                 return;
             }
@@ -508,7 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(function() {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Guardar este operario y sus items';
+            btn.innerHTML = '<i class="fas fa-save"></i> Guardar este operario';
             Swal.fire('Error', 'Error de conexión', 'error');
         });
     });
@@ -622,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<div style="text-align:center;">'
                 + '<div style="background:white;padding:14px;border:2px solid #e5e7eb;border-radius:12px;display:inline-block;max-width:320px;width:100%;">' + data.qr_svg + '</div>'
                 + '<p style="font-size:13px;color:#6b7280;margin-top:14px;line-height:1.4;">'
-                +   'Acerca el celular de cada operario para que escanee.<br>Llena sus datos, los items que recibe y firma.'
+                +   'Acerca el celular de cada operario para que escanee.<br>Llena sus datos, sus tallas y firma.'
                 + '</p>'
                 + '<div style="background:#f3f4f6;padding:10px;border-radius:8px;margin-top:10px;font-size:11px;word-break:break-all;color:#374151;">' + data.url + '</div>'
                 + '<div class="d-flex gap-2 mt-3">'

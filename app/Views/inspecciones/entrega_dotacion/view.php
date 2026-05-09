@@ -31,9 +31,41 @@
         </div>
     </div>
 
+    <!-- ELEMENTOS GLOBALES -->
     <div class="card mb-3">
         <div class="card-body">
-            <h6 class="card-title" style="font-size:14px; color:#999;">OPERARIOS Y ELEMENTOS (<?= count($asistentes) ?>)</h6>
+            <h6 class="card-title" style="font-size:14px; color:#999;">ELEMENTOS ENTREGADOS (<?= count($items ?? []) ?>)</h6>
+            <?php if (empty($items)): ?>
+                <p class="text-muted" style="font-size:13px;">Sin elementos registrados.</p>
+            <?php else: ?>
+                <table class="table table-sm mb-0" style="font-size:13px;">
+                    <thead style="background:#f8f9fa;">
+                        <tr>
+                            <th>Elemento</th>
+                            <th style="width:80px;">Cantidad</th>
+                            <th style="width:120px;">Marca</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($items as $it): ?>
+                        <tr>
+                            <td><?= esc($it['descripcion']) ?></td>
+                            <td><?= esc($it['cantidad']) ?></td>
+                            <td><?= esc($it['marca'] ?? '-') ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <small class="text-muted d-block mt-2" style="font-size:11px;">
+                    <i class="fas fa-info-circle"></i> La talla la digita cada operario al firmar (ver tabla de operarios abajo).
+                </small>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h6 class="card-title" style="font-size:14px; color:#999;">OPERARIOS (<?= count($asistentes) ?>)</h6>
             <?php if (empty($asistentes)): ?>
                 <p class="text-muted" style="font-size:13px;">Sin operarios registrados.</p>
             <?php else: ?>
@@ -59,31 +91,37 @@
                         </span>
                     </div>
 
-                    <?php if (!empty($a['items'])): ?>
+                    <?php if (!empty($a['tallas_map'])): ?>
                     <div class="mt-1">
+                        <small style="font-size:11px; color:#374151; font-weight:600;"><i class="fas fa-ruler"></i> Tallas:</small>
                         <table class="table table-sm mb-0" style="font-size:12px;">
-                            <thead style="background:#f8f9fa;">
-                                <tr>
-                                    <th style="width:55%;">Elemento</th>
-                                    <th style="width:15%;">Cantidad</th>
-                                    <th style="width:15%;">Talla</th>
-                                    <th style="width:15%;">Marca</th>
-                                </tr>
-                            </thead>
                             <tbody>
-                                <?php foreach ($a['items'] as $it): ?>
-                                <tr>
-                                    <td><?= esc($it['descripcion']) ?></td>
-                                    <td><?= esc($it['cantidad']) ?></td>
-                                    <td><?= esc($it['talla'] ?? '-') ?></td>
-                                    <td><?= esc($it['marca'] ?? '-') ?></td>
-                                </tr>
+                                <?php foreach (($items ?? []) as $itGlobal): ?>
+                                    <?php $talla = $a['tallas_map'][$itGlobal['id']] ?? ''; ?>
+                                    <?php if ($talla !== ''): ?>
+                                    <tr>
+                                        <td><?= esc($itGlobal['descripcion']) ?></td>
+                                        <td style="width:80px;"><strong><?= esc($talla) ?></strong></td>
+                                    </tr>
+                                    <?php endif; ?>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
-                    <?php else: ?>
-                    <div class="text-muted" style="font-size:12px; margin-top:4px;">Sin elementos registrados.</div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($a['recibido_buen_estado'])): ?>
+                    <div class="mt-2" style="font-size:12px;">
+                        <strong>¿Recibió en buen estado?</strong>
+                        <?php if ($a['recibido_buen_estado'] === 'si'): ?>
+                            <span class="badge bg-success">SÍ</span>
+                        <?php else: ?>
+                            <span class="badge bg-danger">NO</span>
+                            <?php if (!empty($a['observaciones_recibido'])): ?>
+                                <div class="text-muted mt-1"><i class="fas fa-comment-alt"></i> <?= esc($a['observaciones_recibido']) ?></div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
                     <?php endif; ?>
 
                     <?php if (!empty($a['firma_path'])): ?>

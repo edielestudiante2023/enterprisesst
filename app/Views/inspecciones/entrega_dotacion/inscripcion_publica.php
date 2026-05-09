@@ -20,14 +20,19 @@
         .req::after { content: ' *'; color: #dc3545; }
         .btn-submit { background: #bd9751; color: white; padding: 14px; font-size: 16px; font-weight: 600; border: none; border-radius: 10px; width: 100%; }
         .btn-submit:hover { background: #a88240; color: white; }
-        .item-row { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:10px; margin-bottom:8px; }
+        .item-talla-row { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:10px; margin-bottom:8px; }
         .section-divider { font-size:13px; font-weight:700; color:#374151; margin:18px 0 8px; padding-top:10px; border-top:1px solid #e5e7eb; }
+        .estado-radio-group { display:flex; gap:10px; margin-top:8px; }
+        .estado-radio-btn { flex:1; padding:14px; border:2px solid #e5e7eb; border-radius:8px; text-align:center; cursor:pointer; font-weight:600; transition:all 0.2s; }
+        .estado-radio-btn input { display:none; }
+        .estado-radio-btn.selected-si { border-color:#16a34a; background:#dcfce7; color:#15803d; }
+        .estado-radio-btn.selected-no { border-color:#dc2626; background:#fee2e2; color:#991b1b; }
     </style>
 </head>
 <body>
     <div class="card card-inscripcion">
         <div class="card-header-cap">
-            <i class="fas fa-helmet-safety" style="font-size: 32px;"></i>
+            <i class="fas fa-mitten" style="font-size: 32px;"></i>
             <h4 class="mt-2">Recibido de dotación</h4>
             <div class="subtitle">
                 <?= esc($cliente['nombre_cliente'] ?? '') ?>
@@ -45,7 +50,7 @@
             </div>
 
             <p class="text-muted" style="font-size:13px;">
-                Completa tus datos y los elementos que estás recibiendo. Despues firmas el recibido.
+                Completa tus datos. Los elementos a entregar ya estan definidos por el responsable, solo digita tu <strong>talla</strong> en cada uno.
             </p>
 
             <form id="formInscripcion">
@@ -93,17 +98,57 @@
                     <input type="tel" name="celular" class="form-control" maxlength="20" inputmode="tel">
                 </div>
 
+                <?php if (!empty($items)): ?>
                 <div class="section-divider">
-                    <i class="fas fa-list"></i> ELEMENTOS QUE RECIBES
+                    <i class="fas fa-list"></i> ELEMENTOS QUE RECIBES — DIGITA TU TALLA
                 </div>
                 <p class="text-muted" style="font-size:12px; margin-bottom:8px;">
-                    Agrega cada elemento que estás recibiendo (descripción, cantidad, talla y marca son opcionales pero útiles).
+                    Los elementos están predefinidos. Solo escribe tu talla en cada uno (ej: M, L, 38, 42, etc).
                 </p>
 
-                <div id="itemsContainer"></div>
-                <button type="button" class="btn btn-sm btn-outline-dark mt-1" id="btnAddItem">
-                    <i class="fas fa-plus"></i> Agregar elemento
-                </button>
+                <?php foreach ($items as $it): ?>
+                <div class="item-talla-row">
+                    <div style="font-weight:600; font-size:14px;"><?= esc($it['descripcion']) ?></div>
+                    <div class="text-muted" style="font-size:11px; margin-bottom:6px;">
+                        Cantidad: <?= esc($it['cantidad']) ?>
+                        <?php if (!empty($it['marca'])): ?> &middot; Marca: <?= esc($it['marca']) ?><?php endif; ?>
+                    </div>
+                    <input type="text"
+                        name="tallas[<?= (int)$it['id'] ?>]"
+                        class="form-control form-control-sm"
+                        placeholder="Tu talla (ej: M, L, 38, 42...)"
+                        maxlength="50">
+                </div>
+                <?php endforeach; ?>
+                <?php else: ?>
+                <div class="alert alert-warning py-2" style="font-size:13px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Esta entrega aún no tiene elementos definidos. Pide al responsable que los registre antes de continuar.
+                </div>
+                <?php endif; ?>
+
+                <div class="section-divider">
+                    <i class="fas fa-clipboard-check"></i> ¿RECIBIÓ LA DOTACIÓN EN BUEN ESTADO?
+                </div>
+                <p class="text-muted" style="font-size:12px; margin-bottom:8px;">
+                    Esta confirmación es importante. Si dices NO, describe qué estaba mal.
+                </p>
+
+                <div class="estado-radio-group" id="estadoRadioGroup">
+                    <label class="estado-radio-btn" id="lblEstadoSi">
+                        <input type="radio" name="recibido_buen_estado" value="si" required>
+                        <i class="fas fa-check-circle"></i> SÍ, en buen estado
+                    </label>
+                    <label class="estado-radio-btn" id="lblEstadoNo">
+                        <input type="radio" name="recibido_buen_estado" value="no" required>
+                        <i class="fas fa-times-circle"></i> NO, hay problemas
+                    </label>
+                </div>
+
+                <div id="observacionesRecibidoBox" class="mb-3 mt-3" style="display:none;">
+                    <label class="form-label req">Describe qué problema encontraste</label>
+                    <textarea name="observaciones_recibido" class="form-control" rows="3" maxlength="500" placeholder="Ej: Los guantes están rotos, el casco vino con grietas, las botas no son de mi talla..."></textarea>
+                </div>
 
                 <button type="submit" class="btn-submit mt-4" id="btnEnviar">
                     <i class="fas fa-arrow-right"></i> Continuar a firmar
@@ -118,31 +163,25 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-    function addItemRow() {
-        var div = document.createElement('div');
-        div.className = 'item-row';
-        div.innerHTML =
-            '<div class="d-flex justify-content-between align-items-center mb-2">'
-          +     '<small style="font-weight:600;">Elemento</small>'
-          +     '<button type="button" class="btn btn-sm btn-outline-danger btn-remove-item" style="padding:2px 8px;"><i class="fas fa-times"></i></button>'
-          + '</div>'
-          + '<input type="text" name="item_descripcion[]" class="form-control form-control-sm mb-2" placeholder="Descripción del elemento">'
-          + '<div class="row g-2">'
-          +     '<div class="col-4"><input type="text" name="item_cantidad[]" class="form-control form-control-sm" placeholder="Cant." value="1"></div>'
-          +     '<div class="col-4"><input type="text" name="item_talla[]" class="form-control form-control-sm" placeholder="Talla"></div>'
-          +     '<div class="col-4"><input type="text" name="item_marca[]" class="form-control form-control-sm" placeholder="Marca"></div>'
-          + '</div>';
-        document.getElementById('itemsContainer').appendChild(div);
-    }
-    document.getElementById('btnAddItem').addEventListener('click', addItemRow);
-    document.addEventListener('click', function(e) {
-        var btn = e.target.closest('.btn-remove-item');
-        if (!btn) return;
-        var row = btn.closest('.item-row');
-        if (row) row.remove();
+    var lblSi = document.getElementById('lblEstadoSi');
+    var lblNo = document.getElementById('lblEstadoNo');
+    var obsBox = document.getElementById('observacionesRecibidoBox');
+
+    document.querySelectorAll('input[name="recibido_buen_estado"]').forEach(function(r) {
+        r.addEventListener('change', function() {
+            lblSi.classList.remove('selected-si');
+            lblNo.classList.remove('selected-no');
+            if (r.value === 'si') {
+                lblSi.classList.add('selected-si');
+                obsBox.style.display = 'none';
+                obsBox.querySelector('textarea').required = false;
+            } else {
+                lblNo.classList.add('selected-no');
+                obsBox.style.display = 'block';
+                obsBox.querySelector('textarea').required = true;
+            }
+        });
     });
-    // Empezar con una fila vacía por comodidad
-    addItemRow();
 
     document.getElementById('formInscripcion').addEventListener('submit', function(e) {
         e.preventDefault();

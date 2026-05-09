@@ -13,6 +13,7 @@ class EntregaDotacionAsistenteModel extends Model
         'nombre_completo', 'tipo_documento', 'numero_documento',
         'cargo', 'area_dependencia', 'email', 'celular',
         'token_firma', 'token_expiracion', 'firma_path', 'firmado_at',
+        'recibido_buen_estado', 'observaciones_recibido',
         'ruta_pdf',
         'orden', 'created_at',
     ];

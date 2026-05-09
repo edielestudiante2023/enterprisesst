@@ -405,10 +405,12 @@ class ClientInspeccionesController extends Controller
         $consultantModel = new ConsultantModel();
         $asistenteModel = new EntregaDotacionAsistenteModel();
         $itemModel = new EntregaDotacionItemModel();
+        $tallaModel = new \App\Models\EntregaDotacionAsistenteTallaModel();
 
+        $items = $itemModel->getByEntrega((int)$id);
         $asistentes = $asistenteModel->getByEntrega((int)$id);
         foreach ($asistentes as &$a) {
-            $a['items'] = $itemModel->getByAsistente((int)$a['id']);
+            $a['tallas_map'] = $tallaModel->getMapByAsistente((int)$a['id']);
         }
         unset($a);
 
@@ -417,6 +419,7 @@ class ClientInspeccionesController extends Controller
             'title'   => 'Entrega de Dotación',
             'content' => view('client/inspecciones/entrega_dotacion_view', [
                 'entrega'    => $entrega,
+                'items'      => $items,
                 'cliente'    => $clientModel->find($entrega['id_cliente']),
                 'consultor'  => $entrega['id_consultor'] ? $consultantModel->find($entrega['id_consultor']) : null,
                 'asistentes' => $asistentes,

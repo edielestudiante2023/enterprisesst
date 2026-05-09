@@ -28,6 +28,9 @@
 
         .firma-section { margin-top: 18px; }
         .firma-box { border: 1px solid #999; padding: 12px; min-height: 110px; }
+
+        .estado-buen { background:#d4edda; color:#155724; padding:3px 8px; font-weight:bold; font-size:9pt; }
+        .estado-mal { background:#f8d7da; color:#721c24; padding:3px 8px; font-weight:bold; font-size:9pt; }
     </style>
 </head>
 <body>
@@ -129,26 +132,50 @@
             <thead>
                 <tr>
                     <th style="width:5%;">#</th>
-                    <th style="width:55%;">DESCRIPCIÓN</th>
+                    <th style="width:50%;">DESCRIPCIÓN</th>
                     <th style="width:13%;">CANTIDAD</th>
-                    <th style="width:12%;">TALLA</th>
-                    <th style="width:15%;">MARCA</th>
+                    <th style="width:17%;">MARCA</th>
+                    <th style="width:15%;">TALLA</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($items as $i => $it): ?>
+                <?php $tallaOp = $tallas_map[$it['id']] ?? ''; ?>
                 <tr>
                     <td style="text-align:center; font-weight:bold;"><?= $i + 1 ?></td>
                     <td><?= esc($it['descripcion']) ?></td>
                     <td style="text-align:center;"><?= esc($it['cantidad']) ?></td>
-                    <td style="text-align:center;"><?= esc($it['talla'] ?? '-') ?></td>
                     <td><?= esc($it['marca'] ?? '-') ?></td>
+                    <td style="text-align:center;"><strong><?= $tallaOp !== '' ? esc($tallaOp) : '-' ?></strong></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
         <?php else: ?>
             <p class="empty-text">Sin elementos registrados.</p>
+        <?php endif; ?>
+    </div>
+
+    <!-- CONFIRMACION DE BUEN ESTADO -->
+    <div class="seccion">
+        <div class="seccion-titulo">CONFIRMACIÓN DE BUEN ESTADO</div>
+        <?php if (($asistente['recibido_buen_estado'] ?? '') === 'si'): ?>
+            <p style="font-size:9pt; margin:5px 0;">
+                <span class="estado-buen">✓ RECIBIDO EN BUEN ESTADO</span>
+                — El operario confirmó haber recibido los elementos en buenas condiciones.
+            </p>
+        <?php elseif (($asistente['recibido_buen_estado'] ?? '') === 'no'): ?>
+            <p style="font-size:9pt; margin:5px 0;">
+                <span class="estado-mal">✗ NO EN BUEN ESTADO</span>
+                — El operario reportó problemas con los elementos:
+            </p>
+            <?php if (!empty($asistente['observaciones_recibido'])): ?>
+            <div style="font-size:9pt; padding:8px; border-left:3px solid #dc3545; background:#fff5f5; margin:5px 0;">
+                <?= nl2br(esc($asistente['observaciones_recibido'])) ?>
+            </div>
+            <?php endif; ?>
+        <?php else: ?>
+            <p class="empty-text">Sin confirmación registrada.</p>
         <?php endif; ?>
     </div>
 
@@ -160,8 +187,12 @@
             <?php if (!empty($asistente['numero_documento'])): ?>
                 identificado(a) con <?= esc($asistente['tipo_documento']) ?> No. <?= esc($asistente['numero_documento']) ?>,
             <?php else: ?>,<?php endif; ?>
-            declaro haber recibido a satisfacción los elementos de dotación / EPP relacionados en el cuadro anterior, en buen estado y conforme a lo solicitado.
-            Me comprometo a usarlos adecuadamente, conservarlos, mantenerlos en buen estado y reportar de manera oportuna cualquier daño, pérdida o deterioro.
+            declaro haber recibido los elementos de dotación / EPP relacionados en el cuadro anterior, conforme a las cantidades, marcas y tallas registradas.
+            <?php if (($asistente['recibido_buen_estado'] ?? '') === 'si'): ?>
+            Confirmo que los recibo en buen estado y me comprometo a usarlos adecuadamente, conservarlos y reportar de manera oportuna cualquier daño, pérdida o deterioro.
+            <?php else: ?>
+            Dejo constancia de las observaciones registradas en la sección anterior.
+            <?php endif; ?>
         </p>
     </div>
 
