@@ -136,7 +136,7 @@
                                                       class="d-inline" onsubmit="return confirm('Reenviar correo de firma a <?= esc($m['email']) ?>?');">
                                                     <?= csrf_field() ?>
                                                     <button type="submit" class="btn btn-outline-primary" title="Reenviar email">
-                                                        <i class="bi bi-envelope-arrow-up"></i>
+                                                        <i class="bi bi-arrow-clockwise"></i>
                                                     </button>
                                                 </form>
                                                 <form method="post" action="<?= base_url('firma/cancelar/' . (int) $sol['id_solicitud']) ?>"
