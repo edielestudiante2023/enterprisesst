@@ -476,7 +476,7 @@
             <div class="count">(<?= $totalLocativas ?>)</div>
         </a>
         <a href="<?= site_url('inspecciones/inspeccion-epp') ?>" class="card-tipo">
-            <i class="fas fa-helmet-safety"></i>
+            <i class="fas fa-shoe-prints"></i>
             <div><strong>Inspección EPP</strong></div>
             <div class="count">(<?= $totalInspeccionEpp ?? 0 ?>)</div>
         </a>
@@ -521,7 +521,7 @@
             <div class="count">(<?= $totalListaAsistencia ?? 0 ?>)</div>
         </a>
         <a href="<?= site_url('inspecciones/entrega-dotacion') ?>" class="card-tipo">
-            <i class="fas fa-helmet-safety"></i>
+            <i class="fas fa-mitten"></i>
             <div><strong>Entrega de Dotación QR</strong></div>
             <div class="count">(<?= $totalEntregaDotacion ?? 0 ?>)</div>
         </a>
