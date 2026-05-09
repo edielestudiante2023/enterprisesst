@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\ClientModel;
 use App\Models\ClienteContextoSstModel;
+use App\Models\ConsultantModel;
 use Config\Database;
 use CodeIgniter\Controller;
 
@@ -139,10 +140,20 @@ class PzcertificacionSustanciasCancerigenasController extends Controller
         $contextoModel = new ClienteContextoSstModel();
         $contexto = $contextoModel->getByCliente($idCliente);
 
+        // Datos del consultor SST (firma fisica + nombre + cargo) — para columna ELABORO
+        $consultor = null;
+        $idConsultor = $contexto['id_consultor_responsable'] ?? $cliente['id_consultor'] ?? null;
+        if ($idConsultor) {
+            $consultor = (new ConsultantModel())->find($idConsultor);
+        }
+        if (!$consultor) {
+            $consultor = (new ConsultantModel())->where('id_cliente', $idCliente)->first();
+        }
+
         $firmasElectronicas = $this->obtenerFirmasElectronicas($documento['id_documento'], $contexto ?? [], $cliente);
 
         $delegadoNombre   = trim($contexto['delegado_sst_nombre'] ?? '');
-        $delegadoCargo    = trim($contexto['delegado_sst_cargo']  ?? 'Responsable del SG-SST');
+        $delegadoCargo    = trim($contexto['delegado_sst_cargo']  ?? 'Lider de Operaciones');
         $requiereDelegado = !empty($delegadoNombre);
 
         $data = [
@@ -153,6 +164,7 @@ class PzcertificacionSustanciasCancerigenasController extends Controller
             'anio'                => $anio,
             'versiones'           => $versiones,
             'contexto'            => $contexto,
+            'consultor'           => $consultor,
             'firmasElectronicas'  => $firmasElectronicas,
             'delegadoNombre'      => $delegadoNombre,
             'delegadoCargo'       => $delegadoCargo,
