@@ -6,7 +6,6 @@
     <meta name="theme-color" content="#1c2437">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="<?= base_url('manifest_inspecciones.json') ?>">
     <link rel="apple-touch-icon" href="<?= base_url('assets/icons/icon-192.png') ?>">
     <title><?= $title ?? 'Inspecciones SST' ?></title>
 

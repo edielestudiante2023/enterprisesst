@@ -163,14 +163,21 @@ class InformeTrimestralCopasst extends AbstractDocumentoSST
         }
         $out .= "\n";
 
-        // Asistencia agregada (si hay actas)
+        // Asistencia agregada (si hay actas) — raw SQL porque CodeIgniter QueryBuilder
+        // rompe el SELECT cuando hay comas internas dentro de CASE WHEN.
         if (!empty($idsActas)) {
-            $asist = $db->table('tbl_acta_asistentes')
-                ->select('nombre_completo, cargo, COUNT(*) AS total, SUM(asistio) AS asistio, SUM(CASE WHEN asistio = 0 AND justificacion_ausencia IS NOT NULL AND justificacion_ausencia <> "" THEN 1 ELSE 0 END) AS justificadas')
-                ->whereIn('id_acta', $idsActas)
-                ->groupBy('nombre_completo, cargo')
-                ->orderBy('asistio', 'DESC')
-                ->get()->getResultArray();
+            $placeholders = implode(',', array_fill(0, count($idsActas), '?'));
+            $asist = $db->query(
+                "SELECT nombre_completo, cargo,
+                        COUNT(*) AS total,
+                        SUM(asistio) AS asistio,
+                        SUM(CASE WHEN asistio = 0 AND justificacion_ausencia IS NOT NULL AND justificacion_ausencia <> '' THEN 1 ELSE 0 END) AS justificadas
+                 FROM tbl_acta_asistentes
+                 WHERE id_acta IN ({$placeholders})
+                 GROUP BY nombre_completo, cargo
+                 ORDER BY asistio DESC",
+                $idsActas
+            )->getResultArray();
 
             $out .= "ASISTENCIA EN EL TRIMESTRE (por persona):\n";
             foreach ($asist as $a) {
