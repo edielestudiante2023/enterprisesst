@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Enterprise SST</title>
-    
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#1c2437">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EnterpriseSST">
+    <link rel="manifest" href="<?= base_url('manifest_inspecciones.json') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('assets/icons/icon-192.png') ?>">
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -552,6 +560,131 @@
                 visibility: hidden;
             }
         }
+
+        /* PWA Install Section */
+        .pwa-install-section {
+            margin-top: 25px;
+            padding: 18px;
+            background: linear-gradient(135deg, rgba(48, 43, 99, 0.08), rgba(255, 140, 0, 0.08));
+            border: 2px dashed rgba(255, 140, 0, 0.4);
+            border-radius: 14px;
+            display: none;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .pwa-install-section.visible {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pwa-install-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+            flex-shrink: 0;
+        }
+
+        .pwa-install-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pwa-install-info h5 {
+            margin: 0 0 4px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1c2437;
+        }
+
+        .pwa-install-info p {
+            margin: 0 0 8px;
+            font-size: 0.8rem;
+            color: #555;
+            line-height: 1.3;
+        }
+
+        .btn-pwa-install {
+            background: linear-gradient(135deg, #302b63, #ff8c00);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-pwa-install:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(48, 43, 99, 0.4);
+            color: white;
+        }
+
+        /* Modal iOS */
+        .pwa-ios-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 12, 41, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .pwa-ios-modal.visible {
+            display: flex;
+        }
+
+        .pwa-ios-modal-content {
+            background: white;
+            border-radius: 18px;
+            max-width: 380px;
+            width: 100%;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .pwa-ios-modal-content h4 {
+            margin: 0 0 12px;
+            color: #1c2437;
+            font-weight: 700;
+        }
+
+        .pwa-ios-modal-content ol {
+            padding-left: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .pwa-ios-modal-content li {
+            margin-bottom: 8px;
+        }
+
+        .pwa-ios-modal-content .btn-close-ios {
+            margin-top: 12px;
+            width: 100%;
+            background: #302b63;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 480px) {
+            .pwa-install-icon {
+                width: 52px;
+                height: 52px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -638,9 +771,38 @@
             </div>
         </form>
 
+        <!-- PWA Install Section -->
+        <div class="pwa-install-section" id="pwaInstallSection">
+            <img src="<?= base_url('assets/icons/icon-192.png') ?>" alt="EnterpriseSST" class="pwa-install-icon">
+            <div class="pwa-install-info">
+                <h5>Instala la app EnterpriseSST</h5>
+                <p>Ten acceso directo desde la pantalla de inicio de tu dispositivo.</p>
+                <button type="button" class="btn-pwa-install" id="pwaInstallBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                    </svg>
+                    <span id="pwaInstallBtnText">Descargar app</span>
+                </button>
+            </div>
+        </div>
+
         <div class="login-footer">
             <p class="footer-text">Empowered By EnterpriseSST</p>
         </div>
+    </div>
+</div>
+
+<!-- Modal de instrucciones iOS -->
+<div class="pwa-ios-modal" id="pwaIosModal">
+    <div class="pwa-ios-modal-content">
+        <h4>Cómo instalar en iPhone/iPad</h4>
+        <ol>
+            <li>Toca el botón <strong>Compartir</strong> <span style="display:inline-block;background:#eee;border-radius:4px;padding:1px 6px;">⬆️</span> en la barra de Safari.</li>
+            <li>Desplázate y elige <strong>"Añadir a pantalla de inicio"</strong>.</li>
+            <li>Confirma con <strong>Añadir</strong> en la esquina superior derecha.</li>
+        </ol>
+        <button type="button" class="btn-close-ios" id="pwaIosModalClose">Entendido</button>
     </div>
 </div>
 
@@ -766,6 +928,82 @@
             eyeIcon.innerHTML = '<path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>';
         }
     });
+
+    // === PWA Install Flow ===
+    (function() {
+        var deferredPrompt = null;
+        var section = document.getElementById('pwaInstallSection');
+        var btn = document.getElementById('pwaInstallBtn');
+        var btnText = document.getElementById('pwaInstallBtnText');
+        var iosModal = document.getElementById('pwaIosModal');
+        var iosClose = document.getElementById('pwaIosModalClose');
+
+        var ua = window.navigator.userAgent;
+        var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        var isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                        || window.navigator.standalone === true;
+
+        // Si ya esta instalada, no mostrar nada
+        if (isStandalone) {
+            section.classList.remove('visible');
+            return;
+        }
+
+        // iOS: no soporta beforeinstallprompt -> mostrar instrucciones manuales
+        if (isIOS) {
+            section.classList.add('visible');
+            btnText.textContent = 'Cómo instalar';
+            btn.addEventListener('click', function() {
+                iosModal.classList.add('visible');
+            });
+            iosClose.addEventListener('click', function() {
+                iosModal.classList.remove('visible');
+            });
+            iosModal.addEventListener('click', function(e) {
+                if (e.target === iosModal) iosModal.classList.remove('visible');
+            });
+            return;
+        }
+
+        // Chrome / Edge / Android
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            section.classList.add('visible');
+        });
+
+        btn.addEventListener('click', function() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function(choice) {
+                if (choice.outcome === 'accepted') {
+                    section.classList.remove('visible');
+                }
+                deferredPrompt = null;
+            });
+        });
+
+        window.addEventListener('appinstalled', function() {
+            section.classList.remove('visible');
+            deferredPrompt = null;
+        });
+    })();
+
+    // === Service Worker (PWA) ===
+    // SW minimo dedicado al login (solo habilita instalabilidad).
+    // El SW real de la app esta en /sw_inspecciones.js con scope /inspecciones/.
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('<?= base_url('sw_login.js') ?>', {
+                scope: '/',
+                updateViaCache: 'none'
+            }).then(function(reg) {
+                console.log('SW login registrado:', reg.scope);
+            }).catch(function(err) {
+                console.log('SW login error:', err);
+            });
+        });
+    }
 
     // Efecto de envío del formulario
     document.getElementById('loginForm').addEventListener('submit', function(e) {

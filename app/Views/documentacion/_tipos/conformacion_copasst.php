@@ -2,14 +2,21 @@
 /**
  * Vista de Tipo: 1.1.6 Conformación COPASST
  * Carpeta para gestionar la conformación del COPASST
- * Incluye: Sistema de elecciones + adjuntar soportes manuales
- * Variables: $carpeta, $cliente, $documentosSSTAprobados
+ * Incluye:
+ *   - Sistema de elecciones
+ *   - Generar Informe Trimestral / Anual del COPASST con IA (lee /actas/20)
+ *   - Adjuntar soportes manuales
+ * Variables: $carpeta, $cliente, $documentosSSTAprobados, $informesCopasst
  */
 
 // Determinar si la empresa requiere COPASST o Vigía
 $numTrabajadores = $cliente['trabajadores'] ?? 10;
 $requiereCopasst = $numTrabajadores >= 10;
 $tipoComiteRequerido = $requiereCopasst ? 'COPASST' : 'VIGIA';
+
+$informesCopasst = $informesCopasst ?? [];
+$anioActual = (int) date('Y');
+$trimestreActual = (int) ceil(((int) date('n')) / 3);
 ?>
 
 <!-- Card de Carpeta con Botones -->
@@ -41,6 +48,181 @@ $tipoComiteRequerido = $requiereCopasst ? 'COPASST' : 'VIGIA';
         </div>
     </div>
 </div>
+
+<!-- ============================================ -->
+<!-- INFORMES DE GESTION DEL COPASST (IA)         -->
+<!-- ============================================ -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0">
+            <i class="bi bi-clipboard-data me-2"></i>Informes de Gestion del COPASST con IA
+        </h6>
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">
+            Genere informes <strong>trimestrales</strong> y <strong>anuales</strong> de la gestion del COPASST.
+            La IA usa los datos reales del modulo de Actas (reuniones, asistencia, decisiones, compromisos)
+            y propone recomendaciones que el consultor puede ajustar.
+        </p>
+        <div class="row g-2">
+            <div class="col-md-6">
+                <button type="button" class="btn btn-info text-white w-100" data-bs-toggle="modal" data-bs-target="#modalGenerarTrimestralCopasst">
+                    <i class="bi bi-calendar3-range me-1"></i>Ir a Informes Trimestrales
+                </button>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#modalGenerarAnualCopasst">
+                    <i class="bi bi-graph-up me-1"></i>Ir a Informe Anual
+                </button>
+            </div>
+        </div>
+
+        <?php if (!empty($informesCopasst)): ?>
+            <hr class="my-3">
+            <h6 class="text-muted mb-2"><i class="bi bi-list-check me-1"></i>Informes generados</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Anio</th>
+                            <th>Trim</th>
+                            <th>Codigo</th>
+                            <th>Estado</th>
+                            <th>Actualizado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($informesCopasst as $inf): ?>
+                            <?php
+                                $esTrim = $inf['tipo_documento'] === 'informe_trimestral_copasst';
+                                $tipoLbl = $esTrim ? 'Trimestral' : 'Anual';
+                                $tipoBadge = $esTrim ? 'bg-info' : 'bg-primary';
+                                $trimNum = $inf['trimestre'] ?? null;
+                                $kebab = str_replace('_', '-', $inf['tipo_documento']);
+                                $verUrl = base_url('documentos-sst/' . $cliente['id_cliente'] . '/' . $kebab . '/' . $inf['anio'])
+                                          . ($esTrim && $trimNum ? '?trimestre=' . $trimNum : '');
+                                $editarUrl = base_url('documentos/generar/' . $inf['tipo_documento'] . '/' . $cliente['id_cliente'])
+                                             . '?anio=' . $inf['anio']
+                                             . ($esTrim && $trimNum ? '&trimestre=' . $trimNum : '');
+                            ?>
+                            <tr>
+                                <td><span class="badge <?= $tipoBadge ?>"><?= $tipoLbl ?></span></td>
+                                <td><?= esc($inf['anio']) ?></td>
+                                <td><?= $esTrim ? ('T' . esc($trimNum ?? '?')) : '—' ?></td>
+                                <td><code class="small"><?= esc($inf['codigo'] ?? '—') ?></code></td>
+                                <td><span class="badge bg-secondary"><?= esc($inf['estado']) ?></span></td>
+                                <td class="small text-muted"><?= esc(date('d/m/Y H:i', strtotime($inf['updated_at'] ?? $inf['created_at'] ?? 'now'))) ?></td>
+                                <td class="text-end">
+                                    <a href="<?= esc($verUrl) ?>" target="_blank" class="btn btn-sm btn-outline-primary" title="Ver">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="<?= esc($editarUrl) ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- Modal: escoger anio + trimestre para generar trimestral COPASST -->
+<div class="modal fade" id="modalGenerarTrimestralCopasst" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="bi bi-calendar3-range me-2"></i>Informe Trimestral del COPASST</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Seleccione el anio y trimestre del informe a generar (o continuar editando si ya existe).</p>
+                <div class="mb-3">
+                    <label for="trimAnio" class="form-label">Anio</label>
+                    <select id="trimAnio" class="form-select">
+                        <?php for ($y = $anioActual + 1; $y >= 2022; $y--): ?>
+                            <option value="<?= $y ?>" <?= $y === $anioActual ? 'selected' : '' ?>><?= $y ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Trimestre</label>
+                    <div class="btn-group w-100" role="group">
+                        <?php for ($t = 1; $t <= 4; $t++): ?>
+                            <input type="radio" class="btn-check" name="trimNumeroOpt" id="trimNum<?= $t ?>" value="<?= $t ?>" <?= $t === $trimestreActual ? 'checked' : '' ?>>
+                            <label class="btn btn-outline-info" for="trimNum<?= $t ?>">T<?= $t ?></label>
+                        <?php endfor; ?>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a id="btnIrTrimestral" href="#" class="btn btn-info text-white">
+                    <i class="bi bi-arrow-right-circle me-1"></i>Continuar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: escoger anio para generar anual COPASST -->
+<div class="modal fade" id="modalGenerarAnualCopasst" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-graph-up me-2"></i>Informe Anual del COPASST</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Seleccione el anio del informe anual a generar (o continuar editando si ya existe).</p>
+                <div class="mb-3">
+                    <label for="anuAnio" class="form-label">Anio</label>
+                    <select id="anuAnio" class="form-select">
+                        <?php for ($y = $anioActual; $y >= 2022; $y--): ?>
+                            <option value="<?= $y ?>" <?= $y === $anioActual ? 'selected' : '' ?>><?= $y ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a id="btnIrAnual" href="#" class="btn btn-primary">
+                    <i class="bi bi-arrow-right-circle me-1"></i>Continuar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const idClienteCopasst = <?= (int)($cliente['id_cliente'] ?? 0) ?>;
+    const baseGenerar = <?= json_encode(base_url('documentos/generar')) ?>;
+
+    function actualizarUrlTrim() {
+        const anio = document.getElementById('trimAnio').value;
+        const trimRadio = document.querySelector('input[name="trimNumeroOpt"]:checked');
+        const trim = trimRadio ? trimRadio.value : 1;
+        const url = `${baseGenerar}/informe_trimestral_copasst/${idClienteCopasst}?anio=${anio}&trimestre=${trim}`;
+        document.getElementById('btnIrTrimestral').setAttribute('href', url);
+    }
+    function actualizarUrlAnu() {
+        const anio = document.getElementById('anuAnio').value;
+        const url = `${baseGenerar}/informe_anual_copasst/${idClienteCopasst}?anio=${anio}`;
+        document.getElementById('btnIrAnual').setAttribute('href', url);
+    }
+    document.addEventListener('change', function (e) {
+        if (e.target && (e.target.id === 'trimAnio' || e.target.name === 'trimNumeroOpt')) actualizarUrlTrim();
+        if (e.target && e.target.id === 'anuAnio') actualizarUrlAnu();
+    });
+    document.getElementById('modalGenerarTrimestralCopasst')?.addEventListener('shown.bs.modal', actualizarUrlTrim);
+    document.getElementById('modalGenerarAnualCopasst')?.addEventListener('shown.bs.modal', actualizarUrlAnu);
+})();
+</script>
 
 <!-- Información sobre soportes manuales -->
 <div class="alert alert-secondary mb-4">

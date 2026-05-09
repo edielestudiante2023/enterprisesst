@@ -106,6 +106,9 @@ class DocumentoSSTFactory
         'socializacion_cronograma_copasst' => SocializacionCronogramaCopasst::class,
         'socializacion_cronograma_cocolab' => SocializacionCronogramaCocolab::class,
         'socializacion_cronograma_brigada' => SocializacionCronogramaBrigada::class,
+        // 1.1.6 Informes de gestion del COPASST (trimestral y anual) — leen datos reales del modulo /actas
+        'informe_trimestral_copasst' => InformeTrimestralCopasst::class,
+        'informe_anual_copasst' => InformeAnualCopasst::class,
     ];
 
     /**
