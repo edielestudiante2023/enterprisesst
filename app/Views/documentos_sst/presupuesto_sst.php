@@ -961,6 +961,7 @@
                 'Capacitacion prevencion incendios',
                 'Capacitacion manejo defensivo',
                 'Capacitacion brigadas de emergencia',
+                'Capacitacion en manejo de residuos y orden y aseo',
                 'Curso virtual 50 horas SG-SST'
             ],
             '3': [ // Medicina Preventiva y del Trabajo
@@ -1011,6 +1012,21 @@
                 'Papeleria y materiales SST',
                 'Mantenimiento de equipos de seguridad',
                 'Imprevistos SST'
+            ],
+            '8': [ // Plan de Saneamiento Basico
+                'Fumigacion de instalaciones',
+                'Control de plagas (roedores, cucarachas, mosquitos)',
+                'Lavado y desinfeccion de tanques de agua',
+                'Analisis fisicoquimico y microbiologico del agua',
+                'Puntos ecologicos (separacion en la fuente)',
+                'Canecas y contenedores de residuos',
+                'Suministro de productos de limpieza y desinfeccion',
+                'Servicio de aseo y limpieza (general / contratado)',
+                'Gestion de residuos solidos ordinarios',
+                'Gestion de residuos peligrosos - RESPEL',
+                'Disposicion final de residuos (gestor autorizado)',
+                'Mantenimiento de baterias sanitarias',
+                'Control de vectores'
             ]
         };
 
