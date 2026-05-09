@@ -474,8 +474,11 @@ class DocumentacionController extends Controller
                 // 4.1.1: Metodologia Identificacion de Peligros y Valoracion de Riesgos
                 $queryDocs->where('tipo_documento', 'metodologia_identificacion_peligros');
             } elseif ($tipoCarpetaFases === 'identificacion_sustancias_cancerigenas') {
-                // 4.1.3: Identificacion de Sustancias Cancerigenas o con Toxicidad Aguda
-                $queryDocs->where('tipo_documento', 'identificacion_sustancias_cancerigenas');
+                // 4.1.3: Identificacion + Certificacion de NO sustancias cancerigenas
+                $queryDocs->whereIn('tipo_documento', [
+                    'identificacion_sustancias_cancerigenas',
+                    'certificacion_no_sustancias_cancerigenas'
+                ]);
             } elseif ($tipoCarpetaFases === 'procedimientos_seguridad') {
                 // 4.2.3: Programas de Vigilancia Epidemiologica / PVEs
                 $queryDocs->whereIn('tipo_documento', [
