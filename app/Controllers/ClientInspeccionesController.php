@@ -20,6 +20,9 @@ use App\Models\HallazgoLocativoModel;
 use App\Models\RegistroAsistenciaModel;
 use App\Models\RegistroAsistenciaAsistenteModel;
 use App\Controllers\Inspecciones\RegistroAsistenciaController;
+use App\Models\EntregaDotacionModel;
+use App\Models\EntregaDotacionAsistenteModel;
+use App\Models\EntregaDotacionItemModel;
 use CodeIgniter\Controller;
 
 class ClientInspeccionesController extends Controller
@@ -348,6 +351,74 @@ class ClientInspeccionesController extends Controller
             'client'  => $clientModel->find($clientId),
             'title'   => 'Registro de Asistencia',
             'content' => view('client/inspecciones/registro_asistencia_view', $data),
+        ]);
+    }
+
+    // ─── ENTREGAS DE DOTACION (read-only) ────────────────────
+
+    public function listEntregaDotacion()
+    {
+        $clientId = $this->getClientId();
+        if (!$clientId) {
+            return redirect()->to('/login')->with('error', 'Acceso no autorizado.');
+        }
+
+        $entregaModel = new EntregaDotacionModel();
+        $asistenteModel = new EntregaDotacionAsistenteModel();
+        $entregas = $entregaModel->getByCliente((int)$clientId);
+
+        foreach ($entregas as &$e) {
+            $e['total_asistentes'] = $asistenteModel
+                ->where('id_entrega_dotacion', $e['id'])->countAllResults(false);
+            $e['total_firmados'] = $asistenteModel
+                ->where('id_entrega_dotacion', $e['id'])
+                ->where('firma_path IS NOT NULL', null, false)->countAllResults(false);
+        }
+
+        $clientModel = new ClientModel();
+
+        return view('client/inspecciones/layout', [
+            'client'  => $clientModel->find($clientId),
+            'title'   => 'Entregas de Dotación',
+            'content' => view('client/inspecciones/entrega_dotacion_list', [
+                'entregas' => $entregas,
+            ]),
+        ]);
+    }
+
+    public function viewEntregaDotacion($id)
+    {
+        $clientId = $this->getClientId();
+        if (!$clientId) {
+            return redirect()->to('/login')->with('error', 'Acceso no autorizado.');
+        }
+
+        $entregaModel = new EntregaDotacionModel();
+        $entrega = $entregaModel->find($id);
+        if (!$entrega || (int)$entrega['id_cliente'] !== (int)$clientId) {
+            return redirect()->to('/client/inspecciones/entrega-dotacion')->with('error', 'Entrega no encontrada.');
+        }
+
+        $clientModel = new ClientModel();
+        $consultantModel = new ConsultantModel();
+        $asistenteModel = new EntregaDotacionAsistenteModel();
+        $itemModel = new EntregaDotacionItemModel();
+
+        $asistentes = $asistenteModel->getByEntrega((int)$id);
+        foreach ($asistentes as &$a) {
+            $a['items'] = $itemModel->getByAsistente((int)$a['id']);
+        }
+        unset($a);
+
+        return view('client/inspecciones/layout', [
+            'client'  => $clientModel->find($clientId),
+            'title'   => 'Entrega de Dotación',
+            'content' => view('client/inspecciones/entrega_dotacion_view', [
+                'entrega'    => $entrega,
+                'cliente'    => $clientModel->find($entrega['id_cliente']),
+                'consultor'  => $entrega['id_consultor'] ? $consultantModel->find($entrega['id_consultor']) : null,
+                'asistentes' => $asistentes,
+            ]),
         ]);
     }
 }
