@@ -441,8 +441,15 @@ class DocFirmaModel extends Model
                         break;
                 }
 
-                // Solo incluir si ambas cédulas existen y coinciden
-                if (empty($cedulaFirma) || empty($cedulaActual) || $cedulaFirma !== $cedulaActual) {
+                // Normalizar removiendo puntos y espacios para evitar falsos negativos
+                // por formato (ej: "1.022.365.718" vs "1022365718"). Mantiene la lógica
+                // de seguridad anti-suplantación cuando hay desajuste real entre personas.
+                $normalizar = static fn(string $c): string => preg_replace('/[\s\.]+/', '', $c) ?? '';
+                $cedulaFirmaNorm  = $normalizar($cedulaFirma);
+                $cedulaActualNorm = $normalizar($cedulaActual);
+
+                // Solo incluir si ambas cédulas existen y coinciden (ya normalizadas)
+                if (empty($cedulaFirmaNorm) || empty($cedulaActualNorm) || $cedulaFirmaNorm !== $cedulaActualNorm) {
                     continue; // Firma de persona anterior, no incluir
                 }
             }
