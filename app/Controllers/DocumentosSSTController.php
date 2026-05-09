@@ -352,9 +352,17 @@ class DocumentosSSTController extends BaseController
             // NUEVO: Handler del documento para URLs y configuración
             'documentoHandler' => $documentoHandler,
             // URLs pre-calculadas (usa Factory si disponible, fallback a convención)
-            'urlVistaPrevia' => $documentoHandler
-                ? $documentoHandler->getUrlVistaPrevia($idCliente, $anio)
-                : base_url('documentos-sst/' . $idCliente . '/' . str_replace('_', '-', $tipo) . '/' . $anio),
+            // Si el tipo soporta trimestre y este fue suministrado, lo agregamos al query string
+            // para que la vista previa pueda ubicar el documento correcto.
+            'urlVistaPrevia' => (function () use ($documentoHandler, $idCliente, $anio, $tipo, $trimestre) {
+                $url = $documentoHandler
+                    ? $documentoHandler->getUrlVistaPrevia($idCliente, $anio)
+                    : base_url('documentos-sst/' . $idCliente . '/' . str_replace('_', '-', $tipo) . '/' . $anio);
+                if ($trimestre !== null) {
+                    $url .= (strpos($url, '?') === false ? '?' : '&') . 'trimestre=' . $trimestre;
+                }
+                return $url;
+            })(),
             // Sistema de versionamiento estandarizado
             'historialVersiones' => $historialVersiones,
         ];
