@@ -768,8 +768,10 @@ class DocumentacionController extends Controller
         }
 
         // 1.1.8 Informes IA del COCOLAB (trimestral + anual).
+        // determinarTipoCarpetaFases() retorna 'manual_convivencia_1_1_8' para codigo 1.1.8 (vista actual);
+        // 'comite_convivencia' es legacy pero lo dejamos por compatibilidad.
         $informesCocolab = [];
-        if ($tipoCarpetaFases === 'comite_convivencia') {
+        if (in_array($tipoCarpetaFases, ['comite_convivencia', 'manual_convivencia_1_1_8'], true)) {
             $db = $db ?? \Config\Database::connect();
             $informesCocolab = $db->table('tbl_documentos_sst')
                 ->whereIn('tipo_documento', ['informe_trimestral_cocolab', 'informe_anual_cocolab'])
