@@ -13,6 +13,7 @@ use App\Models\PausaActivaModel;
 use App\Models\InvestigacionAccidenteModel;
 use App\Models\ActaCapacitacionModel;
 use App\Models\ListaAsistenciaModel;
+use App\Models\EntregaDotacionModel;
 use App\Models\ClientModel;
 use App\Models\PendientesModel;
 use App\Models\VencimientosMantenimientoModel;
@@ -64,6 +65,10 @@ class InspeccionesController extends BaseController
         $pendientesListaAsistencia = $listaAsistModel->getAllPendientes();
         $totalListaAsistencia = $listaAsistModel->where('estado', 'completo')->countAllResults();
 
+        $entregaDotModel = new EntregaDotacionModel();
+        $pendientesEntregaDotacion = $entregaDotModel->getAllPendientes();
+        $totalEntregaDotacion = $entregaDotModel->where('estado', 'completo')->countAllResults();
+
         $data = [
             'title'                     => 'Inspecciones SST',
             'pendientes'                => $pendientes,
@@ -76,6 +81,7 @@ class InspeccionesController extends BaseController
             'pendientesInvestigaciones' => $pendientesInvestigaciones,
             'pendientesCapacitaciones'  => $pendientesCapacitaciones,
             'pendientesListaAsistencia' => $pendientesListaAsistencia,
+            'pendientesEntregaDotacion' => $pendientesEntregaDotacion,
             'totalActas'                => $totalActas,
             'totalLocativas'            => $totalLocativas,
             'totalExtintores'           => $totalExtintores,
@@ -86,6 +92,7 @@ class InspeccionesController extends BaseController
             'totalInvestigaciones'      => $totalInvestigaciones,
             'totalCapacitaciones'       => $totalCapacitaciones,
             'totalListaAsistencia'      => $totalListaAsistencia,
+            'totalEntregaDotacion'      => $totalEntregaDotacion,
             'nombre'                    => session()->get('nombre_usuario'),
         ];
 

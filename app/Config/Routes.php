@@ -677,6 +677,8 @@ $routes->group('client/inspecciones', ['filter' => 'auth'], function($routes) {
     $routes->get('locativas/(:num)', 'ClientInspeccionesController::viewLocativa/$1');
     $routes->get('registro-asistencia', 'ClientInspeccionesController::listRegistroAsistencia');
     $routes->get('registro-asistencia/(:num)', 'ClientInspeccionesController::viewRegistroAsistencia/$1');
+    $routes->get('entrega-dotacion', 'ClientInspeccionesController::listEntregaDotacion');
+    $routes->get('entrega-dotacion/(:num)', 'ClientInspeccionesController::viewEntregaDotacion/$1');
 });
 
 // Consultor
@@ -1425,6 +1427,14 @@ $routes->post('lista-asistencia/procesar-firma-remota', 'Inspecciones\ListaAsist
 $routes->get('lista-asistencia/inscripcion/(:any)', 'Inspecciones\ListaAsistenciaController::inscripcion/$1');
 $routes->post('lista-asistencia/procesar-inscripcion', 'Inspecciones\ListaAsistenciaController::procesarInscripcion');
 
+// Rutas PUBLICAS de firma remota entrega de dotacion (sin autenticacion)
+$routes->get('entrega-dotacion/firmar-remoto/(:any)', 'Inspecciones\EntregaDotacionController::firmarRemoto/$1');
+$routes->post('entrega-dotacion/procesar-firma-remota', 'Inspecciones\EntregaDotacionController::procesarFirmaRemota');
+
+// Rutas PUBLICAS de auto-inscripcion entrega de dotacion via QR (sin autenticacion)
+$routes->get('entrega-dotacion/inscripcion/(:any)', 'Inspecciones\EntregaDotacionController::inscripcion/$1');
+$routes->post('entrega-dotacion/procesar-inscripcion', 'Inspecciones\EntregaDotacionController::procesarInscripcion');
+
 // Rutas PUBLICAS de firma remota investigacion accidente (sin autenticacion)
 $routes->get('investigacion-accidente/firmar-remoto/(:any)', 'Inspecciones\InvestigacionAccidenteController::firmarRemoto/$1');
 $routes->post('investigacion-accidente/procesar-firma-remota', 'Inspecciones\InvestigacionAccidenteController::procesarFirmaRemota');
@@ -1805,6 +1815,24 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('lista-asistencia/asistentes-status/(:num)', 'ListaAsistenciaController::getAsistentesStatus/$1');
     $routes->post('lista-asistencia/generar-token-inscripcion/(:num)', 'ListaAsistenciaController::generarTokenInscripcion/$1');
     $routes->get('lista-asistencia/delete/(:num)', 'ListaAsistenciaController::delete/$1');
+
+    // Entrega de Dotacion / EPP
+    $routes->get('entrega-dotacion', 'EntregaDotacionController::list');
+    $routes->get('entrega-dotacion/create', 'EntregaDotacionController::create');
+    $routes->get('entrega-dotacion/create/(:num)', 'EntregaDotacionController::create/$1');
+    $routes->post('entrega-dotacion/store', 'EntregaDotacionController::store');
+    $routes->get('entrega-dotacion/edit/(:num)', 'EntregaDotacionController::edit/$1');
+    $routes->post('entrega-dotacion/update/(:num)', 'EntregaDotacionController::update/$1');
+    $routes->get('entrega-dotacion/view/(:num)', 'EntregaDotacionController::view/$1');
+    $routes->get('entrega-dotacion/pdf-operario/(:num)', 'EntregaDotacionController::generatePdfOperario/$1');
+    $routes->post('entrega-dotacion/finalizar/(:num)', 'EntregaDotacionController::finalizar/$1');
+    $routes->post('entrega-dotacion/generar-token-firma/(:num)', 'EntregaDotacionController::generarTokenFirma/$1');
+    $routes->post('entrega-dotacion/asistente/save/(:num)', 'EntregaDotacionController::saveAsistente/$1');
+    $routes->post('entrega-dotacion/asistente/delete/(:num)/(:num)', 'EntregaDotacionController::deleteAsistente/$1/$2');
+    $routes->post('entrega-dotacion/asistente/enviar-email/(:num)', 'EntregaDotacionController::enviarEmailFirma/$1');
+    $routes->get('entrega-dotacion/asistentes-status/(:num)', 'EntregaDotacionController::getAsistentesStatus/$1');
+    $routes->post('entrega-dotacion/generar-token-inscripcion/(:num)', 'EntregaDotacionController::generarTokenInscripcion/$1');
+    $routes->get('entrega-dotacion/delete/(:num)', 'EntregaDotacionController::delete/$1');
 
     // Inspeccion Locativa
     $routes->get('inspeccion-locativa', 'InspeccionLocativaController::list');
