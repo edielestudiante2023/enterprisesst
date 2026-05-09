@@ -23,6 +23,8 @@ use App\Controllers\Inspecciones\RegistroAsistenciaController;
 use App\Models\EntregaDotacionModel;
 use App\Models\EntregaDotacionAsistenteModel;
 use App\Models\EntregaDotacionItemModel;
+use App\Models\InspeccionEppModel;
+use App\Models\HallazgoEppModel;
 use CodeIgniter\Controller;
 
 class ClientInspeccionesController extends Controller
@@ -418,6 +420,64 @@ class ClientInspeccionesController extends Controller
                 'cliente'    => $clientModel->find($entrega['id_cliente']),
                 'consultor'  => $entrega['id_consultor'] ? $consultantModel->find($entrega['id_consultor']) : null,
                 'asistentes' => $asistentes,
+            ]),
+        ]);
+    }
+
+    // ─── INSPECCIONES DE EPP (read-only) ─────────────────────
+
+    public function listInspeccionEpp()
+    {
+        $clientId = $this->getClientId();
+        if (!$clientId) {
+            return redirect()->to('/login')->with('error', 'Acceso no autorizado.');
+        }
+
+        $inspeccionModel = new InspeccionEppModel();
+        $hallazgoModel = new HallazgoEppModel();
+        $inspecciones = $inspeccionModel->getByCliente((int)$clientId);
+
+        foreach ($inspecciones as &$insp) {
+            $insp['total_hallazgos'] = $hallazgoModel
+                ->where('id_inspeccion', $insp['id'])->countAllResults(false);
+        }
+
+        $clientModel = new ClientModel();
+
+        return view('client/inspecciones/layout', [
+            'client'  => $clientModel->find($clientId),
+            'title'   => 'Inspecciones de EPP',
+            'content' => view('client/inspecciones/inspeccion_epp_list', [
+                'inspecciones' => $inspecciones,
+            ]),
+        ]);
+    }
+
+    public function viewInspeccionEpp($id)
+    {
+        $clientId = $this->getClientId();
+        if (!$clientId) {
+            return redirect()->to('/login')->with('error', 'Acceso no autorizado.');
+        }
+
+        $inspeccionModel = new InspeccionEppModel();
+        $hallazgoModel = new HallazgoEppModel();
+        $inspeccion = $inspeccionModel->find($id);
+        if (!$inspeccion || (int)$inspeccion['id_cliente'] !== (int)$clientId) {
+            return redirect()->to('/client/inspecciones/inspeccion-epp')->with('error', 'Inspección no encontrada.');
+        }
+
+        $clientModel = new ClientModel();
+        $consultantModel = new ConsultantModel();
+
+        return view('client/inspecciones/layout', [
+            'client'  => $clientModel->find($clientId),
+            'title'   => 'Inspección de EPP',
+            'content' => view('client/inspecciones/inspeccion_epp_view', [
+                'inspeccion' => $inspeccion,
+                'cliente'    => $clientModel->find($inspeccion['id_cliente']),
+                'consultor'  => $inspeccion['id_consultor'] ? $consultantModel->find($inspeccion['id_consultor']) : null,
+                'hallazgos'  => $hallazgoModel->getByInspeccion((int)$id),
             ]),
         ]);
     }

@@ -679,6 +679,8 @@ $routes->group('client/inspecciones', ['filter' => 'auth'], function($routes) {
     $routes->get('registro-asistencia/(:num)', 'ClientInspeccionesController::viewRegistroAsistencia/$1');
     $routes->get('entrega-dotacion', 'ClientInspeccionesController::listEntregaDotacion');
     $routes->get('entrega-dotacion/(:num)', 'ClientInspeccionesController::viewEntregaDotacion/$1');
+    $routes->get('inspeccion-epp', 'ClientInspeccionesController::listInspeccionEpp');
+    $routes->get('inspeccion-epp/(:num)', 'ClientInspeccionesController::viewInspeccionEpp/$1');
 });
 
 // Consultor
@@ -1651,6 +1653,16 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('inspecciones/locativa/finalizar/(:num)', 'MiembroInspeccionController::finalizar/$1');
     $routes->get('inspecciones/locativa/pdf/(:num)', 'MiembroInspeccionController::generatePdf/$1');
 
+    // Inspeccion de EPP (transversal a TODOS los comites)
+    $routes->get('inspecciones/inspeccion-epp', 'MiembroInspeccionEppController::list');
+    $routes->get('inspecciones/inspeccion-epp/create', 'MiembroInspeccionEppController::create');
+    $routes->post('inspecciones/inspeccion-epp/store', 'MiembroInspeccionEppController::store');
+    $routes->get('inspecciones/inspeccion-epp/edit/(:num)', 'MiembroInspeccionEppController::edit/$1');
+    $routes->post('inspecciones/inspeccion-epp/update/(:num)', 'MiembroInspeccionEppController::update/$1');
+    $routes->get('inspecciones/inspeccion-epp/view/(:num)', 'MiembroInspeccionEppController::view/$1');
+    $routes->post('inspecciones/inspeccion-epp/finalizar/(:num)', 'MiembroInspeccionEppController::finalizar/$1');
+    $routes->get('inspecciones/inspeccion-epp/pdf/(:num)', 'MiembroInspeccionEppController::generatePdf/$1');
+
     // Pausas Activas (miembro COPASST)
     $routes->get('inspecciones/pausas-activas', 'MiembroPausasActivasController::list');
     $routes->get('inspecciones/pausas-activas/create', 'MiembroPausasActivasController::create');
@@ -1847,6 +1859,20 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->get('inspeccion-locativa/enviar-email/(:num)', 'InspeccionLocativaController::enviarEmail/$1');
     $routes->post('inspeccion-locativa/finalizar/(:num)', 'InspeccionLocativaController::finalizar/$1');
     $routes->get('inspeccion-locativa/delete/(:num)', 'InspeccionLocativaController::delete/$1');
+
+    // Inspeccion de EPP
+    $routes->get('inspeccion-epp', 'InspeccionEppController::list');
+    $routes->get('inspeccion-epp/create', 'InspeccionEppController::create');
+    $routes->get('inspeccion-epp/create/(:num)', 'InspeccionEppController::create/$1');
+    $routes->post('inspeccion-epp/store', 'InspeccionEppController::store');
+    $routes->get('inspeccion-epp/edit/(:num)', 'InspeccionEppController::edit/$1');
+    $routes->post('inspeccion-epp/update/(:num)', 'InspeccionEppController::update/$1');
+    $routes->get('inspeccion-epp/view/(:num)', 'InspeccionEppController::view/$1');
+    $routes->get('inspeccion-epp/pdf/(:num)', 'InspeccionEppController::generatePdf/$1');
+    $routes->get('inspeccion-epp/regenerar/(:num)', 'InspeccionEppController::regenerarPdf/$1');
+    $routes->get('inspeccion-epp/enviar-email/(:num)', 'InspeccionEppController::enviarEmail/$1');
+    $routes->post('inspeccion-epp/finalizar/(:num)', 'InspeccionEppController::finalizar/$1');
+    $routes->get('inspeccion-epp/delete/(:num)', 'InspeccionEppController::delete/$1');
 
     // Pausas Activas
     $routes->get('pausas-activas', 'InspeccionPausasActivasController::list');

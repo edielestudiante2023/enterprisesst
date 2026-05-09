@@ -87,6 +87,41 @@
     <?php endforeach; ?>
     <?php endif; ?>
 
+    <!-- Pendientes Inspeccion EPP -->
+    <?php if (!empty($pendientesInspeccionEpp)): ?>
+    <div class="section-title">Pendientes Inspección EPP</div>
+    <?php foreach ($pendientesInspeccionEpp as $doc): ?>
+    <div class="card card-inspeccion borrador">
+        <div class="card-body py-3 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>
+                        <i class="fas fa-edit text-warning"></i>
+                        Inspección EPP - <?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>
+                    </strong>
+                    <div class="text-muted" style="font-size: 13px;">
+                        <?= date('d/m/Y', strtotime($doc['fecha_inspeccion'])) ?>
+                        &middot;
+                        <span class="badge badge-borrador" style="font-size: 11px;">Borrador</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2 d-flex gap-2 flex-wrap">
+                <a href="<?= site_url('inspecciones/inspeccion-epp/edit/' . $doc['id']) ?>" class="btn btn-sm btn-outline-dark">
+                    Continuar editando <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-doc"
+                    data-url="<?= site_url('inspecciones/inspeccion-epp/delete/' . $doc['id']) ?>"
+                    data-tipo="inspeccion de EPP"
+                    data-nombre="<?= esc($doc['nombre_cliente'] ?? 'Sin cliente') ?>">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+    <?php endif; ?>
+
     <!-- Pendientes Extintores -->
     <?php if (!empty($pendientesExtintores)): ?>
     <div class="section-title">Pendientes Extintores</div>
@@ -439,6 +474,11 @@
             <i class="fas fa-hard-hat"></i>
             <div><strong>Locativas</strong></div>
             <div class="count">(<?= $totalLocativas ?>)</div>
+        </a>
+        <a href="<?= site_url('inspecciones/inspeccion-epp') ?>" class="card-tipo">
+            <i class="fas fa-helmet-safety"></i>
+            <div><strong>Inspección EPP</strong></div>
+            <div class="count">(<?= $totalInspeccionEpp ?? 0 ?>)</div>
         </a>
         <a href="<?= site_url('inspecciones/extintores') ?>" class="card-tipo">
             <i class="fas fa-fire-extinguisher"></i>

@@ -65,6 +65,21 @@
             </a>
         </div>
 
+        <!-- Inspeccion EPP: TRANSVERSAL — visible para todos los comites -->
+        <div class="col-md-6 mb-3">
+            <a href="<?= base_url('miembro/inspecciones/inspeccion-epp') ?>" class="card border-0 shadow-sm text-decoration-none h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-shield-check text-danger fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1 text-dark">Inspección de EPP</h5>
+                        <p class="text-muted mb-0 small">Identificar hallazgos en elementos de protección personal</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
         <?php if (!empty($esCopasst)): ?>
         <div class="col-md-6 mb-3">
             <a href="<?= base_url('miembro/inspecciones/locativa') ?>" class="card border-0 shadow-sm text-decoration-none h-100">

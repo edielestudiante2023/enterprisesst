@@ -5,6 +5,7 @@ namespace App\Controllers\Inspecciones;
 use App\Controllers\BaseController;
 use App\Models\ActaVisitaModel;
 use App\Models\InspeccionLocativaModel;
+use App\Models\InspeccionEppModel;
 use App\Models\InspeccionExtintoresModel;
 use App\Models\InspeccionBotiquinModel;
 use App\Models\InspeccionSenalizacionModel;
@@ -69,6 +70,10 @@ class InspeccionesController extends BaseController
         $pendientesEntregaDotacion = $entregaDotModel->getAllPendientes();
         $totalEntregaDotacion = $entregaDotModel->where('estado', 'completo')->countAllResults();
 
+        $inspEppModel = new InspeccionEppModel();
+        $pendientesInspeccionEpp = $inspEppModel->getAllPendientes();
+        $totalInspeccionEpp = $inspEppModel->where('estado', 'completo')->countAllResults();
+
         $data = [
             'title'                     => 'Inspecciones SST',
             'pendientes'                => $pendientes,
@@ -82,6 +87,7 @@ class InspeccionesController extends BaseController
             'pendientesCapacitaciones'  => $pendientesCapacitaciones,
             'pendientesListaAsistencia' => $pendientesListaAsistencia,
             'pendientesEntregaDotacion' => $pendientesEntregaDotacion,
+            'pendientesInspeccionEpp'   => $pendientesInspeccionEpp,
             'totalActas'                => $totalActas,
             'totalLocativas'            => $totalLocativas,
             'totalExtintores'           => $totalExtintores,
@@ -93,6 +99,7 @@ class InspeccionesController extends BaseController
             'totalCapacitaciones'       => $totalCapacitaciones,
             'totalListaAsistencia'      => $totalListaAsistencia,
             'totalEntregaDotacion'      => $totalEntregaDotacion,
+            'totalInspeccionEpp'        => $totalInspeccionEpp,
             'nombre'                    => session()->get('nombre_usuario'),
         ];
 
