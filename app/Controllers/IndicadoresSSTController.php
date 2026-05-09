@@ -666,7 +666,8 @@ class IndicadoresSSTController extends BaseController
         $versionVigente = $idDocumento ? $this->versionService->obtenerVersionVigente((int)$idDocumento) : null;
 
         // Firmas electrónicas del documento (Instructivo 3_AA_PDF_FIRMAS sección 16-17)
-        $firmasElectronicas = $idDocumento ? $this->obtenerFirmasElectronicas((int)$idDocumento) : [];
+        // Pasar contexto y cliente para que la validacion de cedula no descarte las firmas de delegado_sst / representante_legal.
+        $firmasElectronicas = $idDocumento ? $this->obtenerFirmasElectronicas((int)$idDocumento, $contexto ?? [], $cliente ?? []) : [];
 
         return view('indicadores_sst/ficha_tecnica', array_merge($datosFicha, [
             'cliente'             => $cliente,
@@ -834,7 +835,8 @@ class IndicadoresSSTController extends BaseController
         $versiones = $idDocumento ? $this->versionService->obtenerHistorial((int)$idDocumento) : [];
 
         // Firmas electrónicas del documento (Instructivo 3_AA_PDF_FIRMAS sección 16-17)
-        $firmasElectronicas = $idDocumento ? $this->obtenerFirmasElectronicas((int)$idDocumento) : [];
+        // Pasar contexto y cliente para que la validacion de cedula no descarte las firmas de delegado_sst / representante_legal / vigia_sst.
+        $firmasElectronicas = $idDocumento ? $this->obtenerFirmasElectronicas((int)$idDocumento, $contexto ?? [], $cliente ?? []) : [];
 
         // Firma física del vigía SST para fallback en PDF (Instructivo 3_AA_PDF_FIRMAS sección 17)
         $firmaVigiaBase64 = '';
