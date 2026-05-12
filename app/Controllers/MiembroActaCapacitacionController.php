@@ -9,6 +9,7 @@ use App\Models\ClientModel;
 use App\Models\ConsultantModel;
 use App\Models\ReporteModel;
 use App\Traits\AutosaveJsonTrait;
+use App\Traits\IAActaCapacitacionTrait;
 use Dompdf\Dompdf;
 
 /**
@@ -18,6 +19,7 @@ use Dompdf\Dompdf;
 class MiembroActaCapacitacionController extends BaseController
 {
     use AutosaveJsonTrait;
+    use IAActaCapacitacionTrait;
 
     protected ActaCapacitacionModel $actaModel;
     protected ActaCapacitacionAsistenteModel $asistenteModel;
@@ -767,5 +769,30 @@ class MiembroActaCapacitacionController extends BaseController
             log_message('error', 'Error notificando consultor acta capacitacion: ' . $e->getMessage());
             return false;
         }
+    }
+
+    // ============================================================
+    // GENERACION CON IA (objetivos + contenido)
+    // ============================================================
+
+    public function generarObjetivosIA()
+    {
+        $miembro = $this->getMiembroAny();
+        if (!$miembro) return $this->response->setJSON(['success' => false, 'error' => 'No autenticado']);
+
+        $tema = trim((string)$this->request->getPost('tema'));
+        $resultado = $this->generarObjetivosConIA($tema);
+        return $this->response->setJSON($resultado);
+    }
+
+    public function generarContenidoIA()
+    {
+        $miembro = $this->getMiembroAny();
+        if (!$miembro) return $this->response->setJSON(['success' => false, 'error' => 'No autenticado']);
+
+        $tema = trim((string)$this->request->getPost('tema'));
+        $objetivos = trim((string)$this->request->getPost('objetivos'));
+        $resultado = $this->generarContenidoConIA($tema, $objetivos);
+        return $this->response->setJSON($resultado);
     }
 }

@@ -117,12 +117,26 @@ $tokenInscripcionUrlBase = $ctx === 'consultor'
                                 value="<?= esc($acta['enlace_grabacion'] ?? '') ?>" placeholder="https://...">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Objetivos</label>
-                            <textarea name="objetivos" class="form-control" rows="2" placeholder="Objetivos de la capacitación..."><?= esc($acta['objetivos'] ?? '') ?></textarea>
+                            <div class="d-flex justify-content-between align-items-center" style="gap:8px;">
+                                <label class="form-label mb-0">Objetivos</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-generar-ia"
+                                    data-target="objetivos"
+                                    style="font-size:11px; padding:3px 10px;">
+                                    <i class="fas fa-magic"></i> Generar con IA
+                                </button>
+                            </div>
+                            <textarea name="objetivos" class="form-control mt-1" rows="2" placeholder="Objetivos de la capacitación..."><?= esc($acta['objetivos'] ?? '') ?></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Contenido / Resumen</label>
-                            <textarea name="contenido" class="form-control" rows="3" placeholder="Resumen de lo cubierto en la capacitación..."><?= esc($acta['contenido'] ?? '') ?></textarea>
+                            <div class="d-flex justify-content-between align-items-center" style="gap:8px;">
+                                <label class="form-label mb-0">Contenido / Resumen</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-generar-ia"
+                                    data-target="contenido"
+                                    style="font-size:11px; padding:3px 10px;">
+                                    <i class="fas fa-magic"></i> Generar con IA
+                                </button>
+                            </div>
+                            <textarea name="contenido" class="form-control mt-1" rows="3" placeholder="Resumen de lo cubierto en la capacitación..."><?= esc($acta['contenido'] ?? '') ?></textarea>
                         </div>
                         <div class="mb-0">
                             <label class="form-label">Observaciones</label>
@@ -962,5 +976,97 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // ============================================================
+    // GENERAR CON IA (Objetivos / Contenido)
+    // ============================================================
+    var iaBaseUrl = '<?= $ctx === 'consultor' ? site_url('inspecciones/acta-capacitacion') : site_url('miembro/acta-capacitacion') ?>';
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-generar-ia');
+        if (!btn) return;
+
+        var target = btn.dataset.target; // 'objetivos' o 'contenido'
+        var tema = (document.querySelector('input[name="tema"]') || {}).value || '';
+        tema = tema.trim();
+
+        if (!tema) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Escribe primero el tema',
+                text: 'Necesito conocer el tema de la capacitación para poder generar contenido con IA.',
+                confirmButtonColor: '#bd9751',
+            });
+            return;
+        }
+
+        var textarea = document.querySelector('textarea[name="' + target + '"]');
+        if (!textarea) return;
+
+        // Si ya hay contenido, confirmar reemplazo
+        var procederFn = function() {
+            var endpoint = iaBaseUrl + (target === 'objetivos'
+                ? '/generar-ia-objetivos'
+                : '/generar-ia-contenido');
+
+            var fd = new FormData();
+            fd.append(csrfName, csrfHash);
+            fd.append('tema', tema);
+            if (target === 'contenido') {
+                var objetivos = (document.querySelector('textarea[name="objetivos"]') || {}).value || '';
+                fd.append('objetivos', objetivos.trim());
+            }
+
+            var origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+            textarea.disabled = true;
+
+            fetch(endpoint, {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                textarea.disabled = false;
+
+                if (data.success && data.contenido) {
+                    textarea.value = data.contenido;
+                    textarea.focus();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Generado',
+                        toast: true, position: 'top',
+                        showConfirmButton: false, timer: 1500,
+                    });
+                } else {
+                    Swal.fire('Error', data.error || 'No se pudo generar el contenido', 'error');
+                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                textarea.disabled = false;
+                Swal.fire('Error de conexión', 'No se pudo generar el contenido.', 'error');
+            });
+        };
+
+        if (textarea.value.trim()) {
+            Swal.fire({
+                icon: 'question',
+                title: '¿Reemplazar contenido?',
+                text: 'Ya hay texto en este campo. ¿Quieres reemplazarlo con lo que genere la IA?',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, reemplazar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#bd9751',
+            }).then(function(r) { if (r.isConfirmed) procederFn(); });
+        } else {
+            procederFn();
+        }
+    });
 });
 </script>

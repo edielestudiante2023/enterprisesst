@@ -1701,6 +1701,8 @@ $routes->group('miembro', ['filter' => 'miembro'], function($routes) {
     $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'MiembroActaCapacitacionController::enviarEmailFirma/$1');
     $routes->get('acta-capacitacion/asistentes-status/(:num)', 'MiembroActaCapacitacionController::getAsistentesStatus/$1');
     $routes->post('acta-capacitacion/generar-token-inscripcion/(:num)', 'MiembroActaCapacitacionController::generarTokenInscripcion/$1');
+    $routes->post('acta-capacitacion/generar-ia-objetivos', 'MiembroActaCapacitacionController::generarObjetivosIA');
+    $routes->post('acta-capacitacion/generar-ia-contenido', 'MiembroActaCapacitacionController::generarContenidoIA');
 
     // Lista de Asistencia (transversal a TODOS los comites — sin filtro COPASST)
     $routes->get('lista-asistencia', 'MiembroListaAsistenciaController::list');
@@ -1808,6 +1810,8 @@ $routes->group('inspecciones', ['namespace' => 'App\Controllers\Inspecciones', '
     $routes->post('acta-capacitacion/asistente/enviar-email/(:num)', 'ActaCapacitacionController::enviarEmailFirma/$1');
     $routes->get('acta-capacitacion/asistentes-status/(:num)', 'ActaCapacitacionController::getAsistentesStatus/$1');
     $routes->post('acta-capacitacion/generar-token-inscripcion/(:num)', 'ActaCapacitacionController::generarTokenInscripcion/$1');
+    $routes->post('acta-capacitacion/generar-ia-objetivos', 'ActaCapacitacionController::generarObjetivosIA');
+    $routes->post('acta-capacitacion/generar-ia-contenido', 'ActaCapacitacionController::generarContenidoIA');
     $routes->get('acta-capacitacion/delete/(:num)', 'ActaCapacitacionController::delete/$1');
 
     // Lista de Asistencia (convocatorias diferentes a capacitacion)

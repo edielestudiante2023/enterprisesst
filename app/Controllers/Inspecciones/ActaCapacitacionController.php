@@ -10,6 +10,7 @@ use App\Models\ConsultantModel;
 use App\Models\ReporteModel;
 use App\Models\MiembroComiteModel;
 use App\Traits\AutosaveJsonTrait;
+use App\Traits\IAActaCapacitacionTrait;
 use Dompdf\Dompdf;
 
 /**
@@ -18,6 +19,7 @@ use Dompdf\Dompdf;
 class ActaCapacitacionController extends BaseController
 {
     use AutosaveJsonTrait;
+    use IAActaCapacitacionTrait;
 
     protected ActaCapacitacionModel $actaModel;
     protected ActaCapacitacionAsistenteModel $asistenteModel;
@@ -850,5 +852,24 @@ class ActaCapacitacionController extends BaseController
         if ($existente) return $reporteModel->update($existente['id_reporte'], $data);
         $data['created_at'] = date('Y-m-d H:i:s');
         return $reporteModel->save($data);
+    }
+
+    // ============================================================
+    // GENERACION CON IA (objetivos + contenido)
+    // ============================================================
+
+    public function generarObjetivosIA()
+    {
+        $tema = trim((string)$this->request->getPost('tema'));
+        $resultado = $this->generarObjetivosConIA($tema);
+        return $this->response->setJSON($resultado);
+    }
+
+    public function generarContenidoIA()
+    {
+        $tema = trim((string)$this->request->getPost('tema'));
+        $objetivos = trim((string)$this->request->getPost('objetivos'));
+        $resultado = $this->generarContenidoConIA($tema, $objetivos);
+        return $this->response->setJSON($resultado);
     }
 }
