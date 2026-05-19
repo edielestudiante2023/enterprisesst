@@ -687,7 +687,7 @@ class ComitesEleccionesController extends BaseController
         }
 
         // Validar email no conflictivo con otro rol del sistema
-        $conflicto = $this->validarEmailNoConflictivo($email);
+        $conflicto = $this->validarEmailNoConflictivo($email, (int) $proceso['id_cliente']);
         if ($conflicto) {
             return redirect()->back()
                 ->with('error', $this->mensajeConflictoEmail($conflicto, $nombreCompleto))
@@ -1065,7 +1065,7 @@ class ComitesEleccionesController extends BaseController
         // Validar email solo si cambio (evita falso positivo si el usuario
         // edita otros campos sin tocar el email)
         if (strtolower($emailNuevo) !== strtolower((string)($candidato['email'] ?? ''))) {
-            $conflicto = $this->validarEmailNoConflictivo($emailNuevo);
+            $conflicto = $this->validarEmailNoConflictivo($emailNuevo, (int) $proceso['id_cliente']);
             if ($conflicto) {
                 return redirect()->back()
                     ->with('error', $this->mensajeConflictoEmail($conflicto, $nombreCompleto))
@@ -1116,7 +1116,7 @@ class ComitesEleccionesController extends BaseController
 
         // Validar email no conflictivo con otro rol del sistema
         if (strtolower($email) !== strtolower((string)($candidato['email'] ?? ''))) {
-            $conflicto = $this->validarEmailNoConflictivo($email);
+            $conflicto = $this->validarEmailNoConflictivo($email, (int) ($candidato['id_cliente'] ?? 0));
             if ($conflicto) {
                 return $this->response->setStatusCode(422)->setJSON([
                     'error'    => $this->mensajeConflictoEmail($conflicto, $candidato['nombre_completo'] ?? ''),
@@ -5483,12 +5483,20 @@ class ComitesEleccionesController extends BaseController
     /**
      * Verifica que el email no este registrado con otro rol que no sea
      * miembro de comite. Permite que la misma persona sea miembro de
-     * varios comites con el mismo email — pero no que un cliente,
-     * consultor, admin o superadmin se registre como candidato.
+     * varios comites con el mismo email — pero no que un consultor,
+     * admin o superadmin se registre como candidato.
      *
+     * Excepcion (Sistema de Contextos): si el email pertenece a un
+     * 'client' de la MISMA empresa del proceso, se permite. Es el caso
+     * legitimo del cliente/gerente designado como Representante del
+     * Empleador o candidato en el comite de su propia empresa — el
+     * Sistema de Contextos ya soporta la identidad cliente+miembro.
+     *
+     * @param string   $email
+     * @param int|null $idClienteProceso id_cliente del proceso electoral
      * @return array|null null = OK, array con info del conflicto si hay
      */
-    private function validarEmailNoConflictivo(string $email): ?array
+    private function validarEmailNoConflictivo(string $email, ?int $idClienteProceso = null): ?array
     {
         $email = trim(strtolower($email));
         if (empty($email)) {
@@ -5506,6 +5514,16 @@ class ComitesEleccionesController extends BaseController
 
         // Si ya es miembro, no es conflicto
         if ($existente['tipo_usuario'] === 'miembro') {
+            return null;
+        }
+
+        // Si es el cliente de la MISMA empresa del proceso, no es conflicto:
+        // el sistema de contextos soporta que sea cliente + miembro a la vez.
+        if (
+            $existente['tipo_usuario'] === 'client'
+            && $idClienteProceso !== null
+            && (int) ($existente['id_entidad'] ?? 0) === $idClienteProceso
+        ) {
             return null;
         }
 
