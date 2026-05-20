@@ -428,22 +428,28 @@ class ResponsableSSTModel extends Model
             ->orderBy('c.tipo_plaza', 'ASC')
             ->get()->getResultArray();
 
+        // Dedup por documento + tipo_rol: una persona puede ser responsable en
+        // varios comites (distinto tipo_rol); solo se bloquea el rol exacto ya existente.
         $existentes = $db->table('tbl_cliente_responsables_sst')
-            ->select('numero_documento')
+            ->select('numero_documento, tipo_rol')
             ->where('id_cliente', $idCliente)
             ->get()->getResultArray();
-        $docsSet = array_flip(array_map('strval', array_column($existentes, 'numero_documento')));
+        $set = [];
+        foreach ($existentes as $e) {
+            $set[(string) $e['numero_documento'] . '|' . $e['tipo_rol']] = true;
+        }
 
         foreach ($cands as &$c) {
             $c['tipo_rol']       = self::mapearTipoRolDesdeCandidato($c['tipo_comite'], $c['representacion'], $c['tipo_plaza']);
             $c['tipo_rol_label'] = self::TIPOS_ROL[$c['tipo_rol']] ?? $c['tipo_rol'];
-            $c['ya_importado']   = isset($docsSet[(string) $c['documento_identidad']]);
+            $c['ya_importado']   = isset($set[(string) $c['documento_identidad'] . '|' . $c['tipo_rol']]);
         }
         return $cands;
     }
 
     /**
-     * Importa candidatos seleccionados como responsables. Evita duplicados por numero_documento.
+     * Importa candidatos seleccionados como responsables.
+     * Evita duplicados por documento + tipo_rol (una persona puede estar en varios comites).
      *
      * @return array ['creados'=>int, 'omitidos'=>int]
      */
@@ -452,10 +458,13 @@ class ResponsableSSTModel extends Model
         $db = \Config\Database::connect();
 
         $existentes = $db->table('tbl_cliente_responsables_sst')
-            ->select('numero_documento')
+            ->select('numero_documento, tipo_rol')
             ->where('id_cliente', $idCliente)
             ->get()->getResultArray();
-        $docsSet = array_flip(array_map('strval', array_column($existentes, 'numero_documento')));
+        $set = [];
+        foreach ($existentes as $e) {
+            $set[(string) $e['numero_documento'] . '|' . $e['tipo_rol']] = true;
+        }
 
         $creados = 0;
         $omitidos = 0;
@@ -473,14 +482,16 @@ class ResponsableSSTModel extends Model
                 continue;
             }
             $doc = (string) $c['documento_identidad'];
-            if (isset($docsSet[$doc])) {
+            $tipoRol = self::mapearTipoRolDesdeCandidato($c['tipo_comite'], $c['representacion'], $c['tipo_plaza']);
+            $key = $doc . '|' . $tipoRol;
+            if (isset($set[$key])) {
                 $omitidos++;
                 continue;
             }
 
             $this->insert([
                 'id_cliente'      => $idCliente,
-                'tipo_rol'        => self::mapearTipoRolDesdeCandidato($c['tipo_comite'], $c['representacion'], $c['tipo_plaza']),
+                'tipo_rol'        => $tipoRol,
                 'nombre_completo' => $c['nombre_completo'] ?: trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? '')),
                 'tipo_documento'  => self::normalizarTipoDocumento($c['tipo_documento'] ?? null),
                 'numero_documento' => $doc,
@@ -493,7 +504,7 @@ class ResponsableSSTModel extends Model
                 'created_by'      => $userId,
             ]);
 
-            $docsSet[$doc] = true; // evitar duplicado dentro del mismo lote
+            $set[$key] = true; // evitar duplicado dentro del mismo lote
             $creados++;
         }
 
