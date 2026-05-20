@@ -261,7 +261,11 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <p class="text-muted small mb-2">Miembros elegidos/designados en los comités (COPASST, Convivencia, Brigada). Los que ya están como responsables aparecen deshabilitados. El rol se asigna automáticamente y puedes ajustarlo luego.</p>
+            <p class="text-muted small mb-2">Miembros elegidos/designados en los comités (COPASST, Convivencia, Brigada). Los que ya están como responsables aparecen deshabilitados. El rol se asigna automáticamente.</p>
+            <div class="alert alert-warning py-2 small mb-2">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              <strong>Importante:</strong> después de importar, entra a <strong>Editar</strong> en cada miembro y reclasifica los roles de <strong>Presidente</strong> y <strong>Secretario</strong> de cada comité (la importación los trae como Representante/Suplente).
+            </div>
             <div class="d-flex gap-2 mb-2">
               <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSelTodos">Seleccionar todos</button>
               <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSelNinguno">Ninguno</button>
@@ -367,7 +371,12 @@
               .then(data => {
                 btn.disabled = false;
                 if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'Importado', text: data.message, timer: 2000, showConfirmButton: false }).then(() => location.reload());
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Miembros importados',
+                        html: data.message + '<br><br><div class="text-start"><strong>Recuerda:</strong> entra a <em>Editar</em> en cada miembro y reclasifica los roles de <strong>Presidente</strong> y <strong>Secretario</strong> de cada comité (se importaron como Representante/Suplente).</div>',
+                        confirmButtonText: 'Entendido'
+                    }).then(() => location.reload());
                 } else { Swal.fire('No se pudo', data.message || 'Error', 'error'); }
               })
               .catch(() => { btn.disabled = false; Swal.fire('Error', 'Error de conexión', 'error'); });
