@@ -814,6 +814,9 @@ $routes->post('/responsables-sst/(:num)/eliminar/(:num)', 'ResponsablesSSTContro
 $routes->get('/responsables-sst/(:num)/api', 'ResponsablesSSTController::apiObtener/$1');
 $routes->get('/responsables-sst/(:num)/verificar', 'ResponsablesSSTController::apiVerificar/$1');
 $routes->post('/responsables-sst/(:num)/migrar', 'ResponsablesSSTController::migrar/$1');
+// Importar miembros de comites (procesos electorales) como responsables
+$routes->get('/responsables-sst/(:num)/miembros-importables', 'ResponsablesSSTController::miembrosImportables/$1');
+$routes->post('/responsables-sst/(:num)/importar-miembros', 'ResponsablesSSTController::importarMiembros/$1');
 
 // Firma electrónica
 $routes->get('/firma/dashboard', 'FirmaElectronicaController::dashboard');

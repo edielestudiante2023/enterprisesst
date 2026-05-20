@@ -378,6 +378,129 @@ class ResponsableSSTModel extends Model
     }
 
     /**
+     * Deriva el tipo_rol de responsable a partir de los datos de un candidato de comite.
+     */
+    public static function mapearTipoRolDesdeCandidato(string $tipoComite, ?string $representacion, ?string $tipoPlaza): string
+    {
+        $esEmpleador = strtolower(trim($representacion ?? '')) === 'empleador';
+        $esSuplente  = strtolower(trim($tipoPlaza ?? '')) === 'suplente';
+
+        switch (strtoupper(trim($tipoComite))) {
+            case 'COPASST':
+                if ($esEmpleador) return $esSuplente ? 'copasst_suplente_empleador' : 'copasst_representante_empleador';
+                return $esSuplente ? 'copasst_suplente_trabajadores' : 'copasst_representante_trabajadores';
+            case 'COCOLAB':
+                if ($esEmpleador) return $esSuplente ? 'comite_convivencia_suplente_empleador' : 'comite_convivencia_representante_empleador';
+                return $esSuplente ? 'comite_convivencia_suplente_trabajadores' : 'comite_convivencia_representante_trabajadores';
+            case 'BRIGADA':
+                return 'brigada_coordinador'; // sin rol fino en candidatos; el consultor lo ajusta luego
+            case 'VIGIA':
+                return $esSuplente ? 'vigia_sst_suplente' : 'vigia_sst';
+            default:
+                return 'otro';
+        }
+    }
+
+    /**
+     * Normaliza tipo_documento del candidato al ENUM de responsables (CC, CE, PA, TI, NIT).
+     */
+    private static function normalizarTipoDocumento(?string $tipoDoc): string
+    {
+        $td = strtoupper(trim($tipoDoc ?? ''));
+        return in_array($td, ['CC', 'CE', 'PA', 'TI', 'NIT'], true) ? $td : 'CC';
+    }
+
+    /**
+     * Lista los miembros de comites (candidatos elegidos/designados) de un cliente,
+     * con el tipo_rol mapeado y si ya fueron importados como responsables.
+     */
+    public function getMiembrosImportables(int $idCliente): array
+    {
+        $db = \Config\Database::connect();
+
+        $cands = $db->table('tbl_candidatos_comite c')
+            ->select('c.id_candidato, c.nombre_completo, c.documento_identidad, c.tipo_documento, c.cargo, c.email, c.telefono, c.representacion, c.tipo_plaza, c.estado, p.tipo_comite')
+            ->join('tbl_procesos_electorales p', 'p.id_proceso = c.id_proceso')
+            ->where('c.id_cliente', $idCliente)
+            ->whereIn('c.estado', ['elegido', 'designado'])
+            ->orderBy('p.tipo_comite', 'ASC')
+            ->orderBy('c.representacion', 'ASC')
+            ->orderBy('c.tipo_plaza', 'ASC')
+            ->get()->getResultArray();
+
+        $existentes = $db->table('tbl_cliente_responsables_sst')
+            ->select('numero_documento')
+            ->where('id_cliente', $idCliente)
+            ->get()->getResultArray();
+        $docsSet = array_flip(array_map('strval', array_column($existentes, 'numero_documento')));
+
+        foreach ($cands as &$c) {
+            $c['tipo_rol']       = self::mapearTipoRolDesdeCandidato($c['tipo_comite'], $c['representacion'], $c['tipo_plaza']);
+            $c['tipo_rol_label'] = self::TIPOS_ROL[$c['tipo_rol']] ?? $c['tipo_rol'];
+            $c['ya_importado']   = isset($docsSet[(string) $c['documento_identidad']]);
+        }
+        return $cands;
+    }
+
+    /**
+     * Importa candidatos seleccionados como responsables. Evita duplicados por numero_documento.
+     *
+     * @return array ['creados'=>int, 'omitidos'=>int]
+     */
+    public function importarMiembros(int $idCliente, array $idsCandidatos, ?int $userId = null): array
+    {
+        $db = \Config\Database::connect();
+
+        $existentes = $db->table('tbl_cliente_responsables_sst')
+            ->select('numero_documento')
+            ->where('id_cliente', $idCliente)
+            ->get()->getResultArray();
+        $docsSet = array_flip(array_map('strval', array_column($existentes, 'numero_documento')));
+
+        $creados = 0;
+        $omitidos = 0;
+
+        foreach ($idsCandidatos as $idc) {
+            $c = $db->table('tbl_candidatos_comite c')
+                ->select('c.*, p.tipo_comite')
+                ->join('tbl_procesos_electorales p', 'p.id_proceso = c.id_proceso')
+                ->where('c.id_candidato', (int) $idc)
+                ->where('c.id_cliente', $idCliente)
+                ->whereIn('c.estado', ['elegido', 'designado'])
+                ->get()->getRowArray();
+
+            if (!$c) {
+                continue;
+            }
+            $doc = (string) $c['documento_identidad'];
+            if (isset($docsSet[$doc])) {
+                $omitidos++;
+                continue;
+            }
+
+            $this->insert([
+                'id_cliente'      => $idCliente,
+                'tipo_rol'        => self::mapearTipoRolDesdeCandidato($c['tipo_comite'], $c['representacion'], $c['tipo_plaza']),
+                'nombre_completo' => $c['nombre_completo'] ?: trim(($c['nombres'] ?? '') . ' ' . ($c['apellidos'] ?? '')),
+                'tipo_documento'  => self::normalizarTipoDocumento($c['tipo_documento'] ?? null),
+                'numero_documento' => $doc,
+                'cargo'           => $c['cargo'] ?? null,
+                'email'           => $c['email'] ?? null,
+                'telefono'        => $c['telefono'] ?? null,
+                'fecha_inicio'    => date('Y-m-d'),
+                'activo'          => 1,
+                'observaciones'   => 'Importado desde comite ' . ($c['tipo_comite'] ?? ''),
+                'created_by'      => $userId,
+            ]);
+
+            $docsSet[$doc] = true; // evitar duplicado dentro del mismo lote
+            $creados++;
+        }
+
+        return ['creados' => $creados, 'omitidos' => $omitidos];
+    }
+
+    /**
      * Migra datos del contexto antiguo a la nueva tabla
      */
     public function migrarDesdeContexto(int $idCliente, array $contexto): array

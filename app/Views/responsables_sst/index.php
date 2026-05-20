@@ -41,6 +41,9 @@
                 </nav>
             </div>
             <div>
+                <button type="button" class="btn btn-outline-primary me-2" id="btnImportarMiembros" data-bs-toggle="modal" data-bs-target="#modalImportarMiembros">
+                    <i class="bi bi-box-arrow-in-down me-1"></i>Importar miembros
+                </button>
                 <a href="<?= base_url('responsables-sst/' . $cliente['id_cliente'] . '/crear') ?>" class="btn btn-primary">
                     <i class="bi bi-plus-lg me-1"></i>Agregar Responsable
                 </a>
@@ -249,8 +252,34 @@
         </div>
     </div>
 
+    <!-- Modal Importar miembros de comites -->
+    <div class="modal fade" id="modalImportarMiembros" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-box-arrow-in-down me-1"></i>Importar miembros de comités</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small mb-2">Miembros elegidos/designados en los comités (COPASST, Convivencia, Brigada). Los que ya están como responsables aparecen deshabilitados. El rol se asigna automáticamente y puedes ajustarlo luego.</p>
+            <div class="d-flex gap-2 mb-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSelTodos">Seleccionar todos</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSelNinguno">Ninguno</button>
+            </div>
+            <div id="listaImportar"><div class="text-muted">Cargando...</div></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="btnConfirmarImportar"><i class="bi bi-download me-1"></i>Importar seleccionados</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+    const _impBase = '<?= rtrim(base_url('responsables-sst/' . $cliente['id_cliente']), '/') ?>';
     document.addEventListener('DOMContentLoaded', function() {
         // Eliminar responsable
         document.querySelectorAll('.btn-eliminar').forEach(btn => {
@@ -289,6 +318,60 @@
                 });
             });
         }
+
+        // ===== Importar miembros de comites =====
+        const modalImp = document.getElementById('modalImportarMiembros');
+        const listaImp = document.getElementById('listaImportar');
+        const labelComite = { COPASST: 'COPASST', COCOLAB: 'Comité de Convivencia', BRIGADA: 'Brigada de Emergencias', VIGIA: 'Vigía SST' };
+
+        function cargarImportables() {
+            listaImp.innerHTML = '<div class="text-muted">Cargando...</div>';
+            fetch(_impBase + '/miembros-importables', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+              .then(r => r.json())
+              .then(data => {
+                const ms = (data.miembros || []);
+                if (ms.length === 0) { listaImp.innerHTML = '<div class="alert alert-info mb-0">No hay miembros elegidos/designados en los comités para importar.</div>'; return; }
+                const grupos = {};
+                ms.forEach(m => { (grupos[m.tipo_comite] = grupos[m.tipo_comite] || []).push(m); });
+                let html = '';
+                Object.keys(grupos).forEach(tc => {
+                    html += '<h6 class="mt-3 mb-2 text-primary">' + (labelComite[tc] || tc) + '</h6><div class="list-group mb-2">';
+                    grupos[tc].forEach(m => {
+                        const dis = m.ya_importado;
+                        html += '<label class="list-group-item d-flex align-items-center ' + (dis ? 'text-muted' : '') + '">'
+                          + '<input class="form-check-input me-2 chk-imp" type="checkbox" value="' + m.id_candidato + '" ' + (dis ? 'disabled' : 'checked') + '>'
+                          + '<span class="flex-grow-1"><strong>' + (m.nombre_completo || '') + '</strong> <small class="text-muted">(' + (m.documento_identidad || '') + ')</small><br>'
+                          + '<small>' + (m.tipo_rol_label || '') + (m.cargo ? ' &middot; ' + m.cargo : '') + '</small></span>'
+                          + (dis ? '<span class="badge bg-secondary">ya importado</span>' : '<span class="badge bg-success text-uppercase">' + (m.estado || '') + '</span>')
+                          + '</label>';
+                    });
+                    html += '</div>';
+                });
+                listaImp.innerHTML = html;
+              })
+              .catch(() => { listaImp.innerHTML = '<div class="alert alert-danger mb-0">Error al cargar.</div>'; });
+        }
+
+        if (modalImp) modalImp.addEventListener('show.bs.modal', cargarImportables);
+        document.getElementById('btnSelTodos')?.addEventListener('click', () => document.querySelectorAll('.chk-imp:not(:disabled)').forEach(c => c.checked = true));
+        document.getElementById('btnSelNinguno')?.addEventListener('click', () => document.querySelectorAll('.chk-imp').forEach(c => c.checked = false));
+
+        document.getElementById('btnConfirmarImportar')?.addEventListener('click', function() {
+            const ids = Array.from(document.querySelectorAll('.chk-imp:checked')).map(c => c.value);
+            if (ids.length === 0) { Swal.fire('Atención', 'Selecciona al menos un miembro', 'warning'); return; }
+            const btn = this; btn.disabled = true;
+            const fd = new FormData();
+            ids.forEach(id => fd.append('ids[]', id));
+            fetch(_impBase + '/importar-miembros', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
+              .then(r => r.json())
+              .then(data => {
+                btn.disabled = false;
+                if (data.success) {
+                    Swal.fire({ icon: 'success', title: 'Importado', text: data.message, timer: 2000, showConfirmButton: false }).then(() => location.reload());
+                } else { Swal.fire('No se pudo', data.message || 'Error', 'error'); }
+              })
+              .catch(() => { btn.disabled = false; Swal.fire('Error', 'Error de conexión', 'error'); });
+        });
     });
     </script>
 </body>

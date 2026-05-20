@@ -56,6 +56,44 @@ class ResponsablesSSTController extends BaseController
     }
 
     /**
+     * Lista (AJAX) los miembros de comites importables como responsables.
+     */
+    public function miembrosImportables(int $idCliente)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+        return $this->response->setJSON([
+            'success'  => true,
+            'miembros' => $this->responsableModel->getMiembrosImportables($idCliente),
+        ]);
+    }
+
+    /**
+     * Importa (AJAX) los miembros de comites seleccionados como responsables.
+     */
+    public function importarMiembros(int $idCliente)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+        $ids = $this->request->getPost('ids');
+        if (!is_array($ids) || empty($ids)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Selecciona al menos un miembro']);
+        }
+
+        $userId = session()->get('id_usuario') ?? session()->get('user_id');
+        $res = $this->responsableModel->importarMiembros($idCliente, $ids, $userId ? (int) $userId : null);
+
+        return $this->response->setJSON([
+            'success'  => true,
+            'creados'  => $res['creados'],
+            'omitidos' => $res['omitidos'],
+            'message'  => "Importados: {$res['creados']}. Omitidos (ya existian): {$res['omitidos']}.",
+        ]);
+    }
+
+    /**
      * Formulario para crear nuevo responsable
      */
     public function crear(int $idCliente)
