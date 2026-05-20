@@ -77,11 +77,13 @@
       background: url('https://www.datatables.net/examples/resources/details_close.png') no-repeat center center;
     }
 
-    .item-estandar-cell {
+    .item-estandar-cell,
+    .expandable-cell {
       max-width: 28ch;
     }
 
-    body.expand-all-item-estandar #evaluacionesTable td.item-estandar-cell {
+    body.expand-all-item-estandar #evaluacionesTable td.item-estandar-cell,
+    body.expand-all-item-estandar #evaluacionesTable td.expandable-cell {
       white-space: normal;
       overflow: visible;
       text-overflow: initial;
@@ -204,7 +206,7 @@
     </div>
     <div class="d-flex gap-2 mb-3">
       <button id="clearState" class="btn btn-danger btn-sm">Restablecer Filtros</button>
-      <button id="toggleExpandItemEstandar" class="btn btn-outline-primary btn-sm" type="button">Expandir Item del Estándar</button>
+      <button id="toggleExpandItemEstandar" class="btn btn-outline-primary btn-sm" type="button">Expandir todo el texto</button>
     </div>
     <div id="buttonsContainer"></div>
     <div class="table-responsive">
@@ -538,13 +540,16 @@ columns: [{
             data: 'puntaje_cuantitativo'
           },
           {
-            data: 'item'
+            data: 'item',
+            className: 'expandable-cell'
           },
           {
-            data: 'criterio'
+            data: 'criterio',
+            className: 'expandable-cell'
           },
           {
-            data: 'modo_de_verificacion'
+            data: 'modo_de_verificacion',
+            className: 'expandable-cell'
           },
           {
             data: 'observaciones',
@@ -575,7 +580,7 @@ columns: [{
 
       $('#toggleExpandItemEstandar').on('click', function () {
         var expanded = $('body').toggleClass('expand-all-item-estandar').hasClass('expand-all-item-estandar');
-        $(this).text(expanded ? 'Contraer Item del Estándar' : 'Expandir Item del Estándar');
+        $(this).text(expanded ? 'Contraer todo el texto' : 'Expandir todo el texto');
         table.columns.adjust().draw(false);
       });
 
