@@ -56,7 +56,8 @@ class EstandaresClienteController extends Controller
         $nivelEstandares = $contexto['estandares_aplicables'] ?? 60;
 
         // Obtener estándares del cliente (si ya fueron inicializados)
-        $estandares = $this->clienteEstandaresModel->getByClienteGroupedPHVA($idCliente);
+        // Incluir no_aplica para que el segmentador "No Aplica" funcione (la vista los oculta por defecto)
+        $estandares = $this->clienteEstandaresModel->getByClienteGroupedPHVA($idCliente, true);
         $resumen = $this->clienteEstandaresModel->getResumenCumplimiento($idCliente);
         $cumplimientoPonderado = $this->getCumplimientoPonderadoSimple($idCliente);
         $transicionesPendientes = $this->transicionesModel->getPendientes($idCliente);

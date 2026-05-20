@@ -1,81 +1,35 @@
-# Continuacion de Chat - Estado de Sesion
+# CONTINUACIÓN — Integrar /estandares/{id} (fuente) → /listEvaluaciones (cliente)
 
-**Fecha:** 2026-04-19
-**Rama:** cycloid → merge a main (deployado)
+## Objetivo (decidido con el usuario)
+`/estandares/{id}` (tabla `tbl_cliente_estandares`) es la **única fuente de edición**. Debe alimentar
+de forma confiable `/listEvaluaciones` (cliente, tabla `evaluacion_inicial_sst`), **incluyendo "NO APLICA"**.
 
-## Que se hizo en esta sesion
+Decisiones del usuario:
+- Integración = **Sync confiable** (no reescribir la vista del cliente). El sync debe CREAR el registro si no existe (hoy falla por eso) + backfill.
+- Edición = **solo en /estandares/{id}**; /listEvaluaciones queda solo lectura (la vista CLIENTE ya es solo lectura).
 
-### Cambio de regla de firmantes en documentos SST
+## Diagnóstico (verificado)
+- `/estandares/(:num)` → `EstandaresClienteController::index` (app/Controllers/EstandaresClienteController.php:37) → `ClienteEstandaresModel` → `tbl_cliente_estandares`. Vista: `app/Views/estandares/dashboard.php`.
+- `/listEvaluaciones/(:num)` → `ClientEvaluationController::listEvaluaciones` → `EvaluationModel` → `evaluacion_inicial_sst`. Vista: `app/Views/client/list_evaluaciones.php` (SOLO LECTURA, accordion JS).
+- Sync: `app/Services/SyncEstandaresService.php`. `syncDesdeClienteEstandares()` hace `return` si el registro NO existe en `evaluacion_inicial_sst` (~línea 106) → por eso no se refleja.
+- "NO APLICA" no se ve en /estandares porque `index` llama `getByClienteGroupedPHVA($id)` SIN incluir no_aplica (excluye en `getByClienteCompleto`).
+- Cruce: `evaluacion_inicial_sst.numeral` = `tbl_estandares_minimos.item`.
 
-**Problema detectado:**
-En el documento "Asignacion Responsable SG-SST" de EMPRESA OMEGA aparecia firma REVISO/COPASST, pero el cliente tiene `requiere_delegado_sst = 0`. El usuario determino que cuando el delegado SST esta deshabilitado, el unico firmante del lado cliente debe ser el Representante Legal.
+## Esquema clave
+- `tbl_cliente_estandares`: id_cliente, id_estandar, estado(no_aplica|pendiente|en_proceso|cumple|no_cumple), calificacion, observaciones, fecha_cumplimiento.
+- `tbl_estandares_minimos`: id_estandar, item, nombre, criterio, ciclo_phva(PLANEAR|HACER|VERIFICAR|ACTUAR), categoria_nombre, peso_porcentual, aplica_7/21/60.
+- `evaluacion_inicial_sst`: id_cliente, ciclo, estandar, detalle_estandar, numeral, item_del_estandar, item, criterio, evaluacion_inicial(CUMPLE TOTALMENTE|NO CUMPLE|NO APLICA|''), valor, puntaje_cuantitativo, calificacion, observaciones.
 
-**Causa raiz:**
-La logica `$esSoloDosFirmantes = ($estandares <= 10) && !$requiereDelegado;` hacia que con `estandares > 10` (EMPRESA OMEGA tiene 60) siempre se mostrara un 3er firmante (Vigia SST o COPASST segun numero de estandares), aun sin delegado.
+## Plan de implementación
+1. **Filtro NO APLICA** en /estandares: `EstandaresClienteController::index` → `getByClienteGroupedPHVA($idCliente, true)`. La vista ya tiene card data-filtro="no_aplica" y filas data-estado.
+2. **Estándar manual → aplicable**: en `DocCarpetaModel::agregarCarpetaManual` marcar `tbl_cliente_estandares` (no_aplica/missing → 'pendiente') + sync. En `eliminarCarpetaManual` → 'no_aplica' + sync. Nunca degradar un estado ya evaluado.
+3. **Sync confiable (UPSERT)**: reescribir `SyncEstandaresService::syncDesdeClienteEstandares` para INSERTAR si no existe (mapear ciclo=ciclo_phva, estandar=categoria_nombre, numeral=item, valor=peso_porcentual, evaluacion_inicial=ESTADO_TO_EVAL, puntaje). Agregar `syncTodoCliente($idCliente)` (backfill).
+4. **Backfill (script CLI)** dry-run/apply, local→prod: corre `syncTodoCliente` para cliente 15. DRY-RUN muestra diffs (riesgo: no pisar evaluaciones reales si tbl_cliente_estandares está más vacía).
+5. **Solo lectura**: la vista cliente ya lo es. (Editor consultor `EvaluationController::updateEvaluacion` queda como nota.)
 
-**Solucion aplicada (opcion global):**
-Se cambio la regla a `$esSoloDosFirmantes = !$requiereDelegado;` en **10 archivos** de vista/templates. La condicion de estandares queda como codigo muerto mientras el delegado este off.
+## Estado
+- [ ] Parte 1  [ ] Parte 2  [ ] Parte 3  [ ] Parte 4 backfill  [ ] deploy
 
-### Archivos modificados (10)
-
-| Archivo | Linea |
-|---------|-------|
-| `app/Views/documentos_sst/asignacion_responsable.php` | 337 |
-| `app/Views/documentos_sst/programa_capacitacion.php` | 477 |
-| `app/Views/documentos_sst/programa_induccion_reinduccion.php` | 365 |
-| `app/Views/documentos_sst/programa_promocion_prevencion_salud.php` | 473 |
-| `app/Views/documentos_sst/plan_objetivos_metas.php` | 475 |
-| `app/Views/documentos_sst/procedimiento_control_documental.php` | 658 |
-| `app/Views/documentos_sst/procedimiento_matriz_legal.php` | 360 |
-| `app/Views/documentos_sst/documento_generico.php` | 498 |
-| `app/Views/documentos_sst/pdf_template.php` | 560 |
-| `app/Views/documentos_sst/word_template.php` | 350 |
-
-En cada uno se preservo la linea anterior como comentario para poder revivirla.
-
-### Documentacion creada
-
-- `docs/MODULO_NUMERALES_SGSST/04_FIRMAS_ELECTRONICAS/1_A_CAMBIO_REGLA_FIRMANTES_2026.md`
-  - Motivacion, regla antigua vs nueva
-  - Lista de archivos afectados
-  - Guia paso a paso para revertir el cambio
-
-### Memoria del agente actualizada
-
-- `memory/firmas-sistema.md` ← arbol de decision actualizado con la nueva regla
-
-## Estado al final de la sesion
-
-- Deploy hecho a `main`
-- Rama activa: `cycloid`
-
-## Que validar despues del deploy
-
-1. Recargar documento `asignacion_responsable_sst` de EMPRESA OMEGA en navegador → debe mostrar solo ELABORO (Consultor) + APROBO (Rep.Legal).
-2. Probar un cliente con `requiere_delegado_sst = 1` → debe seguir mostrando 3 firmantes (Consultor + Delegado + Rep.Legal).
-3. PDF y Word del documento deben reflejar lo mismo que la vista web.
-4. Documentos ya generados NO cambian hasta que se regeneren con "Actualizar Datos".
-
-## Como revertir si se necesita
-
-Ver guia detallada en:
-`docs/MODULO_NUMERALES_SGSST/04_FIRMAS_ELECTRONICAS/1_A_CAMBIO_REGLA_FIRMANTES_2026.md`
-
-Comando rapido para localizar los 10 puntos de cambio:
-```bash
-grep -rn "Regla negocio 2026-04-19" app/Views/documentos_sst/
-```
-
-## Otros cambios incluidos en el commit (no relacionados con esta sesion)
-
-Cambios en working tree preexistentes que entraron en el mismo push:
-
-- `app/Models/AccAccionesModel.php` (M)
-- `app/Models/AccVerificacionesModel.php` (M)
-- `app/Models/CompetenciaNivelClienteModel.php` (M)
-- `app/Models/DocFirmaModel.php` (M)
-- `app/Models/HistorialEstandaresModel.php` (M)
-- `app/Models/HistorialPlanTrabajoModel.php` (M)
-- `app/Models/PtaTransicionesModel.php` (M)
-- `scripts/multitenant_05_diagnostico.php` (nuevo)
-- `scripts/multitenant_06_limpiar_trait.php` (nuevo)
+## Flujo git/deploy
+git add . → commit → checkout main → merge cycloid → push origin main → checkout cycloid.
+Scripts BD: LOCAL primero, luego --env=prod.

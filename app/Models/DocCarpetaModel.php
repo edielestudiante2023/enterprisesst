@@ -184,8 +184,12 @@ class DocCarpetaModel extends Model
             $datos['es_manual'] = 1;
         }
         $db->table('tbl_doc_carpetas')->insert($datos);
+        $idCarpetaNueva = $db->insertID();
 
-        return ['success' => true, 'message' => 'Carpeta ' . $est['item'] . ' agregada', 'id_carpeta' => $db->insertID()];
+        // El estandar ahora APLICA: reflejarlo en /estandares y sincronizar a /listEvaluaciones
+        $this->marcarEstandarAplicable($idCliente, $idEstandar, true);
+
+        return ['success' => true, 'message' => 'Carpeta ' . $est['item'] . ' agregada', 'id_carpeta' => $idCarpetaNueva];
     }
 
     /**
@@ -205,7 +209,55 @@ class DocCarpetaModel extends Model
             return false;
         }
         $db->table('tbl_doc_carpetas')->where('id_carpeta', $idCarpeta)->delete();
+
+        // El estandar deja de aplicar: revertir a no_aplica en /estandares y sincronizar
+        if (!empty($carpeta['id_estandar'])) {
+            $this->marcarEstandarAplicable((int) $carpeta['id_cliente'], (int) $carpeta['id_estandar'], false);
+        }
         return true;
+    }
+
+    /**
+     * Sincroniza "aplica / no aplica" de un estandar en tbl_cliente_estandares cuando
+     * se agrega/quita una carpeta manual, y propaga a evaluacion_inicial_sst.
+     * Nunca degrada un estado ya evaluado (cumple/no_cumple/en_proceso/pendiente).
+     */
+    private function marcarEstandarAplicable(int $idCliente, int $idEstandar, bool $aplica): void
+    {
+        $db = \Config\Database::connect();
+        $row = $db->table('tbl_cliente_estandares')
+            ->where('id_cliente', $idCliente)
+            ->where('id_estandar', $idEstandar)
+            ->get()->getRowArray();
+
+        $nuevoEstado = null;
+        if ($aplica) {
+            if (!$row) {
+                $db->table('tbl_cliente_estandares')->insert([
+                    'id_cliente'  => $idCliente,
+                    'id_estandar' => $idEstandar,
+                    'estado'      => 'pendiente',
+                    'created_at'  => date('Y-m-d H:i:s'),
+                    'updated_at'  => date('Y-m-d H:i:s'),
+                ]);
+                $nuevoEstado = 'pendiente';
+            } elseif (($row['estado'] ?? '') === 'no_aplica') {
+                $db->table('tbl_cliente_estandares')
+                    ->where('id_cliente', $idCliente)->where('id_estandar', $idEstandar)
+                    ->update(['estado' => 'pendiente', 'updated_at' => date('Y-m-d H:i:s')]);
+                $nuevoEstado = 'pendiente';
+            }
+            // si ya estaba en un estado aplicable/evaluado, no se toca
+        } elseif ($row) {
+            $db->table('tbl_cliente_estandares')
+                ->where('id_cliente', $idCliente)->where('id_estandar', $idEstandar)
+                ->update(['estado' => 'no_aplica', 'updated_at' => date('Y-m-d H:i:s')]);
+            $nuevoEstado = 'no_aplica';
+        }
+
+        if ($nuevoEstado !== null) {
+            (new \App\Services\SyncEstandaresService())->syncDesdeClienteEstandares($idCliente, $idEstandar, $nuevoEstado);
+        }
     }
 
     /**
