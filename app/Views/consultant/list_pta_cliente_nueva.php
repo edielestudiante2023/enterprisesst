@@ -353,6 +353,24 @@
             color: #224abe;
             text-decoration: underline;
         }
+        /* Boton "Expandir todo" en la cabecera de la columna Actividad */
+        .btn-expand-all {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+            background: #4e73df;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .btn-expand-all:hover {
+            background: #224abe;
+        }
 
         /* ============ BADGES DE ESTADO ============ */
         .estado-badge {
@@ -839,7 +857,11 @@
                             <th>Fuente de la Actividad</th>
                             <th>PHVA</th>
                             <th>Numeral Plan Trabajo</th>
-                            <th>Actividad</th>
+                            <th>Actividad
+                                <button type="button" id="btnExpandAllActividad" class="btn-expand-all" title="Expandir o contraer todas las actividades de la pagina">
+                                    <i class="fas fa-expand-alt"></i> Expandir todo
+                                </button>
+                            </th>
                             <th>Responsable Sugerido</th>
                             <th>Fecha Propuesta</th>
                             <th>Fecha Cierre</th>
@@ -2138,10 +2160,35 @@
                 }
             });
 
+            // Expandir / contraer TODAS las actividades (columna 8) de una vez
+            var actividadExpandAll = false;
+            function applyActividadExpandState() {
+                $('#ptaTable tbody tr td:nth-child(8) .cell-truncate').each(function() {
+                    var $cell = $(this);
+                    var $btn = $cell.next('.btn-expand');
+                    if (actividadExpandAll) {
+                        $cell.addClass('expanded');
+                        if ($btn.length) $btn.html('ver menos &#9650;');
+                    } else {
+                        $cell.removeClass('expanded');
+                        if ($btn.length) $btn.html('ver m&aacute;s &#9660;');
+                    }
+                });
+            }
+            $(document).on('click', '#btnExpandAllActividad', function(e) {
+                e.stopPropagation(); // evitar disparar el ordenamiento de la columna
+                actividadExpandAll = !actividadExpandAll;
+                applyActividadExpandState();
+                $(this).html(actividadExpandAll
+                    ? '<i class="fas fa-compress-alt"></i> Contraer todo'
+                    : '<i class="fas fa-expand-alt"></i> Expandir todo');
+            });
+
             // Inicializar después de cada draw de DataTables
             if (table) {
                 table.on('draw', function() {
                     initTruncateButtons();
+                    applyActividadExpandState();
                 });
                 initTruncateButtons();
             }
