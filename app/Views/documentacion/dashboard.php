@@ -515,15 +515,26 @@
                     document.getElementById('iaListaSugerencias').innerHTML = '<div class="alert alert-danger mb-0">' + (data.error || 'Error') + '</div>';
                     return;
                 }
-                let html = '<div class="list-group">';
+                const hoy = new Date().toISOString().slice(0, 10);
+                let html = '<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">'
+                  + '<label class="small text-muted mb-0">Fecha para todas:</label>'
+                  + '<input type="date" id="iaFechaTodas" class="form-control form-control-sm" style="width:auto" value="' + hoy + '">'
+                  + '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="aplicarFechaTodas()">Aplicar a todas</button>'
+                  + '</div>';
+                html += '<div class="list-group">';
                 data.actividades.forEach(a => {
-                    html += '<label class="list-group-item">'
-                      + '<input class="form-check-input me-2 chk-ia" type="checkbox" checked data-actividad="' + encodeURIComponent(a.actividad) + '">'
-                      + '<strong>' + a.actividad + '</strong>'
-                      + (a.descripcion ? '<br><small class="text-muted">' + a.descripcion + '</small>' : '')
-                      + (a.fuente_legal ? '<br><small><span class="badge bg-light text-dark border">' + a.fuente_legal + '</span></small>' : '')
-                      + (a.evidencia ? '<br><small class="text-success"><i class="bi bi-paperclip"></i> Evidencia: ' + a.evidencia + '</small>' : '')
-                      + '</label>';
+                    html += '<div class="list-group-item">'
+                      + '<div class="form-check">'
+                      +   '<input class="form-check-input chk-ia" type="checkbox" checked data-actividad="' + encodeURIComponent(a.actividad) + '">'
+                      +   '<label class="form-check-label"><strong>' + a.actividad + '</strong>'
+                      +     (a.descripcion ? '<br><small class="text-muted">' + a.descripcion + '</small>' : '')
+                      +     (a.fuente_legal ? '<br><small><span class="badge bg-light text-dark border">' + a.fuente_legal + '</span></small>' : '')
+                      +     (a.evidencia ? '<br><small class="text-success"><i class="bi bi-paperclip"></i> Evidencia: ' + a.evidencia + '</small>' : '')
+                      +   '</label>'
+                      + '</div>'
+                      + '<div class="mt-1 ms-4"><label class="small text-muted me-1">Fecha propuesta:</label>'
+                      +   '<input type="date" class="form-control form-control-sm d-inline-block ia-fecha" style="width:auto" value="' + hoy + '"></div>'
+                      + '</div>';
                 });
                 html += '</div>';
                 document.getElementById('iaListaSugerencias').innerHTML = html;
@@ -532,16 +543,26 @@
               .catch(() => { document.getElementById('iaListaSugerencias').innerHTML = '<div class="alert alert-danger mb-0">Error de conexion</div>'; });
         }
 
+        function aplicarFechaTodas() {
+            const f = document.getElementById('iaFechaTodas');
+            if (!f || !f.value) return;
+            document.querySelectorAll('#iaListaSugerencias .ia-fecha').forEach(i => { i.value = f.value; });
+        }
+
         function agregarSeleccionadasAlPta() {
             const checks = Array.from(document.querySelectorAll('.chk-ia:checked'));
             if (checks.length === 0) { Swal.fire('Atencion', 'Selecciona al menos una actividad', 'warning'); return; }
             const btn = document.getElementById('btnAgregarPta'); btn.disabled = true;
             const calls = checks.map(c => {
+                const item = c.closest('.list-group-item');
+                const fechaInput = item ? item.querySelector('.ia-fecha') : null;
+                const fecha = fechaInput && fechaInput.value ? fechaInput.value : '';
                 const fd = new FormData();
                 fd.append('id_cliente', idCliente);
                 fd.append('phva', _iaCtx.phva);
                 fd.append('numeral', _iaCtx.codigo);
                 fd.append('actividad', decodeURIComponent(c.dataset.actividad));
+                if (fecha) fd.append('fecha', fecha);
                 return fetch(_ptaInsertUrl, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
                     .then(r => r.json()).catch(() => ({ success: false }));
             });
