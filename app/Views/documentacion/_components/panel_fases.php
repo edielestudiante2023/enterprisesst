@@ -139,7 +139,8 @@ if (!isset($fasesInfo) || !$fasesInfo || !$fasesInfo['tiene_fases']) {
                     ?>
                     <?php if (isset($tipoCarpetaFases) && $tipoCarpetaFases === 'responsables_sst'): ?>
                     <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-asignacion-responsable-sst') ?>" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-sm btn-success">
+                        <input type="hidden" name="modalidad" value="">
+                        <button type="button" class="btn btn-sm btn-success" onclick="elegirModalidadAsignacion(this.form)">
                             <i class="bi bi-file-earmark-plus me-1"></i>Generar Documento
                         </button>
                     </form>

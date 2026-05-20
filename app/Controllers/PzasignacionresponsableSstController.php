@@ -84,8 +84,11 @@ class PzasignacionresponsableSstController extends Controller
             $consultor = $consultorModel->find($cliente['id_consultor']);
         }
 
+        // Modalidad elegida por el usuario (con empresa consultora o asignacion directa)
+        $modalidad = $this->request->getPost('modalidad') === 'directa' ? 'directa' : 'con_empresa';
+
         // Construir contenido del documento
-        $contenido = $this->construirContenido($cliente, $contexto, $consultor, $anio);
+        $contenido = $this->construirContenido($cliente, $contexto, $consultor, $anio, $modalidad);
 
         // Generar codigo
         $codigoDocumento = $this->generarCodigo($idCliente);
@@ -200,7 +203,7 @@ class PzasignacionresponsableSstController extends Controller
     /**
      * Construye el contenido del documento desde el contexto
      */
-    protected function construirContenido(array $cliente, array $contexto, ?array $consultor, int $anio): array
+    protected function construirContenido(array $cliente, array $contexto, ?array $consultor, int $anio, string $modalidad = 'con_empresa'): array
     {
         // Datos del representante legal desde contexto
         $nombreRepLegal = $contexto['representante_legal_nombre'] ?? $cliente['nombre_cliente'];
@@ -230,13 +233,28 @@ class PzasignacionresponsableSstController extends Controller
             }
         }
 
+        // Normalizar modalidad (con_empresa = intermediaria | directa = al profesional)
+        $modalidad = $modalidad === 'directa' ? 'directa' : 'con_empresa';
+
         // Texto con datos en negrita usando HTML
         // Nota: numero_licencia ya incluye fecha (ej: "4241 de 19/08/2022")
-        $textoAsignacion = "<strong>{$nombreRepLegal}</strong> con documento de identidad <strong>{$cedulaRepLegal}</strong> como representante legal de <strong>{$nombreCliente}</strong>, "
-            . "nombro a la empresa <strong>{$empresaConsultora}</strong>, y esta a su vez asignando como responsable al profesional en Seguridad y Salud en el Trabajo, "
-            . "<strong>{$nombreConsultor}</strong> con documento de identidad <strong>{$cedulaConsultor}</strong>, con numero de licencia <strong>{$licenciaConsultor}</strong>"
-            . ", a quien se le confia la responsabilidad de asesorar en la administracion e implementacion del Sistema de Gestion "
-            . "de Seguridad y Salud en el Trabajo (SG-SST) en la organizacion.";
+        $preludioAsignacion = "<strong>{$nombreRepLegal}</strong> con documento de identidad <strong>{$cedulaRepLegal}</strong> como representante legal de <strong>{$nombreCliente}</strong>, ";
+
+        if ($modalidad === 'directa') {
+            // Asignacion directa: el representante legal nombra al profesional sin empresa intermediaria
+            $textoAsignacion = $preludioAsignacion
+                . "nombro como responsable al profesional en Seguridad y Salud en el Trabajo a "
+                . "<strong>{$nombreConsultor}</strong> con documento de identidad <strong>{$cedulaConsultor}</strong>, con numero de licencia <strong>{$licenciaConsultor}</strong>"
+                . ", quien directamente diseña, administra y asesora el Sistema de Gestion "
+                . "de Seguridad y Salud en el Trabajo (SG-SST) en la organizacion.";
+        } else {
+            // Con empresa consultora intermediaria (modalidad por defecto)
+            $textoAsignacion = $preludioAsignacion
+                . "nombro a la empresa <strong>{$empresaConsultora}</strong>, y esta a su vez asignando como responsable al profesional en Seguridad y Salud en el Trabajo, "
+                . "<strong>{$nombreConsultor}</strong> con documento de identidad <strong>{$cedulaConsultor}</strong>, con numero de licencia <strong>{$licenciaConsultor}</strong>"
+                . ", a quien se le confia la responsabilidad de asesorar en la administracion e implementacion del Sistema de Gestion "
+                . "de Seguridad y Salud en el Trabajo (SG-SST) en la organizacion.";
+        }
 
         $textoAlcance = "Esto incluye la orientacion en la planificacion, organizacion y direccion de las evaluaciones del sistema, "
             . "la presentacion de informes detallados sobre su desempeno y resultados a la alta direccion, "
@@ -268,6 +286,7 @@ class PzasignacionresponsableSstController extends Controller
                 'nit' => $cliente['nit_cliente'] ?? ''
             ],
             'vigencia' => $anio,
+            'modalidad' => $modalidad,
             'estandares_aplicables' => $estandares,
             'representante_legal' => [
                 'nombre' => $nombreRepLegal,
@@ -379,8 +398,14 @@ class PzasignacionresponsableSstController extends Controller
             $consultor = $consultorModel->find($cliente['id_consultor']);
         }
 
+        // Modalidad: usar la del formulario si viene, sino conservar la guardada
+        $contenidoActual = json_decode($documento['contenido'] ?? '{}', true) ?: [];
+        $modalidadGuardada = $contenidoActual['modalidad'] ?? 'con_empresa';
+        $modalidadPost = $this->request->getPost('modalidad');
+        $modalidad = in_array($modalidadPost, ['directa', 'con_empresa'], true) ? $modalidadPost : $modalidadGuardada;
+
         // Construir nuevo contenido con datos actualizados
-        $nuevoContenido = $this->construirContenido($cliente, $contexto, $consultor, $anio);
+        $nuevoContenido = $this->construirContenido($cliente, $contexto, $consultor, $anio, $modalidad);
 
         // Obtener version actual y calcular nueva
         $versionActual = (int)$documento['version'];

@@ -40,7 +40,8 @@ if (!empty($documentosSSTAprobados)) {
                     </button>
                 <?php elseif (!$hayAprobadoAnioActual): ?>
                     <form action="<?= base_url('documentos-sst/' . $cliente['id_cliente'] . '/crear-asignacion-responsable-sst') ?>" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-success">
+                        <input type="hidden" name="modalidad" value="">
+                        <button type="button" class="btn btn-success" onclick="elegirModalidadAsignacion(this.form)">
                             <i class="bi bi-file-earmark-plus me-1"></i>Generar Asignación <?= date('Y') ?>
                         </button>
                     </form>

@@ -637,6 +637,17 @@
                         </div>
                     </div>
 
+                    <!-- Modalidad de asignacion -->
+                    <div class="mb-3">
+                        <label for="regenerarModalidad" class="form-label">Modalidad de asignacion</label>
+                        <?php $modalidadActual = $contenido['modalidad'] ?? 'con_empresa'; ?>
+                        <select class="form-select" id="regenerarModalidad">
+                            <option value="con_empresa" <?= $modalidadActual === 'con_empresa' ? 'selected' : '' ?>>A traves de empresa consultora</option>
+                            <option value="directa" <?= $modalidadActual === 'directa' ? 'selected' : '' ?>>Asignacion directa al profesional</option>
+                        </select>
+                        <div class="form-text">Define como se redacta la asignacion: con empresa consultora intermediaria o directa al profesional en SST.</div>
+                    </div>
+
                     <div class="mb-3">
                         <label for="descripcionCambio" class="form-label">Descripcion del cambio (opcional):</label>
                         <textarea class="form-control" id="descripcionCambio" rows="2"
@@ -719,6 +730,7 @@
             const repLegalNombre = document.getElementById('regenerarRepLegalNombre').value.trim();
             const repLegalCedula = document.getElementById('regenerarRepLegalCedula').value.trim();
             const idConsultor = document.getElementById('regenerarConsultor').value;
+            const modalidad = document.getElementById('regenerarModalidad')?.value || 'con_empresa';
 
             if (!repLegalNombre) {
                 mostrarToast('warning', 'Dato Requerido', 'El nombre del representante legal es obligatorio');
@@ -733,6 +745,7 @@
             formData.append('representante_legal_nombre', repLegalNombre);
             formData.append('representante_legal_cedula', repLegalCedula);
             formData.append('id_consultor_responsable', idConsultor);
+            formData.append('modalidad', modalidad);
 
             fetch('<?= base_url("documentos-sst/{$cliente['id_cliente']}/regenerar-asignacion-responsable-sst/{$anio}") ?>', {
                 method: 'POST',
