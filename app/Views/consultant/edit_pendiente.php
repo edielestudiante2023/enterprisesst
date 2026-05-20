@@ -141,7 +141,7 @@
                     <label for="responsable">Responsable:</label>
                     <select name="responsable" id="responsable" class="form-control" required>
                         <option value="">Seleccione una opción</option>
-                        <option value="ADMINISTRADOR" <?= set_value('responsable', $pendiente['responsable'] ?? '') === 'CLIENTE' ? 'selected' : '' ?>>ADMINISTRADOR</option>
+                        <option value="CLIENTE" <?= set_value('responsable', $pendiente['responsable'] ?? '') === 'CLIENTE' ? 'selected' : '' ?>>CLIENTE</option>
                         <option value="CONSULTOR CYCLOID TALENT" <?= set_value('responsable', $pendiente['responsable'] ?? '') === 'CYCLOID TALENT' ? 'selected' : '' ?>>CONSULTOR CYCLOID TALENT</option>
                     </select>
 
