@@ -49,9 +49,13 @@ class SyncEstandaresService
             $estado = self::EVAL_TO_ESTADO[$evaluacionInicial] ?? null;
             $pesoEstandar = (float) ($estandar['peso_porcentual'] ?? 0);
 
-            // Si evaluacion_inicial está vacía, no sobreescribir un posible "en_proceso"
+            // Si viene vacio (sin evaluar) -> pendiente; si es un valor desconocido, no tocar
             if ($estado === null) {
-                return;
+                if (trim($evaluacionInicial) === '') {
+                    $estado = 'pendiente';
+                } else {
+                    return;
+                }
             }
 
             $calificacion = ($estado === 'cumple' || $estado === 'no_aplica') ? $pesoEstandar : 0;

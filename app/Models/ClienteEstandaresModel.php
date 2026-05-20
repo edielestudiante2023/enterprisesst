@@ -120,9 +120,20 @@ class ClienteEstandaresModel extends Model
             }
         }
 
-        // Calcular porcentaje (solo sobre los que aplican)
-        $resumen['porcentaje_cumplimiento'] = $resumen['total'] > 0
-            ? round(($resumen['cumple'] / $resumen['total']) * 100, 2)
+        // Porcentaje oficial Res. 0312/2019 (ponderado): NO APLICA cuenta como
+        // cumplido y el denominador es el total de pesos. Coincide con /listEvaluaciones.
+        $db = \Config\Database::connect();
+        $pond = $db->query("
+            SELECT
+                SUM(CASE WHEN ce.estado IN ('cumple', 'no_aplica') THEN em.peso_porcentual ELSE 0 END) as peso_ganado,
+                SUM(em.peso_porcentual) as peso_total
+            FROM tbl_cliente_estandares ce
+            JOIN tbl_estandares_minimos em ON em.id_estandar = ce.id_estandar
+            WHERE ce.id_cliente = ?
+        ", [$idCliente])->getRowArray();
+
+        $resumen['porcentaje_cumplimiento'] = ($pond && (float) $pond['peso_total'] > 0)
+            ? round(((float) $pond['peso_ganado'] / (float) $pond['peso_total']) * 100, 2)
             : 0;
 
         return $resumen;

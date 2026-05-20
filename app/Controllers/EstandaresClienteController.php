@@ -80,11 +80,13 @@ class EstandaresClienteController extends Controller
     {
         $db = \Config\Database::connect();
 
-        // Calcular usando query directo en lugar de SP
+        // Puntaje oficial Res. 0312/2019: NO APLICA cuenta como cumplido y el
+        // denominador es el total de pesos. Misma formula que /listEvaluaciones
+        // (puntaje_cuantitativo / valor) para que ambas vistas coincidan.
         $query = $db->query("
             SELECT
-                SUM(CASE WHEN ce.estado = 'cumple' THEN em.peso_porcentual ELSE 0 END) as peso_cumplido,
-                SUM(CASE WHEN ce.estado != 'no_aplica' THEN em.peso_porcentual ELSE 0 END) as peso_total
+                SUM(CASE WHEN ce.estado IN ('cumple', 'no_aplica') THEN em.peso_porcentual ELSE 0 END) as peso_ganado,
+                SUM(em.peso_porcentual) as peso_total
             FROM tbl_cliente_estandares ce
             JOIN tbl_estandares_minimos em ON em.id_estandar = ce.id_estandar
             WHERE ce.id_cliente = ?
@@ -93,7 +95,7 @@ class EstandaresClienteController extends Controller
         $result = $query->getRowArray();
 
         if ($result && $result['peso_total'] > 0) {
-            return round(($result['peso_cumplido'] / $result['peso_total']) * 100, 2);
+            return round(($result['peso_ganado'] / $result['peso_total']) * 100, 2);
         }
 
         return 0.0;
