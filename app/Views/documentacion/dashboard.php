@@ -468,10 +468,91 @@
         </div>
     </div>
 
+    <!-- Modal Sugerencias de actividades (IA) -->
+    <div class="modal fade" id="modalSugerenciasIA" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-stars me-1"></i>Sugerencias de actividades (IA)</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small mb-1">Numeral: <strong id="iaNumeralTitulo"></strong></p>
+            <p class="text-muted small mb-2">Generadas por IA segun el contexto del cliente. Marca las que quieras agregar al Plan de Trabajo (PTA).</p>
+            <div id="iaListaSugerencias"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" id="btnAgregarPta" onclick="agregarSeleccionadasAlPta()" disabled><i class="bi bi-plus-circle me-1"></i>Agregar al PTA</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const idCliente = <?= $cliente['id_cliente'] ?>;
+
+        // ============ Sugerencias de actividades (IA) ============
+        const _ptaInsertUrl = '<?= base_url('pta-cliente-nueva/insertAiActivity') ?>';
+        let _iaCtx = { codigo: '', nombre: '', phva: '' };
+
+        function abrirSugerenciasIA(btn) {
+            _iaCtx = { codigo: btn.dataset.codigo, nombre: btn.dataset.nombre, phva: btn.dataset.phva };
+            document.getElementById('iaNumeralTitulo').textContent = _iaCtx.codigo + ' · ' + _iaCtx.nombre;
+            document.getElementById('iaListaSugerencias').innerHTML = '<div class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Consultando a la IA...</div>';
+            document.getElementById('btnAgregarPta').disabled = true;
+            new bootstrap.Modal(document.getElementById('modalSugerenciasIA')).show();
+
+            const fd = new FormData();
+            fd.append('codigo', _iaCtx.codigo);
+            fd.append('nombre', _iaCtx.nombre);
+            fetch(docBaseUrl + '/sugerir-actividades/' + idCliente, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
+              .then(r => r.json())
+              .then(data => {
+                if (!data.ok) {
+                    document.getElementById('iaListaSugerencias').innerHTML = '<div class="alert alert-danger mb-0">' + (data.error || 'Error') + '</div>';
+                    return;
+                }
+                let html = '<div class="list-group">';
+                data.actividades.forEach(a => {
+                    html += '<label class="list-group-item">'
+                      + '<input class="form-check-input me-2 chk-ia" type="checkbox" checked data-actividad="' + encodeURIComponent(a.actividad) + '">'
+                      + '<strong>' + a.actividad + '</strong>'
+                      + (a.descripcion ? '<br><small class="text-muted">' + a.descripcion + '</small>' : '')
+                      + (a.fuente_legal ? '<br><small><span class="badge bg-light text-dark border">' + a.fuente_legal + '</span></small>' : '')
+                      + (a.evidencia ? '<br><small class="text-success"><i class="bi bi-paperclip"></i> Evidencia: ' + a.evidencia + '</small>' : '')
+                      + '</label>';
+                });
+                html += '</div>';
+                document.getElementById('iaListaSugerencias').innerHTML = html;
+                document.getElementById('btnAgregarPta').disabled = false;
+              })
+              .catch(() => { document.getElementById('iaListaSugerencias').innerHTML = '<div class="alert alert-danger mb-0">Error de conexion</div>'; });
+        }
+
+        function agregarSeleccionadasAlPta() {
+            const checks = Array.from(document.querySelectorAll('.chk-ia:checked'));
+            if (checks.length === 0) { Swal.fire('Atencion', 'Selecciona al menos una actividad', 'warning'); return; }
+            const btn = document.getElementById('btnAgregarPta'); btn.disabled = true;
+            const calls = checks.map(c => {
+                const fd = new FormData();
+                fd.append('id_cliente', idCliente);
+                fd.append('phva', _iaCtx.phva);
+                fd.append('numeral', _iaCtx.codigo);
+                fd.append('actividad', decodeURIComponent(c.dataset.actividad));
+                return fetch(_ptaInsertUrl, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
+                    .then(r => r.json()).catch(() => ({ success: false }));
+            });
+            Promise.all(calls).then(results => {
+                const ok = results.filter(r => r && r.success).length;
+                const inst = bootstrap.Modal.getInstance(document.getElementById('modalSugerenciasIA'));
+                if (inst) inst.hide();
+                btn.disabled = false;
+                Swal.fire({ icon: 'success', title: 'Agregadas al PTA', text: ok + ' actividad(es) agregada(s) al Plan de Trabajo.', confirmButtonText: 'Listo' });
+            });
+        }
 
         // ============ Agregar carpeta de otro estandar ============
         const docBaseUrl = '<?= rtrim(base_url('documentacion'), '/') ?>';
@@ -815,6 +896,19 @@ function renderCarpetasJerarquicas($carpetas, $idCliente, $nivel = 0) {
         $html .= '<a href="' . base_url('documentacion/carpeta/' . $folderId) . '" class="folder-name" onclick="event.stopPropagation();" target="_blank">';
         $html .= esc($carpeta['nombre']);
         $html .= '</a>';
+
+        // Boton "Sugerir actividades (IA)" solo en carpetas de estandar (numerales)
+        if (($carpeta['tipo'] ?? '') === 'estandar' && !empty($carpeta['codigo'])) {
+            $cod = $carpeta['codigo'];
+            $phvaLetra = ['1' => 'P', '2' => 'H', '3' => 'V', '4' => 'A'][substr($cod, 0, 1)] ?? 'P';
+            $html .= '<button type="button" title="Sugerir actividades con IA"'
+                  . ' onclick="event.stopPropagation(); abrirSugerenciasIA(this);"'
+                  . ' data-codigo="' . esc($cod, 'attr') . '"'
+                  . ' data-nombre="' . esc($carpeta['nombre'], 'attr') . '"'
+                  . ' data-phva="' . $phvaLetra . '"'
+                  . ' style="border:1px solid #6f42c1;color:#6f42c1;background:#fff;border-radius:4px;font-size:11px;font-weight:600;padding:1px 7px;margin-left:8px;cursor:pointer;white-space:nowrap;">'
+                  . '<i class="bi bi-stars"></i> IA</button>';
+        }
 
         // Stats badges
         if ($stats['total'] > 0) {

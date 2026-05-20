@@ -758,6 +758,8 @@ $routes->get('/documentacion/carpeta/(:num)', 'DocumentacionController::carpeta/
 $routes->get('/documentacion/estandares-disponibles/(:num)', 'DocumentacionController::estandaresDisponibles/$1');
 $routes->post('/documentacion/agregar-carpeta-manual/(:num)', 'DocumentacionController::agregarCarpetaManual/$1');
 $routes->post('/documentacion/eliminar-carpeta-manual/(:num)', 'DocumentacionController::eliminarCarpetaManual/$1');
+// Sugerencia de actividades con IA (Anthropic) para un numeral
+$routes->post('/documentacion/sugerir-actividades/(:num)', 'DocumentacionController::sugerirActividades/$1');
 
 // Vinculos carpeta <-> reportList (referencias sin duplicar archivo)
 $routes->get('/documentacion/vinculo/reportes-disponibles/(:num)', 'VinculoReporteController::reportesDisponibles/$1');

@@ -1444,4 +1444,38 @@ class DocumentacionController extends Controller
             'message' => $ok ? 'Carpeta eliminada' : 'No se pudo eliminar (solo aplica a carpetas agregadas manualmente)',
         ]);
     }
+
+    /**
+     * Sugiere actividades (IA Anthropic) para cumplir un numeral, leyendo el contexto del cliente (AJAX).
+     */
+    public function sugerirActividades($idCliente)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+
+        $codigo = trim((string) $this->request->getPost('codigo'));
+        if ($codigo === '') {
+            return $this->response->setJSON(['ok' => false, 'error' => 'Numeral requerido']);
+        }
+
+        $cliente = $this->clienteModel->find($idCliente);
+        if (!$cliente) {
+            return $this->response->setJSON(['ok' => false, 'error' => 'Cliente no encontrado']);
+        }
+
+        $contexto = $this->contextoModel->getByCliente($idCliente) ?: [];
+
+        $estandar = \Config\Database::connect()
+            ->table('tbl_estandares_minimos')
+            ->where('item', $codigo)
+            ->get()->getRowArray();
+        if (!$estandar) {
+            // Fallback minimo si el numeral no esta en el catalogo (carpeta personalizada)
+            $estandar = ['item' => $codigo, 'nombre' => $this->request->getPost('nombre') ?: $codigo];
+        }
+
+        $servicio = new \App\Services\SugerenciaActividadesIaService();
+        return $this->response->setJSON($servicio->sugerir($cliente, $contexto, $estandar));
+    }
 }
