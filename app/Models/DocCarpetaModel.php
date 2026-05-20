@@ -12,7 +12,7 @@ class DocCarpetaModel extends Model
     protected $primaryKey = 'id_carpeta';
     protected $allowedFields = [
         'id_cliente', 'id_carpeta_padre', 'nombre', 'codigo', 'orden',
-        'tipo', 'icono', 'color', 'id_estandar'
+        'tipo', 'icono', 'color', 'id_estandar', 'es_manual'
     ];
 
     protected $returnType = 'array';
@@ -29,6 +29,21 @@ class DocCarpetaModel extends Model
     {
         $db = \Config\Database::connect();
 
+        // Capturar los estandares agregados manualmente (de otro nivel) ANTES de
+        // que el SP borre y recree la estructura, para re-crearlos despues y que
+        // no se pierdan al "Regenerar estructura".
+        $estandaresManuales = [];
+        if ($db->fieldExists('es_manual', 'tbl_doc_carpetas')) {
+            $filas = $db->table('tbl_doc_carpetas')
+                ->select('id_estandar')
+                ->distinct()
+                ->where('id_cliente', $idCliente)
+                ->where('es_manual', 1)
+                ->where('id_estandar IS NOT NULL')
+                ->get()->getResultArray();
+            $estandaresManuales = array_column($filas, 'id_estandar');
+        }
+
         // Usar el SP que respeta el nivel de estándares
         $query = $db->query("CALL sp_generar_carpetas_por_nivel(?, ?, ?)", [$idCliente, $anio, $nivelEstandares]);
         $result = $query->getRowArray();
@@ -41,7 +56,156 @@ class DocCarpetaModel extends Model
             $db->connID->store_result();
         }
 
+        // Re-crear las carpetas manuales sobre la estructura recien generada
+        foreach ($estandaresManuales as $idEstandar) {
+            $this->agregarCarpetaManual($idCliente, (int) $idEstandar, $anio);
+        }
+
         return $result['id_carpeta_raiz'] ?? 0;
+    }
+
+    /**
+     * Lista los estandares del catalogo maestro que el cliente AUN no tiene como
+     * carpeta (para el modal "Agregar carpeta de otro estandar").
+     */
+    public function getEstandaresDisponiblesParaAgregar(int $idCliente): array
+    {
+        $db = \Config\Database::connect();
+
+        $existentes = $db->table('tbl_doc_carpetas')
+            ->select('codigo')
+            ->where('id_cliente', $idCliente)
+            ->where('codigo IS NOT NULL')
+            ->get()->getResultArray();
+        $codigos = array_values(array_filter(array_column($existentes, 'codigo')));
+
+        $builder = $db->table('tbl_estandares_minimos')
+            ->select('id_estandar, item, nombre, ciclo_phva, categoria_nombre, aplica_7, aplica_21, aplica_60')
+            ->orderBy('item', 'ASC');
+        if (!empty($codigos)) {
+            $builder->whereNotIn('item', $codigos);
+        }
+        return $builder->get()->getResultArray();
+    }
+
+    /**
+     * Lista las carpetas que el cliente agrego manualmente (para gestionarlas).
+     */
+    public function getCarpetasManuales(int $idCliente): array
+    {
+        $db = \Config\Database::connect();
+        if (!$db->fieldExists('es_manual', 'tbl_doc_carpetas')) {
+            return [];
+        }
+        return $db->table('tbl_doc_carpetas')
+            ->select('id_carpeta, codigo, nombre')
+            ->where('id_cliente', $idCliente)
+            ->where('es_manual', 1)
+            ->orderBy('codigo', 'ASC')
+            ->get()->getResultArray();
+    }
+
+    /**
+     * Agrega manualmente una carpeta de un estandar (de cualquier nivel) a la
+     * estructura del cliente, ubicandola bajo su ciclo PHVA correcto.
+     * Marca es_manual=1 para que sobreviva a "Regenerar estructura".
+     *
+     * @return array ['success'=>bool, 'message'=>string, 'id_carpeta'=>int|null]
+     */
+    public function agregarCarpetaManual(int $idCliente, int $idEstandar, ?int $anio = null): array
+    {
+        $db = \Config\Database::connect();
+        $anio = $anio ?: (int) date('Y');
+
+        // Estandar del catalogo maestro
+        $est = $db->table('tbl_estandares_minimos')
+            ->where('id_estandar', $idEstandar)
+            ->get()->getRowArray();
+        if (!$est) {
+            return ['success' => false, 'message' => 'Estandar no encontrado', 'id_carpeta' => null];
+        }
+
+        // Raiz del año (fallback: la raiz mas reciente del cliente)
+        $root = $db->table('tbl_doc_carpetas')
+            ->where('id_cliente', $idCliente)
+            ->where('id_carpeta_padre IS NULL')
+            ->like('nombre', 'SG-SST ' . $anio, 'after')
+            ->get()->getRowArray();
+        if (!$root) {
+            $root = $db->table('tbl_doc_carpetas')
+                ->where('id_cliente', $idCliente)
+                ->where('id_carpeta_padre IS NULL')
+                ->orderBy('id_carpeta', 'DESC')
+                ->get()->getRowArray();
+        }
+        if (!$root) {
+            return ['success' => false, 'message' => 'El cliente no tiene estructura de carpetas. Genera la estructura primero.', 'id_carpeta' => null];
+        }
+
+        // Carpeta PHVA destino segun el ciclo del estandar
+        $mapPhva = ['PLANEAR' => '1', 'HACER' => '2', 'VERIFICAR' => '3', 'ACTUAR' => '4'];
+        $phvaCodigo = $mapPhva[strtoupper(trim($est['ciclo_phva'] ?? ''))] ?? '1';
+        $phva = $db->table('tbl_doc_carpetas')
+            ->where('id_cliente', $idCliente)
+            ->where('id_carpeta_padre', $root['id_carpeta'])
+            ->where('codigo', $phvaCodigo)
+            ->get()->getRowArray();
+        if (!$phva) {
+            return ['success' => false, 'message' => 'No se encontro la carpeta PHVA destino', 'id_carpeta' => null];
+        }
+
+        // Evitar duplicado bajo el mismo PHVA
+        $dup = $db->table('tbl_doc_carpetas')
+            ->where('id_cliente', $idCliente)
+            ->where('id_carpeta_padre', $phva['id_carpeta'])
+            ->where('codigo', $est['item'])
+            ->countAllResults();
+        if ($dup > 0) {
+            return ['success' => false, 'message' => 'La carpeta ' . $est['item'] . ' ya existe en la estructura', 'id_carpeta' => null, 'duplicado' => true];
+        }
+
+        // Orden: al final de los hermanos
+        $maxOrden = (int) ($db->table('tbl_doc_carpetas')
+            ->selectMax('orden')
+            ->where('id_carpeta_padre', $phva['id_carpeta'])
+            ->get()->getRow('orden') ?? 0);
+
+        $datos = [
+            'id_cliente'       => $idCliente,
+            'id_carpeta_padre' => $phva['id_carpeta'],
+            'nombre'           => $est['item'] . '. ' . $est['nombre'],
+            'codigo'           => $est['item'],
+            'orden'            => $maxOrden + 1,
+            'tipo'             => 'estandar',
+            'icono'            => 'star-fill',
+            'id_estandar'      => $idEstandar,
+        ];
+        if ($db->fieldExists('es_manual', 'tbl_doc_carpetas')) {
+            $datos['es_manual'] = 1;
+        }
+        $db->table('tbl_doc_carpetas')->insert($datos);
+
+        return ['success' => true, 'message' => 'Carpeta ' . $est['item'] . ' agregada', 'id_carpeta' => $db->insertID()];
+    }
+
+    /**
+     * Elimina una carpeta SOLO si fue agregada manualmente (es_manual=1).
+     */
+    public function eliminarCarpetaManual(int $idCarpeta): bool
+    {
+        $db = \Config\Database::connect();
+        if (!$db->fieldExists('es_manual', 'tbl_doc_carpetas')) {
+            return false;
+        }
+        $carpeta = $db->table('tbl_doc_carpetas')
+            ->where('id_carpeta', $idCarpeta)
+            ->where('es_manual', 1)
+            ->get()->getRowArray();
+        if (!$carpeta) {
+            return false;
+        }
+        $db->table('tbl_doc_carpetas')->where('id_carpeta', $idCarpeta)->delete();
+        return true;
     }
 
     /**

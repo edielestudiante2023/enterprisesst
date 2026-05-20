@@ -754,6 +754,11 @@ $routes->get('/documentacion/(:num)', 'DocumentacionController::index/$1');
 $routes->get('/documentacion/seleccionar-cliente', 'DocumentacionController::seleccionarCliente');
 $routes->get('/documentacion/carpeta/(:num)', 'DocumentacionController::carpeta/$1');
 
+// Agregar/gestionar carpetas manuales de estandares de otro nivel
+$routes->get('/documentacion/estandares-disponibles/(:num)', 'DocumentacionController::estandaresDisponibles/$1');
+$routes->post('/documentacion/agregar-carpeta-manual/(:num)', 'DocumentacionController::agregarCarpetaManual/$1');
+$routes->post('/documentacion/eliminar-carpeta-manual/(:num)', 'DocumentacionController::eliminarCarpetaManual/$1');
+
 // Vinculos carpeta <-> reportList (referencias sin duplicar archivo)
 $routes->get('/documentacion/vinculo/reportes-disponibles/(:num)', 'VinculoReporteController::reportesDisponibles/$1');
 $routes->post('/documentacion/vinculo/agregar', 'VinculoReporteController::agregar');

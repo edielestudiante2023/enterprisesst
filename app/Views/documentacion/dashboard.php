@@ -306,6 +306,9 @@
                                 <button class="btn btn-outline-secondary btn-sm btn-expand-all" onclick="collapseAll()">
                                     <i class="bi bi-arrows-collapse me-1"></i>Colapsar todo
                                 </button>
+                                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAgregarCarpeta">
+                                    <i class="bi bi-folder-symlink me-1"></i>Agregar carpeta de otro estandar
+                                </button>
                                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalGenerarEstructura">
                                     <i class="bi bi-folder-plus me-1"></i>Generar Estructura
                                 </button>
@@ -424,10 +427,142 @@
         </div>
     </div>
 
+    <!-- Modal Agregar carpeta de otro estandar -->
+    <div class="modal fade" id="modalAgregarCarpeta" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-folder-symlink me-1"></i>Agregar carpeta de otro estandar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Agrega a este cliente una carpeta de un estandar que normalmente corresponde a otro nivel
+                        (ej. <strong>1.1.5 Trabajadores de alto riesgo</strong>, propio de 60 estandares).
+                        Se ubica en su ciclo PHVA y <strong>se conserva aunque regeneres la estructura</strong>.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Estandar a agregar</label>
+                        <select id="selectEstandarAgregar" class="form-select">
+                            <option value="">Cargando...</option>
+                        </select>
+                    </div>
+                    <div class="text-end mb-3">
+                        <button type="button" class="btn btn-primary btn-sm" id="btnConfirmarAgregarCarpeta">
+                            <i class="bi bi-plus-circle me-1"></i>Agregar carpeta
+                        </button>
+                    </div>
+
+                    <hr>
+                    <h6 class="text-muted"><i class="bi bi-list-check me-1"></i>Carpetas agregadas manualmente</h6>
+                    <ul class="list-group list-group-flush" id="listaCarpetasManuales">
+                        <li class="list-group-item text-muted small">Cargando...</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const idCliente = <?= $cliente['id_cliente'] ?>;
+
+        // ============ Agregar carpeta de otro estandar ============
+        const docBaseUrl = '<?= rtrim(base_url('documentacion'), '/') ?>';
+        const modalAgregarCarpetaEl = document.getElementById('modalAgregarCarpeta');
+
+        function nivelEstandarTexto(e) {
+            if (parseInt(e.aplica_7) === 1) return '7/21/60';
+            if (parseInt(e.aplica_21) === 1) return '21/60';
+            return 'Solo 60';
+        }
+
+        function cargarEstandaresDisponibles() {
+            const sel = document.getElementById('selectEstandarAgregar');
+            const lista = document.getElementById('listaCarpetasManuales');
+            sel.innerHTML = '<option value="">Cargando...</option>';
+            lista.innerHTML = '<li class="list-group-item text-muted small">Cargando...</li>';
+
+            fetch(`${docBaseUrl}/estandares-disponibles/${idCliente}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.estandares || data.estandares.length === 0) {
+                        sel.innerHTML = '<option value="">No hay estandares disponibles para agregar</option>';
+                    } else {
+                        sel.innerHTML = '<option value="">-- Selecciona un estandar --</option>' +
+                            data.estandares.map(e =>
+                                `<option value="${e.id_estandar}">${e.item} - ${e.nombre} (Nivel: ${nivelEstandarTexto(e)})</option>`
+                            ).join('');
+                    }
+                    if (!data.manuales || data.manuales.length === 0) {
+                        lista.innerHTML = '<li class="list-group-item text-muted small">Aun no has agregado carpetas manuales.</li>';
+                    } else {
+                        lista.innerHTML = data.manuales.map(m =>
+                            `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><span class="badge bg-warning text-dark me-1">manual</span>${m.codigo} - ${m.nombre}</span>
+                                <button class="btn btn-outline-danger btn-sm btn-quitar-carpeta" data-id="${m.id_carpeta}" title="Quitar"><i class="bi bi-trash"></i></button>
+                             </li>`
+                        ).join('');
+                    }
+                })
+                .catch(() => {
+                    sel.innerHTML = '<option value="">Error al cargar</option>';
+                    lista.innerHTML = '<li class="list-group-item text-danger small">Error al cargar.</li>';
+                });
+        }
+
+        if (modalAgregarCarpetaEl) {
+            modalAgregarCarpetaEl.addEventListener('show.bs.modal', cargarEstandaresDisponibles);
+        }
+
+        document.getElementById('btnConfirmarAgregarCarpeta')?.addEventListener('click', function() {
+            const sel = document.getElementById('selectEstandarAgregar');
+            const idEstandar = sel.value;
+            if (!idEstandar) { Swal.fire('Atencion', 'Selecciona un estandar', 'warning'); return; }
+            const btn = this; btn.disabled = true;
+            const fd = new FormData(); fd.append('id_estandar', idEstandar);
+            fetch(`${docBaseUrl}/agregar-carpeta-manual/${idCliente}`, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Listo', text: data.message, timer: 1500, showConfirmButton: false })
+                            .then(() => location.reload());
+                    } else {
+                        Swal.fire('No se pudo', data.message || 'Error', 'error');
+                    }
+                })
+                .catch(() => { btn.disabled = false; Swal.fire('Error', 'Error de conexion', 'error'); });
+        });
+
+        document.getElementById('listaCarpetasManuales')?.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-quitar-carpeta');
+            if (!btn) return;
+            const idCarpeta = btn.dataset.id;
+            Swal.fire({
+                title: 'Quitar carpeta?',
+                text: 'Se eliminara esta carpeta agregada manualmente.',
+                icon: 'warning', showCancelButton: true, confirmButtonText: 'Si, quitar', cancelButtonText: 'Cancelar', confirmButtonColor: '#d33'
+            }).then(res => {
+                if (!res.isConfirmed) return;
+                fetch(`${docBaseUrl}/eliminar-carpeta-manual/${idCarpeta}`, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ icon: 'success', title: 'Eliminada', timer: 1200, showConfirmButton: false }).then(() => location.reload());
+                        } else {
+                            Swal.fire('No se pudo', data.message || 'Error', 'error');
+                        }
+                    })
+                    .catch(() => Swal.fire('Error', 'Error de conexion', 'error'));
+            });
+        });
 
         // Toggle de carpetas
         function toggleFolder(folderId) {

@@ -1392,4 +1392,56 @@ class DocumentacionController extends Controller
 
         return $this->response->setJSON($arbol);
     }
+
+    /**
+     * Lista estandares disponibles para agregar como carpeta + las carpetas
+     * ya agregadas manualmente (AJAX, para el modal "Agregar carpeta de otro estandar").
+     */
+    public function estandaresDisponibles($idCliente)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'estandares' => $this->carpetaModel->getEstandaresDisponiblesParaAgregar((int) $idCliente),
+            'manuales'   => $this->carpetaModel->getCarpetasManuales((int) $idCliente),
+        ]);
+    }
+
+    /**
+     * Agrega manualmente una carpeta de un estandar de otro nivel (AJAX).
+     */
+    public function agregarCarpetaManual($idCliente)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+
+        $idEstandar = (int) $this->request->getPost('id_estandar');
+        $anio       = (int) ($this->request->getPost('anio') ?: date('Y'));
+        if (!$idEstandar) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Estandar requerido']);
+        }
+
+        $res = $this->carpetaModel->agregarCarpetaManual((int) $idCliente, $idEstandar, $anio);
+        return $this->response->setJSON($res);
+    }
+
+    /**
+     * Elimina una carpeta agregada manualmente (AJAX). Solo borra es_manual=1.
+     */
+    public function eliminarCarpetaManual($idCarpeta)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+
+        $ok = $this->carpetaModel->eliminarCarpetaManual((int) $idCarpeta);
+        return $this->response->setJSON([
+            'success' => $ok,
+            'message' => $ok ? 'Carpeta eliminada' : 'No se pudo eliminar (solo aplica a carpetas agregadas manualmente)',
+        ]);
+    }
 }
