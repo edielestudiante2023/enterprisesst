@@ -328,44 +328,65 @@
         const listaImp = document.getElementById('listaImportar');
         const labelComite = { COPASST: 'COPASST', COCOLAB: 'Comité de Convivencia', BRIGADA: 'Brigada de Emergencias', VIGIA: 'Vigía SST' };
 
+        function renderGrupoImp(items, chkClass, idField, esCandidato) {
+            const grupos = {};
+            items.forEach(m => { (grupos[m.tipo_comite] = grupos[m.tipo_comite] || []).push(m); });
+            let html = '';
+            Object.keys(grupos).forEach(tc => {
+                html += '<h6 class="mt-2 mb-1 text-primary">' + (labelComite[tc] || tc) + '</h6><div class="list-group mb-2">';
+                grupos[tc].forEach(m => {
+                    const dis = m.ya_importado;
+                    const doc = esCandidato ? (m.documento_identidad || '') : (m.numero_documento || '');
+                    const badge = esCandidato ? (m.estado || '') : 'miembro';
+                    html += '<label class="list-group-item d-flex align-items-center ' + (dis ? 'text-muted' : '') + '">'
+                      + '<input class="form-check-input me-2 ' + chkClass + '" type="checkbox" value="' + m[idField] + '" ' + (dis ? 'disabled' : 'checked') + '>'
+                      + '<span class="flex-grow-1"><strong>' + (m.nombre_completo || '') + '</strong> <small class="text-muted">(' + doc + ')</small><br>'
+                      + '<small>' + (m.tipo_rol_label || '') + (m.cargo ? ' &middot; ' + m.cargo : '') + '</small></span>'
+                      + (dis ? '<span class="badge bg-secondary">ya importado</span>' : '<span class="badge bg-success text-uppercase">' + badge + '</span>')
+                      + '</label>';
+                });
+                html += '</div>';
+            });
+            return html;
+        }
+
         function cargarImportables() {
             listaImp.innerHTML = '<div class="text-muted">Cargando...</div>';
             fetch(_impBase + '/miembros-importables', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
               .then(r => r.json())
               .then(data => {
-                const ms = (data.miembros || []);
-                if (ms.length === 0) { listaImp.innerHTML = '<div class="alert alert-info mb-0">No hay miembros elegidos/designados en los comités para importar.</div>'; return; }
-                const grupos = {};
-                ms.forEach(m => { (grupos[m.tipo_comite] = grupos[m.tipo_comite] || []).push(m); });
+                const cand = (data.miembros || []);
+                const com = (data.comite || []);
+                if (cand.length === 0 && com.length === 0) {
+                    listaImp.innerHTML = '<div class="alert alert-info mb-0">No hay miembros para importar (ni en comités conformados ni en procesos electorales).</div>';
+                    return;
+                }
                 let html = '';
-                Object.keys(grupos).forEach(tc => {
-                    html += '<h6 class="mt-3 mb-2 text-primary">' + (labelComite[tc] || tc) + '</h6><div class="list-group mb-2">';
-                    grupos[tc].forEach(m => {
-                        const dis = m.ya_importado;
-                        html += '<label class="list-group-item d-flex align-items-center ' + (dis ? 'text-muted' : '') + '">'
-                          + '<input class="form-check-input me-2 chk-imp" type="checkbox" value="' + m.id_candidato + '" ' + (dis ? 'disabled' : 'checked') + '>'
-                          + '<span class="flex-grow-1"><strong>' + (m.nombre_completo || '') + '</strong> <small class="text-muted">(' + (m.documento_identidad || '') + ')</small><br>'
-                          + '<small>' + (m.tipo_rol_label || '') + (m.cargo ? ' &middot; ' + m.cargo : '') + '</small></span>'
-                          + (dis ? '<span class="badge bg-secondary">ya importado</span>' : '<span class="badge bg-success text-uppercase">' + (m.estado || '') + '</span>')
-                          + '</label>';
-                    });
-                    html += '</div>';
-                });
+                if (com.length > 0) {
+                    html += '<div class="fw-bold text-uppercase small text-secondary mt-1 mb-1"><i class="bi bi-people-fill me-1"></i>Desde comités conformados (Actas)</div>';
+                    html += renderGrupoImp(com, 'chk-comite', 'id_miembro', false);
+                }
+                if (cand.length > 0) {
+                    html += '<div class="fw-bold text-uppercase small text-secondary mt-3 mb-1"><i class="bi bi-check2-square me-1"></i>Desde procesos electorales</div>';
+                    html += renderGrupoImp(cand, 'chk-imp', 'id_candidato', true);
+                }
                 listaImp.innerHTML = html;
               })
               .catch(() => { listaImp.innerHTML = '<div class="alert alert-danger mb-0">Error al cargar.</div>'; });
         }
 
         if (modalImp) modalImp.addEventListener('show.bs.modal', cargarImportables);
-        document.getElementById('btnSelTodos')?.addEventListener('click', () => document.querySelectorAll('.chk-imp:not(:disabled)').forEach(c => c.checked = true));
-        document.getElementById('btnSelNinguno')?.addEventListener('click', () => document.querySelectorAll('.chk-imp').forEach(c => c.checked = false));
+        document.getElementById('btnSelTodos')?.addEventListener('click', () => document.querySelectorAll('.chk-imp:not(:disabled), .chk-comite:not(:disabled)').forEach(c => c.checked = true));
+        document.getElementById('btnSelNinguno')?.addEventListener('click', () => document.querySelectorAll('.chk-imp, .chk-comite').forEach(c => c.checked = false));
 
         document.getElementById('btnConfirmarImportar')?.addEventListener('click', function() {
             const ids = Array.from(document.querySelectorAll('.chk-imp:checked')).map(c => c.value);
-            if (ids.length === 0) { Swal.fire('Atención', 'Selecciona al menos un miembro', 'warning'); return; }
+            const idsMiembro = Array.from(document.querySelectorAll('.chk-comite:checked')).map(c => c.value);
+            if (ids.length === 0 && idsMiembro.length === 0) { Swal.fire('Atención', 'Selecciona al menos un miembro', 'warning'); return; }
             const btn = this; btn.disabled = true;
             const fd = new FormData();
             ids.forEach(id => fd.append('ids[]', id));
+            idsMiembro.forEach(id => fd.append('ids_miembro[]', id));
             fetch(_impBase + '/importar-miembros', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
               .then(r => r.json())
               .then(data => {

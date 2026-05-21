@@ -125,6 +125,9 @@
                         <button type="button" class="btn btn-sm btn-outline-success" onclick="importarMiembrosComite()" title="Importar miembros desde Comites Elecciones">
                             <i class="bi bi-download me-1"></i>Importar desde Elecciones
                         </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="importarResponsablesAComite()" title="Importar desde Responsables SST">
+                            <i class="bi bi-people me-1"></i>Importar desde Responsables
+                        </button>
                         <a href="<?= base_url('actas/comite/' . $comite['id_comite'] . '/nuevo-miembro') ?>" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-plus-lg me-1"></i>Agregar
                         </a>
@@ -474,6 +477,54 @@ function reenviarAcceso(idMiembro, nombre, email) {
         console.error('Error:', error);
         alert('Error de conexion');
     });
+}
+
+function importarResponsablesAComite() {
+    const base = '<?= base_url("actas/comite/" . $comite["id_comite"]) ?>';
+    Swal.fire({ title: 'Cargando responsables...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    fetch(base + '/responsables-importables', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) { Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Error' }); return; }
+        const rs = data.responsables || [];
+        if (rs.length === 0) {
+            Swal.fire({ icon: 'info', title: 'Sin responsables', text: 'No hay responsables SST de este comité para importar (o ya son miembros). Regístralos en Responsables SST primero.' });
+            return;
+        }
+        let html = '<div class="text-start">';
+        rs.forEach(r => {
+            const dis = r.ya_miembro;
+            html += '<div class="form-check mb-1">'
+              + '<input class="form-check-input rsp-chk" type="checkbox" value="' + r.id_responsable + '" ' + (dis ? 'disabled' : 'checked') + ' id="rsp' + r.id_responsable + '">'
+              + '<label class="form-check-label" for="rsp' + r.id_responsable + '"><strong>' + r.nombre_completo + '</strong> <small class="text-muted">(' + (r.numero_documento || '') + ')</small><br>'
+              + '<small>' + (r.tipo_rol_label || '') + ' &rarr; ' + (r.rol_comite || '') + (r.cargo ? ' &middot; ' + r.cargo : '') + '</small>'
+              + (dis ? ' <span class="badge bg-secondary">ya es miembro</span>' : '') + '</label></div>';
+        });
+        html += '</div>';
+        Swal.fire({
+            title: 'Importar desde Responsables SST',
+            html: html, icon: 'question', showCancelButton: true, confirmButtonColor: '#0dcaf0',
+            confirmButtonText: '<i class="bi bi-download me-1"></i> Importar', cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const ids = Array.from(document.querySelectorAll('.rsp-chk:checked')).map(c => c.value);
+                if (ids.length === 0) { Swal.showValidationMessage('Selecciona al menos uno'); return false; }
+                return ids;
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+            const fd = new FormData();
+            result.value.forEach(id => fd.append('ids[]', id));
+            Swal.fire({ title: 'Importando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            fetch(base + '/importar-responsables', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
+              .then(r => r.json())
+              .then(data => {
+                if (data.success) { Swal.fire({ icon: 'success', title: 'Listo', text: data.message }).then(() => location.reload()); }
+                else { Swal.fire({ icon: 'error', title: 'Error', text: data.message }); }
+              })
+              .catch(() => Swal.fire({ icon: 'error', title: 'Error de conexion', text: 'No se pudo importar' }));
+        });
+      })
+      .catch(() => Swal.fire({ icon: 'error', title: 'Error de conexion', text: 'No se pudo cargar' }));
 }
 
 function importarMiembrosComite() {

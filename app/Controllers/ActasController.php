@@ -159,6 +159,120 @@ class ActasController extends BaseController
     }
 
     /**
+     * Lista (AJAX) los responsables SST del cliente que pueden importarse como miembros de ESTE comité.
+     */
+    public function responsablesImportables(int $idComite)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+        $db = \Config\Database::connect();
+        $comite = $db->table('tbl_comites c')->select('c.id_cliente, c.id_tipo')->where('c.id_comite', $idComite)->get()->getRowArray();
+        if (!$comite) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Comité no encontrado']);
+        }
+        $idCliente = (int) $comite['id_cliente'];
+        $idTipo    = (int) $comite['id_tipo'];
+
+        $resps = $db->table('tbl_cliente_responsables_sst')
+            ->where('id_cliente', $idCliente)->where('activo', 1)
+            ->orderBy('nombre_completo', 'ASC')->get()->getResultArray();
+
+        $miem = $db->table('tbl_comite_miembros')->select('numero_documento')
+            ->where('id_comite', $idComite)->where('estado', 'activo')->get()->getResultArray();
+        $set = array_flip(array_map('strval', array_column($miem, 'numero_documento')));
+
+        $out = [];
+        foreach ($resps as $r) {
+            $map = \App\Models\ResponsableSSTModel::mapearMiembroDesdeTipoRol($r['tipo_rol']);
+            if (!$map || $map['id_tipo'] !== $idTipo) {
+                continue; // el responsable no corresponde a este tipo de comité
+            }
+            $out[] = [
+                'id_responsable'   => $r['id_responsable'],
+                'nombre_completo'  => $r['nombre_completo'],
+                'numero_documento' => $r['numero_documento'],
+                'cargo'            => $r['cargo'],
+                'tipo_rol_label'   => \App\Models\ResponsableSSTModel::TIPOS_ROL[$r['tipo_rol']] ?? $r['tipo_rol'],
+                'rol_comite'       => $map['rol_comite'],
+                'ya_miembro'       => isset($set[(string) $r['numero_documento']]),
+            ];
+        }
+        return $this->response->setJSON(['success' => true, 'responsables' => $out]);
+    }
+
+    /**
+     * Importa (AJAX) responsables SST seleccionados como miembros de ESTE comité.
+     */
+    public function importarResponsables(int $idComite)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+        $ids = $this->request->getPost('ids');
+        if (!is_array($ids) || empty($ids)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Selecciona al menos un responsable']);
+        }
+
+        $db = \Config\Database::connect();
+        $comite = $db->table('tbl_comites c')->select('c.id_cliente, c.id_tipo')->where('c.id_comite', $idComite)->get()->getRowArray();
+        if (!$comite) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Comité no encontrado']);
+        }
+        $idCliente = (int) $comite['id_cliente'];
+        $idTipo    = (int) $comite['id_tipo'];
+
+        $miem = $db->table('tbl_comite_miembros')->select('numero_documento')
+            ->where('id_comite', $idComite)->where('estado', 'activo')->get()->getResultArray();
+        $set = array_flip(array_map('strval', array_column($miem, 'numero_documento')));
+
+        $creados = 0;
+        $omitidos = 0;
+        foreach ($ids as $idr) {
+            $r = $db->table('tbl_cliente_responsables_sst')
+                ->where('id_responsable', (int) $idr)->where('id_cliente', $idCliente)->get()->getRowArray();
+            if (!$r) {
+                continue;
+            }
+            $map = \App\Models\ResponsableSSTModel::mapearMiembroDesdeTipoRol($r['tipo_rol']);
+            if (!$map || $map['id_tipo'] !== $idTipo) {
+                continue;
+            }
+            $doc = (string) $r['numero_documento'];
+            if (isset($set[$doc])) {
+                $omitidos++;
+                continue;
+            }
+            $this->miembroModel->insert([
+                'id_comite'        => $idComite,
+                'id_cliente'       => $idCliente,
+                'id_responsable'   => $r['id_responsable'],
+                'nombre_completo'  => $r['nombre_completo'],
+                'tipo_documento'   => $r['tipo_documento'] ?: 'CC',
+                'numero_documento' => $doc,
+                'cargo'            => $r['cargo'] ?? null,
+                'email'            => $r['email'] ?? null,
+                'telefono'         => $r['telefono'] ?? null,
+                'representacion'   => $map['representacion'],
+                'tipo_miembro'     => $map['tipo_miembro'],
+                'rol_comite'       => $map['rol_comite'],
+                'puede_crear_actas'  => 1,
+                'puede_cerrar_actas' => 1,
+                'fecha_ingreso'    => date('Y-m-d'),
+                'estado'           => 'activo',
+            ]);
+            $set[$doc] = true;
+            $creados++;
+        }
+        return $this->response->setJSON([
+            'success'  => true,
+            'creados'  => $creados,
+            'omitidos' => $omitidos,
+            'message'  => "Importados: {$creados}. Omitidos (ya eran miembros): {$omitidos}.",
+        ]);
+    }
+
+    /**
      * Formulario para crear nuevo comité
      */
     public function nuevoComite(int $idCliente)

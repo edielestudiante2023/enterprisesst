@@ -65,31 +65,50 @@ class ResponsablesSSTController extends BaseController
         }
         return $this->response->setJSON([
             'success'  => true,
-            'miembros' => $this->responsableModel->getMiembrosImportables($idCliente),
+            'miembros' => $this->responsableModel->getMiembrosImportables($idCliente),       // desde procesos electorales (candidatos)
+            'comite'   => $this->responsableModel->getMiembrosComiteImportables($idCliente),  // desde comites conformados (Actas)
         ]);
     }
 
     /**
-     * Importa (AJAX) los miembros de comites seleccionados como responsables.
+     * Importa (AJAX) los miembros seleccionados como responsables.
+     * Acepta ids[] (candidatos de proceso electoral) e ids_miembro[] (miembros de Actas).
      */
     public function importarMiembros(int $idCliente)
     {
         if (!$this->request->isAJAX()) {
             return $this->response->setStatusCode(403);
         }
-        $ids = $this->request->getPost('ids');
-        if (!is_array($ids) || empty($ids)) {
+        $ids        = $this->request->getPost('ids');
+        $idsMiembro = $this->request->getPost('ids_miembro');
+        $ids        = is_array($ids) ? $ids : [];
+        $idsMiembro = is_array($idsMiembro) ? $idsMiembro : [];
+
+        if (empty($ids) && empty($idsMiembro)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Selecciona al menos un miembro']);
         }
 
         $userId = session()->get('id_usuario') ?? session()->get('user_id');
-        $res = $this->responsableModel->importarMiembros($idCliente, $ids, $userId ? (int) $userId : null);
+        $uid = $userId ? (int) $userId : null;
+
+        $creados = 0;
+        $omitidos = 0;
+        if (!empty($ids)) {
+            $r = $this->responsableModel->importarMiembros($idCliente, $ids, $uid);
+            $creados += $r['creados'];
+            $omitidos += $r['omitidos'];
+        }
+        if (!empty($idsMiembro)) {
+            $r = $this->responsableModel->importarDesdeMiembrosComite($idCliente, $idsMiembro, $uid);
+            $creados += $r['creados'];
+            $omitidos += $r['omitidos'];
+        }
 
         return $this->response->setJSON([
             'success'  => true,
-            'creados'  => $res['creados'],
-            'omitidos' => $res['omitidos'],
-            'message'  => "Importados: {$res['creados']}. Omitidos (ya existian): {$res['omitidos']}.",
+            'creados'  => $creados,
+            'omitidos' => $omitidos,
+            'message'  => "Importados: {$creados}. Omitidos (ya existian): {$omitidos}.",
         ]);
     }
 
@@ -231,8 +250,11 @@ class ResponsablesSSTController extends BaseController
                 log_message('critical', "PASO 7: CREADO responsable ID {$nuevoIdResponsable}");
             }
 
-            // Sincronizar con tbl_miembros_comite si es rol de comité
-            $this->sincronizarMiembroComite($idCliente, $datos);
+            // NOTA: El auto-sync responsable->miembro (sincronizarMiembroComite) quedó
+            // deshabilitado: escribia en una tabla inexistente (tbl_miembros_comite) y nunca
+            // funciono. Se reemplazo por la importacion explicita bidireccional
+            // (boton "Importar desde Responsables SST" en /actas).
+            // $this->sincronizarMiembroComite($idCliente, $datos);
 
             // Crear usuario si se marcó la opción y hay email
             // El asesor externo (consultor) ya tiene su propio usuario - no crear duplicado

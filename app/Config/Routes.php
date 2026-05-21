@@ -1477,6 +1477,9 @@ $routes->post('/actas/comite/(:num)/actualizar-miembro/(:num)', 'ActasController
 $routes->post('/actas/miembro/(:num)/retirar', 'ActasController::retirarMiembro/$1');
 $routes->post('/actas/miembro/(:num)/reenviar-acceso', 'ActasController::reenviarAccesoMiembro/$1');
 $routes->post('/actas/comite/(:num)/importar-miembros', 'ActasController::importarMiembrosComite/$1');
+// Importar responsables SST como miembros del comite (Responsables -> Actas)
+$routes->get('/actas/comite/(:num)/responsables-importables', 'ActasController::responsablesImportables/$1');
+$routes->post('/actas/comite/(:num)/importar-responsables', 'ActasController::importarResponsables/$1');
 
 // Actas - Consultor
 $routes->get('/actas/comite/(:num)/preparar-reunion', 'ActasController::prepararReunion/$1');

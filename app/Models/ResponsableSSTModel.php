@@ -402,12 +402,161 @@ class ResponsableSSTModel extends Model
     }
 
     /**
+     * Deriva el tipo_rol de responsable a partir de un miembro de comite (tbl_comite_miembros).
+     * A diferencia del candidato, el miembro SI trae rol_comite (presidente/secretario), por lo
+     * que se mapean correctamente esos roles.
+     */
+    public static function mapearTipoRolDesdeMiembro(string $tipoComite, ?string $representacion, ?string $tipoMiembro, ?string $rolComite): string
+    {
+        $tc = strtoupper(trim($tipoComite));
+        $rol = strtolower(trim($rolComite ?? ''));
+        $esEmpleador = strtolower(trim($representacion ?? '')) === 'empleador';
+        $esSuplente  = strtolower(trim($tipoMiembro ?? '')) === 'suplente';
+
+        if ($tc === 'BRIGADA') return 'brigada_coordinador';
+        if ($tc === 'VIGIA')   return $esSuplente ? 'vigia_sst_suplente' : 'vigia_sst';
+
+        $prefijo = $tc === 'COPASST' ? 'copasst' : ($tc === 'COCOLAB' ? 'comite_convivencia' : null);
+        if ($prefijo === null) return 'otro';
+
+        if ($rol === 'presidente') return $prefijo . '_presidente';
+        if ($rol === 'secretario') return $prefijo . '_secretario';
+        if ($esEmpleador) return $esSuplente ? $prefijo . '_suplente_empleador' : $prefijo . '_representante_empleador';
+        return $esSuplente ? $prefijo . '_suplente_trabajadores' : $prefijo . '_representante_trabajadores';
+    }
+
+    /**
+     * Deriva los campos de miembro de comite a partir de un tipo_rol de responsable.
+     * Usado al importar Responsables -> Actas.
+     *
+     * @return array|null ['id_tipo'=>1|2|3, 'representacion'=>..., 'tipo_miembro'=>..., 'rol_comite'=>...]
+     *                    null si el tipo_rol no corresponde a un comite (ej. representante_legal).
+     */
+    public static function mapearMiembroDesdeTipoRol(string $tipoRol): ?array
+    {
+        $tr = strtolower(trim($tipoRol));
+        if (str_starts_with($tr, 'copasst_'))            $idTipo = 1;
+        elseif (str_starts_with($tr, 'comite_convivencia_')) $idTipo = 2;
+        elseif (str_starts_with($tr, 'brigada_'))        $idTipo = 3;
+        else return null; // representante_legal, responsable_sgsst, vigia, asesor, otro -> no son miembros de comite
+
+        $rolComite = str_contains($tr, 'presidente') ? 'presidente'
+                   : (str_contains($tr, 'secretario') ? 'secretario' : 'miembro');
+        // representacion: empleador si lo dice o si es presidente; trabajador si lo dice; default empleador
+        if (str_contains($tr, 'empleador') || $rolComite === 'presidente') {
+            $representacion = 'empleador';
+        } elseif (str_contains($tr, 'trabajador') || $rolComite === 'secretario') {
+            $representacion = 'trabajador';
+        } else {
+            $representacion = 'empleador';
+        }
+        $tipoMiembro = str_contains($tr, 'suplente') ? 'suplente' : 'principal';
+
+        return ['id_tipo' => $idTipo, 'representacion' => $representacion, 'tipo_miembro' => $tipoMiembro, 'rol_comite' => $rolComite];
+    }
+
+    /**
      * Normaliza tipo_documento del candidato al ENUM de responsables (CC, CE, PA, TI, NIT).
      */
     private static function normalizarTipoDocumento(?string $tipoDoc): string
     {
         $td = strtoupper(trim($tipoDoc ?? ''));
         return in_array($td, ['CC', 'CE', 'PA', 'TI', 'NIT'], true) ? $td : 'CC';
+    }
+
+    /**
+     * Lista los miembros activos de comites conformados (tbl_comite_miembros) del cliente,
+     * con tipo_rol mapeado y flag ya_importado. Fuente para importar Actas -> Responsables.
+     */
+    public function getMiembrosComiteImportables(int $idCliente): array
+    {
+        $db = \Config\Database::connect();
+        $rows = $db->table('tbl_comite_miembros m')
+            ->select('m.id_miembro, m.nombre_completo, m.numero_documento, m.tipo_documento, m.cargo, m.email, m.telefono, m.representacion, m.tipo_miembro, m.rol_comite, m.id_responsable, tc.codigo as tipo_comite')
+            ->join('tbl_comites c', 'c.id_comite = m.id_comite')
+            ->join('tbl_tipos_comite tc', 'tc.id_tipo = c.id_tipo')
+            ->where('m.id_cliente', $idCliente)
+            ->where('m.estado', 'activo')
+            ->orderBy('tc.codigo', 'ASC')
+            ->orderBy('m.rol_comite', 'ASC')
+            ->get()->getResultArray();
+
+        $existentes = $db->table('tbl_cliente_responsables_sst')
+            ->select('numero_documento, tipo_rol')->where('id_cliente', $idCliente)->get()->getResultArray();
+        $set = [];
+        foreach ($existentes as $e) {
+            $set[(string) $e['numero_documento'] . '|' . $e['tipo_rol']] = true;
+        }
+
+        foreach ($rows as &$m) {
+            $m['tipo_rol']       = self::mapearTipoRolDesdeMiembro($m['tipo_comite'], $m['representacion'], $m['tipo_miembro'], $m['rol_comite']);
+            $m['tipo_rol_label'] = self::TIPOS_ROL[$m['tipo_rol']] ?? $m['tipo_rol'];
+            $m['ya_importado']   = isset($set[(string) $m['numero_documento'] . '|' . $m['tipo_rol']]);
+        }
+        return $rows;
+    }
+
+    /**
+     * Importa miembros de comite (tbl_comite_miembros) como responsables.
+     * Dedup por documento + tipo_rol. Enlaza el miembro al responsable creado (id_responsable).
+     *
+     * @return array ['creados'=>int, 'omitidos'=>int]
+     */
+    public function importarDesdeMiembrosComite(int $idCliente, array $idsMiembro, ?int $userId = null): array
+    {
+        $db = \Config\Database::connect();
+        $existentes = $db->table('tbl_cliente_responsables_sst')
+            ->select('numero_documento, tipo_rol')->where('id_cliente', $idCliente)->get()->getResultArray();
+        $set = [];
+        foreach ($existentes as $e) {
+            $set[(string) $e['numero_documento'] . '|' . $e['tipo_rol']] = true;
+        }
+
+        $creados = 0;
+        $omitidos = 0;
+        foreach ($idsMiembro as $idm) {
+            $m = $db->table('tbl_comite_miembros mm')
+                ->select('mm.*, tc.codigo as tipo_comite')
+                ->join('tbl_comites c', 'c.id_comite = mm.id_comite')
+                ->join('tbl_tipos_comite tc', 'tc.id_tipo = c.id_tipo')
+                ->where('mm.id_miembro', (int) $idm)
+                ->where('mm.id_cliente', $idCliente)
+                ->where('mm.estado', 'activo')
+                ->get()->getRowArray();
+            if (!$m) {
+                continue;
+            }
+            $tipoRol = self::mapearTipoRolDesdeMiembro($m['tipo_comite'], $m['representacion'], $m['tipo_miembro'], $m['rol_comite']);
+            $doc = (string) $m['numero_documento'];
+            $key = $doc . '|' . $tipoRol;
+            if (isset($set[$key])) {
+                $omitidos++;
+                continue;
+            }
+
+            $this->insert([
+                'id_cliente'       => $idCliente,
+                'tipo_rol'         => $tipoRol,
+                'nombre_completo'  => $m['nombre_completo'],
+                'tipo_documento'   => self::normalizarTipoDocumento($m['tipo_documento'] ?? null),
+                'numero_documento' => $doc,
+                'cargo'            => $m['cargo'] ?? null,
+                'email'            => $m['email'] ?? null,
+                'telefono'         => $m['telefono'] ?? null,
+                'fecha_inicio'     => date('Y-m-d'),
+                'activo'           => 1,
+                'observaciones'    => 'Importado desde Actas (' . ($m['tipo_comite'] ?? '') . ')',
+                'created_by'       => $userId,
+            ]);
+            $idResp = $this->getInsertID();
+            if ($idResp && empty($m['id_responsable'])) {
+                $db->table('tbl_comite_miembros')->where('id_miembro', $m['id_miembro'])->update(['id_responsable' => $idResp]);
+            }
+
+            $set[$key] = true;
+            $creados++;
+        }
+        return ['creados' => $creados, 'omitidos' => $omitidos];
     }
 
     /**
